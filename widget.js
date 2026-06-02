@@ -19,7 +19,8 @@
     SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
     LEADS_TABLE:        'tblPcoTI8zCCHLICi',
     RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
-    FROM_EMAIL:         'quotes@midasquote.com',
+    EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
+FROM_EMAIL:         'quotes@midasquote.com',
   };
   // ============================================================
 
@@ -107,13 +108,13 @@
     }
   }
 
-  async function sendEmail(to, subject, html) {
-    if (!CONFIG.RESEND_API_KEY || CONFIG.RESEND_API_KEY === 'YOUR_RESEND_API_KEY_HERE') return;
+ async function sendEmail(to, subject, html) {
+    if (!CONFIG.EMAIL_WORKER) return;
     try {
-      await fetch('https://api.resend.com/emails', {
+      await fetch(CONFIG.EMAIL_WORKER, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${CONFIG.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: `MidasQuote <${CONFIG.FROM_EMAIL}>`, to, subject, html })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, subject, html })
       });
     } catch (e) { console.error('MidasQuote: Email failed', e); }
   }
