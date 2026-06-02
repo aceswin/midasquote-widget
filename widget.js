@@ -81,18 +81,19 @@
   async function saveLead(data, lead, quoteType, low, high, lines) {
     const { shop } = data;
     try {
-      await atCreate(CONFIG.LEADS_TABLE, {
-        'Shop':           [shop._recordId],
-        'Customer name':  lead.name,
-        'Customer email': lead.email,
-        'Customer phone': lead.phone,
-        'Quote type':     quoteType,
-        'Estimate low':   low,
-        'Estimate high':  high,
-        'Quote details':  JSON.stringify(lines),
-        'Source':         'Website',
-        'Status':         'New',
-      });
+     await atCreate(CONFIG.LEADS_TABLE, {
+  'Lead ID':        `${lead.name} — ${new Date().toLocaleDateString()}`,
+  'Shop':           [shop._recordId],
+  'Customer name':  lead.name,
+  'Customer email': lead.email,
+  'Customer phone': lead.phone,
+  'Quote type':     quoteType,
+  'Estimate low':   low,
+  'Estimate high':  high,
+  'Quote details':  JSON.stringify(lines),
+  'Source':         'Website',
+  'Status':         'New',
+});
     } catch (e) { console.error('MidasQuote: Lead save failed', e); }
 
     await sendEmail(shop['Lead notify email'],
