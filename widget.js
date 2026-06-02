@@ -18,7 +18,7 @@
     PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
     SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
     LEADS_TABLE:        'tblPcoTI8zCCHLICi',
-    RESEND_API_KEY:     'YOUR_RESEND_API_KEY_HERE',
+    RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
     FROM_EMAIL:         'quotes@midasquote.com',
   };
   // ============================================================
