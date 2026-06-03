@@ -79,32 +79,75 @@ FROM_EMAIL:         'quotes@midasquote.com',
   // ============================================================
   // EMAIL & LEAD SAVING
   // ============================================================
-  async function saveLead(data, lead, quoteType, low, high, lines) {
+async function saveLead(data, lead, quoteType, low, high, lines) {
     const { shop } = data;
     try {
-     await atCreate(CONFIG.LEADS_TABLE, {
-  'Lead ID':        `${lead.name} — ${new Date().toLocaleDateString()}`,
-  'Shop':           [shop._recordId],
-  'Customer name':  lead.name,
-  'Customer email': lead.email,
-  'Customer phone': lead.phone,
-  'Quote type':     quoteType,
-  'Estimate low':   low,
-  'Estimate high':  high,
-  'Quote details':  JSON.stringify(lines),
-  'Source':         'Website',
-  'Status':         'New',
-});
+      await atCreate(CONFIG.LEADS_TABLE, {
+        'Lead ID':        `${lead.name} — ${new Date().toLocaleDateString()}`,
+        'Shop':           [shop._recordId],
+        'Customer name':  lead.name,
+        'Customer email': lead.email,
+        'Customer phone': lead.phone,
+        'Quote type':     quoteType,
+        'Estimate low':   low,
+        'Estimate high':  high,
+        'Quote details':  JSON.stringify(lines),
+        'Source':         'Website',
+        'Status':         'New',
+      });
     } catch (e) { console.error('MidasQuote: Lead save failed', e); }
 
-    await sendEmail(shop['Lead notify email'],
+    const lineRows = (lines || [])
+      .filter(l => l && l.label && l.cost !== undefined)
+      .map(l => `<tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td>
+      </tr>`).join('');
+
+    await sendEmail(
+      shop['Lead notify email'],
       `New ${quoteType} quote lead — ${lead.name}`,
-      buildShopEmail(shop, lead, quoteType, low, high));
+      `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+        <h2 style="color:#1a1a1a;margin-bottom:4px">New ${quoteType} quote lead</h2>
+        <p style="color:#666;margin-bottom:16px">Someone just completed a quote on your MidasQuote widget.</p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+          <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#111" colspan="2">Customer details</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee;font-weight:500">${lead.name}</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email}</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone}</td></tr>
+        </table>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+          <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#111" colspan="2">Quote breakdown</td></tr>
+          ${lineRows}
+        </table>
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
+          <div style="font-size:13px;color:#666;margin-bottom:4px">Estimated range</div>
+          <div style="font-size:28px;font-weight:700;color:#16a34a">${'$'}${low.toLocaleString()} – $${high.toLocaleString()}</div>
+        </div>
+        <p style="color:#999;font-size:12px">Saved to your MidasQuote leads dashboard.</p>
+      </div>`
+    );
 
     if (lead.email) {
-      await sendEmail(lead.email,
+      await sendEmail(
+        lead.email,
         `Your quote from ${shop['Shop name']}`,
-        buildCustomerEmail(shop, lead, quoteType, low, high));
+        `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+          <h2 style="color:#1a1a1a;margin-bottom:4px">Your ${quoteType} quote from ${shop['Shop name']}</h2>
+          <p style="color:#666;margin-bottom:16px">Hi ${lead.name}, here's your full estimate breakdown.</p>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+            <tr><td style="padding:8px;background:#f9fafb;font-weight:600;color:#111" colspan="2">Quote breakdown</td></tr>
+            ${lineRows}
+          </table>
+          <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
+            <div style="font-size:13px;color:#666;margin-bottom:4px">Your estimated range</div>
+            <div style="font-size:28px;font-weight:700;color:#16a34a">${'$'}${low.toLocaleString()} – $${high.toLocaleString()}</div>
+          </div>
+          <p style="color:#666;font-size:13px">${shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.'}</p>
+          <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
+          <p style="color:#666;font-size:13px"><strong>${shop['Shop name']}</strong><br/>${shop['Phone'] || ''}</p>
+        </div>`
+      );
     }
   }
 
@@ -119,28 +162,53 @@ FROM_EMAIL:         'quotes@midasquote.com',
     } catch (e) { console.error('MidasQuote: Email failed', e); }
   }
 
-  function buildShopEmail(shop, lead, type, low, high) {
-    return `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
-      <h2 style="color:#1a1a1a">New ${type} quote lead</h2>
-      <table style="width:100%;border-collapse:collapse;margin:16px 0">
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:8px;border-bottom:1px solid #eee;font-weight:500">${lead.name}</td></tr>
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:8px;border-bottom:1px solid #eee">${lead.email}</td></tr>
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:8px;border-bottom:1px solid #eee">${lead.phone}</td></tr>
-        <tr><td style="padding:8px;color:#666">Estimate</td><td style="padding:8px;font-weight:700;color:#16a34a;font-size:18px">$${low.toLocaleString()} – $${high.toLocaleString()}</td></tr>
+  function buildShopEmail(shop, lead, type, low, high, lines) {
+    const lineRows = lines.map(l => `
+      <tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">$${l.cost.toLocaleString()}</td>
+      </tr>`).join('');
+    return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+      <h2 style="color:#1a1a1a;margin-bottom:4px">New ${type} quote lead</h2>
+      <p style="color:#666;margin-bottom:16px">Someone just completed a quote on your MidasQuote widget.</p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;font-weight:500" colspan="2">Customer details</td></tr>
+        <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee;font-weight:500">${lead.name}</td></tr>
+        <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email}</td></tr>
+        <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone}</td></tr>
       </table>
-    </div>`;
-  }
-
-  function buildCustomerEmail(shop, lead, type, low, high) {
-    return `<div style="font-family:sans-serif;max-width:500px;margin:0 auto">
-      <h2 style="color:#1a1a1a">Your ${type} quote from ${shop['Shop name']}</h2>
-      <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:16px 0;text-align:center">
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;font-weight:500" colspan="2">Quote breakdown</td></tr>
+        ${lineRows}
+      </table>
+      <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
         <div style="font-size:13px;color:#666;margin-bottom:4px">Estimated range</div>
         <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
       </div>
-      <p style="color:#666;font-size:13px">${shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.'}</p>
+      <p style="color:#666;font-size:12px">This lead has been saved to your MidasQuote dashboard.</p>
+    </div>`;
+  }
+
+  function buildCustomerEmail(shop, lead, type, low, high, lines) {
+    const lineRows = lines.map(l => `
+      <tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">$${l.cost.toLocaleString()}</td>
+      </tr>`).join('');
+    return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+      <h2 style="color:#1a1a1a;margin-bottom:4px">Your ${type} quote from ${shop['Shop name']}</h2>
+      <p style="color:#666;margin-bottom:16px">Hi ${lead.name}, here's a full breakdown of your estimate.</p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;font-weight:500" colspan="2">Quote breakdown</td></tr>
+        ${lineRows}
+      </table>
+      <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
+        <div style="font-size:13px;color:#666;margin-bottom:4px">Your estimated range</div>
+        <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
+      </div>
+      <p style="color:#666;font-size:13px">${shop['Disclaimer text'] || 'This is a ballpark estimate only. Contact us for a full quote.'}</p>
       <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
-      <p style="color:#666;font-size:13px">${shop['Shop name']}<br/>${shop['Phone'] || ''}</p>
+      <p style="color:#666;font-size:13px"><strong>${shop['Shop name']}</strong><br/>${shop['Phone'] || ''}<br/>${shop['Website'] || ''}</p>
     </div>`;
   }
 
