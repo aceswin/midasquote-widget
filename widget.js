@@ -162,11 +162,11 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
     } catch (e) { console.error('MidasQuote: Email failed', e); }
   }
 
-  function buildShopEmail(shop, lead, type, low, high, lines) {
+  function buildShopEmail(shop, lead, quoteType, low, high, lines) {
     const lineRows = lines.map(l => `
       <tr>
         <td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">$${l.cost.toLocaleString()}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">$${Math.round(l.cost || 0).toLocaleString()}</td>
       </tr>`).join('');
     return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
       <h2 style="color:#1a1a1a;margin-bottom:4px">New ${type} quote lead</h2>
@@ -189,11 +189,11 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
     </div>`;
   }
 
-  function buildCustomerEmail(shop, lead, type, low, high, lines) {
-    const lineRows = lines.map(l => `
+  function buildCustomerEmail(shop, lead, quoteType, low, high, lines) {
+    const lineRows = (lines || []).filter(l => l && l.label && l.cost !== undefined).map(l => `
       <tr>
         <td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">$${l.cost.toLocaleString()}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">$${Math.round(l.cost || 0).toLocaleString()}</td>
       </tr>`).join('');
     return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
       <h2 style="color:#1a1a1a;margin-bottom:4px">Your ${type} quote from ${shop['Shop name']}</h2>
