@@ -7,12 +7,12 @@
 (function () {
 
   const CONFIG = {
-  AIRTABLE_TOKEN:     'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
-    BASE_ID:            'app4zrMlVLwF2xn4h',
-    SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
-    PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
-    SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
-    LEADS_TABLE:        'tblPcoTI8zCCHLICi',
+    AIRTABLE_TOKEN:  'YOUR_AIRTABLE_TOKEN_HERE',
+    BASE_ID:         'YOUR_BASE_ID_HERE',
+    SHOPS_TABLE:     'YOUR_SHOPS_TABLE_ID_HERE',
+    PRICING_TABLE:   'YOUR_SHOP_PRICING_TABLE_ID_HERE',
+    SPECIALTY_TABLE: 'YOUR_SPECIALTY_ITEMS_TABLE_ID_HERE',
+    LEADS_TABLE:     'YOUR_LEADS_TABLE_ID_HERE',
   };
 
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
@@ -167,6 +167,7 @@
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
+          <div class="mq-nav-item" onclick="mqNav('pricinghelper',this)"><span class="mq-nav-icon">🧮</span> Pricing helper</div>
         </div>
 
         <div class="mq-content">
@@ -354,6 +355,14 @@
                 <div><strong>Need help?</strong> Email <a href="mailto:hello@midasquote.com" style="color:#1a1a1a">hello@midasquote.com</a></div>
               </div>
             </div>
+          </div>
+
+
+          <!-- PRICING HELPER -->
+          <div class="mq-page" id="mq-page-pricinghelper">
+            <div class="mq-page-title">Pricing Setup Helper</div>
+            <div class="mq-page-sub">Back-calculate your exact per-linear-foot rates from your current software</div>
+            <div id="mq-pricing-helper"></div>
           </div>
 
         </div>
@@ -689,6 +698,21 @@
     const specs = await loadSpecialty(shopRecord.fields['Shop name']);
     renderSpecialty(specs, shopRecord);
   }
+
+  // Load pricing helper when that nav item is clicked
+  const origMqNav = window.mqNav;
+  window.mqNav = function(page, el) {
+    origMqNav(page, el);
+    if (page === 'pricinghelper') {
+      const helperContainer = document.getElementById('mq-pricing-helper');
+      if (helperContainer && !helperContainer.dataset.loaded) {
+        helperContainer.dataset.loaded = 'true';
+        const script = document.createElement('script');
+        script.src = 'https://widget.midasquote.com/pricing-helper.js';
+        document.body.appendChild(script);
+      }
+    }
+  };
 
   init();
 
