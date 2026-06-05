@@ -7,15 +7,12 @@
 (function () {
 
   const CONFIG = {
-        AIRTABLE_TOKEN:     'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
-    BASE_ID:            'app4zrMlVLwF2xn4h',
-    SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
-    PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
-    SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
-    LEADS_TABLE:        'tblPcoTI8zCCHLICi',
-    RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
-    EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
-FROM_EMAIL:         'quotes@midasquote.com',
+    AIRTABLE_TOKEN:  'YOUR_AIRTABLE_TOKEN_HERE',
+    BASE_ID:         'YOUR_BASE_ID_HERE',
+    SHOPS_TABLE:     'YOUR_SHOPS_TABLE_ID_HERE',
+    PRICING_TABLE:   'YOUR_SHOP_PRICING_TABLE_ID_HERE',
+    SPECIALTY_TABLE: 'YOUR_SPECIALTY_ITEMS_TABLE_ID_HERE',
+    LEADS_TABLE:     'YOUR_LEADS_TABLE_ID_HERE',
   };
 
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
@@ -363,9 +360,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
 
           <!-- PRICING HELPER -->
           <div class="mq-page" id="mq-page-pricinghelper">
-            <div class="mq-page-title">Pricing Setup Helper</div>
-            <div class="mq-page-sub">Back-calculate your exact per-linear-foot rates from your current software</div>
-            <div id="mq-pricing-helper"></div>
+            <div id="mq-pricing-helper-v2"></div>
           </div>
 
         </div>
@@ -707,11 +702,11 @@ FROM_EMAIL:         'quotes@midasquote.com',
   window.mqNav = function(page, el) {
     origMqNav(page, el);
     if (page === 'pricinghelper') {
-      const helperContainer = document.getElementById('mq-pricing-helper');
+      const helperContainer = document.getElementById('mq-pricing-helper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         document.body.appendChild(script);
       }
     }
