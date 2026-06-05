@@ -7,15 +7,12 @@
 (function () {
 
   const CONFIG = {
-   AIRTABLE_TOKEN:     'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
-    BASE_ID:            'app4zrMlVLwF2xn4h',
-    SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
-    PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
-    SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
-    LEADS_TABLE:        'tblPcoTI8zCCHLICi',
-    RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
-    EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
-FROM_EMAIL:         'quotes@midasquote.com',
+    AIRTABLE_TOKEN:  'YOUR_AIRTABLE_TOKEN_HERE',
+    BASE_ID:         'YOUR_BASE_ID_HERE',
+    SHOPS_TABLE:     'YOUR_SHOPS_TABLE_ID_HERE',
+    PRICING_TABLE:   'YOUR_SHOP_PRICING_TABLE_ID_HERE',
+    SPECIALTY_TABLE: 'YOUR_SPECIALTY_ITEMS_TABLE_ID_HERE',
+    LEADS_TABLE:     'YOUR_LEADS_TABLE_ID_HERE',
   };
 
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
@@ -170,7 +167,6 @@ FROM_EMAIL:         'quotes@midasquote.com',
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
-          <div class="mq-nav-item" onclick="mqNav('pricinghelper',this)"><span class="mq-nav-icon">🧮</span> Pricing helper</div>
         </div>
 
         <div class="mq-content">
@@ -243,80 +239,9 @@ FROM_EMAIL:         'quotes@midasquote.com',
               <button class="mq-btn mq-btn-primary" onclick="mqSaveShop()">Save shop info</button>
             </div>
           </div>
-
           <!-- PRICING -->
           <div class="mq-page" id="mq-page-pricing">
-            <div class="mq-page-title">Pricing</div>
-            <div class="mq-page-sub">Set your rates — the widget uses these to calculate estimates</div>
-            <div id="mq-pricing-msg"></div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">🪵 Cabinet pricing (per linear foot)</div>
-              <div class="mq-grid3">
-                <div class="mq-field"><label class="mq-label">Melamine</label><input type="number" id="mq-p-melamine" placeholder="280"/></div>
-                <div class="mq-field"><label class="mq-label">Plywood</label><input type="number" id="mq-p-plywood" placeholder="380"/></div>
-                <div class="mq-field"><label class="mq-label">Painted MDF</label><input type="number" id="mq-p-mdf" placeholder="350"/></div>
-                <div class="mq-field"><label class="mq-label">Solid wood</label><input type="number" id="mq-p-solid" placeholder="550"/></div>
-              </div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">🚪 Door style adders (per linear foot)</div>
-              <div class="mq-grid3">
-                <div class="mq-field"><label class="mq-label">Slab</label><input type="number" id="mq-p-slab" placeholder="0"/></div>
-                <div class="mq-field"><label class="mq-label">Shaker</label><input type="number" id="mq-p-shaker" placeholder="0"/></div>
-                <div class="mq-field"><label class="mq-label">Raised panel</label><input type="number" id="mq-p-raised" placeholder="0"/></div>
-                <div class="mq-field"><label class="mq-label">Glass inserts</label><input type="number" id="mq-p-glass" placeholder="0"/></div>
-              </div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">⚙️ Hardware & installation</div>
-              <div class="mq-grid3">
-                <div class="mq-field"><label class="mq-label">Install rate (per lin ft)</label><input type="number" id="mq-p-install" placeholder="85"/></div>
-                <div class="mq-field"><label class="mq-label">Soft-close hinges add</label><input type="number" id="mq-p-hinges" placeholder="12"/></div>
-                <div class="mq-field"><label class="mq-label">Birch drawer box add</label><input type="number" id="mq-p-drawer" placeholder="15"/></div>
-                <div class="mq-field"><label class="mq-label">Removal (per lin ft)</label><input type="number" id="mq-p-removal" placeholder="18"/></div>
-              </div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">🪨 Countertop pricing (per sqft)</div>
-              <div class="mq-grid3">
-                <div class="mq-field"><label class="mq-label">Laminate supply</label><input type="number" id="mq-p-lam" placeholder="18"/></div>
-                <div class="mq-field"><label class="mq-label">Solid surface econ</label><input type="number" id="mq-p-ss-econ" placeholder="38"/></div>
-                <div class="mq-field"><label class="mq-label">Solid surface mid</label><input type="number" id="mq-p-ss-mid" placeholder="58"/></div>
-                <div class="mq-field"><label class="mq-label">Solid surface prem</label><input type="number" id="mq-p-ss-prem" placeholder="90"/></div>
-                <div class="mq-field"><label class="mq-label">Granite economy</label><input type="number" id="mq-p-gran-econ" placeholder="45"/></div>
-                <div class="mq-field"><label class="mq-label">Granite mid</label><input type="number" id="mq-p-gran-mid" placeholder="72"/></div>
-                <div class="mq-field"><label class="mq-label">Granite premium</label><input type="number" id="mq-p-gran-prem" placeholder="130"/></div>
-                <div class="mq-field"><label class="mq-label">Quartz</label><input type="number" id="mq-p-quartz" placeholder="85"/></div>
-                <div class="mq-field"><label class="mq-label">Marble</label><input type="number" id="mq-p-marble" placeholder="110"/></div>
-                <div class="mq-field"><label class="mq-label">Butcher block</label><input type="number" id="mq-p-butcher" placeholder="42"/></div>
-              </div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">🚗 Travel zones</div>
-              <div class="mq-grid3">
-                <div class="mq-field"><label class="mq-label">Local radius (km)</label><input type="number" id="mq-p-zone-radius" placeholder="15"/></div>
-                <div class="mq-field"><label class="mq-label">Zone 2 surcharge</label><input type="number" id="mq-p-zone2" placeholder="320"/></div>
-                <div class="mq-field"><label class="mq-label">Zone 3 surcharge</label><input type="number" id="mq-p-zone3" placeholder="680"/></div>
-                <div class="mq-field"><label class="mq-label">Zone 4 surcharge</label><input type="number" id="mq-p-zone4" placeholder="1100"/></div>
-              </div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">🧾 Tax & other</div>
-              <div class="mq-grid3">
-                <div class="mq-field"><label class="mq-label">Tax rate (%)</label><input type="number" id="mq-p-tax" placeholder="5"/></div>
-                <div class="mq-field"><label class="mq-label">Backsplash (per lin ft)</label><input type="number" id="mq-p-backsplash" placeholder="12"/></div>
-                <div class="mq-field"><label class="mq-label">Sink cutout</label><input type="number" id="mq-p-sink" placeholder="180"/></div>
-                <div class="mq-field"><label class="mq-label">Cooktop cutout</label><input type="number" id="mq-p-cooktop" placeholder="220"/></div>
-              </div>
-            </div>
-
-            <button class="mq-btn mq-btn-primary" onclick="mqSavePricing()">Save pricing</button>
+            <div id="mq-pricing-helper-v2"></div>
           </div>
 
           <!-- SPECIALTY ITEMS -->
@@ -362,9 +287,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
 
 
           <!-- PRICING HELPER -->
-          <div class="mq-page" id="mq-page-pricinghelper">
-            <div id="mq-pricing-helper-v2"></div>
-          </div>
+
 
         </div>
       </div>
@@ -704,7 +627,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
   const origMqNav = window.mqNav;
   window.mqNav = function(page, el) {
     origMqNav(page, el);
-    if (page === 'pricinghelper') {
+    if (page === 'pricing') {
       const helperContainer = document.getElementById('mq-pricing-helper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
