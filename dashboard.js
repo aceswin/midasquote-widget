@@ -84,17 +84,17 @@ FROM_EMAIL:         'quotes@midasquote.com',
       #midasquote-dashboard .mq-btn-sm{padding:5px 10px;font-size:12px}
       #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px)}
       #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0}
-      #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:10px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
+      #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
       #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#f9fafb}
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
-      #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1rem 1.5rem 0.5rem}
-      #midasquote-dashboard .mq-content{flex:1;padding:2rem;overflow-y:auto}
+      #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
+      #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:auto}
       #midasquote-dashboard .mq-page{display:none}
       #midasquote-dashboard .mq-page.active{display:block}
-      #midasquote-dashboard .mq-page-title{font-size:20px;font-weight:700;color:#111;margin-bottom:4px}
-      #midasquote-dashboard .mq-page-sub{font-size:13px;color:#6b7280;margin-bottom:1.5rem}
-      #midasquote-dashboard .mq-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+      #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
+      #midasquote-dashboard .mq-page-sub{font-size:13px;color:#6b7280;margin-bottom:2rem}
+      #midasquote-dashboard .mq-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.75rem;margin-bottom:1.5rem}
       #midasquote-dashboard .mq-card-title{font-size:13px;font-weight:600;color:#111;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
       #midasquote-dashboard .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
       #midasquote-dashboard .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem}
@@ -104,14 +104,14 @@ FROM_EMAIL:         'quotes@midasquote.com',
       #midasquote-dashboard input[type=text],#midasquote-dashboard input[type=email],#midasquote-dashboard input[type=tel],#midasquote-dashboard input[type=number],#midasquote-dashboard input[type=url],#midasquote-dashboard select,#midasquote-dashboard textarea{font-family:inherit;font-size:13px;color:#111;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;width:100%}
       #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{outline:none;border-color:#1a1a1a}
       #midasquote-dashboard textarea{resize:vertical;min-height:80px}
-      #midasquote-dashboard .mq-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem}
-      #midasquote-dashboard .mq-stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.25rem}
-      #midasquote-dashboard .mq-stat-val{font-size:24px;font-weight:700;color:#111;margin-bottom:2px}
-      #midasquote-dashboard .mq-stat-lbl{font-size:12px;color:#6b7280}
+      #midasquote-dashboard .mq-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.25rem;margin-bottom:2rem}
+      #midasquote-dashboard .mq-stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem}
+      #midasquote-dashboard .mq-stat-val{font-size:26px;font-weight:700;color:#111;margin-bottom:6px}
+      #midasquote-dashboard .mq-stat-lbl{font-size:12px;color:#6b7280;font-weight:500}
       #midasquote-dashboard .mq-stat-green .mq-stat-val{color:#16a34a}
       #midasquote-dashboard .mq-table{width:100%;border-collapse:collapse}
-      #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:left}
-      #midasquote-dashboard .mq-table td{font-size:13px;padding:10px 12px;border-bottom:1px solid #f3f4f6;color:#111}
+      #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:left}
+      #midasquote-dashboard .mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:#111}
       #midasquote-dashboard .mq-table tr:last-child td{border-bottom:none}
       #midasquote-dashboard .mq-table tr:hover td{background:#f9fafb}
       #midasquote-dashboard .mq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
