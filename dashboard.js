@@ -626,16 +626,19 @@ FROM_EMAIL:         'quotes@midasquote.com',
     renderSpecialty(specs, shopRecord);
   }
 
-  // Load pricing helper when that nav item is clicked
+ // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
-  window.mqNav = function(page, el) {
-    origMqNav(page, el);
+  window.mqNav = function(page, navEl) {
+    origMqNav(page, navEl);
     if (page === 'pricing') {
       const helperContainer = document.getElementById('mq-pricing-helper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
         script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
+        script.onload = function() {
+          window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
+        };
         document.body.appendChild(script);
       }
     }
