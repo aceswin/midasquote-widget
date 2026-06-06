@@ -70,7 +70,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
-      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh}
+     #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
       #midasquote-dashboard .mq-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
       #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#111;display:flex;align-items:center;gap:8px}
       #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#6b7280}
@@ -82,7 +82,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
       #midasquote-dashboard .mq-btn-danger{background:#fff;color:#dc2626;border-color:#fca5a5}
       #midasquote-dashboard .mq-btn-danger:hover{background:#fef2f2}
       #midasquote-dashboard .mq-btn-sm{padding:5px 10px;font-size:12px}
-      #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px)}
+      #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px);width:100%}
       #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0}
       #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
       #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#f9fafb}
