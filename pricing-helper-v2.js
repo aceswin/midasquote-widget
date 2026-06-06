@@ -597,41 +597,18 @@
     }
   };
 
+// ============================================================
+  // INIT — called by dashboard.js, not self-initializing
   // ============================================================
-  // INIT
-  // ============================================================
-  async function init() {
+  window.mqph2Init = function(passedShopRecord, passedPricingRecord) {
+    shopRecord = passedShopRecord;
+    pricingRecord = passedPricingRecord;
+
     const container = document.getElementById('mq-pricing-helper-v2');
-    if (!container) {
-      console.error('MidasQuote Pricing Helper: Add <div id="mq-pricing-helper-v2"></div> to your page.');
-      return;
-    }
+    if (!container) return;
 
     injectStyles();
-    container.innerHTML = '<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Loading pricing helper...</div>';
-
-    // Get shop token
-    let shopToken = new URLSearchParams(window.location.search).get('shop');
-    if (!shopToken && window.$memberstackDom) {
-      try {
-        const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) shopToken = member.metaData?.shopToken || member.customFields?.shopToken;
-      } catch(e) {}
-    }
-    if (!shopToken) shopToken = 'dr-sales-001';
-
-    // Load records
-    const shops = await atGet(CONFIG.SHOPS_TABLE, `{Shop token} = "${shopToken}"`);
-    if (shops.length) shopRecord = shops[0];
-
-    if (shopRecord) {
-      const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-      if (pricing.length) pricingRecord = pricing[0];
-    }
-
     container.innerHTML = buildHTML();
-  }
-
-  init();
+  };
 
 })();
