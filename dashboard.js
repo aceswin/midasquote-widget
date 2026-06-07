@@ -274,7 +274,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
             <div class="mq-card">
               <div class="mq-card-title">📱 Shop mode</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use this link to pull up the widget on your phone or tablet for walk-in customers. No lead capture — just the quote tool.</p>
-              <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/widget.js?shop=${token}&mode=shop')">Copy</button></div>
+              <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop')">Copy</button></div>
             </div>
             <div class="mq-card">
               <div class="mq-card-title">💡 Installation help</div>
