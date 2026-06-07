@@ -191,7 +191,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
             <div class="mq-card">
               <div class="mq-card-title">🔗 Your widget embed code</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear.</p>
-              <div class="mq-embed-box" id="mq-embed-preview">${embedCode}<button class="mq-copy-btn" onclick="mqCopyEmbed('${rawCode}')">Copy</button></div>
+              <div class="mq-embed-box" id="mq-embed-preview"><span>${embedCode}</span><button class="mq-copy-btn" onclick="mqCopyEmbed('${rawCode}')">Copy</button></div>
             </div>
           </div>
 
@@ -269,7 +269,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
             <div class="mq-card">
               <div class="mq-card-title">📋 Your embed code</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy the code below and paste it into your website's HTML where you want the quote widget to appear. Works on Wix, Squarespace, WordPress, Webflow, GoDaddy and any custom site.</p>
-              <div class="mq-embed-box">${embedCode}<button class="mq-copy-btn" onclick="mqCopyEmbed('${rawCode}')">Copy</button></div>
+              <div class="mq-embed-box"><span>${embedCode}</span><button class="mq-copy-btn" onclick="mqCopyEmbed('${rawCode}')">Copy</button></div>
             </div>
             <div class="mq-card">
               <div class="mq-card-title">📱 Shop mode</div>
