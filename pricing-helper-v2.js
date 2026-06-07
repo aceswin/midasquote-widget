@@ -696,8 +696,8 @@
 
   window.mqphStartItemSetup = async function() {
     // Pre-populate hinges and install if not already there
-    const hasHinge = lineItems.some(r => r.fields['Category']==='hinge');
-    const hasInstall = lineItems.some(r => r.fields['Category']==='install');
+   const hasHinge = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='hinge');
+const hasInstall = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='install');
     if (!hasHinge) {
       for (let i=0; i<DEFAULT_HINGES.length; i++) {
         const rec = await atCreate(LINE_ITEMS_TABLE, { 'Shop':[shopRecord._recordId], 'Name':DEFAULT_HINGES[i], 'Category':'hinge', 'Rate':0, 'Unit':'per lin ft upcharge', 'Active':true, 'Sort order':i+1 });
@@ -824,14 +824,15 @@
   async function loadAndRender() {
     const container = document.getElementById('mq-pricing-helper-v2');
     if (!container) return;
-    lineItems = await atGet(LINE_ITEMS_TABLE, `{Shop} = "${shopRecord._recordId}"`);
+    lineItems = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._recordId}", ARRAYJOIN({Shop}))`);
     container.innerHTML = buildEditorHTML();
   }
 
   // ============================================================
   // INIT
   // ============================================================
-  window.mqph2Init = function(passedShopRecord, passedPricingRecord) {
+
+window.mqph2Init = function(passedShopRecord, passedPricingRecord) {
     if (!passedShopRecord) return;
     shopRecord = { ...passedShopRecord, _recordId:passedShopRecord.id, _baseId:'app4zrMlVLwF2xn4h', _token:'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325', _pricingTable:'tblu6AYZs8h7SIaQl' };
     pricingRecord = passedPricingRecord;
