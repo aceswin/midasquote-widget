@@ -1,5 +1,5 @@
 /*
- * MidasQuote Pricing Helper v4.0
+ * MidasQuote Pricing Helper v4.1
  * Guided item setup + wizard-based rate reverse engineering
  */
 
@@ -14,7 +14,6 @@
   let wizardStep = 0;
   let wizardItems = [];
   let currentEditId = null;
-  let setupPhase = 'editor'; // 'editor' | 'item-setup' | 'wizard'
 
   const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
   const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
@@ -53,22 +52,19 @@
       .mqph-btn-secondary{background:#fff;color:#111;border:1px solid #e5e7eb}.mqph-btn-secondary:hover{background:#f9fafb}
       .mqph-btn-danger{background:#fff;color:#dc2626;border:1px solid #fca5a5}.mqph-btn-danger:hover{background:#fef2f2}
       .mqph-btn-sm{padding:5px 12px;font-size:12px}
-      .mqph-btn-ghost{background:none;border:none;color:#6b7280;font-size:12px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:6px}.mqph-btn-ghost:hover{background:#f3f4f6;color:#111}
 
-      /* ITEM SETUP */
       .mqph-setup-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:1.25rem;overflow:hidden}
-      .mqph-setup-header{background:#f9fafb;padding:14px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between}
+      .mqph-setup-header{background:#f9fafb;padding:14px 16px;border-bottom:1px solid #e5e7eb}
       .mqph-setup-title{font-size:13px;font-weight:700;color:#111}
       .mqph-setup-sub{font-size:11px;color:#6b7280;margin-top:2px}
       .mqph-chip-row{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px;align-items:center}
-      .mqph-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:20px;font-size:13px;color:#111;font-family:inherit}
+      .mqph-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:20px;font-size:13px;color:#111}
       .mqph-chip-del{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:16px;line-height:1;padding:0 0 0 2px;font-family:inherit}.mqph-chip-del:hover{color:#dc2626}
       .mqph-chip-input{display:flex;align-items:center;gap:6px;padding:4px 8px;border:1.5px dashed #d1d5db;border-radius:20px}
-      .mqph-chip-input input{border:none;outline:none;font-size:13px;color:#111;background:transparent;font-family:inherit;width:140px}
+      .mqph-chip-input input{border:none;outline:none;font-size:13px;color:#111;background:transparent;font-family:inherit;width:160px}
       .mqph-chip-input button{background:#1a1a1a;color:#fff;border:none;border-radius:12px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit}
       .mqph-default-chip{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
 
-      /* WIZARD */
       .mqph-wizard-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
       .mqph-wizard-header{background:#1a1a1a;color:#fff;padding:1.25rem 1.5rem}
       .mqph-wizard-header h2{font-size:15px;font-weight:600;margin:0 0 4px}
@@ -95,7 +91,6 @@
       .mqph-item-block:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
       .mqph-item-block-label{font-size:13px;font-weight:600;color:#111;margin-bottom:8px}
 
-      /* EDITOR */
       .mqph-cat-block{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:1.25rem;overflow:hidden}
       .mqph-cat-header{background:#f9fafb;padding:12px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between}
       .mqph-cat-title{font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.06em}
@@ -111,7 +106,6 @@
       .mqph-toggle.on::after{left:16px}
       .mqph-empty{text-align:center;padding:2rem;color:#9ca3af;font-size:13px}
 
-      /* MODAL */
       .mqph-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:1rem}
       .mqph-overlay.show{display:flex}
       .mqph-modal{background:#fff;border-radius:12px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
@@ -128,7 +122,6 @@
       .mqph-msg-success{background:#dcfce7;color:#166534;border:1px solid #86efac}
       .mqph-msg-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
 
-      /* CT */
       .mqph-ct-block{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:1.25rem;overflow:hidden}
       .mqph-ct-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #f3f4f6}
       .mqph-ct-row:last-child{border-bottom:none}
@@ -156,22 +149,24 @@
   const CAT_LABELS = {
     material: '🪵 Box materials', door: '🚪 Door styles', drawerbox: '📦 Drawer box materials',
     slide: '🔩 Drawer slides', hinge: '🔧 Door hinges', finish: '🎨 Finishes',
-    install: '🔧 Installation', zone: '🚗 Travel zones', tax: '🧾 Tax & other',
-    hardware: '⚙️ Hardware', countertop: '🪨 Countertops', other: '📋 Other',
+    install: '🔧 Installation & removal', zone: '🚗 Travel zones', tax: '🧾 Tax & other',
+    countertop: '🪨 Countertops', other: '📋 Other',
   };
 
-  const DEFAULT_HINGES = ['Soft-close hinges', 'Regular hinges'];
   const DEFAULT_INSTALL = [
-    { name: 'Install — uppers', unit: 'per lin ft', description: 'Upper cabinet installation rate — set in wizard' },
-    { name: 'Install — bases',  unit: 'per lin ft', description: 'Base cabinet installation rate — set in wizard' },
+    { name: 'Install — uppers',   unit: 'per lin ft', description: 'Upper cabinet installation rate — set in wizard' },
+    { name: 'Install — bases',    unit: 'per lin ft', description: 'Base cabinet installation rate — set in wizard' },
+    { name: 'Cabinet removal',    unit: 'per lin ft', description: 'Remove & dispose existing cabinets — set in wizard' },
   ];
+
+  const DEFAULT_HINGES = ['Soft-close hinges', 'Regular hinges'];
 
   // ============================================================
   // ITEM SETUP PHASE
   // ============================================================
   function buildItemSetupHTML() {
     const existing = {};
-    lineItems.forEach(r => {
+    lineItems.filter(r => r.fields).forEach(r => {
       const cat = r.fields['Category'];
       if (!existing[cat]) existing[cat] = [];
       existing[cat].push(r);
@@ -188,10 +183,8 @@
         return `
           <div class="mqph-setup-card">
             <div class="mqph-setup-header">
-              <div>
-                <div class="mqph-setup-title">${cat.label}</div>
-                <div class="mqph-setup-sub">${cat.sub}</div>
-              </div>
+              <div class="mqph-setup-title">${cat.label}</div>
+              <div class="mqph-setup-sub">${cat.sub}</div>
             </div>
             <div class="mqph-chip-row" id="mqph-chips-${cat.id}">
               ${items.map(r => `
@@ -207,26 +200,20 @@
           </div>`;
       }).join('')}
 
-      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.25rem;margin-bottom:1.5rem">
-        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">🔧 Installation & hinges</div>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.5">These are pre-added for you. Installation rates will be calculated in the wizard. You can delete options you don't offer.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:8px" id="mqph-chips-install-hinge">
+      <div class="mqph-setup-card">
+        <div class="mqph-setup-header">
+          <div class="mqph-setup-title">🔧 Installation & removal</div>
+          <div class="mqph-setup-sub">Pre-added for you — rates are calculated in the wizard. Delete any you don't offer.</div>
+        </div>
+        <div class="mqph-chip-row" id="mqph-chips-install">
           ${(existing['install'] || []).map(r => `
             <div class="mqph-chip mqph-default-chip" id="mqph-chip-${r.id}">
               ${r.fields['Name']}<button class="mqph-chip-del" onclick="mqphDeleteChip('${r.id}','install')">×</button>
             </div>`).join('')}
-          ${(existing['hinge'] || []).map(r => `
-            <div class="mqph-chip mqph-default-chip" id="mqph-chip-${r.id}">
-              ${r.fields['Name']}<button class="mqph-chip-del" onclick="mqphDeleteChip('${r.id}','hinge')">×</button>
-            </div>`).join('')}
-          <div class="mqph-chip-input">
-            <input type="text" id="mqph-chip-input-hinge" placeholder="Add hinge option" onkeydown="if(event.key==='Enter')mqphAddChip('hinge')"/>
-            <button onclick="mqphAddChip('hinge')">Add</button>
-          </div>
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;justify-content:flex-end">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:0.5rem">
         <button class="mqph-btn mqph-btn-secondary" onclick="loadAndRender()">Back to editor</button>
         <button class="mqph-btn mqph-btn-primary" onclick="mqphGoToWizard()">Items look good — run pricing wizard →</button>
       </div>
@@ -239,21 +226,22 @@
     const name = input.value.trim();
     if (!name) return;
     input.value = '';
-    const sortMax = lineItems.filter(r => r.fields['Category'] === cat).length + 1;
+    const sortMax = lineItems.filter(r => r.fields && r.fields['Category'] === cat).length + 1;
     const rec = await atCreate(LINE_ITEMS_TABLE, {
       'shop': [shopRecord._recordId], 'Name': name, 'Category': cat,
       'Rate': 0, 'Unit': 'per lin ft', 'Active': true, 'Sort order': sortMax,
     });
-    lineItems.push(rec);
-    // Insert chip before input
-    const container = document.getElementById(`mqph-chips-${cat}`) || document.getElementById('mqph-chips-install-hinge');
-    if (container) {
-      const chip = document.createElement('div');
-      chip.className = 'mqph-chip' + (cat === 'install' || cat === 'hinge' ? ' mqph-default-chip' : '');
-      chip.id = `mqph-chip-${rec.id}`;
-      chip.innerHTML = `${name}<button class="mqph-chip-del" onclick="mqphDeleteChip('${rec.id}','${cat}')">×</button>`;
-      const inputWrap = container.querySelector('.mqph-chip-input');
-      container.insertBefore(chip, inputWrap);
+    if (rec && rec.id) {
+      lineItems.push(rec);
+      const container = document.getElementById(`mqph-chips-${cat}`);
+      if (container) {
+        const chip = document.createElement('div');
+        chip.className = 'mqph-chip';
+        chip.id = `mqph-chip-${rec.id}`;
+        chip.innerHTML = `${name}<button class="mqph-chip-del" onclick="mqphDeleteChip('${rec.id}','${cat}')">×</button>`;
+        const inputWrap = container.querySelector('.mqph-chip-input');
+        container.insertBefore(chip, inputWrap);
+      }
     }
   };
 
@@ -280,7 +268,7 @@
   // WIZARD
   // ============================================================
   function getByCategory(cat) {
-    return lineItems.filter(r => r.fields['Category'] === cat && r.fields['Active'] !== false)
+    return lineItems.filter(r => r.fields && r.fields['Category'] === cat && r.fields['Active'] !== false)
       .sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
   }
 
@@ -294,7 +282,7 @@
 
     const steps = [];
 
-    // Step 0: Welcome / check
+    // Step 0: Welcome
     steps.push({
       title: '👋 Pricing Setup Wizard',
       sub: `We'll reverse-engineer your rates from real job quotes. No math required.`,
@@ -302,8 +290,8 @@
         <div class="mqph-warn">⚠️ <strong>Missing items.</strong> You need to add ${noMats ? 'box materials' : ''}${noMats && noDoors ? ' and ' : ''}${noDoors ? 'door styles' : ''} before running the wizard.<br/>
         <button class="mqph-btn mqph-btn-secondary" style="margin-top:10px" onclick="mqphStartItemSetup()">← Go back and add items</button></div>` : `
         <div class="mqph-hl">✅ Found <strong>${materials.length}</strong> material${materials.length!==1?'s':''} and <strong>${doorStyles.length}</strong> door style${doorStyles.length!==1?'s':''}. Ready to go.<br/><br/>
-        We'll step through each of your items one at a time. For each step, create a simple quote in your quoting software and enter the total price. We'll do the rest.</div>
-        <div style="font-size:13px;color:#374151;line-height:1.8">✅ Separate rates for uppers and bases<br/>✅ Door style upcharges<br/>✅ Material upcharges<br/>✅ Hardware upgrades<br/>✅ Installation rates</div>`,
+        For each step, create a simple quote in your quoting software and enter the total. We'll calculate the rates automatically.</div>
+        <div style="font-size:13px;color:#374151;line-height:1.8">✅ Separate rates for uppers and bases<br/>✅ Per-item upcharges for materials, doors, hardware<br/>✅ Installation rates<br/>✅ Cabinet removal rate</div>`,
       skipLabel: null,
       nextLabel: noMats || noDoors ? null : 'Start →',
       onNext: () => noMats || noDoors ? 'abort' : null,
@@ -328,7 +316,7 @@
     // Step 2: Baseline uppers
     steps.push({
       title: '📐 Step 2 — Baseline upper cabinets',
-      sub: 'Quote this exact job in your quoting software:',
+      sub: 'In your quoting software, create a quote for exactly this job:',
       content: () => `
         <div class="mqph-hl">
           <strong>4 linear feet of upper cabinets only (no bases)</strong><br/>
@@ -341,7 +329,7 @@
       nextLabel: 'Next →',
       onNext: () => {
         const p = parseFloat(document.getElementById('mqph-bl-u-price')?.value||0);
-        if (p>0&&wizardBaseline) { wizardBaseline.upperPrice=p; wizardBaseline.upperRate=p/4; wizardItems.push({ name: wizardBaseline.matName+' — uppers', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline — reverse engineered', active:true }); }
+        if (p>0&&wizardBaseline) { wizardBaseline.upperPrice=p; wizardBaseline.upperRate=p/4; wizardItems.push({ name:wizardBaseline.matName+' — uppers', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline material uppers — reverse engineered', active:true }); }
       }
     });
 
@@ -362,7 +350,7 @@
       nextLabel: 'Next →',
       onNext: () => {
         const p = parseFloat(document.getElementById('mqph-bl-b-price')?.value||0);
-        if (p>0&&wizardBaseline) { wizardBaseline.basePrice=p; wizardBaseline.baseRate=p/4; wizardItems.push({ name: wizardBaseline.matName+' — bases', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline — reverse engineered', active:true }); }
+        if (p>0&&wizardBaseline) { wizardBaseline.basePrice=p; wizardBaseline.baseRate=p/4; wizardItems.push({ name:wizardBaseline.matName+' — bases', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline material bases — reverse engineered', active:true }); }
       }
     });
 
@@ -414,13 +402,13 @@
       });
     }
 
-    // Step 6: Hardware upgrades (drawer boxes, slides, hinges, finishes)
+    // Step 6: Hardware & finish upgrades (drawer boxes, slides, hinges, finishes)
     const hwCats = ['drawerbox','slide','hinge','finish'];
-    const hwItems = lineItems.filter(r => hwCats.includes(r.fields['Category']) && r.fields['Active']!==false);
+    const hwItems = lineItems.filter(r => r.fields && hwCats.includes(r.fields['Category']) && r.fields['Active']!==false);
     if (hwItems.length>0) {
       steps.push({
         title: '⚙️ Step 6 — Hardware & finish upgrades',
-        sub: 'Quote the baseline job with each upgrade added one at a time.',
+        sub: 'Quote the baseline job with each upgrade added one at a time. 4ft bases, baseline material and door.',
         content: () => hwItems.map((h,idx) => `
           <div class="mqph-item-block">
             <div class="mqph-item-block-label">${h.fields['Name']}</div>
@@ -428,21 +416,21 @@
             <div class="mqph-input-row"><label>Your price with this upgrade?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-hw-${idx}" placeholder="0.00" oninput="mqphCalcUp('hw-${idx}')"/></div>
             <div id="mqph-r-hw-${idx}" class="mqph-result"></div>
           </div>`).join(''),
-        skipLabel: 'Skip hardware',
+        skipLabel: 'Skip hardware & finishes',
         nextLabel: 'Next →',
         onNext: () => {
           hwItems.forEach((h,idx) => {
             const p = parseFloat(document.getElementById(`mqph-hw-${idx}`)?.value||0);
-            if (p>0&&wizardBaseline) { const u=(p-wizardBaseline.basePrice)/4; wizardItems.push({ name:h.fields['Name'], category:h.fields['Category'], rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Hardware upgrade — reverse engineered', active:true }); }
+            if (p>0&&wizardBaseline) { const u=(p-wizardBaseline.basePrice)/4; wizardItems.push({ name:h.fields['Name'], category:h.fields['Category'], rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Hardware/finish upgrade — reverse engineered', active:true }); }
           });
         }
       });
     }
 
-    // Step 7: Installation
+    // Step 7: Installation & removal
     steps.push({
-      title: '🔧 Step 7 — Installation rates',
-      sub: 'Quote install-only prices — no supply, just labour.',
+      title: '🔧 Step 7 — Installation & removal',
+      sub: 'Quote install-only prices — no supply, just labour. Then set your removal rate.',
       content: () => `
         <div class="mqph-hl">
           <strong>Install only (no supply):</strong><br/>
@@ -451,39 +439,44 @@
         </div>
         <div class="mqph-input-row"><label>Install price for 4ft of uppers</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
         <div class="mqph-input-row"><label>Install price for 4ft of bases</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-        <div id="mqph-r-install" class="mqph-result"></div>`,
+        <div id="mqph-r-install" class="mqph-result"></div>
+        <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
+        <div class="mqph-input-row"><label>Cabinet removal & disposal rate (per lin ft)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00"/></div>
+        <p style="font-size:12px;color:#9ca3af;margin-top:-8px;margin-bottom:1rem">What you charge per linear foot to remove and dispose of existing cabinets.</p>`,
       skipLabel: 'Skip — supply only shop',
       nextLabel: 'Next →',
       onNext: () => {
         const u = parseFloat(document.getElementById('mqph-inst-u')?.value||0);
         const b = parseFloat(document.getElementById('mqph-inst-b')?.value||0);
+        const r = parseFloat(document.getElementById('mqph-removal')?.value||0);
         if (u>0) wizardItems.push({ name:'Install — uppers', category:'install', rate:Math.round((u/4)*100)/100, unit:'per lin ft', description:'Upper install rate — reverse engineered', active:true });
         if (b>0) wizardItems.push({ name:'Install — bases', category:'install', rate:Math.round((b/4)*100)/100, unit:'per lin ft', description:'Base install rate — reverse engineered', active:true });
+        if (r>0) wizardItems.push({ name:'Cabinet removal', category:'install', rate:r, unit:'per lin ft', description:'Remove & dispose existing cabinets', active:true });
       }
     });
 
-    // Step 8: Other rates
+    // Step 8: Travel & tax
     steps.push({
-      title: '📋 Step 8 — Travel, removal & tax',
-      sub: 'A few more rates to round out your pricing.',
+      title: '🚗 Step 8 — Travel zones & tax',
+      sub: 'Set your travel surcharges and tax rate.',
       content: () => `
-        <div class="mqph-input-row"><label>Cabinet removal & disposal (per lin ft)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00"/></div>
         <div class="mqph-input-row"><label>Local zone radius</label><input type="number" id="mqph-zone-r" placeholder="15" style="width:130px;text-align:right"/><span class="mqph-pfx">km</span></div>
-        <div class="mqph-input-row"><label>Zone 2 surcharge (flat)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone2" placeholder="0.00"/></div>
-        <div class="mqph-input-row"><label>Zone 3 surcharge (flat)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone3" placeholder="0.00"/></div>
-        <div class="mqph-input-row"><label>Zone 4 surcharge (flat)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone4" placeholder="0.00"/></div>
+        <p style="font-size:12px;color:#9ca3af;margin-top:-8px;margin-bottom:1rem">Jobs within this distance = no travel surcharge.</p>
+        <div class="mqph-input-row"><label>Zone 2 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone2" placeholder="0.00"/></div>
+        <div class="mqph-input-row"><label>Zone 3 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone3" placeholder="0.00"/></div>
+        <div class="mqph-input-row"><label>Zone 4 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone4" placeholder="0.00"/></div>
+        <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
         <div class="mqph-input-row"><label>Tax rate</label><input type="number" id="mqph-tax" placeholder="5" style="width:130px;text-align:right"/><span class="mqph-pfx">%</span></div>`,
       skipLabel: 'Skip',
       nextLabel: 'Finish setup →',
       onNext: () => {
         const gn = id => parseFloat(document.getElementById(id)?.value||0);
-        const r=gn('mqph-removal'),zr=gn('mqph-zone-r'),z2=gn('mqph-zone2'),z3=gn('mqph-zone3'),z4=gn('mqph-zone4'),tax=gn('mqph-tax');
-        if (r>0)  wizardItems.push({ name:'Cabinet removal',   category:'other',  rate:r,  unit:'per lin ft', description:'Remove & dispose existing cabinets', active:true });
-        if (zr>0) wizardItems.push({ name:'Local zone radius', category:'zone',   rate:zr, unit:'km',         description:'Within this distance = no travel surcharge', active:true });
-        if (z2>0) wizardItems.push({ name:'Zone 2 surcharge',  category:'zone',   rate:z2, unit:'flat',        description:'Zone 2 travel surcharge', active:true });
-        if (z3>0) wizardItems.push({ name:'Zone 3 surcharge',  category:'zone',   rate:z3, unit:'flat',        description:'Zone 3 travel surcharge', active:true });
-        if (z4>0) wizardItems.push({ name:'Zone 4 surcharge',  category:'zone',   rate:z4, unit:'flat',        description:'Zone 4 travel surcharge', active:true });
-        if (tax>0) wizardItems.push({ name:'Tax rate',         category:'tax',    rate:tax,unit:'%',           description:'Applied to cabinet subtotal', active:true });
+        const zr=gn('mqph-zone-r'),z2=gn('mqph-zone2'),z3=gn('mqph-zone3'),z4=gn('mqph-zone4'),tax=gn('mqph-tax');
+        if (zr>0) wizardItems.push({ name:'Local zone radius', category:'zone', rate:zr, unit:'km', description:'Within this distance = no travel surcharge', active:true });
+        if (z2>0) wizardItems.push({ name:'Zone 2 surcharge', category:'zone', rate:z2, unit:'flat', description:'Zone 2 travel surcharge', active:true });
+        if (z3>0) wizardItems.push({ name:'Zone 3 surcharge', category:'zone', rate:z3, unit:'flat', description:'Zone 3 travel surcharge', active:true });
+        if (z4>0) wizardItems.push({ name:'Zone 4 surcharge', category:'zone', rate:z4, unit:'flat', description:'Zone 4 travel surcharge', active:true });
+        if (tax>0) wizardItems.push({ name:'Tax rate', category:'tax', rate:tax, unit:'%', description:'Applied to cabinet subtotal', active:true });
       }
     });
 
@@ -564,16 +557,15 @@
     const container = document.getElementById('mq-pricing-helper-v2');
     if (container) container.innerHTML = '<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Saving your pricing...</div>';
 
-    // Only delete pricing rate items (keep material/door/hardware name items)
-    const rateCategories = ['install','zone','tax','other'];
-    const toDelete = lineItems.filter(r => rateCategories.includes(r.fields['Category']));
+    // Delete old rate-only categories
+    const rateCategories = ['zone','tax'];
+    const toDelete = lineItems.filter(r => r.fields && rateCategories.includes(r.fields['Category']));
     for (const r of toDelete) { await atDelete(LINE_ITEMS_TABLE, r.id); }
 
-    // Now update rates on existing name items, and create new rate items
+    // Update rates on existing items, create new ones
     for (let i=0; i<wizardItems.length; i++) {
       const item = wizardItems[i];
-      // Try to find existing item with same name and update its rate
-      const existing = lineItems.find(r => r.fields['Name']===item.name && !rateCategories.includes(r.fields['Category']));
+      const existing = lineItems.find(r => r.fields && r.fields['Name']===item.name && !rateCategories.includes(r.fields['Category']));
       if (existing) {
         await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate': item.rate, 'Unit': item.unit, 'Description': item.description, 'Active': true });
       } else {
@@ -616,8 +608,8 @@
   // ============================================================
   function buildEditorHTML() {
     const groups = {};
-    lineItems.forEach(r => { const c=r.fields['Category']||'other'; if(!groups[c]) groups[c]=[]; groups[c].push(r); });
-    const hasItems = lineItems.length>0;
+    lineItems.filter(r=>r.fields).forEach(r => { const c=r.fields['Category']||'other'; if(!groups[c]) groups[c]=[]; groups[c].push(r); });
+    const hasItems = lineItems.filter(r=>r.fields).length > 0;
 
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
@@ -695,19 +687,19 @@
   }
 
   window.mqphStartItemSetup = async function() {
-    // Pre-populate hinges and install if not already there
-   const hasHinge = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='hinge');
-const hasInstall = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='install');
+    const hasHinge   = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='hinge');
+    const hasInstall = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='install');
+
     if (!hasHinge) {
       for (let i=0; i<DEFAULT_HINGES.length; i++) {
         const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':DEFAULT_HINGES[i], 'Category':'hinge', 'Rate':0, 'Unit':'per lin ft upcharge', 'Active':true, 'Sort order':i+1 });
-        lineItems.push(rec);
+        if (rec&&rec.id) lineItems.push(rec);
       }
     }
     if (!hasInstall) {
       for (let i=0; i<DEFAULT_INSTALL.length; i++) {
         const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':DEFAULT_INSTALL[i].name, 'Category':'install', 'Rate':0, 'Unit':DEFAULT_INSTALL[i].unit, 'Description':DEFAULT_INSTALL[i].description, 'Active':true, 'Sort order':i+1 });
-        lineItems.push(rec);
+        if (rec&&rec.id) lineItems.push(rec);
       }
     }
     const container = document.getElementById('mq-pricing-helper-v2');
@@ -824,15 +816,18 @@ const hasInstall = lineItems.filter(r=>r.fields).some(r => r.fields['Category']=
   async function loadAndRender() {
     const container = document.getElementById('mq-pricing-helper-v2');
     if (!container) return;
-    lineItems = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._recordId}", ARRAYJOIN({shop}))`);
+    const recs = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._recordId}", ARRAYJOIN({shop}))`);
+    lineItems = recs.filter(r => r.fields);
     container.innerHTML = buildEditorHTML();
   }
+
+  // expose for dashboard buttons
+  window.loadAndRender = loadAndRender;
 
   // ============================================================
   // INIT
   // ============================================================
-
-window.mqph2Init = function(passedShopRecord, passedPricingRecord) {
+  window.mqph2Init = function(passedShopRecord, passedPricingRecord) {
     if (!passedShopRecord) return;
     shopRecord = { ...passedShopRecord, _recordId:passedShopRecord.id, _baseId:'app4zrMlVLwF2xn4h', _token:'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325', _pricingTable:'tblu6AYZs8h7SIaQl' };
     pricingRecord = passedPricingRecord;
