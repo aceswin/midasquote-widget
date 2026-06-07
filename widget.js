@@ -1,30 +1,21 @@
 /*
- * MidasQuote Widget Embed Script v1.0
- * Replace the values in CONFIG with your real Airtable credentials
- * DO NOT share this file publicly with your credentials inside it
- * Host this file on Cloudflare Pages or similar CDN
+ * MidasQuote Widget Embed Script v2.0
+ * Dynamic pricing — pulls materials, doors, hardware from Line Items table
  */
 
 (function() {
 
-  // ============================================================
-  // CONFIG — replace these with your real values
-  // Keep this file private — treat these like passwords
-  // ============================================================
   const CONFIG = {
-    AIRTABLE_TOKEN:     'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
-    BASE_ID:            'app4zrMlVLwF2xn4h',
-    SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
-    PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
-    SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
-    LEADS_TABLE:        'tblPcoTI8zCCHLICi',
-    RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
-    EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
-FROM_EMAIL:         'quotes@midasquote.com',
+    AIRTABLE_TOKEN: 'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
+    BASE_ID:        'app4zrMlVLwF2xn4h',
+    SHOPS_TABLE:    'tbl8PoF2Mu3sAdlMs',
+    PRICING_TABLE:  'tblu6AYZs8h7SIaQl',
+    SPECIALTY_TABLE:'tbloaXeEM5K7TOZCD',
+    LEADS_TABLE:    'tblPcoTI8zCCHLICi',
+    LINE_ITEMS_TABLE:'tblCkJsJ2OC6DgXok',
+    EMAIL_WORKER:   'https://midasquote-email.jordan132001.workers.dev',
+    FROM_EMAIL:     'quotes@midasquote.com',
   };
-  // ============================================================
-
-
 
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
@@ -34,7 +25,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
   const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
   async function atGet(table, formula) {
-    const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
+    const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
     const res = await fetch(url, { headers: AT_HEADS });
     const data = await res.json();
     return data.records || [];
@@ -58,10 +49,30 @@ FROM_EMAIL:         'quotes@midasquote.com',
     const shop = shopRecord.fields;
     shop._recordId = shopRecord.id;
 
-    const pricing = await atGet(CONFIG.PRICING_TABLE,
-      `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
+    // Load old pricing table (for countertops + fallback)
+    const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
     const p = pricing.length ? pricing[0].fields : {};
 
+    // Load new dynamic line items
+    const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE,
+      `AND({Shop} = "${shopRecord.id}", {Active})`);
+    const lineItems = lineItemRecords
+      .sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0))
+      .map(r => r.fields);
+
+    // Extract by category
+    const materials   = lineItems.filter(i => i['Category'] === 'material');
+    const doorStyles  = lineItems.filter(i => i['Category'] === 'door');
+    const hardware    = lineItems.filter(i => i['Category'] === 'hardware');
+    const installItems= lineItems.filter(i => i['Category'] === 'install');
+    const zones       = lineItems.filter(i => i['Category'] === 'zone');
+    const taxItems    = lineItems.filter(i => i['Category'] === 'tax');
+    const otherItems  = lineItems.filter(i => i['Category'] === 'other');
+
+    // Fallback to old pricing if no line items configured yet
+    const hasDynamicPricing = materials.length > 0;
+
+    // Load specialty items
     const specRecords = await atGet(CONFIG.SPECIALTY_TABLE,
       `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
     const specs = specRecords
@@ -73,13 +84,17 @@ FROM_EMAIL:         'quotes@midasquote.com',
         perFt: r.fields['Per linear foot'] || false,
       }));
 
-    return { shop, pricing: p, specs };
+    return {
+      shop, pricing: p, specs,
+      lineItems: { materials, doorStyles, hardware, installItems, zones, taxItems, otherItems },
+      hasDynamicPricing,
+    };
   }
 
   // ============================================================
   // EMAIL & LEAD SAVING
   // ============================================================
-async function saveLead(data, lead, quoteType, low, high, lines) {
+  async function saveLead(data, lead, quoteType, low, high, lines) {
     const { shop } = data;
     try {
       await atCreate(CONFIG.LEADS_TABLE, {
@@ -151,7 +166,7 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
     }
   }
 
- async function sendEmail(to, subject, html) {
+  async function sendEmail(to, subject, html) {
     if (!CONFIG.EMAIL_WORKER) return;
     try {
       await fetch(CONFIG.EMAIL_WORKER, {
@@ -160,56 +175,6 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
         body: JSON.stringify({ to, subject, html })
       });
     } catch (e) { console.error('MidasQuote: Email failed', e); }
-  }
-
-  function buildShopEmail(shop, lead, quoteType, low, high, lines) {
-    const lineRows = lines.map(l => `
-      <tr>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">$${Math.round(l.cost || 0).toLocaleString()}</td>
-      </tr>`).join('');
-    return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-      <h2 style="color:#1a1a1a;margin-bottom:4px">New ${type} quote lead</h2>
-      <p style="color:#666;margin-bottom:16px">Someone just completed a quote on your MidasQuote widget.</p>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;font-weight:500" colspan="2">Customer details</td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee;font-weight:500">${lead.name}</td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email}</td></tr>
-        <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone}</td></tr>
-      </table>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;font-weight:500" colspan="2">Quote breakdown</td></tr>
-        ${lineRows}
-      </table>
-      <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-        <div style="font-size:13px;color:#666;margin-bottom:4px">Estimated range</div>
-        <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
-      </div>
-      <p style="color:#666;font-size:12px">This lead has been saved to your MidasQuote dashboard.</p>
-    </div>`;
-  }
-
-  function buildCustomerEmail(shop, lead, quoteType, low, high, lines) {
-    const lineRows = (lines || []).filter(l => l && l.label && l.cost !== undefined).map(l => `
-      <tr>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">$${Math.round(l.cost || 0).toLocaleString()}</td>
-      </tr>`).join('');
-    return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-      <h2 style="color:#1a1a1a;margin-bottom:4px">Your ${type} quote from ${shop['Shop name']}</h2>
-      <p style="color:#666;margin-bottom:16px">Hi ${lead.name}, here's a full breakdown of your estimate.</p>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-        <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;font-weight:500" colspan="2">Quote breakdown</td></tr>
-        ${lineRows}
-      </table>
-      <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-        <div style="font-size:13px;color:#666;margin-bottom:4px">Your estimated range</div>
-        <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
-      </div>
-      <p style="color:#666;font-size:13px">${shop['Disclaimer text'] || 'This is a ballpark estimate only. Contact us for a full quote.'}</p>
-      <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
-      <p style="color:#666;font-size:13px"><strong>${shop['Shop name']}</strong><br/>${shop['Phone'] || ''}<br/>${shop['Website'] || ''}</p>
-    </div>`;
   }
 
   // ============================================================
@@ -229,7 +194,6 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       #midasquote-widget .mq-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;text-align:center;font-family:inherit}
       #midasquote-widget .mq-tab:hover{border-color:#9ca3af;color:#111}
       #midasquote-widget .mq-tab.active{background:${brandColor};color:#fff;border-color:${brandColor}}
-      #midasquote-widget .mq-tab.mq-tab-both.active{background:linear-gradient(135deg,${brandColor},#378ADD);border-color:transparent}
       #midasquote-widget .mq-tab-icon{font-size:18px;line-height:1;flex-shrink:0}
       #midasquote-widget .mq-tab-label{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
       #midasquote-widget .mq-tab-title{font-size:13px;font-weight:500;line-height:1}
@@ -281,10 +245,10 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       #midasquote-widget .mq-cta-row button:hover{background:#f9fafb}
       #midasquote-widget .mq-pri{background:${brandColor}!important;color:#fff!important;border-color:${brandColor}!important}
       #midasquote-widget .mq-pri:hover{opacity:0.88!important;background:${brandColor}!important}
-     #midasquote-widget .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:flex-end;justify-content:center;padding:0}
-#midasquote-widget .mq-overlay.show{display:flex}
-#midasquote-widget .mq-modal{background:#f8faff;border-radius:12px 12px 0 0;padding:1.5rem;width:100%;max-width:420px;box-shadow:0 -4px 24px rgba(0,0,0,0.15)}
-@media(min-width:600px){#midasquote-widget .mq-overlay{align-items:bottom;padding:1rem}#midasquote-widget .mq-modal{border-radius:12px;width:90%}}
+      #midasquote-widget .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:flex-end;justify-content:center;padding:0}
+      #midasquote-widget .mq-overlay.show{display:flex}
+      #midasquote-widget .mq-modal{background:#f8faff;border-radius:12px 12px 0 0;padding:1.5rem;width:100%;max-width:420px;box-shadow:0 -4px 24px rgba(0,0,0,0.15)}
+      @media(min-width:600px){#midasquote-widget .mq-overlay{align-items:center;padding:1rem}#midasquote-widget .mq-modal{border-radius:12px;width:90%}}
       #midasquote-widget .mq-modal-title{font-size:16px;font-weight:600;color:#111;margin-bottom:4px}
       #midasquote-widget .mq-modal-sub{font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.5}
       #midasquote-widget .mq-modal-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
@@ -316,25 +280,47 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:12px;color:#6b7280;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${brandColor};text-align:right}
+      #midasquote-widget .mq-no-pricing{text-align:center;padding:2rem;color:#6b7280;font-size:13px;background:#f9fafb;border-radius:8px;margin-bottom:1rem}
     `;
     document.head.appendChild(s);
   }
 
   // ============================================================
-  // BUILD HTML HELPERS
+  // BUILD DYNAMIC SELECT OPTIONS
   // ============================================================
-  function matOpts() {
+  function matOpts(materials, pricing, hasDynamic) {
+    if (hasDynamic && materials.length > 0) {
+      return materials.map((m, i) => `<option value="dyn_${i}">${m['Name']}</option>`).join('');
+    }
+    // Fallback to hardcoded
     return `<option value="melamine">Melamine</option>
       <option value="plywood">Plywood</option>
       <option value="mdf">Painted MDF</option>
       <option value="solid">Solid wood</option>`;
   }
 
-  function doorOpts() {
+  function doorOpts(doorStyles, hasDynamic) {
+    if (hasDynamic && doorStyles.length > 0) {
+      return doorStyles.map((d, i) => `<option value="dyn_${i}">${d['Name']}</option>`).join('');
+    }
     return `<option value="slab">Slab (flat)</option>
       <option value="shaker">Shaker</option>
       <option value="raised">Raised panel</option>
       <option value="glass">Glass inserts</option>`;
+  }
+
+  function hardwareOpts(hardware, hasDynamic) {
+    if (!hasDynamic || !hardware.length) return '';
+    return hardware.map((h, i) =>
+      `<div class="mq-spec-item" id="mq-hw-{PREFIX}-${i}">
+        <span class="mq-spec-name" onclick="mqToggleHW('{PREFIX}',${i})">${h['Name']}</span>
+        <div class="mq-qty-ctrl">
+          <button class="mq-qty-btn" onclick="mqAdjHW('{PREFIX}',${i},-1)">−</button>
+          <span class="mq-qty-val" id="mq-hwqty-{PREFIX}-${i}">0</span>
+          <button class="mq-qty-btn" onclick="mqAdjHW('{PREFIX}',${i},1)">+</button>
+        </div>
+      </div>`
+    ).join('');
   }
 
   function ctMatOpts() {
@@ -357,20 +343,32 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       </div>`).join('');
   }
 
-  function cabinetForm(prefix, specs, pricing) {
+  function cabinetForm(prefix, specs, data) {
+    const { lineItems, pricing, hasDynamicPricing } = data;
+    const mOpts = matOpts(lineItems.materials, pricing, hasDynamicPricing);
+    const dOpts = doorOpts(lineItems.doorStyles, hasDynamicPricing);
+    const hwHTML = hasDynamicPricing && lineItems.hardware.length
+      ? hardwareOpts(lineItems.hardware, hasDynamicPricing).replace(/\{PREFIX\}/g, prefix)
+      : '';
+
+    // Build install options
+    const hasInstallU = lineItems.installItems.some(i => i['Name']?.toLowerCase().includes('upper'));
+    const hasInstallB = lineItems.installItems.some(i => i['Name']?.toLowerCase().includes('base'));
+    const hasInstall = hasInstallU || hasInstallB || !hasDynamicPricing;
+
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Room type</label>
             <select id="mq-${prefix}-room"><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option><option value="laundry">Laundry room</option><option value="garage">Garage</option><option value="office">Home office</option><option value="other">Other</option></select></div>
-          <div class="mq-field"><label class="mq-label">Supply + install?</label>
-            <select id="mq-${prefix}-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
+          ${hasInstall ? `<div class="mq-field"><label class="mq-label">Supply + install?</label>
+            <select id="mq-${prefix}-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>` : ''}
         </div>
       </div>
       <div class="mq-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
-        <p class="mq-hint" style="margin-bottom:1rem">Uppers and bases measured separately. A 10ft wall with both = 10ft uppers + 10ft bases.</p>
+        <p class="mq-hint" style="margin-bottom:1rem">Uppers and bases measured separately.</p>
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60"/></div>
@@ -383,8 +381,8 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
         </div>
         <div id="mq-${prefix}-shared">
           <div class="mq-grid3">
-            <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-door">${doorOpts()}</select></div>
-            <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-mat">${matOpts()}</select></div>
+            <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-door">${dOpts}</select></div>
+            <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-mat">${mOpts}</select></div>
             <div class="mq-field"><label class="mq-label">Finish</label>
               <select id="mq-${prefix}-fin"><option value="natural">Natural / stain</option><option value="painted">Painted</option><option value="two-tone">Two-tone</option></select></div>
           </div>
@@ -392,67 +390,53 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
         <div id="mq-${prefix}-diff" style="display:none">
           <div class="mq-sub-sec"><p class="mq-sub-title">Upper cabinets</p>
             <div class="mq-grid3">
-              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-u-door">${doorOpts()}</select></div>
-              <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-u-mat">${matOpts()}</select></div>
+              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-u-door">${dOpts}</select></div>
+              <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-u-mat">${mOpts}</select></div>
               <div class="mq-field"><label class="mq-label">Finish</label><select id="mq-${prefix}-u-fin"><option value="natural">Natural / stain</option><option value="painted">Painted</option><option value="two-tone">Two-tone</option></select></div>
             </div>
           </div>
           <div class="mq-sub-sec" style="margin-top:8px"><p class="mq-sub-title">Base cabinets</p>
             <div class="mq-grid3">
-              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-b-door">${doorOpts()}</select></div>
-              <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-b-mat">${matOpts()}</select></div>
+              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-b-door">${dOpts}</select></div>
+              <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-b-mat">${mOpts}</select></div>
               <div class="mq-field"><label class="mq-label">Finish</label><select id="mq-${prefix}-b-fin"><option value="natural">Natural / stain</option><option value="painted">Painted</option><option value="two-tone">Two-tone</option></select></div>
             </div>
           </div>
         </div>
       </div>
-      <div class="mq-sec">
-        <p class="mq-sec-title">Hardware & drawers</p>
-        <div class="mq-grid3">
-          <div class="mq-field"><label class="mq-label">Door hinges</label>
-            <select id="mq-${prefix}-hinges"><option value="regular">Regular hinges</option><option value="softclose">Soft-close hinges</option></select></div>
-          <div class="mq-field"><label class="mq-label">Drawer slides</label>
-            <select id="mq-${prefix}-slides"><option value="softclose">Soft-close slides</option><option value="regular">Regular slides</option></select></div>
-          <div class="mq-field"><label class="mq-label">Drawer box material</label>
-            <select id="mq-${prefix}-dbox"><option value="melamine">White melamine</option><option value="birch">Prefinished birch</option></select></div>
-        </div>
-      </div>
+      ${hwHTML ? `<div class="mq-sec">
+        <p class="mq-sec-title">Hardware upgrades — select and set quantity</p>
+        <div class="mq-spec-grid" id="mq-${prefix}-hw-grid">${hwHTML}</div>
+      </div>` : ''}
       <div class="mq-sec">
         <p class="mq-sec-title">Specialty items — select and set quantity</p>
         <div class="mq-spec-grid" id="mq-${prefix}-spec-grid">${specHTML(specs, prefix)}</div>
       </div>`;
   }
 
-  function countertopForm(prefix, pricing) {
-    return `
-      <div class="mq-sec">
-        <p class="mq-sec-title">Countertop options</p>
-        <div class="mq-grid2">
-          <div class="mq-field"><label class="mq-label">Supply + install?</label>
-            <select id="mq-${prefix}-ct-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
-        </div>
-      </div>
-      <div class="mq-sec">
-        <p class="mq-sec-title">Surfaces</p>
-        <div id="mq-${prefix}-ct-surfaces"></div>
-        <button class="mq-add-surface-btn" onclick="mqAddSurface('${prefix}')">+ Add another surface</button>
-      </div>`;
-  }
+  function removalTravelForm(prefix, data) {
+    const { lineItems, pricing, hasDynamicPricing } = data;
+    const hasRemoval = !hasDynamicPricing || lineItems.otherItems.some(i => i['Name']?.toLowerCase().includes('removal'));
+    const zoneItems = lineItems.zones;
+    const hasZones = !hasDynamicPricing || zoneItems.length > 0;
+    const localRadius = hasDynamicPricing
+      ? (zoneItems.find(z => z['Name']?.toLowerCase().includes('local'))?.['Rate'] || 15)
+      : (pricing['Local zone radius'] || 15);
 
-  function removalTravelForm(prefix, pricing) {
+    if (!hasRemoval && !hasZones) return '';
+
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Removal & travel</p>
         <div class="mq-grid2">
-          <div class="mq-field"><label class="mq-label">Remove existing cabinets?</label>
-            <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
-          <div class="mq-field"><label class="mq-label">Job location</label>
+          ${hasRemoval ? `<div class="mq-field"><label class="mq-label">Remove existing cabinets?</label>
+            <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>` : ''}
+          ${hasZones ? `<div class="mq-field"><label class="mq-label">Job location</label>
             <select id="mq-${prefix}-zone">
-              <option value="local">Local (within ${pricing['Local zone radius'] || 15}km)</option>
-              <option value="zone2">Zone 2</option>
-              <option value="zone3">Zone 3</option>
-              <option value="zone4">Zone 4 (100km+)</option>
-            </select></div>
+              <option value="local">Local (within ${localRadius}km)</option>
+              ${zoneItems.filter(z => !z['Name']?.toLowerCase().includes('local')).map((z, i) => `<option value="dyn_zone_${i}">${z['Name']}</option>`).join('')}
+              ${!hasDynamicPricing ? '<option value="zone2">Zone 2</option><option value="zone3">Zone 3</option><option value="zone4">Zone 4 (100km+)</option>' : ''}
+            </select></div>` : ''}
         </div>
       </div>`;
   }
@@ -460,7 +444,7 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
   // ============================================================
   // BUILD FULL WIDGET HTML
   // ============================================================
-  function buildWidgetHTML(shop, specs, pricing) {
+  function buildWidgetHTML(shop, specs, data) {
     const logoHTML = shop['Logo URL']
       ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>`
       : `<span>${(shop['Shop name'] || 'S').charAt(0)}</span>`;
@@ -493,8 +477,8 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
 
       <!-- CABINET TAB -->
       <div class="mq-tab-content active" id="mq-tab-cabinets">
-        ${cabinetForm('c', specs, pricing)}
-        ${removalTravelForm('c', pricing)}
+        ${cabinetForm('c', specs, data)}
+        ${removalTravelForm('c', data)}
         <button class="mq-calc-btn" id="mq-c-calc-btn" onclick="mqCalcCabinets()">Calculate cabinet estimate</button>
         <div class="mq-loading" id="mq-c-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-c-result">
@@ -535,7 +519,7 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
             <div><div class="mq-res-range-lbl">Estimated range</div><div class="mq-res-range" id="mq-ct-res-range">—</div></div>
           </div>
           <ul class="mq-line-items" id="mq-ct-line-items"></ul>
-          <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating. Contact us to book.</div>
+          <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
           <div class="mq-cta-row">
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
@@ -550,29 +534,35 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
           <div class="mq-both-divider-label">🪵 Cabinet details</div>
           <div class="mq-both-divider-line"></div>
         </div>
-        ${cabinetForm('b', specs, pricing)}
-
+        ${cabinetForm('b', specs, data)}
         <div class="mq-both-divider">
           <div class="mq-both-divider-line"></div>
           <div class="mq-both-divider-label">🪨 Countertop details</div>
           <div class="mq-both-divider-line"></div>
         </div>
-        ${countertopForm('b', pricing)}
-        ${removalTravelForm('b', pricing)}
-
-        <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">
-          Calculate full project estimate ✨
-        </button>
+        <div class="mq-sec">
+          <p class="mq-sec-title">Project options</p>
+          <div class="mq-grid2">
+            <div class="mq-field"><label class="mq-label">Countertop supply + install?</label>
+              <select id="mq-b-ct-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
+          </div>
+        </div>
+        <div class="mq-sec">
+          <p class="mq-sec-title">Surfaces</p>
+          <div id="mq-b-ct-surfaces"></div>
+          <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
+        </div>
+        ${removalTravelForm('b', data)}
+        <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
         <div class="mq-loading" id="mq-b-loading">Building your full project estimate...</div>
-
         <div class="mq-combined-result" id="mq-b-result">
           <div class="mq-combined-title">✨ Full project estimate</div>
-          <div class="mq-combined-section" id="mq-b-cab-section">
+          <div class="mq-combined-section">
             <div class="mq-combined-section-title">🪵 Cabinets</div>
             <div id="mq-b-cab-rows"></div>
             <div class="mq-combined-subtotal"><span>Cabinet subtotal</span><span id="mq-b-cab-sub">—</span></div>
           </div>
-          <div class="mq-combined-section" id="mq-b-ct-section">
+          <div class="mq-combined-section">
             <div class="mq-combined-section-title">🪨 Countertops</div>
             <div id="mq-b-ct-rows"></div>
             <div class="mq-combined-subtotal"><span>Countertop subtotal</span><span id="mq-b-ct-sub">—</span></div>
@@ -612,26 +602,56 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
   // WIRE ALL LOGIC
   // ============================================================
   function wireWidget(data) {
-    const { shop, pricing, specs } = data;
+    const { shop, pricing, specs, lineItems, hasDynamicPricing } = data;
 
-    // Pricing tables
-    const MAT = {
-      melamine: pricing['Melamine price']    || 280,
-      plywood:  pricing['Plywood price']     || 380,
-      mdf:      pricing['MDF price']         || 350,
-      solid:    pricing['Solid wood price']  || 550,
-    };
-    const DOOR = {
-      slab:   pricing['Slab multiplier']   || 0,
-      shaker: pricing['Shaker multiplier'] || 0,
-      raised: pricing['Raised multiplier'] || 0,
-      glass:  pricing['Glass multiplier']  || 0,
-    };
-    const FIN = {
-      natural:    pricing['Natural finish add']    || 0,
-      painted:    pricing['Painted finish add']    || 0,
-      'two-tone': pricing['Two tone finish add']   || 0,
-    };
+    // Build pricing lookup from dynamic line items
+    function buildPricingFromLineItems() {
+      const mat = {};
+      const door = {};
+      const hw = {};
+      let installU = 0, installB = 0;
+      let removalRate = 0, taxRate = 0;
+      const zones = {};
+
+      if (hasDynamicPricing) {
+        lineItems.materials.forEach((m, i) => { mat[`dyn_${i}`] = { label: m['Name'], rate: m['Rate'] || 0 }; });
+        lineItems.doorStyles.forEach((d, i) => { door[`dyn_${i}`] = { label: d['Name'], rate: d['Rate'] || 0 }; });
+        lineItems.hardware.forEach((h, i) => { hw[`dyn_${i}`] = { label: h['Name'], rate: h['Rate'] || 0 }; });
+        const iu = lineItems.installItems.find(i => i['Name']?.toLowerCase().includes('upper'));
+        const ib = lineItems.installItems.find(i => i['Name']?.toLowerCase().includes('base'));
+        installU = iu ? iu['Rate'] || 0 : 0;
+        installB = ib ? ib['Rate'] || 0 : 0;
+        const rem = lineItems.otherItems.find(i => i['Name']?.toLowerCase().includes('removal'));
+        removalRate = rem ? rem['Rate'] || 0 : 0;
+        const tax = lineItems.taxItems[0];
+        taxRate = tax ? (tax['Rate'] || 0) / 100 : 0;
+        lineItems.zones.forEach((z, i) => {
+          if (!z['Name']?.toLowerCase().includes('local')) {
+            zones[`dyn_zone_${i}`] = z['Rate'] || 0;
+          }
+        });
+      } else {
+        // Fallback to old pricing table
+        mat['melamine'] = { label: 'Melamine',    rate: pricing['Melamine price']    || 280 };
+        mat['plywood']  = { label: 'Plywood',      rate: pricing['Plywood price']     || 380 };
+        mat['mdf']      = { label: 'Painted MDF',  rate: pricing['MDF price']         || 350 };
+        mat['solid']    = { label: 'Solid wood',   rate: pricing['Solid wood price']  || 550 };
+        door['slab']    = { label: 'Slab',         rate: pricing['Slab multiplier']   || 0 };
+        door['shaker']  = { label: 'Shaker',       rate: pricing['Shaker multiplier'] || 0 };
+        door['raised']  = { label: 'Raised panel', rate: pricing['Raised multiplier'] || 0 };
+        door['glass']   = { label: 'Glass',        rate: pricing['Glass multiplier']  || 0 };
+        installU = pricing['Install rate uppers'] || 85;
+        installB = installU; // fallback — same rate
+        removalRate = pricing['Removal rate'] || 18;
+        taxRate = (pricing['Tax rate'] || 5) / 100;
+        zones['zone2'] = pricing['Zone 2 surcharge'] || 320;
+        zones['zone3'] = pricing['Zone 3 surcharge'] || 680;
+        zones['zone4'] = pricing['Zone 4 surcharge'] || 1100;
+      }
+
+      return { mat, door, hw, installU, installB, removalRate, taxRate, zones };
+    }
+
     const CT_MAT = {
       lam:       { label:'Laminate',                    ps:pricing['Lam supply']       ||18,  pi:pricing['Lam install']       ||12 },
       ss_econ:   { label:'Solid surface — Economy',     ps:pricing['SS econ supply']   ||38,  pi:pricing['SS econ install']   ||18 },
@@ -644,21 +664,16 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       marble:    { label:'Marble',                      ps:pricing['Marble supply']    ||110, pi:pricing['Marble install']    ||30 },
       butcher:   { label:'Butcher block',               ps:pricing['Butcher supply']   ||42,  pi:pricing['Butcher install']   ||18 },
     };
-    const EDGE  = { eased:pricing['Eased edge']||0, bevel:pricing['Bevel edge']||4, bullnose:pricing['Bullnose edge']||8, ogee:pricing['Ogee edge']||14, waterfall:pricing['Waterfall edge']||28 };
-    const ZONE  = { local:0, zone2:pricing['Zone 2 surcharge']||320, zone3:pricing['Zone 3 surcharge']||680, zone4:pricing['Zone 4 surcharge']||1100 };
-    const iRate = pricing['Install rate uppers'] || 85;
-    const rRate = pricing['Removal rate']        || 18;
-    const hAdd  = pricing['Soft close hinges']   || 12;
-    const bAdd  = pricing['Birch drawer box']    || 15;
-    const taxR  = (pricing['Tax rate'] || 5) / 100;
+
     const ctDepth = pricing['Default CT depth'] || 25.5;
     const bsRate  = pricing['Backsplash rate']   || 12;
-    const sinkR   = pricing['Sink cutout']        || 180;
-    const cookR   = pricing['Cooktop cutout']     || 220;
+    const sinkR   = pricing['Sink cutout']       || 180;
+    const cookR   = pricing['Cooktop cutout']    || 220;
+    const EDGE    = { eased:0, bevel:4, bullnose:8, ogee:14, waterfall:28 };
 
-    // State — separate qty arrays for each tab prefix
     const diffOn  = {};
     const specQty = {};
+    const hwQty   = {};
     const surfCounts = {};
     const surfs = {};
     let pendingCb = null;
@@ -666,6 +681,7 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
     ['c','ct','b'].forEach(p => {
       diffOn[p] = false;
       specQty[p] = new Array(specs.length).fill(0);
+      hwQty[p] = new Array(lineItems.hardware.length).fill(0);
       surfCounts[p] = 0;
       surfs[p] = {};
     });
@@ -674,23 +690,20 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
     function gv(id) { const e = document.getElementById(id); return e ? e.value : ''; }
     function gn(id, d = 0) { const v = parseFloat(gv(id)); return isNaN(v) ? d : v; }
 
-    // ---- TABS ----
-    window.mqSwitchTab = function (id, el) {
+    window.mqSwitchTab = function(id, el) {
       document.querySelectorAll('.mq-tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.mq-tab').forEach(t => t.classList.remove('active'));
       document.getElementById('mq-tab-' + id).classList.add('active');
       el.classList.add('active');
     };
 
-    // ---- DIFF TOGGLES ----
-    window.mqTogDiff = function (prefix) {
+    window.mqTogDiff = function(prefix) {
       diffOn[prefix] = !diffOn[prefix];
       document.getElementById(`mq-${prefix}-diff-tog`).classList.toggle('on', diffOn[prefix]);
       document.getElementById(`mq-${prefix}-shared`).style.display = diffOn[prefix] ? 'none' : 'block';
       document.getElementById(`mq-${prefix}-diff`).style.display   = diffOn[prefix] ? 'block' : 'none';
     };
 
-    // ---- SPEC ITEMS ----
     window.mqToggleSpec = (prefix, i) => {
       if (specQty[prefix][i] === 0) mqAdjQty(prefix, i, 1);
       else mqAdjQty(prefix, i, -specQty[prefix][i]);
@@ -701,7 +714,18 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       document.getElementById(`mq-sp-${prefix}-${i}`).classList.toggle('on', specQty[prefix][i] > 0);
     };
 
-    // ---- LEAD MODAL ----
+    window.mqToggleHW = (prefix, i) => {
+      if (hwQty[prefix][i] === 0) mqAdjHW(prefix, i, 1);
+      else mqAdjHW(prefix, i, -hwQty[prefix][i]);
+    };
+    window.mqAdjHW = (prefix, i, d) => {
+      hwQty[prefix][i] = Math.max(0, hwQty[prefix][i] + d);
+      const qtyEl = document.getElementById(`mq-hwqty-${prefix}-${i}`);
+      if (qtyEl) qtyEl.textContent = hwQty[prefix][i];
+      const itemEl = document.getElementById(`mq-hw-${prefix}-${i}`);
+      if (itemEl) itemEl.classList.toggle('on', hwQty[prefix][i] > 0);
+    };
+
     window.mqShowLead      = cb => { pendingCb = cb; document.getElementById('mq-lead-overlay').classList.add('show'); };
     window.mqSkipLead      = () => { document.getElementById('mq-lead-overlay').classList.remove('show'); if (pendingCb) { pendingCb(null); pendingCb = null; } };
     window.mqSubmitLead    = async () => {
@@ -711,37 +735,53 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
     };
     window.mqShowConsultModal = () => window.mqShowLead(() => {});
 
-    // ---- CABINET CALCULATION (shared logic) ----
     function calcCabinet(prefix) {
+      const { mat, door, hw, installU, installB, removalRate, taxRate, zones } = buildPricingFromLineItems();
+
       const uFt   = gn(`mq-${prefix}-uft`, 0);
       const bFt   = gn(`mq-${prefix}-bft`, 0);
-      const si    = gv(`mq-${prefix}-si`);
+      const si    = document.getElementById(`mq-${prefix}-si`) ? gv(`mq-${prefix}-si`) : 'supply';
       const hMult = { standard: 1.0, tall: 1.15, mixed: 1.08 }[gv(`mq-${prefix}-ht`)];
-      const ir    = si === 'install' ? iRate : 0;
-      const ha    = gv(`mq-${prefix}-hinges`) === 'softclose' ? hAdd : 0;
-      const ba    = gv(`mq-${prefix}-dbox`)   === 'birch'     ? bAdd : 0;
 
-      let uDoor, uMat, uFin, bDoor, bMat, bFin;
+      let uDoorKey, uMatKey, bDoorKey, bMatKey;
       if (diffOn[prefix]) {
-        uDoor = gv(`mq-${prefix}-u-door`); uMat = gv(`mq-${prefix}-u-mat`); uFin = gv(`mq-${prefix}-u-fin`);
-        bDoor = gv(`mq-${prefix}-b-door`); bMat = gv(`mq-${prefix}-b-mat`); bFin = gv(`mq-${prefix}-b-fin`);
+        uDoorKey = gv(`mq-${prefix}-u-door`); uMatKey = gv(`mq-${prefix}-u-mat`);
+        bDoorKey = gv(`mq-${prefix}-b-door`); bMatKey = gv(`mq-${prefix}-b-mat`);
       } else {
-        uDoor = bDoor = gv(`mq-${prefix}-door`);
-        uMat  = bMat  = gv(`mq-${prefix}-mat`);
-        uFin  = bFin  = gv(`mq-${prefix}-fin`);
+        uDoorKey = bDoorKey = gv(`mq-${prefix}-door`);
+        uMatKey  = bMatKey  = gv(`mq-${prefix}-mat`);
       }
 
-      const uPft = MAT[uMat] * hMult + (DOOR[uDoor] || 0) + (FIN[uFin] || 0) + ha + ba + ir;
-      const bPft = MAT[bMat]          + (DOOR[bDoor] || 0) + (FIN[bFin] || 0) + ha + ba + ir;
+      const uMatRate  = mat[uMatKey]?.rate  || 0;
+      const uDoorRate = door[uDoorKey]?.rate || 0;
+      const bMatRate  = mat[bMatKey]?.rate  || 0;
+      const bDoorRate = door[bDoorKey]?.rate || 0;
+
+      const uInstall = si === 'install' ? installU : 0;
+      const bInstall = si === 'install' ? installB : 0;
+
+      const uPft = uMatRate * hMult + uDoorRate + uInstall;
+      const bPft = bMatRate          + bDoorRate + bInstall;
       const uCost = uFt * uPft;
       const bCost = bFt * bPft;
 
       const lines = [];
-      if (uFt > 0) lines.push({ label: `Upper cabinets (${uFt} lin ft)`, cost: Math.round(uCost) });
-      if (bFt > 0) lines.push({ label: `Base cabinets (${bFt} lin ft)`,  cost: Math.round(bCost) });
+      if (uFt > 0) lines.push({ label: `Upper cabinets — ${mat[uMatKey]?.label || ''} ${door[uDoorKey]?.label || ''} (${uFt} lin ft)`, cost: Math.round(uCost) });
+      if (bFt > 0) lines.push({ label: `Base cabinets — ${mat[bMatKey]?.label || ''} ${door[bDoorKey]?.label || ''} (${bFt} lin ft)`, cost: Math.round(bCost) });
 
-      let specTotal = 0;
+      // Hardware upgrades
+      let hwTotal = 0;
       const totalFt = uFt + bFt;
+      lineItems.hardware.forEach((h, i) => {
+        if (!hwQty[prefix][i]) return;
+        const rate = h['Rate'] || 0;
+        const cost = rate * totalFt * hwQty[prefix][i];
+        hwTotal += cost;
+        lines.push({ label: hwQty[prefix][i] > 1 ? `${h['Name']} × ${hwQty[prefix][i]}` : h['Name'], cost: Math.round(cost) });
+      });
+
+      // Specialty items
+      let specTotal = 0;
       specs.forEach((s, i) => {
         if (!specQty[prefix][i]) return;
         const cost = s.perFt ? s.price * totalFt * specQty[prefix][i] : s.price * specQty[prefix][i];
@@ -749,31 +789,36 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
         lines.push({ label: specQty[prefix][i] > 1 ? `${s.label} × ${specQty[prefix][i]}` : s.label, cost: Math.round(cost) });
       });
 
-      const remCost  = gv(`mq-${prefix}-removal`) === 'yes' ? (uFt + bFt) * rRate : 0;
-      const zoneCost = ZONE[gv(`mq-${prefix}-zone`)] || 0;
-      if (remCost  > 0) lines.push({ label: 'Cabinet removal', cost: Math.round(remCost) });
+      // Removal
+      const remEl = document.getElementById(`mq-${prefix}-removal`);
+      const remCost = remEl && remEl.value === 'yes' ? (uFt + bFt) * removalRate : 0;
+      if (remCost > 0) lines.push({ label: 'Cabinet removal', cost: Math.round(remCost) });
+
+      // Zone
+      const zoneEl = document.getElementById(`mq-${prefix}-zone`);
+      const zoneKey = zoneEl ? zoneEl.value : 'local';
+      const zoneCost = zoneKey !== 'local' ? (zones[zoneKey] || 0) : 0;
       if (zoneCost > 0) lines.push({ label: 'Travel surcharge', cost: zoneCost });
 
-      const sub   = uCost + bCost + specTotal + remCost + zoneCost;
-      const tax   = sub * taxR;
+      const sub   = uCost + bCost + hwTotal + specTotal + remCost + zoneCost;
+      const tax   = sub * taxRate;
       lines.push({ label: 'Subtotal (before tax)', cost: Math.round(sub), bold: true });
-      if (taxR > 0) lines.push({ label: `Est. tax (${Math.round(taxR * 100)}%)`, cost: Math.round(tax) });
+      if (taxRate > 0) lines.push({ label: `Est. tax (${Math.round(taxRate * 100)}%)`, cost: Math.round(tax) });
 
       const total = sub + tax;
       const low   = Math.round(total * 0.9  / 100) * 100;
       const high  = Math.round(total * 1.25 / 100) * 100;
 
-      const roomLabel = { kitchen:'Kitchen', bathroom:'Bathroom', laundry:'Laundry room', garage:'Garage', office:'Home office', other:'Room' }[gv(`mq-${prefix}-room`)];
+      const roomLabel = { kitchen:'Kitchen', bathroom:'Bathroom', laundry:'Laundry room', garage:'Garage', office:'Home office', other:'Room' }[gv(`mq-${prefix}-room`)] || 'Cabinet';
       return { lines, sub: Math.round(sub), total: Math.round(total), low, high, roomLabel, si, uFt, bFt };
     }
 
-    // ---- COUNTERTOP CALCULATION (shared logic) ----
     function calcCountertop(prefix) {
-      const ctSiId   = prefix === 'ct' ? 'mq-ct-si'   : `mq-${prefix}-ct-si`;
-      const ctZoneId = prefix === 'ct' ? 'mq-ct-zone' : `mq-${prefix}-zone`;
+      const { taxRate, zones } = buildPricingFromLineItems();
+      const ctSiId   = prefix === 'ct' ? 'mq-ct-si'   : `mq-b-ct-si`;
       const surfKey  = prefix;
-
       const lines = []; let sub = 0;
+
       Object.keys(surfs[surfKey]).forEach(id => {
         if (!document.getElementById('mqsc-' + id)) return;
         const type  = gv('mqst-' + id);
@@ -794,18 +839,18 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
         const cost = sqft * m.ps
           + (si === 'install' ? sqft * m.pi : 0)
           + linFt * (EDGE[edge] || 0)
-          + (document.getElementById('mqsbs-' + id).checked ? linFt * bsRate : 0)
-          + (document.getElementById('mqsco-' + id).checked
+          + (document.getElementById('mqsbs-' + id)?.checked ? linFt * bsRate : 0)
+          + (document.getElementById('mqsco-' + id)?.checked
             ? gn('mqssink-' + id) * sinkR + gn('mqscook-' + id) * cookR : 0);
         sub += cost;
         lines.push({ label: `${gv('mqsn-' + id) || 'Surface'} — ${m.label} (${Math.round(sqft * 10) / 10} sqft)`, cost: Math.round(cost) });
       });
 
-      const zc = prefix === 'ct' ? (ZONE[gv('mq-ct-zone')] || 0) : 0;
+      const zc = prefix === 'ct' ? (zones[gv('mq-ct-zone')] || 0) : 0;
       if (zc > 0) { lines.push({ label: 'Travel surcharge', cost: zc }); sub += zc; }
-      const tax = sub * taxR;
+      const tax = sub * taxRate;
       lines.push({ label: 'Subtotal (before tax)', cost: Math.round(sub), bold: true });
-      if (taxR > 0) lines.push({ label: `Est. tax (${Math.round(taxR * 100)}%)`, cost: Math.round(tax) });
+      if (taxRate > 0) lines.push({ label: `Est. tax (${Math.round(taxRate * 100)}%)`, cost: Math.round(tax) });
 
       const total = sub + tax;
       const low   = Math.round(total * 0.88 / 100) * 100;
@@ -813,38 +858,32 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       return { lines, sub: Math.round(sub), total: Math.round(total), low, high };
     }
 
-    // ---- RENDER RESULT ----
-    function renderResult(titleEl, subEl, rangeEl, listEl, result) {
+    function renderResult(rangeEl, listEl, result) {
       document.getElementById(rangeEl).textContent = fmt(result.low) + ' – ' + fmt(result.high);
       const ul = document.getElementById(listEl); ul.innerHTML = '';
       result.lines.forEach(l => {
         const li = document.createElement('li');
-        li.innerHTML = `<span class="mq-li-lbl" ${l.bold ? 'style="font-weight:600;color:#111"' : ''}>${l.label}</span><span ${l.bold ? 'style="font-weight:600"' : ''}>${fmt(l.cost)}</span>`;
+        li.innerHTML = `<span class="mq-li-lbl" ${l.bold?'style="font-weight:600;color:#111"':''}>${l.label}</span><span ${l.bold?'style="font-weight:600"':''}>${fmt(l.cost)}</span>`;
         ul.appendChild(li);
       });
     }
 
-    // ---- CABINET TAB CALC ----
     window.mqCalcCabinets = () => {
       window.mqShowLead(async lead => {
         document.getElementById('mq-c-calc-btn').disabled = true;
         document.getElementById('mq-c-loading').classList.add('show');
         document.getElementById('mq-c-result').classList.remove('show');
-
         const r = calcCabinet('c');
         document.getElementById('mq-c-res-title').textContent = r.roomLabel + ' cabinet estimate';
-        document.getElementById('mq-c-res-sub').textContent   = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si === 'install' ? 'Supply + install' : 'Supply only'}`;
-        renderResult('mq-c-res-title','mq-c-res-sub','mq-c-res-range','mq-c-line-items', r);
-
+        document.getElementById('mq-c-res-sub').textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si === 'install' ? 'Supply + install' : 'Supply only'}`;
+        renderResult('mq-c-res-range','mq-c-line-items', r);
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');
         document.getElementById('mq-c-calc-btn').disabled = false;
-
         if (lead) await saveLead(data, lead, 'Cabinets', r.low, r.high, r.lines);
       });
     };
 
-    // ---- COUNTERTOP TAB CALC ----
     window.mqCalcCountertops = () => {
       if (!Object.keys(surfs['ct']).filter(id => document.getElementById('mqsc-' + id)).length) {
         alert('Please add at least one surface.'); return;
@@ -853,34 +892,27 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
         document.getElementById('mq-ct-calc-btn').disabled = true;
         document.getElementById('mq-ct-loading').classList.add('show');
         document.getElementById('mq-ct-result').classList.remove('show');
-
         setTimeout(async () => {
           const r = calcCountertop('ct');
           const active = Object.keys(surfs['ct']).filter(id => document.getElementById('mqsc-' + id)).length;
           document.getElementById('mq-ct-res-sub').textContent = `${active} surface(s) · ${gv('mq-ct-si') === 'install' ? 'Supply + install' : 'Supply only'}`;
-          renderResult(null,null,'mq-ct-res-range','mq-ct-line-items', r);
-
+          renderResult('mq-ct-res-range','mq-ct-line-items', r);
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');
           document.getElementById('mq-ct-calc-btn').disabled = false;
-
           if (lead) await saveLead(data, lead, 'Countertops', r.low, r.high, r.lines);
         }, 900);
       });
     };
 
-    // ---- BOTH TAB CALC ----
     window.mqCalcBoth = () => {
       window.mqShowLead(async lead => {
         document.getElementById('mq-b-calc-btn').disabled = true;
         document.getElementById('mq-b-loading').classList.add('show');
         document.getElementById('mq-b-result').classList.remove('show');
-
         setTimeout(async () => {
           const cab = calcCabinet('b');
           const ct  = calcCountertop('b');
-
-          // Render cabinet section
           const cabRows = document.getElementById('mq-b-cab-rows'); cabRows.innerHTML = '';
           cab.lines.filter(l => !l.bold).forEach(l => {
             const d = document.createElement('div');
@@ -889,8 +921,6 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
             cabRows.appendChild(d);
           });
           document.getElementById('mq-b-cab-sub').textContent = fmt(cab.sub);
-
-          // Render countertop section
           const ctRows = document.getElementById('mq-b-ct-rows'); ctRows.innerHTML = '';
           ct.lines.filter(l => !l.bold).forEach(l => {
             const d = document.createElement('div');
@@ -899,16 +929,12 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
             ctRows.appendChild(d);
           });
           document.getElementById('mq-b-ct-sub').textContent = fmt(ct.sub);
-
-          // Grand total
           const totalLow  = cab.low  + ct.low;
           const totalHigh = cab.high + ct.high;
           document.getElementById('mq-b-grand').textContent = fmt(totalLow) + ' – ' + fmt(totalHigh);
-
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');
           document.getElementById('mq-b-calc-btn').disabled = false;
-
           if (lead) {
             const allLines = [
               { label: '— CABINETS —', cost: 0 }, ...cab.lines,
@@ -920,7 +946,6 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       });
     };
 
-    // ---- SURFACE MANAGEMENT ----
     function addSurfaceInternal(prefix, name) {
       surfCounts[prefix]++;
       const id = `s${prefix}${surfCounts[prefix]}`;
@@ -979,7 +1004,6 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
         document.getElementById('mqsco-' + id).checked ? 'block' : 'none';
     };
 
-    // Add default surfaces
     addSurfaceInternal('ct', 'Kitchen run');
     addSurfaceInternal('b',  'Kitchen run');
   }
@@ -997,7 +1021,7 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       return;
     }
     injectStyles(shop['Brand colour'] || '#1a1a1a');
-    container.innerHTML = buildWidgetHTML(shop, specs, pricing);
+    container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
   }
 
