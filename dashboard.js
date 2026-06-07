@@ -146,7 +146,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
     const embedCode = `&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=${token}"&gt;&lt;/script&gt;`;
-    const rawCode = `<div id="midasquote-widget"></div>\n<script src="https://widget.midasquote.com/widget.js?shop=${token}"></script>`;
+ const rawCode = `<div id="midasquote-widget"></div>\n<scr` + `ipt src="https://widget.midasquote.com/widget.js?shop=${token}"></scr` + `ipt>`;
 
     return `
       <div class="mq-topbar">
