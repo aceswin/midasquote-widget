@@ -1,6 +1,6 @@
 /*
- * MidasQuote Pricing Helper v4.1
- * Guided item setup + wizard-based rate reverse engineering
+ * MidasQuote Pricing Helper v4.2
+ * Updated wizard: 30"+18" spec throughout, box-only baseline, doors as upcharge, hinges restructured
  */
 
 (function() {
@@ -80,6 +80,9 @@
       .mqph-step-sub{font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6}
       .mqph-hl{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;color:#166534;line-height:1.7}
       .mqph-warn{background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:12px 16px;font-size:13px;color:#854d0e;margin-bottom:1rem;line-height:1.6}
+      .mqph-spec-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;color:#374151;line-height:1.8}
+      .mqph-spec-box strong{color:#111}
+      .mqph-spec-box .mqph-spec-tag{display:inline-block;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;color:#374151;margin:2px 3px 2px 0}
       .mqph-input-row{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
       .mqph-input-row label{font-size:13px;color:#374151;flex:1;font-weight:500}
       .mqph-input-row input[type=number]{width:130px;text-align:right;font-weight:600;font-family:inherit;font-size:13px;color:#111;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 12px}
@@ -104,7 +107,6 @@
       .mqph-toggle.on{background:#16a34a}
       .mqph-toggle::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
       .mqph-toggle.on::after{left:16px}
-      .mqph-empty{text-align:center;padding:2rem;color:#9ca3af;font-size:13px}
 
       .mqph-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:1rem}
       .mqph-overlay.show{display:flex}
@@ -139,10 +141,10 @@
   // ============================================================
   const CATEGORIES = [
     { id: 'material',  label: '🪵 Box materials',       sub: 'The material used to build the cabinet boxes', placeholder: 'e.g. White melamine' },
-    { id: 'door',      label: '🚪 Door styles',          sub: 'Door styles you offer', placeholder: 'e.g. Maple shaker' },
+    { id: 'door',      label: '🚪 Door styles',          sub: 'Door styles you offer (doors are priced as an upcharge on top of the box)', placeholder: 'e.g. Maple shaker' },
     { id: 'drawerbox', label: '📦 Drawer box materials', sub: 'Materials used for drawer boxes', placeholder: 'e.g. Prefinished birch' },
     { id: 'slide',     label: '🔩 Drawer slides',        sub: 'Slide options you offer', placeholder: 'e.g. Undermount soft-close' },
-    { id: 'hinge',     label: '🔧 Door hinges',          sub: 'Hinge options you offer', placeholder: 'e.g. Concealed hinge' },
+    { id: 'hinge',     label: '🔧 Door hinges',          sub: 'Hinge options you offer — your cheapest hinge is the baseline, others become upcharges', placeholder: 'e.g. Concealed hinge' },
     { id: 'finish',    label: '🎨 Finishes',             sub: 'Finish options available', placeholder: 'e.g. Painted' },
   ];
 
@@ -161,8 +163,12 @@
 
   const DEFAULT_HINGES = ['Soft-close hinges', 'Regular hinges'];
 
+  // Standard spec used throughout entire wizard
+  const WIZARD_SPEC = '1 × 30" cabinet + 1 × 18" cabinet = 4 linear feet';
+  const WIZARD_SPEC_DOORS = '3 doors total: 2 on the 30", 1 on the 18"';
+
   // ============================================================
-  // ITEM SETUP PHASE
+  // ITEM SETUP
   // ============================================================
   function buildItemSetupHTML() {
     const existing = {};
@@ -175,7 +181,7 @@
     return `
       <div style="margin-bottom:1.5rem">
         <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px">🛠️ Set Up Your Shop Items</h2>
-        <p style="font-size:13px;color:#6b7280;line-height:1.6">Add the materials, door styles, and options your shop offers. Just names for now — we'll figure out pricing in the next step.</p>
+        <p style="font-size:13px;color:#6b7280;line-height:1.6">Add the materials, door styles, and options your shop offers. Just names for now — we'll figure out pricing in the wizard.</p>
       </div>
 
       ${CATEGORIES.map(cat => {
@@ -265,7 +271,14 @@
   };
 
   // ============================================================
-  // WIZARD
+  // WIZARD SPEC BOX HELPER
+  // ============================================================
+  function specBox(lines) {
+    return `<div class="mqph-spec-box">${lines.map(l => `<div>${l}</div>`).join('')}</div>`;
+  }
+
+  // ============================================================
+  // WIZARD STEPS
   // ============================================================
   function getByCategory(cat) {
     return lineItems.filter(r => r.fields && r.fields['Category'] === cat && r.fields['Active'] !== false)
@@ -275,6 +288,7 @@
   function buildWizardSteps() {
     const materials  = getByCategory('material');
     const doorStyles = getByCategory('door');
+    const hinges     = getByCategory('hinge');
     const noMats  = materials.length === 0;
     const noDoors = doorStyles.length === 0;
     const matOpts  = materials.map((m,i)  => `<option value="${i}">${m.fields['Name']}</option>`).join('');
@@ -285,13 +299,23 @@
     // Step 0: Welcome
     steps.push({
       title: '👋 Pricing Setup Wizard',
-      sub: `We'll reverse-engineer your rates from real job quotes. No math required.`,
+      sub: `We'll reverse-engineer your rates from real job quotes using a consistent spec throughout — no math required.`,
       content: () => noMats || noDoors ? `
-        <div class="mqph-warn">⚠️ <strong>Missing items.</strong> You need to add ${noMats ? 'box materials' : ''}${noMats && noDoors ? ' and ' : ''}${noDoors ? 'door styles' : ''} before running the wizard.<br/>
+        <div class="mqph-warn">⚠️ <strong>Missing items.</strong> You need to add ${noMats?'box materials':''}${noMats&&noDoors?' and ':''}${noDoors?'door styles':''} before running the wizard.<br/>
         <button class="mqph-btn mqph-btn-secondary" style="margin-top:10px" onclick="mqphStartItemSetup()">← Go back and add items</button></div>` : `
-        <div class="mqph-hl">✅ Found <strong>${materials.length}</strong> material${materials.length!==1?'s':''} and <strong>${doorStyles.length}</strong> door style${doorStyles.length!==1?'s':''}. Ready to go.<br/><br/>
-        For each step, create a simple quote in your quoting software and enter the total. We'll calculate the rates automatically.</div>
-        <div style="font-size:13px;color:#374151;line-height:1.8">✅ Separate rates for uppers and bases<br/>✅ Per-item upcharges for materials, doors, hardware<br/>✅ Installation rates<br/>✅ Cabinet removal rate</div>`,
+        <div class="mqph-hl">
+          ✅ Found <strong>${materials.length}</strong> material${materials.length!==1?'s':''} and <strong>${doorStyles.length}</strong> door style${doorStyles.length!==1?'s':''}.<br/><br/>
+          <strong>Every step uses the same cabinet spec:</strong><br/>
+          <span class="mqph-spec-tag">1 × 30" cabinet</span> + <span class="mqph-spec-tag">1 × 18" cabinet</span> = <span class="mqph-spec-tag">4 linear feet</span><br/><br/>
+          Keep this spec consistent in your quoting software for every step. We'll tell you exactly what to change each time.
+        </div>
+        <div style="font-size:13px;color:#374151;line-height:1.8">
+          ✅ Box-only baseline (no doors)<br/>
+          ✅ Door styles as upcharges on top of the box<br/>
+          ✅ Separate rates for uppers and bases<br/>
+          ✅ Hardware, hinges, and finish upgrades<br/>
+          ✅ Installation and removal rates
+        </div>`,
       skipLabel: null,
       nextLabel: noMats || noDoors ? null : 'Start →',
       onNext: () => noMats || noDoors ? 'abort' : null,
@@ -300,70 +324,88 @@
     // Step 1: Choose baseline
     steps.push({
       title: '📐 Step 1 — Choose your baseline',
-      sub: 'Pick your cheapest combination. Everything else will be calculated as an upcharge from this.',
+      sub: 'Pick your cheapest material and cheapest door style. The baseline quote will be box-only (no doors) — doors will be priced separately as upcharges.',
       content: () => `
-        <div class="mqph-hl">Your baseline = the simplest job you quote. Cheapest material + cheapest door style.</div>
-        <div class="mqph-input-row"><label>Baseline box material</label><select id="mqph-bl-mat" style="width:200px">${matOpts}</select></div>
-        <div class="mqph-input-row"><label>Baseline door style</label><select id="mqph-bl-door" style="width:200px">${doorOpts}</select></div>`,
+        <div class="mqph-hl">Your baseline = cheapest material, no doors, no hardware upgrades. Everything else is calculated as an upcharge from here.</div>
+        <div class="mqph-input-row"><label>Baseline box material</label><select id="mqph-bl-mat" style="width:220px">${matOpts}</select></div>
+        <div class="mqph-input-row"><label>Baseline door style <span style="font-weight:400;color:#9ca3af">(used later for door steps)</span></label><select id="mqph-bl-door" style="width:220px">${doorOpts}</select></div>
+        ${hinges.length > 0 ? `<div class="mqph-input-row"><label>Your cheapest hinge option <span style="font-weight:400;color:#9ca3af">(baseline hinge — others become upcharges)</span></label><select id="mqph-bl-hinge" style="width:220px">${hinges.map((h,i)=>`<option value="${i}">${h.fields['Name']}</option>`).join('')}</select></div>` : ''}`,
       nextLabel: 'Next →',
       onNext: () => {
         const mi = parseInt(document.getElementById('mqph-bl-mat')?.value||0);
         const di = parseInt(document.getElementById('mqph-bl-door')?.value||0);
-        wizardBaseline = { matIndex:mi, matName:materials[mi]?.fields['Name']||'', doorIndex:di, doorName:doorStyles[di]?.fields['Name']||'', upperPrice:0, basePrice:0, upperRate:0, baseRate:0 };
+        const hi = parseInt(document.getElementById('mqph-bl-hinge')?.value||0);
+        wizardBaseline = {
+          matIndex:mi, matName:materials[mi]?.fields['Name']||'',
+          doorIndex:di, doorName:doorStyles[di]?.fields['Name']||'',
+          hingeIndex:hi, hingeName:hinges[hi]?.fields['Name']||'',
+          upperPrice:0, basePrice:0, upperRate:0, baseRate:0,
+          upperWithDoorPrice:0, baseWithDoorPrice:0,
+        };
       }
     });
 
-    // Step 2: Baseline uppers
+    // Step 2: Baseline uppers — BOX ONLY, no doors
     steps.push({
-      title: '📐 Step 2 — Baseline upper cabinets',
-      sub: 'In your quoting software, create a quote for exactly this job:',
+      title: '📐 Step 2 — Baseline upper cabinets (box only)',
+      sub: 'In your quoting software, quote this exact job:',
       content: () => `
-        <div class="mqph-hl">
-          <strong>4 linear feet of upper cabinets only (no bases)</strong><br/>
-          Material: <strong>${wizardBaseline?.matName||'—'}</strong><br/>
-          Door style: <strong>${wizardBaseline?.doorName||'—'}</strong><br/>
-          No hardware upgrades · Supply only · No install · Local delivery
-        </div>
-        <div class="mqph-input-row"><label>Your total price for 4ft uppers?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
+        ${specBox([
+          `<strong>Upper cabinets only — BOX ONLY, no doors</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
+          `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span>`,
+          `<strong>No doors · No hardware · Supply only · Local delivery</strong>`,
+        ])}
+        <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
         <div id="mqph-r-bl-u" class="mqph-result"></div>`,
       nextLabel: 'Next →',
       onNext: () => {
         const p = parseFloat(document.getElementById('mqph-bl-u-price')?.value||0);
-        if (p>0&&wizardBaseline) { wizardBaseline.upperPrice=p; wizardBaseline.upperRate=p/4; wizardItems.push({ name:wizardBaseline.matName+' — uppers', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline material uppers — reverse engineered', active:true }); }
+        if (p>0&&wizardBaseline) {
+          wizardBaseline.upperPrice=p; wizardBaseline.upperRate=p/4;
+          wizardItems.push({ name:wizardBaseline.matName+' — uppers (box)', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline box rate uppers — reverse engineered', active:true });
+        }
       }
     });
 
-    // Step 3: Baseline bases
+    // Step 3: Baseline bases — BOX ONLY, no doors
     steps.push({
-      title: '📐 Step 3 — Baseline base cabinets',
-      sub: 'Same job but bases only. Bases are usually priced higher — heavier, drawers, ladder kicks.',
+      title: '📐 Step 3 — Baseline base cabinets (box only)',
+      sub: 'Same spec, bases only. Bases include toe kick — no doors, no hardware.',
       content: () => `
-        <div class="mqph-hl">
-          <strong>4 linear feet of base cabinets only (no uppers)</strong><br/>
-          Material: <strong>${wizardBaseline?.matName||'—'}</strong><br/>
-          Door style: <strong>${wizardBaseline?.doorName||'—'}</strong><br/>
-          No hardware upgrades · Supply only · No install · Local delivery
-        </div>
-        ${wizardBaseline?.upperRate>0?`<div style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was $${wizardBaseline.upperRate.toFixed(2)}/ft — bases should be higher.</div>`:''}
-        <div class="mqph-input-row"><label>Your total price for 4ft bases?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
+        ${specBox([
+          `<strong>Base cabinets only — BOX ONLY, no doors</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+          `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span>`,
+          `<strong>No doors · No hardware · Supply only · Local delivery · Include toe kick</strong>`,
+        ])}
+        ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper box rate was $${wizardBaseline.upperRate.toFixed(2)}/ft — bases should be higher due to toe kick and drawers.</p>`:''}
+        <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
         <div id="mqph-r-bl-b" class="mqph-result"></div>`,
       nextLabel: 'Next →',
       onNext: () => {
         const p = parseFloat(document.getElementById('mqph-bl-b-price')?.value||0);
-        if (p>0&&wizardBaseline) { wizardBaseline.basePrice=p; wizardBaseline.baseRate=p/4; wizardItems.push({ name:wizardBaseline.matName+' — bases', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline material bases — reverse engineered', active:true }); }
+        if (p>0&&wizardBaseline) {
+          wizardBaseline.basePrice=p; wizardBaseline.baseRate=p/4;
+          wizardItems.push({ name:wizardBaseline.matName+' — bases (box)', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline box rate bases — reverse engineered', active:true });
+        }
       }
     });
 
-    // Step 4: Additional materials
+    // Step 4: Additional materials (bases, box only, no doors)
     const otherMats = materials.filter((_,i)=>i!==wizardBaseline?.matIndex);
     if (otherMats.length>0) {
       steps.push({
         title: '🪵 Step 4 — Additional material upcharges',
-        sub: 'Same base cabinet job but swap the material. 4ft bases, same door style, supply only.',
+        sub: 'Same base cabinet spec, just swap the material. Box only, no doors.',
         content: () => otherMats.map((m,idx) => `
           <div class="mqph-item-block">
             <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
-            <div class="mqph-hl" style="margin-bottom:10px">4ft base cabinets · <strong>${m.fields['Name']}</strong> · ${wizardBaseline?.doorName} · supply only</div>
+            ${specBox([
+              `<strong>Base cabinets — BOX ONLY, no doors</strong>`,
+              `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+              `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · Supply only`,
+            ])}
             <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcUp('mat-${idx}')"/></div>
             <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
           </div>`).join(''),
@@ -372,23 +414,61 @@
         onNext: () => {
           otherMats.forEach((m,idx) => {
             const p = parseFloat(document.getElementById(`mqph-mat-${idx}`)?.value||0);
-            if (p>0&&wizardBaseline) { const u=(p-wizardBaseline.basePrice)/4; wizardItems.push({ name:m.fields['Name'], category:'material', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Material upcharge — reverse engineered', active:true }); }
+            if (p>0&&wizardBaseline) {
+              const u=(p-wizardBaseline.basePrice)/4;
+              wizardItems.push({ name:m.fields['Name'], category:'material', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Material upcharge — reverse engineered', active:true });
+            }
           });
         }
       });
     }
 
-    // Step 5: Door style upcharges
+    // Step 5: Door style upcharges — NOW add doors (3 doors: 2 on 30", 1 on 18")
+    // First: baseline door with baseline hinge
+    steps.push({
+      title: '🚪 Step 5 — Door style pricing',
+      sub: 'Now we add doors. Quote the same base cabinet spec but with your baseline door style and cheapest hinge.',
+      content: () => `
+        <div class="mqph-hl">This establishes your baseline door rate. We use the same 30"+18" spec — that gives us 3 doors total which is realistic for this size run.</div>
+        ${specBox([
+          `<strong>Base cabinets with baseline doors + baseline hinges</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+          `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span>`,
+          `Door style: <span class="mqph-spec-tag">${wizardBaseline?.doorName||'—'}</span> · <span class="mqph-spec-tag">3 doors total: 2 on 30", 1 on 18"</span>`,
+          `Hinges: <span class="mqph-spec-tag">${wizardBaseline?.hingeName||'your cheapest hinge'}</span> · Supply only`,
+        ])}
+        <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-baseline" placeholder="0.00" oninput="mqphCalcDoorBaseline()"/></div>
+        <div id="mqph-r-door-baseline" class="mqph-result"></div>`,
+      nextLabel: 'Next →',
+      onNext: () => {
+        const p = parseFloat(document.getElementById('mqph-door-baseline')?.value||0);
+        if (p>0&&wizardBaseline) {
+          wizardBaseline.baseWithDoorPrice = p;
+          const doorUpcharge = (p - wizardBaseline.basePrice) / 4;
+          wizardItems.push({ name:wizardBaseline.doorName, category:'door', rate:Math.round(doorUpcharge*100)/100, unit:'per lin ft upcharge', description:`Baseline door style (${wizardBaseline.hingeName}) — reverse engineered`, active:true });
+          // Also store baseline hinge as $0 upcharge (it's the base)
+          if (wizardBaseline.hingeName) {
+            wizardItems.push({ name:wizardBaseline.hingeName, category:'hinge', rate:0, unit:'per lin ft upcharge', description:'Baseline hinge — included in door price', active:true });
+          }
+        }
+      }
+    });
+
+    // Step 6: Additional door styles
     const otherDoors = doorStyles.filter((_,i)=>i!==wizardBaseline?.doorIndex);
     if (otherDoors.length>0) {
       steps.push({
-        title: '🚪 Step 5 — Door style upcharges',
-        sub: 'Same baseline job but swap the door style. Baseline material, 4ft bases, supply only.',
+        title: '🚪 Step 6 — Additional door style upcharges',
+        sub: 'Same spec, swap the door style. Keep the baseline material and baseline hinge.',
         content: () => otherDoors.map((d,idx) => `
           <div class="mqph-item-block">
             <div class="mqph-item-block-label">🚪 ${d.fields['Name']}</div>
-            <div class="mqph-hl" style="margin-bottom:10px">4ft base cabinets · ${wizardBaseline?.matName} · <strong>${d.fields['Name']}</strong> · supply only</div>
-            <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcUp('door-${idx}')"/></div>
+            ${specBox([
+              `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+              `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span> · Doors: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
+              `<span class="mqph-spec-tag">3 doors: 2 on 30", 1 on 18"</span> · Hinges: <span class="mqph-spec-tag">${wizardBaseline?.hingeName||'baseline hinge'}</span> · Supply only`,
+            ])}
+            <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
             <div id="mqph-r-door-${idx}" class="mqph-result"></div>
           </div>`).join(''),
         skipLabel: 'Skip — same price for all door styles',
@@ -396,23 +476,63 @@
         onNext: () => {
           otherDoors.forEach((d,idx) => {
             const p = parseFloat(document.getElementById(`mqph-door-${idx}`)?.value||0);
-            if (p>0&&wizardBaseline) { const u=(p-wizardBaseline.basePrice)/4; wizardItems.push({ name:d.fields['Name'], category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Door style upcharge — reverse engineered', active:true }); }
+            if (p>0&&wizardBaseline) {
+              // Upcharge vs baseline door (not vs box-only)
+              const u=(p - (wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice)) / 4;
+              wizardItems.push({ name:d.fields['Name'], category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Door style upcharge — reverse engineered', active:true });
+            }
           });
         }
       });
     }
 
-    // Step 6: Hardware & finish upgrades (drawer boxes, slides, hinges, finishes)
-    const hwCats = ['drawerbox','slide','hinge','finish'];
+    // Step 7: Hinge upcharges (other hinges vs baseline hinge)
+    const otherHinges = hinges.filter((_,i)=>i!==wizardBaseline?.hingeIndex);
+    if (otherHinges.length>0) {
+      steps.push({
+        title: '🔧 Step 7 — Hinge upcharges',
+        sub: 'Same spec with baseline door, swap the hinge type. This calculates the upcharge over your baseline hinge.',
+        content: () => otherHinges.map((h,idx) => `
+          <div class="mqph-item-block">
+            <div class="mqph-item-block-label">🔧 ${h.fields['Name']}</div>
+            ${specBox([
+              `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+              `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span> · Doors: <span class="mqph-spec-tag">${wizardBaseline?.doorName||'—'}</span>`,
+              `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${wizardBaseline?.hingeName||'baseline hinge'}) · Supply only`,
+            ])}
+            <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
+            <div id="mqph-r-hinge-${idx}" class="mqph-result"></div>
+          </div>`).join(''),
+        skipLabel: 'Skip — only one hinge option',
+        nextLabel: 'Next →',
+        onNext: () => {
+          otherHinges.forEach((h,idx) => {
+            const p = parseFloat(document.getElementById(`mqph-hinge-${idx}`)?.value||0);
+            if (p>0&&wizardBaseline) {
+              const baseWithDoor = wizardBaseline.baseWithDoorPrice || wizardBaseline.basePrice;
+              const u = (p - baseWithDoor) / 4;
+              wizardItems.push({ name:h.fields['Name'], category:'hinge', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:`Hinge upcharge over ${wizardBaseline.hingeName} — reverse engineered`, active:true });
+            }
+          });
+        }
+      });
+    }
+
+    // Step 8: Other hardware & finishes (drawer boxes, slides, finishes)
+    const hwCats = ['drawerbox','slide','finish'];
     const hwItems = lineItems.filter(r => r.fields && hwCats.includes(r.fields['Category']) && r.fields['Active']!==false);
     if (hwItems.length>0) {
       steps.push({
-        title: '⚙️ Step 6 — Hardware & finish upgrades',
-        sub: 'Quote the baseline job with each upgrade added one at a time. 4ft bases, baseline material and door.',
+        title: '⚙️ Step 8 — Hardware & finish upgrades',
+        sub: 'Quote the baseline box job (no doors) with each upgrade added one at a time.',
         content: () => hwItems.map((h,idx) => `
           <div class="mqph-item-block">
             <div class="mqph-item-block-label">${h.fields['Name']}</div>
-            <div class="mqph-hl" style="margin-bottom:10px">Same baseline job + <strong>${h.fields['Name']}</strong></div>
+            ${specBox([
+              `Baseline box job + <span class="mqph-spec-tag">${h.fields['Name']}</span>`,
+              `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> · Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span>`,
+              `No doors · Supply only`,
+            ])}
             <div class="mqph-input-row"><label>Your price with this upgrade?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-hw-${idx}" placeholder="0.00" oninput="mqphCalcUp('hw-${idx}')"/></div>
             <div id="mqph-r-hw-${idx}" class="mqph-result"></div>
           </div>`).join(''),
@@ -421,47 +541,53 @@
         onNext: () => {
           hwItems.forEach((h,idx) => {
             const p = parseFloat(document.getElementById(`mqph-hw-${idx}`)?.value||0);
-            if (p>0&&wizardBaseline) { const u=(p-wizardBaseline.basePrice)/4; wizardItems.push({ name:h.fields['Name'], category:h.fields['Category'], rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Hardware/finish upgrade — reverse engineered', active:true }); }
+            if (p>0&&wizardBaseline) {
+              const u=(p-wizardBaseline.basePrice)/4;
+              wizardItems.push({ name:h.fields['Name'], category:h.fields['Category'], rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Hardware/finish upgrade — reverse engineered', active:true });
+            }
           });
         }
       });
     }
 
-    // Step 7: Installation & removal
-    steps.push({
-      title: '🔧 Step 7 — Installation & removal',
-      sub: 'Quote install-only prices — no supply, just labour. Then set your removal rate.',
-      content: () => `
-        <div class="mqph-hl">
-          <strong>Install only (no supply):</strong><br/>
-          • 4 linear feet of upper cabinets — installation labour only<br/>
-          • 4 linear feet of base cabinets — installation labour only
-        </div>
-        <div class="mqph-input-row"><label>Install price for 4ft of uppers</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-        <div class="mqph-input-row"><label>Install price for 4ft of bases</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-        <div id="mqph-r-install" class="mqph-result"></div>
-        <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
-        <div class="mqph-input-row"><label>Cabinet removal & disposal rate (per lin ft)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00"/></div>
-        <p style="font-size:12px;color:#9ca3af;margin-top:-8px;margin-bottom:1rem">What you charge per linear foot to remove and dispose of existing cabinets.</p>`,
-      skipLabel: 'Skip — supply only shop',
-      nextLabel: 'Next →',
-      onNext: () => {
-        const u = parseFloat(document.getElementById('mqph-inst-u')?.value||0);
-        const b = parseFloat(document.getElementById('mqph-inst-b')?.value||0);
-        const r = parseFloat(document.getElementById('mqph-removal')?.value||0);
-        if (u>0) wizardItems.push({ name:'Install — uppers', category:'install', rate:Math.round((u/4)*100)/100, unit:'per lin ft', description:'Upper install rate — reverse engineered', active:true });
-        if (b>0) wizardItems.push({ name:'Install — bases', category:'install', rate:Math.round((b/4)*100)/100, unit:'per lin ft', description:'Base install rate — reverse engineered', active:true });
-        if (r>0) wizardItems.push({ name:'Cabinet removal', category:'install', rate:r, unit:'per lin ft', description:'Remove & dispose existing cabinets', active:true });
-      }
-    });
+    // Step 9: Installation & removal
+    const hasInstall = getByCategory('install').length > 0;
+    if (hasInstall) {
+      steps.push({
+        title: '🔧 Step 9 — Installation & removal',
+        sub: 'Quote install-only prices — no supply, just labour. Then set your removal rate.',
+        content: () => `
+          ${specBox([
+            `<strong>Install only (no supply):</strong>`,
+            `Upper install: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
+            `Base install: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+          ])}
+          <div class="mqph-input-row"><label>Install price for 4ft of uppers (labour only)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          <div class="mqph-input-row"><label>Install price for 4ft of bases (labour only)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          <div id="mqph-r-install" class="mqph-result"></div>
+          <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
+          <div class="mqph-input-row"><label>Cabinet removal & disposal (per lin ft)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00"/></div>
+          <p style="font-size:12px;color:#9ca3af;margin-top:-8px;margin-bottom:1rem">What you charge per linear foot to remove and dispose of existing cabinets.</p>`,
+        skipLabel: 'Skip — supply only shop',
+        nextLabel: 'Next →',
+        onNext: () => {
+          const u=parseFloat(document.getElementById('mqph-inst-u')?.value||0);
+          const b=parseFloat(document.getElementById('mqph-inst-b')?.value||0);
+          const r=parseFloat(document.getElementById('mqph-removal')?.value||0);
+          if (u>0) wizardItems.push({ name:'Install — uppers', category:'install', rate:Math.round((u/4)*100)/100, unit:'per lin ft', description:'Upper install rate — reverse engineered', active:true });
+          if (b>0) wizardItems.push({ name:'Install — bases', category:'install', rate:Math.round((b/4)*100)/100, unit:'per lin ft', description:'Base install rate — reverse engineered', active:true });
+          if (r>0) wizardItems.push({ name:'Cabinet removal', category:'install', rate:r, unit:'per lin ft', description:'Remove & dispose existing cabinets', active:true });
+        }
+      });
+    }
 
-    // Step 8: Travel & tax
+    // Final step: Travel & tax
     steps.push({
-      title: '🚗 Step 8 — Travel zones & tax',
+      title: '🚗 Final step — Travel zones & tax',
       sub: 'Set your travel surcharges and tax rate.',
       content: () => `
         <div class="mqph-input-row"><label>Local zone radius</label><input type="number" id="mqph-zone-r" placeholder="15" style="width:130px;text-align:right"/><span class="mqph-pfx">km</span></div>
-        <p style="font-size:12px;color:#9ca3af;margin-top:-8px;margin-bottom:1rem">Jobs within this distance = no travel surcharge.</p>
+        <p style="font-size:12px;color:#9ca3af;margin-top:-8px;margin-bottom:1rem">Jobs within this distance have no travel surcharge.</p>
         <div class="mqph-input-row"><label>Zone 2 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone2" placeholder="0.00"/></div>
         <div class="mqph-input-row"><label>Zone 3 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone3" placeholder="0.00"/></div>
         <div class="mqph-input-row"><label>Zone 4 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone4" placeholder="0.00"/></div>
@@ -470,7 +596,7 @@
       skipLabel: 'Skip',
       nextLabel: 'Finish setup →',
       onNext: () => {
-        const gn = id => parseFloat(document.getElementById(id)?.value||0);
+        const gn=id=>parseFloat(document.getElementById(id)?.value||0);
         const zr=gn('mqph-zone-r'),z2=gn('mqph-zone2'),z3=gn('mqph-zone3'),z4=gn('mqph-zone4'),tax=gn('mqph-tax');
         if (zr>0) wizardItems.push({ name:'Local zone radius', category:'zone', rate:zr, unit:'km', description:'Within this distance = no travel surcharge', active:true });
         if (z2>0) wizardItems.push({ name:'Zone 2 surcharge', category:'zone', rate:z2, unit:'flat', description:'Zone 2 travel surcharge', active:true });
@@ -488,8 +614,8 @@
   // ============================================================
   window.mqphCalc = function(id) {
     const map = {
-      'bl-u': { inputId:'mqph-bl-u-price', resId:'mqph-r-bl-u', label:'Upper rate', calc: p => p/4 },
-      'bl-b': { inputId:'mqph-bl-b-price', resId:'mqph-r-bl-b', label:'Base rate',  calc: p => p/4 },
+      'bl-u': { inputId:'mqph-bl-u-price', resId:'mqph-r-bl-u', label:'Upper box rate', calc: p => p/4 },
+      'bl-b': { inputId:'mqph-bl-b-price', resId:'mqph-r-bl-b', label:'Base box rate',  calc: p => p/4 },
     };
     const cfg = map[id]; if (!cfg) return;
     const p = parseFloat(document.getElementById(cfg.inputId)?.value||0);
@@ -503,8 +629,44 @@
     const res = document.getElementById(`mqph-r-${id}`);
     if (!input||!res||!wizardBaseline) return;
     const p = parseFloat(input.value||0);
-    if (p>0) { const u=(p-wizardBaseline.basePrice)/4; res.style.display='block'; res.innerHTML=`<strong>Upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)} / lin ft</span>`; }
+    if (p>0) { const u=(p-wizardBaseline.basePrice)/4; res.style.display='block'; res.innerHTML=`<strong>Upcharge vs baseline box:</strong> <span class="mqph-result-val">$${u.toFixed(2)} / lin ft</span>`; }
     else res.style.display='none';
+  };
+
+  window.mqphCalcDoorBaseline = function() {
+    const p = parseFloat(document.getElementById('mqph-door-baseline')?.value||0);
+    const res = document.getElementById('mqph-r-door-baseline'); if (!res||!wizardBaseline) return;
+    if (p>0) {
+      const doorUp = (p-wizardBaseline.basePrice)/4;
+      res.style.display='block';
+      res.innerHTML=`<strong>Door upcharge (${wizardBaseline.doorName}):</strong> <span class="mqph-result-val">$${doorUp.toFixed(2)} / lin ft</span><br/><span style="font-size:12px;color:#6b7280">Box rate $${wizardBaseline.baseRate.toFixed(2)} + door $${doorUp.toFixed(2)} = $${(wizardBaseline.baseRate+doorUp).toFixed(2)}/ft total</span>`;
+    } else res.style.display='none';
+  };
+
+  window.mqphCalcDoorUp = function(idx) {
+    const input = document.getElementById(`mqph-door-${idx}`);
+    const res = document.getElementById(`mqph-r-door-${idx}`);
+    if (!input||!res||!wizardBaseline) return;
+    const p = parseFloat(input.value||0);
+    if (p>0) {
+      const baseWithDoor = wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice;
+      const u=(p-baseWithDoor)/4;
+      res.style.display='block';
+      res.innerHTML=`<strong>Upcharge vs baseline door:</strong> <span class="mqph-result-val">$${u.toFixed(2)} / lin ft</span>`;
+    } else res.style.display='none';
+  };
+
+  window.mqphCalcHingeUp = function(idx) {
+    const input = document.getElementById(`mqph-hinge-${idx}`);
+    const res = document.getElementById(`mqph-r-hinge-${idx}`);
+    if (!input||!res||!wizardBaseline) return;
+    const p = parseFloat(input.value||0);
+    if (p>0) {
+      const baseWithDoor = wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice;
+      const u=(p-baseWithDoor)/4;
+      res.style.display='block';
+      res.innerHTML=`<strong>Hinge upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)} / lin ft</span>`;
+    } else res.style.display='none';
   };
 
   window.mqphCalcInstall = function() {
@@ -512,8 +674,8 @@
     const b=parseFloat(document.getElementById('mqph-inst-b')?.value||0);
     const res=document.getElementById('mqph-r-install'); if (!res) return;
     let html='';
-    if (u>0) html+=`<strong>Upper install:</strong> <span class="mqph-result-val">$${(u/4).toFixed(2)} / lin ft</span><br/>`;
-    if (b>0) html+=`<strong>Base install:</strong> <span class="mqph-result-val">$${(b/4).toFixed(2)} / lin ft</span>`;
+    if (u>0) html+=`<strong>Upper install rate:</strong> <span class="mqph-result-val">$${(u/4).toFixed(2)} / lin ft</span><br/>`;
+    if (b>0) html+=`<strong>Base install rate:</strong> <span class="mqph-result-val">$${(b/4).toFixed(2)} / lin ft</span>`;
     if (html) { res.style.display='block'; res.innerHTML=html; } else res.style.display='none';
   };
 
@@ -530,8 +692,8 @@
     const back=document.getElementById('mqph-back-btn');
     const next=document.getElementById('mqph-next-btn');
     const skip=document.getElementById('mqph-skip-btn');
-    if (back) back.style.display = idx===0?'none':'inline-block';
-    if (next) { if (steps[idx].nextLabel) { next.textContent=steps[idx].nextLabel; next.style.display='inline-block'; } else next.style.display='none'; }
+    if (back) back.style.display=idx===0?'none':'inline-block';
+    if (next) { if(steps[idx].nextLabel){next.textContent=steps[idx].nextLabel;next.style.display='inline-block';}else next.style.display='none'; }
     if (skip) { skip.style.display=steps[idx].skipLabel?'inline-block':'none'; if(steps[idx].skipLabel) skip.textContent=steps[idx].skipLabel; }
   }
 
@@ -543,36 +705,22 @@
     if (wizardStep>=steps.length) { mqphFinishWizard(); } else { renderWizardStep(wizardStep); }
   };
 
-  window.mqphBack = function() {
-    if (wizardStep>0) { wizardStep--; renderWizardStep(wizardStep); }
-  };
-
-  window.mqphSkip = function() {
-    wizardStep++;
-    const steps = getSteps();
-    if (wizardStep>=steps.length) { mqphFinishWizard(); } else { renderWizardStep(wizardStep); }
-  };
+  window.mqphBack = function() { if(wizardStep>0){wizardStep--;renderWizardStep(wizardStep);} };
+  window.mqphSkip = function() { wizardStep++; const steps=getSteps(); if(wizardStep>=steps.length){mqphFinishWizard();}else{renderWizardStep(wizardStep);} };
 
   async function mqphFinishWizard() {
     const container = document.getElementById('mq-pricing-helper-v2');
     if (container) container.innerHTML = '<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Saving your pricing...</div>';
-
-    // Delete old rate-only categories
     const rateCategories = ['zone','tax'];
     const toDelete = lineItems.filter(r => r.fields && rateCategories.includes(r.fields['Category']));
     for (const r of toDelete) { await atDelete(LINE_ITEMS_TABLE, r.id); }
-
-    // Update rates on existing items, create new ones
     for (let i=0; i<wizardItems.length; i++) {
       const item = wizardItems[i];
       const existing = lineItems.find(r => r.fields && r.fields['Name']===item.name && !rateCategories.includes(r.fields['Category']));
       if (existing) {
-        await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate': item.rate, 'Unit': item.unit, 'Description': item.description, 'Active': true });
+        await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate':item.rate, 'Unit':item.unit, 'Description':item.description, 'Active':true });
       } else {
-        await atCreate(LINE_ITEMS_TABLE, {
-          'shop': [shopRecord._recordId], 'Name': item.name, 'Category': item.category,
-          'Rate': item.rate, 'Unit': item.unit, 'Description': item.description||'', 'Active': true, 'Sort order': i+1,
-        });
+        await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':item.name, 'Category':item.category, 'Rate':item.rate, 'Unit':item.unit, 'Description':item.description||'', 'Active':true, 'Sort order':i+1 });
       }
     }
     await loadAndRender();
@@ -591,7 +739,7 @@
       <div class="mqph-wizard-card">
         <div class="mqph-wizard-header">
           <h2>⚙️ Pricing Setup Wizard</h2>
-          <p>Reverse-engineer your rates from real job quotes</p>
+          <p>Spec: 1 × 30" + 1 × 18" = 4 lin ft · used throughout every step</p>
           <div class="mqph-progress">${dots}</div>
         </div>
         <div class="mqph-wizard-body">${stepDivs}</div>
@@ -610,7 +758,6 @@
     const groups = {};
     lineItems.filter(r=>r.fields).forEach(r => { const c=r.fields['Category']||'other'; if(!groups[c]) groups[c]=[]; groups[c].push(r); });
     const hasItems = lineItems.filter(r=>r.fields).length > 0;
-
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
         <div>
@@ -622,7 +769,6 @@
           <button class="mqph-btn mqph-btn-secondary" onclick="mqphGoToWizard()">🧙 Run pricing wizard</button>
         </div>
       </div>
-
       ${!hasItems ? `
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:3rem;text-align:center;margin-bottom:1.5rem">
           <div style="font-size:32px;margin-bottom:12px">⚙️</div>
@@ -654,18 +800,14 @@
               </div>`).join('')}
           </div>`).join('')}
       `}
-
       ${buildCTHtml(pricingRecord?.fields||{})}
-
       <div class="mqph-overlay" id="mqph-modal-overlay">
         <div class="mqph-modal">
           <div class="mh"><h3 id="mqph-modal-title">Add pricing item</h3><button onclick="mqphCloseModal()">×</button></div>
           <div class="mb">
             <div class="mqph-field"><label>Name</label><input type="text" id="mqph-item-name" placeholder="e.g. Maple shaker"/></div>
             <div class="mqph-field"><label>Category</label>
-              <select id="mqph-item-cat">
-                ${Object.entries(CAT_LABELS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}
-              </select>
+              <select id="mqph-item-cat">${Object.entries(CAT_LABELS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
             </div>
             <div class="mqph-field"><label>Rate ($)</label><input type="number" id="mqph-item-rate" placeholder="0.00" step="0.01"/></div>
             <div class="mqph-field"><label>Unit</label>
@@ -689,79 +831,66 @@
   window.mqphStartItemSetup = async function() {
     const hasHinge   = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='hinge');
     const hasInstall = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='install');
-
     if (!hasHinge) {
-      for (let i=0; i<DEFAULT_HINGES.length; i++) {
-        const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':DEFAULT_HINGES[i], 'Category':'hinge', 'Rate':0, 'Unit':'per lin ft upcharge', 'Active':true, 'Sort order':i+1 });
-        if (rec&&rec.id) lineItems.push(rec);
+      for (let i=0;i<DEFAULT_HINGES.length;i++) {
+        const rec=await atCreate(LINE_ITEMS_TABLE,{'shop':[shopRecord._recordId],'Name':DEFAULT_HINGES[i],'Category':'hinge','Rate':0,'Unit':'per lin ft upcharge','Active':true,'Sort order':i+1});
+        if(rec&&rec.id) lineItems.push(rec);
       }
     }
     if (!hasInstall) {
-      for (let i=0; i<DEFAULT_INSTALL.length; i++) {
-        const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':DEFAULT_INSTALL[i].name, 'Category':'install', 'Rate':0, 'Unit':DEFAULT_INSTALL[i].unit, 'Description':DEFAULT_INSTALL[i].description, 'Active':true, 'Sort order':i+1 });
-        if (rec&&rec.id) lineItems.push(rec);
+      for (let i=0;i<DEFAULT_INSTALL.length;i++) {
+        const rec=await atCreate(LINE_ITEMS_TABLE,{'shop':[shopRecord._recordId],'Name':DEFAULT_INSTALL[i].name,'Category':'install','Rate':0,'Unit':DEFAULT_INSTALL[i].unit,'Description':DEFAULT_INSTALL[i].description,'Active':true,'Sort order':i+1});
+        if(rec&&rec.id) lineItems.push(rec);
       }
     }
-    const container = document.getElementById('mq-pricing-helper-v2');
-    if (container) container.innerHTML = buildItemSetupHTML();
+    const container=document.getElementById('mq-pricing-helper-v2');
+    if(container) container.innerHTML=buildItemSetupHTML();
   };
 
   window.mqphOpenAdd = function(cat) {
-    currentEditId = null;
-    document.getElementById('mqph-modal-title').textContent = 'Add pricing item';
-    document.getElementById('mqph-item-name').value = '';
-    document.getElementById('mqph-item-cat').value = cat || 'material';
-    document.getElementById('mqph-item-rate').value = '';
-    document.getElementById('mqph-item-unit').value = 'per lin ft';
-    document.getElementById('mqph-item-desc').value = '';
-    document.getElementById('mqph-item-active').checked = true;
+    currentEditId=null;
+    document.getElementById('mqph-modal-title').textContent='Add pricing item';
+    document.getElementById('mqph-item-name').value='';
+    document.getElementById('mqph-item-cat').value=cat||'material';
+    document.getElementById('mqph-item-rate').value='';
+    document.getElementById('mqph-item-unit').value='per lin ft';
+    document.getElementById('mqph-item-desc').value='';
+    document.getElementById('mqph-item-active').checked=true;
     document.getElementById('mqph-modal-overlay').classList.add('show');
   };
 
   window.mqphOpenEdit = function(id) {
-    const rec = lineItems.find(r=>r.id===id); if (!rec) return;
-    currentEditId = id;
-    document.getElementById('mqph-modal-title').textContent = 'Edit pricing item';
-    document.getElementById('mqph-item-name').value = rec.fields['Name']||'';
-    document.getElementById('mqph-item-cat').value = rec.fields['Category']||'material';
-    document.getElementById('mqph-item-rate').value = rec.fields['Rate']||'';
-    document.getElementById('mqph-item-unit').value = rec.fields['Unit']||'per lin ft';
-    document.getElementById('mqph-item-desc').value = rec.fields['Description']||'';
-    document.getElementById('mqph-item-active').checked = rec.fields['Active']!==false;
+    const rec=lineItems.find(r=>r.id===id); if(!rec) return;
+    currentEditId=id;
+    document.getElementById('mqph-modal-title').textContent='Edit pricing item';
+    document.getElementById('mqph-item-name').value=rec.fields['Name']||'';
+    document.getElementById('mqph-item-cat').value=rec.fields['Category']||'material';
+    document.getElementById('mqph-item-rate').value=rec.fields['Rate']||'';
+    document.getElementById('mqph-item-unit').value=rec.fields['Unit']||'per lin ft';
+    document.getElementById('mqph-item-desc').value=rec.fields['Description']||'';
+    document.getElementById('mqph-item-active').checked=rec.fields['Active']!==false;
     document.getElementById('mqph-modal-overlay').classList.add('show');
   };
 
-  window.mqphCloseModal = function() { document.getElementById('mqph-modal-overlay').classList.remove('show'); };
+  window.mqphCloseModal=function(){document.getElementById('mqph-modal-overlay').classList.remove('show');};
 
-  window.mqphSaveItem = async function() {
-    const name = document.getElementById('mqph-item-name').value.trim();
-    if (!name) { alert('Please enter a name.'); return; }
-    const fields = {
-      'shop':[shopRecord._recordId], 'Name':name,
-      'Category':document.getElementById('mqph-item-cat').value,
-      'Rate':parseFloat(document.getElementById('mqph-item-rate').value||0),
-      'Unit':document.getElementById('mqph-item-unit').value,
-      'Description':document.getElementById('mqph-item-desc').value.trim(),
-      'Active':document.getElementById('mqph-item-active').checked,
-    };
-    try {
-      if (currentEditId) { await atUpdate(LINE_ITEMS_TABLE, currentEditId, fields); }
-      else { fields['Sort order']=lineItems.length+1; await atCreate(LINE_ITEMS_TABLE, fields); }
-      mqphCloseModal(); await loadAndRender();
-    } catch(e) { alert('Error saving. Please try again.'); }
+  window.mqphSaveItem=async function(){
+    const name=document.getElementById('mqph-item-name').value.trim();
+    if(!name){alert('Please enter a name.');return;}
+    const fields={'shop':[shopRecord._recordId],'Name':name,'Category':document.getElementById('mqph-item-cat').value,'Rate':parseFloat(document.getElementById('mqph-item-rate').value||0),'Unit':document.getElementById('mqph-item-unit').value,'Description':document.getElementById('mqph-item-desc').value.trim(),'Active':document.getElementById('mqph-item-active').checked};
+    try{
+      if(currentEditId){await atUpdate(LINE_ITEMS_TABLE,currentEditId,fields);}
+      else{fields['Sort order']=lineItems.length+1;await atCreate(LINE_ITEMS_TABLE,fields);}
+      mqphCloseModal();await loadAndRender();
+    }catch(e){alert('Error saving. Please try again.');}
   };
 
-  window.mqphDelete = async function(id) {
-    if (!confirm('Delete this item?')) return;
-    try { await atDelete(LINE_ITEMS_TABLE, id); await loadAndRender(); } catch(e) { alert('Error deleting.'); }
-  };
+  window.mqphDelete=async function(id){if(!confirm('Delete this item?'))return;try{await atDelete(LINE_ITEMS_TABLE,id);await loadAndRender();}catch(e){alert('Error deleting.');}};
 
-  window.mqphToggle = async function(id, el) {
-    const rec = lineItems.find(r=>r.id===id); if (!rec) return;
-    const val = !rec.fields['Active'];
-    el.classList.toggle('on', val);
-    rec.fields['Active'] = val;
-    await atUpdate(LINE_ITEMS_TABLE, id, { 'Active':val });
+  window.mqphToggle=async function(id,el){
+    const rec=lineItems.find(r=>r.id===id);if(!rec)return;
+    const val=!rec.fields['Active'];el.classList.toggle('on',val);rec.fields['Active']=val;
+    await atUpdate(LINE_ITEMS_TABLE,id,{'Active':val});
   };
 
   // ============================================================
@@ -797,14 +926,14 @@
       </div>`;
   }
 
-  window.mqphSaveCT = async function() {
+  window.mqphSaveCT=async function(){
     const gn=id=>parseFloat(document.getElementById(`mqph-ct-${id}`)?.value||0);
-    const fields={ 'Lam supply':gn('lam'),'SS econ supply':gn('ss-econ'),'SS mid supply':gn('ss-mid'),'SS prem supply':gn('ss-prem'),'Gran econ supply':gn('gran-econ'),'Gran mid supply':gn('gran-mid'),'Gran prem supply':gn('gran-prem'),'Quartz supply':gn('quartz'),'Marble supply':gn('marble'),'Butcher supply':gn('butcher'),'Backsplash rate':gn('backsplash'),'Sink cutout':gn('sink'),'Cooktop cutout':gn('cooktop') };
-    try {
-      if (pricingRecord) await fetch(`${AT_BASE_URL()}/${shopRecord._pricingTable}/${pricingRecord.id}`,{method:'PATCH',headers:AT_HEADS(),body:JSON.stringify({fields})});
+    const fields={'Lam supply':gn('lam'),'SS econ supply':gn('ss-econ'),'SS mid supply':gn('ss-mid'),'SS prem supply':gn('ss-prem'),'Gran econ supply':gn('gran-econ'),'Gran mid supply':gn('gran-mid'),'Gran prem supply':gn('gran-prem'),'Quartz supply':gn('quartz'),'Marble supply':gn('marble'),'Butcher supply':gn('butcher'),'Backsplash rate':gn('backsplash'),'Sink cutout':gn('sink'),'Cooktop cutout':gn('cooktop')};
+    try{
+      if(pricingRecord) await fetch(`${AT_BASE_URL()}/${shopRecord._pricingTable}/${pricingRecord.id}`,{method:'PATCH',headers:AT_HEADS(),body:JSON.stringify({fields})});
       const msg=document.getElementById('mqph-ct-msg');
       if(msg){msg.textContent='✓ Saved!';msg.className='mqph-msg mqph-msg-success';msg.style.display='block';setTimeout(()=>msg.style.display='none',3000);}
-    } catch(e) {
+    }catch(e){
       const msg=document.getElementById('mqph-ct-msg');
       if(msg){msg.textContent='Error saving.';msg.className='mqph-msg mqph-msg-error';msg.style.display='block';}
     }
@@ -814,23 +943,22 @@
   // LOAD AND RENDER
   // ============================================================
   async function loadAndRender() {
-    const container = document.getElementById('mq-pricing-helper-v2');
-    if (!container) return;
-    const recs = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._recordId}", ARRAYJOIN({shop}))`);
-    lineItems = recs.filter(r => r.fields);
-    container.innerHTML = buildEditorHTML();
+    const container=document.getElementById('mq-pricing-helper-v2');
+    if(!container) return;
+    const recs=await atGet(LINE_ITEMS_TABLE,`FIND("${shopRecord._recordId}", ARRAYJOIN({shop}))`);
+    lineItems=recs.filter(r=>r.fields);
+    container.innerHTML=buildEditorHTML();
   }
 
-  // expose for dashboard buttons
-  window.loadAndRender = loadAndRender;
+  window.loadAndRender=loadAndRender;
 
   // ============================================================
   // INIT
   // ============================================================
-  window.mqph2Init = function(passedShopRecord, passedPricingRecord) {
-    if (!passedShopRecord) return;
-    shopRecord = { ...passedShopRecord, _recordId:passedShopRecord.id, _baseId:'app4zrMlVLwF2xn4h', _token:'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325', _pricingTable:'tblu6AYZs8h7SIaQl' };
-    pricingRecord = passedPricingRecord;
+  window.mqph2Init=function(passedShopRecord,passedPricingRecord){
+    if(!passedShopRecord) return;
+    shopRecord={...passedShopRecord,_recordId:passedShopRecord.id,_baseId:'app4zrMlVLwF2xn4h',_token:'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',_pricingTable:'tblu6AYZs8h7SIaQl'};
+    pricingRecord=passedPricingRecord;
     injectStyles();
     loadAndRender();
   };
