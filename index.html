@@ -2,8 +2,25 @@
 <html>
 <head>
   <title>MidasQuote Widget</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>
 </head>
 <body>
-  <p>MidasQuote widget is running. Add <code>?shop=YOUR_TOKEN</code> to use.</p>
+  <div id="midasquote-widget"></div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get('shop');
+    const mode = params.get('mode');
+    if (shop) {
+      const script = document.createElement('script');
+      script.src = 'https://widget.midasquote.com/widget.js?shop=' + shop + (mode ? '&mode=' + mode : '');
+      document.body.appendChild(script);
+    } else {
+      document.body.innerHTML = '<p style="padding:2rem;color:#6b7280">No shop token provided.</p>';
+    }
+  </script>
 </body>
 </html>
