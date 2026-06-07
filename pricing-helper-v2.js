@@ -351,7 +351,7 @@
       sub: 'In your quoting software, quote this exact job:',
       content: () => `
         ${specBox([
-          `<strong>Upper cabinets only — BOX ONLY, Include shelves, no doors</strong>`,
+          `<strong>Upper cabinets only — BOX ONLY, no doors</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
           `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName || materials[parseInt(document.getElementById('mqph-bl-mat')?.value||0)]?.fields['Name'] || '—'}</span>`,
           `<strong>No doors · No hardware · Supply only · Local delivery</strong>`,
@@ -371,7 +371,7 @@
     // Step 3: Baseline bases — BOX ONLY, no doors
     steps.push({
       title: '📐 Step 3 — Baseline base cabinets (box only)',
-      sub: 'Same spec, bases only. Bases include toe kick and shelf — no doors, no hardware.',
+      sub: 'Same spec, bases only. Bases include toe kick — no doors, no hardware.',
       content: () => `
         ${specBox([
           `<strong>Base cabinets only — BOX ONLY, no doors</strong>`,
@@ -398,7 +398,8 @@
         title: '🪵 Step 4 — Additional material upcharges',
         sub: 'Same base cabinet spec, just swap the material. Box only, no doors.',
         content: () => {
-          const others = materials.filter((_,i) => i !== (wizardBaseline?.matIndex ?? -1));
+          const blIdx = wizardBaseline?.matIndex ?? parseInt(document.getElementById('mqph-bl-mat')?.value||'0');
+          const others = materials.filter((_,i) => i !== blIdx);
           return others.map((m,idx) => `
             <div class="mqph-item-block">
               <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
@@ -463,7 +464,8 @@
         title: '🚪 Step 6 — Additional door style upcharges',
         sub: 'Same spec, swap the door style. Keep the baseline material and baseline hinge.',
         content: () => {
-          const others = doorStyles.filter((_,i) => i !== (wizardBaseline?.doorIndex ?? -1));
+          const blIdx = wizardBaseline?.doorIndex ?? parseInt(document.getElementById('mqph-bl-door')?.value||'0');
+          const others = doorStyles.filter((_,i) => i !== blIdx);
           return others.map((d,idx) => `
             <div class="mqph-item-block">
               <div class="mqph-item-block-label">🚪 ${d.fields['Name']}</div>
@@ -497,7 +499,8 @@
         title: '🔧 Step 7 — Hinge upcharges',
         sub: 'Same spec with baseline door, swap the hinge type. This calculates the upcharge over your baseline hinge.',
         content: () => {
-          const others = hinges.filter((_,i) => i !== (wizardBaseline?.hingeIndex ?? -1));
+          const blIdx = wizardBaseline?.hingeIndex ?? parseInt(document.getElementById('mqph-bl-hinge')?.value||'0');
+          const others = hinges.filter((_,i) => i !== blIdx);
           return others.map((h,idx) => `
             <div class="mqph-item-block">
               <div class="mqph-item-block-label">🔧 ${h.fields['Name']}</div>
