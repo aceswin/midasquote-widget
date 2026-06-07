@@ -353,7 +353,7 @@
         ${specBox([
           `<strong>Upper cabinets only — BOX ONLY, no doors</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
-          `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span>`,
+          `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName || materials[parseInt(document.getElementById('mqph-bl-mat')?.value||0)]?.fields['Name'] || '—'}</span>`,
           `<strong>No doors · No hardware · Supply only · Local delivery</strong>`,
         ])}
         <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
@@ -376,7 +376,7 @@
         ${specBox([
           `<strong>Base cabinets only — BOX ONLY, no doors</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
-          `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span>`,
+          `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName || materials[parseInt(document.getElementById('mqph-bl-mat')?.value||0)]?.fields['Name'] || '—'}</span>`,
           `<strong>No doors · No hardware · Supply only · Local delivery · Include toe kick</strong>`,
         ])}
         ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper box rate was $${wizardBaseline.upperRate.toFixed(2)}/ft — bases should be higher due to toe kick and drawers.</p>`:''}
@@ -393,26 +393,29 @@
     });
 
     // Step 4: Additional materials (bases, box only, no doors)
-    const otherMats = materials.filter((_,i)=>i!==wizardBaseline?.matIndex);
-    if (otherMats.length>0) {
+    if (materials.length > 1) {
       steps.push({
         title: '🪵 Step 4 — Additional material upcharges',
         sub: 'Same base cabinet spec, just swap the material. Box only, no doors.',
-        content: () => otherMats.map((m,idx) => `
-          <div class="mqph-item-block">
-            <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
-            ${specBox([
-              `<strong>Base cabinets — BOX ONLY, no doors</strong>`,
-              `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
-              `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · Supply only`,
-            ])}
-            <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcUp('mat-${idx}')"/></div>
-            <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
-          </div>`).join(''),
+        content: () => {
+          const others = materials.filter((_,i) => i !== (wizardBaseline?.matIndex ?? -1));
+          return others.map((m,idx) => `
+            <div class="mqph-item-block">
+              <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
+              ${specBox([
+                `<strong>Base cabinets — BOX ONLY, no doors</strong>`,
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · Supply only`,
+              ])}
+              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcUp('mat-${idx}')"/></div>
+              <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
+            </div>`).join('');
+        },
         skipLabel: 'Skip — same price for all materials',
         nextLabel: 'Next →',
         onNext: () => {
-          otherMats.forEach((m,idx) => {
+          const others = materials.filter((_,i) => i !== (wizardBaseline?.matIndex ?? -1));
+          others.forEach((m,idx) => {
             const p = parseFloat(document.getElementById(`mqph-mat-${idx}`)?.value||0);
             if (p>0&&wizardBaseline) {
               const u=(p-wizardBaseline.basePrice)/4;
@@ -454,30 +457,32 @@
       }
     });
 
-    // Step 6: Additional door styles
-    const otherDoors = doorStyles.filter((_,i)=>i!==wizardBaseline?.doorIndex);
-    if (otherDoors.length>0) {
+    // Step 6: Additional door styles — only if >1 door style
+    if (doorStyles.length > 1) {
       steps.push({
         title: '🚪 Step 6 — Additional door style upcharges',
         sub: 'Same spec, swap the door style. Keep the baseline material and baseline hinge.',
-        content: () => otherDoors.map((d,idx) => `
-          <div class="mqph-item-block">
-            <div class="mqph-item-block-label">🚪 ${d.fields['Name']}</div>
-            ${specBox([
-              `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
-              `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span> · Doors: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
-              `<span class="mqph-spec-tag">3 doors: 2 on 30", 1 on 18"</span> · Hinges: <span class="mqph-spec-tag">${wizardBaseline?.hingeName||'baseline hinge'}</span> · Supply only`,
-            ])}
-            <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
-            <div id="mqph-r-door-${idx}" class="mqph-result"></div>
-          </div>`).join(''),
+        content: () => {
+          const others = doorStyles.filter((_,i) => i !== (wizardBaseline?.doorIndex ?? -1));
+          return others.map((d,idx) => `
+            <div class="mqph-item-block">
+              <div class="mqph-item-block-label">🚪 ${d.fields['Name']}</div>
+              ${specBox([
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+                `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span> · Doors: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
+                `<span class="mqph-spec-tag">3 doors: 2 on 30", 1 on 18"</span> · Hinges: <span class="mqph-spec-tag">${wizardBaseline?.hingeName||'baseline hinge'}</span> · Supply only`,
+              ])}
+              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
+              <div id="mqph-r-door-${idx}" class="mqph-result"></div>
+            </div>`).join('');
+        },
         skipLabel: 'Skip — same price for all door styles',
         nextLabel: 'Next →',
         onNext: () => {
-          otherDoors.forEach((d,idx) => {
+          const others = doorStyles.filter((_,i) => i !== (wizardBaseline?.doorIndex ?? -1));
+          others.forEach((d,idx) => {
             const p = parseFloat(document.getElementById(`mqph-door-${idx}`)?.value||0);
             if (p>0&&wizardBaseline) {
-              // Upcharge vs baseline door (not vs box-only)
               const u=(p - (wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice)) / 4;
               wizardItems.push({ name:d.fields['Name'], category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Door style upcharge — reverse engineered', active:true });
             }
@@ -486,27 +491,30 @@
       });
     }
 
-    // Step 7: Hinge upcharges (other hinges vs baseline hinge)
-    const otherHinges = hinges.filter((_,i)=>i!==wizardBaseline?.hingeIndex);
-    if (otherHinges.length>0) {
+    // Step 7: Hinge upcharges — only if >1 hinge
+    if (hinges.length > 1) {
       steps.push({
         title: '🔧 Step 7 — Hinge upcharges',
         sub: 'Same spec with baseline door, swap the hinge type. This calculates the upcharge over your baseline hinge.',
-        content: () => otherHinges.map((h,idx) => `
-          <div class="mqph-item-block">
-            <div class="mqph-item-block-label">🔧 ${h.fields['Name']}</div>
-            ${specBox([
-              `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
-              `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span> · Doors: <span class="mqph-spec-tag">${wizardBaseline?.doorName||'—'}</span>`,
-              `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${wizardBaseline?.hingeName||'baseline hinge'}) · Supply only`,
-            ])}
-            <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
-            <div id="mqph-r-hinge-${idx}" class="mqph-result"></div>
-          </div>`).join(''),
+        content: () => {
+          const others = hinges.filter((_,i) => i !== (wizardBaseline?.hingeIndex ?? -1));
+          return others.map((h,idx) => `
+            <div class="mqph-item-block">
+              <div class="mqph-item-block-label">🔧 ${h.fields['Name']}</div>
+              ${specBox([
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+                `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName||'—'}</span> · Doors: <span class="mqph-spec-tag">${wizardBaseline?.doorName||'—'}</span>`,
+                `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${wizardBaseline?.hingeName||'baseline hinge'}) · Supply only`,
+              ])}
+              <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
+              <div id="mqph-r-hinge-${idx}" class="mqph-result"></div>
+            </div>`).join('');
+        },
         skipLabel: 'Skip — only one hinge option',
         nextLabel: 'Next →',
         onNext: () => {
-          otherHinges.forEach((h,idx) => {
+          const others = hinges.filter((_,i) => i !== (wizardBaseline?.hingeIndex ?? -1));
+          others.forEach((h,idx) => {
             const p = parseFloat(document.getElementById(`mqph-hinge-${idx}`)?.value||0);
             if (p>0&&wizardBaseline) {
               const baseWithDoor = wizardBaseline.baseWithDoorPrice || wizardBaseline.basePrice;
