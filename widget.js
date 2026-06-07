@@ -1,6 +1,6 @@
 /*
- * MidasQuote Widget Embed Script v3.0
- * Fully dynamic — pulls all options from Line Items table
+ * MidasQuote Widget v3.1
+ * Fully dynamic — materials, doors (with finish), drawers, hinges all from Line Items
  */
 
 (function() {
@@ -31,9 +31,7 @@
   }
 
   async function atCreate(table, fields) {
-    const res = await fetch(`${AT_BASE}/${table}`, {
-      method: 'POST', headers: AT_HEADS, body: JSON.stringify({ fields })
-    });
+    const res = await fetch(`${AT_BASE}/${table}`, { method:'POST', headers:AT_HEADS, body:JSON.stringify({fields}) });
     return await res.json();
   }
 
@@ -50,19 +48,16 @@
     const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
     const p = pricing.length ? pricing[0].fields : {};
 
-    const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE,
-      `AND({Shop} = "${shopRecord.id}", {Active})`);
-    const sorted = lineItemRecords.sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+    const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE, `AND({shop} = "${shopRecord.id}", {Active})`);
+    const sorted = lineItemRecords.filter(r=>r.fields).sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
 
-    const byCategory = (cat) => sorted.filter(r => r.fields['Category']===cat).map(r => r.fields);
+    const byCategory = cat => sorted.filter(r=>r.fields['Category']===cat).map(r=>r.fields);
 
     const li = {
       materials:   byCategory('material'),
       doorStyles:  byCategory('door'),
-      drawerBoxes: byCategory('drawerbox'),
-      slides:      byCategory('slide'),
+      drawers:     byCategory('drawer'),
       hinges:      byCategory('hinge'),
-      finishes:    byCategory('finish'),
       installItems:byCategory('install'),
       zones:       byCategory('zone'),
       taxItems:    byCategory('tax'),
@@ -71,13 +66,12 @@
 
     const hasDynamic = li.materials.length > 0;
 
-    const specRecords = await atGet(CONFIG.SPECIALTY_TABLE,
-      `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+    const specRecords = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
     const specs = specRecords
-      .sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0))
-      .map(r => ({ id:r.id, label:r.fields['Item name']||r.fields['Special Items'], price:r.fields['Price']||0, perFt:r.fields['Per linear foot']||false }));
+      .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0))
+      .map(r=>({ id:r.id, label:r.fields['Item name']||r.fields['Special Items'], price:r.fields['Price']||0, perFt:r.fields['Per linear foot']||false }));
 
-    return { shop, pricing: p, specs, li, hasDynamic };
+    return { shop, pricing:p, specs, li, hasDynamic };
   }
 
   // ============================================================
@@ -87,11 +81,11 @@
     const { shop } = data;
     try {
       await atCreate(CONFIG.LEADS_TABLE, {
-        'Lead ID': `${lead.name} — ${new Date().toLocaleDateString()}`,
-        'Shop': [shop._recordId], 'Customer name': lead.name,
-        'Customer email': lead.email, 'Customer phone': lead.phone,
-        'Quote type': quoteType, 'Estimate low': low, 'Estimate high': high,
-        'Quote details': JSON.stringify(lines), 'Source': 'Website', 'Status': 'New',
+        'Lead ID':`${lead.name} — ${new Date().toLocaleDateString()}`,
+        'Shop':[shop._recordId], 'Customer name':lead.name,
+        'Customer email':lead.email, 'Customer phone':lead.phone,
+        'Quote type':quoteType, 'Estimate low':low, 'Estimate high':high,
+        'Quote details':JSON.stringify(lines), 'Source':'Website', 'Status':'New',
       });
     } catch(e) { console.error('Lead save failed', e); }
 
@@ -101,7 +95,6 @@
     await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#1a1a1a">New ${quoteType} quote lead</h2>
-        <p style="color:#666">Someone just completed a quote on your MidasQuote widget.</p>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Customer details</td></tr>
           <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name}</td></tr>
@@ -111,7 +104,7 @@
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Quote breakdown</td></tr>${lineRows}
         </table>
-        <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center">
           <div style="font-size:13px;color:#666;margin-bottom:4px">Estimated range</div>
           <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
         </div>
@@ -121,16 +114,13 @@
       await sendEmail(lead.email, `Your quote from ${shop['Shop name']}`,
         `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
           <h2 style="color:#1a1a1a">Your ${quoteType} quote from ${shop['Shop name']}</h2>
-          <p style="color:#666">Hi ${lead.name}, here's your estimate breakdown.</p>
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
             <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Quote breakdown</td></tr>${lineRows}
           </table>
           <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-            <div style="font-size:13px;color:#666;margin-bottom:4px">Your estimated range</div>
             <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
           </div>
           <p style="color:#666;font-size:13px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
-          <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
           <p style="color:#666;font-size:13px"><strong>${shop['Shop name']}</strong><br/>${shop['Phone']||''}</p>
         </div>`);
     }
@@ -138,8 +128,8 @@
 
   async function sendEmail(to, subject, html) {
     if (!CONFIG.EMAIL_WORKER||!to) return;
-    try { await fetch(CONFIG.EMAIL_WORKER, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({to,subject,html}) }); }
-    catch(e) { console.error('Email failed', e); }
+    try { await fetch(CONFIG.EMAIL_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,subject,html})}); }
+    catch(e) { console.error('Email failed',e); }
   }
 
   // ============================================================
@@ -246,16 +236,16 @@
   }
 
   // ============================================================
-  // BUILD SELECT OPTIONS FROM LINE ITEMS
+  // BUILD WIDGET HTML
   // ============================================================
-  function makeOpts(items, fallback) {
-    if (items && items.length > 0) return items.map((m,i) => `<option value="dyn_${i}">${m['Name']}</option>`).join('');
-    return fallback || '';
+  function makeOpts(items, fallbackOpts) {
+    if (items && items.length > 0) return items.map((m,i)=>`<option value="dyn_${i}">${m['Name']}</option>`).join('');
+    return fallbackOpts || '';
   }
 
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:13px;color:#6b7280">No specialty items configured yet.</p>';
-    return specs.map((s,i) => `
+    return specs.map((s,i)=>`
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}">
         <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
         <div class="mq-qty-ctrl">
@@ -275,18 +265,16 @@
 
   function cabinetForm(prefix, specs, data) {
     const { li, hasDynamic } = data;
-    const mOpts  = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
-    const dOpts  = makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
-    const dbOpts = makeOpts(li.drawerBoxes, '');
-    const slOpts = makeOpts(li.slides, '');
-    const hnOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
-    const fnOpts = makeOpts(li.finishes, '<option value="natural">Natural/stain</option><option value="painted">Painted</option>');
 
+    const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
+    // No doors option at top, then all door styles
+    const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
+    const drawerOpts = makeOpts(li.drawers, '');
+    const hingeOpts  = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
+
+    const hasDrawers = li.drawers.length > 0;
+    const hasHinges  = li.hinges.length > 0;
     const hasInstall = !hasDynamic || li.installItems.length > 0;
-    const hasDrawerBox = li.drawerBoxes.length > 0;
-    const hasSlides    = li.slides.length > 0;
-    const hasHinges    = li.hinges.length > 0;
-    const hasFinishes  = li.finishes.length > 0;
 
     const localRadius = li.zones.find(z=>z['Name']?.toLowerCase().includes('local'))?.['Rate'] || 15;
     const dynZones = li.zones.filter(z=>!z['Name']?.toLowerCase().includes('local'));
@@ -318,7 +306,7 @@
           <div class="mq-grid3">
             <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-mat">${mOpts}</select></div>
             <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-door">${dOpts}</select></div>
-            ${hasFinishes?`<div class="mq-field"><label class="mq-label">Finish</label><select id="mq-${prefix}-fin">${fnOpts}</select></div>`:''}
+            ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-hinge">${hingeOpts}</select></div>`:''}
           </div>
         </div>
         <div id="mq-${prefix}-diff" style="display:none">
@@ -326,26 +314,24 @@
             <div class="mq-grid3">
               <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-u-mat">${mOpts}</select></div>
               <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-u-door">${dOpts}</select></div>
-              ${hasFinishes?`<div class="mq-field"><label class="mq-label">Finish</label><select id="mq-${prefix}-u-fin">${fnOpts}</select></div>`:''}
+              ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-u-hinge">${hingeOpts}</select></div>`:''}
             </div>
           </div>
           <div class="mq-sub-sec" style="margin-top:8px"><p class="mq-sub-title">Base cabinets</p>
             <div class="mq-grid3">
               <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-b-mat">${mOpts}</select></div>
               <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-b-door">${dOpts}</select></div>
-              ${hasFinishes?`<div class="mq-field"><label class="mq-label">Finish</label><select id="mq-${prefix}-b-fin">${fnOpts}</select></div>`:''}
+              ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-b-hinge">${hingeOpts}</select></div>`:''}
             </div>
           </div>
         </div>
       </div>
-      <div class="mq-sec">
-        <p class="mq-sec-title">Hardware options</p>
-        <div class="mq-grid3">
-          ${hasDrawerBox?`<div class="mq-field"><label class="mq-label">Drawer box material</label><select id="mq-${prefix}-dbox">${dbOpts}</select></div>`:''}
-          ${hasSlides?`<div class="mq-field"><label class="mq-label">Drawer slides</label><select id="mq-${prefix}-slides">${slOpts}</select></div>`:''}
-          ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-hinges">${hnOpts}</select></div>`:''}
+      ${hasDrawers?`<div class="mq-sec">
+        <p class="mq-sec-title">Drawer configuration</p>
+        <div class="mq-grid2">
+          <div class="mq-field"><label class="mq-label">Drawer type</label><select id="mq-${prefix}-drawer">${drawerOpts}</select></div>
         </div>
-      </div>
+      </div>`:''}
       <div class="mq-sec">
         <p class="mq-sec-title">Removal & travel</p>
         <div class="mq-grid2">
@@ -364,9 +350,6 @@
       </div>`;
   }
 
-  // ============================================================
-  // BUILD WIDGET HTML
-  // ============================================================
   function buildWidgetHTML(shop, specs, data) {
     const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
@@ -507,37 +490,49 @@
   function wireWidget(data) {
     const { shop, pricing, specs, li, hasDynamic } = data;
 
-    // Build pricing lookup
     function P() {
-      const mat={}, door={}, drawerbox={}, slide={}, hinge={}, finish={};
+      const mat={}, door={}, drawer={}, hinge={};
       let installU=0, installB=0, removalRate=0, taxRate=0;
       const zones={};
 
       if (hasDynamic) {
-        li.materials.forEach((m,i)   => { mat[`dyn_${i}`]       = { label:m['Name'], rate:m['Rate']||0 }; });
-        li.doorStyles.forEach((d,i)  => { door[`dyn_${i}`]      = { label:d['Name'], rate:d['Rate']||0 }; });
-        li.drawerBoxes.forEach((d,i) => { drawerbox[`dyn_${i}`] = { label:d['Name'], rate:d['Rate']||0 }; });
-        li.slides.forEach((s,i)      => { slide[`dyn_${i}`]     = { label:s['Name'], rate:s['Rate']||0 }; });
-        li.hinges.forEach((h,i)      => { hinge[`dyn_${i}`]     = { label:h['Name'], rate:h['Rate']||0 }; });
-        li.finishes.forEach((f,i)    => { finish[`dyn_${i}`]    = { label:f['Name'], rate:f['Rate']||0 }; });
+        li.materials.forEach((m,i)  => { mat[`dyn_${i}`]    = { label:m['Name'], rate:m['Rate']||0, rateU: m['Unit']?.includes('uppers') ? m['Rate']||0 : null, rateB: m['Unit']?.includes('bases') ? m['Rate']||0 : null }; });
+        // Build material lookup by name for uppers/bases split
+        const matByName = {};
+        li.materials.forEach(m => {
+          const n = m['Name'].replace(/ — (uppers|bases).*$/,'').trim();
+          if (!matByName[n]) matByName[n] = { label:n, rateU:0, rateB:0 };
+          if (m['Unit']?.includes('uppers')) matByName[n].rateU = m['Rate']||0;
+          else if (m['Unit']?.includes('bases')) matByName[n].rateB = m['Rate']||0;
+          else { matByName[n].rateU = m['Rate']||0; matByName[n].rateB = m['Rate']||0; }
+        });
+        // Map dropdown options to matByName
+        li.materials.forEach((m,i) => {
+          const n = m['Name'].replace(/ — (uppers|bases).*$/,'').trim();
+          if (matByName[n] && !mat[`dyn_${i}`]) mat[`dyn_${i}`] = matByName[n];
+        });
+
+        li.doorStyles.forEach((d,i)  => { door[`dyn_${i}`]   = { label:d['Name'], rate:d['Rate']||0 }; });
+        li.drawers.forEach((d,i)     => { drawer[`dyn_${i}`]  = { label:d['Name'], rate:d['Rate']||0 }; });
+        li.hinges.forEach((h,i)      => { hinge[`dyn_${i}`]   = { label:h['Name'], rate:h['Rate']||0 }; });
+
         const iu = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper'));
         const ib = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base'));
         installU = iu?iu['Rate']||0:0;
         installB = ib?ib['Rate']||0:0;
-        const rem = li.otherItems.find(i=>i['Name']?.toLowerCase().includes('removal'));
+        const rem = li.otherItems.find(i=>i['Name']?.toLowerCase().includes('removal')) ||
+                    li.installItems.find(i=>i['Name']?.toLowerCase().includes('removal'));
         removalRate = rem?rem['Rate']||0:0;
         const tax = li.taxItems[0];
         taxRate = tax?(tax['Rate']||0)/100:0;
-        li.zones.filter(z=>!z['Name']?.toLowerCase().includes('local')).forEach((z,i) => { zones[`dyn_zone_${i}`]=z['Rate']||0; });
+        li.zones.filter(z=>!z['Name']?.toLowerCase().includes('local')).forEach((z,i)=>{ zones[`dyn_zone_${i}`]=z['Rate']||0; });
       } else {
-        mat['melamine'] = {label:'Melamine',    rate:pricing['Melamine price']   ||280};
-        mat['plywood']  = {label:'Plywood',      rate:pricing['Plywood price']    ||380};
-        door['slab']    = {label:'Slab',         rate:pricing['Slab multiplier']  ||0};
-        door['shaker']  = {label:'Shaker',       rate:pricing['Shaker multiplier']||0};
-        hinge['softclose'] = {label:'Soft-close hinges', rate:pricing['Soft close hinges']||12};
-        hinge['regular']   = {label:'Regular hinges',     rate:0};
-        drawerbox['melamine'] = {label:'Melamine drawer box', rate:0};
-        drawerbox['birch']    = {label:'Birch drawer box',    rate:pricing['Birch drawer box']||15};
+        mat['melamine'] = {label:'Melamine', rateU:pricing['Melamine price']||280, rateB:pricing['Melamine price']||280};
+        mat['plywood']  = {label:'Plywood',  rateU:pricing['Plywood price'] ||380, rateB:pricing['Plywood price'] ||380};
+        door['slab']    = {label:'Slab',     rate:0};
+        door['shaker']  = {label:'Shaker',   rate:pricing['Shaker multiplier']||0};
+        hinge['softclose'] = {label:'Soft-close', rate:pricing['Soft close hinges']||12};
+        hinge['regular']   = {label:'Regular',    rate:0};
         installU = pricing['Install rate uppers']||85;
         installB = installU;
         removalRate = pricing['Removal rate']||18;
@@ -546,7 +541,7 @@
         zones['zone3']=pricing['Zone 3 surcharge']||680;
         zones['zone4']=pricing['Zone 4 surcharge']||1100;
       }
-      return { mat, door, drawerbox, slide, hinge, finish, installU, installB, removalRate, taxRate, zones };
+      return { mat, door, drawer, hinge, installU, installB, removalRate, taxRate, zones };
     }
 
     const CT_MAT = {
@@ -567,7 +562,7 @@
     const sinkR=pricing['Sink cutout']||180;
     const cookR=pricing['Cooktop cutout']||220;
 
-    const diffOn={}, specQty={}, surfCounts={}, surfs={};
+    const diffOn={},specQty={},surfCounts={},surfs={};
     let pendingCb=null;
     ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};});
 
@@ -589,7 +584,7 @@
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
     };
 
-    window.mqToggleSpec=(prefix,i)=>{ if(specQty[prefix][i]===0) mqAdjQty(prefix,i,1); else mqAdjQty(prefix,i,-specQty[prefix][i]); };
+    window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0)mqAdjQty(prefix,i,1);else mqAdjQty(prefix,i,-specQty[prefix][i]);};
     window.mqAdjQty=(prefix,i,d)=>{
       specQty[prefix][i]=Math.max(0,specQty[prefix][i]+d);
       document.getElementById(`mq-qty-${prefix}-${i}`).textContent=specQty[prefix][i];
@@ -605,49 +600,51 @@
     };
     window.mqShowConsultModal=()=>window.mqShowLead(()=>{});
 
+    function getMaterialRates(matKey, mat) {
+      const m = mat[matKey];
+      if (!m) return { rateU: 0, rateB: 0, label: '' };
+      // If item has separate upper/base rates use them, otherwise use single rate
+      return { rateU: m.rateU ?? m.rate ?? 0, rateB: m.rateB ?? m.rate ?? 0, label: m.label || '' };
+    }
+
     function calcCabinet(prefix) {
-      const {mat,door,drawerbox,slide,hinge,finish,installU,installB,removalRate,taxRate,zones} = P();
+      const {mat,door,drawer,hinge,installU,installB,removalRate,taxRate,zones}=P();
       const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
       const hMult={standard:1.0,tall:1.15,mixed:1.08}[gv(`mq-${prefix}-ht`)];
 
-      let uMatKey,uDoorKey,uFinKey,bMatKey,bDoorKey,bFinKey;
+      let uMatKey,uDoorKey,uHingeKey,bMatKey,bDoorKey,bHingeKey;
       if(diffOn[prefix]){
-        uMatKey=gv(`mq-${prefix}-u-mat`);uDoorKey=gv(`mq-${prefix}-u-door`);uFinKey=gv(`mq-${prefix}-u-fin`);
-        bMatKey=gv(`mq-${prefix}-b-mat`);bDoorKey=gv(`mq-${prefix}-b-door`);bFinKey=gv(`mq-${prefix}-b-fin`);
+        uMatKey=gv(`mq-${prefix}-u-mat`);uDoorKey=gv(`mq-${prefix}-u-door`);uHingeKey=gv(`mq-${prefix}-u-hinge`)||'';
+        bMatKey=gv(`mq-${prefix}-b-mat`);bDoorKey=gv(`mq-${prefix}-b-door`);bHingeKey=gv(`mq-${prefix}-b-hinge`)||'';
       } else {
         uMatKey=bMatKey=gv(`mq-${prefix}-mat`);
         uDoorKey=bDoorKey=gv(`mq-${prefix}-door`);
-        uFinKey=bFinKey=gv(`mq-${prefix}-fin`)||'';
+        uHingeKey=bHingeKey=gv(`mq-${prefix}-hinge`)||'';
       }
+      const drawerKey=gv(`mq-${prefix}-drawer`)||'';
 
-      const dbKey=gv(`mq-${prefix}-dbox`)||'';
-      const slKey=gv(`mq-${prefix}-slides`)||'';
-      const hnKey=gv(`mq-${prefix}-hinges`)||'';
+      const uMat = getMaterialRates(uMatKey, mat);
+      const bMat = getMaterialRates(bMatKey, mat);
+      const uDoorRate = uDoorKey==='none' ? 0 : (door[uDoorKey]?.rate||0);
+      const bDoorRate = bDoorKey==='none' ? 0 : (door[bDoorKey]?.rate||0);
+      const uHingeRate = uDoorKey==='none' ? 0 : (hinge[uHingeKey]?.rate||0);
+      const bHingeRate = bDoorKey==='none' ? 0 : (hinge[bHingeKey]?.rate||0);
+      const drawerRate = drawer[drawerKey]?.rate||0;
 
-      const uMatRate  = mat[uMatKey]?.rate||0;
-      const uDoorRate = door[uDoorKey]?.rate||0;
-      const uFinRate  = finish[uFinKey]?.rate||0;
-      const bMatRate  = mat[bMatKey]?.rate||0;
-      const bDoorRate = door[bDoorKey]?.rate||0;
-      const bFinRate  = finish[bFinKey]?.rate||0;
-      const dbRate    = drawerbox[dbKey]?.rate||0;
-      const slRate    = slide[slKey]?.rate||0;
-      const hnRate    = hinge[hnKey]?.rate||0;
+      const uInstall=si==='install'?installU:0;
+      const bInstall=si==='install'?installB:0;
 
-      const uInstall = si==='install'?installU:0;
-      const bInstall = si==='install'?installB:0;
-
-      const uPft = uMatRate*hMult + uDoorRate + uFinRate + hnRate + slRate + dbRate + uInstall;
-      const bPft = bMatRate        + bDoorRate + bFinRate + hnRate + slRate + dbRate + bInstall;
+      const uPft = uMat.rateU*hMult + uDoorRate + uHingeRate + drawerRate + uInstall;
+      const bPft = bMat.rateB        + bDoorRate + bHingeRate + drawerRate + bInstall;
       const uCost=uFt*uPft, bCost=bFt*bPft;
 
       const lines=[];
-      if(uFt>0) lines.push({label:`Upper cabinets — ${mat[uMatKey]?.label||''} ${door[uDoorKey]?.label||''} (${uFt} lin ft)`,cost:Math.round(uCost)});
-      if(bFt>0) lines.push({label:`Base cabinets — ${mat[bMatKey]?.label||''} ${door[bDoorKey]?.label||''} (${bFt} lin ft)`,cost:Math.round(bCost)});
-      if(hnRate>0) lines.push({label:hinge[hnKey]?.label||'Hinge upgrade',cost:Math.round(hnRate*(uFt+bFt))});
-      if(slRate>0) lines.push({label:slide[slKey]?.label||'Slide upgrade',cost:Math.round(slRate*(uFt+bFt))});
-      if(dbRate>0) lines.push({label:drawerbox[dbKey]?.label||'Drawer box upgrade',cost:Math.round(dbRate*(uFt+bFt))});
+      const uDoorLabel = uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
+      const bDoorLabel = bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
+      if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uCost)});
+      if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
+      if(drawerRate>0&&(uFt+bFt)>0) lines.push({label:`Drawers — ${drawer[drawerKey]?.label||''}`,cost:Math.round(drawerRate*(uFt+bFt))});
 
       let specTotal=0;
       const totalFt=uFt+bFt;
@@ -698,15 +695,14 @@
       });
       const zc=prefix==='ct'?(zones[gv('mq-ct-zone')]||0):0;
       if(zc>0){lines.push({label:'Travel surcharge',cost:zc});sub+=zc;}
-      const {taxRate:tr}=P();
-      const tax=sub*tr;
+      const tax=sub*taxRate;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
-      if(tr>0) lines.push({label:`Est. tax (${Math.round(tr*100)}%)`,cost:Math.round(tax)});
+      if(taxRate>0) lines.push({label:`Est. tax (${Math.round(taxRate*100)}%)`,cost:Math.round(tax)});
       const total=sub+tax;
       return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*0.88/100)*100,high:Math.round(total*1.22/100)*100};
     }
 
-    function renderResult(rangeEl,listEl,result) {
+    function renderResult(rangeEl,listEl,result){
       document.getElementById(rangeEl).textContent=fmt(result.low)+' – '+fmt(result.high);
       const ul=document.getElementById(listEl);ul.innerHTML='';
       result.lines.forEach(l=>{
@@ -774,7 +770,7 @@
       });
     };
 
-    function addSurfaceInternal(prefix,name) {
+    function addSurfaceInternal(prefix,name){
       surfCounts[prefix]++;
       const id=`s${prefix}${surfCounts[prefix]}`;
       surfs[prefix][id]=1;
@@ -828,13 +824,13 @@
   // INIT
   // ============================================================
   async function init() {
-    const data = await loadShopData(shopToken);
-    if (!data) return;
-    const { shop, specs } = data;
-    const container = document.getElementById('midasquote-widget');
-    if (!container) { console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.'); return; }
-    injectStyles(shop['Brand colour'] || '#1a1a1a');
-    container.innerHTML = buildWidgetHTML(shop, specs, data);
+    const data=await loadShopData(shopToken);
+    if(!data) return;
+    const {shop,specs}=data;
+    const container=document.getElementById('midasquote-widget');
+    if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
+    injectStyles(shop['Brand colour']||'#1a1a1a');
+    container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
   }
 
