@@ -939,7 +939,7 @@
 
   window.mqphSaveCT=async function(){
     const gn=id=>parseFloat(document.getElementById(`mqph-ct-${id}`)?.value||0);
-    const fields={Lam supply:gn('lam'),'SS econ supply':gn('ss-econ'),'SS mid supply':gn('ss-mid'),'SS prem supply':gn('ss-prem'),'Gran econ supply':gn('gran-econ'),'Gran mid supply':gn('gran-mid'),'Gran prem supply':gn('gran-prem'),'Quartz supply':gn('quartz'),'Marble supply':gn('marble'),'Butcher supply':gn('butcher'),'Backsplash rate':gn('backsplash'),'Sink cutout':gn('sink'),'Cooktop cutout':gn('cooktop')};
+    const fields={'Lam supply':gn('lam'),'SS econ supply':gn('ss-econ'),'SS mid supply':gn('ss-mid'),'SS prem supply':gn('ss-prem'),'Gran econ supply':gn('gran-econ'),'Gran mid supply':gn('gran-mid'),'Gran prem supply':gn('gran-prem'),'Quartz supply':gn('quartz'),'Marble supply':gn('marble'),'Butcher supply':gn('butcher'),'Backsplash rate':gn('backsplash'),'Sink cutout':gn('sink'),'Cooktop cutout':gn('cooktop')};
     try{
       if(pricingRecord)await fetch(`${AT_BASE_URL()}/${shopRecord._pricingTable}/${pricingRecord.id}`,{method:'PATCH',headers:AT_HEADS(),body:JSON.stringify({fields})});
       const msg=document.getElementById('mqph-ct-msg');
