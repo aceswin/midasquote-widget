@@ -283,7 +283,7 @@ async function saveLead(data, lead, quoteType, low, high, lines) {
       #midasquote-widget .mq-pri:hover{opacity:0.88!important;background:${brandColor}!important}
      #midasquote-widget .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:flex-end;justify-content:center;padding:0}
 #midasquote-widget .mq-overlay.show{display:flex}
-#midasquote-widget .mq-modal{background:#fff;border-radius:12px 12px 0 0;padding:1.5rem;width:100%;max-width:420px;box-shadow:0 -4px 24px rgba(0,0,0,0.15)}
+#midasquote-widget .mq-modal{background:#f8faff;border-radius:12px 12px 0 0;padding:1.5rem;width:100%;max-width:420px;box-shadow:0 -4px 24px rgba(0,0,0,0.15)}
 @media(min-width:600px){#midasquote-widget .mq-overlay{align-items:bottom;padding:1rem}#midasquote-widget .mq-modal{border-radius:12px;width:90%}}
       #midasquote-widget .mq-modal-title{font-size:16px;font-weight:600;color:#111;margin-bottom:4px}
       #midasquote-widget .mq-modal-sub{font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.5}
