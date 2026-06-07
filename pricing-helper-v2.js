@@ -716,9 +716,13 @@
 
   function renderWizardStep(idx) {
     const steps=getSteps();
+    const activeEl=document.getElementById(`mqph-step-${idx}`);
+    if(activeEl){
+      activeEl.innerHTML=`<div class="mqph-step-title">${steps[idx].title}</div><div class="mqph-step-sub">${steps[idx].sub}</div>${steps[idx].content()}`;
+    }
     steps.forEach((_,i)=>{const el=document.getElementById(`mqph-step-${i}`);if(el)el.classList.toggle('active',i===idx);});
     const dots=document.querySelectorAll('.mqph-progress .dot');
-    dots.forEach((d,i)=>{d.classList.remove('done','active');if(i<idx)d.classList.add('done');else if(i===idx)d.classList.add('active');});
+    dots.forEach((d,i)=>{d.classList.remove('done','ctive');if(i<idx)d.classList.add('done');else if(i===idx)d.classList.add('active');});
     const back=document.getElementById('mqph-back-btn');
     const next=document.getElementById('mqph-next-btn');
     const skip=document.getElementById('mqph-skip-btn');
@@ -727,11 +731,11 @@
     if(skip){skip.style.display=steps[idx].skipLabel?'inline-block':'none';if(steps[idx].skipLabel)skip.textContent=steps[idx].skipLabel;}
   }
 
-  window.mqphNext=function(){
+  window.mqphNext=function(){console.log("mqphNext: step",wizardStep,"wizardBaseline before onNext:",JSON.stringify(wizardBaseline));
     const steps=getSteps();
     const result=steps[wizardStep].onNext?steps[wizardStep].onNext():null;
     if(result==='abort'){loadAndRender();return;}
-    wizardStep++;
+    wizardStep++;console.log("mqphNext: after onNext wizardBaseline:",JSON.stringify(wizardBaseline));
     if(wizardStep>=steps.length){mqphFinishWizard();}else{renderWizardStep(wizardStep);}
   };
   window.mqphBack=function(){if(wizardStep>0){wizardStep--;renderWizardStep(wizardStep);}};
@@ -755,12 +759,7 @@
   function buildWizardHTML() {
     const steps=getSteps();
     const dots=steps.map(()=>`<div class="dot"></div>`).join('');
-    const stepDivs=steps.map((s,i)=>`
-      <div class="mqph-step ${i===0?'active':''}" id="mqph-step-${i}">
-        <div class="mqph-step-title">${s.title}</div>
-        <div class="mqph-step-sub">${s.sub}</div>
-        ${s.content()}
-      </div>`).join('');
+    const stepDivs=steps.map((s,i)=>`<div class="mqph-step ${i===0?'active':''}" id="mqph-step-${i}"></div>`).join('');
     return `
       <div class="mqph-wizard-card">
         <div class="mqph-wizard-header">
