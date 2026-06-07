@@ -14,8 +14,8 @@
     SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
     LEADS_TABLE:        'tblPcoTI8zCCHLICi',
     RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
-    EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
-FROM_EMAIL:         'quotes@midasquote.com',
+    EMAIL_WORKER:       'https://midasquote-email.jordan132001.workers.dev',
+    FROM_EMAIL:         'quotes@midasquote.com',
   };
 
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
@@ -70,7 +70,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
-     #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
+      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
       #midasquote-dashboard .mq-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
       #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#111;display:flex;align-items:center;gap:8px}
       #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#6b7280}
@@ -89,7 +89,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
-     #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
+      #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
       #midasquote-dashboard .mq-page{display:none}
       #midasquote-dashboard .mq-page.active{display:block}
       #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
@@ -145,8 +145,8 @@ FROM_EMAIL:         'quotes@midasquote.com',
 
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
-    const embedCode = `&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=${token}"&gt;&lt;/script&gt;`;
- const rawCode = `<div id="midasquote-widget"></div>\n<scr` + `ipt src="https://widget.midasquote.com/widget.js?shop=${token}"></scr` + `ipt>`;
+    const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
+    window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
 
     return `
       <div class="mq-topbar">
@@ -191,7 +191,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
             <div class="mq-card">
               <div class="mq-card-title">🔗 Your widget embed code</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear.</p>
-              <div class="mq-embed-box" id="mq-embed-preview"><span>${embedCode}</span><button class="mq-copy-btn" onclick="mqCopyEmbed('${rawCode}')">Copy</button></div>
+              <div class="mq-embed-box" id="mq-embed-preview"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-1">Copy</button></div>
             </div>
           </div>
 
@@ -242,6 +242,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
               <button class="mq-btn mq-btn-primary" onclick="mqSaveShop()">Save shop info</button>
             </div>
           </div>
+
           <!-- PRICING -->
           <div class="mq-page" id="mq-page-pricing">
             <div id="mq-pricing-helper-v2"></div>
@@ -269,7 +270,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
             <div class="mq-card">
               <div class="mq-card-title">📋 Your embed code</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy the code below and paste it into your website's HTML where you want the quote widget to appear. Works on Wix, Squarespace, WordPress, Webflow, GoDaddy and any custom site.</p>
-              <div class="mq-embed-box"><span>${embedCode}</span><button class="mq-copy-btn" onclick="mqCopyEmbed('${rawCode}')">Copy</button></div>
+              <div class="mq-embed-box"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-2">Copy</button></div>
             </div>
             <div class="mq-card">
               <div class="mq-card-title">📱 Shop mode</div>
@@ -287,10 +288,6 @@ FROM_EMAIL:         'quotes@midasquote.com',
               </div>
             </div>
           </div>
-
-
-          <!-- PRICING HELPER -->
-
 
         </div>
       </div>
@@ -311,10 +308,10 @@ FROM_EMAIL:         'quotes@midasquote.com',
   // ============================================================
   // COPY HELPERS
   // ============================================================
-  window.mqCopyEmbed = function(code) {
+  window.mqCopyEmbed = function(btn) {
+    const code = window._mqRawEmbedCode || '';
     navigator.clipboard.writeText(code).then(() => {
-      const btns = document.querySelectorAll('#midasquote-dashboard .mq-copy-btn');
-      btns.forEach(b => { if (b.textContent === 'Copy') { b.textContent = 'Copied!'; setTimeout(() => b.textContent = 'Copy', 2000); }});
+      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); }
     });
   };
   window.mqCopyText = function(text, btn) {
@@ -341,7 +338,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
     return recs;
   }
 
- async function loadSpecialty(shopName) {
+  async function loadSpecialty(shopName) {
     const recs = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
     return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
@@ -437,7 +434,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
     set('mq-stat-value', fmt(pipeline));
   }
 
- function renderSpecialty(specs, shopRecord) {
+  function renderSpecialty(specs, shopRecord) {
     const container = el('mq-spec-list');
     if (!container) return;
     if (!specs.length) {
@@ -460,7 +457,6 @@ FROM_EMAIL:         'quotes@midasquote.com',
         </tbody>
       </table>`;
 
-    // Drag to reorder
     const tbody = document.getElementById('mq-spec-tbody');
     let dragging = null;
 
@@ -473,7 +469,6 @@ FROM_EMAIL:         'quotes@midasquote.com',
       row.addEventListener('dragend', async () => {
         row.style.opacity = '1';
         dragging = null;
-        // Save new sort orders
         const rows = [...tbody.querySelectorAll('tr')];
         for (let i = 0; i < rows.length; i++) {
           await atUpdate(CONFIG.SPECIALTY_TABLE, rows[i].dataset.id, { 'Sort order': i + 1 });
@@ -499,14 +494,14 @@ FROM_EMAIL:         'quotes@midasquote.com',
     if (!shopRec) return;
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, {
-        'Shop name':        gv('mq-shop-name'),
-        'Phone':            gv('mq-shop-phone'),
-        'City':             gv('mq-shop-city'),
-        'Website':          gv('mq-shop-website'),
-        'Lead notify email':gv('mq-shop-email'),
-        'Brand colour':     gv('mq-shop-color'),
-        'Logo URL':         gv('mq-shop-logo'),
-        'Disclaimer text':  gv('mq-shop-disclaimer'),
+        'Shop name':         gv('mq-shop-name'),
+        'Phone':             gv('mq-shop-phone'),
+        'City':              gv('mq-shop-city'),
+        'Website':           gv('mq-shop-website'),
+        'Lead notify email': gv('mq-shop-email'),
+        'Brand colour':      gv('mq-shop-color'),
+        'Logo URL':          gv('mq-shop-logo'),
+        'Disclaimer text':   gv('mq-shop-disclaimer'),
       });
       showMsg('mq-shop-msg', '✓ Shop info saved!');
     } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
@@ -518,37 +513,37 @@ FROM_EMAIL:         'quotes@midasquote.com',
     if (!shopRec) return;
     try {
       const fields = {
-        'Shop':              [shopRec.id],
-        'Melamine price':    gn('mq-p-melamine'),
-        'Plywood price':     gn('mq-p-plywood'),
-        'MDF price':         gn('mq-p-mdf'),
-        'Solid wood price':  gn('mq-p-solid'),
-        'Slab multiplier':   gn('mq-p-slab'),
-        'Shaker multiplier': gn('mq-p-shaker'),
-        'Raised multiplier': gn('mq-p-raised'),
-        'Glass multiplier':  gn('mq-p-glass'),
+        'Shop':                [shopRec.id],
+        'Melamine price':      gn('mq-p-melamine'),
+        'Plywood price':       gn('mq-p-plywood'),
+        'MDF price':           gn('mq-p-mdf'),
+        'Solid wood price':    gn('mq-p-solid'),
+        'Slab multiplier':     gn('mq-p-slab'),
+        'Shaker multiplier':   gn('mq-p-shaker'),
+        'Raised multiplier':   gn('mq-p-raised'),
+        'Glass multiplier':    gn('mq-p-glass'),
         'Install rate uppers': gn('mq-p-install'),
-        'Soft close hinges': gn('mq-p-hinges'),
-        'Birch drawer box':  gn('mq-p-drawer'),
-        'Removal rate':      gn('mq-p-removal'),
-        'Lam supply':        gn('mq-p-lam'),
-        'SS econ supply':    gn('mq-p-ss-econ'),
-        'SS mid supply':     gn('mq-p-ss-mid'),
-        'SS prem supply':    gn('mq-p-ss-prem'),
-        'Gran econ supply':  gn('mq-p-gran-econ'),
-        'Gran mid supply':   gn('mq-p-gran-mid'),
-        'Gran prem supply':  gn('mq-p-gran-prem'),
-        'Quartz supply':     gn('mq-p-quartz'),
-        'Marble supply':     gn('mq-p-marble'),
-        'Butcher supply':    gn('mq-p-butcher'),
-        'Local zone radius': gn('mq-p-zone-radius'),
-        'Zone 2 surcharge':  gn('mq-p-zone2'),
-        'Zone 3 surcharge':  gn('mq-p-zone3'),
-        'Zone 4 surcharge':  gn('mq-p-zone4'),
-        'Tax rate':          gn('mq-p-tax'),
-        'Backsplash rate':   gn('mq-p-backsplash'),
-        'Sink cutout':       gn('mq-p-sink'),
-        'Cooktop cutout':    gn('mq-p-cooktop'),
+        'Soft close hinges':   gn('mq-p-hinges'),
+        'Birch drawer box':    gn('mq-p-drawer'),
+        'Removal rate':        gn('mq-p-removal'),
+        'Lam supply':          gn('mq-p-lam'),
+        'SS econ supply':      gn('mq-p-ss-econ'),
+        'SS mid supply':       gn('mq-p-ss-mid'),
+        'SS prem supply':      gn('mq-p-ss-prem'),
+        'Gran econ supply':    gn('mq-p-gran-econ'),
+        'Gran mid supply':     gn('mq-p-gran-mid'),
+        'Gran prem supply':    gn('mq-p-gran-prem'),
+        'Quartz supply':       gn('mq-p-quartz'),
+        'Marble supply':       gn('mq-p-marble'),
+        'Butcher supply':      gn('mq-p-butcher'),
+        'Local zone radius':   gn('mq-p-zone-radius'),
+        'Zone 2 surcharge':    gn('mq-p-zone2'),
+        'Zone 3 surcharge':    gn('mq-p-zone3'),
+        'Zone 4 surcharge':    gn('mq-p-zone4'),
+        'Tax rate':            gn('mq-p-tax'),
+        'Backsplash rate':     gn('mq-p-backsplash'),
+        'Sink cutout':         gn('mq-p-sink'),
+        'Cooktop cutout':      gn('mq-p-cooktop'),
       };
       if (pricingRec) {
         await atUpdate(CONFIG.PRICING_TABLE, pricingRec.id, fields);
@@ -620,7 +615,6 @@ FROM_EMAIL:         'quotes@midasquote.com',
     injectStyles();
     container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;font-size:14px;color:#6b7280">Loading your dashboard...</div>';
 
-    // Get shop token from Memberstack or URL param
     let shopToken = new URLSearchParams(window.location.search).get('shop');
     if (!shopToken && window.$memberstackDom) {
       try {
@@ -628,9 +622,8 @@ FROM_EMAIL:         'quotes@midasquote.com',
         if (member) shopToken = member.metaData?.shopToken || member.customFields?.shopToken;
       } catch(e) {}
     }
-    if (!shopToken) shopToken = 'dr-sales-001'; // fallback for testing
+    if (!shopToken) shopToken = 'dr-sales-001';
 
-    // Load shop record
     const shopRecord = await loadShop(shopToken);
     if (!shopRecord) {
       container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at hello@midasquote.com</div>';
@@ -640,25 +633,28 @@ FROM_EMAIL:         'quotes@midasquote.com',
     window._mqShopRecord = shopRecord;
     container.innerHTML = buildHTML(shopRecord.fields);
 
-    // Load pricing
+    // Wire up embed copy buttons now that DOM exists
+    ['mq-copy-embed-1', 'mq-copy-embed-2'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.onclick = () => mqCopyEmbed(btn);
+    });
+
     const pricingRecord = await loadPricing(shopRecord.fields['Shop name']);
     window._mqPricingRecord = pricingRecord;
     if (pricingRecord) populatePricing(pricingRecord);
     populateShop(shopRecord);
 
-    // Load leads
     const leads = await loadLeads(shopRecord.id);
     window._mqLeads = leads;
     renderStats(leads);
     el('mq-recent-leads').innerHTML = renderLeads(leads, 5);
     el('mq-leads-table').innerHTML = renderLeads(leads);
 
-    // Load specialty items
     const specs = await loadSpecialty(shopRecord.fields['Shop name']);
     renderSpecialty(specs, shopRecord);
   }
 
- // Load pricing helper when that nav item is clicked
+  // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
   window.mqNav = function(page, navEl) {
     origMqNav(page, navEl);
