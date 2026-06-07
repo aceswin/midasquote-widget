@@ -203,7 +203,7 @@
       <div class="mqph-setup-card">
         <div class="mqph-setup-header">
           <div class="mqph-setup-title">🔧 Installation & removal</div>
-          <div class="mqph-setup-sub">Pre-added for you — rates are calculated in the wizard. Delete any you don't offer.</div>
+          <div class="mqph-setup-sub">Pre-added for you — rates are calculated in the wizard. Delete any you don't offer. If you only do supply, delete all three.</div>
         </div>
         <div class="mqph-chip-row" id="mqph-chips-install">
           ${(existing['install'] || []).map(r => `
