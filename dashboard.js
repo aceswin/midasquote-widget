@@ -89,7 +89,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
-    #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
+      #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:auto}
       #midasquote-dashboard .mq-page{display:none}
       #midasquote-dashboard .mq-page.active{display:block}
       #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
@@ -339,9 +339,9 @@ FROM_EMAIL:         'quotes@midasquote.com',
     return recs;
   }
 
-  async function loadSpecialty(shopName) {
+ async function loadSpecialty(shopName) {
     const recs = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
-    return recs;
+    return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
 
   // ============================================================
@@ -560,7 +560,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
         'Price': 0,
         'Active': true,
         'Per linear foot': false,
-        'Sort order': 99,
+        'Sort order': 0,
       });
       const specs = await loadSpecialty(shopRec.fields['Shop name']);
       renderSpecialty(specs, shopRec);
