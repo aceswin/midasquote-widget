@@ -241,7 +241,7 @@
     input.value = '';
     const sortMax = lineItems.filter(r => r.fields['Category'] === cat).length + 1;
     const rec = await atCreate(LINE_ITEMS_TABLE, {
-      'Shop': [shopRecord._recordId], 'Name': name, 'Category': cat,
+      'shop': [shopRecord._recordId], 'Name': name, 'Category': cat,
       'Rate': 0, 'Unit': 'per lin ft', 'Active': true, 'Sort order': sortMax,
     });
     lineItems.push(rec);
@@ -578,7 +578,7 @@
         await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate': item.rate, 'Unit': item.unit, 'Description': item.description, 'Active': true });
       } else {
         await atCreate(LINE_ITEMS_TABLE, {
-          'Shop': [shopRecord._recordId], 'Name': item.name, 'Category': item.category,
+          'shop': [shopRecord._recordId], 'Name': item.name, 'Category': item.category,
           'Rate': item.rate, 'Unit': item.unit, 'Description': item.description||'', 'Active': true, 'Sort order': i+1,
         });
       }
@@ -700,13 +700,13 @@
 const hasInstall = lineItems.filter(r=>r.fields).some(r => r.fields['Category']==='install');
     if (!hasHinge) {
       for (let i=0; i<DEFAULT_HINGES.length; i++) {
-        const rec = await atCreate(LINE_ITEMS_TABLE, { 'Shop':[shopRecord._recordId], 'Name':DEFAULT_HINGES[i], 'Category':'hinge', 'Rate':0, 'Unit':'per lin ft upcharge', 'Active':true, 'Sort order':i+1 });
+        const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':DEFAULT_HINGES[i], 'Category':'hinge', 'Rate':0, 'Unit':'per lin ft upcharge', 'Active':true, 'Sort order':i+1 });
         lineItems.push(rec);
       }
     }
     if (!hasInstall) {
       for (let i=0; i<DEFAULT_INSTALL.length; i++) {
-        const rec = await atCreate(LINE_ITEMS_TABLE, { 'Shop':[shopRecord._recordId], 'Name':DEFAULT_INSTALL[i].name, 'Category':'install', 'Rate':0, 'Unit':DEFAULT_INSTALL[i].unit, 'Description':DEFAULT_INSTALL[i].description, 'Active':true, 'Sort order':i+1 });
+        const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':DEFAULT_INSTALL[i].name, 'Category':'install', 'Rate':0, 'Unit':DEFAULT_INSTALL[i].unit, 'Description':DEFAULT_INSTALL[i].description, 'Active':true, 'Sort order':i+1 });
         lineItems.push(rec);
       }
     }
@@ -745,7 +745,7 @@ const hasInstall = lineItems.filter(r=>r.fields).some(r => r.fields['Category']=
     const name = document.getElementById('mqph-item-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
     const fields = {
-      'Shop':[shopRecord._recordId], 'Name':name,
+      'shop':[shopRecord._recordId], 'Name':name,
       'Category':document.getElementById('mqph-item-cat').value,
       'Rate':parseFloat(document.getElementById('mqph-item-rate').value||0),
       'Unit':document.getElementById('mqph-item-unit').value,
@@ -824,7 +824,7 @@ const hasInstall = lineItems.filter(r=>r.fields).some(r => r.fields['Category']=
   async function loadAndRender() {
     const container = document.getElementById('mq-pricing-helper-v2');
     if (!container) return;
-    lineItems = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._recordId}", ARRAYJOIN({Shop}))`);
+    lineItems = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._recordId}", ARRAYJOIN({shop}))`);
     container.innerHTML = buildEditorHTML();
   }
 
