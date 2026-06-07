@@ -351,7 +351,7 @@
       sub: 'In your quoting software, quote this exact job:',
       content: () => `
         ${specBox([
-          `<strong>Upper cabinets only — BOX ONLY, no doors</strong>`,
+          `<strong>Upper cabinets only — BOX ONLY, Include shelves, no doors</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
           `Material: <span class="mqph-spec-tag">${wizardBaseline?.matName || materials[parseInt(document.getElementById('mqph-bl-mat')?.value||0)]?.fields['Name'] || '—'}</span>`,
           `<strong>No doors · No hardware · Supply only · Local delivery</strong>`,
@@ -371,7 +371,7 @@
     // Step 3: Baseline bases — BOX ONLY, no doors
     steps.push({
       title: '📐 Step 3 — Baseline base cabinets (box only)',
-      sub: 'Same spec, bases only. Bases include toe kick — no doors, no hardware.',
+      sub: 'Same spec, bases only. Bases include toe kick and shelf — no doors, no hardware.',
       content: () => `
         ${specBox([
           `<strong>Base cabinets only — BOX ONLY, no doors</strong>`,
