@@ -435,7 +435,7 @@ FROM_EMAIL:         'quotes@midasquote.com',
     set('mq-stat-value', fmt(pipeline));
   }
 
-  function renderSpecialty(specs, shopRecord) {
+ function renderSpecialty(specs, shopRecord) {
     const container = el('mq-spec-list');
     if (!container) return;
     if (!specs.length) {
@@ -443,20 +443,50 @@ FROM_EMAIL:         'quotes@midasquote.com',
       return;
     }
     container.innerHTML = `
-      <table class="mq-table">
-        <thead><tr><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Active</th><th>Sort</th><th></th></tr></thead>
-        <tbody>
+      <table class="mq-table" id="mq-spec-table">
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Active</th><th></th></tr></thead>
+        <tbody id="mq-spec-tbody">
           ${specs.map(r => `
-            <tr>
+            <tr data-id="${r.id}" style="cursor:grab">
+              <td style="color:#9ca3af;font-size:16px;padding:8px 12px">⠿</td>
               <td><input type="text" value="${r.fields['Item name'] || ''}" id="mq-spec-name-${r.id}" style="border:none;background:none;font-size:13px;width:160px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/></td>
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td><input type="checkbox" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecField('${r.id}','Per linear foot',this.checked)"/></td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
-              <td><input type="number" value="${r.fields['Sort order'] || ''}" style="width:60px" onblur="mqSaveSpecField('${r.id}','Sort order',parseInt(this.value))"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
             </tr>`).join('')}
         </tbody>
       </table>`;
+
+    // Drag to reorder
+    const tbody = document.getElementById('mq-spec-tbody');
+    let dragging = null;
+
+    tbody.querySelectorAll('tr').forEach(row => {
+      row.draggable = true;
+      row.addEventListener('dragstart', () => {
+        dragging = row;
+        setTimeout(() => row.style.opacity = '0.4', 0);
+      });
+      row.addEventListener('dragend', async () => {
+        row.style.opacity = '1';
+        dragging = null;
+        // Save new sort orders
+        const rows = [...tbody.querySelectorAll('tr')];
+        for (let i = 0; i < rows.length; i++) {
+          await atUpdate(CONFIG.SPECIALTY_TABLE, rows[i].dataset.id, { 'Sort order': i + 1 });
+        }
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        const after = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+        if (e.clientY < after) {
+          tbody.insertBefore(dragging, row);
+        } else {
+          tbody.insertBefore(dragging, row.nextSibling);
+        }
+      });
+    });
   }
 
   // ============================================================
