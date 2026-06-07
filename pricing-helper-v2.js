@@ -451,9 +451,10 @@
       title: '🚪 Step 5 — Baseline door style pricing',
       sub: 'Now add doors. Quote baseline material + baseline door style + cheapest hinge.',
       content: () => {
-        const matName  = wizardBaseline?.matName  || materials[getBlIdx('mqph-bl-mat',null)]?.fields['Name']  || '—';
-        const doorName = wizardBaseline?.doorName || doorStyles[getBlIdx('mqph-bl-door',null)]?.fields['Name'] || '—';
-        const hingeName= wizardBaseline?.hingeName|| hinges[getBlIdx('mqph-bl-hinge',null)]?.fields['Name']   || (hinges.length?hinges[0].fields['Name']:'your cheapest hinge');
+        const matName  = wizardBaseline?.matName  != null ? wizardBaseline.matName  : (materials[getBlIdx('mqph-bl-mat',null)]?.fields['Name']  || '—');
+        const doorName = wizardBaseline?.doorName != null ? wizardBaseline.doorName : (doorStyles[getBlIdx('mqph-bl-door',null)]?.fields['Name'] || '—');
+        const hi = wizardBaseline?.hingeIndex ?? parseInt(document.getElementById('mqph-bl-hinge')?.value || '0');
+        const hingeName = hinges[hi]?.fields['Name'] || 'your cheapest hinge';
         return `
           <div class="mqph-hl">Doors are priced as an upcharge on top of the box. The finish is already in your door name — e.g. "Maple shaker — stained & lacquered".</div>
           ${specBox([
@@ -487,8 +488,9 @@
         sub: 'Same spec, swap the door style. Keep baseline material and baseline hinge.',
         content: () => {
           const blIdx = getBlIdx('mqph-bl-door', wizardBaseline?.doorIndex);
-          const matName  = wizardBaseline?.matName  || materials[getBlIdx('mqph-bl-mat',null)]?.fields['Name']  || '—';
-          const hingeName= wizardBaseline?.hingeName|| hinges[getBlIdx('mqph-bl-hinge',null)]?.fields['Name']   || 'baseline hinge';
+          const matName  = wizardBaseline?.matName  != null ? wizardBaseline.matName  : (materials[getBlIdx('mqph-bl-mat',null)]?.fields['Name']  || '—');
+          const hi = wizardBaseline?.hingeIndex ?? 0;
+          const hingeName = hinges[hi]?.fields['Name'] || 'baseline hinge';
           const others = doorStyles.filter((_,i) => i !== blIdx);
           return others.map((d,idx) => `
             <div class="mqph-item-block">
@@ -939,7 +941,7 @@
 
   window.mqphSaveCT=async function(){
     const gn=id=>parseFloat(document.getElementById(`mqph-ct-${id}`)?.value||0);
-    const fields={'Lam supply':gn('lam'),'SS econ supply':gn('ss-econ'),'SS mid supply':gn('ss-mid'),'SS prem supply':gn('ss-prem'),'Gran econ supply':gn('gran-econ'),'Gran mid supply':gn('gran-mid'),'Gran prem supply':gn('gran-prem'),'Quartz supply':gn('quartz'),'Marble supply':gn('marble'),'Butcher supply':gn('butcher'),'Backsplash rate':gn('backsplash'),'Sink cutout':gn('sink'),'Cooktop cutout':gn('cooktop')};
+    const fields={Lam supply:gn('lam'),'SS econ supply':gn('ss-econ'),'SS mid supply':gn('ss-mid'),'SS prem supply':gn('ss-prem'),'Gran econ supply':gn('gran-econ'),'Gran mid supply':gn('gran-mid'),'Gran prem supply':gn('gran-prem'),'Quartz supply':gn('quartz'),'Marble supply':gn('marble'),'Butcher supply':gn('butcher'),'Backsplash rate':gn('backsplash'),'Sink cutout':gn('sink'),'Cooktop cutout':gn('cooktop')};
     try{
       if(pricingRecord)await fetch(`${AT_BASE_URL()}/${shopRecord._pricingTable}/${pricingRecord.id}`,{method:'PATCH',headers:AT_HEADS(),body:JSON.stringify({fields})});
       const msg=document.getElementById('mqph-ct-msg');
