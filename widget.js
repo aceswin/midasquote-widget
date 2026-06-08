@@ -17,25 +17,26 @@
   };
 
 
+  
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
-
+ 
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
   const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
-
+ 
   async function atGet(table, formula) {
     const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
     const res = await fetch(url, { headers: AT_HEADS });
     const data = await res.json();
     return data.records || [];
   }
-
+ 
   async function atCreate(table, fields) {
     const res = await fetch(`${AT_BASE}/${table}`, { method:'POST', headers:AT_HEADS, body:JSON.stringify({fields}) });
     return await res.json();
   }
-
+ 
   // ============================================================
   // LOAD SHOP DATA
   // ============================================================
@@ -45,13 +46,13 @@
     const shopRecord = shops[0];
     const shop = shopRecord.fields;
     shop._recordId = shopRecord.id;
-
+ 
     const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
     const p = pricing.length ? pricing[0].fields : {};
-
+ 
     const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({shop}))`);
     const sorted = lineItemRecords.filter(r=>r.fields).sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
-
+ 
     const byCategory = cat => sorted.filter(r=>r.fields['Category']===cat).map(r=>r.fields);
     // For materials, deduplicate by base name (strip " — uppers" / " — bases" suffix)
     // Keep one entry per unique base material name for the customer dropdown
@@ -65,7 +66,7 @@
       }
       return acc;
     }, []);
-
+ 
     const li = {
       materials:   dedupedMaterials,
       rawMaterials: rawMaterials,
@@ -77,17 +78,17 @@
       taxItems:    byCategory('tax'),
       otherItems:  byCategory('other'),
     };
-
+ 
     const hasDynamic = li.materials.length > 0;
-
+ 
     const specRecords = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
     const specs = specRecords
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0))
       .map(r=>({ id:r.id, label:r.fields['Item name']||r.fields['Special Items'], price:r.fields['Price']||0, perFt:r.fields['Per linear foot']||false }));
-
+ 
     return { shop, pricing:p, specs, li, hasDynamic };
   }
-
+ 
   // ============================================================
   // EMAIL & LEAD
   // ============================================================
@@ -102,10 +103,10 @@
         'Quote details':JSON.stringify(lines), 'Source':'Website', 'Status':'New',
       });
     } catch(e) { console.error('Lead save failed', e); }
-
+ 
     const lineRows = (lines||[]).filter(l=>l&&l.label&&l.cost!==undefined)
       .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`).join('');
-
+ 
     await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#1a1a1a">New ${quoteType} quote lead</h2>
@@ -123,7 +124,7 @@
           <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
         </div>
       </div>`);
-
+ 
     if (lead.email) {
       await sendEmail(lead.email, `Your quote from ${shop['Shop name']}`,
         `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
@@ -139,13 +140,13 @@
         </div>`);
     }
   }
-
+ 
   async function sendEmail(to, subject, html) {
     if (!CONFIG.EMAIL_WORKER||!to) return;
     try { await fetch(CONFIG.EMAIL_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,subject,html})}); }
     catch(e) { console.error('Email failed',e); }
   }
-
+ 
   // ============================================================
   // STYLES
   // ============================================================
@@ -248,15 +249,15 @@
     `;
     document.head.appendChild(s);
   }
-
+ 
   // ============================================================
   // BUILD WIDGET HTML
   // ============================================================
   function makeOpts(items, fallbackOpts) {
-    if (items && items.length > 0) return items.map((m,i)=>`<option value="dyn_${i}">${m['Name']}</option>`).join('');
+    if (items && items.length > 0) return items.map((m,i)=>`<option value="dyn_${i}">${m._baseName || m['Name']}</option>`).join('');
     return fallbackOpts || '';
   }
-
+ 
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:13px;color:#6b7280">No specialty items configured yet.</p>';
     return specs.map((s,i)=>`
@@ -269,30 +270,30 @@
         </div>
       </div>`).join('');
   }
-
+ 
   function ctMatOpts() {
     return `<optgroup label="Laminate"><option value="lam">Laminate</option></optgroup>
       <optgroup label="Solid Surface"><option value="ss_econ">Economy</option><option value="ss_mid">Mid-grade</option><option value="ss_prem">Premium</option></optgroup>
       <optgroup label="Granite"><option value="gran_econ">Economy granite</option><option value="gran_mid">Mid-grade granite</option><option value="gran_prem">Premium (Cambria)</option></optgroup>
       <optgroup label="Other"><option value="quartz">Engineered quartz</option><option value="marble">Marble</option><option value="butcher">Butcher block</option></optgroup>`;
   }
-
+ 
   function cabinetForm(prefix, specs, data) {
     const { li, hasDynamic } = data;
-
+ 
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     // No doors option at top, then all door styles
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const drawerOpts = makeOpts(li.drawers, '');
     const hingeOpts  = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
-
+ 
     const hasDrawers = li.drawers.length > 0;
     const hasHinges  = li.hinges.length > 0;
     const hasInstall = !hasDynamic || li.installItems.length > 0;
-
+ 
     const localRadius = li.zones.find(z=>z['Name']?.toLowerCase().includes('local'))?.['Rate'] || 15;
     const dynZones = li.zones.filter(z=>!z['Name']?.toLowerCase().includes('local'));
-
+ 
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
@@ -363,11 +364,11 @@
         <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
       </div>`;
   }
-
+ 
   function buildWidgetHTML(shop, specs, data) {
     const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
-
+ 
     return `
       <div class="mq-header">
         <div class="mq-logo">${logoHTML}</div>
@@ -390,7 +391,7 @@
           <span class="mq-tab-label"><span class="mq-tab-title">Both</span><span class="mq-tab-sub">Full project quote</span></span>
         </button>
       </div>
-
+ 
       <!-- CABINET TAB -->
       <div class="mq-tab-content active" id="mq-tab-cabinets">
         ${cabinetForm('c', specs, data)}
@@ -409,7 +410,7 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- COUNTERTOP TAB -->
       <div class="mq-tab-content" id="mq-tab-countertops">
         <div class="mq-sec">
@@ -440,7 +441,7 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- BOTH TAB -->
       <div class="mq-tab-content" id="mq-tab-both">
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪵 Cabinet details</div><div class="mq-both-divider-line"></div></div>
@@ -481,7 +482,7 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- LEAD MODAL -->
       <div class="mq-overlay" id="mq-lead-overlay">
         <div class="mq-modal">
@@ -497,18 +498,18 @@
         </div>
       </div>`;
   }
-
+ 
   // ============================================================
   // WIRE LOGIC
   // ============================================================
   function wireWidget(data) {
     const { shop, pricing, specs, li, hasDynamic } = data;
-
+ 
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
       let installU=0, installB=0, removalRate=0, taxRate=0;
       const zones={};
-
+ 
       if (hasDynamic) {
         // Build material rates — match upper/base rates from raw line items by base name
         li.materials.forEach((m,i) => {
@@ -523,11 +524,11 @@
             rateB: bItem ? bItem['Rate']||0 : fallbackRate,
           };
         });
-
+ 
         li.doorStyles.forEach((d,i)  => { door[`dyn_${i}`]   = { label:d['Name'], rate:d['Rate']||0 }; });
         li.drawers.forEach((d,i)     => { drawer[`dyn_${i}`]  = { label:d['Name'], rate:d['Rate']||0 }; });
         li.hinges.forEach((h,i)      => { hinge[`dyn_${i}`]   = { label:h['Name'], rate:h['Rate']||0 }; });
-
+ 
         const iu = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper'));
         const ib = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base'));
         installU = iu?iu['Rate']||0:0;
@@ -555,7 +556,7 @@
       }
       return { mat, door, drawer, hinge, installU, installB, removalRate, taxRate, zones };
     }
-
+ 
     const CT_MAT = {
       lam:{label:'Laminate',ps:pricing['Lam supply']||18,pi:12},
       ss_econ:{label:'Solid surface — Economy',ps:pricing['SS econ supply']||38,pi:18},
@@ -573,36 +574,36 @@
     const bsRate=pricing['Backsplash rate']||12;
     const sinkR=pricing['Sink cutout']||180;
     const cookR=pricing['Cooktop cutout']||220;
-
+ 
     const diffOn={},specQty={},surfCounts={},surfs={};
     let pendingCb=null;
     ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};});
-
+ 
     function fmt(n){return '$'+Math.round(n).toLocaleString();}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
     function gn(id,d=0){const v=parseFloat(gv(id));return isNaN(v)?d:v;}
-
+ 
     window.mqSwitchTab=(id,el)=>{
       document.querySelectorAll('.mq-tab-content').forEach(t=>t.classList.remove('active'));
       document.querySelectorAll('.mq-tab').forEach(t=>t.classList.remove('active'));
       document.getElementById('mq-tab-'+id).classList.add('active');
       el.classList.add('active');
     };
-
+ 
     window.mqTogDiff=(prefix)=>{
       diffOn[prefix]=!diffOn[prefix];
       document.getElementById(`mq-${prefix}-diff-tog`).classList.toggle('on',diffOn[prefix]);
       document.getElementById(`mq-${prefix}-shared`).style.display=diffOn[prefix]?'none':'block';
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
     };
-
+ 
     window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0)mqAdjQty(prefix,i,1);else mqAdjQty(prefix,i,-specQty[prefix][i]);};
     window.mqAdjQty=(prefix,i,d)=>{
       specQty[prefix][i]=Math.max(0,specQty[prefix][i]+d);
       document.getElementById(`mq-qty-${prefix}-${i}`).textContent=specQty[prefix][i];
       document.getElementById(`mq-sp-${prefix}-${i}`).classList.toggle('on',specQty[prefix][i]>0);
     };
-
+ 
     window.mqShowLead=cb=>{pendingCb=cb;document.getElementById('mq-lead-overlay').classList.add('show');};
     window.mqSkipLead=()=>{document.getElementById('mq-lead-overlay').classList.remove('show');if(pendingCb){pendingCb(null);pendingCb=null;}};
     window.mqSubmitLead=async()=>{
@@ -611,20 +612,20 @@
       if(pendingCb){pendingCb(lead);pendingCb=null;}
     };
     window.mqShowConsultModal=()=>window.mqShowLead(()=>{});
-
+ 
     function getMaterialRates(matKey, mat) {
       const m = mat[matKey];
       if (!m) return { rateU: 0, rateB: 0, label: '' };
       // If item has separate upper/base rates use them, otherwise use single rate
       return { rateU: m.rateU ?? m.rate ?? 0, rateB: m.rateB ?? m.rate ?? 0, label: m.label || '' };
     }
-
+ 
     function calcCabinet(prefix) {
       const {mat,door,drawer,hinge,installU,installB,removalRate,taxRate,zones}=P();
       const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
       const hMult={standard:1.0,tall:1.15,mixed:1.08}[gv(`mq-${prefix}-ht`)];
-
+ 
       let uMatKey,uDoorKey,uHingeKey,bMatKey,bDoorKey,bHingeKey;
       if(diffOn[prefix]){
         uMatKey=gv(`mq-${prefix}-u-mat`);uDoorKey=gv(`mq-${prefix}-u-door`);uHingeKey=gv(`mq-${prefix}-u-hinge`)||'';
@@ -635,7 +636,7 @@
         uHingeKey=bHingeKey=gv(`mq-${prefix}-hinge`)||'';
       }
       const drawerKey=gv(`mq-${prefix}-drawer`)||'';
-
+ 
       const uMat = getMaterialRates(uMatKey, mat);
       const bMat = getMaterialRates(bMatKey, mat);
       const uDoorRate = uDoorKey==='none' ? 0 : (door[uDoorKey]?.rate||0);
@@ -643,21 +644,21 @@
       const uHingeRate = uDoorKey==='none' ? 0 : (hinge[uHingeKey]?.rate||0);
       const bHingeRate = bDoorKey==='none' ? 0 : (hinge[bHingeKey]?.rate||0);
       const drawerRate = drawer[drawerKey]?.rate||0;
-
+ 
       const uInstall=si==='install'?installU:0;
       const bInstall=si==='install'?installB:0;
-
+ 
       const uPft = uMat.rateU*hMult + uDoorRate + uHingeRate + drawerRate + uInstall;
       const bPft = bMat.rateB        + bDoorRate + bHingeRate + drawerRate + bInstall;
       const uCost=uFt*uPft, bCost=bFt*bPft;
-
+ 
       const lines=[];
       const uDoorLabel = uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
       const bDoorLabel = bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
       if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uCost)});
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
       if(drawerRate>0&&(uFt+bFt)>0) lines.push({label:`Drawers — ${drawer[drawerKey]?.label||''}`,cost:Math.round(drawerRate*(uFt+bFt))});
-
+ 
       let specTotal=0;
       const totalFt=uFt+bFt;
       specs.forEach((s,i)=>{
@@ -666,27 +667,27 @@
         specTotal+=cost;
         lines.push({label:specQty[prefix][i]>1?`${s.label} × ${specQty[prefix][i]}`:s.label,cost:Math.round(cost)});
       });
-
+ 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
-
+ 
       const zoneEl=document.getElementById(`mq-${prefix}-zone`);
       const zoneKey=zoneEl?zoneEl.value:'local';
       const zoneCost=zoneKey!=='local'?(zones[zoneKey]||0):0;
       if(zoneCost>0) lines.push({label:'Travel surcharge',cost:zoneCost});
-
+ 
       const sub=uCost+bCost+specTotal+remCost+zoneCost;
       const tax=sub*taxRate;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
       if(taxRate>0) lines.push({label:`Est. tax (${Math.round(taxRate*100)}%)`,cost:Math.round(tax)});
-
+ 
       const total=sub+tax;
       const low=Math.round(total*0.9/100)*100, high=Math.round(total*1.25/100)*100;
       const roomLabel={kitchen:'Kitchen',bathroom:'Bathroom',laundry:'Laundry room',garage:'Garage',office:'Home office',other:'Room'}[gv(`mq-${prefix}-room`)]||'Cabinet';
       return {lines,sub:Math.round(sub),total:Math.round(total),low,high,roomLabel,si,uFt,bFt};
     }
-
+ 
     function calcCountertop(prefix) {
       const {taxRate,zones}=P();
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
@@ -713,7 +714,7 @@
       const total=sub+tax;
       return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*0.88/100)*100,high:Math.round(total*1.22/100)*100};
     }
-
+ 
     function renderResult(rangeEl,listEl,result){
       document.getElementById(rangeEl).textContent=fmt(result.low)+' – '+fmt(result.high);
       const ul=document.getElementById(listEl);ul.innerHTML='';
@@ -723,7 +724,7 @@
         ul.appendChild(li);
       });
     }
-
+ 
     window.mqCalcCabinets=()=>{
       window.mqShowLead(async lead=>{
         document.getElementById('mq-c-calc-btn').disabled=true;
@@ -739,7 +740,7 @@
         if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines);
       });
     };
-
+ 
     window.mqCalcCountertops=()=>{
       if(!Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length){alert('Please add at least one surface.');return;}
       window.mqShowLead(async lead=>{
@@ -758,7 +759,7 @@
         },900);
       });
     };
-
+ 
     window.mqCalcBoth=()=>{
       window.mqShowLead(async lead=>{
         document.getElementById('mq-b-calc-btn').disabled=true;
@@ -781,7 +782,7 @@
         },1200);
       });
     };
-
+ 
     function addSurfaceInternal(prefix,name){
       surfCounts[prefix]++;
       const id=`s${prefix}${surfCounts[prefix]}`;
@@ -822,16 +823,16 @@
         </div>`;
       document.getElementById(containerId)?.appendChild(card);
     }
-
+ 
     window.mqAddSurface=(prefix)=>addSurfaceInternal(prefix);
     window.mqRemoveSurf=(prefix,id)=>{const c=document.getElementById('mqsc-'+id);if(c)c.remove();delete surfs[prefix][id];};
     window.mqTogDims=id=>{const t=gv('mqst-'+id);document.getElementById('mqsf-'+id).style.display=t==='std'?'flex':'none';document.getElementById('mqcf-'+id).style.display=t==='cust'?'flex':'none';};
     window.mqTogCuts=id=>{document.getElementById('mqscuts-'+id).style.display=document.getElementById('mqsco-'+id).checked?'block':'none';};
-
+ 
     addSurfaceInternal('ct','Kitchen run');
     addSurfaceInternal('b','Kitchen run');
   }
-
+ 
   // ============================================================
   // INIT
   // ============================================================
@@ -845,7 +846,8 @@
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
   }
-
+ 
   init();
-
+ 
 })();
+ 
