@@ -965,7 +965,7 @@
   async function loadAndRender(){
     const container=document.getElementById('mq-pricing-helper-v2');
     if(!container) return;
-    const recs=await atGet(LINE_ITEMS_TABLE,`FIND("${shopRecord._recordId}", ARRAYJOIN({shop}))`);
+    const recs=await atGet(LINE_ITEMS_TABLE,`FIND("${shopRecord._shopName}", ARRAYJOIN({shop}))`);
     lineItems=recs.filter(r=>r.fields);
     container.innerHTML=buildEditorHTML();
   }
@@ -977,7 +977,7 @@
   // ============================================================
   window.mqph2Init=function(passedShopRecord,passedPricingRecord){
     if(!passedShopRecord) return;
-    shopRecord={...passedShopRecord,_recordId:passedShopRecord.id,_baseId:'app4zrMlVLwF2xn4h',_token:'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',_pricingTable:'tblu6AYZs8h7SIaQl'};
+    shopRecord={...passedShopRecord,_recordId:passedShopRecord.id,_shopName:(passedShopRecord.fields&&passedShopRecord.fields['Shop name'])||'',_baseId:'app4zrMlVLwF2xn4h',_token:'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',_pricingTable:'tblu6AYZs8h7SIaQl'};
     pricingRecord=passedPricingRecord;
     injectStyles();
     loadAndRender();
