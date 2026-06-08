@@ -16,7 +16,6 @@
     EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
   };
 
-
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
@@ -650,7 +649,7 @@
       const uInstall=si==='install'?installU:0;
       const bInstall=si==='install'?installB:0;
 
-      const uPft = uMat.rateU*hMult + uDoorRate + uHingeRate + drawerRate + uInstall;
+      const uPft = uMat.rateU*hMult + uDoorRate + uHingeRate + uInstall;
       const bPft = bMat.rateB        + bDoorRate + bHingeRate + drawerRate + bInstall;
       const uCost=uFt*uPft, bCost=bFt*bPft;
 
@@ -659,7 +658,7 @@
       const bDoorLabel = bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
       if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uCost)});
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
-      if(drawerRate>0&&(uFt+bFt)>0) lines.push({label:`Drawers — ${drawer[drawerKey]?.label||''}`,cost:Math.round(drawerRate*(uFt+bFt))});
+      if(drawerRate>0&&bFt>0) lines.push({label:`Drawer config — ${drawer[drawerKey]?.label||''} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       let specTotal=0;
       const totalFt=uFt+bFt;
