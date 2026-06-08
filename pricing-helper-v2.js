@@ -162,7 +162,7 @@
     {
       id: 'zone',
       label: '🚗 Travel zones',
-      sub: 'Zone 1 is your local area (free delivery, default 15km radius). Add surcharge zones beyond that. Name them with their distance range so customers understand. e.g. "Zone 2 — 16 to 50km", "Zone 3 — 51 to 100km"',
+      sub: 'Zone 1 is your local delivery area — no surcharge added. Your standard delivery cost should already be factored into your regular pricing. Add flat-fee surcharge zones beyond that for travel costs. Name them with their distance range e.g. "Zone 2 — 16 to 50km"',
       placeholder: 'e.g. Zone 2 — 16 to 50km'
     },
   ];
@@ -213,7 +213,7 @@
           zoneExtra = '<div style="padding:12px 16px;background:#eff6ff;border-bottom:1px solid #bfdbfe">'
             + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
             + '<div style="background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap">Zone 1 — Local</div>'
-            + '<div style="font-size:12px;color:#1e40af">No travel surcharge within this radius. Add surcharge zones below for anything beyond.</div>'
+            + '<div style="font-size:12px;color:#1e40af">Your local delivery area — no extra surcharge added within this radius. Factor your standard delivery cost into your regular pricing. Add flat-fee surcharge zones below for jobs beyond this area.</div>'
             + '</div>'
             + '<div style="display:flex;align-items:center;gap:8px">'
             + '<label style="font-size:13px;color:#1e40af;font-weight:500">Local radius:</label>'
@@ -685,7 +685,7 @@
     const existingZones = getByCategory('zone').filter(z => !z.fields['Name']?.toLowerCase().includes('local'));
     steps.push({
       title: '🚗 Final step — Travel zones & tax',
-      sub: 'Set your local delivery radius, travel surcharges for each zone, and your tax rate.',
+      sub: 'Set your local delivery radius and flat-fee surcharges for jobs beyond it. Surcharges are per job — set them to roughly cover your fuel and travel time for a typical job in that area.',
       content: () => {
         const zoneRows = existingZones.length > 0
           ? existingZones.map((z,i) => `
