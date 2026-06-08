@@ -159,6 +159,12 @@
       sub: 'Hinge options you offer — your cheapest hinge is the baseline, others become upcharges',
       placeholder: 'e.g. Concealed hinge'
     },
+    {
+      id: 'zone',
+      label: '🚗 Travel zones',
+      sub: 'Name your delivery zones — the wizard will ask for surcharge amounts for each. (e.g. "Zone 2 — up to 50km", "Zone 3 — up to 100km")',
+      placeholder: 'e.g. Zone 2 — up to 50km'
+    },
   ];
 
   const CAT_LABELS = {
@@ -173,9 +179,11 @@
   };
 
   const DEFAULT_INSTALL = [
-    { name: 'Install — uppers',  unit: 'per lin ft', description: 'Upper cabinet installation rate — set in wizard' },
-    { name: 'Install — bases',   unit: 'per lin ft', description: 'Base cabinet installation rate — set in wizard' },
-    { name: 'Cabinet removal',   unit: 'per lin ft', description: 'Remove & dispose existing cabinets — set in wizard' },
+    { name: 'Install — uppers (no doors)',   unit: 'per lin ft', description: 'Upper box install rate, no doors — set in wizard' },
+    { name: 'Install — uppers (with doors)', unit: 'per lin ft', description: 'Upper install rate with doors — set in wizard' },
+    { name: 'Install — bases (no doors)',    unit: 'per lin ft', description: 'Base box install rate, no doors — set in wizard' },
+    { name: 'Install — bases (with doors)',  unit: 'per lin ft', description: 'Base install rate with doors — set in wizard' },
+    { name: 'Cabinet removal',               unit: 'per lin ft', description: 'Remove & dispose existing cabinets — set in wizard' },
   ];
 
   const DEFAULT_HINGES = ['Soft-close hinges', 'Regular hinges'];
@@ -597,53 +605,122 @@
     if (hasInstall) {
       steps.push({
         title: '🔧 Step 9 — Installation & removal',
-        sub: 'Quote install-only prices — no supply, just labour.',
+        sub: 'Quote install-only prices for each scenario — no supply, just labour. We need separate rates for with and without doors since installing doors takes more time.',
         content: () => `
-          ${specBox([
-            `<strong>Install only (no supply):</strong>`,
-            `Uppers: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
-            `Bases: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
-          ])}
-          <div class="mqph-input-row"><label>Install price for 4ft of uppers (labour only)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-          <div class="mqph-input-row"><label>Install price for 4ft of bases (labour only)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          <div class="mqph-hl">Use the same <span class="mqph-spec-tag">1 × 30"</span> + <span class="mqph-spec-tag">1 × 18"</span> = 4 lin ft spec for each quote below.</div>
+
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1.25rem">
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔼 Upper cabinets — install only</div>
+            <div class="mqph-input-row">
+              <label>4ft uppers, <strong>box only</strong> (no doors installed)</label>
+              <span class="mqph-pfx">$</span>
+              <input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/>
+            </div>
+            <div class="mqph-input-row">
+              <label>4ft uppers, <strong>with doors</strong> (hang & adjust doors too)</label>
+              <span class="mqph-pfx">$</span>
+              <input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/>
+            </div>
+          </div>
+
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1.25rem">
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔽 Base cabinets — install only</div>
+            <div class="mqph-input-row">
+              <label>4ft bases, <strong>box only</strong> (no doors installed)</label>
+              <span class="mqph-pfx">$</span>
+              <input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/>
+            </div>
+            <div class="mqph-input-row">
+              <label>4ft bases, <strong>with doors</strong> (hang & adjust doors too)</label>
+              <span class="mqph-pfx">$</span>
+              <input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/>
+            </div>
+          </div>
+
           <div id="mqph-r-install" class="mqph-result"></div>
+
           <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
-          <div class="mqph-input-row"><label>Cabinet removal & disposal (per lin ft)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00"/></div>
-          <p style="font-size:12px;color:#9ca3af;margin-top:-8px;margin-bottom:1rem">What you charge per linear foot to remove and dispose of existing cabinets.</p>`,
+          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal</div>
+          <div class="mqph-input-row">
+            <label>Removal & disposal rate (per lin ft)</label>
+            <span class="mqph-pfx">$</span>
+            <input type="number" id="mqph-removal" placeholder="0.00"/>
+          </div>
+          <p style="font-size:12px;color:#9ca3af;margin-bottom:1rem">What you charge per linear foot to remove and dispose of existing cabinets.</p>`,
         skipLabel: 'Skip — supply only shop',
         nextLabel: 'Next →',
         onNext: () => {
-          const u=parseFloat(document.getElementById('mqph-inst-u')?.value||0);
-          const b=parseFloat(document.getElementById('mqph-inst-b')?.value||0);
+          const und=parseFloat(document.getElementById('mqph-inst-u-nd')?.value||0);
+          const uwd=parseFloat(document.getElementById('mqph-inst-u-wd')?.value||0);
+          const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
+          const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
           const r=parseFloat(document.getElementById('mqph-removal')?.value||0);
-          if (u>0) wizardItems.push({ name:'Install — uppers', category:'install', rate:Math.round((u/4)*100)/100, unit:'per lin ft', description:'Upper install rate', active:true });
-          if (b>0) wizardItems.push({ name:'Install — bases', category:'install', rate:Math.round((b/4)*100)/100, unit:'per lin ft', description:'Base install rate', active:true });
+          if (und>0) wizardItems.push({ name:'Install — uppers (no doors)', category:'install', rate:Math.round((und/4)*100)/100, unit:'per lin ft', description:'Upper box install, no doors', active:true });
+          if (uwd>0) wizardItems.push({ name:'Install — uppers (with doors)', category:'install', rate:Math.round((uwd/4)*100)/100, unit:'per lin ft', description:'Upper install with doors hung', active:true });
+          if (bnd>0) wizardItems.push({ name:'Install — bases (no doors)', category:'install', rate:Math.round((bnd/4)*100)/100, unit:'per lin ft', description:'Base box install, no doors', active:true });
+          if (bwd>0) wizardItems.push({ name:'Install — bases (with doors)', category:'install', rate:Math.round((bwd/4)*100)/100, unit:'per lin ft', description:'Base install with doors hung', active:true });
           if (r>0) wizardItems.push({ name:'Cabinet removal', category:'install', rate:r, unit:'per lin ft', description:'Remove & dispose existing cabinets', active:true });
         }
       });
     }
 
-    // Final: Travel & tax
+    // Final: Travel zones & tax
+    // Read any zones already set up in item setup
+    const existingZones = getByCategory('zone').filter(z => !z.fields['Name']?.toLowerCase().includes('local'));
     steps.push({
       title: '🚗 Final step — Travel zones & tax',
-      sub: 'Set your travel surcharges and tax rate.',
-      content: () => `
-        <div class="mqph-input-row"><label>Local zone radius</label><input type="number" id="mqph-zone-r" placeholder="15" style="width:130px;text-align:right"/><span class="mqph-pfx">km</span></div>
-        <p style="font-size:12px;color:#9ca3af;margin-top:-8px;margin-bottom:1rem">Jobs within this distance have no travel surcharge.</p>
-        <div class="mqph-input-row"><label>Zone 2 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone2" placeholder="0.00"/></div>
-        <div class="mqph-input-row"><label>Zone 3 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone3" placeholder="0.00"/></div>
-        <div class="mqph-input-row"><label>Zone 4 surcharge (flat fee)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-zone4" placeholder="0.00"/></div>
-        <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
-        <div class="mqph-input-row"><label>Tax rate</label><input type="number" id="mqph-tax" placeholder="5" style="width:130px;text-align:right"/><span class="mqph-pfx">%</span></div>`,
+      sub: 'Set your local delivery radius, travel surcharges for each zone, and your tax rate.',
+      content: () => {
+        const zoneRows = existingZones.length > 0
+          ? existingZones.map((z,i) => `
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:0.75rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:0.75rem">📍 ${z.fields['Name'] || 'Zone '+(i+2)}</div>
+              <div class="mqph-input-row">
+                <label>Distance range (km) e.g. 16–50km</label>
+                <input type="text" id="mqph-zone-range-${i}" placeholder="e.g. 16–50km" style="width:160px"/>
+              </div>
+              <div class="mqph-input-row">
+                <label>Flat travel surcharge for this zone</label>
+                <span class="mqph-pfx">$</span>
+                <input type="number" id="mqph-zone-fee-${i}" placeholder="0.00"/>
+              </div>
+            </div>`).join('')
+          : `<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px;font-size:13px;color:#856404;margin-bottom:1rem">
+              No travel zones set up yet. You can add zones in "Edit shop items" after finishing the wizard, or skip this step.
+            </div>`;
+        return `
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1.25rem">
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">📍 Local zone</div>
+            <div class="mqph-input-row">
+              <label>Local radius — no surcharge within this distance</label>
+              <input type="number" id="mqph-zone-r" placeholder="15" style="width:130px;text-align:right"/>
+              <span class="mqph-pfx">km</span>
+            </div>
+          </div>
+          ${zoneRows}
+          <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
+          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🧾 Tax</div>
+          <div class="mqph-input-row">
+            <label>Tax rate applied to cabinet subtotal</label>
+            <input type="number" id="mqph-tax" placeholder="5" style="width:130px;text-align:right"/>
+            <span class="mqph-pfx">%</span>
+          </div>`;
+      },
       skipLabel: 'Skip',
       nextLabel: 'Finish setup →',
       onNext: () => {
         const gn=id=>parseFloat(document.getElementById(id)?.value||0);
-        const zr=gn('mqph-zone-r'),z2=gn('mqph-zone2'),z3=gn('mqph-zone3'),z4=gn('mqph-zone4'),tax=gn('mqph-tax');
+        const gs=id=>document.getElementById(id)?.value||'';
+        const zr=gn('mqph-zone-r'), tax=gn('mqph-tax');
         if (zr>0) wizardItems.push({ name:'Local zone radius', category:'zone', rate:zr, unit:'km', description:'Within this distance = no travel surcharge', active:true });
-        if (z2>0) wizardItems.push({ name:'Zone 2 surcharge', category:'zone', rate:z2, unit:'flat', description:'Zone 2 travel surcharge', active:true });
-        if (z3>0) wizardItems.push({ name:'Zone 3 surcharge', category:'zone', rate:z3, unit:'flat', description:'Zone 3 travel surcharge', active:true });
-        if (z4>0) wizardItems.push({ name:'Zone 4 surcharge', category:'zone', rate:z4, unit:'flat', description:'Zone 4 travel surcharge', active:true });
+        existingZones.forEach((z,i) => {
+          const fee=gn(`mqph-zone-fee-${i}`);
+          const range=gs(`mqph-zone-range-${i}`);
+          if (fee>0) {
+            const desc = range ? `Travel surcharge — ${range}` : 'Travel surcharge';
+            wizardItems.push({ name:z.fields['Name'], category:'zone', rate:fee, unit:'flat', description:desc, active:true });
+          }
+        });
         if (tax>0) wizardItems.push({ name:'Tax rate', category:'tax', rate:tax, unit:'%', description:'Applied to cabinet subtotal', active:true });
       }
     });
@@ -700,12 +777,16 @@
   };
 
   window.mqphCalcInstall = function() {
-    const u=parseFloat(document.getElementById('mqph-inst-u')?.value||0);
-    const b=parseFloat(document.getElementById('mqph-inst-b')?.value||0);
+    const und=parseFloat(document.getElementById('mqph-inst-u-nd')?.value||0);
+    const uwd=parseFloat(document.getElementById('mqph-inst-u-wd')?.value||0);
+    const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
+    const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
     const res=document.getElementById('mqph-r-install'); if(!res) return;
     let html='';
-    if(u>0) html+=`<strong>Upper install:</strong> <span class="mqph-result-val">$${(u/4).toFixed(2)} / lin ft</span><br/>`;
-    if(b>0) html+=`<strong>Base install:</strong> <span class="mqph-result-val">$${(b/4).toFixed(2)} / lin ft</span>`;
+    if(und>0) html+=`<strong>Uppers (no doors):</strong> <span class="mqph-result-val">$${(und/4).toFixed(2)} / lin ft</span><br/>`;
+    if(uwd>0) html+=`<strong>Uppers (with doors):</strong> <span class="mqph-result-val">$${(uwd/4).toFixed(2)} / lin ft</span><br/>`;
+    if(bnd>0) html+=`<strong>Bases (no doors):</strong> <span class="mqph-result-val">$${(bnd/4).toFixed(2)} / lin ft</span><br/>`;
+    if(bwd>0) html+=`<strong>Bases (with doors):</strong> <span class="mqph-result-val">$${(bwd/4).toFixed(2)} / lin ft</span>`;
     if(html){res.style.display='block';res.innerHTML=html;}else res.style.display='none';
   };
 
