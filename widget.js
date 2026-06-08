@@ -16,6 +16,7 @@
     EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
   };
 
+
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
@@ -48,7 +49,7 @@
     const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
     const p = pricing.length ? pricing[0].fields : {};
 
-    const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE, `AND({shop} = "${shopRecord.id}", {Active})`);
+    const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({shop}))`);
     const sorted = lineItemRecords.filter(r=>r.fields).sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
 
     const byCategory = cat => sorted.filter(r=>r.fields['Category']===cat).map(r=>r.fields);
