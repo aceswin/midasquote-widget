@@ -222,26 +222,25 @@
               <span id="mqph-local-radius-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
             </div>
           </div>` : '';
-        return \`
+        return `
           <div class="mqph-setup-card">
             <div class="mqph-setup-header">
-              <div class="mqph-setup-title">\${cat.label}</div>
-              <div class="mqph-setup-sub">\${cat.sub}</div>
+              <div class="mqph-setup-title">${cat.label}</div>
+              <div class="mqph-setup-sub">${cat.sub}</div>
             </div>
-            \${zoneExtra}
-            <div class="mqph-chip-row" id="mqph-chips-\${cat.id}">
-              \${items.map(r => \`
-                <div class="mqph-chip" id="mqph-chip-\${r.id}">
-                  \${r.fields['Name']}
-                  <button class="mqph-chip-del" onclick="mqphDeleteChip('\${r.id}','\${cat.id}')">×</button>
-                </div>\`).join('')}
+            ${zoneExtra}
+            <div class="mqph-chip-row" id="mqph-chips-${cat.id}">
+              ${items.map(r => `
+                <div class="mqph-chip" id="mqph-chip-${r.id}">
+                  ${r.fields['Name']}
+                  <button class="mqph-chip-del" onclick="mqphDeleteChip('${r.id}','${cat.id}')">×</button>
+                </div>`).join('')}
               <div class="mqph-chip-input">
-                <input type="text" id="mqph-chip-input-\${cat.id}" placeholder="\${cat.placeholder}" onkeydown="if(event.key==='Enter')mqphAddChip('\${cat.id}')"/>
-                <button onclick="mqphAddChip('\${cat.id}')">Add</button>
+                <input type="text" id="mqph-chip-input-${cat.id}" placeholder="${cat.placeholder}" onkeydown="if(event.key==='Enter')mqphAddChip('${cat.id}')"/>
+                <button onclick="mqphAddChip('${cat.id}')">Add</button>
               </div>
             </div>
-          </div>\`;
-      }).join('')}
+          </div>`;
 
       <div class="mqph-setup-card">
         <div class="mqph-setup-header">
