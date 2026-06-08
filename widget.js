@@ -53,9 +53,22 @@
     const sorted = lineItemRecords.filter(r=>r.fields).sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
 
     const byCategory = cat => sorted.filter(r=>r.fields['Category']===cat).map(r=>r.fields);
+    // For materials, deduplicate by base name (strip " — uppers" / " — bases" suffix)
+    // Keep one entry per unique base material name for the customer dropdown
+    const rawMaterials = byCategory('material');
+    const matSeen = new Set();
+    const dedupedMaterials = rawMaterials.reduce((acc, m) => {
+      const baseName = m['Name'].replace(/\s*—\s*(uppers|bases).*$/i, '').trim();
+      if (!matSeen.has(baseName)) {
+        matSeen.add(baseName);
+        acc.push({ ...m, _baseName: baseName });
+      }
+      return acc;
+    }, []);
 
     const li = {
-      materials:   byCategory('material'),
+      materials:   dedupedMaterials,
+      rawMaterials: rawMaterials,
       doorStyles:  byCategory('door'),
       drawers:     byCategory('drawer'),
       hinges:      byCategory('hinge'),
@@ -497,20 +510,18 @@
       const zones={};
 
       if (hasDynamic) {
-        li.materials.forEach((m,i)  => { mat[`dyn_${i}`]    = { label:m['Name'], rate:m['Rate']||0, rateU: m['Unit']?.includes('uppers') ? m['Rate']||0 : null, rateB: m['Unit']?.includes('bases') ? m['Rate']||0 : null }; });
-        // Build material lookup by name for uppers/bases split
-        const matByName = {};
-        li.materials.forEach(m => {
-          const n = m['Name'].replace(/ — (uppers|bases).*$/,'').trim();
-          if (!matByName[n]) matByName[n] = { label:n, rateU:0, rateB:0 };
-          if (m['Unit']?.includes('uppers')) matByName[n].rateU = m['Rate']||0;
-          else if (m['Unit']?.includes('bases')) matByName[n].rateB = m['Rate']||0;
-          else { matByName[n].rateU = m['Rate']||0; matByName[n].rateB = m['Rate']||0; }
-        });
-        // Map dropdown options to matByName
+        // Build material rates — match upper/base rates from raw line items by base name
         li.materials.forEach((m,i) => {
-          const n = m['Name'].replace(/ — (uppers|bases).*$/,'').trim();
-          if (matByName[n] && !mat[`dyn_${i}`]) mat[`dyn_${i}`] = matByName[n];
+          const baseName = m._baseName || m['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim();
+          // Find upper and base rates from raw materials
+          const uItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('uppers'));
+          const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
+          const fallbackRate = m['Rate'] || 0;
+          mat[`dyn_${i}`] = {
+            label: baseName,
+            rateU: uItem ? uItem['Rate']||0 : fallbackRate,
+            rateB: bItem ? bItem['Rate']||0 : fallbackRate,
+          };
         });
 
         li.doorStyles.forEach((d,i)  => { door[`dyn_${i}`]   = { label:d['Name'], rate:d['Rate']||0 }; });
