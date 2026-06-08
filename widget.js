@@ -69,7 +69,8 @@
       materials:   dedupedMaterials,
       rawMaterials: rawMaterials,
       doorStyles:  byCategory('door'),
-      drawers:     byCategory('drawer'),
+      drawers:     byCategory('drawer').filter(d => !d['Name']?.includes(' — 1 drawer') && !d['Name']?.includes(' — bank')),
+      rawDrawers:  byCategory('drawer'),
       hinges:      byCategory('hinge'),
       installItems:byCategory('install'),
       zones:       byCategory('zone'),
@@ -285,7 +286,9 @@
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     // No doors option at top, then all door styles
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
-    const drawerOpts = makeOpts(li.drawers, '');
+    // Build drawer opts from unique base names
+    const uniqueDrawers = [...new Set((li.rawDrawers||li.drawers).map(d => d['Name'].replace(/ — (1 drawer upcharge|bank upcharge).*$/,'').trim()))];
+    const drawerOpts = uniqueDrawers.length > 0 ? uniqueDrawers.map((n,i)=>`<option value="dyn_${i}">${n}</option>`).join('') : '';
     const hingeOpts  = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
 
     const hasDrawers = li.drawers.length > 0;
@@ -343,9 +346,16 @@
         </div>
       </div>
       ${hasDrawers?`<div class="mq-sec">
-        <p class="mq-sec-title">Drawer configuration</p>
+        <p class="mq-sec-title">Base cabinet drawer layout</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Drawer type</label><select id="mq-${prefix}-drawer">${drawerOpts}</select></div>
+          <div class="mq-field"><label class="mq-label">Drawer layout</label>
+            <select id="mq-${prefix}-drawer-tier">
+              <option value="none">No drawers (doors only)</option>
+              <option value="some">Some drawers (typical mix)</option>
+              <option value="mostly">Mostly drawers (drawer-heavy)</option>
+            </select>
+          </div>
         </div>
       </div>`:''}
       <div class="mq-sec">
@@ -527,7 +537,18 @@
         });
 
         li.doorStyles.forEach((d,i)  => { door[`dyn_${i}`]   = { label:d['Name'], rate:d['Rate']||0 }; });
-        li.drawers.forEach((d,i)     => { drawer[`dyn_${i}`]  = { label:d['Name'], rate:d['Rate']||0 }; });
+        // Build drawer lookup — match 1-drawer and bank upcharge rates by base name
+        const drawer1Items = li.rawDrawers || li.drawers;
+        const uniqueDrawerNames = [...new Set(li.drawers.map(d => d['Name'].replace(/ — (1 drawer upcharge|bank upcharge).*$/,'').trim()))];
+        uniqueDrawerNames.forEach((baseName, i) => {
+          const oneItem  = drawer1Items.find(d => d['Name'] === baseName + ' — 1 drawer upcharge');
+          const bankItem = drawer1Items.find(d => d['Name'] === baseName + ' — bank upcharge');
+          drawer[`dyn_${i}`] = {
+            label: baseName,
+            rate1: oneItem  ? oneItem['Rate']  || 0 : 0,
+            rateBank: bankItem ? bankItem['Rate'] || 0 : 0,
+          };
+        });
         li.hinges.forEach((h,i)      => { hinge[`dyn_${i}`]   = { label:h['Name'], rate:h['Rate']||0 }; });
 
         const iu = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper'));
@@ -637,6 +658,7 @@
         uHingeKey=bHingeKey=gv(`mq-${prefix}-hinge`)||'';
       }
       const drawerKey=gv(`mq-${prefix}-drawer`)||'';
+      const drawerTier=gv(`mq-${prefix}-drawer-tier`)||'none';
 
       const uMat = getMaterialRates(uMatKey, mat);
       const bMat = getMaterialRates(bMatKey, mat);
@@ -644,7 +666,10 @@
       const bDoorRate = bDoorKey==='none' ? 0 : (door[bDoorKey]?.rate||0);
       const uHingeRate = uDoorKey==='none' ? 0 : (hinge[uHingeKey]?.rate||0);
       const bHingeRate = bDoorKey==='none' ? 0 : (hinge[bHingeKey]?.rate||0);
-      const drawerRate = drawer[drawerKey]?.rate||0;
+      const drawerInfo = drawer[drawerKey] || { rate1:0, rateBank:0 };
+      const drawerRate = drawerTier === 'none' ? 0
+        : drawerTier === 'some'   ? drawerInfo.rate1
+        : /* mostly */             (drawerInfo.rate1 + drawerInfo.rateBank) / 2;
 
       const uInstall=si==='install'?installU:0;
       const bInstall=si==='install'?installB:0;
@@ -658,7 +683,10 @@
       const bDoorLabel = bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
       if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uCost)});
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
-      if(drawerRate>0&&bFt>0) lines.push({label:`Drawer config — ${drawer[drawerKey]?.label||''} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
+      if(drawerRate>0&&bFt>0) {
+        const tierLabel = drawerTier==='some'?'some drawers':'mostly drawers';
+        lines.push({label:`Drawers — ${drawerInfo.label||''} / ${tierLabel} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
+      }
 
       let specTotal=0;
       const totalFt=uFt+bFt;
