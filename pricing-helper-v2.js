@@ -162,8 +162,8 @@
     {
       id: 'zone',
       label: '🚗 Travel zones',
-      sub: 'Name your delivery zones — the wizard will ask for surcharge amounts for each. (e.g. "Zone 2 — up to 50km", "Zone 3 — up to 100km")',
-      placeholder: 'e.g. Zone 2 — up to 50km'
+      sub: 'Zone 1 is your local area (free delivery, default 15km radius). Add surcharge zones beyond that. Name them with their distance range so customers understand. e.g. "Zone 2 — 16 to 50km", "Zone 3 — 51 to 100km"',
+      placeholder: 'e.g. Zone 2 — 16 to 50km'
     },
   ];
 
@@ -207,24 +207,40 @@
 
       ${CATEGORIES.map(cat => {
         const items = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
-        return `
+        const existingLocalRadius = (existing['zone']||[]).find(r=>r.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15;
+        const zoneExtra = cat.id === 'zone' ? `
+          <div style="padding:12px 16px;background:#eff6ff;border-bottom:1px solid #bfdbfe">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div style="background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap">Zone 1 — Local</div>
+              <div style="font-size:12px;color:#1e40af">No travel surcharge within this radius. Add surcharge zones below for anything beyond.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <label style="font-size:13px;color:#1e40af;font-weight:500">Local radius:</label>
+              <input type="number" id="mqph-local-radius" value="${existingLocalRadius}" style="width:80px;text-align:right;font-family:inherit;font-size:13px;color:#111;background:#fff;border:1.5px solid #93c5fd;border-radius:8px;padding:6px 10px;font-weight:600"/>
+              <span style="font-size:13px;color:#1e40af;font-weight:500">km</span>
+              <button onclick="mqphSaveLocalRadius()" style="background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>
+              <span id="mqph-local-radius-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
+            </div>
+          </div>` : '';
+        return \`
           <div class="mqph-setup-card">
             <div class="mqph-setup-header">
-              <div class="mqph-setup-title">${cat.label}</div>
-              <div class="mqph-setup-sub">${cat.sub}</div>
+              <div class="mqph-setup-title">\${cat.label}</div>
+              <div class="mqph-setup-sub">\${cat.sub}</div>
             </div>
-            <div class="mqph-chip-row" id="mqph-chips-${cat.id}">
-              ${items.map(r => `
-                <div class="mqph-chip" id="mqph-chip-${r.id}">
-                  ${r.fields['Name']}
-                  <button class="mqph-chip-del" onclick="mqphDeleteChip('${r.id}','${cat.id}')">×</button>
-                </div>`).join('')}
+            \${zoneExtra}
+            <div class="mqph-chip-row" id="mqph-chips-\${cat.id}">
+              \${items.map(r => \`
+                <div class="mqph-chip" id="mqph-chip-\${r.id}">
+                  \${r.fields['Name']}
+                  <button class="mqph-chip-del" onclick="mqphDeleteChip('\${r.id}','\${cat.id}')">×</button>
+                </div>\`).join('')}
               <div class="mqph-chip-input">
-                <input type="text" id="mqph-chip-input-${cat.id}" placeholder="${cat.placeholder}" onkeydown="if(event.key==='Enter')mqphAddChip('${cat.id}')"/>
-                <button onclick="mqphAddChip('${cat.id}')">Add</button>
+                <input type="text" id="mqph-chip-input-\${cat.id}" placeholder="\${cat.placeholder}" onkeydown="if(event.key==='Enter')mqphAddChip('\${cat.id}')"/>
+                <button onclick="mqphAddChip('\${cat.id}')">Add</button>
               </div>
             </div>
-          </div>`;
+          </div>\`;
       }).join('')}
 
       <div class="mqph-setup-card">
@@ -944,6 +960,20 @@
       </div>
     `;
   }
+
+  window.mqphSaveLocalRadius = async function() {
+    const val = parseFloat(document.getElementById('mqph-local-radius')?.value || 15);
+    const existing = lineItems.find(r => r.fields && r.fields['Name']?.toLowerCase().includes('local') && r.fields['Category'] === 'zone');
+    if (existing) {
+      await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate': val, 'Description': 'Within this distance = no travel surcharge' });
+      existing.fields['Rate'] = val;
+    } else {
+      const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':'Local zone radius', 'Category':'zone', 'Rate':val, 'Unit':'km', 'Description':'Within this distance = no travel surcharge', 'Active':true, 'Sort order':0 });
+      if (rec && rec.id) lineItems.push(rec);
+    }
+    const saved = document.getElementById('mqph-local-radius-saved');
+    if (saved) { saved.style.display = 'inline'; setTimeout(() => saved.style.display = 'none', 2000); }
+  };
 
   window.mqphStartItemSetup = async function() {
     const hasHinge  =lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='hinge');
