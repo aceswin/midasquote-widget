@@ -208,20 +208,21 @@
       ${CATEGORIES.map(cat => {
         const items = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
         const existingLocalRadius = (existing['zone']||[]).find(r=>r.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15;
-        const zoneExtra = cat.id === 'zone' ? `
-          <div style="padding:12px 16px;background:#eff6ff;border-bottom:1px solid #bfdbfe">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <div style="background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap">Zone 1 — Local</div>
-              <div style="font-size:12px;color:#1e40af">No travel surcharge within this radius. Add surcharge zones below for anything beyond.</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <label style="font-size:13px;color:#1e40af;font-weight:500">Local radius:</label>
-              <input type="number" id="mqph-local-radius" value="${existingLocalRadius}" style="width:80px;text-align:right;font-family:inherit;font-size:13px;color:#111;background:#fff;border:1.5px solid #93c5fd;border-radius:8px;padding:6px 10px;font-weight:600"/>
-              <span style="font-size:13px;color:#1e40af;font-weight:500">km</span>
-              <button onclick="mqphSaveLocalRadius()" style="background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>
-              <span id="mqph-local-radius-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
-            </div>
-          </div>` : '';
+        let zoneExtra = '';
+        if (cat.id === 'zone') {
+          zoneExtra = '<div style="padding:12px 16px;background:#eff6ff;border-bottom:1px solid #bfdbfe">'
+            + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+            + '<div style="background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap">Zone 1 — Local</div>'
+            + '<div style="font-size:12px;color:#1e40af">No travel surcharge within this radius. Add surcharge zones below for anything beyond.</div>'
+            + '</div>'
+            + '<div style="display:flex;align-items:center;gap:8px">'
+            + '<label style="font-size:13px;color:#1e40af;font-weight:500">Local radius:</label>'
+            + '<input type="number" id="mqph-local-radius" value="' + existingLocalRadius + '" style="width:80px;text-align:right;font-family:inherit;font-size:13px;color:#111;background:#fff;border:1.5px solid #93c5fd;border-radius:8px;padding:6px 10px;font-weight:600"/>'
+            + '<span style="font-size:13px;color:#1e40af;font-weight:500">km</span>'
+            + '<button onclick="mqphSaveLocalRadius()" style="background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>'
+            + '<span id="mqph-local-radius-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>'
+            + '</div></div>';
+        }
         return `
           <div class="mqph-setup-card">
             <div class="mqph-setup-header">
@@ -241,7 +242,7 @@
               </div>
             </div>
           </div>`;
-
+      }).join('')}
       <div class="mqph-setup-card">
         <div class="mqph-setup-header">
           <div class="mqph-setup-title">🔧 Installation & removal</div>
