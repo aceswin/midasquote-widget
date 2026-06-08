@@ -714,15 +714,26 @@
   // ============================================================
   function getSteps() { return buildWizardSteps(); }
 
+  // Store input values so Back button can restore them
+  const wizardSavedInputs = {};
+  function saveCurrentInputs() {
+    document.querySelectorAll('.mqph-wizard-body input, .mqph-wizard-body select').forEach(el => { if(el.id) wizardSavedInputs[el.id] = el.value; });
+  }
+  function restoreSavedInputs() {
+    Object.entries(wizardSavedInputs).forEach(([id, val]) => { const el = document.getElementById(id); if(el) el.value = val; });
+  }
+
   function renderWizardStep(idx) {
+    saveCurrentInputs();
     const steps=getSteps();
     const activeEl=document.getElementById(`mqph-step-${idx}`);
     if(activeEl){
       activeEl.innerHTML=`<div class="mqph-step-title">${steps[idx].title}</div><div class="mqph-step-sub">${steps[idx].sub}</div>${steps[idx].content()}`;
     }
+    restoreSavedInputs();
     steps.forEach((_,i)=>{const el=document.getElementById(`mqph-step-${i}`);if(el)el.classList.toggle('active',i===idx);});
     const dots=document.querySelectorAll('.mqph-progress .dot');
-    dots.forEach((d,i)=>{d.classList.remove('done','ctive');if(i<idx)d.classList.add('done');else if(i===idx)d.classList.add('active');});
+    dots.forEach((d,i)=>{d.classList.remove('done','active');if(i<idx)d.classList.add('done');else if(i===idx)d.classList.add('active');});
     const back=document.getElementById('mqph-back-btn');
     const next=document.getElementById('mqph-next-btn');
     const skip=document.getElementById('mqph-skip-btn');
