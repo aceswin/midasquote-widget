@@ -357,12 +357,7 @@
     if (chip) chip.remove();
   };
 
-  window.mqphGoToWizard = async function() {
-    // Only create default install + hinge records when actually launching the wizard
-    const hasHinge   = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='hinge');
-    const hasInstall = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='install');
-    if (!hasHinge)   { for(let i=0;i<DEFAULT_HINGES.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_HINGES[i],Category:'hinge',Rate:0,Unit:'per lin ft upcharge',Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
-    if (!hasInstall) { for(let i=0;i<DEFAULT_INSTALL.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_INSTALL[i].name,Category:'install',Rate:0,Unit:DEFAULT_INSTALL[i].unit,Description:DEFAULT_INSTALL[i].description,Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
+  window.mqphGoToWizard = function() {
     wizardStep = 0; wizardItems = []; wizardBaseline = null;
     const container = document.getElementById('mq-pricing-helper-v2');
     if (container) { container.innerHTML = buildWizardHTML(); renderWizardStep(0); }
@@ -1181,13 +1176,24 @@
   // EDITOR
   // ============================================================
   function buildEditorHTML() {
+    // Wizard has run if any material record has a rate > 0
+    const wizardHasRun = lineItems.some(r => r.fields && r.fields['Category'] === 'material' && (r.fields['Rate'] || 0) > 0);
+
+    // Hide wizard-owned $0 items until wizard has completed —
+    // they exist in Airtable (pre-created by item setup) but aren't meaningful yet
+    const visibleItems = lineItems.filter(r => {
+      if (!r.fields) return false;
+      if (!wizardHasRun && WIZARD_OWNED_CATEGORIES.includes(r.fields['Category']) && (r.fields['Rate'] || 0) === 0) return false;
+      return true;
+    });
+
     const groups = {};
-    lineItems.filter(r=>r.fields).forEach(r => {
+    visibleItems.forEach(r => {
       const c = r.fields['Category'] || 'other';
       if (!groups[c]) groups[c] = [];
       groups[c].push(r);
     });
-    const hasItems = lineItems.filter(r=>r.fields).length > 0;
+    const hasItems = visibleItems.length > 0;
 
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap">
@@ -1255,7 +1261,7 @@
         </div>
       </div>
 
-      <!-- Raw edit modal (for all categories) -->
+      <!-- Raw edit modal -->
       <div class="mqph-overlay" id="mqph-modal-overlay">
         <div class="mqph-modal">
           <div class="mqph-modal-hdr">
@@ -1351,7 +1357,11 @@
     if (saved) { saved.style.display='inline'; setTimeout(()=>saved.style.display='none',2000); }
   };
 
-  window.mqphStartItemSetup = function() {
+  window.mqphStartItemSetup = async function() {
+    const hasHinge   = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='hinge');
+    const hasInstall = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='install');
+    if (!hasHinge)   { for(let i=0;i<DEFAULT_HINGES.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_HINGES[i],Category:'hinge',Rate:0,Unit:'per lin ft upcharge',Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
+    if (!hasInstall) { for(let i=0;i<DEFAULT_INSTALL.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_INSTALL[i].name,Category:'install',Rate:0,Unit:DEFAULT_INSTALL[i].unit,Description:DEFAULT_INSTALL[i].description,Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
     const container=document.getElementById('mq-pricing-helper-v2');
     if(container) container.innerHTML=buildItemSetupHTML();
   };
