@@ -45,7 +45,7 @@
     const s = document.createElement('style');
     s.id = 'mqph4-styles';
     s.textContent = `
-      #mq-pricing-helper-v2 *{box-sizing:border-box !important;margin:0 !important;padding:0 !important}
+      #mq-pricing-helper-v2 *{box-sizing:border-box !important}
       #mq-pricing-helper-v2{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;padding:2rem !important;max-width:900px}
       .mqph-btn{padding:10px 20px !important;font-size:13px !important;font-weight:600 !important;border-radius:8px !important;cursor:pointer !important;border:none !important;font-family:inherit !important;transition:all 0.15s !important;line-height:1.2 !important}
       .mqph-btn-primary{background:#1a1a1a !important;color:#fff !important}.mqph-btn-primary:hover{opacity:0.88 !important}
