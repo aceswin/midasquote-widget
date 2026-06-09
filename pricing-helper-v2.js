@@ -341,19 +341,23 @@
       title: '👋 Pricing Setup Wizard',
       sub: `We'll reverse-engineer your rates from real job quotes using a consistent spec throughout — no math required.`,
       content: () => noMats || noDoors ? `
-        <div class="mqph-warn">⚠️ <strong>Missing items.</strong> You need to add ${noMats?'box materials':''}${noMats&&noDoors?' and ':''}${noDoors?'door styles':''} before running the wizard.<br/>
-        <button class="mqph-btn mqph-btn-secondary" style="margin-top:10px" onclick="mqphStartItemSetup()">← Go back and add items</button></div>` : `
+        <div class="mqph-warn">⚠️ <strong>Missing items.</strong> You need to add ${noMats?'box materials':''}${noMats&&noDoors?' and ':''}${noDoors?'door styles':''} before running the wizard.</div>
+        <button class="mqph-btn mqph-btn-primary" style="margin-top:10px" onclick="mqphStartItemSetup()">← Add shop items first</button>` : `
         <div class="mqph-hl">
           ✅ Found <strong>${materials.length}</strong> material${materials.length!==1?'s':''}, <strong>${doorStyles.length}</strong> door style${doorStyles.length!==1?'s':''}, <strong>${drawers.length}</strong> drawer config${drawers.length!==1?'s':''}, <strong>${hinges.length}</strong> hinge${hinges.length!==1?'s':''}.<br/><br/>
           <strong>Every step uses the same spec:</strong><br/>
           <span class="mqph-spec-tag">1 × 30" cabinet</span> + <span class="mqph-spec-tag">1 × 18" cabinet</span> = <span class="mqph-spec-tag">4 linear feet</span>
         </div>
-        <div style="font-size:13px;color:#374151;line-height:1.8">
+        <div style="font-size:13px;color:#374151;line-height:1.8;margin-bottom:1.25rem">
           ✅ Box-only baseline (no doors, no drawers)<br/>
           ✅ Door styles as upcharges (finish included in name)<br/>
           ✅ Drawer configurations as upcharges<br/>
           ✅ Separate upper and base rates<br/>
           ✅ Installation and removal rates
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;color:#374151">Need to add or change your shop items first?</span>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>
         </div>`,
       nextLabel: noMats || noDoors ? null : 'Start →',
       onNext: () => noMats || noDoors ? 'abort' : null,
@@ -951,6 +955,7 @@
         <div style="display:flex;gap:8px">
           <button class="mqph-btn mqph-btn-secondary" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>
           <button class="mqph-btn mqph-btn-secondary" onclick="mqphGoToWizard()">🧙 Run pricing wizard</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDeleteAll()" title="Delete all pricing items and start fresh">🗑️ Start fresh</button>
         </div>
       </div>
       ${!hasItems?`
@@ -1068,6 +1073,15 @@
     const fields={shop:[shopRecord._recordId],Name:name,Category:document.getElementById('mqph-item-cat').value,Rate:parseFloat(document.getElementById('mqph-item-rate').value||0),Unit:document.getElementById('mqph-item-unit').value,Description:document.getElementById('mqph-item-desc').value.trim(),Active:document.getElementById('mqph-item-active').checked};
     try{if(currentEditId){await atUpdate(LINE_ITEMS_TABLE,currentEditId,fields);}else{fields['Sort order']=lineItems.length+1;await atCreate(LINE_ITEMS_TABLE,fields);}mqphCloseModal();await loadAndRender();}
     catch(e){alert('Error saving. Please try again.');}
+  };
+
+  window.mqphDeleteAll = async function() {
+    if (!confirm('Delete ALL pricing items and start fresh? This cannot be undone.')) return;
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (container) container.innerHTML = '<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Deleting all items...</div>';
+    for (const r of lineItems) { try { await atDelete(LINE_ITEMS_TABLE, r.id); } catch(e) {} }
+    lineItems = [];
+    await loadAndRender();
   };
 
   window.mqphDelete=async function(id){if(!confirm('Delete this item?'))return;try{await atDelete(LINE_ITEMS_TABLE,id);await loadAndRender();}catch(e){alert('Error deleting.');}};
