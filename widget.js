@@ -1,6 +1,6 @@
 /*
- * MidasQuote Widget v3.1
- * Fully dynamic — materials, doors (with finish), drawers, hinges all from Line Items
+ * MidasQuote Widget v3.2
+ * Zones removed — local delivery only. Travel disclaimer added to results.
  */
 
 (function() {
@@ -52,8 +52,8 @@
     const sorted = lineItemRecords.filter(r=>r.fields).sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
 
     const byCategory = cat => sorted.filter(r=>r.fields['Category']===cat).map(r=>r.fields);
-    // For materials, deduplicate by base name (strip " — uppers" / " — bases" suffix)
-    // Keep one entry per unique base material name for the customer dropdown
+
+    // Deduplicate materials by base name (strip " — uppers" / " — bases" suffix)
     const rawMaterials = byCategory('material');
     const matSeen = new Set();
     const dedupedMaterials = rawMaterials.reduce((acc, m) => {
@@ -66,16 +66,19 @@
     }, []);
 
     const li = {
-      materials:   dedupedMaterials,
+      materials:    dedupedMaterials,
       rawMaterials: rawMaterials,
-      doorStyles:  byCategory('door'),
-      drawers:     byCategory('drawer'),
-      hinges:      byCategory('hinge'),
-      installItems:byCategory('install'),
-      zones:       byCategory('zone'),
-      taxItems:    byCategory('tax'),
-      otherItems:  byCategory('other'),
+      doorStyles:   byCategory('door'),
+      drawers:      byCategory('drawer'),
+      hinges:       byCategory('hinge'),
+      installItems: byCategory('install'),
+      taxItems:     byCategory('tax'),
+      otherItems:   byCategory('other'),
     };
+
+    // Local zone radius
+    const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
+    li.localRadius = localZone?.['Rate'] || 15;
 
     const hasDynamic = li.materials.length > 0;
 
@@ -134,6 +137,7 @@
             <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
           </div>
           <p style="color:#666;font-size:13px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
+          <p style="color:#666;font-size:13px;margin-top:8px">⚠ Jobs outside our local delivery area may be subject to additional travel charges — your final quote will confirm the exact amount.</p>
           <p style="color:#666;font-size:13px"><strong>${shop['Shop name']}</strong><br/>${shop['Phone']||''}</p>
         </div>`);
     }
@@ -207,6 +211,7 @@
       #midasquote-widget .mq-line-items li:last-child{border-bottom:none}
       #midasquote-widget .mq-li-lbl{color:#6b7280}
       #midasquote-widget .mq-disclaimer{font-size:12px;color:#6b7280;background:#f9fafb;border-radius:6px;padding:10px 12px;margin-top:1rem;line-height:1.5}
+      #midasquote-widget .mq-travel-note{font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 12px;margin-top:8px;line-height:1.5}
       #midasquote-widget .mq-cta-row{display:flex;gap:8px;margin-top:1rem}
       #midasquote-widget .mq-cta-row button{flex:1;padding:10px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111;font-family:inherit}
       #midasquote-widget .mq-pri{background:${bc}!important;color:#fff!important;border-color:${bc}!important}
@@ -283,7 +288,6 @@
     const { li, hasDynamic } = data;
 
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
-    // No doors option at top, then all door styles
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const drawerOpts = makeOpts(li.drawers, '');
     const hingeOpts  = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -291,9 +295,6 @@
     const hasDrawers = li.drawers.length > 0;
     const hasHinges  = li.hinges.length > 0;
     const hasInstall = !hasDynamic || li.installItems.length > 0;
-
-    const localRadius = li.zones.find(z=>z['Name']?.toLowerCase().includes('local'))?.['Rate'] || 15;
-    const dynZones = li.zones.filter(z=>!z['Name']?.toLowerCase().includes('local'));
 
     return `
       <div class="mq-sec">
@@ -349,15 +350,10 @@
         </div>
       </div>`:''}
       <div class="mq-sec">
-        <p class="mq-sec-title">Removal & travel</p>
+        <p class="mq-sec-title">Removal</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Remove existing cabinets?</label>
             <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
-          <div class="mq-field"><label class="mq-label">Job location</label>
-            <select id="mq-${prefix}-zone">
-              <option value="local">Local (within ${localRadius}km)</option>
-              ${hasDynamic ? dynZones.map((z,i)=>`<option value="dyn_zone_${i}">${z['Name']}</option>`).join('') : '<option value="zone2">Zone 2</option><option value="zone3">Zone 3</option><option value="zone4">Zone 4</option>'}
-            </select></div>
         </div>
       </div>
       <div class="mq-sec">
@@ -365,6 +361,8 @@
         <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
       </div>`;
   }
+
+  const TRAVEL_NOTE = '🚗 This estimate is based on local delivery. Jobs outside our local area may be subject to additional travel charges — your final quote will confirm the exact amount.';
 
   function buildWidgetHTML(shop, specs, data) {
     const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
@@ -405,6 +403,7 @@
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
           <div class="mq-disclaimer">⚠ ${disc}</div>
+          <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
@@ -419,8 +418,6 @@
           <div class="mq-grid2">
             <div class="mq-field"><label class="mq-label">Supply + install?</label>
               <select id="mq-ct-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
-            <div class="mq-field"><label class="mq-label">Job location</label>
-              <select id="mq-ct-zone"><option value="local">Local</option><option value="zone2">Zone 2</option><option value="zone3">Zone 3</option><option value="zone4">Zone 4</option></select></div>
           </div>
         </div>
         <div class="mq-sec"><p class="mq-sec-title">Surfaces</p>
@@ -436,6 +433,7 @@
           </div>
           <ul class="mq-line-items" id="mq-ct-line-items"></ul>
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
+          <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
@@ -477,6 +475,7 @@
             <div class="mq-grand-val" id="mq-b-grand">—</div>
           </div>
           <div class="mq-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
+          <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row" style="margin-top:1rem">
             <button onclick="mqShowConsultModal()">Ask a question ↗</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
@@ -509,26 +508,18 @@
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
       let installU=0, installB=0, removalRate=0, taxRate=0;
-      const zones={};
 
       if (hasDynamic) {
-        // Build material rates — match upper/base rates from raw line items by base name
         li.materials.forEach((m,i) => {
           const baseName = m._baseName || m['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim();
-          // Find upper and base rates from raw materials
           const uItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('uppers'));
           const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
           const fallbackRate = m['Rate'] || 0;
-          mat[`dyn_${i}`] = {
-            label: baseName,
-            rateU: uItem ? uItem['Rate']||0 : fallbackRate,
-            rateB: bItem ? bItem['Rate']||0 : fallbackRate,
-          };
+          mat[`dyn_${i}`] = { label:baseName, rateU:uItem?uItem['Rate']||0:fallbackRate, rateB:bItem?bItem['Rate']||0:fallbackRate };
         });
-
-        li.doorStyles.forEach((d,i)  => { door[`dyn_${i}`]   = { label:d['Name'], rate:d['Rate']||0 }; });
-        li.drawers.forEach((d,i)     => { drawer[`dyn_${i}`]  = { label:d['Name'], rate:d['Rate']||0 }; });
-        li.hinges.forEach((h,i)      => { hinge[`dyn_${i}`]   = { label:h['Name'], rate:h['Rate']||0 }; });
+        li.doorStyles.forEach((d,i) => { door[`dyn_${i}`]  = { label:d['Name'], rate:d['Rate']||0 }; });
+        li.drawers.forEach((d,i)    => { drawer[`dyn_${i}`] = { label:d['Name'], rate:d['Rate']||0 }; });
+        li.hinges.forEach((h,i)     => { hinge[`dyn_${i}`]  = { label:h['Name'], rate:h['Rate']||0 }; });
 
         const iu = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper'));
         const ib = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base'));
@@ -539,23 +530,19 @@
         removalRate = rem?rem['Rate']||0:0;
         const tax = li.taxItems[0];
         taxRate = tax?(tax['Rate']||0)/100:0;
-        li.zones.filter(z=>!z['Name']?.toLowerCase().includes('local')).forEach((z,i)=>{ zones[`dyn_zone_${i}`]=z['Rate']||0; });
       } else {
         mat['melamine'] = {label:'Melamine', rateU:pricing['Melamine price']||280, rateB:pricing['Melamine price']||280};
         mat['plywood']  = {label:'Plywood',  rateU:pricing['Plywood price'] ||380, rateB:pricing['Plywood price'] ||380};
-        door['slab']    = {label:'Slab',     rate:0};
-        door['shaker']  = {label:'Shaker',   rate:pricing['Shaker multiplier']||0};
+        door['slab']    = {label:'Slab',   rate:0};
+        door['shaker']  = {label:'Shaker', rate:pricing['Shaker multiplier']||0};
         hinge['softclose'] = {label:'Soft-close', rate:pricing['Soft close hinges']||12};
         hinge['regular']   = {label:'Regular',    rate:0};
         installU = pricing['Install rate uppers']||85;
         installB = installU;
         removalRate = pricing['Removal rate']||18;
         taxRate = (pricing['Tax rate']||5)/100;
-        zones['zone2']=pricing['Zone 2 surcharge']||320;
-        zones['zone3']=pricing['Zone 3 surcharge']||680;
-        zones['zone4']=pricing['Zone 4 surcharge']||1100;
       }
-      return { mat, door, drawer, hinge, installU, installB, removalRate, taxRate, zones };
+      return { mat, door, drawer, hinge, installU, installB, removalRate, taxRate };
     }
 
     const CT_MAT = {
@@ -616,13 +603,12 @@
 
     function getMaterialRates(matKey, mat) {
       const m = mat[matKey];
-      if (!m) return { rateU: 0, rateB: 0, label: '' };
-      // If item has separate upper/base rates use them, otherwise use single rate
-      return { rateU: m.rateU ?? m.rate ?? 0, rateB: m.rateB ?? m.rate ?? 0, label: m.label || '' };
+      if (!m) return { rateU:0, rateB:0, label:'' };
+      return { rateU:m.rateU??m.rate??0, rateB:m.rateB??m.rate??0, label:m.label||'' };
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,installU,installB,removalRate,taxRate,zones}=P();
+      const {mat,door,drawer,hinge,installU,installB,removalRate,taxRate}=P();
       const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
       const hMult={standard:1.0,tall:1.15,mixed:1.08}[gv(`mq-${prefix}-ht`)];
@@ -638,24 +624,24 @@
       }
       const drawerKey=gv(`mq-${prefix}-drawer`)||'';
 
-      const uMat = getMaterialRates(uMatKey, mat);
-      const bMat = getMaterialRates(bMatKey, mat);
-      const uDoorRate = uDoorKey==='none' ? 0 : (door[uDoorKey]?.rate||0);
-      const bDoorRate = bDoorKey==='none' ? 0 : (door[bDoorKey]?.rate||0);
-      const uHingeRate = uDoorKey==='none' ? 0 : (hinge[uHingeKey]?.rate||0);
-      const bHingeRate = bDoorKey==='none' ? 0 : (hinge[bHingeKey]?.rate||0);
-      const drawerRate = drawer[drawerKey]?.rate||0;
+      const uMat=getMaterialRates(uMatKey,mat);
+      const bMat=getMaterialRates(bMatKey,mat);
+      const uDoorRate=uDoorKey==='none'?0:(door[uDoorKey]?.rate||0);
+      const bDoorRate=bDoorKey==='none'?0:(door[bDoorKey]?.rate||0);
+      const uHingeRate=uDoorKey==='none'?0:(hinge[uHingeKey]?.rate||0);
+      const bHingeRate=bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
+      const drawerRate=drawer[drawerKey]?.rate||0;
 
       const uInstall=si==='install'?installU:0;
       const bInstall=si==='install'?installB:0;
 
-      const uPft = uMat.rateU*hMult + uDoorRate + uHingeRate + uInstall;
-      const bPft = bMat.rateB        + bDoorRate + bHingeRate + drawerRate + bInstall;
+      const uPft=uMat.rateU*hMult+uDoorRate+uHingeRate+uInstall;
+      const bPft=bMat.rateB+bDoorRate+bHingeRate+drawerRate+bInstall;
       const uCost=uFt*uPft, bCost=bFt*bPft;
 
       const lines=[];
-      const uDoorLabel = uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
-      const bDoorLabel = bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
+      const uDoorLabel=uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
+      const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
       if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uCost)});
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawer config — ${drawer[drawerKey]?.label||''} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
@@ -673,12 +659,7 @@
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const zoneEl=document.getElementById(`mq-${prefix}-zone`);
-      const zoneKey=zoneEl?zoneEl.value:'local';
-      const zoneCost=zoneKey!=='local'?(zones[zoneKey]||0):0;
-      if(zoneCost>0) lines.push({label:'Travel surcharge',cost:zoneCost});
-
-      const sub=uCost+bCost+specTotal+remCost+zoneCost;
+      const sub=uCost+bCost+specTotal+remCost;
       const tax=sub*taxRate;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
       if(taxRate>0) lines.push({label:`Est. tax (${Math.round(taxRate*100)}%)`,cost:Math.round(tax)});
@@ -690,7 +671,7 @@
     }
 
     function calcCountertop(prefix) {
-      const {taxRate,zones}=P();
+      const {taxRate}=P();
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
       Object.keys(surfs[prefix]).forEach(id=>{
@@ -707,8 +688,6 @@
         sub+=cost;
         lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft)`,cost:Math.round(cost)});
       });
-      const zc=prefix==='ct'?(zones[gv('mq-ct-zone')]||0):0;
-      if(zc>0){lines.push({label:'Travel surcharge',cost:zc});sub+=zc;}
       const tax=sub*taxRate;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
       if(taxRate>0) lines.push({label:`Est. tax (${Math.round(taxRate*100)}%)`,cost:Math.round(tax)});
