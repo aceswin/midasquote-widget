@@ -357,7 +357,12 @@
     if (chip) chip.remove();
   };
 
-  window.mqphGoToWizard = function() {
+  window.mqphGoToWizard = async function() {
+    // Only create default install + hinge records when actually launching the wizard
+    const hasHinge   = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='hinge');
+    const hasInstall = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='install');
+    if (!hasHinge)   { for(let i=0;i<DEFAULT_HINGES.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_HINGES[i],Category:'hinge',Rate:0,Unit:'per lin ft upcharge',Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
+    if (!hasInstall) { for(let i=0;i<DEFAULT_INSTALL.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_INSTALL[i].name,Category:'install',Rate:0,Unit:DEFAULT_INSTALL[i].unit,Description:DEFAULT_INSTALL[i].description,Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
     wizardStep = 0; wizardItems = []; wizardBaseline = null;
     const container = document.getElementById('mq-pricing-helper-v2');
     if (container) { container.innerHTML = buildWizardHTML(); renderWizardStep(0); }
@@ -1220,7 +1225,7 @@
                   <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
-                <div class="mqph-row-rate">$${(r.fields['Rate']||0).toLocaleString()}</div>
+                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced</span>' : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
                 <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
                 <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
                 <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
@@ -1346,11 +1351,7 @@
     if (saved) { saved.style.display='inline'; setTimeout(()=>saved.style.display='none',2000); }
   };
 
-  window.mqphStartItemSetup = async function() {
-    const hasHinge   = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='hinge');
-    const hasInstall = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='install');
-    if(!hasHinge)   { for(let i=0;i<DEFAULT_HINGES.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_HINGES[i],Category:'hinge',Rate:0,Unit:'per lin ft upcharge',Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
-    if(!hasInstall) { for(let i=0;i<DEFAULT_INSTALL.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_INSTALL[i].name,Category:'install',Rate:0,Unit:DEFAULT_INSTALL[i].unit,Description:DEFAULT_INSTALL[i].description,Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
+  window.mqphStartItemSetup = function() {
     const container=document.getElementById('mq-pricing-helper-v2');
     if(container) container.innerHTML=buildItemSetupHTML();
   };
