@@ -132,6 +132,8 @@
       .mqph-modal-hdr{padding:1.25rem 1.5rem !important;border-bottom:1px solid #e5e7eb !important;display:flex !important;align-items:flex-start !important;justify-content:space-between !important;gap:12px !important}
       .mqph-modal-hdr h3{font-size:16px !important;font-weight:700 !important;color:#111 !important;margin:0 !important;padding:0 !important}
       .mqph-modal-hdr p{font-size:13px !important;color:#6b7280 !important;margin:4px 0 0 !important;padding:0 !important;line-height:1.5 !important}
+      .mqph-mini-hdr h3{color:#fff !important}
+      .mqph-mini-hdr p{color:rgba(255,255,255,0.65) !important}
       .mqph-modal-hdr-close{background:none !important;border:none !important;font-size:20px !important;color:#9ca3af !important;cursor:pointer !important;line-height:1 !important;padding:0 !important;margin:0 !important;flex-shrink:0 !important}.mqph-modal-hdr-close:hover{color:#374151 !important}
       .mqph-modal-body{padding:1.5rem !important}
       .mqph-modal-footer{padding:1rem 1.5rem !important;border-top:1px solid #e5e7eb !important;display:flex !important;gap:10px !important;align-items:center !important;background:#f9fafb !important}
@@ -746,9 +748,10 @@
           </div>
           <div id="mqph-r-install" class="mqph-result"></div>
           <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
-          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal</div>
-          <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">What would you charge to remove those same 4 linear feet of base cabinets with doors? <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
-          <div class="mqph-input-row"><label>Removal price for 4ft job</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal & disposal</div>
+          <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet of base cabinets with doors?</label></div>
+          <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Include your cost to haul away and dispose of the old cabinets. <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
+          <div class="mqph-input-row"><label>Removal & disposal price for 4ft job</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           <div id="mqph-r-removal" class="mqph-result"></div>`,
         skipLabel:'Skip — supply only',
         nextLabel:'Next →',
@@ -1393,7 +1396,7 @@
       <!-- Mini-wizard overlay -->
       <div class="mqph-overlay" id="mqph-mini-overlay">
         <div class="mqph-modal">
-          <div class="mqph-modal-hdr" style="background:#1a1a1a;border-radius:12px 12px 0 0">
+          <div class="mqph-modal-hdr mqph-mini-hdr" style="background:#1a1a1a;border-radius:12px 12px 0 0">
             <div>
               <h3 id="mqph-mini-title" style="color:#fff;font-size:15px">Add item</h3>
               <p id="mqph-mini-sub" style="color:rgba(255,255,255,0.6);font-size:12px;margin:3px 0 0;padding:0"></p>
