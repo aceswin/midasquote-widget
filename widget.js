@@ -540,6 +540,8 @@
     const drawerConfigNames = [...new Set(
       li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
     )];
+
+    function P() {
       const mat={}, door={}, drawer={}, hinge={};
       let installU=0, installB=0, removalRate=0, taxRate=0;
 
