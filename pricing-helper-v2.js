@@ -584,7 +584,7 @@
           others.forEach((d,idx) => {
             const p = parseFloat(document.getElementById(`mqph-door-${idx}`)?.value||0);
             if (p>0&&wizardBaseline) {
-              const u = (p - (wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice)) / 4;
+              const u = (p - wizardBaseline.basePrice) / 4;
               wizardItems.push({ name:d.fields['Name'], category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Door style upcharge', active:true });
             }
           });
@@ -847,7 +847,7 @@
   window.mqphCalcDoorUp = function(idx) {
     const p=parseFloat(document.getElementById(`mqph-door-${idx}`)?.value||0);
     const res=document.getElementById(`mqph-r-door-${idx}`); if(!res||!wizardBaseline) return;
-    if(p>0){const u=(p-(wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice))/4;res.style.display='block';res.innerHTML=`<strong>Upcharge vs baseline door:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;}
+    if(p>0){const u=(p-wizardBaseline.basePrice)/4;res.style.display='block';res.innerHTML=`<strong>Upcharge vs plain box:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcHingeUp = function(idx) {
@@ -1082,20 +1082,40 @@
 
     if (cat === 'drawer') {
       const baselineBoxDesc = `$${bl.blBasePrice.toLocaleString(undefined,{maximumFractionDigits:0})} (your ${bl.blMatName} base box price)`;
-      return `
-        <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the baseline base box with 1 top drawer in each cabinet using this config.</p>
-        ${specBox([
-          `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
-          `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
-          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
-          `<strong>No doors · No drawer fronts · Supply only</strong>`,
-        ])}
-        <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
-        <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the drawer upcharge per lin ft</p>
-        <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
-          <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
-          <div class="mqph-rate-reveal-lbl">per linear foot upcharge</div>
-        </div>`;
+      if (step === 0) {
+        return `
+          <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the baseline base box with <strong>1 top drawer</strong> in each cabinet. This gives us the "some drawers" rate.</p>
+          ${specBox([
+            `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+            `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
+            `<strong>No doors · No drawer fronts · Supply only</strong>`,
+          ])}
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the "some drawers" upcharge per lin ft</p>
+          <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
+            <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
+            <div class="mqph-rate-reveal-lbl">per linear foot — some drawers upcharge</div>
+          </div>`;
+      }
+      if (step === 1) {
+        const p0 = miniWiz.p0 || 0;
+        return `
+          <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Now quote a <strong>full drawer bank</strong> — 3 drawers in each cabinet. This gives us the "mostly drawers" rate.</p>
+          ${specBox([
+            `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+            `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
+            `<strong>No doors · No drawer fronts · Supply only</strong>`,
+          ])}
+          ${p0>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">1-drawer quote was $${p0.toLocaleString()} — bank quote should be higher.</p>`:''}
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <p class="mqph-calc-hint">We'll average this with your 1-drawer quote to get the "mostly drawers" rate</p>
+          <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
+            <div class="mqph-rate-reveal-val" id="mqph-mini-rate-1">—</div>
+            <div class="mqph-rate-reveal-lbl">per linear foot — mostly drawers upcharge</div>
+          </div>`;
+      }
     }
 
     return '';
@@ -1133,14 +1153,21 @@
       reveal(0, p > 0 ? (p - baseWithDoor) / 4 : null);
     }
     if (cat === 'drawer') {
-      const p = parseFloat(document.getElementById('mqph-mini-p0')?.value || 0);
-      reveal(0, p > 0 ? (p - bl.blBasePrice) / 4 : null);
+      if (step === 0) {
+        const p = parseFloat(document.getElementById('mqph-mini-p0')?.value || 0);
+        reveal(0, p > 0 ? (p - bl.blBasePrice) / 4 : null);
+      }
+      if (step === 1) {
+        const p0 = miniWiz.p0 || 0;
+        const p1 = parseFloat(document.getElementById('mqph-mini-p1')?.value || 0);
+        reveal(1, p0 > 0 && p1 > 0 ? ((p0 + p1) / 2 - bl.blBasePrice) / 4 : null);
+      }
     }
   };
 
   // Total steps per category
   function miniWizTotalSteps(cat) {
-    return cat === 'material' ? 2 : 1;
+    return (cat === 'material' || cat === 'drawer') ? 2 : 1;
   }
 
   function renderMiniWiz() {
@@ -1150,7 +1177,7 @@
     const total = miniWizTotalSteps(cat);
     const isLast = step >= total - 1;
 
-    const stepLabels = { material:['Upper rate','Base rate'], door:['Door upcharge'], hinge:['Hinge upcharge'], drawer:['Drawer upcharge'] };
+    const stepLabels = { material:['Upper rate','Base rate'], door:['Door upcharge'], hinge:['Hinge upcharge'], drawer:['Some drawers','Mostly drawers'] };
     const labels = stepLabels[cat] || [];
 
     const progressDots = labels.map((_,i) =>
@@ -1242,13 +1269,28 @@
       }
 
       if (cat === 'drawer') {
-        const rate = Math.round(((p - bl.blBasePrice) / 4) * 100) / 100;
+        const p0 = miniWiz.p0 || 0; // 1-drawer quote
+        const p1 = miniWiz.p1 || 0; // bank quote (current step)
+        const bl2 = getBaselineRates();
         const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='drawer').length;
-        const rec = await atCreate(LINE_ITEMS_TABLE, {
-          shop:[shopRecord._recordId], Name:name, Category:'drawer',
-          Rate:rate, Unit:'per lin ft', Description:'Drawer config rate', Active:true, 'Sort order':sortBase+1,
-        });
-        if (rec?.id) lineItems.push(rec);
+
+        if (p0 > 0) {
+          const someRate = Math.round(((p0 - bl2.blBasePrice) / 4) * 100) / 100;
+          const rec1 = await atCreate(LINE_ITEMS_TABLE, {
+            shop:[shopRecord._recordId], Name:`${name} — some drawers`, Category:'drawer',
+            Rate:someRate, Unit:'per lin ft', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1,
+          });
+          if (rec1?.id) lineItems.push(rec1);
+        }
+
+        if (p0 > 0 && p1 > 0) {
+          const mostlyRate = Math.round((((p0 + p1) / 2 - bl2.blBasePrice) / 4) * 100) / 100;
+          const rec2 = await atCreate(LINE_ITEMS_TABLE, {
+            shop:[shopRecord._recordId], Name:`${name} — mostly drawers`, Category:'drawer',
+            Rate:mostlyRate, Unit:'per lin ft', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':sortBase+2,
+          });
+          if (rec2?.id) lineItems.push(rec2);
+        }
       }
 
       mqphCloseMiniWiz();
@@ -1354,10 +1396,10 @@
           <div class="mqph-modal-hdr" style="background:#1a1a1a;border-radius:12px 12px 0 0">
             <div>
               <h3 id="mqph-mini-title" style="color:#fff;font-size:15px">Add item</h3>
-              <p id="mqph-mini-sub" style="color:rgba(255,255,255,0.6);font-size:12px;margin:3px 0 0"></p>
+              <p id="mqph-mini-sub" style="color:rgba(255,255,255,0.6);font-size:12px;margin:3px 0 0;padding:0"></p>
               <div id="mqph-mini-progress" style="display:flex;gap:4px;margin-top:10px;min-width:200px"></div>
             </div>
-            <button class="mqph-modal-hdr-close" onclick="mqphCloseMiniWiz()" style="color:rgba(255,255,255,0.6)">×</button>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseMiniWiz()" style="color:rgba(255,255,255,0.7);font-size:22px">×</button>
           </div>
           <div class="mqph-modal-body" id="mqph-mini-content"></div>
           <div class="mqph-modal-footer">
