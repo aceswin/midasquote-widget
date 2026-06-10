@@ -747,7 +747,9 @@
           <div id="mqph-r-install" class="mqph-result"></div>
           <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
           <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal</div>
-          <div class="mqph-input-row"><label>Removal & disposal (per lin ft)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00"/></div>`,
+          <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">What would you charge to remove those same 4 linear feet of base cabinets with doors? <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
+          <div class="mqph-input-row"><label>Removal price for 4ft job</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          <div id="mqph-r-removal" class="mqph-result"></div>`,
         skipLabel:'Skip — supply only',
         nextLabel:'Next →',
         onNext:() => {
@@ -755,12 +757,19 @@
           const uwd=parseFloat(document.getElementById('mqph-inst-u-wd')?.value||0);
           const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
           const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
-          const r=parseFloat(document.getElementById('mqph-removal')?.value||0);
+          const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
+
           if(und>0) wizardItems.push({ name:'Install — uppers (no doors)',   category:'install', rate:Math.round((und/4)*100)/100, unit:'per lin ft', description:'Upper box install, no doors', active:true });
           if(uwd>0) wizardItems.push({ name:'Install — uppers (with doors)', category:'install', rate:Math.round((uwd/4)*100)/100, unit:'per lin ft', description:'Upper install with doors hung', active:true });
           if(bnd>0) wizardItems.push({ name:'Install — bases (no doors)',    category:'install', rate:Math.round((bnd/4)*100)/100, unit:'per lin ft', description:'Base box install, no doors', active:true });
-          if(bwd>0) wizardItems.push({ name:'Install — bases (with doors)',  category:'install', rate:Math.round((bwd/4)*100)/100, unit:'per lin ft', description:'Base install with doors hung', active:true });
-          if(r>0)   wizardItems.push({ name:'Cabinet removal',               category:'install', rate:r, unit:'per lin ft', description:'Remove & dispose existing cabinets', active:true });
+          if(bwd>0) {
+            const bwdRate = Math.round((bwd/4)*100)/100;
+            wizardItems.push({ name:'Install — bases (with doors)',       category:'install', rate:bwdRate,                              unit:'per lin ft', description:'Base install with doors hung', active:true });
+            // Auto-calculated drawer install rates — no extra quotes needed
+            wizardItems.push({ name:'Install — bases (some drawers)',     category:'install', rate:Math.round(bwdRate*1.10*100)/100,    unit:'per lin ft', description:'Base install with some drawers (+10% over with-doors rate)', active:true });
+            wizardItems.push({ name:'Install — bases (mostly drawers)',   category:'install', rate:Math.round(bwdRate*1.15*100)/100,    unit:'per lin ft', description:'Base install with mostly drawers (+15% over with-doors rate)', active:true });
+          }
+          if(rem>0) wizardItems.push({ name:'Cabinet removal', category:'install', rate:Math.round((rem/4)*100)/100, unit:'per lin ft', description:'Remove & dispose existing cabinets', active:true });
         }
       });
     }
@@ -861,13 +870,27 @@
     const uwd=parseFloat(document.getElementById('mqph-inst-u-wd')?.value||0);
     const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
     const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
+    const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
     const res=document.getElementById('mqph-r-install'); if(!res) return;
     let html='';
     if(und>0) html+=`Uppers (no doors): <span class="mqph-result-val">$${(und/4).toFixed(2)}/lin ft</span><br/>`;
     if(uwd>0) html+=`Uppers (with doors): <span class="mqph-result-val">$${(uwd/4).toFixed(2)}/lin ft</span><br/>`;
     if(bnd>0) html+=`Bases (no doors): <span class="mqph-result-val">$${(bnd/4).toFixed(2)}/lin ft</span><br/>`;
-    if(bwd>0) html+=`Bases (with doors): <span class="mqph-result-val">$${(bwd/4).toFixed(2)}/lin ft</span>`;
+    if(bwd>0) {
+      html+=`Bases (with doors): <span class="mqph-result-val">$${(bwd/4).toFixed(2)}/lin ft</span><br/>`;
+      html+=`Bases (some drawers): <span class="mqph-result-val">$${(bwd/4*1.10).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +10%</span><br/>`;
+      html+=`Bases (mostly drawers): <span class="mqph-result-val">$${(bwd/4*1.15).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +15%</span>`;
+      // Update removal suggestion hint
+      const hint = document.getElementById('mqph-removal-hint');
+      if (hint) hint.textContent = `Suggested: $${Math.round(bwd*0.5)} (half your base install with doors rate)`;
+    }
     if(html){res.style.display='block';res.innerHTML=html;}else res.style.display='none';
+    // Removal live rate
+    const remRes = document.getElementById('mqph-r-removal');
+    if (remRes) {
+      if(rem>0){remRes.style.display='block';remRes.innerHTML=`<strong>Removal rate:</strong> <span class="mqph-result-val">$${(rem/4).toFixed(2)}/lin ft</span>`;}
+      else remRes.style.display='none';
+    }
   };
 
   // ============================================================

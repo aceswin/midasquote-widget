@@ -549,10 +549,14 @@
         });
         li.hinges.forEach((h,i)     => { hinge[`dyn_${i}`]  = { label:h['Name'], rate:h['Rate']||0 }; });
 
-        const iu = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper'));
-        const ib = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base'));
+        const iu  = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && !i['Name']?.toLowerCase().includes('drawer'));
+        const ib  = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('with doors'));
+        const ibSome   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('some drawers'));
+        const ibMostly = li.installItems.find(i=>i['Name']?.toLowerCase().includes('mostly drawers'));
         installU = iu?iu['Rate']||0:0;
         installB = ib?ib['Rate']||0:0;
+        const installBSome   = ibSome?ibSome['Rate']||0:installB;
+        const installBMostly = ibMostly?ibMostly['Rate']||0:installB;
         const rem = li.otherItems.find(i=>i['Name']?.toLowerCase().includes('removal')) ||
                     li.installItems.find(i=>i['Name']?.toLowerCase().includes('removal'));
         removalRate = rem?rem['Rate']||0:0;
@@ -567,10 +571,12 @@
         hinge['regular']   = {label:'Regular',    rate:0};
         installU = pricing['Install rate uppers']||85;
         installB = installU;
+        const installBSome   = Math.round(installB*1.10*100)/100;
+        const installBMostly = Math.round(installB*1.15*100)/100;
         removalRate = pricing['Removal rate']||18;
         taxRate = (pricing['Tax rate']||5)/100;
       }
-      return { mat, door, drawer, hinge, installU, installB, removalRate, taxRate };
+      return { mat, door, drawer, hinge, installU, installB, installBSome, installBMostly, removalRate, taxRate };
     }
 
     const CT_MAT = {
@@ -642,7 +648,7 @@
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,installU,installB,removalRate,taxRate}=P();
+      const {mat,door,drawer,hinge,installU,installB,installBSome,installBMostly,removalRate,taxRate}=P();
       const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
       const hMult={standard:1.0,tall:1.15,mixed:1.08}[gv(`mq-${prefix}-ht`)];
@@ -669,7 +675,11 @@
       const bHingeRate=bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
 
       const uInstall=si==='install'?installU:0;
-      const bInstall=si==='install'?installB:0;
+      const bInstall=si==='install'?(
+        drawerTier==='some'   ? installBSome   :
+        drawerTier==='mostly' ? installBMostly :
+        installB
+      ):0;
 
       const uPft=uMat.rateU*hMult+uDoorRate+uHingeRate+uInstall;
       const bPft=bMat.rateB+bDoorRate+bHingeRate+drawerRate+bInstall;
