@@ -797,7 +797,17 @@
       onNext:() => {
         const gn=id=>parseFloat(document.getElementById(id)?.value||0);
         const zr=gn('mqph-zone-r'), tax=gn('mqph-tax');
-        if(zr>0) wizardItems.push({ name:'Local zone radius', category:'zone', rate:zr, unit:'km', description:'Within this distance = no travel surcharge', active:true });
+        // Zone radius — upsert directly, don't go through wizard wipe/rewrite
+        if(zr>0) {
+          const existing = lineItems.find(r=>r.fields&&r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
+          if(existing) {
+            atUpdate(LINE_ITEMS_TABLE, existing.id, {Rate:zr});
+            existing.fields['Rate'] = zr;
+          } else {
+            atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Local zone radius',Category:'zone',Rate:zr,Unit:'km',Description:'Within this distance = no travel surcharge',Active:true,'Sort order':0})
+              .then(rec=>{ if(rec?.id) lineItems.push(rec); });
+          }
+        }
         if(tax>0) wizardItems.push({ name:'Tax rate', category:'tax', rate:tax, unit:'%', description:'Applied to cabinet subtotal', active:true });
       }
     });
