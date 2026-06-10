@@ -186,7 +186,7 @@
   const CAT_LABELS = {
     material:'🪵 Box materials', door:'🚪 Door styles', drawer:'🗄️ Drawer configurations',
     hinge:'🔧 Door hinges', install:'🔧 Installation & removal',
-    tax:'🧾 Tax', other:'📋 Other',
+    countertop:'🪨 Countertop materials', zone:'🚗 Travel zones', tax:'🧾 Tax', other:'📋 Other',
   };
 
   // Categories fully owned by the wizard — wiped on every full wizard run
@@ -1327,7 +1327,7 @@
                   <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
-                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced</span>' : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
+                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
                 <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
                 <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
                 <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
@@ -1336,7 +1336,7 @@
           </div>`).join('')}
       `}
 
-      ${buildCTHtml(pricingRecord?.fields||{})}
+      ${buildCTHtml()}
 
       <!-- Mini-wizard overlay -->
       <div class="mqph-overlay" id="mqph-mini-overlay">
@@ -1531,52 +1531,158 @@
   // ============================================================
   // COUNTERTOP DIRECT ENTRY
   // ============================================================
-  function buildCTHtml(p) {
-    const v=(f,d)=>p[f]!==undefined?p[f]:d;
-    const row=(id,label,field,def,suf)=>`
-      <div class="mqph-ct-row">
-        <span class="mqph-ct-label">${label}</span>
-        <div class="mqph-ct-inp"><span>$</span><input type="number" id="mqph-ct-${id}" value="${v(field,def)}"/><span>${suf||'/sqft'}</span></div>
+  // ============================================================
+  // COUNTERTOP EDITOR (dynamic — reads/writes Line Items table)
+  // ============================================================
+  function buildCTHtml() {
+    const ctItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop')
+      .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+
+    const unitOpts = (sel) => ['sqft','lin ft'].map(u=>`<option value="${u}" ${sel===u?'selected':''}>${u}</option>`).join('');
+
+    const rows = ctItems.length > 0 ? ctItems.map(r => {
+      const unitParts = (r.fields['Unit']||'sqft|sqft').split('|');
+      const supplyUnit  = (unitParts[0]||'sqft').trim();
+      const installUnit = (unitParts[1]||'sqft').trim();
+      const isSpecial = ['backsplash','sink','cooktop'].some(k=>r.fields['Name']?.toLowerCase().includes(k));
+      return `
+        <div class="mqph-row" id="mqph-ct-row-${r.id}">
+          <div style="flex:1;min-width:0">
+            <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+          </div>
+          ${isSpecial ? `
+            <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+              <span style="color:#6b7280">$</span><span style="font-weight:600">${(r.fields['Rate']||0).toLocaleString()}</span>
+              <span style="color:#6b7280;font-size:11px">${r.fields['Unit']||''}</span>
+            </div>` : `
+            <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+              <span style="color:#6b7280;font-size:11px">Supply:</span>
+              <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+              <span style="color:#6b7280;font-size:11px">/${supplyUnit}</span>
+              <span style="color:#d1d5db;margin:0 4px">·</span>
+              <span style="color:#6b7280;font-size:11px">Install:</span>
+              <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
+              <span style="color:#6b7280;font-size:11px">/${installUnit}</span>
+            </div>`}
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenCTEdit('${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+        </div>`;
+    }).join('') : `
+      <div style="padding:1.5rem;text-align:center;color:#6b7280;font-size:13px">
+        No countertop materials yet. Add them with the button above.
       </div>`;
+
     return `
       <div class="mqph-ct-block">
         <div class="mqph-cat-header">
-          <span class="mqph-cat-title">🪨 Countertop rates</span>
-          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphSaveCT()">Save countertop rates</button>
+          <span class="mqph-cat-title">🪨 Countertop materials</span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenCTAdd()">+ Add material</button>
         </div>
         <div id="mqph-ct-msg" class="mqph-msg"></div>
-        ${row('lam',      'Laminate',                 'Lam supply',       18, '/sqft')}
-        ${row('ss-econ',  'Solid surface — Economy',  'SS econ supply',   38, '/sqft')}
-        ${row('ss-mid',   'Solid surface — Mid',      'SS mid supply',    58, '/sqft')}
-        ${row('ss-prem',  'Solid surface — Premium',  'SS prem supply',   90, '/sqft')}
-        ${row('gran-econ','Granite — Economy',         'Gran econ supply', 45, '/sqft')}
-        ${row('gran-mid', 'Granite — Mid',             'Gran mid supply',  72, '/sqft')}
-        ${row('gran-prem','Granite — Premium',         'Gran prem supply', 130,'/sqft')}
-        ${row('quartz',   'Engineered quartz',         'Quartz supply',    85, '/sqft')}
-        ${row('marble',   'Marble',                    'Marble supply',    110,'/sqft')}
-        ${row('butcher',  'Butcher block',             'Butcher supply',   42, '/sqft')}
-        ${row('backsplash','Backsplash',               'Backsplash rate',  12, '/lin ft')}
-        ${row('sink',     'Sink cutout',               'Sink cutout',      180,'each')}
-        ${row('cooktop',  'Cooktop cutout',            'Cooktop cutout',   220,'each')}
+        ${rows}
+      </div>
+
+      <!-- Countertop add/edit modal -->
+      <div class="mqph-overlay" id="mqph-ct-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-ct-modal-title">Add countertop material</h3></div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseCTModal()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div class="mqph-field"><label>Material name</label><input type="text" id="mqph-ct-name" placeholder="e.g. Granite — Mid"/></div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply</div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <label style="font-size:13px;color:#374151;flex:1">Rate</label>
+                <span style="font-size:13px;color:#6b7280">$</span>
+                <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">per</span>
+                <select id="mqph-ct-supply-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                  <option value="sqft">sqft</option>
+                  <option value="lin ft">lin ft</option>
+                </select>
+              </div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Installation</div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <label style="font-size:13px;color:#374151;flex:1">Rate</label>
+                <span style="font-size:13px;color:#6b7280">$</span>
+                <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">per</span>
+                <select id="mqph-ct-install-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                  <option value="sqft">sqft</option>
+                  <option value="lin ft">lin ft</option>
+                </select>
+              </div>
+            </div>
+            <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
+              <label style="text-transform:none;font-size:13px;font-weight:500">Active</label>
+              <input type="checkbox" id="mqph-ct-active" checked style="width:auto"/>
+            </div>
+          </div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseCTModal()">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" onclick="mqphSaveCTItem()" style="margin-left:auto">Save</button>
+          </div>
+        </div>
       </div>`;
   }
 
-  window.mqphSaveCT = async function() {
-    const gn=id=>parseFloat(document.getElementById(`mqph-ct-${id}`)?.value||0);
-    const fields={
-      'Lam supply':gn('lam'),'SS econ supply':gn('ss-econ'),'SS mid supply':gn('ss-mid'),'SS prem supply':gn('ss-prem'),
-      'Gran econ supply':gn('gran-econ'),'Gran mid supply':gn('gran-mid'),'Gran prem supply':gn('gran-prem'),
-      'Quartz supply':gn('quartz'),'Marble supply':gn('marble'),'Butcher supply':gn('butcher'),
-      'Backsplash rate':gn('backsplash'),'Sink cutout':gn('sink'),'Cooktop cutout':gn('cooktop'),
+  let currentCTEditId = null;
+
+  window.mqphOpenCTAdd = function() {
+    currentCTEditId = null;
+    document.getElementById('mqph-ct-modal-title').textContent = 'Add countertop material';
+    document.getElementById('mqph-ct-name').value = '';
+    document.getElementById('mqph-ct-supply-rate').value = '';
+    document.getElementById('mqph-ct-supply-unit').value = 'sqft';
+    document.getElementById('mqph-ct-install-rate').value = '';
+    document.getElementById('mqph-ct-install-unit').value = 'sqft';
+    document.getElementById('mqph-ct-active').checked = true;
+    document.getElementById('mqph-ct-modal-overlay').classList.add('show');
+  };
+
+  window.mqphOpenCTEdit = function(id) {
+    const rec = lineItems.find(r=>r.id===id); if(!rec) return;
+    currentCTEditId = id;
+    const unitParts = (rec.fields['Unit']||'sqft|sqft').split('|');
+    document.getElementById('mqph-ct-modal-title').textContent = 'Edit countertop material';
+    document.getElementById('mqph-ct-name').value = rec.fields['Name']||'';
+    document.getElementById('mqph-ct-supply-rate').value = rec.fields['Rate']||'';
+    document.getElementById('mqph-ct-supply-unit').value = (unitParts[0]||'sqft').trim();
+    document.getElementById('mqph-ct-install-rate').value = rec.fields['Install rate']||'';
+    document.getElementById('mqph-ct-install-unit').value = (unitParts[1]||'sqft').trim();
+    document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
+    document.getElementById('mqph-ct-modal-overlay').classList.add('show');
+  };
+
+  window.mqphCloseCTModal = function() { document.getElementById('mqph-ct-modal-overlay')?.classList.remove('show'); };
+
+  window.mqphSaveCTItem = async function() {
+    const name = document.getElementById('mqph-ct-name').value.trim();
+    if (!name) { alert('Please enter a name.'); return; }
+    const supplyRate  = parseFloat(document.getElementById('mqph-ct-supply-rate').value||0);
+    const installRate = parseFloat(document.getElementById('mqph-ct-install-rate').value||0);
+    const supplyUnit  = document.getElementById('mqph-ct-supply-unit').value;
+    const installUnit = document.getElementById('mqph-ct-install-unit').value;
+    const fields = {
+      shop: [shopRecord._recordId],
+      Name: name,
+      Category: 'countertop',
+      Rate: supplyRate,
+      'Install rate': installRate,
+      Unit: `${supplyUnit}|${installUnit}`,
+      Active: document.getElementById('mqph-ct-active').checked,
     };
     try {
-      if (pricingRecord) await fetch(`${AT_BASE_URL()}/${shopRecord._pricingTable}/${pricingRecord.id}`,{method:'PATCH',headers:AT_HEADS(),body:JSON.stringify({fields})});
-      const msg=document.getElementById('mqph-ct-msg');
-      if(msg){msg.textContent='✓ Saved!';msg.className='mqph-msg mqph-msg-success';msg.style.display='block';setTimeout(()=>msg.style.display='none',3000);}
-    } catch(e) {
-      const msg=document.getElementById('mqph-ct-msg');
-      if(msg){msg.textContent='Error saving.';msg.className='mqph-msg mqph-msg-error';msg.style.display='block';}
-    }
+      if (currentCTEditId) { await atUpdate(LINE_ITEMS_TABLE, currentCTEditId, fields); }
+      else { fields['Sort order'] = lineItems.filter(r=>r.fields?.['Category']==='countertop').length + 1; await atCreate(LINE_ITEMS_TABLE, fields); }
+      mqphCloseCTModal();
+      await loadAndRender();
+    } catch(e) { alert('Error saving. Please try again.'); }
   };
 
   // ============================================================
