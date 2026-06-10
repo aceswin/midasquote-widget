@@ -343,7 +343,7 @@
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Height</label>
-            <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36")</option><option value="mixed">Mix</option></select></div>
+            <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36–40")</option></select></div>
         </div>
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
@@ -685,7 +685,7 @@
       const {mat,door,drawer,hinge,installU,installB,installBSome,installBMostly,removalRate,taxRate}=P();
       const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
-      const hMult={standard:1.0,tall:1.15,mixed:1.08}[gv(`mq-${prefix}-ht`)];
+      const hMult={standard:1.0,tall:1.30}[gv(`mq-${prefix}-ht`)]||1.0;
 
       let uMatKey,uDoorKey,uHingeKey,bMatKey,bDoorKey,bHingeKey;
       if(diffOn[prefix]){
@@ -716,7 +716,7 @@
         installB
       ):0;
 
-      const uPft  = uMat.rateU*hMult+uDoorRate+uHingeRate+uInstall;
+      const uPft  = (uMat.rateU + uDoorRate + uHingeRate + uInstall) * hMult;
       const bPft  = bMat.rateB+bDoorRate+bHingeRate+drawerRate+bInstall;
       const uCost = uFt*uPft, bCost=bFt*bPft;
 
