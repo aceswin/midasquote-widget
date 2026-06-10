@@ -293,6 +293,12 @@
     const hingeOpts  = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
 
     const hasDrawers = li.drawers.length > 0;
+
+    // Build drawer config options — deduplicate by stripping the " — some/mostly drawers" suffix
+    const drawerConfigNames = [...new Set(
+      li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
+    )];
+    const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
     const hasHinges  = li.hinges.length > 0;
     const hasInstall = !hasDynamic || li.installItems.length > 0;
 
@@ -344,9 +350,20 @@
         </div>
       </div>
       ${hasDrawers?`<div class="mq-sec">
-        <p class="mq-sec-title">Drawer configuration</p>
+        <p class="mq-sec-title">Drawers</p>
         <div class="mq-grid2">
-          <div class="mq-field"><label class="mq-label">Drawer type</label><select id="mq-${prefix}-drawer">${drawerOpts}</select></div>
+          <div class="mq-field">
+            <label class="mq-label">Drawer amount</label>
+            <select id="mq-${prefix}-drawer-tier" onchange="mqTogDrawerConfig('${prefix}')">
+              <option value="none">No drawers</option>
+              <option value="some">Some drawers</option>
+              <option value="mostly">Mostly drawers</option>
+            </select>
+          </div>
+          <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none">
+            <label class="mq-label">Drawer type</label>
+            <select id="mq-${prefix}-drawer-config">${drawerConfigOpts}</select>
+          </div>
         </div>
       </div>`:''}
       <div class="mq-sec">
@@ -505,7 +522,10 @@
   function wireWidget(data) {
     const { shop, pricing, specs, li, hasDynamic } = data;
 
-    function P() {
+    // Deduplicated drawer config names (strip tier suffix) — used by calcCabinet and form
+    const drawerConfigNames = [...new Set(
+      li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
+    )];
       const mat={}, door={}, drawer={}, hinge={};
       let installU=0, installB=0, removalRate=0, taxRate=0;
 
@@ -518,7 +538,15 @@
           mat[`dyn_${i}`] = { label:baseName, rateU:uItem?uItem['Rate']||0:fallbackRate, rateB:bItem?bItem['Rate']||0:fallbackRate };
         });
         li.doorStyles.forEach((d,i) => { door[`dyn_${i}`]  = { label:d['Name'], rate:d['Rate']||0 }; });
-        li.drawers.forEach((d,i)    => { drawer[`dyn_${i}`] = { label:d['Name'], rate:d['Rate']||0 }; });
+        li.drawers.forEach(d => {
+          const name = d['Name'];
+          const baseName = name.replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
+          const tier = name.match(/—\s*(some|mostly) drawers\s*$/i)?.[1]?.toLowerCase();
+          if (baseName && tier) {
+            if (!drawer[baseName]) drawer[baseName] = {};
+            drawer[baseName][tier] = d['Rate'] || 0;
+          }
+        });
         li.hinges.forEach((h,i)     => { hinge[`dyn_${i}`]  = { label:h['Name'], rate:h['Rate']||0 }; });
 
         const iu = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper'));
@@ -585,6 +613,12 @@
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
     };
 
+    window.mqTogDrawerConfig=(prefix)=>{
+      const tier=gv(`mq-${prefix}-drawer-tier`);
+      const wrap=document.getElementById(`mq-${prefix}-drawer-config-wrap`);
+      if(wrap) wrap.style.display=tier==='none'?'none':'block';
+    };
+
     window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0)mqAdjQty(prefix,i,1);else mqAdjQty(prefix,i,-specQty[prefix][i]);};
     window.mqAdjQty=(prefix,i,d)=>{
       specQty[prefix][i]=Math.max(0,specQty[prefix][i]+d);
@@ -622,7 +656,10 @@
         uDoorKey=bDoorKey=gv(`mq-${prefix}-door`);
         uHingeKey=bHingeKey=gv(`mq-${prefix}-hinge`)||'';
       }
-      const drawerKey=gv(`mq-${prefix}-drawer`)||'';
+      const drawerTier = gv(`mq-${prefix}-drawer-tier`) || 'none';
+      const drawerConfigIdx = parseInt(gv(`mq-${prefix}-drawer-config`) || '0');
+      const drawerConfigName = drawerConfigNames[drawerConfigIdx] || '';
+      const drawerRate = drawerTier === 'none' ? 0 : (drawer[drawerConfigName]?.[drawerTier] || 0);
 
       const uMat=getMaterialRates(uMatKey,mat);
       const bMat=getMaterialRates(bMatKey,mat);
@@ -630,7 +667,6 @@
       const bDoorRate=bDoorKey==='none'?0:(door[bDoorKey]?.rate||0);
       const uHingeRate=uDoorKey==='none'?0:(hinge[uHingeKey]?.rate||0);
       const bHingeRate=bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
-      const drawerRate=drawer[drawerKey]?.rate||0;
 
       const uInstall=si==='install'?installU:0;
       const bInstall=si==='install'?installB:0;
@@ -644,7 +680,7 @@
       const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
       if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uCost)});
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
-      if(drawerRate>0&&bFt>0) lines.push({label:`Drawer config — ${drawer[drawerKey]?.label||''} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
+      if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       let specTotal=0;
       const totalFt=uFt+bFt;

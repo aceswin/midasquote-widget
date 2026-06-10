@@ -631,15 +631,17 @@
       });
     }
 
-    // Step 8: Drawers
+    // Step 8a: Drawers — 1 drawer per cabinet ("some drawers" rate)
     if (drawers.length > 0) {
       steps.push({
-        title:'🗄️ Step 8 — Drawer configurations',
+        title:'🗄️ Step 8a — Some drawers (1 per cabinet)',
         sub:'Quote the baseline box job with 1 top drawer in each cabinet. No doors, no drawer fronts.',
         content:() => {
           const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
           return `
-            <div class="mqph-hl">Each drawer config gets one rate — the per-linear-foot upcharge applied when a customer selects that drawer type on their quote.</div>
+            <div class="mqph-hl">
+              This gives us the <strong>"some drawers"</strong> rate — used when a customer says their project has some drawers but not a full drawer bank in every cabinet.
+            </div>
             ${drawers.map((d,idx) => `
               <div class="mqph-item-block">
                 <div class="mqph-item-block-label">🗄️ ${d.fields['Name']}</div>
@@ -648,19 +650,77 @@
                   `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
                   `<strong>1 top drawer per cabinet · No doors · No drawer fronts · Supply only</strong>`,
                 ])}
-                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-drawer-${idx}" placeholder="0.00" oninput="mqphCalcDrawer(${idx})"/></div>
-                <div id="mqph-r-drawer-${idx}" class="mqph-result"></div>
+                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-drawer1-${idx}" placeholder="0.00" oninput="mqphCalcDrawer1(${idx})"/></div>
+                <div id="mqph-r-drawer1-${idx}" class="mqph-result"></div>
               </div>`).join('')}`;
         },
         skipLabel:'Skip drawers',
         nextLabel:'Next →',
         onNext:() => {
+          // Store 1-drawer prices in wizardBaseline for use in step 8b
+          if (!wizardBaseline.drawer1Prices) wizardBaseline.drawer1Prices = {};
           drawers.forEach((d,idx) => {
-            const p = parseFloat(document.getElementById(`mqph-drawer-${idx}`)?.value||0);
-            if (p>0&&wizardBaseline) {
-              const u = (p - wizardBaseline.basePrice) / 4;
-              // Save rate directly on the drawer config's own name (no suffix)
-              wizardItems.push({ name:d.fields['Name'], category:'drawer', rate:Math.round(u*100)/100, unit:'per lin ft', description:'Drawer config rate', active:true });
+            const p = parseFloat(document.getElementById(`mqph-drawer1-${idx}`)?.value||0);
+            if (p>0) wizardBaseline.drawer1Prices[idx] = p;
+          });
+        }
+      });
+
+      // Step 8b: Drawers — full drawer bank ("mostly drawers" rate)
+      steps.push({
+        title:'🗄️ Step 8b — Mostly drawers (full bank)',
+        sub:'Same spec but now quote a full drawer bank — 3 drawers in each cabinet. No doors, no drawer fronts.',
+        content:() => {
+          const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
+          return `
+            <div class="mqph-hl">
+              This gives us the <strong>"mostly drawers"</strong> rate — used when a customer's project is heavily drawer-based. We'll average this with the 1-drawer quote to get an accurate blended rate.
+            </div>
+            ${drawers.map((d,idx) => {
+              const p1 = wizardBaseline?.drawer1Prices?.[idx] || 0;
+              return `
+              <div class="mqph-item-block">
+                <div class="mqph-item-block-label">🗄️ ${d.fields['Name']}</div>
+                ${specBox([
+                  `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+                  `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
+                  `<strong>Full drawer bank (3 per cabinet) · No doors · No drawer fronts · Supply only</strong>`,
+                ])}
+                ${p1>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:10px">1-drawer quote was $${p1.toLocaleString()} — bank quote should be higher.</p>`:''}
+                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-drawer3-${idx}" placeholder="0.00" oninput="mqphCalcDrawer3(${idx})"/></div>
+                <div id="mqph-r-drawer3-${idx}" class="mqph-result"></div>
+              </div>`;
+            }).join('')}`;
+        },
+        skipLabel:'Skip',
+        nextLabel:'Next →',
+        onNext:() => {
+          drawers.forEach((d,idx) => {
+            const p1 = wizardBaseline?.drawer1Prices?.[idx] || 0;
+            const p3 = parseFloat(document.getElementById(`mqph-drawer3-${idx}`)?.value||0);
+            if (p1>0&&wizardBaseline) {
+              // "some drawers" rate = (1-drawer quote - baseline box) / 4
+              const someRate = (p1 - wizardBaseline.basePrice) / 4;
+              wizardItems.push({
+                name: d.fields['Name'] + ' — some drawers',
+                category: 'drawer',
+                rate: Math.round(someRate*100)/100,
+                unit: 'per lin ft',
+                description: 'Some drawers rate (1 drawer per cabinet)',
+                active: true,
+              });
+            }
+            if (p1>0&&p3>0&&wizardBaseline) {
+              // "mostly drawers" rate = ((1-drawer + bank) / 2 - baseline box) / 4
+              const mostlyRate = ((p1 + p3) / 2 - wizardBaseline.basePrice) / 4;
+              wizardItems.push({
+                name: d.fields['Name'] + ' — mostly drawers',
+                category: 'drawer',
+                rate: Math.round(mostlyRate*100)/100,
+                unit: 'per lin ft',
+                description: 'Mostly drawers rate (averaged 1-drawer + bank)',
+                active: true,
+              });
             }
           });
         }
@@ -777,11 +837,24 @@
     if(p>0){const u=(p-(wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice))/4;res.style.display='block';res.innerHTML=`<strong>Hinge upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
-  window.mqphCalcDrawer = function(idx) {
-    const p=parseFloat(document.getElementById(`mqph-drawer-${idx}`)?.value||0);
-    const res=document.getElementById(`mqph-r-drawer-${idx}`); if(!res||!wizardBaseline) return;
-    if(p>0){const u=(p-wizardBaseline.basePrice)/4;res.style.display='block';res.innerHTML=`<strong>Drawer upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;}
-    else res.style.display='none';
+  window.mqphCalcDrawer1 = function(idx) {
+    const p=parseFloat(document.getElementById(`mqph-drawer1-${idx}`)?.value||0);
+    const res=document.getElementById(`mqph-r-drawer1-${idx}`); if(!res||!wizardBaseline) return;
+    if(p>0){
+      const u=(p-wizardBaseline.basePrice)/4;
+      res.style.display='block';
+      res.innerHTML=`<strong>"Some drawers" upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;
+    } else res.style.display='none';
+  };
+  window.mqphCalcDrawer3 = function(idx) {
+    const p3=parseFloat(document.getElementById(`mqph-drawer3-${idx}`)?.value||0);
+    const res=document.getElementById(`mqph-r-drawer3-${idx}`); if(!res||!wizardBaseline) return;
+    const p1=wizardBaseline?.drawer1Prices?.[idx]||0;
+    if(p3>0){
+      const mostlyRate=((p1+p3)/2-wizardBaseline.basePrice)/4;
+      res.style.display='block';
+      res.innerHTML=`<strong>"Mostly drawers" upcharge:</strong> <span class="mqph-result-val">$${mostlyRate.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">(average of $${p1.toLocaleString()} + $${p3.toLocaleString()})</span>`;
+    } else res.style.display='none';
   };
   window.mqphCalcInstall = function() {
     const und=parseFloat(document.getElementById('mqph-inst-u-nd')?.value||0);
