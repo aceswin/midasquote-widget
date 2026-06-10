@@ -1,6 +1,5 @@
 /*
- * MidasQuote Widget v3.2
- * Zones removed — local delivery only. Travel disclaimer added to results.
+ * MidasQuote Widget v3.3
  */
 
 (function() {
@@ -50,18 +49,13 @@
 
     const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({shop}))`);
     const sorted = lineItemRecords.filter(r=>r.fields).sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
-
     const byCategory = cat => sorted.filter(r=>r.fields['Category']===cat).map(r=>r.fields);
 
-    // Deduplicate materials by base name (strip " — uppers" / " — bases" suffix)
     const rawMaterials = byCategory('material');
     const matSeen = new Set();
     const dedupedMaterials = rawMaterials.reduce((acc, m) => {
       const baseName = m['Name'].replace(/\s*—\s*(uppers|bases).*$/i, '').trim();
-      if (!matSeen.has(baseName)) {
-        matSeen.add(baseName);
-        acc.push({ ...m, _baseName: baseName });
-      }
+      if (!matSeen.has(baseName)) { matSeen.add(baseName); acc.push({ ...m, _baseName: baseName }); }
       return acc;
     }, []);
 
@@ -77,7 +71,6 @@
       countertopItems: byCategory('countertop'),
     };
 
-    // Local zone radius
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
     li.localRadius = localZone?.['Rate'] || 15;
 
@@ -255,6 +248,50 @@
   }
 
   // ============================================================
+  // MODULE-LEVEL CT_MAT — populated before buildWidgetHTML runs
+  // ============================================================
+  let CT_MAT = {};
+
+  function buildCTMAT(data) {
+    const { li, pricing } = data;
+    CT_MAT = {};
+    const hasDynamicCT = li.countertopItems.length > 0;
+    if (hasDynamicCT) {
+      li.countertopItems
+        .filter(item => {
+          const desc = item['Description']||'';
+          return desc.includes('type:material') || (!desc.includes('type:backsplash') && !desc.includes('type:cutout'));
+        })
+        .forEach((item, i) => {
+          const unitParts = (item['Unit']||'sqft|sqft').split('|');
+          CT_MAT[`ct_${i}`] = {
+            label:       item['Name'],
+            ps:          item['Rate']||0,
+            pi:          item['Install rate']||0,
+            supplyUnit:  (unitParts[0]||'sqft').trim(),
+            installUnit: (unitParts[1]||'sqft').trim(),
+          };
+        });
+    } else {
+      CT_MAT['lam']       = {label:'Laminate',                ps:pricing['Lam supply']||18,   pi:12, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['ss_econ']   = {label:'Solid surface — Economy', ps:pricing['SS econ supply']||38, pi:18, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['ss_mid']    = {label:'Solid surface — Mid',     ps:pricing['SS mid supply']||58,  pi:18, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['ss_prem']   = {label:'Solid surface — Premium', ps:pricing['SS prem supply']||90, pi:22, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['gran_econ'] = {label:'Granite — Economy',       ps:pricing['Gran econ supply']||45,  pi:25, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['gran_mid']  = {label:'Granite — Mid',           ps:pricing['Gran mid supply']||72,   pi:25, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['gran_prem'] = {label:'Granite — Premium',       ps:pricing['Gran prem supply']||130, pi:30, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['quartz']    = {label:'Engineered quartz',       ps:pricing['Quartz supply']||85,  pi:25, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['marble']    = {label:'Marble',                  ps:pricing['Marble supply']||110, pi:30, supplyUnit:'sqft', installUnit:'sqft'};
+      CT_MAT['butcher']   = {label:'Butcher block',           ps:pricing['Butcher supply']||42, pi:18, supplyUnit:'sqft', installUnit:'sqft'};
+    }
+  }
+
+  function ctMatOpts() {
+    return Object.entries(CT_MAT).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('') ||
+      `<option value="lam">Laminate</option>`;
+  }
+
+  // ============================================================
   // BUILD WIDGET HTML
   // ============================================================
   function makeOpts(items, fallbackOpts) {
@@ -278,28 +315,16 @@
       </div>`).join('');
   }
 
-    function ctMatOpts() {
-      return Object.entries(CT_MAT).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('') ||
-        `<option value="lam">Laminate</option>`;
-    }
-
   function cabinetForm(prefix, specs, data) {
     const { li, hasDynamic } = data;
-
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
-    const drawerOpts = makeOpts(li.drawers, '');
-    const hingeOpts  = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
-
+    const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
     const hasDrawers = li.drawers.length > 0;
-
-    // Build drawer config options — deduplicate by stripping the " — some/mostly drawers" suffix
-    const drawerConfigNames = [...new Set(
-      li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
-    )];
-    const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
     const hasHinges  = li.hinges.length > 0;
     const hasInstall = !hasDynamic || li.installItems.length > 0;
+    const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
+    const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
 
     return `
       <div class="mq-sec">
@@ -351,8 +376,7 @@
       ${hasDrawers?`<div class="mq-sec">
         <p class="mq-sec-title">Drawers</p>
         <div class="mq-grid2">
-          <div class="mq-field">
-            <label class="mq-label">Drawer amount</label>
+          <div class="mq-field"><label class="mq-label">Drawer amount</label>
             <select id="mq-${prefix}-drawer-tier" onchange="mqTogDrawerConfig('${prefix}')">
               <option value="none">No drawers</option>
               <option value="some">Some drawers</option>
@@ -536,14 +560,13 @@
   function wireWidget(data) {
     const { shop, pricing, specs, li, hasDynamic } = data;
 
-    // Deduplicated drawer config names (strip tier suffix) — used by calcCabinet and form
     const drawerConfigNames = [...new Set(
       li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
     )];
 
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
-      let installU=0, installB=0, removalRate=0, taxRate=0;
+      let installU=0, installB=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
 
       if (hasDynamic) {
         li.materials.forEach((m,i) => {
@@ -553,7 +576,7 @@
           const fallbackRate = m['Rate'] || 0;
           mat[`dyn_${i}`] = { label:baseName, rateU:uItem?uItem['Rate']||0:fallbackRate, rateB:bItem?bItem['Rate']||0:fallbackRate };
         });
-        li.doorStyles.forEach((d,i) => { door[`dyn_${i}`]  = { label:d['Name'], rate:d['Rate']||0 }; });
+        li.doorStyles.forEach((d,i) => { door[`dyn_${i}`] = { label:d['Name'], rate:d['Rate']||0 }; });
         li.drawers.forEach(d => {
           const name = d['Name'];
           const baseName = name.replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
@@ -563,21 +586,21 @@
             drawer[baseName][tier] = d['Rate'] || 0;
           }
         });
-        li.hinges.forEach((h,i)     => { hinge[`dyn_${i}`]  = { label:h['Name'], rate:h['Rate']||0 }; });
+        li.hinges.forEach((h,i) => { hinge[`dyn_${i}`] = { label:h['Name'], rate:h['Rate']||0 }; });
 
-        const iu  = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && !i['Name']?.toLowerCase().includes('drawer'));
-        const ib  = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('with doors'));
+        const iu       = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && !i['Name']?.toLowerCase().includes('drawer'));
+        const ib       = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('with doors'));
         const ibSome   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('some drawers'));
         const ibMostly = li.installItems.find(i=>i['Name']?.toLowerCase().includes('mostly drawers'));
-        installU = iu?iu['Rate']||0:0;
-        installB = ib?ib['Rate']||0:0;
-        const installBSome   = ibSome?ibSome['Rate']||0:installB;
-        const installBMostly = ibMostly?ibMostly['Rate']||0:installB;
-        const rem = li.otherItems.find(i=>i['Name']?.toLowerCase().includes('removal')) ||
-                    li.installItems.find(i=>i['Name']?.toLowerCase().includes('removal'));
-        removalRate = rem?rem['Rate']||0:0;
-        const tax = li.taxItems[0];
-        taxRate = tax?(tax['Rate']||0)/100:0;
+        const rem      = li.otherItems.find(i=>i['Name']?.toLowerCase().includes('removal')) ||
+                         li.installItems.find(i=>i['Name']?.toLowerCase().includes('removal'));
+        const tax      = li.taxItems[0];
+        installU       = iu?iu['Rate']||0:0;
+        installB       = ib?ib['Rate']||0:0;
+        installBSome   = ibSome?ibSome['Rate']||0:installB;
+        installBMostly = ibMostly?ibMostly['Rate']||0:installB;
+        removalRate    = rem?rem['Rate']||0:0;
+        taxRate        = tax?(tax['Rate']||0)/100:0;
       } else {
         mat['melamine'] = {label:'Melamine', rateU:pricing['Melamine price']||280, rateB:pricing['Melamine price']||280};
         mat['plywood']  = {label:'Plywood',  rateU:pricing['Plywood price'] ||380, rateB:pricing['Plywood price'] ||380};
@@ -585,59 +608,28 @@
         door['shaker']  = {label:'Shaker', rate:pricing['Shaker multiplier']||0};
         hinge['softclose'] = {label:'Soft-close', rate:pricing['Soft close hinges']||12};
         hinge['regular']   = {label:'Regular',    rate:0};
-        installU = pricing['Install rate uppers']||85;
-        installB = installU;
-        const installBSome   = Math.round(installB*1.10*100)/100;
-        const installBMostly = Math.round(installB*1.15*100)/100;
-        removalRate = pricing['Removal rate']||18;
-        taxRate = (pricing['Tax rate']||5)/100;
+        installU       = pricing['Install rate uppers']||85;
+        installB       = installU;
+        installBSome   = Math.round(installB*1.10*100)/100;
+        installBMostly = Math.round(installB*1.15*100)/100;
+        removalRate    = pricing['Removal rate']||18;
+        taxRate        = (pricing['Tax rate']||5)/100;
       }
       return { mat, door, drawer, hinge, installU, installB, installBSome, installBMostly, removalRate, taxRate };
     }
 
-    // Build CT_MAT dynamically from line items — materials only
-    const hasDynamicCT = li.countertopItems.length > 0;
-    const CT_MAT = {};
-    if (hasDynamicCT) {
-      li.countertopItems
-        .filter(item => {
-          const desc = item['Description']||'';
-          return desc.includes('type:material') || (!desc.includes('type:backsplash') && !desc.includes('type:cutout'));
-        })
-        .forEach((item, i) => {
-          const unitParts = (item['Unit']||'sqft|sqft').split('|');
-          CT_MAT[`ct_${i}`] = {
-            label:       item['Name'],
-            ps:          item['Rate']||0,
-            pi:          item['Install rate']||0,
-            supplyUnit:  (unitParts[0]||'sqft').trim(),
-            installUnit: (unitParts[1]||'sqft').trim(),
-          };
-        });
-    } else {
-      CT_MAT['lam']      = {label:'Laminate',                ps:pricing['Lam supply']||18,  pi:12, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['ss_econ']  = {label:'Solid surface — Economy', ps:pricing['SS econ supply']||38, pi:18, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['ss_mid']   = {label:'Solid surface — Mid',     ps:pricing['SS mid supply']||58,  pi:18, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['ss_prem']  = {label:'Solid surface — Premium', ps:pricing['SS prem supply']||90, pi:22, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['gran_econ']= {label:'Granite — Economy',       ps:pricing['Gran econ supply']||45,  pi:25, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['gran_mid'] = {label:'Granite — Mid',           ps:pricing['Gran mid supply']||72,   pi:25, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['gran_prem']= {label:'Granite — Premium',       ps:pricing['Gran prem supply']||130, pi:30, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['quartz']   = {label:'Engineered quartz',       ps:pricing['Quartz supply']||85,  pi:25, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['marble']   = {label:'Marble',                  ps:pricing['Marble supply']||110, pi:30, supplyUnit:'sqft', installUnit:'sqft'};
-      CT_MAT['butcher']  = {label:'Butcher block',           ps:pricing['Butcher supply']||42, pi:18, supplyUnit:'sqft', installUnit:'sqft'};
-    }
-
-    // Backsplash install rate — from backsplash line item
-    const bsLineItem = li.countertopItems.find(i=>(i['Description']||'').includes('type:backsplash'));
+    // Backsplash install rate
+    const bsLineItem   = li.countertopItems.find(i=>(i['Description']||'').includes('type:backsplash'));
     const bsInstallRate = bsLineItem ? (bsLineItem['Install rate']||0) : (pricing['Backsplash rate']||12);
 
     // Cutout rates
-    const sinkItem  = li.countertopItems.find(i=>(i['Description']||'').includes('type:cutout')&&i['Name']?.toLowerCase().includes('sink'));
-    const cookItem  = li.countertopItems.find(i=>(i['Description']||'').includes('type:cutout')&&(i['Name']?.toLowerCase().includes('cooktop')||i['Name']?.toLowerCase().includes('cook')));
-    const sinkR  = sinkItem  ? (sinkItem['Rate']||180)  : (pricing['Sink cutout']||180);
-    const cookR  = cookItem  ? (cookItem['Rate']||220)  : (pricing['Cooktop cutout']||220);
-    const EDGE={eased:0,bevel:4,bullnose:8,ogee:14,waterfall:28};
-    const ctDepth = 25; // default countertop depth in inches
+    const sinkItem = li.countertopItems.find(i=>(i['Description']||'').includes('type:cutout')&&i['Name']?.toLowerCase().includes('sink'));
+    const cookItem = li.countertopItems.find(i=>(i['Description']||'').includes('type:cutout')&&(i['Name']?.toLowerCase().includes('cooktop')||i['Name']?.toLowerCase().includes('cook')));
+    const sinkR    = sinkItem ? (sinkItem['Rate']||180) : (pricing['Sink cutout']||180);
+    const cookR    = cookItem ? (cookItem['Rate']||220) : (pricing['Cooktop cutout']||220);
+
+    const EDGE     = {eased:0,bevel:4,bullnose:8,ogee:14,waterfall:28};
+    const ctDepth  = 25;
 
     const diffOn={},specQty={},surfCounts={},surfs={};
     let pendingCb=null;
@@ -704,28 +696,29 @@
         uDoorKey=bDoorKey=gv(`mq-${prefix}-door`);
         uHingeKey=bHingeKey=gv(`mq-${prefix}-hinge`)||'';
       }
-      const drawerTier = gv(`mq-${prefix}-drawer-tier`) || 'none';
-      const drawerConfigIdx = parseInt(gv(`mq-${prefix}-drawer-config`) || '0');
+
+      const drawerTier       = gv(`mq-${prefix}-drawer-tier`) || 'none';
+      const drawerConfigIdx  = parseInt(gv(`mq-${prefix}-drawer-config`) || '0');
       const drawerConfigName = drawerConfigNames[drawerConfigIdx] || '';
-      const drawerRate = drawerTier === 'none' ? 0 : (drawer[drawerConfigName]?.[drawerTier] || 0);
+      const drawerRate       = drawerTier === 'none' ? 0 : (drawer[drawerConfigName]?.[drawerTier] || 0);
 
-      const uMat=getMaterialRates(uMatKey,mat);
-      const bMat=getMaterialRates(bMatKey,mat);
-      const uDoorRate=uDoorKey==='none'?0:(door[uDoorKey]?.rate||0);
-      const bDoorRate=bDoorKey==='none'?0:(door[bDoorKey]?.rate||0);
-      const uHingeRate=uDoorKey==='none'?0:(hinge[uHingeKey]?.rate||0);
-      const bHingeRate=bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
+      const uMat      = getMaterialRates(uMatKey,mat);
+      const bMat      = getMaterialRates(bMatKey,mat);
+      const uDoorRate = uDoorKey==='none'?0:(door[uDoorKey]?.rate||0);
+      const bDoorRate = bDoorKey==='none'?0:(door[bDoorKey]?.rate||0);
+      const uHingeRate= uDoorKey==='none'?0:(hinge[uHingeKey]?.rate||0);
+      const bHingeRate= bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
 
-      const uInstall=si==='install'?installU:0;
-      const bInstall=si==='install'?(
+      const uInstall = si==='install'?installU:0;
+      const bInstall = si==='install'?(
         drawerTier==='some'   ? installBSome   :
         drawerTier==='mostly' ? installBMostly :
         installB
       ):0;
 
-      const uPft=uMat.rateU*hMult+uDoorRate+uHingeRate+uInstall;
-      const bPft=bMat.rateB+bDoorRate+bHingeRate+drawerRate+bInstall;
-      const uCost=uFt*uPft, bCost=bFt*bPft;
+      const uPft  = uMat.rateU*hMult+uDoorRate+uHingeRate+uInstall;
+      const bPft  = bMat.rateB+bDoorRate+bHingeRate+drawerRate+bInstall;
+      const uCost = uFt*uPft, bCost=bFt*bPft;
 
       const lines=[];
       const uDoorLabel=uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
@@ -763,27 +756,26 @@
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
 
-      // Check "use cabinet measurements" checkbox
-      const useCabMeasure = document.getElementById(`mq-${prefix}-ct-use-cab`)?.checked;
+      const useCabMeasure = document.getElementById(`mq-${prefix}-ct-use-cab`)?.checked ||
+                            document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       if (useCabMeasure) {
-        const bFt = gn(`mq-${prefix}-bft`, 0);
+        const bFt  = gn(`mq-${prefix}-bft`, 0);
+        const matId= prefix==='ct'?'mq-ct-ct-mat-cab':`mq-${prefix}-ct-mat-cab`;
         if (bFt > 0) {
           const linFt = bFt;
           const sqft  = linFt * (ctDepth / 12);
-          const mat   = gv(`mq-${prefix}-ct-mat-cab`);
+          const mat   = gv(matId);
           const si    = gv(ctSiId);
           const m     = CT_MAT[mat] || Object.values(CT_MAT)[0];
           if (m) {
-            const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt * m.ps : sqft * m.ps;
-            const installCost = si === 'install' ? (m.installUnit === 'lin ft' ? linFt * m.pi : sqft * m.pi) : 0;
-            const cost = supplyCost + installCost;
-            sub += cost;
-            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft)`, cost:Math.round(cost)});
+            const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
+            const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
+            sub += supplyCost+installCost;
+            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft)`, cost:Math.round(supplyCost+installCost)});
           }
         }
       }
 
-      // Additional surfaces
       Object.keys(surfs[prefix]).forEach(id=>{
         if(!document.getElementById('mqsc-'+id)) return;
         const mat=gv('mqsm-'+id), edge=gv('mqse-'+id);
@@ -793,20 +785,16 @@
         const w=gn('mqsw-'+id,0), d=gn('mqsd-'+id,ctDepth);
         const sqft=(w*(d||ctDepth))/144;
         const linFt=w/12;
-        const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt * m.ps : sqft * m.ps;
-        const installCost = si === 'install' ? (m.installUnit === 'lin ft' ? linFt * m.pi : sqft * m.pi) : 0;
-        // Backsplash: supply = material rate at 4" height, install = backsplash install rate per lin ft
-        const bsChecked = document.getElementById('mqsbs-'+id)?.checked;
+        const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
+        const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
+        const bsChecked   = document.getElementById('mqsbs-'+id)?.checked;
         let bsCost = 0;
         if (bsChecked) {
-          const bsSqft = linFt * (4/12); // 4" high
-          const bsSupply = m.supplyUnit === 'lin ft' ? linFt * m.ps : bsSqft * m.ps;
-          bsCost = bsSupply + linFt * bsInstallRate;
+          const bsSqft   = linFt*(4/12);
+          const bsSupply = m.supplyUnit==='lin ft' ? linFt*m.ps : bsSqft*m.ps;
+          bsCost = bsSupply + linFt*bsInstallRate;
         }
-
-        const cost = supplyCost + installCost
-          + linFt*(EDGE[edge]||0)
-          + bsCost
+        const cost = supplyCost+installCost+linFt*(EDGE[edge]||0)+bsCost
           +(document.getElementById('mqsco-'+id)?.checked?gn('mqssink-'+id)*sinkR+gn('mqscook-'+id)*cookR:0);
         sub+=cost;
         lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft)`,cost:Math.round(cost)});
@@ -932,7 +920,8 @@
     window.mqAddSurface=(prefix)=>addSurfaceInternal(prefix);
     window.mqRemoveSurf=(prefix,id)=>{const c=document.getElementById('mqsc-'+id);if(c)c.remove();delete surfs[prefix][id];};
     window.mqTogUseCab=(prefix)=>{
-      const checked=document.getElementById(`mq-${prefix}-use-cab`)?.checked||document.getElementById(`mq-${prefix}-ct-use-cab`)?.checked;
+      const useId1=`mq-${prefix}-use-cab`, useId2=`mq-${prefix}-ct-use-cab`;
+      const checked=document.getElementById(useId1)?.checked||document.getElementById(useId2)?.checked;
       const matDiv=document.getElementById(`mq-${prefix}-cab-mat`)||document.getElementById(`mq-ct-cab-mat`);
       if(matDiv) matDiv.style.display=checked?'block':'none';
     };
@@ -963,6 +952,7 @@
     const container=document.getElementById('midasquote-widget');
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
     injectStyles(shop['Brand colour']||'#1a1a1a');
+    buildCTMAT(data);  // build CT_MAT before buildWidgetHTML uses ctMatOpts()
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
   }
