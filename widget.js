@@ -593,22 +593,26 @@
       return { mat, door, drawer, hinge, installU, installB, installBSome, installBMostly, removalRate, taxRate };
     }
 
-    // Build CT_MAT dynamically from line items, falling back to hardcoded defaults
+    // Build CT_MAT dynamically from line items — materials only
     const hasDynamicCT = li.countertopItems.length > 0;
     const CT_MAT = {};
     if (hasDynamicCT) {
-      li.countertopItems.forEach((item, i) => {
-        const unitParts = (item['Unit']||'sqft|sqft').split('|');
-        CT_MAT[`ct_${i}`] = {
-          label:       item['Name'],
-          ps:          item['Rate']||0,
-          pi:          item['Install rate']||0,
-          supplyUnit:  (unitParts[0]||'sqft').trim(),
-          installUnit: (unitParts[1]||'sqft').trim(),
-        };
-      });
+      li.countertopItems
+        .filter(item => {
+          const desc = item['Description']||'';
+          return desc.includes('type:material') || (!desc.includes('type:backsplash') && !desc.includes('type:cutout'));
+        })
+        .forEach((item, i) => {
+          const unitParts = (item['Unit']||'sqft|sqft').split('|');
+          CT_MAT[`ct_${i}`] = {
+            label:       item['Name'],
+            ps:          item['Rate']||0,
+            pi:          item['Install rate']||0,
+            supplyUnit:  (unitParts[0]||'sqft').trim(),
+            installUnit: (unitParts[1]||'sqft').trim(),
+          };
+        });
     } else {
-      // Hardcoded fallbacks
       CT_MAT['lam']      = {label:'Laminate',                ps:pricing['Lam supply']||18,  pi:12, supplyUnit:'sqft', installUnit:'sqft'};
       CT_MAT['ss_econ']  = {label:'Solid surface — Economy', ps:pricing['SS econ supply']||38, pi:18, supplyUnit:'sqft', installUnit:'sqft'};
       CT_MAT['ss_mid']   = {label:'Solid surface — Mid',     ps:pricing['SS mid supply']||58,  pi:18, supplyUnit:'sqft', installUnit:'sqft'};
@@ -620,14 +624,18 @@
       CT_MAT['marble']   = {label:'Marble',                  ps:pricing['Marble supply']||110, pi:30, supplyUnit:'sqft', installUnit:'sqft'};
       CT_MAT['butcher']  = {label:'Butcher block',           ps:pricing['Butcher supply']||42, pi:18, supplyUnit:'sqft', installUnit:'sqft'};
     }
+
+    // Backsplash install rate — from backsplash line item
+    const bsLineItem = li.countertopItems.find(i=>(i['Description']||'').includes('type:backsplash'));
+    const bsInstallRate = bsLineItem ? (bsLineItem['Install rate']||0) : (pricing['Backsplash rate']||12);
+
+    // Cutout rates
+    const sinkItem  = li.countertopItems.find(i=>(i['Description']||'').includes('type:cutout')&&i['Name']?.toLowerCase().includes('sink'));
+    const cookItem  = li.countertopItems.find(i=>(i['Description']||'').includes('type:cutout')&&(i['Name']?.toLowerCase().includes('cooktop')||i['Name']?.toLowerCase().includes('cook')));
+    const sinkR  = sinkItem  ? (sinkItem['Rate']||180)  : (pricing['Sink cutout']||180);
+    const cookR  = cookItem  ? (cookItem['Rate']||220)  : (pricing['Cooktop cutout']||220);
     const EDGE={eased:0,bevel:4,bullnose:8,ogee:14,waterfall:28};
     const ctDepth = 25; // default countertop depth in inches
-    const bsItem  = hasDynamicCT ? li.countertopItems.find(i=>i['Name']?.toLowerCase().includes('backsplash')) : null;
-    const sinkItem = hasDynamicCT ? li.countertopItems.find(i=>i['Name']?.toLowerCase().includes('sink')) : null;
-    const cookItem = hasDynamicCT ? li.countertopItems.find(i=>i['Name']?.toLowerCase().includes('cooktop')||i['Name']?.toLowerCase().includes('cook')) : null;
-    const bsRate  = bsItem  ? (bsItem['Rate']||12)   : (pricing['Backsplash rate']||12);
-    const sinkR   = sinkItem? (sinkItem['Rate']||180) : (pricing['Sink cutout']||180);
-    const cookR   = cookItem? (cookItem['Rate']||220) : (pricing['Cooktop cutout']||220);
 
     const diffOn={},specQty={},surfCounts={},surfs={};
     let pendingCb=null;
@@ -785,9 +793,18 @@
         const linFt=w/12;
         const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt * m.ps : sqft * m.ps;
         const installCost = si === 'install' ? (m.installUnit === 'lin ft' ? linFt * m.pi : sqft * m.pi) : 0;
+        // Backsplash: supply = material rate at 4" height, install = backsplash install rate per lin ft
+        const bsChecked = document.getElementById('mqsbs-'+id)?.checked;
+        let bsCost = 0;
+        if (bsChecked) {
+          const bsSqft = linFt * (4/12); // 4" high
+          const bsSupply = m.supplyUnit === 'lin ft' ? linFt * m.ps : bsSqft * m.ps;
+          bsCost = bsSupply + linFt * bsInstallRate;
+        }
+
         const cost = supplyCost + installCost
           + linFt*(EDGE[edge]||0)
-          +(document.getElementById('mqsbs-'+id)?.checked?linFt*bsRate:0)
+          + bsCost
           +(document.getElementById('mqsco-'+id)?.checked?gn('mqssink-'+id)*sinkR+gn('mqscook-'+id)*cookR:0);
         sub+=cost;
         lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft)`,cost:Math.round(cost)});

@@ -1539,95 +1539,188 @@
   };
 
   // ============================================================
-  // COUNTERTOP DIRECT ENTRY
-  // ============================================================
-  // ============================================================
   // COUNTERTOP EDITOR (dynamic — reads/writes Line Items table)
   // ============================================================
+
+  // Pre-populate default countertop extras if none exist yet
+  async function ensureCTDefaults() {
+    const existing = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop');
+    const hasBacksplash = existing.some(r=>r.fields['Description']?.includes('type:backsplash'));
+    const hasSink       = existing.some(r=>r.fields['Description']?.includes('type:cutout')&&r.fields['Name']?.toLowerCase().includes('sink'));
+    const hasCooktop    = existing.some(r=>r.fields['Description']?.includes('type:cutout')&&r.fields['Name']?.toLowerCase().includes('cooktop'));
+    const sortBase = existing.length;
+    if (!hasBacksplash) {
+      const rec = await atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Backsplash',Category:'countertop',Rate:0,'Install rate':12,Unit:'lin ft|lin ft',Description:'type:backsplash — Supply auto-calculated from countertop material at 4" height. Set your install rate per lin ft.',Active:true,'Sort order':sortBase+1});
+      if(rec?.id) lineItems.push(rec);
+    }
+    if (!hasSink) {
+      const rec = await atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Sink cutout',Category:'countertop',Rate:180,'Install rate':0,Unit:'each|each',Description:'type:cutout — Flat rate per cutout.',Active:true,'Sort order':sortBase+2});
+      if(rec?.id) lineItems.push(rec);
+    }
+    if (!hasCooktop) {
+      const rec = await atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Cooktop cutout',Category:'countertop',Rate:220,'Install rate':0,Unit:'each|each',Description:'type:cutout — Flat rate per cutout.',Active:true,'Sort order':sortBase+3});
+      if(rec?.id) lineItems.push(rec);
+    }
+  }
+
+  function getCTType(r) {
+    const desc = r.fields['Description']||'';
+    if (desc.includes('type:backsplash')) return 'backsplash';
+    if (desc.includes('type:cutout'))     return 'cutout';
+    return 'material';
+  }
+
   function buildCTHtml() {
     const ctItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop')
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
 
-    const unitOpts = (sel) => ['sqft','lin ft'].map(u=>`<option value="${u}" ${sel===u?'selected':''}>${u}</option>`).join('');
+    const materials   = ctItems.filter(r=>getCTType(r)==='material');
+    const backsplash  = ctItems.filter(r=>getCTType(r)==='backsplash');
+    const cutouts     = ctItems.filter(r=>getCTType(r)==='cutout');
 
-    const rows = ctItems.length > 0 ? ctItems.map(r => {
+    function matRow(r) {
       const unitParts = (r.fields['Unit']||'sqft|sqft').split('|');
-      const supplyUnit  = (unitParts[0]||'sqft').trim();
-      const installUnit = (unitParts[1]||'sqft').trim();
-      const isSpecial = ['backsplash','sink','cooktop'].some(k=>r.fields['Name']?.toLowerCase().includes(k));
+      const su = (unitParts[0]||'sqft').trim();
+      const iu = (unitParts[1]||'sqft').trim();
       return `
-        <div class="mqph-row" id="mqph-ct-row-${r.id}">
-          <div style="flex:1;min-width:0">
-            <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+        <div class="mqph-row">
+          <div style="flex:1;min-width:0"><div class="mqph-row-name">${r.fields['Name']||'—'}</div></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
+            <span style="color:#6b7280;font-size:11px">Supply:</span>
+            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/${su}</span>
+            <span style="color:#d1d5db;margin:0 4px">·</span>
+            <span style="color:#6b7280;font-size:11px">Install:</span>
+            <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/${iu}</span>
           </div>
-          ${isSpecial ? `
-            <div style="display:flex;align-items:center;gap:6px;font-size:13px">
-              <span style="color:#6b7280">$</span><span style="font-weight:600">${(r.fields['Rate']||0).toLocaleString()}</span>
-              <span style="color:#6b7280;font-size:11px">${r.fields['Unit']||''}</span>
-            </div>` : `
-            <div style="display:flex;align-items:center;gap:6px;font-size:13px">
-              <span style="color:#6b7280;font-size:11px">Supply:</span>
-              <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
-              <span style="color:#6b7280;font-size:11px">/${supplyUnit}</span>
-              <span style="color:#d1d5db;margin:0 4px">·</span>
-              <span style="color:#6b7280;font-size:11px">Install:</span>
-              <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
-              <span style="color:#6b7280;font-size:11px">/${installUnit}</span>
-            </div>`}
           <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
           <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenCTEdit('${r.id}')">Edit</button>
           <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
         </div>`;
-    }).join('') : `
-      <div style="padding:1.5rem;text-align:center;color:#6b7280;font-size:13px">
-        No countertop materials yet. Add them with the button above.
-      </div>`;
+    }
+
+    function bsRow(r) {
+      return `
+        <div class="mqph-row">
+          <div style="flex:1;min-width:0">
+            <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+            <div class="mqph-row-desc">Supply auto-calculated from countertop material at 4" height</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+            <span style="color:#6b7280;font-size:11px">Install:</span>
+            <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/lin ft</span>
+          </div>
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenCTEdit('${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+        </div>`;
+    }
+
+    function cutoutRow(r) {
+      return `
+        <div class="mqph-row">
+          <div style="flex:1;min-width:0"><div class="mqph-row-name">${r.fields['Name']||'—'}</div></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">each</span>
+          </div>
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenCTEdit('${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+        </div>`;
+    }
+
+    const section = (title, items, rowFn, emptyMsg) => items.length > 0
+      ? `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
+         ${items.map(rowFn).join('')}`
+      : `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
+         <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`;
 
     return `
       <div class="mqph-ct-block">
         <div class="mqph-cat-header">
-          <span class="mqph-cat-title">🪨 Countertop materials</span>
-          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenCTAdd()">+ Add material</button>
+          <span class="mqph-cat-title">🪨 Countertop pricing</span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenCTAdd()">+ Add item</button>
         </div>
         <div id="mqph-ct-msg" class="mqph-msg"></div>
-        ${rows}
+        ${section('Materials', materials, matRow, 'No materials yet — add your first countertop material.')}
+        ${section('Backsplash', backsplash, bsRow, 'No backsplash item — add one above.')}
+        ${section('Cutouts', cutouts, cutoutRow, 'No cutout items — add sink/cooktop cutouts above.')}
       </div>
 
       <!-- Countertop add/edit modal -->
       <div class="mqph-overlay" id="mqph-ct-modal-overlay">
         <div class="mqph-modal">
           <div class="mqph-modal-hdr">
-            <div><h3 id="mqph-ct-modal-title">Add countertop material</h3></div>
+            <div><h3 id="mqph-ct-modal-title">Add countertop item</h3></div>
             <button class="mqph-modal-hdr-close" onclick="mqphCloseCTModal()">×</button>
           </div>
           <div class="mqph-modal-body">
-            <div class="mqph-field"><label>Material name</label><input type="text" id="mqph-ct-name" placeholder="e.g. Granite — Mid"/></div>
-            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply</div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <label style="font-size:13px;color:#374151;flex:1">Rate</label>
-                <span style="font-size:13px;color:#6b7280">$</span>
-                <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-                <span style="font-size:13px;color:#6b7280">per</span>
-                <select id="mqph-ct-supply-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
-                  <option value="sqft">sqft</option>
-                  <option value="lin ft">lin ft</option>
-                </select>
+            <div class="mqph-field">
+              <label>Item type</label>
+              <select id="mqph-ct-type" onchange="mqphTogCTType()">
+                <option value="material">Material (e.g. Granite — Mid)</option>
+                <option value="backsplash">Backsplash</option>
+                <option value="cutout">Cutout (sink, cooktop, etc.)</option>
+              </select>
+            </div>
+            <div class="mqph-field"><label>Name</label><input type="text" id="mqph-ct-name" placeholder="e.g. Granite — Mid"/></div>
+
+            <!-- Material fields -->
+            <div id="mqph-ct-material-fields">
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:13px;color:#6b7280">$</span>
+                  <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                  <span style="font-size:13px;color:#6b7280">per</span>
+                  <select id="mqph-ct-supply-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                    <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
+                  </select>
+                </div>
+              </div>
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:13px;color:#6b7280">$</span>
+                  <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                  <span style="font-size:13px;color:#6b7280">per</span>
+                  <select id="mqph-ct-install-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                    <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
+                  </select>
+                </div>
               </div>
             </div>
-            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Installation</div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <label style="font-size:13px;color:#374151;flex:1">Rate</label>
-                <span style="font-size:13px;color:#6b7280">$</span>
-                <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-                <span style="font-size:13px;color:#6b7280">per</span>
-                <select id="mqph-ct-install-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
-                  <option value="sqft">sqft</option>
-                  <option value="lin ft">lin ft</option>
-                </select>
+
+            <!-- Backsplash fields -->
+            <div id="mqph-ct-backsplash-fields" style="display:none">
+              <div class="mqph-info" style="margin-bottom:1rem">
+                Supply cost is automatically calculated from the customer's chosen countertop material at 4" height — no separate supply rate needed. Just set your install rate below.
+              </div>
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:13px;color:#6b7280">$</span>
+                  <input type="number" id="mqph-ct-bs-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                  <span style="font-size:13px;color:#6b7280">per lin ft</span>
+                </div>
               </div>
             </div>
+
+            <!-- Cutout fields -->
+            <div id="mqph-ct-cutout-fields" style="display:none">
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Flat rate per cutout</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:13px;color:#6b7280">$</span>
+                  <input type="number" id="mqph-ct-cutout-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                  <span style="font-size:13px;color:#6b7280">each</span>
+                </div>
+              </div>
+            </div>
+
             <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
               <label style="text-transform:none;font-size:13px;font-weight:500">Active</label>
               <input type="checkbox" id="mqph-ct-active" checked style="width:auto"/>
@@ -1643,29 +1736,51 @@
 
   let currentCTEditId = null;
 
-  window.mqphOpenCTAdd = function() {
+  window.mqphTogCTType = function() {
+    const type = document.getElementById('mqph-ct-type')?.value;
+    document.getElementById('mqph-ct-material-fields').style.display   = type==='material'   ? 'block' : 'none';
+    document.getElementById('mqph-ct-backsplash-fields').style.display = type==='backsplash' ? 'block' : 'none';
+    document.getElementById('mqph-ct-cutout-fields').style.display     = type==='cutout'     ? 'block' : 'none';
+    const namePh = {material:'e.g. Granite — Mid', backsplash:'e.g. Backsplash', cutout:'e.g. Sink cutout'};
+    const nameEl = document.getElementById('mqph-ct-name');
+    if(nameEl) nameEl.placeholder = namePh[type]||'';
+  };
+
+  window.mqphOpenCTAdd = async function() {
+    // Pre-populate defaults if none exist yet
+    const hasCT = lineItems.some(r=>r.fields&&r.fields['Category']==='countertop');
+    if (!hasCT) { await ensureCTDefaults(); await loadAndRender(); return; }
     currentCTEditId = null;
-    document.getElementById('mqph-ct-modal-title').textContent = 'Add countertop material';
+    document.getElementById('mqph-ct-modal-title').textContent = 'Add countertop item';
+    document.getElementById('mqph-ct-type').value = 'material';
     document.getElementById('mqph-ct-name').value = '';
     document.getElementById('mqph-ct-supply-rate').value = '';
     document.getElementById('mqph-ct-supply-unit').value = 'sqft';
     document.getElementById('mqph-ct-install-rate').value = '';
     document.getElementById('mqph-ct-install-unit').value = 'sqft';
+    document.getElementById('mqph-ct-bs-install-rate').value = '';
+    document.getElementById('mqph-ct-cutout-rate').value = '';
     document.getElementById('mqph-ct-active').checked = true;
+    mqphTogCTType();
     document.getElementById('mqph-ct-modal-overlay').classList.add('show');
   };
 
   window.mqphOpenCTEdit = function(id) {
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
     currentCTEditId = id;
+    const type = getCTType(rec);
     const unitParts = (rec.fields['Unit']||'sqft|sqft').split('|');
-    document.getElementById('mqph-ct-modal-title').textContent = 'Edit countertop material';
+    document.getElementById('mqph-ct-modal-title').textContent = 'Edit countertop item';
+    document.getElementById('mqph-ct-type').value = type;
     document.getElementById('mqph-ct-name').value = rec.fields['Name']||'';
-    document.getElementById('mqph-ct-supply-rate').value = rec.fields['Rate']||'';
-    document.getElementById('mqph-ct-supply-unit').value = (unitParts[0]||'sqft').trim();
+    document.getElementById('mqph-ct-supply-rate').value  = rec.fields['Rate']||'';
+    document.getElementById('mqph-ct-supply-unit').value  = (unitParts[0]||'sqft').trim();
     document.getElementById('mqph-ct-install-rate').value = rec.fields['Install rate']||'';
     document.getElementById('mqph-ct-install-unit').value = (unitParts[1]||'sqft').trim();
+    document.getElementById('mqph-ct-bs-install-rate').value = rec.fields['Install rate']||'';
+    document.getElementById('mqph-ct-cutout-rate').value  = rec.fields['Rate']||'';
     document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
+    mqphTogCTType();
     document.getElementById('mqph-ct-modal-overlay').classList.add('show');
   };
 
@@ -1674,19 +1789,32 @@
   window.mqphSaveCTItem = async function() {
     const name = document.getElementById('mqph-ct-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
-    const supplyRate  = parseFloat(document.getElementById('mqph-ct-supply-rate').value||0);
-    const installRate = parseFloat(document.getElementById('mqph-ct-install-rate').value||0);
-    const supplyUnit  = document.getElementById('mqph-ct-supply-unit').value;
-    const installUnit = document.getElementById('mqph-ct-install-unit').value;
-    const fields = {
-      shop: [shopRecord._recordId],
-      Name: name,
-      Category: 'countertop',
-      Rate: supplyRate,
-      'Install rate': installRate,
-      Unit: `${supplyUnit}|${installUnit}`,
-      Active: document.getElementById('mqph-ct-active').checked,
-    };
+    const type = document.getElementById('mqph-ct-type').value;
+    let fields;
+    if (type === 'material') {
+      const su = document.getElementById('mqph-ct-supply-unit').value;
+      const iu = document.getElementById('mqph-ct-install-unit').value;
+      fields = {
+        shop:[shopRecord._recordId], Name:name, Category:'countertop',
+        Rate:parseFloat(document.getElementById('mqph-ct-supply-rate').value||0),
+        'Install rate':parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
+        Unit:`${su}|${iu}`, Description:'type:material', Active:document.getElementById('mqph-ct-active').checked,
+      };
+    } else if (type === 'backsplash') {
+      fields = {
+        shop:[shopRecord._recordId], Name:name, Category:'countertop',
+        Rate:0, 'Install rate':parseFloat(document.getElementById('mqph-ct-bs-install-rate').value||0),
+        Unit:'lin ft|lin ft', Description:'type:backsplash — Supply auto-calculated from countertop material at 4" height. Set your install rate per lin ft.',
+        Active:document.getElementById('mqph-ct-active').checked,
+      };
+    } else { // cutout
+      fields = {
+        shop:[shopRecord._recordId], Name:name, Category:'countertop',
+        Rate:parseFloat(document.getElementById('mqph-ct-cutout-rate').value||0),
+        'Install rate':0, Unit:'each|each', Description:'type:cutout — Flat rate per cutout.',
+        Active:document.getElementById('mqph-ct-active').checked,
+      };
+    }
     try {
       if (currentCTEditId) { await atUpdate(LINE_ITEMS_TABLE, currentCTEditId, fields); }
       else { fields['Sort order'] = lineItems.filter(r=>r.fields?.['Category']==='countertop').length + 1; await atCreate(LINE_ITEMS_TABLE, fields); }
