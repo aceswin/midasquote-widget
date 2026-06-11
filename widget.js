@@ -337,7 +337,9 @@
       </div>
       <div class="mq-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
-        <p class="mq-hint" style="margin-bottom:1rem">Uppers and bases measured separately. Include island cabinets in your base linear footage.</p>
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;margin-bottom:1rem;font-size:12px;color:#92400e;line-height:1.5">
+          💡 Uppers and bases measured separately. <strong>Include island cabinets in your base linear footage.</strong>
+        </div>
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60"/></div>
