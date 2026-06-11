@@ -326,6 +326,8 @@
 
         </div>
       </div>
+      <!-- Hidden Memberstack trigger for billing portal -->
+      <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" id="mq-ms-plans-trigger" style="display:none">plans</a>
     `;
   }
 
@@ -339,12 +341,14 @@
       } else if (window.$memberstackDom?.openBillingPortal) {
         await window.$memberstackDom.openBillingPortal();
       } else {
-        // Fallback — redirect to Stripe billing portal
         const { data } = await window.$memberstackDom.getPortalUrl();
         if (data?.url) window.open(data.url, '_blank');
         else alert('Please contact support at hello@midasquote.com to manage your billing.');
       }
     } catch(e) {
+      // Try clicking the hidden Memberstack plans link as fallback
+      const msPlansEl = document.querySelector('[data-ms-modal="profile"]');
+      if (msPlansEl) { msPlansEl.click(); return; }
       console.error('Billing portal error:', e);
       alert('To manage your billing, please email hello@midasquote.com');
     }
