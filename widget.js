@@ -462,12 +462,24 @@
         </div>
         <div class="mq-sec">
           <p class="mq-sec-title">Countertop measurements</p>
-          <label class="mq-check-row" style="margin-bottom:1rem">
-            <input type="checkbox" id="mq-ct-use-cab" onchange="mqTogUseCab('ct')"/>
-            <span style="font-size:13px;font-weight:500">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes 25" depth)</span></span>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:1rem;cursor:pointer">
+            <input type="checkbox" id="mq-ct-use-cab" onchange="mqTogUseCab('ct')" style="margin-top:2px;flex-shrink:0;width:auto"/>
+            <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes 25" depth)</span></span>
           </label>
-          <div id="mq-ct-cab-mat" style="display:none;margin-bottom:1rem">
-            <div class="mq-field"><label class="mq-label">Countertop material</label><select id="mq-ct-ct-mat-cab">${ctMatOpts()}</select></div>
+          <div id="mq-ct-cab-mat" style="display:none;margin-bottom:0.5rem">
+            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-ct-ct-mat-cab">${ctMatOpts()}</select></div>
+            <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:0.75rem">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                <input type="checkbox" id="mq-ct-cab-bs" style="width:auto;flex-shrink:0"/> Backsplash (4" standard)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                <input type="checkbox" id="mq-ct-cab-co" onchange="mqTogCabCuts('ct')" style="width:auto;flex-shrink:0"/> Cutouts needed
+              </label>
+            </div>
+            <div id="mq-ct-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:13px;color:#6b7280;min-width:110px">Sink cutouts</label><input type="number" id="mq-ct-cab-sink" value="0" min="0" max="4" style="width:55px"/></div>
+              <div style="display:flex;align-items:center;gap:8px"><label style="font-size:13px;color:#6b7280;min-width:110px">Cooktop cutouts</label><input type="number" id="mq-ct-cab-cook" value="0" min="0" max="2" style="width:55px"/></div>
+            </div>
           </div>
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
@@ -499,12 +511,24 @@
             <div class="mq-field"><label class="mq-label">Supply + install?</label>
               <select id="mq-b-ct-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
           </div>
-          <label class="mq-check-row" style="margin-top:0.75rem">
-            <input type="checkbox" id="mq-b-use-cab" onchange="mqTogUseCab('b')"/>
-            <span style="font-size:13px;font-weight:500">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes 25" depth)</span></span>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
+            <input type="checkbox" id="mq-b-use-cab" onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
+            <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes 25" depth)</span></span>
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
-            <div class="mq-field"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab">${ctMatOpts()}</select></div>
+            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab">${ctMatOpts()}</select></div>
+            <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:0.75rem">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                <input type="checkbox" id="mq-b-cab-bs" style="width:auto;flex-shrink:0"/> Backsplash (4" standard)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
+              </label>
+            </div>
+            <div id="mq-b-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:13px;color:#6b7280;min-width:110px">Sink cutouts</label><input type="number" id="mq-b-cab-sink" value="0" min="0" max="4" style="width:55px"/></div>
+              <div style="display:flex;align-items:center;gap:8px"><label style="font-size:13px;color:#6b7280;min-width:110px">Cooktop cutouts</label><input type="number" id="mq-b-cab-cook" value="0" min="0" max="2" style="width:55px"/></div>
+            </div>
           </div>
         </div>
         <div class="mq-sec"><p class="mq-sec-title">Additional surfaces</p>
@@ -615,7 +639,7 @@
         removalRate    = pricing['Removal rate']||18;
         taxRate        = (pricing['Tax rate']||5)/100;
       }
-      return { mat, door, drawer, hinge, installU, installB, installBSome, installBMostly, removalRate, taxRate };
+      return { mat, door, drawer, hinge, installU, installB, installBSome, installBMostly, removalRate };
     }
 
     // Backsplash install rate
@@ -682,7 +706,7 @@
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,installU,installB,installBSome,installBMostly,removalRate,taxRate}=P();
+      const {mat,door,drawer,hinge,installU,installB,installBSome,installBMostly,removalRate}=P();
       const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
       const hMult={standard:1.0,tall:1.30}[gv(`mq-${prefix}-ht`)]||1.0;
@@ -741,26 +765,28 @@
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
       const sub=uCost+bCost+specTotal+remCost;
-      const tax=sub*taxRate;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
-      if(taxRate>0) lines.push({label:`Est. tax (${Math.round(taxRate*100)}%)`,cost:Math.round(tax)});
 
-      const total=sub+tax;
-      const low=Math.round(total*0.9/100)*100, high=Math.round(total*1.25/100)*100;
+      const total=sub;
+      const low=Math.round(total*0.9/100)*100, high=Math.round(total*1.15/100)*100;
       const roomLabel={kitchen:'Kitchen',bathroom:'Bathroom',laundry:'Laundry room',garage:'Garage',office:'Home office',other:'Room'}[gv(`mq-${prefix}-room`)]||'Cabinet';
       return {lines,sub:Math.round(sub),total:Math.round(total),low,high,roomLabel,si,uFt,bFt};
     }
 
     function calcCountertop(prefix) {
-      const {taxRate}=P();
+      const {removalRate}=P();
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
 
       const useCabMeasure = document.getElementById(`mq-${prefix}-ct-use-cab`)?.checked ||
                             document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       if (useCabMeasure) {
-        const bFt  = gn(`mq-${prefix}-bft`, 0);
-        const matId= prefix==='ct'?'mq-ct-ct-mat-cab':`mq-${prefix}-ct-mat-cab`;
+        const bFt   = gn(`mq-${prefix}-bft`, 0);
+        const matId = prefix==='ct' ? 'mq-ct-ct-mat-cab' : `mq-${prefix}-ct-mat-cab`;
+        const bsId  = prefix==='ct' ? 'mq-ct-cab-bs'     : `mq-${prefix}-cab-bs`;
+        const coId  = prefix==='ct' ? 'mq-ct-cab-co'     : `mq-${prefix}-cab-co`;
+        const sinkId= prefix==='ct' ? 'mq-ct-cab-sink'   : `mq-${prefix}-cab-sink`;
+        const cookId= prefix==='ct' ? 'mq-ct-cab-cook'   : `mq-${prefix}-cab-cook`;
         if (bFt > 0) {
           const linFt = bFt;
           const sqft  = linFt * (ctDepth / 12);
@@ -770,8 +796,18 @@
           if (m) {
             const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
             const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
-            sub += supplyCost+installCost;
-            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft)`, cost:Math.round(supplyCost+installCost)});
+            const bsChecked   = document.getElementById(bsId)?.checked;
+            let bsCost = 0;
+            if (bsChecked) {
+              const bsSqft   = linFt * (4/12);
+              const bsSupply = m.supplyUnit === 'lin ft' ? linFt*m.ps : bsSqft*m.ps;
+              bsCost = bsSupply + linFt * bsInstallRate;
+            }
+            const coChecked = document.getElementById(coId)?.checked;
+            const cutoutCost = coChecked ? gn(sinkId)*sinkR + gn(cookId)*cookR : 0;
+            const cost = supplyCost + installCost + bsCost + cutoutCost;
+            sub += cost;
+            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft)${bsChecked?' + backsplash':''}`, cost:Math.round(cost)});
           }
         }
       }
@@ -800,11 +836,9 @@
         lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft)`,cost:Math.round(cost)});
       });
 
-      const tax=sub*taxRate;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
-      if(taxRate>0) lines.push({label:`Est. tax (${Math.round(taxRate*100)}%)`,cost:Math.round(tax)});
-      const total=sub+tax;
-      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*0.88/100)*100,high:Math.round(total*1.22/100)*100};
+      const total=sub;
+      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*0.9/100)*100,high:Math.round(total*1.15/100)*100};
     }
 
     function renderResult(rangeEl,listEl,result){
@@ -935,6 +969,12 @@
         el.textContent=`${sqft} sqft · ${linFt} lin ft`;
         el.style.color='#16a34a';
       } else if(el){el.textContent='Enter width & depth';el.style.color='#6b7280';}
+    };
+    window.mqTogCabCuts=(prefix)=>{
+      const coId   = prefix==='ct'?'mq-ct-cab-co':`mq-${prefix}-cab-co`;
+      const cutsId = prefix==='ct'?'mq-ct-cab-cuts':`mq-${prefix}-cab-cuts`;
+      const el=document.getElementById(cutsId);
+      if(el) el.style.display=document.getElementById(coId)?.checked?'block':'none';
     };
     window.mqTogCuts=id=>{document.getElementById('mqscuts-'+id).style.display=document.getElementById('mqsco-'+id).checked?'block':'none';};
 

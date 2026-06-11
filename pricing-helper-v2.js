@@ -779,28 +779,24 @@
 
     // Final: Local zone & tax
     steps.push({
-      title:'📍 Final step — Local zone & tax',
-      sub:'Almost done. Just set your local delivery radius and your tax rate.',
+      title:'📍 Final step — Local delivery zone',
+      sub:'Set your local delivery radius so the widget knows your service area.',
       content:() => {
         const existingRadius = getByCategory('zone').find(z=>z.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15;
         return `
           <div class="mqph-info">
             Jobs within your local radius are quoted at no extra travel charge — any delivery cost should already be built into your regular pricing. Jobs outside this area will include a note on the quote that travel charges may apply.
           </div>
-          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1.25rem">
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
             <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">📍 Local delivery radius</div>
             <div class="mqph-input-row"><label>No extra travel charge within this distance</label><input type="number" id="mqph-zone-r" value="${existingRadius}" style="width:130px;text-align:right"/><span class="mqph-pfx">km</span></div>
-          </div>
-          <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
-          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🧾 Tax</div>
-          <div class="mqph-input-row"><label>Tax rate on cabinet subtotal</label><input type="number" id="mqph-tax" placeholder="5" style="width:130px;text-align:right"/><span class="mqph-pfx">%</span></div>`;
+          </div>`;
       },
       skipLabel:'Skip',
       nextLabel:'Finish setup →',
       onNext:() => {
         const gn=id=>parseFloat(document.getElementById(id)?.value||0);
-        const zr=gn('mqph-zone-r'), tax=gn('mqph-tax');
-        // Zone radius — upsert directly, don't go through wizard wipe/rewrite
+        const zr=gn('mqph-zone-r');
         if(zr>0) {
           const existing = lineItems.find(r=>r.fields&&r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
           if(existing) {
@@ -811,7 +807,6 @@
               .then(rec=>{ if(rec?.id) lineItems.push(rec); });
           }
         }
-        if(tax>0) wizardItems.push({ name:'Tax rate', category:'tax', rate:tax, unit:'%', description:'Applied to cabinet subtotal', active:true });
       }
     });
 
