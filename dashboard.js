@@ -156,7 +156,7 @@
         </div>
         <div class="mq-topbar-actions">
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
-          <button class="mq-btn mq-btn-sm" onclick="window.$memberstackDom?.logout?.()">Log out</button>
+          <button class="mq-btn mq-btn-sm" onclick="mqLogout()">Log out</button>
         </div>
       </div>
 
@@ -297,6 +297,26 @@
   // ============================================================
   // NAVIGATION
   // ============================================================
+  window.mqLogout = async function() {
+    try {
+      // Memberstack v2 DOM package
+      if (window.$memberstackDom) {
+        await window.$memberstackDom.logout();
+        return;
+      }
+      // Memberstack v2 vanilla
+      if (window.memberstack) {
+        await window.memberstack.logout();
+        return;
+      }
+      // Fallback — redirect to Memberstack logout URL
+      window.location.href = '/?ms-logout=true';
+    } catch(e) {
+      // Last resort
+      window.location.href = '/?ms-logout=true';
+    }
+  };
+
   window.mqNav = function(page, el) {
     document.querySelectorAll('#midasquote-dashboard .mq-nav-item').forEach(i => i.classList.remove('active'));
     document.querySelectorAll('#midasquote-dashboard .mq-page').forEach(p => p.classList.remove('active'));
