@@ -776,6 +776,7 @@
         }
       }
     }
+    if (page === 'pricing') {
       const helperContainer = document.getElementById('mq-pricing-helper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
