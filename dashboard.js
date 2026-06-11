@@ -299,28 +299,28 @@
               <div class="mq-card-title">📋 Current plan</div>
               <div id="mq-billing-plan" style="font-size:14px;color:#6b7280;margin-bottom:1.25rem">Loading plan info...</div>
               <div style="display:flex;gap:10px;flex-wrap:wrap">
-                <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn mq-btn-primary" style="text-decoration:none">Manage plan</a>
-                <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn" style="text-decoration:none">Upgrade to annual</a>
+                <button class="mq-btn mq-btn-primary" onclick="mqOpenBillingPortal()">Manage plan</button>
+                <button class="mq-btn" onclick="mqOpenBillingPortal()">Upgrade to annual</button>
               </div>
             </div>
 
             <div class="mq-card" style="margin-bottom:1rem">
               <div class="mq-card-title">💳 Payment method</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Update your credit card or billing details.</p>
-              <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn" style="text-decoration:none">Update payment method</a>
+              <button class="mq-btn" onclick="mqOpenBillingPortal()">Update payment method</button>
             </div>
 
             <div class="mq-card" style="margin-bottom:1rem">
               <div class="mq-card-title">🧾 Invoices</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">View and download your past invoices.</p>
-              <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn" style="text-decoration:none">View invoices</a>
+              <button class="mq-btn" onclick="mqOpenBillingPortal()">View invoices</button>
             </div>
 
             <div class="mq-card" style="border-color:#fca5a5">
               <div class="mq-card-title" style="color:#dc2626">⚠️ Cancel subscription</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Your leads and pricing data will be available for 30 days after cancellation.</p>
-              <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn mq-btn-danger" style="text-decoration:none">Cancel subscription</a>
+              <button class="mq-btn mq-btn-danger" onclick="mqOpenBillingPortal()">Cancel subscription</button>
             </div>
           </div>
 
@@ -332,6 +332,24 @@
   // ============================================================
   // NAVIGATION
   // ============================================================
+  window.mqOpenBillingPortal = async function() {
+    try {
+      if (window.$memberstackDom?.openModal) {
+        await window.$memberstackDom.openModal('profile', { tab: 'plans' });
+      } else if (window.$memberstackDom?.openBillingPortal) {
+        await window.$memberstackDom.openBillingPortal();
+      } else {
+        // Fallback — redirect to Stripe billing portal
+        const { data } = await window.$memberstackDom.getPortalUrl();
+        if (data?.url) window.open(data.url, '_blank');
+        else alert('Please contact support at hello@midasquote.com to manage your billing.');
+      }
+    } catch(e) {
+      console.error('Billing portal error:', e);
+      alert('To manage your billing, please email hello@midasquote.com');
+    }
+  };
+
   window.mqLogout = async function() {
     try {
       // Memberstack v2 DOM package
@@ -728,6 +746,10 @@
 
     window._mqShopRecord = shopRecord;
     container.innerHTML = buildHTML(shopRecord.fields);
+
+    // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
+    if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
+    else if (window.MemberStack?.reload) window.MemberStack.reload();
 
     // Wire up embed copy buttons now that DOM exists
     ['mq-copy-embed-1', 'mq-copy-embed-2'].forEach(id => {
