@@ -752,7 +752,7 @@
 
   // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
-  window.mqNav = function(page, navEl) {
+  window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
     if (page === 'billing') {
       const planEl = document.getElementById('mq-billing-plan');
