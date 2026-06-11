@@ -209,10 +209,9 @@
       #midasquote-widget .mq-cta-row{display:flex;gap:8px;margin-top:1rem}
       #midasquote-widget .mq-cta-row button{flex:1;padding:10px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111;font-family:inherit}
       #midasquote-widget .mq-pri{background:${bc}!important;color:#fff!important;border-color:${bc}!important}
-      #midasquote-widget .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:flex-end;justify-content:center}
+      #midasquote-widget .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:1rem}
       #midasquote-widget .mq-overlay.show{display:flex}
-      #midasquote-widget .mq-modal{background:#f8faff;border-radius:12px 12px 0 0;padding:1.5rem;width:100%;max-width:420px;box-shadow:0 -4px 24px rgba(0,0,0,0.15)}
-      @media(min-width:600px){#midasquote-widget .mq-overlay{align-items:center;padding:1rem}#midasquote-widget .mq-modal{border-radius:12px;width:90%}}
+      #midasquote-widget .mq-modal{background:#f8faff;border-radius:12px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.18);position:relative;margin:auto}
       #midasquote-widget .mq-modal-title{font-size:16px;font-weight:600;color:#111;margin-bottom:4px}
       #midasquote-widget .mq-modal-sub{font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.5}
       #midasquote-widget .mq-modal-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
@@ -338,7 +337,7 @@
       </div>
       <div class="mq-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
-        <p class="mq-hint" style="margin-bottom:1rem">Uppers and bases measured separately.</p>
+        <p class="mq-hint" style="margin-bottom:1rem">Uppers and bases measured separately. Include island cabinets in your base linear footage.</p>
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60"/></div>
@@ -671,7 +670,13 @@
       document.getElementById(`mq-sp-${prefix}-${i}`).classList.toggle('on',specQty[prefix][i]>0);
     };
 
-    window.mqShowLead=cb=>{pendingCb=cb;document.getElementById('mq-lead-overlay').classList.add('show');};
+    window.mqShowLead=cb=>{
+      pendingCb=cb;
+      const overlay=document.getElementById('mq-lead-overlay');
+      overlay.classList.add('show');
+      // Scroll the overlay into view so it appears at the user's current position
+      overlay.scrollIntoView({behavior:'smooth',block:'center'});
+    };
     window.mqSkipLead=()=>{document.getElementById('mq-lead-overlay').classList.remove('show');if(pendingCb){pendingCb(null);pendingCb=null;}};
     window.mqSubmitLead=async()=>{
       const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone')};
