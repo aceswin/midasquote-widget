@@ -336,19 +336,17 @@
   // ============================================================
   window.mqOpenBillingPortal = async function() {
     try {
-      if (window.$memberstackDom?.openModal) {
-        await window.$memberstackDom.openModal('profile', { tab: 'plans' });
-      } else if (window.$memberstackDom?.openBillingPortal) {
-        await window.$memberstackDom.openBillingPortal();
-      } else {
-        const { data } = await window.$memberstackDom.getPortalUrl();
-        if (data?.url) window.open(data.url, '_blank');
-        else alert('Please contact support at hello@midasquote.com to manage your billing.');
-      }
+      await window.$memberstackDom.openModal('profile');
+      // Click Plans tab after modal opens
+      setTimeout(() => {
+        const tabs = document.querySelectorAll('[data-ms-modal-tab], .ms-modal-tab, [class*="plans"], [class*="Plans"]');
+        tabs.forEach(t => { if (t.textContent?.trim() === 'Plans') t.click(); });
+        // Also try finding by text content in any clickable element
+        document.querySelectorAll('button, a, li, div[role="tab"]').forEach(el => {
+          if (el.textContent?.trim() === 'Plans') el.click();
+        });
+      }, 300);
     } catch(e) {
-      // Try clicking the hidden Memberstack plans link as fallback
-      const msPlansEl = document.querySelector('[data-ms-modal="profile"]');
-      if (msPlansEl) { msPlansEl.click(); return; }
       console.error('Billing portal error:', e);
       alert('To manage your billing, please email hello@midasquote.com');
     }
