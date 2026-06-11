@@ -336,37 +336,26 @@
   // ============================================================
   window.mqOpenBillingPortal = async function() {
     try {
-      await window.$memberstackDom.openModal('PROFILE');
-      // Auto-click the Plans tab after modal opens
-      setTimeout(() => {
-        document.querySelectorAll('button, a, li, [role="tab"]').forEach(el => {
-          if (el.textContent?.trim() === 'Plans') el.click();
-        });
-      }, 400);
+      // launchStripeCustomerPortal opens Stripe billing directly — cancel, update card, invoices all in one
+      await window.$memberstackDom.launchStripeCustomerPortal({});
     } catch(e) {
       console.error('Billing portal error:', e);
-      alert('To manage your billing, please email hello@midasquote.com');
+      // Fallback to profile modal
+      try { await window.$memberstackDom.openModal('PROFILE'); } catch(e2) {}
     }
   };
 
-  window.mqLogout = async function() {
-    try {
-      // Memberstack v2 DOM package
-      if (window.$memberstackDom) {
+  window.mqLogout = function() {
+    // Wait for Memberstack to be ready then logout
+    const doLogout = async () => {
+      try {
         await window.$memberstackDom.logout();
-        return;
+      } catch(e) {
+        window.location.href = '/?ms-logout=true';
       }
-      // Memberstack v2 vanilla
-      if (window.memberstack) {
-        await window.memberstack.logout();
-        return;
-      }
-      // Fallback — redirect to Memberstack logout URL
-      window.location.href = '/?ms-logout=true';
-    } catch(e) {
-      // Last resort
-      window.location.href = '/?ms-logout=true';
-    }
+    };
+    if (window.$memberstackDom) doLogout();
+    else window.addEventListener('memberstack.ready', doLogout, { once: true });
   };
 
   window.mqNav = function(page, el) {
