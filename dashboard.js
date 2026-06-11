@@ -336,16 +336,13 @@
   // ============================================================
   window.mqOpenBillingPortal = async function() {
     try {
-      await window.$memberstackDom.openModal('profile');
-      // Click Plans tab after modal opens
+      await window.$memberstackDom.openModal('PROFILE');
+      // Auto-click the Plans tab after modal opens
       setTimeout(() => {
-        const tabs = document.querySelectorAll('[data-ms-modal-tab], .ms-modal-tab, [class*="plans"], [class*="Plans"]');
-        tabs.forEach(t => { if (t.textContent?.trim() === 'Plans') t.click(); });
-        // Also try finding by text content in any clickable element
-        document.querySelectorAll('button, a, li, div[role="tab"]').forEach(el => {
+        document.querySelectorAll('button, a, li, [role="tab"]').forEach(el => {
           if (el.textContent?.trim() === 'Plans') el.click();
         });
-      }, 300);
+      }, 400);
     } catch(e) {
       console.error('Billing portal error:', e);
       alert('To manage your billing, please email hello@midasquote.com');
