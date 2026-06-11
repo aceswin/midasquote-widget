@@ -461,26 +461,7 @@
           </div>
         </div>
         <div class="mq-sec">
-          <p class="mq-sec-title">Countertop measurements</p>
-          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:1rem;cursor:pointer">
-            <input type="checkbox" id="mq-ct-use-cab" onchange="mqTogUseCab('ct')" style="margin-top:2px;flex-shrink:0;width:auto"/>
-            <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes 25" depth)</span></span>
-          </label>
-          <div id="mq-ct-cab-mat" style="display:none;margin-bottom:0.5rem">
-            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-ct-ct-mat-cab">${ctMatOpts()}</select></div>
-            <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:0.75rem">
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                <input type="checkbox" id="mq-ct-cab-bs" style="width:auto;flex-shrink:0"/> Backsplash (4" standard)
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                <input type="checkbox" id="mq-ct-cab-co" onchange="mqTogCabCuts('ct')" style="width:auto;flex-shrink:0"/> Cutouts needed
-              </label>
-            </div>
-            <div id="mq-ct-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:13px;color:#6b7280;min-width:110px">Sink cutouts</label><input type="number" id="mq-ct-cab-sink" value="0" min="0" max="4" style="width:55px"/></div>
-              <div style="display:flex;align-items:center;gap:8px"><label style="font-size:13px;color:#6b7280;min-width:110px">Cooktop cutouts</label><input type="number" id="mq-ct-cab-cook" value="0" min="0" max="2" style="width:55px"/></div>
-            </div>
-          </div>
+          <p class="mq-sec-title">Surfaces</p>
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
         </div>
@@ -778,8 +759,7 @@
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
 
-      const useCabMeasure = document.getElementById(`mq-${prefix}-ct-use-cab`)?.checked ||
-                            document.getElementById(`mq-${prefix}-use-cab`)?.checked;
+      const useCabMeasure = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       if (useCabMeasure) {
         const bFt   = gn(`mq-${prefix}-bft`, 0);
         const matId = prefix==='ct' ? 'mq-ct-ct-mat-cab' : `mq-${prefix}-ct-mat-cab`;
@@ -868,9 +848,8 @@
     };
 
     window.mqCalcCountertops=()=>{
-      const useCab=document.getElementById('mq-ct-use-cab')?.checked;
       const hasSurfaces=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length>0;
-      if(!useCab&&!hasSurfaces){alert('Please check "Use my base cabinet measurements" or add at least one surface.');return;}
+      if(!hasSurfaces){alert('Please add at least one surface.');return;}
       window.mqShowLead(async lead=>{
         document.getElementById('mq-ct-calc-btn').disabled=true;
         document.getElementById('mq-ct-loading').classList.add('show');
@@ -954,9 +933,8 @@
     window.mqAddSurface=(prefix)=>addSurfaceInternal(prefix);
     window.mqRemoveSurf=(prefix,id)=>{const c=document.getElementById('mqsc-'+id);if(c)c.remove();delete surfs[prefix][id];};
     window.mqTogUseCab=(prefix)=>{
-      const useId1=`mq-${prefix}-use-cab`, useId2=`mq-${prefix}-ct-use-cab`;
-      const checked=document.getElementById(useId1)?.checked||document.getElementById(useId2)?.checked;
-      const matDiv=document.getElementById(`mq-${prefix}-cab-mat`)||document.getElementById(`mq-ct-cab-mat`);
+      const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
+      const matDiv  = document.getElementById(`mq-${prefix}-cab-mat`);
       if(matDiv) matDiv.style.display=checked?'block':'none';
     };
     window.mqCalcSurfDims=(id)=>{
