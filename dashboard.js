@@ -170,6 +170,7 @@
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
+          <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
         </div>
 
         <div class="mq-content">
@@ -289,10 +290,39 @@
             </div>
           </div>
 
-        </div>
-      </div>
-    `;
-  }
+          <!-- BILLING -->
+          <div class="mq-page" id="mq-page-billing">
+            <div class="mq-page-title">Billing</div>
+            <div class="mq-page-sub">Manage your subscription, payment method, and invoices</div>
+
+            <div class="mq-card" style="margin-bottom:1rem">
+              <div class="mq-card-title">📋 Current plan</div>
+              <div id="mq-billing-plan" style="font-size:14px;color:#6b7280;margin-bottom:1.25rem">Loading plan info...</div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn mq-btn-primary" style="text-decoration:none">Manage plan</a>
+                <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn" style="text-decoration:none">Upgrade to annual</a>
+              </div>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1rem">
+              <div class="mq-card-title">💳 Payment method</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Update your credit card or billing details.</p>
+              <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn" style="text-decoration:none">Update payment method</a>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1rem">
+              <div class="mq-card-title">🧾 Invoices</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">View and download your past invoices.</p>
+              <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn" style="text-decoration:none">View invoices</a>
+            </div>
+
+            <div class="mq-card" style="border-color:#fca5a5">
+              <div class="mq-card-title" style="color:#dc2626">⚠️ Cancel subscription</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Your leads and pricing data will be available for 30 days after cancellation.</p>
+              <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" class="mq-btn mq-btn-danger" style="text-decoration:none">Cancel subscription</a>
+            </div>
+          </div>
 
   // ============================================================
   // NAVIGATION
@@ -719,7 +749,28 @@
   const origMqNav = window.mqNav;
   window.mqNav = function(page, navEl) {
     origMqNav(page, navEl);
-    if (page === 'pricing') {
+    if (page === 'billing') {
+      const planEl = document.getElementById('mq-billing-plan');
+      if (planEl && planEl.textContent === 'Loading plan info...') {
+        try {
+          const { data: member } = await window.$memberstackDom.getCurrentMember();
+          const plans = member?.planConnections || [];
+          if (plans.length > 0) {
+            const plan = plans[0];
+            planEl.innerHTML = `
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <span style="background:#dcfce7;color:#166534;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">Active</span>
+                <span style="font-size:14px;font-weight:500;color:#111">${plan.planName || plan.plan?.name || 'MidasQuote'}</span>
+              </div>
+              <p style="font-size:13px;color:#6b7280">Your subscription is active. Manage it using the buttons below.</p>`;
+          } else {
+            planEl.innerHTML = `<p style="font-size:13px;color:#6b7280">No active plan found. <a href="/pricing" style="color:#1a1a1a;font-weight:500">View plans →</a></p>`;
+          }
+        } catch(e) {
+          planEl.innerHTML = `<p style="font-size:13px;color:#6b7280">Use the buttons below to manage your subscription.</p>`;
+        }
+      }
+    }
       const helperContainer = document.getElementById('mq-pricing-helper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
