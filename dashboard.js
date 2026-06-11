@@ -343,6 +343,47 @@
     return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
 
+  const DEFAULT_SPECIALTY_ITEMS = [
+    { name:'Tall cabinets',              price:0,  perFt:false, sort:1  },
+    { name:'Appliance garage',           price:0,  perFt:false, sort:2  },
+    { name:'Blind corner solution',      price:0,  perFt:false, sort:3  },
+    { name:'Double garbage pullout',     price:0,  perFt:false, sort:4  },
+    { name:'Toe kick drawers',           price:0,  perFt:false, sort:5  },
+    { name:'Lazy Susan',                 price:0,  perFt:false, sort:6  },
+    { name:'Wine rack / cabinet',        price:0,  perFt:false, sort:7  },
+    { name:'Spice rack',                 price:0,  perFt:false, sort:8  },
+    { name:'Pull-out shelves',           price:0,  perFt:false, sort:9  },
+    { name:'Pot drawers',                price:0,  perFt:false, sort:10 },
+    { name:'Pantry unit',                price:0,  perFt:false, sort:11 },
+    { name:'Desk / homework station',    price:0,  perFt:false, sort:12 },
+    { name:'Glass door fronts',          price:0,  perFt:false, sort:13 },
+    { name:'Undervalence lighting rail', price:0,  perFt:true,  sort:14 },
+    { name:'Crown moulding',             price:0,  perFt:true,  sort:15 },
+  ];
+
+  async function ensureSpecialtyDefaults(shopRecord) {
+    const shopName = shopRecord.fields['Shop name'];
+    const existing = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+    if (existing.length > 0) return existing;
+    // New shop — create default list
+    const created = [];
+    for (const item of DEFAULT_SPECIALTY_ITEMS) {
+      try {
+        const rec = await atCreate(CONFIG.SPECIALTY_TABLE, {
+          'Shop': [shopRecord.id],
+          'Item name': item.name,
+          'Special Items': item.name,
+          'Price': item.price,
+          'Per linear foot': item.perFt,
+          'Active': true,
+          'Sort order': item.sort,
+        });
+        if (rec?.id) created.push(rec);
+      } catch(e) { console.warn('Failed to create default specialty item:', item.name, e); }
+    }
+    return created.sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+  }
+
   // ============================================================
   // POPULATE FIELDS
   // ============================================================
@@ -650,7 +691,7 @@
     el('mq-recent-leads').innerHTML = renderLeads(leads, 5);
     el('mq-leads-table').innerHTML = renderLeads(leads);
 
-    const specs = await loadSpecialty(shopRecord.fields['Shop name']);
+    const specs = await ensureSpecialtyDefaults(shopRecord);
     renderSpecialty(specs, shopRecord);
   }
 
