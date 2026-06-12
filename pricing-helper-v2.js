@@ -201,7 +201,7 @@
   const CAT_LABELS = {
     material:'🪵 Box materials', door:'🚪 Door styles', drawer:'🗄️ Drawer configurations',
     hinge:'🔧 Door hinges', install:'🔧 Installation & removal',
-    countertop:'🪨 Countertop materials', zone:'🚗 Travel zones', tax:'🧾 Tax', other:'📋 Other',
+    zone:'🚗 Travel zones', tax:'🧾 Tax', other:'📋 Other',
   };
 
   // Categories fully owned by the wizard — wiped on every full wizard run
@@ -1349,6 +1349,7 @@
     const groups = {};
     visibleItems.forEach(r => {
       const c = r.fields['Category'] || 'other';
+      if (c === 'countertop') return; // handled by buildCTHtml()
       if (!groups[c]) groups[c] = [];
       groups[c].push(r);
     });
