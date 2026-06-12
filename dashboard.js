@@ -139,23 +139,23 @@
       #midasquote-dashboard .mq-toggle.on::after{left:20px}
       #midasquote-dashboard .mq-empty{text-align:center;padding:3rem;color:#9ca3af;font-size:14px}
       #midasquote-dashboard .mq-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+
+      @media (max-width: 768px) {
+        #midasquote-dashboard .mq-layout{flex-direction:column}
+        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch}
+        #midasquote-dashboard .mq-nav-section{display:none}
+        #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
+        #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
+        #midasquote-dashboard .mq-content{padding:1.25rem}
+        #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
+        #midasquote-dashboard .mq-topbar-brand{font-size:14px}
+        #midasquote-dashboard .mq-card{padding:1.25rem}
+        #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        #midasquote-dashboard .mq-table{min-width:560px}
+      }
     `;
     document.head.appendChild(s);
   }
-
-window.logoutMember = async function () {
-  try {
-    await window.$memberstackDom.logout();
-
-    // Change this if your login page URL is different
-    window.location.href = "/login";
-  } catch (err) {
-    console.error("Logout failed:", err);
-    alert("Logout failed. Please refresh and try again.");
-  }
-};
-
-
 
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
@@ -170,12 +170,7 @@ window.logoutMember = async function () {
         </div>
         <div class="mq-topbar-actions">
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
-<button 
-  type="button"
-  class="mq-btn mq-btn-sm"
-  onclick="logoutMember()">
-  Log out
-</button>
+          <button class="mq-btn mq-btn-sm" data-ms-action="logout">Log out</button>
         </div>
       </div>
 
@@ -427,7 +422,7 @@ window.logoutMember = async function () {
   }
 
   async function loadLeads(shopId) {
-    const recs = await atGet(CONFIG.LEADS_TABLE, `{Shop} = "${shopId}"`);
+    const recs = await atGet(CONFIG.LEADS_TABLE, `FIND("${shopId}", ARRAYJOIN({Shop}))`);
     return recs;
   }
 
@@ -552,7 +547,7 @@ window.logoutMember = async function () {
         </td>
       </tr>`;
     }).join('');
-    return `<table class="mq-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Estimate</th><th>Status</th><th>Update</th></tr></thead><tbody>${rows}</tbody></table>`;
+    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Estimate</th><th>Status</th><th>Update</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
@@ -576,6 +571,7 @@ window.logoutMember = async function () {
       return;
     }
     container.innerHTML = `
+      <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
         <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
@@ -589,7 +585,8 @@ window.logoutMember = async function () {
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
             </tr>`).join('')}
         </tbody>
-      </table>`;
+      </table>
+      </div>`;
 
     const tbody = document.getElementById('mq-spec-tbody');
     let dragging = null;
