@@ -304,7 +304,7 @@
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}">
         <div style="flex:1;min-width:0">
           <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
-          <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perFt ? 'per linear foot' : 'quantity'}</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perFt ? 'linear feet' : 'quantity'}</div>
         </div>
         <div class="mq-qty-ctrl">
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
@@ -740,12 +740,13 @@
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       let specTotal=0;
-      const totalFt=uFt+bFt;
       specs.forEach((s,i)=>{
         if(!specQty[prefix][i]) return;
-        const cost=s.perFt?s.price*totalFt*specQty[prefix][i]:s.price*specQty[prefix][i];
+        // For per-linear-foot items, the quantity IS the linear feet — independent of cabinet measurements
+        const cost=s.perFt?s.price*specQty[prefix][i]:s.price*specQty[prefix][i];
         specTotal+=cost;
-        lines.push({label:specQty[prefix][i]>1?`${s.label} × ${specQty[prefix][i]}`:s.label,cost:Math.round(cost)});
+        const qtyLabel=s.perFt?`${specQty[prefix][i]} ft`:(specQty[prefix][i]>1?`× ${specQty[prefix][i]}`:'');
+        lines.push({label:qtyLabel?`${s.label} (${qtyLabel})`:s.label,cost:Math.round(cost)});
       });
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
