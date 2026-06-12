@@ -138,6 +138,19 @@
       .mqph-modal-body{padding:1.5rem !important}
       .mqph-modal-footer{padding:1rem 1.5rem !important;border-top:1px solid #e5e7eb !important;display:flex !important;gap:10px !important;align-items:center !important;background:#f9fafb !important}
 
+      @media (max-width: 640px) {
+        .mqph-row{flex-wrap:wrap !important;gap:6px !important;padding:12px !important}
+        .mqph-row-name{flex:1 1 100% !important;order:1 !important}
+        .mqph-row-desc{flex:1 1 100% !important;order:2 !important}
+        .mqph-row-rate{order:3 !important;min-width:0 !important;text-align:left !important;flex:0 0 auto !important}
+        .mqph-row-unit{order:4 !important;min-width:0 !important;text-align:left !important;flex:0 0 auto !important}
+        .mqph-row .mqph-toggle{order:5 !important;margin-left:auto !important}
+        .mqph-row button{order:6 !important}
+        .mqph-cat-header{flex-wrap:wrap !important;gap:8px !important}
+        .mqph-modal{max-width:100% !important;width:100% !important;height:100% !important;max-height:100% !important;border-radius:0 !important}
+        .mqph-overlay{padding:0 !important}
+      }
+
       /* ── Mini-wizard steps ── */
       .mqph-mini-step{display:none !important}.mqph-mini-step.active{display:block !important}
       .mqph-name-input{font-family:inherit !important;font-size:15px !important;font-weight:600 !important;color:#111 !important;background:#fff !important;border:1.5px solid #d1d5db !important;border-radius:8px !important;padding:10px 14px !important;width:100% !important;margin-bottom:1.25rem !important}
