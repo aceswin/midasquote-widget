@@ -156,7 +156,7 @@
         </div>
         <div class="mq-topbar-actions">
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
-          <button class="mq-btn mq-btn-sm" data-ms-action="logout" onclick="mqLogout()">Log out</button>
+          <button class="mq-btn mq-btn-sm" data-ms-action="logout">Log out</button>
         </div>
       </div>
 
@@ -357,16 +357,18 @@
   };
 
   window.mqLogout = function() {
-    // Wait for Memberstack to be ready then logout
-    const doLogout = async () => {
-      try {
-        await window.$memberstackDom.logout();
-      } catch(e) {
-        window.location.href = '/?ms-logout=true';
+    let attempts = 0;
+    const tryLogout = async () => {
+      if (window.$memberstackDom?.logout) {
+        try { await window.$memberstackDom.logout(); window.location.reload(); }
+        catch(e) { window.location.href = '/?ms-logout=true'; }
+        return;
       }
+      attempts++;
+      if (attempts < 20) setTimeout(tryLogout, 250);
+      else window.location.href = '/?ms-logout=true';
     };
-    if (window.$memberstackDom) doLogout();
-    else window.addEventListener('memberstack.ready', doLogout, { once: true });
+    tryLogout();
   };
 
   window.mqNav = function(page, el) {
