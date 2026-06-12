@@ -849,7 +849,7 @@
         document.getElementById('mq-c-res-sub').textContent=`${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
         renderResult('mq-c-res-range','mq-c-line-items',r);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');
+        document.getElementById('mq-c-result').classList.add('show');document.getElementById('mq-c-result').scrollIntoView({behavior:'smooth',block:'start'});
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines);
       });
@@ -868,7 +868,7 @@
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s) · ${gv('mq-ct-si')==='install'?'Supply + install':'Supply only'}`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');
+          document.getElementById('mq-ct-result').classList.add('show');document.getElementById('mq-ct-result').scrollIntoView({behavior:'smooth',block:'start'});
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines);
         },900);
@@ -891,7 +891,7 @@
           const tl=cab.low+ct.low,th=cab.high+ct.high;
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');
+          document.getElementById('mq-b-result').classList.add('show');document.getElementById('mq-b-result').scrollIntoView({behavior:'smooth',block:'start'});
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'— CABINETS —',cost:0},...cab.lines,{label:'— COUNTERTOPS —',cost:0},...ct.lines]);
         },1200);
