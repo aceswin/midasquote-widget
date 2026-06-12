@@ -156,7 +156,7 @@
         </div>
         <div class="mq-topbar-actions">
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
-          <button class="mq-btn mq-btn-sm" onclick="mqLogout()">Log out</button>
+          <button class="mq-btn mq-btn-sm" data-ms-action="logout" onclick="mqLogout()">Log out</button>
         </div>
       </div>
 
@@ -300,7 +300,7 @@
               <div id="mq-billing-plan" style="font-size:14px;color:#6b7280;margin-bottom:1.25rem">Loading plan info...</div>
               <div style="display:flex;gap:10px;flex-wrap:wrap">
                 <button class="mq-btn mq-btn-primary" onclick="mqOpenBillingPortal()">Manage plan</button>
-                <button class="mq-btn" onclick="mqOpenBillingPortal()">Upgrade to annual</button>
+                <button class="mq-btn" onclick="mqUpgradeToAnnual()">Upgrade to annual</button>
               </div>
             </div>
 
@@ -334,6 +334,17 @@
   // ============================================================
   // NAVIGATION
   // ============================================================
+  window.mqUpgradeToAnnual = async function() {
+    try {
+      await window.$memberstackDom.purchasePlansWithCheckout({
+        priceId: 'prc_midasquote-annual-0o2d0axt',
+      });
+    } catch(e) {
+      console.error('Upgrade error:', e);
+      alert('Unable to open upgrade checkout. Please email hello@midasquote.com to upgrade your plan.');
+    }
+  };
+
   window.mqOpenBillingPortal = async function() {
     try {
       // launchStripeCustomerPortal opens Stripe billing directly — cancel, update card, invoices all in one
