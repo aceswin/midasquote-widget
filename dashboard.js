@@ -156,12 +156,12 @@
         </div>
         <div class="mq-topbar-actions">
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
-  <a 
-  href="#"
+<button 
+  type="button"
   class="mq-btn mq-btn-sm"
-  data-ms-action="logout">
+  onclick="window.$memberstackDom.logout()">
   Log out
-</a>
+</button>
         </div>
       </div>
 
