@@ -156,7 +156,7 @@
         </div>
         <div class="mq-topbar-actions">
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
-          <button class="mq-btn mq-btn-sm" data-ms-action="logout">Log out onclick='#'</button>
+          <button class="mq-btn mq-btn-sm"  onclick='#' data-ms-action="logout">Log out</button>
         </div>
       </div>
 
