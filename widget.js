@@ -552,7 +552,7 @@
           <div class="mq-modal-fields">
             <div class="mq-field"><label class="mq-label">Your name</label><input type="text" id="mq-lead-name" placeholder="Jane Smith"/></div>
             <div class="mq-field"><label class="mq-label">Email address</label><input type="email" id="mq-lead-email" placeholder="jane@email.com"/></div>
-            <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" id="mq-lead-phone" placeholder="(555) 000-0000"/></div>
+            <div class="mq-field"><label class="mq-label">Phone number <span style="color:#9ca3af;font-weight:400">(optional)</span></label><input type="tel" id="mq-lead-phone" placeholder="(555) 000-0000"/></div>
           </div>
           <button class="mq-modal-btn" onclick="mqSubmitLead()">Show my estimate →</button>
           <button class="mq-modal-skip" onclick="mqSkipLead()">Skip for now</button>
@@ -674,6 +674,18 @@
 
     window.mqShowLead=cb=>{
       pendingCb=cb;
+      // Prefill from previously saved info so repeat visitors don't re-type
+      try{
+        const saved=JSON.parse(localStorage.getItem('mq_lead_info')||'null');
+        if(saved){
+          const nameEl=document.getElementById('mq-lead-name');
+          const emailEl=document.getElementById('mq-lead-email');
+          const phoneEl=document.getElementById('mq-lead-phone');
+          if(nameEl&&!nameEl.value) nameEl.value=saved.name||'';
+          if(emailEl&&!emailEl.value) emailEl.value=saved.email||'';
+          if(phoneEl&&!phoneEl.value) phoneEl.value=saved.phone||'';
+        }
+      }catch(e){}
       const overlay=document.getElementById('mq-lead-overlay');
       overlay.classList.add('show');
       // Scroll the overlay into view so it appears at the user's current position
@@ -682,6 +694,8 @@
     window.mqSkipLead=()=>{document.getElementById('mq-lead-overlay').classList.remove('show');if(pendingCb){pendingCb(null);pendingCb=null;}};
     window.mqSubmitLead=async()=>{
       const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone')};
+      // Remember for next time so they don't have to re-type
+      try{localStorage.setItem('mq_lead_info',JSON.stringify(lead));}catch(e){}
       document.getElementById('mq-lead-overlay').classList.remove('show');
       if(pendingCb){pendingCb(lead);pendingCb=null;}
     };

@@ -225,6 +225,10 @@
                 <option value="Lost">Lost</option>
               </select>
             </div>
+            <div id="mq-leads-msg"></div>
+            <div style="margin-bottom:1rem;text-align:right">
+              <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteAllLeads()">🗑️ Clear all leads</button>
+            </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div id="mq-leads-table"><div class="mq-loading">Loading leads...</div></div>
             </div>
@@ -545,9 +549,10 @@
             <option ${f['Status']==='Lost'?'selected':''}>Lost</option>
           </select>
         </td>
+        <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteLead('${r.id}')">Delete</button></td>
       </tr>`;
     }).join('');
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Estimate</th><th>Status</th><th>Update</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Estimate</th><th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
@@ -726,7 +731,34 @@
     } catch(e) { showMsg('mq-spec-msg', 'Error adding item.', 'error'); }
   };
 
-  window.mqFilterLeads = async function() {
+  window.mqDeleteLead = async function(id) {
+    if (!confirm('Delete this lead? This cannot be undone.')) return;
+    try {
+      await atDelete(CONFIG.LEADS_TABLE, id);
+      window._mqLeads = window._mqLeads.filter(r => r.id !== id);
+      renderStats(window._mqLeads);
+      el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
+      mqFilterLeads();
+      showMsg('mq-leads-msg', '✓ Lead deleted.');
+    } catch(e) { showMsg('mq-leads-msg', 'Error deleting lead.', 'error'); }
+  };
+
+  window.mqDeleteAllLeads = async function() {
+    const count = window._mqLeads?.length || 0;
+    if (count === 0) return;
+    if (!confirm(`Delete ALL ${count} leads? This is useful for clearing test data but cannot be undone. Are you sure?`)) return;
+    if (!confirm(`Really delete all ${count} leads? Last chance to cancel.`)) return;
+    try {
+      for (const lead of window._mqLeads) {
+        await atDelete(CONFIG.LEADS_TABLE, lead.id);
+      }
+      window._mqLeads = [];
+      renderStats([]);
+      el('mq-recent-leads').innerHTML = renderLeads([], 5);
+      mqFilterLeads();
+      showMsg('mq-leads-msg', '✓ All leads deleted.');
+    } catch(e) { showMsg('mq-leads-msg', 'Error deleting leads.', 'error'); }
+  };
     const filter = gv('mq-lead-filter');
     let leads = window._mqLeads || [];
     if (filter) leads = leads.filter(r => r.fields['Status'] === filter);
