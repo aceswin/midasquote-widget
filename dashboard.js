@@ -780,8 +780,6 @@
     populateShop(shopRecord);
 
     const leads = await loadLeads(shopRecord.fields['Shop name']);
-    console.log('DEBUG shop name:', JSON.stringify(shopRecord.fields['Shop name']));
-    console.log('DEBUG leads found:', leads.length, leads);
     window._mqLeads = leads;
     renderStats(leads);
     el('mq-recent-leads').innerHTML = renderLeads(leads, 5);
