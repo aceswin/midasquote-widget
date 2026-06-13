@@ -828,8 +828,7 @@
       }
     }
   };
-dashboard.js?v=2
-widget.js?v=3
+
   init();
 
 })();
