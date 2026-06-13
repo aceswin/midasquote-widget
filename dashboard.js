@@ -759,6 +759,8 @@
       showMsg('mq-leads-msg', '✓ All leads deleted.');
     } catch(e) { showMsg('mq-leads-msg', 'Error deleting leads.', 'error'); }
   };
+
+  window.mqFilterLeads = async function() {
     const filter = gv('mq-lead-filter');
     let leads = window._mqLeads || [];
     if (filter) leads = leads.filter(r => r.fields['Status'] === filter);
