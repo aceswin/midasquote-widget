@@ -421,8 +421,8 @@
     return recs.length ? recs[0] : null;
   }
 
-  async function loadLeads(shopId) {
-    const recs = await atGet(CONFIG.LEADS_TABLE, `FIND("${shopId}", ARRAYJOIN({Shop}))`);
+  async function loadLeads(shopName) {
+    const recs = await atGet(CONFIG.LEADS_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
     return recs;
   }
 
@@ -779,7 +779,9 @@
     if (pricingRecord) populatePricing(pricingRecord);
     populateShop(shopRecord);
 
-    const leads = await loadLeads(shopRecord.id);
+    const leads = await loadLeads(shopRecord.fields['Shop name']);
+    console.log('DEBUG shop name:', JSON.stringify(shopRecord.fields['Shop name']));
+    console.log('DEBUG leads found:', leads.length, leads);
     window._mqLeads = leads;
     renderStats(leads);
     el('mq-recent-leads').innerHTML = renderLeads(leads, 5);
