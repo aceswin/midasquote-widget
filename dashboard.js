@@ -156,6 +156,17 @@
     `;
     document.head.appendChild(s);
   }
+window.logoutMember = async function () {
+  try {
+    await window.$memberstackDom.logout();
+
+    // Change this if your login page URL is different
+    window.location.href = "/login";
+  } catch (err) {
+    console.error("Logout failed:", err);
+    alert("Logout failed. Please refresh and try again.");
+  }
+};
 
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
@@ -170,7 +181,12 @@
         </div>
         <div class="mq-topbar-actions">
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
-          <button class="mq-btn mq-btn-sm" data-ms-action="logout">Log out</button>
+          <button 
+  type="button"
+  class="mq-btn mq-btn-sm"
+  onclick="logoutMember()">
+  Log out
+</button>
         </div>
       </div>
 
