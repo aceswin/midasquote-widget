@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Our Products & Materials</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --brand: #1a1a1a; --white: #ffffff; --gray-50: #fafaf8; --gray-100: #f0efeb; --gray-200: #e2e0d9; --gray-400: #9e9b92; --gray-600: #5c5a54; --gray-900: #1a1917; --radius: 12px; }
+    body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-900); -webkit-font-smoothing: antialiased; }
+    .sr-header { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .sr-shop-info { display: flex; align-items: center; gap: 12px; }
+    .sr-shop-logo { width: 36px; height: 36px; border-radius: 8px; background: var(--brand); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .sr-shop-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .sr-shop-name { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+    .sr-shop-city { font-size: 12px; color: var(--gray-400); }
+    .sr-back { font-size: 13px; color: var(--gray-600); text-decoration: none; }
+    .sr-back:hover { color: var(--gray-900); }
+    .sr-hero { background: var(--brand); color: var(--white); padding: 3.5rem 2rem; text-align: center; }
+    .sr-hero-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 1rem; }
+    .sr-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 44px); font-weight: 600; line-height: 1.15; margin-bottom: 1rem; }
+    .sr-hero p { font-size: 15px; color: rgba(255,255,255,0.65); max-width: 480px; margin: 0 auto; line-height: 1.7; }
+    .sr-nav { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 0 2rem; display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .sr-nav-item { padding: 1rem 1.25rem; font-size: 13px; font-weight: 500; color: var(--gray-400); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.15s; text-decoration: none; }
+    .sr-nav-item:hover { color: var(--gray-900); }
+    .sr-nav-item.active { color: var(--gray-900); border-bottom-color: var(--brand); }
+    .sr-content { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+    .sr-section { margin-bottom: 4rem; }
+    .sr-section-header { margin-bottom: 2rem; }
+    .sr-section-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 8px; }
+    .sr-section-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; color: var(--gray-900); margin-bottom: 8px; }
+    .sr-section-desc { font-size: 14px; color: var(--gray-600); line-height: 1.6; max-width: 560px; }
+    .sr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .sr-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s; }
+    .sr-card:hover { border-color: var(--brand); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .sr-card-img { width: 100%; height: 160px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 48px; }
+    .sr-card-body { padding: 1rem 1.25rem 1.25rem; }
+    .sr-card-name { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; }
+    .sr-card-desc { font-size: 12px; color: var(--gray-600); line-height: 1.5; }
+    .sr-spec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+    .sr-spec-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 1.25rem; display: flex; flex-direction: column; gap: 8px; transition: border-color 0.15s; }
+    .sr-spec-card:hover { border-color: var(--brand); }
+    .sr-spec-icon { font-size: 24px; }
+    .sr-spec-name { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+    .sr-spec-desc { font-size: 12px; color: var(--gray-600); line-height: 1.5; }
+    .sr-loading { text-align: center; padding: 4rem 2rem; color: var(--gray-400); font-size: 14px; }
+    .sr-empty { text-align: center; padding: 3rem 2rem; color: var(--gray-400); font-size: 13px; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); }
+    .sr-divider { height: 1px; background: var(--gray-200); margin: 3rem 0; }
+    .sr-footer { background: var(--white); border-top: 1px solid var(--gray-200); padding: 1.5rem 2rem; text-align: center; font-size: 12px; color: var(--gray-400); }
+    .sr-footer a { color: var(--gray-600); text-decoration: none; }
+    @media (max-width: 600px) {
+      .sr-header { padding: 1rem; }
+      .sr-hero { padding: 2.5rem 1.25rem; }
+      .sr-content { padding: 2rem 1.25rem 4rem; }
+      .sr-grid { grid-template-columns: repeat(2, 1fr); }
+      .sr-spec-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sr-header">
+    <div class="sr-shop-info">
+      <div class="sr-shop-logo" id="sr-logo">?</div>
+      <div>
+        <div class="sr-shop-name" id="sr-shop-name">Loading...</div>
+        <div class="sr-shop-city" id="sr-shop-city"></div>
+      </div>
+    </div>
+    <a href="javascript:window.close()" class="sr-back">← Close</a>
+  </div>
+
+  <div class="sr-hero" id="sr-hero">
+    <div class="sr-hero-eyebrow">Products & Materials</div>
+    <h1 id="sr-hero-title">Our Product Catalogue</h1>
+    <p>Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.</p>
+  </div>
+
+  <nav class="sr-nav">
+    <a class="sr-nav-item active" href="#box-materials">Box Materials</a>
+    <a class="sr-nav-item" href="#door-styles">Door Styles</a>
+    <a class="sr-nav-item" href="#countertops">Countertops</a>
+    <a class="sr-nav-item" href="#specialty">Specialty Items</a>
+  </nav>
+
+  <div class="sr-content" id="sr-content">
+    <div class="sr-loading">Loading your showroom...</div>
+  </div>
+
+  <div class="sr-footer">
+    Powered by <a href="https://www.midasquote.com" target="_blank">MidasQuote</a>
+  </div>
+
+  <script>
+    const AIRTABLE_TOKEN = 'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325';
+    const BASE_ID = 'app4zrMlVLwF2xn4h';
+
+    const ALL_BOX_MATERIALS = [
+      { key:'melamine', name:'Melamine',   emoji:'🟤', desc:'Durable, easy-clean surface over engineered wood. Budget-friendly and available in dozens of colours. Great for modern kitchens.' },
+      { key:'plywood',  name:'Plywood',    emoji:'🪵', desc:'Structurally superior to particle board. More resistant to moisture and warping. A premium choice for long-lasting cabinet boxes.' },
+      { key:'mdf',      name:'MDF',        emoji:'⬜', desc:'Medium-density fibreboard offers a smooth, consistent surface — ideal for painted finishes.' },
+      { key:'solid',    name:'Solid Wood', emoji:'🌲', desc:'Real hardwood construction. Beautiful grain character, extremely durable, and a timeless choice.' },
+    ];
+
+    const ALL_DOOR_STYLES = [
+      { key:'slab',   name:'Slab',          emoji:'▭',  desc:'Clean, flat door with no frame. The defining look of modern and minimalist kitchens. Easy to clean.' },
+      { key:'shaker', name:'Shaker',         emoji:'⬜', desc:'Five-piece frame with a flat centre panel. The most popular style — timeless, works with both traditional and contemporary designs.' },
+      { key:'raised', name:'Raised Panel',   emoji:'🔲', desc:'Traditional style with a raised centre panel. Adds depth and a classic, formal look.' },
+      { key:'glass',  name:'Glass Fronts',   emoji:'🪟', desc:'Cabinet doors with glass panels. Perfect for displaying dishes or adding visual lightness.' },
+      { key:'none',   name:'No Doors',       emoji:'📦', desc:'Open shelving or frameless box only. Popular for pantry areas and modern open-concept designs.' },
+    ];
+
+    const ALL_COUNTERTOPS = [
+      { key:'lam',       name:'Laminate',                emoji:'🟫', desc:'Most affordable option. Available in hundreds of colours and patterns including realistic stone looks.' },
+      { key:'ss_econ',   name:'Solid Surface — Economy', emoji:'⬜', desc:'Non-porous, seamless surface that resists stains and bacteria. Can be repaired if scratched.' },
+      { key:'ss_mid',    name:'Solid Surface — Mid',     emoji:'⬜', desc:'Premium solid surface with better colour depth and durability. Seamless installation with integrated sinks available.' },
+      { key:'ss_prem',   name:'Solid Surface — Premium', emoji:'⬜', desc:'Top-tier solid surface with designer colour options and superior finish quality.' },
+      { key:'gran_econ', name:'Granite — Economy',       emoji:'🪨', desc:'Natural stone with unique veining and excellent heat resistance. Great value with natural variation.' },
+      { key:'gran_mid',  name:'Granite — Mid',           emoji:'🪨', desc:'More consistent patterning and colour selection. Extremely durable and adds real value to a home.' },
+      { key:'gran_prem', name:'Granite — Premium',       emoji:'🪨', desc:'Exceptional colour, movement, and rarity. Each slab is unique — a true statement surface.' },
+      { key:'quartz',    name:'Quartz',                  emoji:'💎', desc:'Engineered stone combining natural quartz with resin. Non-porous, consistent colouring, very low maintenance.' },
+      { key:'marble',    name:'Marble',                  emoji:'🤍', desc:'The ultimate luxury surface. Beautiful natural veining unique to every slab.' },
+      { key:'butcher',   name:'Butcher Block',           emoji:'🟤', desc:'Warm, natural wood surface. Ideal for kitchen islands and baking areas. Can be sanded and refinished.' },
+    ];
+
+    const SPECIALTY_ICONS = {
+      'tall': '📦', 'appliance': '🔌', 'blind': '↩️', 'garbage': '🗑️',
+      'toe': '👟', 'lazy': '🔄', 'wine': '🍷', 'spice': '🧂',
+      'pull': '📥', 'pot': '🍳', 'pantry': '🥫', 'desk': '🖥️',
+      'glass': '🪟', 'light': '💡', 'crown': '👑',
+    };
+
+    function getIcon(name) {
+      const lower = (name || '').toLowerCase();
+      for (const [k, v] of Object.entries(SPECIALTY_ICONS)) {
+        if (lower.includes(k)) return v;
+      }
+      return '⭐';
+    }
+
+    async function atGet(table, formula) {
+      const url = `https://api.airtable.com/v0/${BASE_ID}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` } });
+      const d = await res.json();
+      return d.records || [];
+    }
+
+    function card(emoji, name, desc) {
+      return `<div class="sr-card"><div class="sr-card-img">${emoji}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div><div class="sr-card-desc">${desc}</div></div></div>`;
+    }
+
+    async function init() {
+      const shop_token = new URLSearchParams(window.location.search).get('shop');
+      if (!shop_token) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">No shop specified.</div>'; return; }
+
+      const shops = await atGet('tbl8PoF2Mu3sAdlMs', `{Shop token} = "${shop_token}"`);
+      if (!shops.length) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">Shop not found.</div>'; return; }
+
+      const shop = shops[0].fields;
+      const products = shop['Products'] ? JSON.parse(shop['Products']) : null;
+      const brand = shop['Brand colour'] || '#1a1a1a';
+
+      // Apply brand
+      document.documentElement.style.setProperty('--brand', brand);
+      document.getElementById('sr-hero').style.background = brand;
+
+      // Header
+      const logoEl = document.getElementById('sr-logo');
+      logoEl.style.background = brand;
+      if (shop['Logo URL']) {
+        logoEl.innerHTML = `<img src="${shop['Logo URL']}" alt="logo"/>`;
+      } else {
+        logoEl.textContent = (shop['Shop name'] || 'S')[0].toUpperCase();
+      }
+      document.getElementById('sr-shop-name').textContent = shop['Shop name'] || '';
+      document.getElementById('sr-shop-city').textContent = [shop['City'], shop['Province/State']].filter(Boolean).join(', ');
+      document.getElementById('sr-hero-title').textContent = `${shop['Shop name'] || 'Our'} Product Catalogue`;
+      document.title = `${shop['Shop name'] || 'Products'} — Materials & Options`;
+
+      // Filter to what shop offers
+      const boxMats = products?.boxMaterials ? ALL_BOX_MATERIALS.filter(m => products.boxMaterials.includes(m.key)) : ALL_BOX_MATERIALS;
+      const doorStyles = products?.doorStyles ? ALL_DOOR_STYLES.filter(d => products.doorStyles.includes(d.key)) : ALL_DOOR_STYLES;
+      const countertops = products?.countertops ? ALL_COUNTERTOPS.filter(c => products.countertops.includes(c.key)) : ALL_COUNTERTOPS;
+
+      // Specialty items
+      const specs = await atGet('tbloaXeEM5K7TOZCD', `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+
+      document.getElementById('sr-content').innerHTML = `
+        <div class="sr-section" id="box-materials">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">Cabinet construction</div>
+            <div class="sr-section-title">Box Materials</div>
+            <div class="sr-section-desc">The box is the structural core of every cabinet. We offer the following materials depending on your project needs and budget.</div>
+          </div>
+          ${boxMats.length ? `<div class="sr-grid">${boxMats.map(m => card(m.emoji, m.name, m.desc)).join('')}</div>` : '<div class="sr-empty">Contact us for material options.</div>'}
+        </div>
+        <div class="sr-divider"></div>
+        <div class="sr-section" id="door-styles">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">Cabinet doors</div>
+            <div class="sr-section-title">Door Styles</div>
+            <div class="sr-section-desc">The door is the face of your kitchen. Choose a style that fits your aesthetic — from clean modern slabs to classic shaker profiles.</div>
+          </div>
+          ${doorStyles.length ? `<div class="sr-grid">${doorStyles.map(d => card(d.emoji, d.name, d.desc)).join('')}</div>` : '<div class="sr-empty">Contact us for door style options.</div>'}
+        </div>
+        <div class="sr-divider"></div>
+        <div class="sr-section" id="countertops">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">Surfaces</div>
+            <div class="sr-section-title">Countertop Materials</div>
+            <div class="sr-section-desc">We supply and install a range of countertop materials to suit every style and budget.</div>
+          </div>
+          ${countertops.length ? `<div class="sr-grid">${countertops.map(c => card(c.emoji, c.name, c.desc)).join('')}</div>` : '<div class="sr-empty">Contact us for countertop options.</div>'}
+        </div>
+        <div class="sr-divider"></div>
+        <div class="sr-section" id="specialty">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">Add-ons & upgrades</div>
+            <div class="sr-section-title">Specialty Items</div>
+            <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
+          </div>
+          ${specs.length ? `<div class="sr-spec-grid">${specs.map(r => `<div class="sr-spec-card"><div class="sr-spec-icon">${getIcon(r.fields['Item name'])}</div><div class="sr-spec-name">${r.fields['Item name'] || ''}</div></div>`).join('')}</div>` : '<div class="sr-empty">Contact us for specialty options.</div>'}
+        </div>
+      `;
+
+      // Nav scroll
+      document.querySelectorAll('.sr-nav-item').forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+          const target = document.querySelector(link.getAttribute('href'));
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      window.addEventListener('scroll', () => {
+        const ids = ['box-materials','door-styles','countertops','specialty'];
+        let current = ids[0];
+        ids.forEach(id => { const el = document.getElementById(id); if (el && window.scrollY >= el.offsetTop - 150) current = id; });
+        document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -156,6 +156,7 @@
     `;
     document.head.appendChild(s);
   }
+
 window.logoutMember = async function () {
   try {
     await window.$memberstackDom.logout();
@@ -200,6 +201,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
+          <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
         </div>
 
@@ -322,6 +324,52 @@ window.logoutMember = async function () {
                 <div><strong>Need help?</strong> Email <a href="mailto:hello@midasquote.com" style="color:#1a1a1a">hello@midasquote.com</a></div>
               </div>
             </div>
+          </div>
+
+          <!-- MY PRODUCTS -->
+          <div class="mq-page" id="mq-page-products">
+            <div class="mq-page-title">My Products</div>
+            <div class="mq-page-sub">Select what you offer — only these items will appear on your showroom page</div>
+            <div id="mq-products-msg"></div>
+            <div id="mq-products-content"><div class="mq-loading">Loading...</div></div>
+          </div>
+
+          <!-- MY PRODUCTS -->
+          <div class="mq-page" id="mq-page-products">
+            <div class="mq-page-title">My Products</div>
+            <div class="mq-page-sub">Choose what materials and options you offer — these will show in your customer showroom page</div>
+
+            <div id="mq-products-msg"></div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">🪵 Box Materials</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Which cabinet box materials do you work with?</p>
+              <div id="mq-prod-box-mats" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">🚪 Door Styles</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Which door styles do you offer?</p>
+              <div id="mq-prod-door-styles" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">🪨 Countertop Materials</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Which countertop materials do you supply and/or install?</p>
+              <div id="mq-prod-countertops" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">🔗 Your showroom link</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Share this link with customers so they can browse your product catalogue before getting a quote.</p>
+              <div class="mq-embed-box" id="mq-showroom-link-box">
+                <span id="mq-showroom-link-text">Loading...</span>
+                <button class="mq-copy-btn" id="mq-showroom-copy-btn">Copy</button>
+              </div>
+              <button class="mq-btn" style="margin-top:10px" id="mq-showroom-open-btn">Open showroom ↗</button>
+            </div>
+
+            <button class="mq-btn mq-btn-primary" onclick="mqSaveProducts()">Save product selections</button>
           </div>
 
           <!-- BILLING -->
@@ -707,6 +755,96 @@ window.logoutMember = async function () {
     } catch(e) { showMsg('mq-pricing-msg', 'Error saving — please try again.', 'error'); }
   };
 
+  const ALL_PRODUCTS = {
+    boxMaterials: [
+      { key:'melamine', name:'Melamine',   desc:'Budget-friendly, easy-clean engineered wood surface' },
+      { key:'plywood',  name:'Plywood',    desc:'Superior moisture resistance and structural strength' },
+      { key:'mdf',      name:'MDF',        desc:'Smooth, consistent surface ideal for painted finishes' },
+      { key:'solid',    name:'Solid Wood', desc:'Premium real hardwood construction' },
+    ],
+    doorStyles: [
+      { key:'slab',   name:'Slab',          desc:'Clean, flat modern door — no frame or panel' },
+      { key:'shaker', name:'Shaker',         desc:'Classic 5-piece frame with flat centre panel' },
+      { key:'raised', name:'Raised Panel',   desc:'Traditional raised centre panel, formal look' },
+      { key:'glass',  name:'Glass Fronts',   desc:'Glass panel doors for display or visual lightness' },
+      { key:'none',   name:'No Doors',       desc:'Open shelving or frameless box only' },
+    ],
+    countertops: [
+      { key:'lam',       name:'Laminate',                desc:'Most affordable, hundreds of colour options' },
+      { key:'ss_econ',   name:'Solid Surface — Economy', desc:'Non-porous, seamless, repairable surface' },
+      { key:'ss_mid',    name:'Solid Surface — Mid',     desc:'Better colour depth and durability' },
+      { key:'ss_prem',   name:'Solid Surface — Premium', desc:'Top-tier designer solid surface' },
+      { key:'gran_econ', name:'Granite — Economy',       desc:'Natural stone, great value, unique variation' },
+      { key:'gran_mid',  name:'Granite — Mid',           desc:'More consistent patterning, very durable' },
+      { key:'gran_prem', name:'Granite — Premium',       desc:'Exceptional rarity, colour, and movement' },
+      { key:'quartz',    name:'Quartz',                  desc:'Engineered stone, non-porous, low maintenance' },
+      { key:'marble',    name:'Marble',                  desc:'Luxury natural stone with unique veining' },
+      { key:'butcher',   name:'Butcher Block',           desc:'Warm wood surface, refinishable' },
+    ],
+  };
+
+  function renderProductCheckboxes(containerId, items, selectedKeys) {
+    const container = el(containerId);
+    if (!container) return;
+    container.innerHTML = items.map(item => `
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer">
+        <input type="checkbox" value="${item.key}" ${selectedKeys.includes(item.key) ? 'checked' : ''}
+          style="width:auto;flex-shrink:0;margin-top:2px"/>
+        <span>
+          <span style="font-size:13px;font-weight:500;color:#111;display:block">${item.name}</span>
+          <span style="font-size:12px;color:#6b7280">${item.desc}</span>
+        </span>
+      </label>`).join('');
+  }
+
+  function getCheckedKeys(containerId) {
+    const container = el(containerId);
+    if (!container) return [];
+    return [...container.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value);
+  }
+
+  window.mqSaveProducts = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const products = {
+      boxMaterials: getCheckedKeys('mq-prod-box-mats'),
+      doorStyles:   getCheckedKeys('mq-prod-door-styles'),
+      countertops:  getCheckedKeys('mq-prod-countertops'),
+    };
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Products': JSON.stringify(products) });
+      shopRec.fields['Products'] = JSON.stringify(products);
+      showMsg('mq-products-msg', '✓ Product selections saved!');
+    } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  function initProductsTab(shopRecord) {
+    const token = shopRecord.fields['Shop token'] || '';
+    const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${token}`;
+
+    // Parse saved selections
+    let saved = { boxMaterials: [], doorStyles: [], countertops: [] };
+    try {
+      if (shopRecord.fields['Products']) saved = JSON.parse(shopRecord.fields['Products']);
+    } catch(e) {}
+
+    // Default to all if none saved
+    const boxSel  = saved.boxMaterials?.length ? saved.boxMaterials  : ALL_PRODUCTS.boxMaterials.map(m => m.key);
+    const doorSel = saved.doorStyles?.length   ? saved.doorStyles    : ALL_PRODUCTS.doorStyles.map(d => d.key);
+    const ctSel   = saved.countertops?.length  ? saved.countertops   : ALL_PRODUCTS.countertops.map(c => c.key);
+
+    renderProductCheckboxes('mq-prod-box-mats',     ALL_PRODUCTS.boxMaterials, boxSel);
+    renderProductCheckboxes('mq-prod-door-styles',  ALL_PRODUCTS.doorStyles,   doorSel);
+    renderProductCheckboxes('mq-prod-countertops',  ALL_PRODUCTS.countertops,  ctSel);
+
+    const linkText = el('mq-showroom-link-text');
+    const copyBtn  = el('mq-showroom-copy-btn');
+    const openBtn  = el('mq-showroom-open-btn');
+    if (linkText) linkText.textContent = showroomUrl;
+    if (copyBtn)  copyBtn.onclick = () => mqCopyText(showroomUrl, copyBtn);
+    if (openBtn)  openBtn.onclick = () => window.open(showroomUrl, '_blank');
+  }
+
   window.mqUpdateLeadStatus = async function(id, status) {
     try {
       await atUpdate(CONFIG.LEADS_TABLE, id, { 'Status': status });
@@ -774,6 +912,98 @@ window.logoutMember = async function () {
       mqFilterLeads();
       showMsg('mq-leads-msg', '✓ All leads deleted.');
     } catch(e) { showMsg('mq-leads-msg', 'Error deleting leads.', 'error'); }
+  };
+
+  // ============================================================
+  // MY PRODUCTS
+  // ============================================================
+  const MQ_PRODUCTS = {
+    materials: { label:'Box Materials', icon:'🪵', items:[
+      {id:'mel',name:'White Melamine'}, {id:'ply',name:'Birch Plywood'},
+      {id:'mdf',name:'MDF'}, {id:'solid',name:'Solid Wood'},
+    ]},
+    doors: { label:'Door Styles', icon:'🚪', items:[
+      {id:'nodoor',name:'Open Shelving'}, {id:'slab',name:'Slab (Flat Panel)'},
+      {id:'shaker',name:'Shaker'}, {id:'raised',name:'Raised Panel'}, {id:'glass',name:'Glass Front'},
+    ]},
+    countertops: { label:'Countertop Materials', icon:'🪨', items:[
+      {id:'lam',name:'Laminate'}, {id:'quartz',name:'Quartz'},
+      {id:'granite_econ',name:'Granite (Standard)'}, {id:'granite_mid',name:'Granite (Mid-Grade)'},
+      {id:'granite_prem',name:'Granite (Premium)'}, {id:'marble',name:'Marble'},
+      {id:'butcher',name:'Butcher Block'}, {id:'ss_econ',name:'Stainless Steel (Standard)'},
+      {id:'ss_mid',name:'Stainless Steel (Mid-Grade)'}, {id:'ss_prem',name:'Stainless Steel (Premium)'},
+    ]},
+    hinges: { label:'Hardware & Hinges', icon:'🔧', items:[
+      {id:'reg_hinge',name:'Regular Hinges'}, {id:'sc_hinge',name:'Soft-Close Hinges'},
+    ]},
+    specialty: { label:'Specialty Items', icon:'⭐', items:[
+      {id:'tall_cab',name:'Tall Cabinets'}, {id:'app_garage',name:'Appliance Garage'},
+      {id:'blind_corner',name:'Blind Corner Solution'}, {id:'dbl_garbage',name:'Double Garbage Pullout'},
+      {id:'toe_kick',name:'Toe Kick Drawers'}, {id:'lazy_susan',name:'Lazy Susan'},
+      {id:'wine_rack',name:'Wine Rack / Cabinet'}, {id:'spice_rack',name:'Spice Rack'},
+      {id:'pullout_shelf',name:'Pull-Out Shelves'}, {id:'pot_drawers',name:'Pot Drawers'},
+      {id:'pantry',name:'Pantry Unit'}, {id:'desk',name:'Desk / Homework Station'},
+      {id:'glass_doors',name:'Glass Door Fronts'}, {id:'undervalence',name:'Undervalence Lighting Rail'},
+      {id:'crown',name:'Crown Moulding'},
+    ]},
+  };
+
+  function renderProductsTab(enabledIds) {
+    const shopToken = window._mqShopRecord?.fields?.['Shop token'] || '';
+    const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${shopToken}`;
+    let html = `
+      <div class="mq-card" style="margin-bottom:1.5rem">
+        <div class="mq-card-title">🔗 Your showroom link</div>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Share this link with customers so they can browse everything you offer before booking a consultation.</p>
+        <div class="mq-embed-box"><span>${showroomUrl}</span><button class="mq-copy-btn" onclick="mqCopyText('${showroomUrl}',this)">Copy</button></div>
+        <div style="margin-top:1rem">
+          <a href="${showroomUrl}" target="_blank" class="mq-btn mq-btn-sm">Preview showroom ↗</a>
+        </div>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">📦 What do you offer?</div>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem">Check everything that applies to your shop. Unchecked items won't appear on your showroom page.</p>`;
+
+    Object.entries(MQ_PRODUCTS).forEach(([catKey, cat]) => {
+      html += `<div style="margin-bottom:1.5rem">
+        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem">${cat.icon} ${cat.label}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">`;
+      cat.items.forEach(item => {
+        const checked = !enabledIds || enabledIds.includes(item.id) ? 'checked' : '';
+        html += `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;background:#fff">
+          <input type="checkbox" data-product-id="${item.id}" ${checked} style="width:auto;flex-shrink:0"/>
+          ${item.name}
+        </label>`;
+      });
+      html += `</div></div>`;
+    });
+
+    html += `<div style="display:flex;gap:10px;align-items:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e5e7eb">
+      <button class="mq-btn mq-btn-primary" onclick="mqSaveProducts()">Save my products</button>
+      <button class="mq-btn mq-btn-sm" onclick="mqSelectAllProducts()">Select all</button>
+      <button class="mq-btn mq-btn-sm" onclick="mqDeselectAllProducts()">Deselect all</button>
+    </div></div>`;
+
+    document.getElementById('mq-products-content').innerHTML = html;
+  }
+
+  window.mqSaveProducts = async function() {
+    const checked = [...document.querySelectorAll('[data-product-id]:checked')].map(el => el.dataset.productId);
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Products': JSON.stringify(checked) });
+      shopRec.fields['Products'] = JSON.stringify(checked);
+      showMsg('mq-products-msg', `✓ Saved — ${checked.length} products enabled on your showroom.`);
+    } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqSelectAllProducts = function() {
+    document.querySelectorAll('[data-product-id]').forEach(el => el.checked = true);
+  };
+
+  window.mqDeselectAllProducts = function() {
+    document.querySelectorAll('[data-product-id]').forEach(el => el.checked = false);
   };
 
   window.mqFilterLeads = async function() {
@@ -863,6 +1093,24 @@ window.logoutMember = async function () {
         } catch(e) {
           planEl.innerHTML = `<p style="font-size:13px;color:#6b7280">Use the buttons below to manage your subscription.</p>`;
         }
+      }
+    }
+    if (page === 'products') {
+      const container = document.getElementById('mq-products-content');
+      if (container && container.innerHTML.includes('Loading')) {
+        let enabledIds = null;
+        try {
+          const raw = window._mqShopRecord?.fields?.['Products'];
+          if (raw) enabledIds = JSON.parse(raw);
+        } catch(e) {}
+        renderProductsTab(enabledIds);
+      }
+    }
+    if (page === 'products') {
+      const prodContainer = document.getElementById('mq-prod-box-mats');
+      if (prodContainer && !prodContainer.dataset.loaded) {
+        prodContainer.dataset.loaded = 'true';
+        initProductsTab(window._mqShopRecord);
       }
     }
     if (page === 'pricing') {
