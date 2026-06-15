@@ -838,7 +838,9 @@ window.logoutMember = async function () {
       if (!cat || EXCLUDED_CATS.has(cat.toLowerCase())) return;
       if (!byCategory[cat]) byCategory[cat] = [];
       // Deduplicate by base name (strip "— uppers"/"— bases" suffix)
+      const ITEM_EXCLUDE = /backsplash|cutout|cooktop/i;
       const baseName = (r.fields['Name'] || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
+      if (ITEM_EXCLUDE.test(baseName)) return;
       if (!byCategory[cat].find(x => x.baseName === baseName)) {
         byCategory[cat].push({ id: r.id, baseName, fullName: r.fields['Name'] || baseName });
       }
