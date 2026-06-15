@@ -412,10 +412,11 @@
     return `
       <div class="mq-header">
         <div class="mq-logo">${logoHTML}</div>
-        <div>
+        <div style="flex:1">
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
         </div>
+        ${shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:11px;font-weight:500;color:#6b7280;text-decoration:none;border:1px solid #e5e7eb;border-radius:6px;padding:5px 10px;white-space:nowrap;flex-shrink:0;transition:all 0.15s" onmouseover="this.style.color='#111';this.style.borderColor='#d1d5db'" onmouseout="this.style.color='#6b7280';this.style.borderColor='#e5e7eb'">View our products →</a>` : ''}
       </div>
       <div class="mq-tab-bar">
         <button class="mq-tab active" onclick="mqSwitchTab('cabinets',this)">
