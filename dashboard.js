@@ -827,6 +827,9 @@ window.logoutMember = async function () {
     try { if (shopRecord.fields['Photos']) savedPhotos = JSON.parse(shopRecord.fields['Photos']); } catch(e) {}
     try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
 
+    // Debug — log what line items we received
+    console.log('DEBUG lineItems count:', (lineItemsData||[]).length, lineItemsData?.slice(0,3)?.map(r=>({cat:r.fields['Category'],name:r.fields['ConfigName']||r.fields['Name']})));
+
     // Detect from line items what this shop has configured
     const cats = {};
     (lineItemsData || []).forEach(r => {
