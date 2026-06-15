@@ -802,39 +802,19 @@ window.logoutMember = async function () {
     preview.innerHTML = `<img src="${url}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.innerHTML='<div style=\"color:#dc2626;font-size:12px\">Image not found — check the URL</div>'"/>`;
   };
 
-  window.mqToggleProductPhoto = function(key) {
-    const section = el('mq-photo-section-' + key);
-    const cb = document.querySelector(`input.mq-prod-check[value="${key}"]`);
-    if (section) section.style.display = cb?.checked ? 'block' : 'none';
-  };
-
   window.mqSaveProducts = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
-
-    // Collect checkbox selections
-    const products = { boxMaterials:[], doorStyles:[], countertops:[] };
-    document.querySelectorAll('input.mq-prod-check:checked').forEach(cb => {
-      const field = cb.dataset.field;
-      if (products[field]) products[field].push(cb.value);
-    });
-
-    // Collect photo URLs
     const photos = {};
     document.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
       if (input.value.trim()) photos[key] = input.value.trim();
     });
-
     try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, {
-        'Products': JSON.stringify(products),
-        'Photos':   JSON.stringify(photos),
-      });
-      shopRec.fields['Products'] = JSON.stringify(products);
-      shopRec.fields['Photos']   = JSON.stringify(photos);
-      showMsg('mq-products-msg', '✓ Products and photos saved!');
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Photos': JSON.stringify(photos) });
+      shopRec.fields['Photos'] = JSON.stringify(photos);
+      showMsg('mq-products-msg', '✓ Photos saved!');
     } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -842,101 +822,106 @@ window.logoutMember = async function () {
     const token = shopRecord.fields['Shop token'] || '';
     const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${token}`;
 
-    // Load saved selections and photos
-    let savedProducts = { boxMaterials:[], doorStyles:[], countertops:[], specIds:[] };
     let savedPhotos = {};
-    try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
+    let savedProducts = {};
     try { if (shopRecord.fields['Photos']) savedPhotos = JSON.parse(shopRecord.fields['Photos']); } catch(e) {}
+    try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
+
+    // Detect from line items what this shop has configured
+    const cats = {};
+    (lineItemsData || []).forEach(r => {
+      const cat = (r.fields['Category'] || '').toLowerCase();
+      const name = (r.fields['ConfigName'] || r.fields['Name'] || '').toLowerCase();
+      if (cat === 'material' || cat === 'box') {
+        if (name.includes('melamine')) cats.melamine = true;
+        if (name.includes('plywood'))  cats.plywood  = true;
+        if (name.includes('mdf'))      cats.mdf      = true;
+        if (name.includes('solid'))    cats.solid    = true;
+      }
+      if (cat === 'door') {
+        if (name.includes('slab'))   cats.slab   = true;
+        if (name.includes('shaker')) cats.shaker = true;
+        if (name.includes('raised')) cats.raised = true;
+        if (name.includes('glass'))  cats.glass  = true;
+        if (name.includes('no door') || name === 'none') cats.none = true;
+      }
+    });
+
+    // Countertops from pricing record — only if rate > 0
+    const pricing = window._mqPricingRecord?.fields || {};
+    const pos = f => pricing[f] > 0;
+    if (pos('Lam supply'))       cats.lam       = true;
+    if (pos('SS econ supply'))   cats.ss_econ   = true;
+    if (pos('SS mid supply'))    cats.ss_mid    = true;
+    if (pos('SS prem supply'))   cats.ss_prem   = true;
+    if (pos('Gran econ supply')) cats.gran_econ = true;
+    if (pos('Gran mid supply'))  cats.gran_mid  = true;
+    if (pos('Gran prem supply')) cats.gran_prem = true;
+    if (pos('Quartz supply'))    cats.quartz    = true;
+    if (pos('Marble supply'))    cats.marble    = true;
+    if (pos('Butcher supply'))   cats.butcher   = true;
+
+    const boxKeys  = ['melamine','plywood','mdf','solid'].filter(k => cats[k]);
+    const doorKeys = ['slab','shaker','raised','glass','none'].filter(k => cats[k]);
+    const ctKeys   = ['lam','ss_econ','ss_mid','ss_prem','gran_econ','gran_mid','gran_prem','quartz','marble','butcher'].filter(k => cats[k]);
+
+    // Save detected keys so showroom can read them
+    savedProducts = { boxMaterials: boxKeys, doorStyles: doorKeys, countertops: ctKeys };
 
     // Load specialty items
     const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
 
-    const ALL_BOX = [
-      { key:'melamine', name:'Melamine',   desc:'Durable, easy-clean surface. Budget-friendly.' },
-      { key:'plywood',  name:'Plywood',    desc:'Superior moisture resistance and strength.' },
-      { key:'mdf',      name:'MDF',        desc:'Smooth surface ideal for painted finishes.' },
-      { key:'solid',    name:'Solid Wood', desc:'Premium real hardwood construction.' },
-    ];
-    const ALL_DOOR = [
-      { key:'slab',   name:'Slab',         desc:'Clean, flat modern door.' },
-      { key:'shaker', name:'Shaker',        desc:'Classic 5-piece frame — most popular.' },
-      { key:'raised', name:'Raised Panel',  desc:'Traditional raised centre panel.' },
-      { key:'glass',  name:'Glass Fronts',  desc:'Glass panel doors.' },
-      { key:'none',   name:'No Doors',      desc:'Open shelving or frameless box.' },
-    ];
-    const ALL_CT = [
-      { key:'lam',       name:'Laminate' },
-      { key:'ss_econ',   name:'Solid Surface — Economy' },
-      { key:'ss_mid',    name:'Solid Surface — Mid' },
-      { key:'ss_prem',   name:'Solid Surface — Premium' },
-      { key:'gran_econ', name:'Granite — Economy' },
-      { key:'gran_mid',  name:'Granite — Mid' },
-      { key:'gran_prem', name:'Granite — Premium' },
-      { key:'quartz',    name:'Quartz' },
-      { key:'marble',    name:'Marble' },
-      { key:'butcher',   name:'Butcher Block' },
-    ];
-
     const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
     function specIcon(name) { for (const [k,v] of Object.entries(icons)) { if ((name||'').toLowerCase().includes(k)) return v; } return '⭐'; }
 
-    function photoCard(key, name, emoji, savedUrl) {
+    function photoCard(key, name, emoji) {
+      const savedUrl = savedPhotos[key] || '';
       const preview = savedUrl
-        ? `<img src="${savedUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:6px;margin-bottom:8px" onerror="this.style.display='none'"/>`
-        : `<div style="width:100%;height:100px;background:#f0efeb;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">${emoji}</div>`;
-      return `<div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+        ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
+        : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
+      return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
         <div id="mq-photo-preview-${key}">${preview}</div>
-        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
-        <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="Photo URL (optional)"
-          style="font-size:11px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px;width:100%;margin-bottom:5px"/>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:10px" onclick="mqPreviewPhoto('${key}')">Preview</button>
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Photo URL (optional)</div>
+        <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
+          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
+        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
       </div>`;
     }
 
-    function checkSection(title, items, savedKeys, fieldName) {
+    function section(title, keys) {
+      if (!keys.length) return '';
+      const cards = keys.map(k => photoCard(k, PHOTO_LIBRARY[k]?.label || k, PHOTO_LIBRARY[k]?.emoji || '📷')).join('');
       return `<div class="mq-card">
         <div class="mq-card-title">${title}</div>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Check what you offer, then add photos (optional) for each.</p>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem">
-          ${items.map(item => `
-            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
-              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer">
-                <input type="checkbox" class="mq-prod-check" data-field="${fieldName}" value="${item.key}"
-                  ${savedKeys.includes(item.key) ? 'checked' : ''} style="width:auto;flex-shrink:0"
-                  onchange="mqToggleProductPhoto('${item.key}')"/>
-                <span style="font-size:13px;font-weight:500;color:#111">${item.name}</span>
-                ${item.desc ? `<span style="font-size:12px;color:#9ca3af;margin-left:auto">${item.desc}</span>` : ''}
-              </label>
-              <div id="mq-photo-section-${item.key}" style="display:${savedKeys.includes(item.key) ? 'block' : 'none'};padding:0 12px 12px">
-                ${photoCard(item.key, item.name, PHOTO_LIBRARY[item.key]?.emoji || '📷', savedPhotos[item.key] || '')}
-              </div>
-            </div>`).join('')}
-        </div>
-        <button class="mq-btn mq-btn-primary" style="width:100%" onclick="mqSaveProducts()">Save</button>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
+        <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
       </div>`;
     }
 
     const specSection = specItems.length ? `<div class="mq-card">
       <div class="mq-card-title">⭐ Specialty Items</div>
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1.25rem">
-        ${specItems.map(r => {
-          const name = r.fields['Item name'] || '';
-          const key = 'spec_' + r.id;
-          return photoCard(key, name, specIcon(name), savedPhotos[key] || '');
-        }).join('')}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+        ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']))).join('')}
       </div>
-      <button class="mq-btn mq-btn-primary" style="width:100%" onclick="mqSaveProducts()">Save</button>
+      <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
     </div>` : '';
 
     const content = el('mq-products-content');
     if (content) {
-      content.innerHTML =
-        checkSection('🪵 Box Materials', ALL_BOX, savedProducts.boxMaterials || [], 'boxMaterials') +
-        checkSection('🚪 Door Styles',   ALL_DOOR, savedProducts.doorStyles   || [], 'doorStyles') +
-        checkSection('🪨 Countertops',   ALL_CT,   savedProducts.countertops  || [], 'countertops') +
-        specSection;
+      const hasAny = boxKeys.length || doorKeys.length || ctKeys.length || specItems.length;
+      content.innerHTML = !hasAny
+        ? '<div class="mq-empty">Set up your pricing first — your configured materials and door styles will appear here automatically.</div>'
+        : section('🪵 Box Materials', boxKeys) + section('🚪 Door Styles', doorKeys) + section('🪨 Countertops', ctKeys) + specSection;
     }
+
+    // Auto-save detected product list so showroom can read it
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Products': JSON.stringify(savedProducts) });
+      shopRecord.fields['Products'] = JSON.stringify(savedProducts);
+    } catch(e) {}
 
     const linkText = el('mq-showroom-link-text');
     const copyBtn  = el('mq-showroom-copy-btn');
@@ -945,7 +930,6 @@ window.logoutMember = async function () {
     if (copyBtn)  copyBtn.onclick = () => mqCopyText(showroomUrl, copyBtn);
     if (openBtn)  openBtn.onclick = () => window.open(showroomUrl, '_blank');
   }
-
   window.mqToggleShowroom = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;

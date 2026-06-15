@@ -185,13 +185,13 @@
       document.getElementById('sr-hero-title').textContent = `${shop['Shop name'] || 'Our'} Product Catalogue`;
       document.title = `${shop['Shop name'] || 'Products'} — Materials & Options`;
 
-      // Use saved Products selections — set by shop owner in My Products tab
+      // Use saved Products field (auto-updated when shop owner visits My Products tab)
       let products = null;
       try { if (shop['Products']) products = JSON.parse(shop['Products']); } catch(e) {}
 
-      const boxMats     = products?.boxMaterials?.length ? ALL_BOX_MATERIALS.filter(m => products.boxMaterials.includes(m.key)) : [];
-      const doorStyles  = products?.doorStyles?.length   ? ALL_DOOR_STYLES.filter(d => products.doorStyles.includes(d.key))     : [];
-      const countertops = products?.countertops?.length  ? ALL_COUNTERTOPS.filter(c => products.countertops.includes(c.key))    : [];
+      const boxMats     = products?.boxMaterials?.length ? ALL_BOX_MATERIALS.filter(m => products.boxMaterials.includes(m.key)) : ALL_BOX_MATERIALS;
+      const doorStyles  = products?.doorStyles?.length   ? ALL_DOOR_STYLES.filter(d => products.doorStyles.includes(d.key))     : ALL_DOOR_STYLES;
+      const countertops = products?.countertops?.length  ? ALL_COUNTERTOPS.filter(c => products.countertops.includes(c.key))    : ALL_COUNTERTOPS;
 
       // Specialty items
       const specs = await atGet('tbloaXeEM5K7TOZCD', `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
@@ -264,7 +264,10 @@
       });
     }
 
-    init();
+    init().catch(err => {
+      console.error('Showroom error:', err);
+      document.getElementById('sr-content').innerHTML = `<div class="sr-empty">Error loading showroom: ${err.message}. Please try refreshing.</div>`;
+    });
   </script>
 </body>
 </html>
