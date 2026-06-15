@@ -770,6 +770,109 @@ window.logoutMember = async function () {
     butcher:   { label:'Butcher Block',           emoji:'🟤', desc:'Warm, natural wood surface. Ideal for islands. Can be sanded and refinished.' },
   };
 
+  // MidasQuote curated photo library — swap placeholder URLs for real photos when ready
+  // Format: { category: [ {url, label}, ... ] }
+  const MQ_PHOTO_LIBRARY = {
+    material: [
+      { url:'https://widget.midasquote.com/photos/melamine-white.jpg',    label:'White Melamine' },
+      { url:'https://widget.midasquote.com/photos/melamine-grey.jpg',     label:'Grey Melamine' },
+      { url:'https://widget.midasquote.com/photos/plywood-birch.jpg',     label:'Birch Plywood' },
+      { url:'https://widget.midasquote.com/photos/mdf-painted.jpg',       label:'Painted MDF' },
+      { url:'https://widget.midasquote.com/photos/solid-oak.jpg',         label:'Solid Oak' },
+      { url:'https://widget.midasquote.com/photos/solid-maple.jpg',       label:'Solid Maple' },
+    ],
+    door: [
+      { url:'https://widget.midasquote.com/photos/door-slab-white.jpg',   label:'Slab White' },
+      { url:'https://widget.midasquote.com/photos/door-slab-grey.jpg',    label:'Slab Grey' },
+      { url:'https://widget.midasquote.com/photos/door-shaker-white.jpg', label:'Shaker White' },
+      { url:'https://widget.midasquote.com/photos/door-shaker-grey.jpg',  label:'Shaker Grey' },
+      { url:'https://widget.midasquote.com/photos/door-raised.jpg',       label:'Raised Panel' },
+      { url:'https://widget.midasquote.com/photos/door-glass.jpg',        label:'Glass Front' },
+    ],
+    drawer: [
+      { url:'https://widget.midasquote.com/photos/drawer-birch.jpg',      label:'Birch Drawer' },
+      { url:'https://widget.midasquote.com/photos/drawer-dovetail.jpg',   label:'Dovetail' },
+    ],
+    hinge: [
+      { url:'https://widget.midasquote.com/photos/hinge-soft-close.jpg',  label:'Soft Close' },
+      { url:'https://widget.midasquote.com/photos/hinge-regular.jpg',     label:'Regular' },
+    ],
+    countertop: [
+      { url:'https://widget.midasquote.com/photos/ct-laminate.jpg',       label:'Laminate' },
+      { url:'https://widget.midasquote.com/photos/ct-quartz-white.jpg',   label:'White Quartz' },
+      { url:'https://widget.midasquote.com/photos/ct-quartz-grey.jpg',    label:'Grey Quartz' },
+      { url:'https://widget.midasquote.com/photos/ct-granite-black.jpg',  label:'Black Granite' },
+      { url:'https://widget.midasquote.com/photos/ct-granite-white.jpg',  label:'White Granite' },
+      { url:'https://widget.midasquote.com/photos/ct-marble.jpg',         label:'Marble' },
+      { url:'https://widget.midasquote.com/photos/ct-butcher.jpg',        label:'Butcher Block' },
+    ],
+    specialty: [
+      { url:'https://widget.midasquote.com/photos/spec-lazy-susan.jpg',   label:'Lazy Susan' },
+      { url:'https://widget.midasquote.com/photos/spec-pullout.jpg',      label:'Pull-out Shelf' },
+      { url:'https://widget.midasquote.com/photos/spec-crown.jpg',        label:'Crown Moulding' },
+      { url:'https://widget.midasquote.com/photos/spec-glass-door.jpg',   label:'Glass Door' },
+      { url:'https://widget.midasquote.com/photos/spec-garbage.jpg',      label:'Garbage Pullout' },
+      { url:'https://widget.midasquote.com/photos/spec-pot-drawer.jpg',   label:'Pot Drawer' },
+    ],
+  };
+
+  // Photo picker modal
+  function injectPhotoPicker() {
+    if (document.getElementById('mq-photo-picker')) return;
+    const modal = document.createElement('div');
+    modal.id = 'mq-photo-picker';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1rem';
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:15px;font-weight:600;color:#111">Choose from library</div>
+          <button onclick="mqClosePhotoPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;line-height:1">×</button>
+        </div>
+        <div id="mq-picker-grid" style="padding:1rem;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px"></div>
+        <div style="padding:1rem;border-top:1px solid #e5e7eb;text-align:center;font-size:12px;color:#9ca3af">
+          More photos coming soon — or paste your own URL above
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  let _pickerTargetKey = null;
+  let _pickerCat = null;
+
+  window.mqOpenPhotoPicker = function(key, cat) {
+    injectPhotoPicker();
+    _pickerTargetKey = key;
+    _pickerCat = cat;
+    const grid = document.getElementById('mq-picker-grid');
+    const photos = MQ_PHOTO_LIBRARY[cat] || MQ_PHOTO_LIBRARY.specialty || [];
+    grid.innerHTML = photos.length
+      ? photos.map(p => `
+        <div onclick="mqSelectLibraryPhoto('${p.url}')"
+          style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:border-color 0.15s"
+          onmouseover="this.style.borderColor='#1a1a1a'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <div style="height:90px;background:#f0efeb;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af">
+            📷 ${p.label}
+          </div>
+          <div style="padding:6px 8px;font-size:11px;font-weight:500;color:#374151;text-align:center">${p.label}</div>
+        </div>`).join('')
+      : '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">No library photos for this category yet — paste your own URL above.</div>';
+    document.getElementById('mq-photo-picker').style.display = 'flex';
+  };
+
+  window.mqClosePhotoPicker = function() {
+    const m = document.getElementById('mq-photo-picker');
+    if (m) m.style.display = 'none';
+  };
+
+  window.mqSelectLibraryPhoto = function(url) {
+    const input = el('mq-photo-' + _pickerTargetKey);
+    if (input) {
+      input.value = url;
+      mqPreviewPhoto(_pickerTargetKey);
+    }
+    mqClosePhotoPicker();
+  };
+
   function buildProductCard(key, savedPhotos) {
     const lib = PHOTO_LIBRARY[key];
     if (!lib) return '';
@@ -785,11 +888,10 @@ window.logoutMember = async function () {
         <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Photo URL (optional)</div>
         <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
           style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
+        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
+        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${key in PHOTO_LIBRARY ? (PHOTO_LIBRARY[key].label||'').toLowerCase() : 'specialty'}')">📷 Choose from library</button>
       </div>`;
-  }
-
-  window.mqPreviewPhoto = function(key) {
+  } = function(key) {
     const input = el('mq-photo-' + key);
     const preview = el('mq-photo-preview-' + key);
     if (!input || !preview) return;
@@ -873,7 +975,7 @@ window.logoutMember = async function () {
     const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
     function specIcon(name) { for (const [k,v] of Object.entries(icons)) { if ((name||'').toLowerCase().includes(k)) return v; } return '⭐'; }
 
-    function photoCard(key, name, emoji) {
+    function photoCard(key, name, emoji, cat) {
       const savedUrl = savedPhotos[key] || '';
       const preview = savedUrl
         ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.outerHTML='<div style=\\'width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px\\'>${'📷'}</div>'"/>`
@@ -884,7 +986,8 @@ window.logoutMember = async function () {
         <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Photo URL (optional)</div>
         <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
           style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
+        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
+        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>
       </div>`;
     }
 
@@ -895,7 +998,7 @@ window.logoutMember = async function () {
       const cards = items.map(item => {
         const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
         const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
-        return photoCard(key, item.baseName, lib.emoji || disp.emoji);
+        return photoCard(key, item.baseName, lib.emoji || disp.emoji, cat);
       }).join('');
       return `<div class="mq-card">
         <div class="mq-card-title">${disp.title}</div>
@@ -909,7 +1012,7 @@ window.logoutMember = async function () {
       <div class="mq-card-title">⭐ Specialty Items</div>
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-        ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']))).join('')}
+        ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']), 'specialty')).join('')}
       </div>
       <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
     </div>` : '';
