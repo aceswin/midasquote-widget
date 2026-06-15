@@ -828,35 +828,51 @@ window.logoutMember = async function () {
     // Auto-detect from line items
     const cats = {};
     (lineItemsData || []).forEach(r => {
-      const cat = r.fields['Category'];
+      const cat = (r.fields['Category'] || '').toLowerCase();
       const name = (r.fields['ConfigName'] || r.fields['Name'] || '').toLowerCase();
-      if (cat === 'material') {
+      // Box materials
+      if (cat === 'material' || cat === 'box') {
         if (name.includes('melamine')) cats.melamine = true;
         if (name.includes('plywood'))  cats.plywood  = true;
         if (name.includes('mdf'))      cats.mdf      = true;
         if (name.includes('solid'))    cats.solid    = true;
       }
+      // Door styles
       if (cat === 'door') {
-        if (name.includes('slab'))         cats.slab   = true;
-        if (name.includes('shaker'))       cats.shaker = true;
-        if (name.includes('raised'))       cats.raised = true;
-        if (name.includes('glass'))        cats.glass  = true;
+        if (name.includes('slab'))   cats.slab   = true;
+        if (name.includes('shaker')) cats.shaker = true;
+        if (name.includes('raised')) cats.raised = true;
+        if (name.includes('glass'))  cats.glass  = true;
         if (name.includes('no door') || name === 'none') cats.none = true;
+      }
+      // Countertops from line items
+      if (cat === 'countertop') {
+        if (name.includes('laminate'))       cats.lam       = true;
+        if (name.includes('solid surface') && name.includes('econ')) cats.ss_econ = true;
+        if (name.includes('solid surface') && name.includes('mid'))  cats.ss_mid  = true;
+        if (name.includes('solid surface') && name.includes('prem')) cats.ss_prem = true;
+        if (name.includes('granite') && name.includes('econ')) cats.gran_econ = true;
+        if (name.includes('granite') && name.includes('mid'))  cats.gran_mid  = true;
+        if (name.includes('granite') && name.includes('prem')) cats.gran_prem = true;
+        if (name.includes('quartz'))       cats.quartz  = true;
+        if (name.includes('marble'))       cats.marble  = true;
+        if (name.includes('butcher'))      cats.butcher = true;
       }
     });
 
-    // Detect countertops from pricing record
+    // Also detect countertops from pricing record (check for value > 0 OR field exists)
     const pricing = window._mqPricingRecord?.fields || {};
-    if (pricing['Lam supply'])       cats.lam       = true;
-    if (pricing['SS econ supply'])   cats.ss_econ   = true;
-    if (pricing['SS mid supply'])    cats.ss_mid    = true;
-    if (pricing['SS prem supply'])   cats.ss_prem   = true;
-    if (pricing['Gran econ supply']) cats.gran_econ = true;
-    if (pricing['Gran mid supply'])  cats.gran_mid  = true;
-    if (pricing['Gran prem supply']) cats.gran_prem = true;
-    if (pricing['Quartz supply'])    cats.quartz    = true;
-    if (pricing['Marble supply'])    cats.marble    = true;
-    if (pricing['Butcher supply'])   cats.butcher   = true;
+    const has = f => pricing[f] !== undefined && pricing[f] !== null;
+    if (has('Lam supply'))       cats.lam       = true;
+    if (has('SS econ supply'))   cats.ss_econ   = true;
+    if (has('SS mid supply'))    cats.ss_mid    = true;
+    if (has('SS prem supply'))   cats.ss_prem   = true;
+    if (has('Gran econ supply')) cats.gran_econ = true;
+    if (has('Gran mid supply'))  cats.gran_mid  = true;
+    if (has('Gran prem supply')) cats.gran_prem = true;
+    if (has('Quartz supply'))    cats.quartz    = true;
+    if (has('Marble supply'))    cats.marble    = true;
+    if (has('Butcher supply'))   cats.butcher   = true;
 
     const boxKeys  = ['melamine','plywood','mdf','solid'].filter(k => cats[k]);
     const doorKeys = ['slab','shaker','raised','glass','none'].filter(k => cats[k]);
