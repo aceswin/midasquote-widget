@@ -832,7 +832,7 @@ window.logoutMember = async function () {
     (lineItemsData || []).forEach(r => {
       if (!r.fields || r.fields['Active'] === false) return;
       const cat = r.fields['Category'];
-      if (!cat) return;
+      if (!cat || EXCLUDED_CATS.has(cat.toLowerCase())) return;
       if (!byCategory[cat]) byCategory[cat] = [];
       // Deduplicate by base name (strip "— uppers"/"— bases" suffix)
       const baseName = (r.fields['Name'] || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
@@ -844,11 +844,12 @@ window.logoutMember = async function () {
     const CAT_DISPLAY = {
       material: { title:'🪵 Box Materials',       emoji:'🪵' },
       door:     { title:'🚪 Door Styles',          emoji:'🚪' },
-      drawer:   { title:'🗄️ Drawer Configs',      emoji:'🗄️' },
+      drawer:   { title:'🗄️ Drawer Configurations', emoji:'🗄️' },
       hinge:    { title:'🔧 Door Hinges',          emoji:'🔧' },
-      install:  { title:'🔧 Installation',         emoji:'🔧' },
       countertop:{ title:'🪨 Countertop Materials', emoji:'🪨' },
     };
+    // Categories to exclude from My Products (no photos needed)
+    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
 
     // Build Products for showroom — all item names per category
     const savedProductsForShowroom = {};
@@ -872,7 +873,7 @@ window.logoutMember = async function () {
     function photoCard(key, name, emoji) {
       const savedUrl = savedPhotos[key] || '';
       const preview = savedUrl
-        ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
+        ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.outerHTML='<div style=\\'width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px\\'>${'📷'}</div>'"/>`
         : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
       return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
         <div id="mq-photo-preview-${key}">${preview}</div>
@@ -912,7 +913,7 @@ window.logoutMember = async function () {
 
     const content = el('mq-products-content');
     if (content) {
-      const catsOrdered = ['material','door','drawer','hinge','install','countertop'];
+      const catsOrdered = ['material','door','drawer','hinge','countertop'];
       const hasCats = catsOrdered.some(c => byCategory[c]?.length);
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
