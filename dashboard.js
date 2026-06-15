@@ -827,6 +827,9 @@ window.logoutMember = async function () {
     try { if (shopRecord.fields['Photos']) savedPhotos = JSON.parse(shopRecord.fields['Photos']); } catch(e) {}
     try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
 
+    // Categories to exclude from My Products (no photos needed)
+    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
+
     // Group line items by category directly — same source as pricing helper
     const byCategory = {};
     (lineItemsData || []).forEach(r => {
@@ -848,8 +851,6 @@ window.logoutMember = async function () {
       hinge:    { title:'🔧 Door Hinges',          emoji:'🔧' },
       countertop:{ title:'🪨 Countertop Materials', emoji:'🪨' },
     };
-    // Categories to exclude from My Products (no photos needed)
-    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
 
     // Build Products for showroom — all item names per category
     const savedProductsForShowroom = {};
