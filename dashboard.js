@@ -818,7 +818,7 @@ window.logoutMember = async function () {
     } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
   };
 
-  function initProductsTab(shopRecord, lineItemsData) {
+  async function initProductsTab(shopRecord, lineItemsData) {
     const token = shopRecord.fields['Shop token'] || '';
     const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${token}`;
 
