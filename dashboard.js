@@ -827,68 +827,41 @@ window.logoutMember = async function () {
     try { if (shopRecord.fields['Photos']) savedPhotos = JSON.parse(shopRecord.fields['Photos']); } catch(e) {}
     try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
 
-    // Debug — log what line items we received
-    console.log('DEBUG lineItems count:', (lineItemsData||[]).length, lineItemsData?.slice(0,3)?.map(r=>({cat:r.fields['Category'],name:r.fields['ConfigName']||r.fields['Name']})));
-
-    // Detect from line items what this shop has configured
-    const cats = {};
+    // Group line items by category directly — same source as pricing helper
+    const byCategory = {};
     (lineItemsData || []).forEach(r => {
-      const cat = (r.fields['Category'] || '').toLowerCase();
-      const name = (r.fields['ConfigName'] || r.fields['Name'] || '').toLowerCase();
-      if (cat === 'material' || cat === 'box') {
-        if (name.includes('melamine')) cats.melamine = true;
-        if (name.includes('plywood'))  cats.plywood  = true;
-        if (name.includes('mdf'))      cats.mdf      = true;
-        if (name.includes('solid'))    cats.solid    = true;
-      }
-      if (cat === 'door') {
-        if (name.includes('slab'))   cats.slab   = true;
-        if (name.includes('shaker')) cats.shaker = true;
-        if (name.includes('raised')) cats.raised = true;
-        if (name.includes('glass'))  cats.glass  = true;
-        if (name.includes('no door') || name === 'none') cats.none = true;
+      if (!r.fields || r.fields['Active'] === false) return;
+      const cat = r.fields['Category'];
+      if (!cat) return;
+      if (!byCategory[cat]) byCategory[cat] = [];
+      // Deduplicate by base name (strip "— uppers"/"— bases" suffix)
+      const baseName = (r.fields['Name'] || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
+      if (!byCategory[cat].find(x => x.baseName === baseName)) {
+        byCategory[cat].push({ id: r.id, baseName, fullName: r.fields['Name'] || baseName });
       }
     });
 
-      // Countertops from pricing record — only if rate > 0
-    const pricing = window._mqPricingRecord?.fields || {};
-    const pos = f => pricing[f] > 0;
-    if (pos('Lam supply'))       cats.lam       = true;
-    if (pos('SS econ supply'))   cats.ss_econ   = true;
-    if (pos('SS mid supply'))    cats.ss_mid    = true;
-    if (pos('SS prem supply'))   cats.ss_prem   = true;
-    if (pos('Gran econ supply')) cats.gran_econ = true;
-    if (pos('Gran mid supply'))  cats.gran_mid  = true;
-    if (pos('Gran prem supply')) cats.gran_prem = true;
-    if (pos('Quartz supply'))    cats.quartz    = true;
-    if (pos('Marble supply'))    cats.marble    = true;
-    if (pos('Butcher supply'))   cats.butcher   = true;
+    const CAT_DISPLAY = {
+      material: { title:'🪵 Box Materials',       emoji:'🪵' },
+      door:     { title:'🚪 Door Styles',          emoji:'🚪' },
+      drawer:   { title:'🗄️ Drawer Configs',      emoji:'🗄️' },
+      hinge:    { title:'🔧 Door Hinges',          emoji:'🔧' },
+      install:  { title:'🔧 Installation',         emoji:'🔧' },
+      countertop:{ title:'🪨 Countertop Materials', emoji:'🪨' },
+    };
 
-    // Also detect countertops from line items (type:material in countertop category)
-    (lineItemsData || []).forEach(r => {
-      const cat = (r.fields['Category'] || '').toLowerCase();
-      const desc = (r.fields['Description'] || '').toLowerCase();
-      const name = (r.fields['Name'] || r.fields['ConfigName'] || '').toLowerCase();
-      if (cat === 'countertop') {
-        if (name.includes('laminate') || desc.includes('laminate')) cats.lam = true;
-        if (name.includes('quartz')   || desc.includes('quartz'))   cats.quartz = true;
-        if (name.includes('marble')   || desc.includes('marble'))   cats.marble = true;
-        if (name.includes('butcher')  || desc.includes('butcher'))  cats.butcher = true;
-        if (name.includes('granite')  || desc.includes('granite')) {
-          cats.gran_econ = true; // show at least economy granite
-        }
-        if (name.includes('solid surface') || desc.includes('solid surface')) {
-          cats.ss_econ = true;
-        }
-      }
+    // Build Products for showroom — all item names per category
+    const savedProductsForShowroom = {};
+    Object.entries(byCategory).forEach(([cat, items]) => {
+      savedProductsForShowroom[cat] = items.map(i => i.baseName);
     });
 
-    const boxKeys  = ['melamine','plywood','mdf','solid'].filter(k => cats[k]);
-    const doorKeys = ['slab','shaker','raised','glass','none'].filter(k => cats[k]);
-    const ctKeys   = ['lam','ss_econ','ss_mid','ss_prem','gran_econ','gran_mid','gran_prem','quartz','marble','butcher'].filter(k => cats[k]);
 
     // Save detected keys so showroom can read them
-    savedProducts = { boxMaterials: boxKeys, doorStyles: doorKeys, countertops: ctKeys };
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Products': JSON.stringify(savedProductsForShowroom) });
+      shopRecord.fields['Products'] = JSON.stringify(savedProductsForShowroom);
+    } catch(e) {}
 
     // Load specialty items
     const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
@@ -911,11 +884,17 @@ window.logoutMember = async function () {
       </div>`;
     }
 
-    function section(title, keys) {
-      if (!keys.length) return '';
-      const cards = keys.map(k => photoCard(k, PHOTO_LIBRARY[k]?.label || k, PHOTO_LIBRARY[k]?.emoji || '📷')).join('');
+    function catSection(cat) {
+      const items = byCategory[cat] || [];
+      if (!items.length) return '';
+      const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
+      const cards = items.map(item => {
+        const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
+        const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
+        return photoCard(key, item.baseName, lib.emoji || disp.emoji);
+      }).join('');
       return `<div class="mq-card">
-        <div class="mq-card-title">${title}</div>
+        <div class="mq-card-title">${disp.title}</div>
         <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
         <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
@@ -933,17 +912,12 @@ window.logoutMember = async function () {
 
     const content = el('mq-products-content');
     if (content) {
-      const hasAny = boxKeys.length || doorKeys.length || ctKeys.length || specItems.length;
-      content.innerHTML = !hasAny
-        ? '<div class="mq-empty">Set up your pricing first — your configured materials and door styles will appear here automatically.</div>'
-        : section('🪵 Box Materials', boxKeys) + section('🚪 Door Styles', doorKeys) + section('🪨 Countertops', ctKeys) + specSection;
+      const catsOrdered = ['material','door','drawer','hinge','install','countertop'];
+      const hasCats = catsOrdered.some(c => byCategory[c]?.length);
+      content.innerHTML = (!hasCats && !specItems.length)
+        ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
+        : catsOrdered.map(catSection).join('') + specSection;
     }
-
-    // Auto-save detected product list so showroom can read it
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Products': JSON.stringify(savedProducts) });
-      shopRecord.fields['Products'] = JSON.stringify(savedProducts);
-    } catch(e) {}
 
     const linkText = el('mq-showroom-link-text');
     const copyBtn  = el('mq-showroom-copy-btn');

@@ -164,7 +164,9 @@
 
       const shop = shops[0].fields;
       let photos = {};
+      let products = {};
       try { if (shop['Photos']) photos = JSON.parse(shop['Photos']); } catch(e) {}
+      try { if (shop['Products']) products = JSON.parse(shop['Products']); } catch(e) {}
       const brand = shop['Brand colour'] || '#1a1a1a';
 
       // Apply brand
@@ -184,65 +186,72 @@
       document.getElementById('sr-hero-title').textContent = `${shop['Shop name'] || 'Our'} Product Catalogue`;
       document.title = `${shop['Shop name'] || 'Products'} — Materials & Options`;
 
-      // Use saved Products field (auto-saved when shop owner visits My Products tab)
-      let products = null;
-      try { if (shop['Products']) products = JSON.parse(shop['Products']); } catch(e) {}
+      // Build showroom from saved Products (auto-saved by dashboard My Products tab)
+      // products format: { material:['name1',...], door:[...], drawer:[...], countertop:[...], ... }
+      const CAT_CONFIG = {
+        material:    { id:'box-materials', eyebrow:'Cabinet construction', title:'Box Materials',       desc:'The box is the structural core of every cabinet. We offer the following materials.' },
+        door:        { id:'door-styles',   eyebrow:'Cabinet doors',        title:'Door Styles',         desc:'The door is the face of your kitchen. Choose a style that fits your aesthetic.' },
+        drawer:      { id:'drawer-configs',eyebrow:'Cabinet drawers',      title:'Drawer Configurations',desc:'Drawer box options that affect function and durability.' },
+        hinge:       { id:'door-hinges',   eyebrow:'Hardware',             title:'Door Hinges',         desc:'Hinge options for your cabinet doors.' },
+        install:     { id:'installation',  eyebrow:'Services',             title:'Installation',        desc:'Installation and removal services we provide.' },
+        countertop:  { id:'countertops',   eyebrow:'Surfaces',             title:'Countertop Materials',desc:'We supply and install a range of countertop materials to suit every style and budget.' },
+      };
 
-      const boxMats     = products?.boxMaterials?.length ? ALL_BOX_MATERIALS.filter(m => products.boxMaterials.includes(m.key)) : ALL_BOX_MATERIALS;
-      const doorStyles  = products?.doorStyles?.length   ? ALL_DOOR_STYLES.filter(d => products.doorStyles.includes(d.key))     : ALL_DOOR_STYLES;
-      const countertops = products?.countertops?.length  ? ALL_COUNTERTOPS.filter(c => products.countertops.includes(c.key))    : ALL_COUNTERTOPS;
+      function itemCard(name, photoKey) {
+        const photoUrl = photos[photoKey];
+        const imgHtml = photoUrl
+          ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover" onerror="this.style.display='none'">`
+          : `<div style="width:100%;height:160px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gray-400)">📷</div>`;
+        return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div></div></div>`;
+      }
 
-      // Specialty items
+      let html = '';
+      let first = true;
+      Object.entries(CAT_CONFIG).forEach(([cat, cfg]) => {
+        const names = products[cat] || [];
+        if (!names.length) return;
+        if (!first) html += '<div class="sr-divider"></div>';
+        first = false;
+        html += `<div class="sr-section" id="${cfg.id}">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">${cfg.eyebrow}</div>
+            <div class="sr-section-title">${cfg.title}</div>
+            <div class="sr-section-desc">${cfg.desc}</div>
+          </div>
+          <div class="sr-grid">${names.map(name => {
+            const key = 'li_' + cat + '_' + name.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+            return itemCard(name, key);
+          }).join('')}</div>
+        </div>`;
+      });
+
+      // Specialty items — always from Airtable
       const specs = await atGet('tbloaXeEM5K7TOZCD', `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
-
-      document.getElementById('sr-content').innerHTML = `
-        <div class="sr-section" id="box-materials">
-          <div class="sr-section-header">
-            <div class="sr-section-eyebrow">Cabinet construction</div>
-            <div class="sr-section-title">Box Materials</div>
-            <div class="sr-section-desc">The box is the structural core of every cabinet. We offer the following materials depending on your project needs and budget.</div>
-          </div>
-          ${boxMats.length ? `<div class="sr-grid">${boxMats.map(m => card(m.emoji, m.name, m.desc, photos[m.key])).join('')}</div>` : '<div class="sr-empty">Contact us for material options.</div>'}
-        </div>
-        <div class="sr-divider"></div>
-        <div class="sr-section" id="door-styles">
-          <div class="sr-section-header">
-            <div class="sr-section-eyebrow">Cabinet doors</div>
-            <div class="sr-section-title">Door Styles</div>
-            <div class="sr-section-desc">The door is the face of your kitchen. Choose a style that fits your aesthetic — from clean modern slabs to classic shaker profiles.</div>
-          </div>
-          ${doorStyles.length ? `<div class="sr-grid">${doorStyles.map(d => card(d.emoji, d.name, d.desc, photos[d.key])).join('')}</div>` : '<div class="sr-empty">Contact us for door style options.</div>'}
-        </div>
-        <div class="sr-divider"></div>
-        <div class="sr-section" id="countertops">
-          <div class="sr-section-header">
-            <div class="sr-section-eyebrow">Surfaces</div>
-            <div class="sr-section-title">Countertop Materials</div>
-            <div class="sr-section-desc">We supply and install a range of countertop materials to suit every style and budget.</div>
-          </div>
-          ${countertops.length ? `<div class="sr-grid">${countertops.map(c => card(c.emoji, c.name, c.desc, photos[c.key])).join('')}</div>` : '<div class="sr-empty">Contact us for countertop options.</div>'}
-        </div>
-        <div class="sr-divider"></div>
-        <div class="sr-section" id="specialty">
+      if (specs.length) {
+        if (!first) html += '<div class="sr-divider"></div>';
+        const specIcons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
+        html += `<div class="sr-section" id="specialty">
           <div class="sr-section-header">
             <div class="sr-section-eyebrow">Add-ons & upgrades</div>
             <div class="sr-section-title">Specialty Items</div>
             <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
           </div>
-          ${specs.length ? `<div class="sr-spec-grid">${specs.map(r => {
+          <div class="sr-spec-grid">${specs.map(r => {
             const name = r.fields['Item name'] || '';
             const key = 'spec_' + r.id;
-            const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
             let emoji = '⭐';
-            for (const [k,v] of Object.entries(icons)) { if (name.toLowerCase().includes(k)) { emoji = v; break; } }
+            for (const [k,v] of Object.entries(specIcons)) { if (name.toLowerCase().includes(k)) { emoji = v; break; } }
             const photoUrl = photos[key];
-            const imgHtml = photoUrl
-              ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px" onerror="this.style.display='none'"/>`
-              : `<div class="sr-spec-icon">${emoji}</div>`;
-            return `<div class="sr-spec-card">${imgHtml}<div class="sr-spec-name">${name}</div></div>`;
-          }).join('')}</div>` : '<div class="sr-empty">Contact us for specialty options.</div>'}
-        </div>
-      `;
+            return `<div class="sr-spec-card">
+              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px" onerror="this.style.display='none'"/>` : `<div class="sr-spec-icon">${emoji}</div>`}
+              <div class="sr-spec-name">${name}</div>
+            </div>`;
+          }).join('')}</div>
+        </div>`;
+      }
+
+      if (!html) html = '<div class="sr-empty" style="padding:4rem;text-align:center">Visit your dashboard → My Products tab to set up your showroom.</div>';
+      document.getElementById('sr-content').innerHTML = html;
 
       // Nav scroll
       document.querySelectorAll('.sr-nav-item').forEach(link => {
