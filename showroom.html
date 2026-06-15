@@ -253,7 +253,18 @@
             <div class="sr-section-title">Specialty Items</div>
             <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
           </div>
-          ${specs.length ? `<div class="sr-spec-grid">${specs.map(r => `<div class="sr-spec-card"><div class="sr-spec-icon">${getIcon(r.fields['Item name'])}</div><div class="sr-spec-name">${r.fields['Item name'] || ''}</div></div>`).join('')}</div>` : '<div class="sr-empty">Contact us for specialty options.</div>'}
+          ${specs.length ? `<div class="sr-spec-grid">${specs.map(r => {
+            const name = r.fields['Item name'] || '';
+            const key = 'spec_' + r.id;
+            const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
+            let emoji = '⭐';
+            for (const [k,v] of Object.entries(icons)) { if (name.toLowerCase().includes(k)) { emoji = v; break; } }
+            const photoUrl = photos[key];
+            const imgHtml = photoUrl
+              ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px" onerror="this.style.display='none'"/>`
+              : `<div class="sr-spec-icon">${emoji}</div>`;
+            return `<div class="sr-spec-card">${imgHtml}<div class="sr-spec-name">${name}</div></div>`;
+          }).join('')}</div>` : '<div class="sr-empty">Contact us for specialty options.</div>'}
         </div>
       `;
 

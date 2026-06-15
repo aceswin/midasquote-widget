@@ -878,6 +878,9 @@ window.logoutMember = async function () {
     const doorKeys = ['slab','shaker','raised','glass','none'].filter(k => cats[k]);
     const ctKeys   = ['lam','ss_econ','ss_mid','ss_prem','gran_econ','gran_mid','gran_prem','quartz','marble','butcher'].filter(k => cats[k]);
 
+    // Load specialty items
+    const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+
     const section = (title, keys) => !keys.length ? '' : `
       <div class="mq-card">
         <div class="mq-card-title">${title}</div>
@@ -888,12 +891,40 @@ window.logoutMember = async function () {
         <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
       </div>`;
 
+    const specSection = specItems.length ? `
+      <div class="mq-card">
+        <div class="mq-card-title">⭐ Specialty Items</div>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. Manage the items themselves in the Specialty Items tab.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+          ${specItems.map(r => {
+            const name = r.fields['Item name'] || '';
+            const key = 'spec_' + r.id;
+            const savedUrl = savedPhotos[key] || '';
+            const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
+            let emoji = '⭐';
+            for (const [k,v] of Object.entries(icons)) { if (name.toLowerCase().includes(k)) { emoji = v; break; } }
+            const preview = savedUrl
+              ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
+              : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
+            return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
+              <div id="mq-photo-preview-${key}">${preview}</div>
+              <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
+              <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Photo URL (optional)</div>
+              <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
+                style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
+              <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
+            </div>`;
+          }).join('')}
+        </div>
+        <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
+      </div>` : '';
+
     const content = el('mq-products-content');
     if (content) {
-      const hasAny = boxKeys.length || doorKeys.length || ctKeys.length;
+      const hasAny = boxKeys.length || doorKeys.length || ctKeys.length || specItems.length;
       content.innerHTML = !hasAny
         ? '<div class="mq-empty">Set up your pricing first — your materials and door styles will appear here automatically once configured.</div>'
-        : section('🪵 Box Materials', boxKeys) + section('🚪 Door Styles', doorKeys) + section('🪨 Countertops', ctKeys);
+        : section('🪵 Box Materials', boxKeys) + section('🚪 Door Styles', doorKeys) + section('🪨 Countertops', ctKeys) + specSection;
     }
 
     const linkText = el('mq-showroom-link-text');
