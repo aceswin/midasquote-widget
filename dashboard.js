@@ -1034,94 +1034,7 @@ window.logoutMember = async function () {
   // ============================================================
   // MY PRODUCTS
   // ============================================================
-  const MQ_PRODUCTS = {
-    materials: { label:'Box Materials', icon:'🪵', items:[
-      {id:'mel',name:'White Melamine'}, {id:'ply',name:'Birch Plywood'},
-      {id:'mdf',name:'MDF'}, {id:'solid',name:'Solid Wood'},
-    ]},
-    doors: { label:'Door Styles', icon:'🚪', items:[
-      {id:'nodoor',name:'Open Shelving'}, {id:'slab',name:'Slab (Flat Panel)'},
-      {id:'shaker',name:'Shaker'}, {id:'raised',name:'Raised Panel'}, {id:'glass',name:'Glass Front'},
-    ]},
-    countertops: { label:'Countertop Materials', icon:'🪨', items:[
-      {id:'lam',name:'Laminate'}, {id:'quartz',name:'Quartz'},
-      {id:'granite_econ',name:'Granite (Standard)'}, {id:'granite_mid',name:'Granite (Mid-Grade)'},
-      {id:'granite_prem',name:'Granite (Premium)'}, {id:'marble',name:'Marble'},
-      {id:'butcher',name:'Butcher Block'}, {id:'ss_econ',name:'Stainless Steel (Standard)'},
-      {id:'ss_mid',name:'Stainless Steel (Mid-Grade)'}, {id:'ss_prem',name:'Stainless Steel (Premium)'},
-    ]},
-    hinges: { label:'Hardware & Hinges', icon:'🔧', items:[
-      {id:'reg_hinge',name:'Regular Hinges'}, {id:'sc_hinge',name:'Soft-Close Hinges'},
-    ]},
-    specialty: { label:'Specialty Items', icon:'⭐', items:[
-      {id:'tall_cab',name:'Tall Cabinets'}, {id:'app_garage',name:'Appliance Garage'},
-      {id:'blind_corner',name:'Blind Corner Solution'}, {id:'dbl_garbage',name:'Double Garbage Pullout'},
-      {id:'toe_kick',name:'Toe Kick Drawers'}, {id:'lazy_susan',name:'Lazy Susan'},
-      {id:'wine_rack',name:'Wine Rack / Cabinet'}, {id:'spice_rack',name:'Spice Rack'},
-      {id:'pullout_shelf',name:'Pull-Out Shelves'}, {id:'pot_drawers',name:'Pot Drawers'},
-      {id:'pantry',name:'Pantry Unit'}, {id:'desk',name:'Desk / Homework Station'},
-      {id:'glass_doors',name:'Glass Door Fronts'}, {id:'undervalence',name:'Undervalence Lighting Rail'},
-      {id:'crown',name:'Crown Moulding'},
-    ]},
-  };
 
-  function renderProductsTab(enabledIds) {
-    const shopToken = window._mqShopRecord?.fields?.['Shop token'] || '';
-    const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${shopToken}`;
-    let html = `
-      <div class="mq-card" style="margin-bottom:1.5rem">
-        <div class="mq-card-title">🔗 Your showroom link</div>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Share this link with customers so they can browse everything you offer before booking a consultation.</p>
-        <div class="mq-embed-box"><span>${showroomUrl}</span><button class="mq-copy-btn" onclick="mqCopyText('${showroomUrl}',this)">Copy</button></div>
-        <div style="margin-top:1rem">
-          <a href="${showroomUrl}" target="_blank" class="mq-btn mq-btn-sm">Preview showroom ↗</a>
-        </div>
-      </div>
-      <div class="mq-card">
-        <div class="mq-card-title">📦 What do you offer?</div>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem">Check everything that applies to your shop. Unchecked items won't appear on your showroom page.</p>`;
-
-    Object.entries(MQ_PRODUCTS).forEach(([catKey, cat]) => {
-      html += `<div style="margin-bottom:1.5rem">
-        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem">${cat.icon} ${cat.label}</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">`;
-      cat.items.forEach(item => {
-        const checked = !enabledIds || enabledIds.includes(item.id) ? 'checked' : '';
-        html += `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;background:#fff">
-          <input type="checkbox" data-product-id="${item.id}" ${checked} style="width:auto;flex-shrink:0"/>
-          ${item.name}
-        </label>`;
-      });
-      html += `</div></div>`;
-    });
-
-    html += `<div style="display:flex;gap:10px;align-items:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e5e7eb">
-      <button class="mq-btn mq-btn-primary" onclick="mqSaveProducts()">Save my products</button>
-      <button class="mq-btn mq-btn-sm" onclick="mqSelectAllProducts()">Select all</button>
-      <button class="mq-btn mq-btn-sm" onclick="mqDeselectAllProducts()">Deselect all</button>
-    </div></div>`;
-
-    document.getElementById('mq-products-content').innerHTML = html;
-  }
-
-  window.mqSaveProducts = async function() {
-    const checked = [...document.querySelectorAll('[data-product-id]:checked')].map(el => el.dataset.productId);
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Products': JSON.stringify(checked) });
-      shopRec.fields['Products'] = JSON.stringify(checked);
-      showMsg('mq-products-msg', `✓ Saved — ${checked.length} products enabled on your showroom.`);
-    } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
-  };
-
-  window.mqSelectAllProducts = function() {
-    document.querySelectorAll('[data-product-id]').forEach(el => el.checked = true);
-  };
-
-  window.mqDeselectAllProducts = function() {
-    document.querySelectorAll('[data-product-id]').forEach(el => el.checked = false);
-  };
 
   window.mqFilterLeads = async function() {
     const filter = gv('mq-lead-filter');
@@ -1214,17 +1127,6 @@ window.logoutMember = async function () {
         } catch(e) {
           planEl.innerHTML = `<p style="font-size:13px;color:#6b7280">Use the buttons below to manage your subscription.</p>`;
         }
-      }
-    }
-    if (page === 'products') {
-      const container = document.getElementById('mq-products-content');
-      if (container && container.innerHTML.includes('Loading')) {
-        let enabledIds = null;
-        try {
-          const raw = window._mqShopRecord?.fields?.['Products'];
-          if (raw) enabledIds = JSON.parse(raw);
-        } catch(e) {}
-        renderProductsTab(enabledIds);
       }
     }
     if (page === 'products') {
