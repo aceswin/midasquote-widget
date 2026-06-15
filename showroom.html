@@ -148,8 +148,11 @@
       return d.records || [];
     }
 
-    function card(emoji, name, desc) {
-      return `<div class="sr-card"><div class="sr-card-img">${emoji}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div><div class="sr-card-desc">${desc}</div></div></div>`;
+    function card(emoji, name, desc, photoUrl) {
+      const img = photoUrl
+        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover" onerror="this.parentElement.innerHTML='<span style=font-size:48px>${emoji}</span>'">`
+        : emoji;
+      return `<div class="sr-card"><div class="sr-card-img">${img}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div><div class="sr-card-desc">${desc}</div></div></div>`;
     }
 
     async function init() {
@@ -161,6 +164,8 @@
 
       const shop = shops[0].fields;
       const products = shop['Products'] ? JSON.parse(shop['Products']) : null;
+      let photos = {};
+      try { if (shop['Photos']) photos = JSON.parse(shop['Photos']); } catch(e) {}
       const brand = shop['Brand colour'] || '#1a1a1a';
 
       // Apply brand
@@ -195,7 +200,7 @@
             <div class="sr-section-title">Box Materials</div>
             <div class="sr-section-desc">The box is the structural core of every cabinet. We offer the following materials depending on your project needs and budget.</div>
           </div>
-          ${boxMats.length ? `<div class="sr-grid">${boxMats.map(m => card(m.emoji, m.name, m.desc)).join('')}</div>` : '<div class="sr-empty">Contact us for material options.</div>'}
+          ${boxMats.length ? `<div class="sr-grid">${boxMats.map(m => card(m.emoji, m.name, m.desc, photos[m.key])).join('')}</div>` : '<div class="sr-empty">Contact us for material options.</div>'}
         </div>
         <div class="sr-divider"></div>
         <div class="sr-section" id="door-styles">
@@ -204,7 +209,7 @@
             <div class="sr-section-title">Door Styles</div>
             <div class="sr-section-desc">The door is the face of your kitchen. Choose a style that fits your aesthetic — from clean modern slabs to classic shaker profiles.</div>
           </div>
-          ${doorStyles.length ? `<div class="sr-grid">${doorStyles.map(d => card(d.emoji, d.name, d.desc)).join('')}</div>` : '<div class="sr-empty">Contact us for door style options.</div>'}
+          ${doorStyles.length ? `<div class="sr-grid">${doorStyles.map(d => card(d.emoji, d.name, d.desc, photos[d.key])).join('')}</div>` : '<div class="sr-empty">Contact us for door style options.</div>'}
         </div>
         <div class="sr-divider"></div>
         <div class="sr-section" id="countertops">
@@ -213,7 +218,7 @@
             <div class="sr-section-title">Countertop Materials</div>
             <div class="sr-section-desc">We supply and install a range of countertop materials to suit every style and budget.</div>
           </div>
-          ${countertops.length ? `<div class="sr-grid">${countertops.map(c => card(c.emoji, c.name, c.desc)).join('')}</div>` : '<div class="sr-empty">Contact us for countertop options.</div>'}
+          ${countertops.length ? `<div class="sr-grid">${countertops.map(c => card(c.emoji, c.name, c.desc, photos[c.key])).join('')}</div>` : '<div class="sr-empty">Contact us for countertop options.</div>'}
         </div>
         <div class="sr-divider"></div>
         <div class="sr-section" id="specialty">
