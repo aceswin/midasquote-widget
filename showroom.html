@@ -185,36 +185,48 @@
       document.getElementById('sr-hero-title').textContent = `${shop['Shop name'] || 'Our'} Product Catalogue`;
       document.title = `${shop['Shop name'] || 'Products'} — Materials & Options`;
 
-      // Load pricing to detect what's offered
+      // Load pricing to detect what this shop offers
       const pricingRecs = await atGet('tblu6AYZs8h7SIaQl', `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
       const pricing = pricingRecs[0]?.fields || {};
       const has = f => pricing[f] !== undefined && pricing[f] !== null;
 
-      // Filter to what shop offers
-      const boxMats = products?.boxMaterials
-        ? ALL_BOX_MATERIALS.filter(m => products.boxMaterials.includes(m.key))
-        : ALL_BOX_MATERIALS.filter(m => {
-            if (m.key === 'melamine') return has('Melamine price');
-            if (m.key === 'plywood')  return has('Plywood price');
-            if (m.key === 'mdf')      return has('MDF price');
-            if (m.key === 'solid')    return has('Solid wood price');
-            return false;
-          });
+      // Load line items for door style detection
+      const lineItems = await atGet('tblCkJsJ2OC6DgXok', `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
+      const doorKeysFound = new Set();
+      lineItems.forEach(r => {
+        const cat = (r.fields['Category'] || '').toLowerCase();
+        const name = (r.fields['ConfigName'] || r.fields['Name'] || '').toLowerCase();
+        if (cat === 'door') {
+          if (name.includes('slab'))   doorKeysFound.add('slab');
+          if (name.includes('shaker')) doorKeysFound.add('shaker');
+          if (name.includes('raised')) doorKeysFound.add('raised');
+          if (name.includes('glass'))  doorKeysFound.add('glass');
+          if (name.includes('no door') || name === 'none') doorKeysFound.add('none');
+        }
+        if (cat === 'material' || cat === 'box') {
+          if (name.includes('melamine')) doorKeysFound.add('_mel');
+        }
+      });
 
-      const doorStyles = products?.doorStyles
-        ? ALL_DOOR_STYLES.filter(d => products.doorStyles.includes(d.key))
-        : ALL_DOOR_STYLES.filter(() => Object.keys(pricing).length > 0);
+      // Always detect from pricing — no manual Products selection needed
+      const boxMats = ALL_BOX_MATERIALS.filter(m => {
+        if (m.key === 'melamine') return has('Melamine price');
+        if (m.key === 'plywood')  return has('Plywood price');
+        if (m.key === 'mdf')      return has('MDF price');
+        if (m.key === 'solid')    return has('Solid wood price');
+        return false;
+      });
 
-      const countertops = products?.countertops
-        ? ALL_COUNTERTOPS.filter(c => products.countertops.includes(c.key))
-        : ALL_COUNTERTOPS.filter(c => {
-            const map = {
-              lam:'Lam supply', ss_econ:'SS econ supply', ss_mid:'SS mid supply',
-              ss_prem:'SS prem supply', gran_econ:'Gran econ supply', gran_mid:'Gran mid supply',
-              gran_prem:'Gran prem supply', quartz:'Quartz supply', marble:'Marble supply', butcher:'Butcher supply'
-            };
-            return has(map[c.key]);
-          });
+      const doorStyles = doorKeysFound.size > 0
+        ? ALL_DOOR_STYLES.filter(d => doorKeysFound.has(d.key))
+        : (Object.keys(pricing).length > 0 ? ALL_DOOR_STYLES : []);
+
+      const ctMap = {
+        lam:'Lam supply', ss_econ:'SS econ supply', ss_mid:'SS mid supply',
+        ss_prem:'SS prem supply', gran_econ:'Gran econ supply', gran_mid:'Gran mid supply',
+        gran_prem:'Gran prem supply', quartz:'Quartz supply', marble:'Marble supply', butcher:'Butcher supply'
+      };
+      const countertops = ALL_COUNTERTOPS.filter(c => has(ctMap[c.key]));
 
       // Specialty items
       const specs = await atGet('tbloaXeEM5K7TOZCD', `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
