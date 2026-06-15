@@ -847,7 +847,7 @@ window.logoutMember = async function () {
       }
     });
 
-    // Countertops from pricing record — only if rate > 0
+      // Countertops from pricing record — only if rate > 0
     const pricing = window._mqPricingRecord?.fields || {};
     const pos = f => pricing[f] > 0;
     if (pos('Lam supply'))       cats.lam       = true;
@@ -860,6 +860,25 @@ window.logoutMember = async function () {
     if (pos('Quartz supply'))    cats.quartz    = true;
     if (pos('Marble supply'))    cats.marble    = true;
     if (pos('Butcher supply'))   cats.butcher   = true;
+
+    // Also detect countertops from line items (type:material in countertop category)
+    (lineItemsData || []).forEach(r => {
+      const cat = (r.fields['Category'] || '').toLowerCase();
+      const desc = (r.fields['Description'] || '').toLowerCase();
+      const name = (r.fields['Name'] || r.fields['ConfigName'] || '').toLowerCase();
+      if (cat === 'countertop') {
+        if (name.includes('laminate') || desc.includes('laminate')) cats.lam = true;
+        if (name.includes('quartz')   || desc.includes('quartz'))   cats.quartz = true;
+        if (name.includes('marble')   || desc.includes('marble'))   cats.marble = true;
+        if (name.includes('butcher')  || desc.includes('butcher'))  cats.butcher = true;
+        if (name.includes('granite')  || desc.includes('granite')) {
+          cats.gran_econ = true; // show at least economy granite
+        }
+        if (name.includes('solid surface') || desc.includes('solid surface')) {
+          cats.ss_econ = true;
+        }
+      }
+    });
 
     const boxKeys  = ['melamine','plywood','mdf','solid'].filter(k => cats[k]);
     const doorKeys = ['slab','shaker','raised','glass','none'].filter(k => cats[k]);

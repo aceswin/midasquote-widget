@@ -163,7 +163,6 @@
       if (!shops.length) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">Shop not found.</div>'; return; }
 
       const shop = shops[0].fields;
-      const products = shop['Products'] ? JSON.parse(shop['Products']) : null;
       let photos = {};
       try { if (shop['Photos']) photos = JSON.parse(shop['Photos']); } catch(e) {}
       const brand = shop['Brand colour'] || '#1a1a1a';
@@ -176,7 +175,7 @@
       const logoEl = document.getElementById('sr-logo');
       logoEl.style.background = brand;
       if (shop['Logo URL']) {
-        logoEl.innerHTML = `<img src="${shop['Logo URL']}" alt="logo"/>`;
+        logoEl.innerHTML = `<img src="${shop['Logo URL']}" alt="logo" style="width:100%;height:100%;object-fit:cover"/>`;
       } else {
         logoEl.textContent = (shop['Shop name'] || 'S')[0].toUpperCase();
       }
@@ -185,7 +184,7 @@
       document.getElementById('sr-hero-title').textContent = `${shop['Shop name'] || 'Our'} Product Catalogue`;
       document.title = `${shop['Shop name'] || 'Products'} — Materials & Options`;
 
-      // Use saved Products field (auto-updated when shop owner visits My Products tab)
+      // Use saved Products field (auto-saved when shop owner visits My Products tab)
       let products = null;
       try { if (shop['Products']) products = JSON.parse(shop['Products']); } catch(e) {}
 
