@@ -891,7 +891,9 @@ window.logoutMember = async function () {
         <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
         <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${key in PHOTO_LIBRARY ? (PHOTO_LIBRARY[key].label||'').toLowerCase() : 'specialty'}')">📷 Choose from library</button>
       </div>`;
-  } = function(key) {
+  }
+
+  window.mqPreviewPhoto = function(key) {
     const input = el('mq-photo-' + key);
     const preview = el('mq-photo-preview-' + key);
     if (!input || !preview) return;
