@@ -912,6 +912,14 @@ window.logoutMember = async function () {
     preview.innerHTML = `<img src="${url}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.outerHTML='<div style=\\'width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px\\'>📷</div>'"/>`;
   };
 
+  window.mqMarkProductsDirty = function() {
+    document.querySelectorAll('.mq-products-save-btn').forEach(btn => {
+      btn.textContent = '💾 Save changes';
+      btn.style.background = '#16a34a';
+      btn.style.borderColor = '#16a34a';
+    });
+  };
+
   window.mqSaveProducts = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -933,6 +941,12 @@ window.logoutMember = async function () {
       });
       shopRec.fields['Photos']  = JSON.stringify(photos);
       shopRec.fields['Hidden']  = JSON.stringify(hidden);
+      document.querySelectorAll('.mq-products-save-btn').forEach(btn => {
+        btn.textContent = 'Saved ✓';
+        btn.style.background = '#1a1a1a';
+        btn.style.borderColor = '#1a1a1a';
+        setTimeout(() => { btn.textContent = 'Save photos'; }, 2000);
+      });
       showMsg('mq-products-msg', '✓ Photos saved!');
     } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
   };
@@ -1006,12 +1020,13 @@ window.logoutMember = async function () {
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
         <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
           <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
-            onchange="this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
+            onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
           Hide from showroom
         </label>
         <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Photo URL (optional)</div>
         <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
-          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
+          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
+          oninput="mqMarkProductsDirty()"/>
         <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
         <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>
       </div>`;
@@ -1030,7 +1045,7 @@ window.logoutMember = async function () {
         <div class="mq-card-title">${disp.title}</div>
         <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
-        <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
+        <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
       </div>`;
     }
 
@@ -1040,7 +1055,7 @@ window.logoutMember = async function () {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
         ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']), 'specialty')).join('')}
       </div>
-      <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
+      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
     </div>` : '';
 
     const content = el('mq-products-content');
