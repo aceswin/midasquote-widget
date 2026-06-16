@@ -42,6 +42,8 @@
     if (!shops.length) { console.error('MidasQuote: Shop not found:', token); return null; }
     const shopRecord = shops[0];
     const shop = shopRecord.fields;
+    const RANGE_LOW  = (100 - (parseFloat(shop['Quote range low'])  || 10)) / 100;  // default -10%
+    const RANGE_HIGH = (100 + (parseFloat(shop['Quote range high']) || 15)) / 100;  // default +15%
     shop._recordId = shopRecord.id;
 
     const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
@@ -772,7 +774,7 @@
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
 
       const total=sub;
-      const low=Math.round(total*0.9/100)*100, high=Math.round(total*1.15/100)*100;
+      const low=Math.round(total*RANGE_LOW/100)*100, high=Math.round(total*RANGE_HIGH/100)*100;
       const roomLabel={kitchen:'Kitchen',bathroom:'Bathroom',laundry:'Laundry room',garage:'Garage',office:'Home office',other:'Room'}[gv(`mq-${prefix}-room`)]||'Cabinet';
       return {lines,sub:Math.round(sub),total:Math.round(total),low,high,roomLabel,si,uFt,bFt};
     }
@@ -841,7 +843,7 @@
 
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
       const total=sub;
-      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*0.9/100)*100,high:Math.round(total*1.15/100)*100};
+      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*RANGE_LOW/100)*100,high:Math.round(total*RANGE_HIGH/100)*100};
     }
 
     function renderResult(rangeEl,listEl,result){
