@@ -300,7 +300,8 @@ window.logoutMember = async function () {
                 <div class="mq-page-title">Specialty items</div>
                 <div class="mq-page-sub">Add-ons that appear as options in your widget</div>
               </div>
-              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ Add item</button>
+              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
+              <button class="mq-btn mq-btn-sm" onclick="mqSaveAllSpecItems()" style="margin-left:6px">💾 Save all</button>
             </div>
             <div id="mq-spec-msg"></div>
             <div class="mq-card" style="padding:0;overflow:hidden">
@@ -1057,6 +1058,26 @@ window.logoutMember = async function () {
     try {
       await atUpdate(CONFIG.LEADS_TABLE, id, { 'Status': status });
     } catch(e) { console.error('Failed to update lead status', e); }
+  };
+
+  window.mqSaveAllSpecItems = async function() {
+    const rows = document.querySelectorAll('#mq-spec-tbody tr[data-id]');
+    if (!rows.length) return;
+    showMsg('mq-spec-msg', 'Saving...');
+    try {
+      for (const row of rows) {
+        const id = row.dataset.id;
+        const nameInput = document.getElementById('mq-spec-name-' + id);
+        const priceInput = document.getElementById('mq-spec-price-' + id);
+        if (nameInput || priceInput) {
+          await atUpdate(CONFIG.SPECIALTY_TABLE, id, {
+            'Item name': nameInput?.value || '',
+            'Price': parseFloat(priceInput?.value) || 0,
+          });
+        }
+      }
+      showMsg('mq-spec-msg', '✓ All items saved!');
+    } catch(e) { showMsg('mq-spec-msg', 'Error saving — please try again.', 'error'); }
   };
 
   window.mqSaveSpecField = async function(id, field, value) {
