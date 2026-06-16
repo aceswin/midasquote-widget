@@ -908,7 +908,7 @@ window.logoutMember = async function () {
       preview.innerHTML = `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${lib?.emoji||'📷'}</div>`;
       return;
     }
-    preview.innerHTML = `<img src="${url}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.innerHTML='<div style=\"color:#dc2626;font-size:12px\">Image not found — check the URL</div>'"/>`;
+    preview.innerHTML = `<img src="${url}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.outerHTML='<div style=\\'width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px\\'>📷</div>'"/>`;
   };
 
   window.mqSaveProducts = async function() {
@@ -937,7 +937,7 @@ window.logoutMember = async function () {
     try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
 
     // Categories to exclude from My Products (no photos needed)
-    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
+    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other','hinge']);
 
     // Group line items by category directly — same source as pricing helper
     const byCategory = {};
@@ -985,7 +985,7 @@ window.logoutMember = async function () {
     function photoCard(key, name, emoji, cat) {
       const savedUrl = savedPhotos[key] || '';
       const preview = savedUrl
-        ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.outerHTML='<div style=\\'width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px\\'>${'📷'}</div>'"/>`
+        ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
         : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
       return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
         <div id="mq-photo-preview-${key}">${preview}</div>
