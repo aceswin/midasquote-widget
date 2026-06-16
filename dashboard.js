@@ -772,49 +772,41 @@ window.logoutMember = async function () {
 
   // MidasQuote curated photo library — swap placeholder URLs for real photos when ready
   // Format: { category: [ {url, label}, ... ] }
-  const MQ_PHOTO_LIBRARY = {
-    material: [
-      { url:'https://widget.midasquote.com/photos/melamine-white.jpg',    label:'White Melamine' },
-      { url:'https://widget.midasquote.com/photos/melamine-grey.jpg',     label:'Grey Melamine' },
-      { url:'https://widget.midasquote.com/photos/plywood-birch.jpg',     label:'Birch Plywood' },
-      { url:'https://widget.midasquote.com/photos/mdf-painted.jpg',       label:'Painted MDF' },
-      { url:'https://widget.midasquote.com/photos/solid-oak.jpg',         label:'Solid Oak' },
-      { url:'https://widget.midasquote.com/photos/solid-maple.jpg',       label:'Solid Maple' },
-    ],
-    door: [
-      { url:'https://widget.midasquote.com/photos/door-slab-white.jpg',   label:'Slab White' },
-      { url:'https://widget.midasquote.com/photos/door-slab-grey.jpg',    label:'Slab Grey' },
-      { url:'https://widget.midasquote.com/photos/door-shaker-white.jpg', label:'Shaker White' },
-      { url:'https://widget.midasquote.com/photos/door-shaker-grey.jpg',  label:'Shaker Grey' },
-      { url:'https://widget.midasquote.com/photos/door-raised.jpg',       label:'Raised Panel' },
-      { url:'https://widget.midasquote.com/photos/door-glass.jpg',        label:'Glass Front' },
-    ],
-    drawer: [
-      { url:'https://widget.midasquote.com/photos/drawer-birch.jpg',      label:'Birch Drawer' },
-      { url:'https://widget.midasquote.com/photos/drawer-dovetail.jpg',   label:'Dovetail' },
-    ],
-    hinge: [
-      { url:'https://widget.midasquote.com/photos/hinge-soft-close.jpg',  label:'Soft Close' },
-      { url:'https://widget.midasquote.com/photos/hinge-regular.jpg',     label:'Regular' },
-    ],
-    countertop: [
-      { url:'https://widget.midasquote.com/photos/ct-laminate.jpg',       label:'Laminate' },
-      { url:'https://widget.midasquote.com/photos/ct-quartz-white.jpg',   label:'White Quartz' },
-      { url:'https://widget.midasquote.com/photos/ct-quartz-grey.jpg',    label:'Grey Quartz' },
-      { url:'https://widget.midasquote.com/photos/ct-granite-black.jpg',  label:'Black Granite' },
-      { url:'https://widget.midasquote.com/photos/ct-granite-white.jpg',  label:'White Granite' },
-      { url:'https://widget.midasquote.com/photos/ct-marble.jpg',         label:'Marble' },
-      { url:'https://widget.midasquote.com/photos/ct-butcher.jpg',        label:'Butcher Block' },
-    ],
-    specialty: [
-      { url:'https://widget.midasquote.com/photos/spec-lazy-susan.jpg',   label:'Lazy Susan' },
-      { url:'https://widget.midasquote.com/photos/spec-pullout.jpg',      label:'Pull-out Shelf' },
-      { url:'https://widget.midasquote.com/photos/spec-crown.jpg',        label:'Crown Moulding' },
-      { url:'https://widget.midasquote.com/photos/spec-glass-door.jpg',   label:'Glass Door' },
-      { url:'https://widget.midasquote.com/photos/spec-garbage.jpg',      label:'Garbage Pullout' },
-      { url:'https://widget.midasquote.com/photos/spec-pot-drawer.jpg',   label:'Pot Drawer' },
-    ],
+  // GitHub photo library — reads directly from repo folders, no manifest needed
+  // Folder structure: photos/materials/, photos/doors/, photos/countertops/, etc.
+  const GH_REPO = 'aceswin/midasquote-widget';
+  const GH_BASE = `https://raw.githubusercontent.com/${GH_REPO}/main/photos`;
+  const GH_API  = `https://api.github.com/repos/${GH_REPO}/contents/photos`;
+
+  // Map line item categories to photo folder names
+  const CAT_TO_FOLDER = {
+    material:   'materials',
+    door:       'doors',
+    drawer:     'drawers',
+    hinge:      'hinges',
+    countertop: 'countertops',
+    specialty:  'specialty',
   };
+
+  const _photoCache = {};
+
+  async function fetchPhotoFolder(cat) {
+    const folder = CAT_TO_FOLDER[cat] || cat;
+    if (_photoCache[folder]) return _photoCache[folder];
+    try {
+      const res = await fetch(`${GH_API}/${folder}`);
+      if (!res.ok) { _photoCache[folder] = []; return []; }
+      const files = await res.json();
+      const photos = files
+        .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name))
+        .map(f => ({
+          url:   `${GH_BASE}/${folder}/${f.name}`,
+          label: f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        }));
+      _photoCache[folder] = photos;
+      return photos;
+    } catch(e) { _photoCache[folder] = []; return []; }
+  }
 
   // Photo picker modal
   function injectPhotoPicker() {
@@ -823,40 +815,47 @@ window.logoutMember = async function () {
     modal.id = 'mq-photo-picker';
     modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1rem';
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:14px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
-        <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
-          <div style="font-size:15px;font-weight:600;color:#111">Choose from library</div>
-          <button onclick="mqClosePhotoPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;line-height:1">×</button>
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:600px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <div style="font-size:15px;font-weight:600;color:#111">📷 Choose from library</div>
+          <button onclick="mqClosePhotoPicker()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1">×</button>
         </div>
-        <div id="mq-picker-grid" style="padding:1rem;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px"></div>
-        <div style="padding:1rem;border-top:1px solid #e5e7eb;text-align:center;font-size:12px;color:#9ca3af">
-          More photos coming soon — or paste your own URL above
+        <div id="mq-picker-grid" style="padding:1rem;overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>
+        <div style="padding:0.75rem 1rem;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center;flex-shrink:0">
+          Add photos by uploading to the <strong>photos/</strong> folder in your GitHub repo
         </div>
       </div>`;
     document.body.appendChild(modal);
   }
 
   let _pickerTargetKey = null;
-  let _pickerCat = null;
 
-  window.mqOpenPhotoPicker = function(key, cat) {
+  window.mqOpenPhotoPicker = async function(key, cat) {
     injectPhotoPicker();
     _pickerTargetKey = key;
-    _pickerCat = cat;
     const grid = document.getElementById('mq-picker-grid');
-    const photos = MQ_PHOTO_LIBRARY[cat] || MQ_PHOTO_LIBRARY.specialty || [];
-    grid.innerHTML = photos.length
-      ? photos.map(p => `
-        <div onclick="mqSelectLibraryPhoto('${p.url}')"
-          style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:border-color 0.15s"
-          onmouseover="this.style.borderColor='#1a1a1a'" onmouseout="this.style.borderColor='#e5e7eb'">
-          <div style="height:90px;background:#f0efeb;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af">
-            📷 ${p.label}
-          </div>
-          <div style="padding:6px 8px;font-size:11px;font-weight:500;color:#374151;text-align:center">${p.label}</div>
-        </div>`).join('')
-      : '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">No library photos for this category yet — paste your own URL above.</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">Loading photos...</div>';
     document.getElementById('mq-photo-picker').style.display = 'flex';
+
+    const photos = await fetchPhotoFolder(cat);
+
+    if (!photos.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">
+        No photos in <strong>photos/${CAT_TO_FOLDER[cat] || cat}/</strong> yet.<br>
+        Upload photos to that folder in your GitHub repo and they'll appear here automatically.
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = photos.map(p => `
+      <div onclick="mqSelectLibraryPhoto('${p.url}')"
+        style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:all 0.15s"
+        onmouseover="this.style.borderColor='#1a1a1a';this.style.transform='scale(1.02)'"
+        onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='scale(1)'">
+        <img src="${p.url}" style="width:100%;height:100px;object-fit:cover;display:block"
+          onerror="this.parentElement.style.display='none'"/>
+        <div style="padding:6px 8px;font-size:11px;font-weight:500;color:#374151;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.label}</div>
+      </div>`).join('');
   };
 
   window.mqClosePhotoPicker = function() {
