@@ -278,6 +278,7 @@ window.logoutMember = async function () {
                   <input type="number" id="mq-shop-range-high" placeholder="15" min="0" max="50"/>
                   <span class="mq-hint">Default 15 — quote shows up to 15% above your estimate</span>
                 </div>
+              </div>
               <div class="mq-field" style="margin-bottom:1rem">
                 <label class="mq-label">Logo URL</label>
                 <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png"/>
