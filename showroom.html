@@ -150,10 +150,29 @@
 
     function card(emoji, name, desc, photoUrl) {
       const img = photoUrl
-        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover" onerror="this.parentElement.innerHTML='<span style=font-size:48px>${emoji}</span>'">`
+        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox(this.src,'${name}')" onerror="this.parentElement.innerHTML='<span style=font-size:48px>${emoji}</span>'">`
         : emoji;
-      return `<div class="sr-card"><div class="sr-card-img">${img}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div><div class="sr-card-desc">${desc}</div></div></div>`;
+      return `<div class="sr-card"><div class="sr-card-img" style="padding:0;overflow:hidden">${img}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div><div class="sr-card-desc">${desc}</div></div></div>`;
     }
+
+    function mqLightbox(src, label) {
+      let lb = document.getElementById('sr-lightbox');
+      if (!lb) {
+        lb = document.createElement('div');
+        lb.id = 'sr-lightbox';
+        lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:1rem';
+        lb.onclick = () => lb.style.display = 'none';
+        lb.innerHTML = `
+          <img id="sr-lb-img" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"/>
+          <div id="sr-lb-label" style="color:#fff;font-size:15px;font-weight:500;text-align:center"></div>
+          <div style="color:rgba(255,255,255,0.4);font-size:12px">Click anywhere to close</div>`;
+        document.body.appendChild(lb);
+      }
+      document.getElementById('sr-lb-img').src = src;
+      document.getElementById('sr-lb-label').textContent = label;
+      lb.style.display = 'flex';
+    }
+    window.mqLightbox = mqLightbox;
 
     async function init() {
       const shop_token = new URLSearchParams(window.location.search).get('shop');
@@ -199,8 +218,9 @@
 
       function itemCard(name, photoKey) {
         const photoUrl = photos[photoKey];
+        const safeName = name.replace(/'/g, "\\'");
         const imgHtml = photoUrl
-          ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover" onerror="this.style.display='none'">`
+          ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}')" onerror="this.style.display='none'">`
           : `<div style="width:100%;height:160px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gray-400)">📷</div>`;
         return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div></div></div>`;
       }
@@ -243,7 +263,7 @@
             for (const [k,v] of Object.entries(specIcons)) { if (name.toLowerCase().includes(k)) { emoji = v; break; } }
             const photoUrl = photos[key];
             return `<div class="sr-spec-card">
-              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px" onerror="this.style.display='none'"/>` : `<div class="sr-spec-icon">${emoji}</div>`}
+              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${name.replace(/'/g,"\\'")}')"/>` : `<div class="sr-spec-icon">${emoji}</div>`}
               <div class="sr-spec-name">${name}</div>
             </div>`;
           }).join('')}</div>
