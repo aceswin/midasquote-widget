@@ -1216,9 +1216,13 @@ window.logoutMember = async function () {
     }
     if (page === 'products') {
       const prodContent = document.getElementById('mq-products-content');
-      if (prodContent && !prodContent.dataset.loaded) {
-        prodContent.dataset.loaded = 'true';
-        initProductsTab(window._mqShopRecord, window._mqLineItems || []);
+      if (prodContent) {
+        prodContent.innerHTML = '<div class="mq-loading">Loading your products...</div>';
+        atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`)
+          .then(lineItems => {
+            window._mqLineItems = lineItems;
+            initProductsTab(window._mqShopRecord, lineItems);
+          });
       }
     }
     if (page === 'pricing') {
