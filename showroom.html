@@ -188,6 +188,8 @@
       try { if (shop['Photos']) photos = JSON.parse(shop['Photos']); } catch(e) {}
       try { if (shop['Products']) products = JSON.parse(shop['Products']); } catch(e) {}
       try { if (shop['Hidden']) hidden = JSON.parse(shop['Hidden']); } catch(e) {}
+      console.log('DEBUG hidden field raw:', shop['Hidden']);
+      console.log('DEBUG hidden parsed:', hidden);
       const brand = shop['Brand colour'] || '#1a1a1a';
 
       // Apply brand
