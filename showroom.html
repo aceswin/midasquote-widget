@@ -184,8 +184,10 @@
       const shop = shops[0].fields;
       let photos = {};
       let products = {};
+      let hidden = {};
       try { if (shop['Photos']) photos = JSON.parse(shop['Photos']); } catch(e) {}
       try { if (shop['Products']) products = JSON.parse(shop['Products']); } catch(e) {}
+      try { if (shop['Hidden']) hidden = JSON.parse(shop['Hidden']); } catch(e) {}
       const brand = shop['Brand colour'] || '#1a1a1a';
 
       // Apply brand
@@ -211,9 +213,7 @@
         material:    { id:'box-materials', eyebrow:'Cabinet construction', title:'Box Materials',       desc:'The box is the structural core of every cabinet. We offer the following materials.' },
         door:        { id:'door-styles',   eyebrow:'Cabinet doors',        title:'Door Styles',         desc:'The door is the face of your kitchen. Choose a style that fits your aesthetic.' },
         drawer:      { id:'drawer-configs',eyebrow:'Cabinet drawers',      title:'Drawer Configurations',desc:'Drawer box options that affect function and durability.' },
-        hinge:       { id:'door-hinges',   eyebrow:'Hardware',             title:'Door Hinges',         desc:'Hinge options for your cabinet doors.' },
-        
-        countertop:  { id:'countertops',   eyebrow:'Surfaces',             title:'Countertop Materials',desc:'We supply and install a range of countertop materials to suit every style and budget.' },
+countertop:  { id:'countertops',   eyebrow:'Surfaces',             title:'Countertop Materials',desc:'We supply and install a range of countertop materials to suit every style and budget.' },
       };
 
       function itemCard(name, photoKey) {
@@ -238,7 +238,10 @@
             <div class="sr-section-title">${cfg.title}</div>
             <div class="sr-section-desc">${cfg.desc}</div>
           </div>
-          <div class="sr-grid">${names.map(name => {
+          <div class="sr-grid">${names.filter(name => {
+            const key = 'li_' + cat + '_' + name.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+            return !hidden[key];
+          }).map(name => {
             const key = 'li_' + cat + '_' + name.replace(/[^a-z0-9]/gi,'_').toLowerCase();
             return itemCard(name, key);
           }).join('')}</div>
@@ -256,7 +259,7 @@
             <div class="sr-section-title">Specialty Items</div>
             <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
           </div>
-          <div class="sr-spec-grid">${specs.map(r => {
+          <div class="sr-spec-grid">${specs.filter(r => !hidden['spec_' + r.id]).map(r => {
             const name = r.fields['Item name'] || '';
             const key = 'spec_' + r.id;
             let emoji = '⭐';

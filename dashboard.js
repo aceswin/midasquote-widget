@@ -916,14 +916,23 @@ window.logoutMember = async function () {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     const photos = {};
+    const hidden = {};
     document.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
       if (input.value.trim()) photos[key] = input.value.trim();
     });
+    document.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
+      const key = cb.id.replace('mq-hidden-', '');
+      if (cb.checked) hidden[key] = true;
+    });
     try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Photos': JSON.stringify(photos) });
-      shopRec.fields['Photos'] = JSON.stringify(photos);
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, {
+        'Photos':  JSON.stringify(photos),
+        'Hidden':  JSON.stringify(hidden),
+      });
+      shopRec.fields['Photos']  = JSON.stringify(photos);
+      shopRec.fields['Hidden']  = JSON.stringify(hidden);
       showMsg('mq-products-msg', '✓ Photos saved!');
     } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
   };
@@ -983,14 +992,23 @@ window.logoutMember = async function () {
     const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
     function specIcon(name) { for (const [k,v] of Object.entries(icons)) { if ((name||'').toLowerCase().includes(k)) return v; } return '⭐'; }
 
+    let savedHidden = {};
+    try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
+
     function photoCard(key, name, emoji, cat) {
       const savedUrl = savedPhotos[key] || '';
+      const isHidden = savedHidden[key] || false;
       const preview = savedUrl
         ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
         : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
-      return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
+      return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
         <div id="mq-photo-preview-${key}">${preview}</div>
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
+          <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
+            onchange="this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
+          Hide from showroom
+        </label>
         <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Photo URL (optional)</div>
         <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
           style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
