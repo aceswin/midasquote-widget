@@ -1003,13 +1003,18 @@
   // INIT
   // ============================================================
   async function init() {
+    const container=document.getElementById('midasquote-widget');
+    if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
+    container.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;gap:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+      <div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#1a1a1a;border-radius:50%;animation:mqSpin 0.7s linear infinite;"></div>
+      <div style="font-size:14px;color:#6b7280;letter-spacing:0.01em;">Loading estimator…</div>
+      <style>@keyframes mqSpin{to{transform:rotate(360deg)}}</style>
+    </div>`;
     const data=await loadShopData(shopToken);
     if(!data) return;
     const {shop,specs}=data;
-    const container=document.getElementById('midasquote-widget');
-    if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
     injectStyles(shop['Brand colour']||'#1a1a1a');
-    buildCTMAT(data);  // build CT_MAT before buildWidgetHTML uses ctMatOpts()
+    buildCTMAT(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
   }
