@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Maple & Stone Cabinetry — Nashville, TN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --stone: #3d3830;
+    --stone-mid: #6b6357;
+    --stone-light: #a89f94;
+    --cream: #f5f1eb;
+    --cream-dark: #ede8e0;
+    --warm-white: #faf8f5;
+    --maple: #b8763a;
+    --maple-dark: #9e6330;
+    --text: #1e1b17;
+    --text-mid: #5c5650;
+    --text-light: #8f897f;
+    --border: rgba(61,56,48,0.12);
+    --radius: 4px;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--warm-white); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  /* ── DEMO BANNER ── */
+  .demo-banner {
+    background: var(--stone);
+    color: rgba(255,255,255,0.85);
+    text-align: center;
+    padding: 9px 1rem;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .demo-banner a { color: #f0c97a; text-decoration: none; font-weight: 600; }
+  .demo-banner a:hover { text-decoration: underline; }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    position: sticky;
+    top: 37px;
+    z-index: 100;
+  }
+  .nav-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .nav-brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--stone);
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .nav-brand-sub {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--stone-light);
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-mid);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover { color: var(--stone); }
+  .nav-cta {
+    background: var(--maple);
+    color: #fff !important;
+    padding: 9px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600 !important;
+    transition: background 0.15s !important;
+  }
+  .nav-cta:hover { background: var(--maple-dark) !important; color: #fff !important; }
+
+  /* ── HERO ── */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 86vh;
+    max-height: 860px;
+  }
+  .hero-left {
+    background: var(--cream);
+    padding: 5rem 4rem 5rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-left::before {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: -60px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: rgba(184,118,58,0.07);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--maple);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 1.5px;
+    background: var(--maple);
+  }
+  .hero-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 4vw, 54px);
+    font-weight: 500;
+    line-height: 1.1;
+    color: var(--stone);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+  }
+  .hero-headline em {
+    font-style: italic;
+    color: var(--maple);
+  }
+  .hero-body {
+    font-size: 15px;
+    color: var(--text-mid);
+    line-height: 1.75;
+    max-width: 400px;
+    margin-bottom: 2.25rem;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn-primary {
+    background: var(--stone);
+    color: #fff;
+    padding: 13px 28px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    transition: background 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--maple); }
+  .btn-secondary {
+    color: var(--stone-mid);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s;
+  }
+  .btn-secondary:hover { color: var(--stone); }
+  .hero-trust {
+    margin-top: 3rem;
+    display: flex;
+    gap: 2rem;
+  }
+  .trust-item { display: flex; flex-direction: column; gap: 2px; }
+  .trust-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--stone);
+    line-height: 1;
+  }
+  .trust-label { font-size: 11px; color: var(--stone-light); letter-spacing: 0.04em; }
+
+  .hero-right {
+    position: relative;
+    overflow: hidden;
+    background: var(--stone);
+  }
+  .hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.82;
+    display: block;
+  }
+  .hero-img-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #3d3830 0%, #5c4f3d 40%, #7a6a54 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* SVG kitchen illustration fallback */
+  .kitchen-svg { opacity: 0.18; }
+
+  /* ── QUOTE SECTION ── */
+  .quote-section {
+    background: var(--warm-white);
+    padding: 5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .section-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--maple);
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(28px, 3.5vw, 42px);
+    font-weight: 500;
+    color: var(--stone);
+    text-align: center;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+  .section-sub {
+    font-size: 15px;
+    color: var(--text-mid);
+    text-align: center;
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+  .widget-wrap {
+    width: 100%;
+    max-width: 780px;
+    background: var(--warm-white);
+  }
+  #midasquote-widget-container { width: 100%; }
+
+  /* ── PROCESS ── */
+  .process-section {
+    background: var(--cream);
+    padding: 5rem 2rem;
+  }
+  .process-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .process-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 3rem;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .process-step {
+    background: var(--cream);
+    padding: 2.5rem;
+  }
+  .step-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 400;
+    color: rgba(184,118,58,0.22);
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+  .step-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--stone);
+    margin-bottom: 0.5rem;
+  }
+  .step-body {
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.65;
+  }
+
+  /* ── MATERIALS ── */
+  .materials-section {
+    background: var(--warm-white);
+    padding: 5rem 2rem;
+  }
+  .materials-inner { max-width: 1000px; margin: 0 auto; }
+  .materials-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 3rem;
+  }
+  .material-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fff;
+  }
+  .material-card:hover {
+    border-color: var(--maple);
+    box-shadow: 0 4px 24px rgba(61,56,48,0.08);
+  }
+  .material-swatch {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+  .material-info { padding: 1rem; }
+  .material-name { font-size: 14px; font-weight: 600; color: var(--stone); margin-bottom: 4px; }
+  .material-desc { font-size: 12px; color: var(--text-light); line-height: 1.5; }
+
+  /* ── TESTIMONIAL ── */
+  .testimonial-section {
+    background: var(--stone);
+    padding: 5rem 2rem;
+    text-align: center;
+  }
+  .testimonial-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(22px, 3vw, 34px);
+    font-weight: 400;
+    font-style: italic;
+    color: rgba(255,255,255,0.9);
+    max-width: 700px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+  }
+  .testimonial-attr {
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── WHY ── */
+  .why-section {
+    background: var(--cream-dark);
+    padding: 5rem 2rem;
+  }
+  .why-inner { max-width: 1000px; margin: 0 auto; }
+  .why-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+    align-items: start;
+  }
+  .why-list { display: flex; flex-direction: column; gap: 1.5rem; }
+  .why-item { display: flex; gap: 1rem; align-items: flex-start; }
+  .why-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--maple);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 16px;
+  }
+  .why-item-title { font-size: 15px; font-weight: 600; color: var(--stone); margin-bottom: 4px; }
+  .why-item-body { font-size: 13px; color: var(--text-mid); line-height: 1.65; }
+  .why-right {
+    background: var(--stone);
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    color: rgba(255,255,255,0.9);
+  }
+  .why-right-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+  .why-right-body { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.75; margin-bottom: 1.5rem; }
+  .contact-list { display: flex; flex-direction: column; gap: 10px; }
+  .contact-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: rgba(255,255,255,0.75); }
+  .contact-icon { font-size: 16px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #1a1714;
+    padding: 2.5rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .footer-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+  }
+  .footer-copy { font-size: 12px; color: rgba(255,255,255,0.28); }
+  .footer-powered {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+  }
+  .footer-powered a {
+    color: #f0c97a;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .footer-powered a:hover { text-decoration: underline; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; max-height: none; }
+    .hero-right { height: 300px; }
+    .hero-left { padding: 3.5rem 2rem; }
+    .nav-links { display: none; }
+    nav { padding: 0 1.25rem; }
+    .process-grid { grid-template-columns: 1fr; }
+    .materials-grid { grid-template-columns: repeat(2, 1fr); }
+    .why-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .materials-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero-trust { gap: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- DEMO BANNER -->
+<div class="demo-banner">
+  📋 This is a live demo — showing what your shop could look like with MidasQuote. &nbsp;<a href="https://www.midasquote.com" target="_blank">Get your own widget →</a>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-brand-name">Maple & Stone</div>
+    <div class="nav-brand-sub">Custom Cabinetry · Nashville, TN</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#quote">Get a Quote</a></li>
+    <li><a href="#process">Our Process</a></li>
+    <li><a href="#materials">Materials</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#quote" class="nav-cta">Start Your Quote</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Nashville's Premier Cabinet Makers</div>
+    <h1 class="hero-headline">
+      Crafted for the<br/>way you <em>actually</em><br/>live at home.
+    </h1>
+    <p class="hero-body">
+      Maple & Stone builds custom cabinetry for kitchens, bathrooms, and beyond — designed to last a lifetime and built right here in Nashville. No showroom pressure, no surprises on price.
+    </p>
+    <div class="hero-actions">
+      <a href="#quote" class="btn-primary">Get an instant estimate</a>
+      <a href="#process" class="btn-secondary">How it works →</a>
+    </div>
+    <div class="hero-trust">
+      <div class="trust-item">
+        <div class="trust-num">18</div>
+        <div class="trust-label">Years in business</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-num">940+</div>
+        <div class="trust-label">Kitchens completed</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-num">4.9★</div>
+        <div class="trust-label">Google rating</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-img-fallback">
+      <svg class="kitchen-svg" width="380" height="340" viewBox="0 0 380 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Upper cabinets -->
+        <rect x="40" y="40" width="300" height="90" rx="2" fill="white"/>
+        <line x1="40" y1="40" x2="340" y2="40" stroke="white" stroke-width="1.5"/>
+        <line x1="130" y1="40" x2="130" y2="130" stroke="white" stroke-width="1"/>
+        <line x1="220" y1="40" x2="220" y2="130" stroke="white" stroke-width="1"/>
+        <circle cx="130" cy="85" r="4" fill="white"/>
+        <circle cx="220" cy="85" r="4" fill="white"/>
+        <!-- Countertop -->
+        <rect x="30" y="175" width="320" height="14" rx="2" fill="white"/>
+        <!-- Lower cabinets -->
+        <rect x="40" y="189" width="300" height="100" rx="2" fill="white"/>
+        <line x1="130" y1="189" x2="130" y2="289" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+        <line x1="220" y1="189" x2="220" y2="289" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+        <rect x="60" y="225" width="50" height="6" rx="3" fill="rgba(255,255,255,0.4)"/>
+        <rect x="150" y="225" width="50" height="6" rx="3" fill="rgba(255,255,255,0.4)"/>
+        <rect x="240" y="225" width="50" height="6" rx="3" fill="rgba(255,255,255,0.4)"/>
+        <!-- Backsplash tiles -->
+        <rect x="40" y="130" width="300" height="45" fill="rgba(255,255,255,0.06)"/>
+        <line x1="40" y1="145" x2="340" y2="145" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+        <line x1="40" y1="160" x2="340" y2="160" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+        <line x1="100" y1="130" x2="100" y2="175" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+        <line x1="160" y1="130" x2="160" y2="175" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+        <line x1="220" y1="130" x2="220" y2="175" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+        <line x1="280" y1="130" x2="280" y2="175" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE SECTION -->
+<section class="quote-section" id="quote">
+  <div class="section-eyebrow">Instant Pricing</div>
+  <h2 class="section-title">Get your cabinet estimate<br/>in under 2 minutes</h2>
+  <p class="section-sub">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
+  <div class="widget-wrap">
+    <div id="midasquote-widget-container"></div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process-section" id="process">
+  <div class="process-inner">
+    <div style="text-align:center">
+      <div class="section-eyebrow">How It Works</div>
+      <h2 class="section-title">Simple from start to finish</h2>
+    </div>
+    <div class="process-grid">
+      <div class="process-step">
+        <div class="step-num">01</div>
+        <div class="step-title">Get an instant estimate</div>
+        <p class="step-body">Use the quote tool above to get a ballpark range in minutes. No commitment, no email required to see numbers.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">02</div>
+        <div class="step-title">Book a free measure</div>
+        <p class="step-body">One of our cabinet specialists comes to your home, measures every inch, and walks you through material options in person.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">03</div>
+        <div class="step-title">We build & install</div>
+        <p class="step-body">Your cabinets are built in our Nashville workshop and installed by our own crew — not a subcontractor. We own the result.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MATERIALS -->
+<section class="materials-section" id="materials">
+  <div class="materials-inner">
+    <div style="text-align:center">
+      <div class="section-eyebrow">Materials & Finishes</div>
+      <h2 class="section-title">Built from what lasts</h2>
+      <p class="section-sub" style="margin:0.75rem auto 0">We work with solid wood, premium plywood boxes, and soft-close hardware on everything we build.</p>
+    </div>
+    <div class="materials-grid">
+      <div class="material-card">
+        <div class="material-swatch" style="background:linear-gradient(135deg,#d4a96a,#b8864a)">🪵</div>
+        <div class="material-info">
+          <div class="material-name">Maple</div>
+          <div class="material-desc">Clean grain, takes stain beautifully. Our most popular choice for modern kitchens.</div>
+        </div>
+      </div>
+      <div class="material-card">
+        <div class="material-swatch" style="background:linear-gradient(135deg,#8b6f4e,#6b5237)">🌰</div>
+        <div class="material-info">
+          <div class="material-name">Walnut</div>
+          <div class="material-desc">Rich, dark character grain. Stunning in contemporary and transitional spaces.</div>
+        </div>
+      </div>
+      <div class="material-card">
+        <div class="material-swatch" style="background:linear-gradient(135deg,#c8a97a,#a88558)">🌿</div>
+        <div class="material-info">
+          <div class="material-name">White Oak</div>
+          <div class="material-desc">Warm, open grain with a modern feel. Pairs well with stone countertops.</div>
+        </div>
+      </div>
+      <div class="material-card">
+        <div class="material-swatch" style="background:linear-gradient(135deg,#e8e0d4,#d4c8b8)">🎨</div>
+        <div class="material-info">
+          <div class="material-name">Painted MDF</div>
+          <div class="material-desc">Flawless flat finish in any colour. Perfect for shaker-style and painted looks.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testimonial-section">
+  <p class="testimonial-quote">"We'd been putting off the kitchen for three years because every quote we got felt like a negotiation. Maple & Stone sent us a range online in five minutes and the final number landed right in the middle."</p>
+  <div class="testimonial-attr">— Sarah M., Brentwood, TN &nbsp;·&nbsp; Kitchen renovation 2024</div>
+</section>
+
+<!-- WHY / CONTACT -->
+<section class="why-section" id="contact">
+  <div class="why-inner">
+    <div style="text-align:center; margin-bottom:1rem">
+      <div class="section-eyebrow">Why Maple & Stone</div>
+      <h2 class="section-title">What makes us different</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-list">
+        <div class="why-item">
+          <div class="why-icon">🏗️</div>
+          <div>
+            <div class="why-item-title">We build it ourselves</div>
+            <p class="why-item-body">Our cabinets are made in our own 12,000 sq ft Nashville workshop. No offshore boxes, no mystery materials.</p>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="why-icon">📐</div>
+          <div>
+            <div class="why-item-title">Measured to your space</div>
+            <p class="why-item-body">Every cabinet is built to your exact dimensions — not cut down from a stock size. Corners, soffits, and odd angles included.</p>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="why-icon">🔒</div>
+          <div>
+            <div class="why-item-title">Fixed-price contracts</div>
+            <p class="why-item-body">The price we quote is the price you pay. No material escalation clauses, no surprise site fees.</p>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="why-icon">⭐</div>
+          <div>
+            <div class="why-item-title">Lifetime warranty on boxes</div>
+            <p class="why-item-body">Our cabinet boxes carry a lifetime warranty. Doors and hardware are covered for 5 years.</p>
+          </div>
+        </div>
+      </div>
+      <div class="why-right">
+        <div class="why-right-title">Ready to talk through your project?</div>
+        <p class="why-right-body">Use the quote tool above to get a ballpark first — then reach out and we'll set up a free in-home measure at a time that works for you.</p>
+        <div class="contact-list">
+          <div class="contact-item"><span class="contact-icon">📞</span> (615) 555-0182</div>
+          <div class="contact-item"><span class="contact-icon">✉️</span> hello@mapleandstone.com</div>
+          <div class="contact-item"><span class="contact-icon">📍</span> 4820 Centennial Blvd, Nashville, TN 37209</div>
+          <div class="contact-item"><span class="contact-icon">🕐</span> Mon–Fri 8am–5pm · Sat 9am–2pm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Maple & Stone Cabinetry</div>
+  <div class="footer-copy">© 2024 Maple & Stone Cabinetry · Nashville, TN</div>
+  <div class="footer-powered">Quotes powered by <a href="https://www.midasquote.com" target="_blank">MidasQuote</a></div>
+</footer>
+
+<!-- MIDASQUOTE WIDGET -->
+<script src="https://widget.midasquote.com/widget.js?shop=MAPLE_STONE_TOKEN"></script>
+
+</body>
+</html>
