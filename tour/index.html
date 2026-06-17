@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MidasQuote — Dashboard Tour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f9fafb;
+  --white:#ffffff;
+  --border:#e5e7eb;
+  --text:#111827;
+  --text-mid:#6b7280;
+  --text-light:#9ca3af;
+  --accent:#1a1a1a;
+  --accent-hover:#374151;
+  --green:#16a34a;
+  --green-bg:#dcfce7;
+  --green-text:#166534;
+  --blue-bg:#dbeafe;
+  --blue-text:#1e40af;
+  --yellow-bg:#fef9c3;
+  --yellow-text:#854d0e;
+  --red-bg:#fee2e2;
+  --red-text:#991b1b;
+  --tour-accent:#f59e0b;
+  --tour-bg:#fffbeb;
+  --tour-border:#fbbf24;
+  --radius:12px;
+  --sidebar:220px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* DEMO BANNER */
+.demo-banner{background:var(--accent);color:rgba(255,255,255,0.85);text-align:center;padding:9px 1rem;font-size:12px;letter-spacing:0.03em}
+.demo-banner a{color:#f0c97a;text-decoration:none;font-weight:600}
+
+/* TOPBAR */
+.mq-topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:37px;z-index:50}
+.mq-topbar-brand{font-size:16px;font-weight:700;color:var(--text)}
+.mq-topbar-shop{font-size:13px;color:var(--text-mid)}
+.mq-btn{padding:7px 14px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text);font-family:inherit;transition:all 0.15s}
+.mq-btn:hover{background:var(--bg)}
+.mq-btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mq-btn-primary:hover{opacity:0.88}
+.mq-btn-sm{padding:5px 10px;font-size:12px}
+.mq-btn-danger{color:#dc2626;border-color:#fca5a5}
+.mq-btn-danger:hover{background:#fef2f2}
+
+/* LAYOUT */
+.mq-layout{display:flex;min-height:calc(100vh - 97px)}
+.mq-sidebar{width:var(--sidebar);background:var(--white);border-right:1px solid var(--border);padding:1.5rem 0;flex-shrink:0}
+.mq-nav-section{font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
+.mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
+.mq-nav-item:hover{color:var(--text);background:var(--bg)}
+.mq-nav-item.active{color:var(--text);background:var(--bg);border-left-color:var(--accent)}
+.mq-nav-icon{font-size:16px;width:20px;text-align:center}
+.mq-content{flex:1;padding:2.5rem;overflow-y:auto}
+.mq-page{display:none}
+.mq-page.active{display:block}
+.mq-page-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px}
+.mq-page-sub{font-size:13px;color:var(--text-mid);margin-bottom:2rem}
+.mq-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem}
+.mq-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1rem}
+.mq-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.25rem;margin-bottom:2rem}
+.mq-stat{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem}
+.mq-stat-val{font-size:26px;font-weight:700;color:var(--text);margin-bottom:6px}
+.mq-stat-lbl{font-size:12px;color:var(--text-mid);font-weight:500}
+.mq-stat-green .mq-stat-val{color:var(--green)}
+.mq-table{width:100%;border-collapse:collapse}
+.mq-table th{font-size:11px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid var(--border);text-align:left}
+.mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:var(--text)}
+.mq-table tr:last-child td{border-bottom:none}
+.mq-table tr:hover td{background:var(--bg)}
+.mq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.mq-badge-green{background:var(--green-bg);color:var(--green-text)}
+.mq-badge-blue{background:var(--blue-bg);color:var(--blue-text)}
+.mq-badge-yellow{background:var(--yellow-bg);color:var(--yellow-text)}
+.mq-badge-red{background:var(--red-bg);color:var(--red-text)}
+.mq-badge-grey{background:#f3f4f6;color:var(--text-mid)}
+.mq-embed-box{background:#1a1a1a;border-radius:8px;padding:1rem;font-family:monospace;font-size:12px;color:#a3e635;line-height:1.6;position:relative;word-break:break-all}
+.mq-copy-btn{position:absolute;top:8px;right:8px;background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit}
+.mq-field{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem}
+.mq-label{font-size:12px;font-weight:500;color:#374151}
+.mq-hint{font-size:11px;color:var(--text-light);margin-top:2px}
+.mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=url],select,textarea{font-family:inherit;font-size:13px;color:var(--text);background:var(--white);border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;width:100%}
+textarea{resize:vertical;min-height:80px}
+.mq-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.mq-toggle{width:40px;height:22px;background:#d1d5db;border-radius:11px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
+.mq-toggle.on{background:var(--accent)}
+.mq-toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
+.mq-toggle.on::after{left:20px}
+.mq-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.mq-spec-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #f3f4f6}
+.mq-spec-row:last-child{border-bottom:none}
+.mq-empty{text-align:center;padding:3rem;color:var(--text-light);font-size:14px}
+
+/* PRODUCT CARDS */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.product-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1rem}
+.product-swatch{width:100%;height:110px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px}
+.product-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.product-desc{font-size:11px;color:var(--text-mid);line-height:1.4}
+
+/* ── TOUR OVERLAY ── */
+#tour-overlay{position:fixed;inset:0;z-index:1000;pointer-events:none}
+.tour-highlight{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.55);transition:all 0.4s cubic-bezier(0.4,0,0.2,1);z-index:1001}
+.tour-tooltip{position:fixed;background:var(--white);border-radius:14px;padding:1.25rem 1.5rem;max-width:320px;min-width:260px;box-shadow:0 20px 60px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.06);z-index:1002;pointer-events:all;transition:top 0.35s cubic-bezier(0.4,0,0.2,1),left 0.35s cubic-bezier(0.4,0,0.2,1)}
+.tour-step-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--tour-accent);margin-bottom:6px}
+.tour-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3}
+.tour-body{font-size:13px;color:var(--text-mid);line-height:1.65;margin-bottom:1.25rem}
+.tour-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tour-dots{display:flex;gap:5px}
+.tour-dot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:background 0.2s,width 0.2s}
+.tour-dot.active{background:var(--accent);width:16px;border-radius:3px}
+.tour-btns{display:flex;gap:8px}
+.tour-btn{padding:7px 16px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--white);color:var(--text);transition:all 0.15s}
+.tour-btn:hover{background:var(--bg)}
+.tour-btn-next{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tour-btn-next:hover{opacity:0.88}
+.tour-arrow{position:absolute;width:12px;height:12px;background:var(--white);transform:rotate(45deg)}
+
+/* TOUR START SCREEN */
+#tour-start{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.tour-start-card{background:var(--white);border-radius:20px;padding:2.5rem;max-width:460px;width:100%;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,0.2)}
+.tour-start-icon{font-size:48px;margin-bottom:1rem}
+.tour-start-title{font-size:24px;font-weight:700;color:var(--text);margin-bottom:0.75rem}
+.tour-start-body{font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:2rem}
+.tour-start-btn{display:inline-block;background:var(--accent);color:#fff;padding:13px 32px;border-radius:10px;font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit;width:100%;transition:opacity 0.15s}
+.tour-start-btn:hover{opacity:0.88}
+.tour-start-skip{font-size:12px;color:var(--text-light);margin-top:12px;cursor:pointer}
+.tour-start-skip:hover{color:var(--text)}
+
+/* TOUR END */
+#tour-end{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;align-items:center;justify-content:center;padding:1rem}
+.tour-end-card{background:var(--white);border-radius:20px;padding:2.5rem;max-width:460px;width:100%;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,0.2)}
+.confetti{font-size:48px;margin-bottom:1rem;animation:bounce 0.6s ease infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .demo-banner{font-size:11px;padding:7px 0.75rem}
+  .mq-topbar{padding:0 1rem;top:0;height:52px}
+  .mq-topbar-brand{font-size:14px}
+  .mq-topbar-shop{font-size:11px}
+  .mq-topbar .mq-btn{display:none}
+  .mq-layout{flex-direction:column}
+  .mq-sidebar{width:100%;padding:0;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .mq-sidebar::-webkit-scrollbar{display:none}
+  .mq-nav-section{display:none}
+  .mq-nav-item{flex-shrink:0;border-left:none!important;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap;font-size:12px}
+  .mq-nav-item.active{border-bottom-color:var(--accent)!important;background:var(--bg)}
+  .mq-nav-icon{font-size:14px}
+  .mq-content{padding:1rem}
+  .mq-card{padding:1.25rem}
+  .mq-page-title{font-size:18px}
+  .mq-stat-grid{grid-template-columns:repeat(2,1fr);gap:0.75rem;margin-bottom:1.25rem}
+  .mq-stat{padding:1rem}
+  .mq-stat-val{font-size:20px}
+  .mq-grid2{grid-template-columns:1fr}
+  .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .mq-table{min-width:520px}
+  .product-grid{grid-template-columns:repeat(2,1fr)}
+  .mq-section-header{flex-wrap:wrap;gap:8px}
+  .tour-tooltip{max-width:calc(100vw - 32px)!important;min-width:0!important;width:calc(100vw - 32px)!important;padding:1rem!important}
+  .tour-title{font-size:14px}
+  .tour-body{font-size:12px;margin-bottom:1rem}
+  .tour-btn{padding:8px 14px;font-size:13px}
+}
+@media (max-width: 400px) {
+  .mq-stat-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- DEMO BANNER -->
+<div class="demo-banner">
+  📋 Interactive dashboard tour — see exactly what your shop gets. &nbsp;<a href="https://www.midasquote.com" target="_blank">Get started at MidasQuote →</a>
+</div>
+
+<!-- TOPBAR -->
+<div class="mq-topbar">
+  <div>
+    <div class="mq-topbar-brand">⚡ MidasQuote</div>
+    <div class="mq-topbar-shop">Maple & Stone Cabinetry</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="mq-btn mq-btn-sm" onclick="window.open('https://midasquote.com/quote','_blank')">Preview widget ↗</button>
+    <button class="mq-btn mq-btn-sm">Log out</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="mq-layout">
+
+  <!-- SIDEBAR -->
+  <div class="mq-sidebar" id="sidebar">
+    <div class="mq-nav-section">Overview</div>
+    <div class="mq-nav-item active" id="nav-overview" onclick="goPage('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
+    <div class="mq-nav-item" id="nav-leads" onclick="goPage('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
+    <div class="mq-nav-section">Setup</div>
+    <div class="mq-nav-item" id="nav-shop" onclick="goPage('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
+    <div class="mq-nav-item" id="nav-pricing" onclick="goPage('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
+    <div class="mq-nav-item" id="nav-specialty" onclick="goPage('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
+    <div class="mq-nav-item" id="nav-embed" onclick="goPage('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
+    <div class="mq-nav-item" id="nav-products" onclick="goPage('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
+    <div class="mq-nav-item" id="nav-billing" onclick="goPage('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="mq-content" id="main-content">
+
+    <!-- OVERVIEW -->
+    <div class="mq-page active" id="page-overview">
+      <div class="mq-page-title">Welcome back 👋</div>
+      <div class="mq-page-sub">Here's what's happening with your widget</div>
+      <div class="mq-stat-grid">
+        <div class="mq-stat" id="stat-leads"><div class="mq-stat-val">24</div><div class="mq-stat-lbl">Total leads</div></div>
+        <div class="mq-stat mq-stat-green" id="stat-new"><div class="mq-stat-val">7</div><div class="mq-stat-lbl">New this week</div></div>
+        <div class="mq-stat" id="stat-booked"><div class="mq-stat-val">4</div><div class="mq-stat-lbl">Booked</div></div>
+        <div class="mq-stat" id="stat-value"><div class="mq-stat-val">$186,400</div><div class="mq-stat-lbl">Est. pipeline value</div></div>
+      </div>
+      <div class="mq-card" id="card-recent-leads">
+        <div class="mq-card-title">📋 Recent leads</div>
+        <table class="mq-table">
+          <thead><tr><th>Name</th><th>Type</th><th>Estimate</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Sarah Mitchell</strong></td><td>Cabinets + Countertops</td><td>$18,200 – $21,800</td><td><span class="mq-badge mq-badge-blue">New</span></td></tr>
+            <tr><td><strong>James & Carol Tran</strong></td><td>Cabinets only</td><td>$12,400 – $14,700</td><td><span class="mq-badge mq-badge-yellow">Contacted</span></td></tr>
+            <tr><td><strong>Derek Hoover</strong></td><td>Countertops only</td><td>$4,100 – $4,900</td><td><span class="mq-badge mq-badge-green">Booked</span></td></tr>
+            <tr><td><strong>Amanda Perkins</strong></td><td>Cabinets + Countertops</td><td>$22,600 – $27,100</td><td><span class="mq-badge mq-badge-blue">New</span></td></tr>
+            <tr><td><strong>Mike Oduya</strong></td><td>Cabinets only</td><td>$8,800 – $10,500</td><td><span class="mq-badge mq-badge-red">Lost</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mq-card" id="card-embed-overview">
+        <div class="mq-card-title">🔗 Your widget embed code</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:8px">Copy and paste this into your website where you want the widget to appear.</p>
+        <div class="mq-embed-box">&lt;div id="midasquote-widget"&gt;&lt;/div&gt;<br/>&lt;script src="https://widget.midasquote.com/widget.js?shop=maple-stone-demo"&gt;&lt;/script&gt;<button class="mq-copy-btn">Copy</button></div>
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="mq-page" id="page-leads">
+      <div class="mq-section-header">
+        <div>
+          <div class="mq-page-title">Leads</div>
+          <div class="mq-page-sub">All quote requests from your widget</div>
+        </div>
+        <select style="font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;width:auto">
+          <option>All leads</option><option>New</option><option>Contacted</option><option>Booked</option><option>Lost</option>
+        </select>
+      </div>
+      <div class="mq-card" style="padding:0;overflow:hidden">
+        <div class="mq-table-wrap"><table class="mq-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Estimate</th><th>Status</th><th>Update</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Sarah Mitchell</strong></td><td>sarah.m@gmail.com</td><td>(615) 402-8811</td><td>Both</td><td>$18,200 – $21,800</td><td><span class="mq-badge mq-badge-blue">New</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option>New</option><option>Contacted</option><option>Booked</option><option>Lost</option></select></td></tr>
+            <tr><td><strong>James & Carol Tran</strong></td><td>jtran@outlook.com</td><td>(615) 884-2200</td><td>Cabinets</td><td>$12,400 – $14,700</td><td><span class="mq-badge mq-badge-yellow">Contacted</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option>New</option><option selected>Contacted</option><option>Booked</option><option>Lost</option></select></td></tr>
+            <tr><td><strong>Derek Hoover</strong></td><td>dhoover@me.com</td><td>(615) 231-9944</td><td>Countertops</td><td>$4,100 – $4,900</td><td><span class="mq-badge mq-badge-green">Booked</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option>New</option><option>Contacted</option><option selected>Booked</option><option>Lost</option></select></td></tr>
+            <tr><td><strong>Amanda Perkins</strong></td><td>amanda.p@yahoo.com</td><td>(629) 554-7712</td><td>Both</td><td>$22,600 – $27,100</td><td><span class="mq-badge mq-badge-blue">New</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option selected>New</option><option>Contacted</option><option>Booked</option><option>Lost</option></select></td></tr>
+            <tr><td><strong>Mike Oduya</strong></td><td>m.oduya@gmail.com</td><td>(615) 770-3388</td><td>Cabinets</td><td>$8,800 – $10,500</td><td><span class="mq-badge mq-badge-red">Lost</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option>New</option><option>Contacted</option><option>Booked</option selected><option selected>Lost</option></select></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- SHOP INFO -->
+    <div class="mq-page" id="page-shop">
+      <div class="mq-page-title">Shop info</div>
+      <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
+      <div class="mq-card">
+        <div class="mq-grid2">
+          <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" value="Maple & Stone Cabinetry"/></div>
+          <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" value="(615) 555-0182"/></div>
+          <div class="mq-field"><label class="mq-label">City</label><input type="text" value="Nashville, TN"/></div>
+          <div class="mq-field"><label class="mq-label">Website URL</label><input type="url" value="https://mapleandstone.com"/></div>
+          <div class="mq-field"><label class="mq-label">Lead notify email</label><input type="email" value="hello@mapleandstone.com"/><span class="mq-hint">Where new lead notifications go</span></div>
+          <div class="mq-field"><label class="mq-label">Brand colour</label><input type="text" value="#3d3830"/><span class="mq-hint">Hex code for widget buttons</span></div>
+          <div class="mq-field"><label class="mq-label">Quote range — low (%)</label><input type="number" value="12"/><span class="mq-hint">Quote shows up to 12% below your estimate</span></div>
+          <div class="mq-field"><label class="mq-label">Quote range — high (%)</label><input type="number" value="18"/><span class="mq-hint">Quote shows up to 18% above your estimate</span></div>
+        </div>
+        <div class="mq-field"><label class="mq-label">Disclaimer text</label><textarea>Ballpark estimate only. Contact us for a full quote.</textarea></div>
+        <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+          <div><div style="font-size:13px;font-weight:500">Show "View our products" link on widget</div><div style="font-size:12px;color:var(--text-mid);margin-top:2px">Customers can browse your showroom before getting a quote</div></div>
+          <div class="mq-toggle on"></div>
+        </div>
+        <button class="mq-btn mq-btn-primary">Save shop info</button>
+      </div>
+    </div>
+
+    <!-- PRICING -->
+    <div class="mq-page" id="page-pricing">
+
+      <!-- Header with buttons matching real dashboard -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px;margin-bottom:6px">&#9881;&#65039; Pricing</div>
+          <div style="font-size:13px;color:var(--text-mid)">Your rates — changes apply to your widget immediately.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="mq-btn mq-btn-sm">&#129308; Edit shop items</button>
+          <button class="mq-btn mq-btn-sm" onclick="showWizard()">&#129497; Re-run pricing wizard</button>
+          <button class="mq-btn mq-btn-sm mq-btn-danger">&#128465;&#65039; Start fresh</button>
+        </div>
+      </div>
+
+      <!-- WIZARD CALLOUT -->
+      <div id="wizard-callout" class="mq-card" style="border:2px solid #f59e0b;background:#fffbeb;margin-bottom:1.5rem">
+        <div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+          <div style="font-size:36px;line-height:1">&#129497;</div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:6px">The Pricing Wizard — your secret weapon</div>
+            <div style="font-size:13px;color:#6b7280;line-height:1.7;margin-bottom:1rem">
+              Not sure what your per-linear-foot rates are? No problem. The wizard asks you to price a <strong style="color:#111">standard 4’ run of cabinets</strong> in a few common variations — just enter what you’d actually charge a customer for each one. It reverse-engineers your rates automatically from your real-world pricing. There’s also a <strong style="color:#111">Mini Wizard</strong> on any individual line item you’re unsure about — same idea, one item at a time.
+            </div>
+            <button class="mq-btn mq-btn-primary" onclick="showWizard()">Run the pricing wizard →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WIZARD FORM (hidden by default, shown on click) -->
+      <div id="wizard-demo" style="display:none">
+        <div class="mq-card" style="border:2px solid #1a1a1a;margin-bottom:1.5rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
+            <div style="font-size:15px;font-weight:700;color:#111">&#129497; Pricing Wizard — Step 1 of 3</div>
+            <button class="mq-btn mq-btn-sm" onclick="hideWizard()">✕ Close</button>
+          </div>
+          <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:1.5rem;overflow:hidden">
+            <div style="width:33%;height:100%;background:#1a1a1a;border-radius:2px"></div>
+          </div>
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:6px">Quote a standard 4-foot run of cabinets</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">
+            We’ll ask you to price the same 4’ run a few different ways — different materials, with and without doors, supply only vs. installed. Just enter what you’d actually charge a customer for each scenario. The wizard calculates your per-linear-foot rates automatically.
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:13px;color:#166534;line-height:1.6">
+            <strong>Scenario 1 of 4:</strong> 4 ft uppers + 4 ft bases — Melamine box, no doors, supply only (no install). What would you charge?
+          </div>
+          <div class="mq-grid2" style="margin-bottom:1rem">
+            <div class="mq-field"><label class="mq-label">Your price for this job ($)</label><input type="number" placeholder="e.g. 1800"/></div>
+            <div class="mq-field"><label class="mq-label">Does this include tax?</label><select><option>No — tax not included</option><option>Yes — tax included</option></select></div>
+          </div>
+          <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:13px;color:#92400e;line-height:1.6">
+            &#128161; <strong>Mini Wizard:</strong> Already have most rates set but unsure about one item? Click <em>"Edit shop items"</em> and use the mini wizard on just that line — enter your price for a single 4’ run scenario and it calculates that rate on its own.
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="mq-btn" onclick="hideWizard()">Cancel</button>
+            <button class="mq-btn mq-btn-primary">Next scenario →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXISTING RATES (shown below wizard callout) -->
+      <div id="pricing-rates">
+        <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f3f4f6">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280">&#128295; INSTALLATION &amp; REMOVAL</div>
+            <button class="mq-btn mq-btn-sm">+ Add</button>
+          </div>
+          <div class="mq-table-wrap"><table class="mq-table">
+            <tbody>
+              <tr><td><strong>Install — uppers (no doors)</strong><div style="font-size:11px;color:#9ca3af">Upper box install, no doors</div></td><td style="font-weight:500">$60.75</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Install — uppers (with doors)</strong><div style="font-size:11px;color:#9ca3af">Upper install with doors hung</div></td><td style="font-weight:500">$79.35</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Install — bases (no doors)</strong><div style="font-size:11px;color:#9ca3af">Base box install, no doors</div></td><td style="font-weight:500">$108.75</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Removal — existing cabinets</strong><div style="font-size:11px;color:#9ca3af">Demo and haul away old cabinets</div></td><td style="font-weight:500">$20.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f3f4f6">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280">&#129717; BOX MATERIALS</div>
+            <button class="mq-btn mq-btn-sm">+ Add</button>
+          </div>
+          <div class="mq-table-wrap"><table class="mq-table">
+            <tbody>
+              <tr><td><strong>Melamine — uppers</strong></td><td style="font-weight:500">$155.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Melamine — bases</strong></td><td style="font-weight:500">$155.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Plywood — uppers</strong></td><td style="font-weight:500">$210.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Plywood — bases</strong></td><td style="font-weight:500">$210.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="mq-card" style="padding:0;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f3f4f6">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280">&#129704; COUNTERTOP PRICING</div>
+            <button class="mq-btn mq-btn-sm">+ Add item</button>
+          </div>
+          <div class="mq-table-wrap"><table class="mq-table">
+            <tbody>
+              <tr><td><strong>Quartz</strong></td><td style="font-weight:500">$88.00</td><td style="font-size:11px;color:#9ca3af">per sq ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Granite — mid</strong></td><td style="font-weight:500">$75.00</td><td style="font-size:11px;color:#9ca3af">per sq ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Marble</strong></td><td style="font-weight:500">$115.00</td><td style="font-size:11px;color:#9ca3af">per sq ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    <!-- SPECIALTY -->
+    <div class="mq-page" id="page-specialty">
+      <div class="mq-section-header">
+        <div><div class="mq-page-title">Specialty items</div><div class="mq-page-sub">Add-ons that appear as checkboxes in your widget</div></div>
+        <button class="mq-btn mq-btn-primary mq-btn-sm">+ New item</button>
+      </div>
+      <div class="mq-card" style="padding:0;overflow:hidden">
+        <table class="mq-table">
+          <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Active</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Crown moulding</td><td><input type="number" value="8" style="width:70px"/></td><td><input type="checkbox" checked/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Valance</td><td><input type="number" value="6" style="width:70px"/></td><td><input type="checkbox" checked/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Glass door inserts</td><td><input type="number" value="120" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Lazy Susan</td><td><input type="number" value="95" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Pull-out trash</td><td><input type="number" value="110" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Under-cabinet lighting</td><td><input type="number" value="12" style="width:70px"/></td><td><input type="checkbox" checked/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Deep pot drawers</td><td><input type="number" value="85" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EMBED CODE -->
+    <div class="mq-page" id="page-embed">
+      <div class="mq-page-title">Embed code</div>
+      <div class="mq-page-sub">Paste this into your website where you want the widget to appear</div>
+      <div class="mq-card">
+        <div class="mq-card-title">📋 Your embed code</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Works on Wix, Squarespace, WordPress, Webflow, GoDaddy and any custom site.</p>
+        <div class="mq-embed-box">&lt;div id="midasquote-widget"&gt;&lt;/div&gt;<br/>&lt;script src="https://widget.midasquote.com/widget.js?shop=maple-stone-demo"&gt;&lt;/script&gt;<button class="mq-copy-btn">Copy</button></div>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">📱 Shop mode — for walk-in customers</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Pull this up on a tablet at your shop. No lead capture — just the quote tool.</p>
+        <div class="mq-embed-box">https://widget.midasquote.com/?shop=maple-stone-demo&mode=shop<button class="mq-copy-btn">Copy</button></div>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">💡 Installation help</div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
+          <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
+          <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
+          <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
+          <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY PRODUCTS -->
+    <div class="mq-page" id="page-products">
+      <div class="mq-page-title">My Products</div>
+      <div class="mq-page-sub">Add photos to your materials and options — these appear on your customer showroom page</div>
+      <div class="mq-card">
+        <div class="mq-card-title">🪵 Box Materials</div>
+        <div class="product-grid">
+          <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#d4a96a,#b8864a)">🪵</div><div class="product-name">Maple</div><input type="text" placeholder="Paste photo URL..." style="font-size:11px;margin-top:6px"/></div>
+          <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#8b6f4e,#6b5237)">🌰</div><div class="product-name">Walnut</div><input type="text" placeholder="Paste photo URL..." style="font-size:11px;margin-top:6px"/></div>
+          <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#c8a97a,#a88558)">🌿</div><div class="product-name">White Oak</div><input type="text" placeholder="Paste photo URL..." style="font-size:11px;margin-top:6px"/></div>
+          <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#e8e0d4,#d4c8b8)">🎨</div><div class="product-name">Painted MDF</div><input type="text" placeholder="Paste photo URL..." style="font-size:11px;margin-top:6px"/></div>
+        </div>
+        <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%">Save photos</button>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">🔗 Your showroom link</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Share this with customers so they can browse your materials before getting a quote.</p>
+        <div class="mq-embed-box">https://widget.midasquote.com/showroom.html?shop=maple-stone-demo<button class="mq-copy-btn">Copy</button></div>
+        <button class="mq-btn" style="margin-top:10px">Open showroom ↗</button>
+      </div>
+    </div>
+
+    <!-- BILLING -->
+    <div class="mq-page" id="page-billing">
+      <div class="mq-page-title">Billing</div>
+      <div class="mq-page-sub">Manage your subscription, payment method, and invoices</div>
+      <div class="mq-card">
+        <div class="mq-card-title">📋 Current plan</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="mq-badge mq-badge-green">Active</span>
+          <span style="font-size:14px;font-weight:500">MidasQuote Pro — $49/month</span>
+        </div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem">Next billing date: July 16, 2026</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="mq-btn mq-btn-primary">Manage plan</button>
+          <button class="mq-btn">Upgrade to annual (save 20%)</button>
+        </div>
+      </div>
+      <div class="mq-card"><div class="mq-card-title">💳 Payment method</div><p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem">Visa ending in 4242 — expires 08/28</p><button class="mq-btn">Update payment method</button></div>
+      <div class="mq-card"><div class="mq-card-title">🧾 Invoices</div><p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem">View and download your past invoices.</p><button class="mq-btn">View invoices</button></div>
+      <div class="mq-card" style="border-color:#fca5a5">
+        <div class="mq-card-title" style="color:#dc2626">⚠️ Cancel subscription</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem;line-height:1.6">You can cancel at any time — your widget stays active until the end of your billing period. Your leads and data are kept for 30 days.</p>
+        <button class="mq-btn mq-btn-danger">Cancel subscription</button>
+      </div>
+    </div>
+
+  </div><!-- /mq-content -->
+</div><!-- /mq-layout -->
+
+<!-- TOUR START SCREEN -->
+<div id="tour-start">
+  <div class="tour-start-card">
+    <div class="tour-start-icon">⚡</div>
+    <div class="tour-start-title">Welcome to your MidasQuote dashboard</div>
+    <div class="tour-start-body">This is an interactive tour of everything you get as a MidasQuote shop owner. Click through each section to see how it works — no account needed.</div>
+    <button class="tour-start-btn" onclick="startTour()">Start the tour →</button>
+    <div class="tour-start-skip" onclick="skipTour()">Skip tour and explore freely</div>
+  </div>
+</div>
+
+<!-- TOUR END SCREEN -->
+<div id="tour-end">
+  <div class="tour-end-card">
+    <div class="confetti">🎉</div>
+    <div class="tour-start-title">That's your dashboard!</div>
+    <div class="tour-start-body" style="margin-bottom:1.5rem">Every quote request from your widget lands here automatically. Your pricing, your leads, your products — all in one place. Ready to get your own?</div>
+    <button class="tour-start-btn" onclick="window.open('https://www.midasquote.com','_blank')">Get MidasQuote for my shop →</button>
+    <div class="tour-start-skip" onclick="document.getElementById('tour-end').style.display='none'">Keep exploring the dashboard</div>
+  </div>
+</div>
+
+<!-- TOUR OVERLAY -->
+<div id="tour-overlay" style="display:none">
+  <div class="tour-highlight" id="tour-highlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-step-label" id="tour-step-label"></div>
+    <div class="tour-title" id="tour-title"></div>
+    <div class="tour-body" id="tour-body"></div>
+    <div class="tour-footer">
+      <div class="tour-dots" id="tour-dots"></div>
+      <div class="tour-btns">
+        <button class="tour-btn" id="tour-prev" onclick="tourStep(-1)">← Back</button>
+        <button class="tour-btn tour-btn-next" id="tour-next" onclick="tourStep(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── WIZARD TOGGLE ──
+function showWizard() {
+  document.getElementById('wizard-demo').style.display = 'block';
+  document.getElementById('wizard-callout').style.display = 'none';
+  document.getElementById('wizard-demo').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function hideWizard() {
+  document.getElementById('wizard-demo').style.display = 'none';
+  document.getElementById('wizard-callout').style.display = 'block';
+}
+
+// ── PAGE NAV ──
+function goPage(name, navEl) {
+  document.querySelectorAll('.mq-nav-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.mq-page').forEach(p => p.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  else { const n = document.getElementById('nav-' + name); if (n) n.classList.add('active'); }
+  const p = document.getElementById('page-' + name);
+  if (p) p.classList.add('active');
+}
+
+// ── TOUR STEPS ──
+const STEPS = [
+  {
+    page: 'overview',
+    target: 'stat-leads',
+    label: 'Step 1 of 9 — Dashboard',
+    title: 'Your live stats, always up to date',
+    body: 'The moment a customer submits a quote request on your website, it shows up here. Total leads, new this week, how many you\'ve booked, and your estimated pipeline value — all calculated automatically.',
+    placement: 'bottom'
+  },
+  {
+    page: 'overview',
+    target: 'card-recent-leads',
+    label: 'Step 2 of 9 — Recent Leads',
+    title: 'Your 5 most recent quote requests',
+    body: 'Every lead shows the customer\'s name, what they\'re quoting, the price range the widget showed them, and their current status. You can see the full list in the Leads tab.',
+    placement: 'top'
+  },
+  {
+    page: 'leads',
+    target: 'page-leads',
+    label: 'Step 3 of 9 — Leads',
+    title: 'Every lead, fully manageable',
+    body: 'Filter by status, update a lead\'s stage with one click (New → Contacted → Booked), and keep your pipeline organized. Every lead includes name, email, phone, quote type, and the exact estimate range they received.',
+    placement: 'top'
+  },
+  {
+    page: 'shop',
+    target: 'page-shop',
+    label: 'Step 4 of 9 — Shop Info',
+    title: 'Your shop info, your widget\'s identity',
+    body: 'Everything here feeds directly into your widget — your shop name, phone, city, brand colour, and disclaimer text. Change it here and your widget updates instantly. You can also set how wide your quote range is.',
+    placement: 'top'
+  },
+  {
+    page: 'pricing',
+    target: 'wizard-callout',
+    label: 'Step 5 of 9 — Pricing Wizard',
+    title: 'The wizard that reverse-engineers your pricing',
+    body: 'Never done per-linear-foot rates before? No problem. Tell the wizard what you charged for a past kitchen job — footage, material, doors, install — and it works backwards to calculate your rates automatically. There\'s also a Mini Wizard for individual line items you\'re unsure about.',
+    placement: 'bottom'
+  },
+  {
+    page: 'specialty',
+    target: 'page-specialty',
+    label: 'Step 6 of 9 — Specialty Items',
+    title: 'Add-ons that show as checkboxes',
+    body: 'Crown moulding, lazy Susans, pull-out trash, lighting — whatever you offer. Each item appears as an optional checkbox in your widget. Set a flat price or a per-linear-foot rate. Drag to reorder them.',
+    placement: 'top'
+  },
+  {
+    page: 'embed',
+    target: 'page-embed',
+    label: 'Step 7 of 9 — Embed Code',
+    title: 'Two lines of code, anywhere on your site',
+    body: 'Copy your unique embed code and paste it into any website — Wix, Squarespace, WordPress, Webflow, or custom HTML. You also get a shop mode link for walk-in customers on a tablet, with no lead capture.',
+    placement: 'top'
+  },
+  {
+    page: 'products',
+    target: 'page-products',
+    label: 'Step 8 of 9 — My Products',
+    title: 'Build your customer showroom',
+    body: 'Add a photo URL for each material and door style you offer. These populate your showroom page — a beautiful browseable gallery customers can visit before getting a quote. You get a shareable showroom link to put on your website.',
+    placement: 'top'
+  },
+  {
+    page: 'billing',
+    target: 'page-billing',
+    label: 'Step 9 of 9 — Billing',
+    title: 'Simple, transparent billing',
+    body: 'Manage your plan, update your payment method, and download invoices — all from one place. Upgrade to annual and save 20%. Cancel any time and your widget stays active until the end of your billing period.',
+    placement: 'top'
+  }
+];
+
+let currentStep = 0;
+let tourActive = false;
+
+function startTour() {
+  document.getElementById('tour-start').style.display = 'none';
+  tourActive = true;
+  document.getElementById('tour-overlay').style.display = 'block';
+  buildDots();
+  showStep(0);
+}
+
+function skipTour() {
+  document.getElementById('tour-start').style.display = 'none';
+}
+
+function buildDots() {
+  const dots = document.getElementById('tour-dots');
+  dots.innerHTML = STEPS.map((_, i) => `<div class="tour-dot" id="dot-${i}"></div>`).join('');
+}
+
+function showStep(idx) {
+  const step = STEPS[idx];
+  currentStep = idx;
+
+  // Switch page
+  goPage(step.page);
+
+  // Update tooltip content
+  document.getElementById('tour-step-label').textContent = step.label;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-body').textContent = step.body;
+
+  // Dots
+  document.querySelectorAll('.tour-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+
+  // Buttons
+  document.getElementById('tour-prev').style.display = idx === 0 ? 'none' : '';
+  document.getElementById('tour-next').textContent = idx === STEPS.length - 1 ? 'Finish 🎉' : 'Next →';
+
+  // Scroll target into view first
+  const target = document.getElementById(step.target);
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => positionTour(target, step.placement), 350);
+  }
+}
+
+function positionTour(target, placement) {
+  const rect = target.getBoundingClientRect();
+  const hl   = document.getElementById('tour-highlight');
+  const tt   = document.getElementById('tour-tooltip');
+  const pad  = 8;
+  const vpW  = window.innerWidth;
+  const vpH  = window.innerHeight;
+  const isMobile = vpW < 768;
+
+  // Highlight — fixed, so just use viewport rect directly
+  hl.style.top    = (rect.top - pad) + 'px';
+  hl.style.left   = (rect.left - pad) + 'px';
+  hl.style.width  = (rect.width + pad * 2) + 'px';
+  hl.style.height = (rect.height + pad * 2) + 'px';
+
+  // Tooltip width — full width on mobile with margins
+  const margin = 16;
+  const ttW = isMobile ? vpW - margin * 2 : Math.min(320, vpW - margin * 2);
+
+  // Ideal center
+  let left = rect.left + rect.width / 2 - ttW / 2;
+  // Clamp horizontal to always stay inside viewport
+  left = Math.max(margin, Math.min(left, vpW - ttW - margin));
+
+  // Measure tooltip height after setting width
+  tt.style.width = ttW + 'px';
+  tt.style.visibility = 'hidden';
+  tt.style.top = '0px';
+  tt.style.left = left + 'px';
+  const ttH = tt.offsetHeight || 240;
+  tt.style.visibility = '';
+
+  // Try preferred placement first
+  let top;
+  const spaceAbove = rect.top - pad - 12 - ttH;
+  const spaceBelow = vpH - rect.bottom - pad - 12;
+
+  if (isMobile) {
+    // On mobile always pin to bottom of screen with safe area
+    top = vpH - ttH - 80;
+    top = Math.max(80, top);
+  } else if (placement === 'bottom' && spaceBelow >= ttH) {
+    top = rect.bottom + pad + 12;
+  } else if (spaceAbove >= ttH) {
+    top = rect.top - ttH - pad - 12;
+  } else if (spaceBelow >= ttH) {
+    top = rect.bottom + pad + 12;
+  } else {
+    // Not enough space either side — float in center of screen
+    top = Math.max(80, vpH / 2 - ttH / 2);
+  }
+
+  // Final clamp — never go off top or bottom
+  top = Math.max(70, Math.min(top, vpH - ttH - 16));
+
+  tt.style.top  = top + 'px';
+  tt.style.left = left + 'px';
+}
+
+function tourStep(dir) {
+  const next = currentStep + dir;
+  if (next >= STEPS.length) {
+    endTour();
+    return;
+  }
+  if (next < 0) return;
+  showStep(next);
+}
+
+function endTour() {
+  document.getElementById('tour-overlay').style.display = 'none';
+  tourActive = false;
+  document.getElementById('tour-end').style.display = 'flex';
+}
+
+// Reposition on scroll/resize
+window.addEventListener('scroll', () => {
+  if (!tourActive) return;
+  const step = STEPS[currentStep];
+  const target = document.getElementById(step.target);
+  if (target) positionTour(target, step.placement);
+}, { passive: true });
+
+window.addEventListener('resize', () => {
+  if (!tourActive) return;
+  const step = STEPS[currentStep];
+  const target = document.getElementById(step.target);
+  if (target) positionTour(target, step.placement);
+});
+</script>
+</body>
+</html>
