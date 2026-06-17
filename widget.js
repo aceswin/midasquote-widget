@@ -5,7 +5,7 @@
 (function() {
 
   const CONFIG = {
-    AIRTABLE_TOKEN:  'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
+    AIRTABLE_TOKEN:  'patjvToXCjNSKQTyi.9876ae658c788ba72e9b950bab014802ed9349df9305aa7ac0ddd41596a0569e',
     BASE_ID:         'app4zrMlVLwF2xn4h',
     SHOPS_TABLE:     'tbl8PoF2Mu3sAdlMs',
     PRICING_TABLE:   'tblu6AYZs8h7SIaQl',
@@ -208,6 +208,10 @@
       #midasquote-widget .mq-li-lbl{color:#6b7280}
       #midasquote-widget .mq-disclaimer{font-size:12px;color:#6b7280;background:#f9fafb;border-radius:6px;padding:10px 12px;margin-top:1rem;line-height:1.5}
       #midasquote-widget .mq-travel-note{font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 12px;margin-top:8px;line-height:1.5}
+      #midasquote-widget .mq-powered-by{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:11px;color:#9ca3af;letter-spacing:0.01em}
+      #midasquote-widget .mq-powered-by a{color:#9ca3af;text-decoration:none;font-weight:500;transition:color 0.15s}
+      #midasquote-widget .mq-powered-by a:hover{color:#1a1a1a}
+      #midasquote-widget .mq-powered-by svg{opacity:0.45}
       #midasquote-widget .mq-cta-row{display:flex;gap:8px;margin-top:1rem}
       #midasquote-widget .mq-cta-row button{flex:1;padding:10px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111;font-family:inherit}
       #midasquote-widget .mq-pri{background:${bc}!important;color:#fff!important;border-color:${bc}!important}
@@ -452,6 +456,7 @@
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
+          <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
 
@@ -483,6 +488,7 @@
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
+          <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
 
@@ -543,6 +549,8 @@
           <div class="mq-cta-row" style="margin-top:1rem">
             <button onclick="mqShowConsultModal()">Ask a question ↗</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+          </div>
+          <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
           </div>
         </div>
       </div>
