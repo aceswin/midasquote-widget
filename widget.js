@@ -247,7 +247,7 @@
       #midasquote-widget .mq-combined-section-title{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
       #midasquote-widget .mq-combined-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
       #midasquote-widget .mq-combined-row .mq-clbl{color:#6b7280}
-      #midasquote-widget .mq-combined-subtotal{display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:6px 0;border-top:1px solid rgba(134,239,172,0.5);margin-top:4px}
+      #midasquote-widget .mq-combined-subtotal{display:none}
       #midasquote-widget .mq-grand-total{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;background:#fff;border-radius:8px;margin-top:1rem;border:1px solid #86efac}
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:12px;color:#6b7280;margin-top:2px}
@@ -538,12 +538,10 @@
           <div class="mq-combined-section">
             <div class="mq-combined-section-title">🪵 Cabinets</div>
             <div id="mq-b-cab-rows"></div>
-            <div class="mq-combined-subtotal"><span>Cabinet subtotal</span><span id="mq-b-cab-sub">—</span></div>
           </div>
           <div class="mq-combined-section">
             <div class="mq-combined-section-title">🪨 Countertops</div>
             <div id="mq-b-ct-rows"></div>
-            <div class="mq-combined-subtotal"><span>Countertop subtotal</span><span id="mq-b-ct-sub">—</span></div>
           </div>
           <div class="mq-grand-total">
             <div><div class="mq-grand-label">Total project estimate</div><div class="mq-grand-sub">Before tax · Ballpark estimate only</div></div>
@@ -915,10 +913,8 @@
           const cab=calcCabinet('b'),ct=calcCountertop('b');
           const cabRows=document.getElementById('mq-b-cab-rows');cabRows.innerHTML='';
           [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;cabRows.appendChild(d);});
-          document.getElementById('mq-b-cab-sub').textContent=fmt(cab.sub);
           const ctRows=document.getElementById('mq-b-ct-rows');ctRows.innerHTML='';
           [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
-          document.getElementById('mq-b-ct-sub').textContent=fmt(ct.sub);
           const tl=cab.low+ct.low,th=cab.high+ct.high;
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
           document.getElementById('mq-b-loading').classList.remove('show');
