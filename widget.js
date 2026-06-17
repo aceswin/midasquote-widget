@@ -123,15 +123,19 @@
       </div>`);
 
     if (lead.email) {
+      const customerLineRows = (lines||[]).filter(l=>l&&l.label&&!l.bold)
+        .sort((a,b)=>b.cost-a.cost)
+        .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
       await sendEmail(lead.email, `Your quote from ${shop['Shop name']}`,
         `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
           <h2 style="color:#1a1a1a">Your ${quoteType} quote from ${shop['Shop name']}</h2>
-          <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-            <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Quote breakdown</td></tr>${lineRows}
-          </table>
           <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
+            <div style="font-size:13px;color:#666;margin-bottom:4px">Your estimated range</div>
             <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
           </div>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+            <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What’s included</td></tr>${customerLineRows}
+          </table>
           <p style="color:#666;font-size:13px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
           <p style="color:#666;font-size:13px;margin-top:8px">⚠ Jobs outside our local delivery area may be subject to additional travel charges — your final quote will confirm the exact amount.</p>
           <p style="color:#666;font-size:13px"><strong>${shop['Shop name']}</strong><br/>${shop['Phone']||''}</p>
@@ -858,9 +862,10 @@
     function renderResult(rangeEl,listEl,result){
       document.getElementById(rangeEl).textContent=fmt(result.low)+' – '+fmt(result.high);
       const ul=document.getElementById(listEl);ul.innerHTML='';
-      result.lines.forEach(l=>{
+      const sorted=[...result.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost);
+      sorted.forEach(l=>{
         const li=document.createElement('li');
-        li.innerHTML=`<span class="mq-li-lbl" ${l.bold?'style="font-weight:600;color:#111"':''}>${l.label}</span><span ${l.bold?'style="font-weight:600"':''}>${fmt(l.cost)}</span>`;
+        li.innerHTML=`<span class="mq-li-lbl">✓ ${l.label}</span>`;
         ul.appendChild(li);
       });
     }
@@ -909,10 +914,10 @@
         setTimeout(async()=>{
           const cab=calcCabinet('b'),ct=calcCountertop('b');
           const cabRows=document.getElementById('mq-b-cab-rows');cabRows.innerHTML='';
-          cab.lines.filter(l=>!l.bold).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">${l.label}</span><span>${fmt(l.cost)}</span>`;cabRows.appendChild(d);});
+          [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;cabRows.appendChild(d);});
           document.getElementById('mq-b-cab-sub').textContent=fmt(cab.sub);
           const ctRows=document.getElementById('mq-b-ct-rows');ctRows.innerHTML='';
-          ct.lines.filter(l=>!l.bold).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">${l.label}</span><span>${fmt(l.cost)}</span>`;ctRows.appendChild(d);});
+          [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
           document.getElementById('mq-b-ct-sub').textContent=fmt(ct.sub);
           const tl=cab.low+ct.low,th=cab.high+ct.high;
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
