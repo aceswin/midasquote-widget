@@ -347,8 +347,17 @@
       </div>
       <div class="mq-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
-        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;margin-bottom:1rem;font-size:12px;color:#92400e;line-height:1.5">
-          💡 Uppers and bases measured separately. <strong>Include island cabinets in your base linear footage.</strong>
+        <div style="margin-bottom:1rem">
+          <button type="button" onclick="mqTogMeasure(this)" style="background:none;border:none;padding:0;font-family:inherit;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em">
+            <span id="mq-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> How to measure
+          </button>
+          <div id="mq-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">
+            <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
+            <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
+            <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
+            <div style="margin-bottom:6px"><strong>Not sure?</strong> A standard kitchen is usually 10–20 linear feet for each. Just use your best guess — this is a ballpark estimate!</div>
+            <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet wide, enter 12.</div>
+          </div>
         </div>
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
@@ -673,7 +682,14 @@
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
     };
 
-    window.mqTogDrawerConfig=(prefix)=>{
+    window.mqTogMeasure=(btn)=>{
+  const guide=document.getElementById('mq-measure-guide');
+  const arrow=document.getElementById('mq-measure-arrow');
+  const open=guide.style.display==='none';
+  guide.style.display=open?'block':'none';
+  arrow.style.transform=open?'rotate(90deg)':'rotate(0deg)';
+};
+window.mqTogDrawerConfig=(prefix)=>{
       const tier=gv(`mq-${prefix}-drawer-tier`);
       const wrap=document.getElementById(`mq-${prefix}-drawer-config-wrap`);
       if(wrap) wrap.style.display=tier==='none'?'none':'block';
