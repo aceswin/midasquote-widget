@@ -348,8 +348,8 @@
       <div class="mq-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
         <div style="margin-bottom:1rem">
-          <button type="button" onclick="mqTogMeasure(this)" style="background:none;border:none;padding:0;font-family:inherit;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em">
-            <span id="mq-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> How to measure
+          <button type="button" onclick="mqTogMeasure(this)" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em;width:100%;text-align:left">
+            <span id="mq-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> 📏 How to measure your space
           </button>
           <div id="mq-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">
             <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
