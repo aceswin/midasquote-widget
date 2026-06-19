@@ -232,6 +232,12 @@ countertop:  { id:'countertops',   eyebrow:'Surfaces',             title:'Counte
       Object.entries(CAT_CONFIG).forEach(([cat, cfg]) => {
         const names = products[cat] || [];
         if (!names.length) return;
+        // Only show this category if at least one item has a photo AND isn't hidden
+        const visibleItems = names.filter(name => {
+          const key = 'li_' + cat + '_' + name.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+          return !hidden[key] && photos[key];
+        });
+        if (!visibleItems.length) return;
         if (!first) html += '<div class="sr-divider"></div>';
         first = false;
         html += `<div class="sr-section" id="${cfg.id}">
@@ -240,10 +246,7 @@ countertop:  { id:'countertops',   eyebrow:'Surfaces',             title:'Counte
             <div class="sr-section-title">${cfg.title}</div>
             <div class="sr-section-desc">${cfg.desc}</div>
           </div>
-          <div class="sr-grid">${names.filter(name => {
-            const key = 'li_' + cat + '_' + name.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-            return !hidden[key];
-          }).map(name => {
+          <div class="sr-grid">${visibleItems.map(name => {
             const key = 'li_' + cat + '_' + name.replace(/[^a-z0-9]/gi,'_').toLowerCase();
             return itemCard(name, key);
           }).join('')}</div>
@@ -252,7 +255,8 @@ countertop:  { id:'countertops',   eyebrow:'Surfaces',             title:'Counte
 
       // Specialty items — always from Airtable
       const specs = await atGet('tbloaXeEM5K7TOZCD', `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
-      if (specs.length) {
+      const visibleSpecs = specs.filter(r => !hidden['spec_' + r.id] && photos['spec_' + r.id]);
+      if (visibleSpecs.length) {
         if (!first) html += '<div class="sr-divider"></div>';
         const specIcons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
         html += `<div class="sr-section" id="specialty">
@@ -261,7 +265,7 @@ countertop:  { id:'countertops',   eyebrow:'Surfaces',             title:'Counte
             <div class="sr-section-title">Specialty Items</div>
             <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
           </div>
-          <div class="sr-spec-grid">${specs.filter(r => !hidden['spec_' + r.id]).map(r => {
+          <div class="sr-spec-grid">${visibleSpecs.map(r => {
             const name = r.fields['Item name'] || '';
             const key = 'spec_' + r.id;
             let emoji = '⭐';
