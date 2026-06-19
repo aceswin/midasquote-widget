@@ -172,8 +172,8 @@ window.logoutMember = async function () {
 
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
-    const embedCode = '&lt;div style="text-align:center"&gt;\n  &lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n  &lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;\n&lt;/div&gt;';
-    window._mqRawEmbedCode = '<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>\n</div>';
+    const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
+    window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
 
     return `
       <div class="mq-topbar">
@@ -1310,7 +1310,7 @@ window.logoutMember = async function () {
   <p style="font-size:14px;color:#6b7280;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
 </div>`;
 
-    const trustBarHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    const trustBarHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin:30px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
   <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">✅</span><span>No commitment required</span></div>
   <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">📧</span><span>Results sent to your inbox</span></div>
   <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">🔒</span><span>We never sell your info</span></div>
