@@ -290,6 +290,16 @@ window.logoutMember = async function () {
                 <textarea id="mq-shop-disclaimer" placeholder="Ballpark estimate only. Contact us for a full quote."></textarea>
                 <span class="mq-hint">Shown at the bottom of every quote</span>
               </div>
+              <div class="mq-field" style="margin-bottom:1rem">
+                <label class="mq-label">"Book a consultation" link <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+                <input type="url" id="mq-shop-consult-link" placeholder="https://yoursite.com/contact"/>
+                <span class="mq-hint">If set, the widget's "Book a consultation" button opens this page in a new tab instead of the default contact form</span>
+              </div>
+              <div class="mq-field" style="margin-bottom:1.5rem">
+                <label class="mq-label">Or, consultation email <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+                <input type="email" id="mq-shop-consult-email" placeholder="sales@yourshop.com"/>
+                <span class="mq-hint">Used only if no link is set above — opens a pre-filled email instead</span>
+              </div>
               <div class="mq-toggle-row" style="margin-bottom:1.5rem">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Show "View our products" link on widget</div>
@@ -620,6 +630,8 @@ window.logoutMember = async function () {
     set('mq-shop-range-high', f['Quote range high'] || '15');
     set('mq-shop-logo', f['Logo URL']);
     set('mq-shop-disclaimer', f['Disclaimer text']);
+    set('mq-shop-consult-link', f['Consultation link']);
+    set('mq-shop-consult-email', f['Consultation email']);
     const toggle = el('mq-showroom-toggle');
     if (toggle) {
       const isOn = f['Show showroom'] !== false;
@@ -787,6 +799,8 @@ window.logoutMember = async function () {
         'Quote range high':  gn('mq-shop-range-high', 15),
         'Logo URL':          gv('mq-shop-logo'),
         'Disclaimer text':   gv('mq-shop-disclaimer'),
+        'Consultation link': gv('mq-shop-consult-link'),
+        'Consultation email': gv('mq-shop-consult-email'),
       });
       showMsg('mq-shop-msg', '✓ Shop info saved!');
     } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }

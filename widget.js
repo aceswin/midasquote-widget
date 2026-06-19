@@ -729,7 +729,20 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.getElementById('mq-lead-overlay').classList.remove('show');
       if(pendingCb){pendingCb(lead);pendingCb=null;}
     };
-    window.mqShowConsultModal=()=>window.mqShowLead(()=>{});
+    window.mqShowConsultModal=()=>{
+      const shop=window._mqShopData||{};
+      const consultUrl=(shop['Consultation link']||'').trim();
+      const consultEmail=(shop['Consultation email']||'').trim();
+      if(consultUrl){
+        window.open(consultUrl,'_blank');
+        return;
+      }
+      if(consultEmail){
+        window.location.href='mailto:'+consultEmail+'?subject='+encodeURIComponent('Consultation request — '+(shop['Shop name']||''));
+        return;
+      }
+      window.mqShowLead(()=>{});
+    };
 
     function getMaterialRates(matKey, mat) {
       const m = mat[matKey];
@@ -1025,6 +1038,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     const data=await loadShopData(shopToken);
     if(!data) return;
     const {shop,specs}=data;
+    window._mqShopData=shop;
     injectStyles(shop['Brand colour']||'#1a1a1a');
     buildCTMAT(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
