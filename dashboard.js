@@ -427,7 +427,11 @@ window.logoutMember = async function () {
 
             <div class="mq-card">
               <div class="mq-card-title">✨ Trust bar for your website</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Paste this code snippet directly above or below your widget embed code.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Paste this code snippet directly above or below your widget embed code. Here's what it looks like:</p>
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1.25rem">
+                <div id="mq-mk-trustbar-preview"></div>
+              </div>
+              <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Code to copy:</p>
               <div class="mq-embed-box"><span id="mq-mk-trustbar-display"></span><button class="mq-copy-btn" id="mq-mk-trustbar-copy">Copy</button></div>
             </div>
 
@@ -1324,8 +1328,10 @@ window.logoutMember = async function () {
 
     const trustDisplay = el('mq-mk-trustbar-display');
     const trustCopyBtn = el('mq-mk-trustbar-copy');
+    const trustPreview = el('mq-mk-trustbar-preview');
     if (trustDisplay) trustDisplay.textContent = trustBarHTML;
     if (trustCopyBtn) trustCopyBtn.onclick = () => mqCopyText(trustBarHTML, trustCopyBtn);
+    if (trustPreview) trustPreview.innerHTML = trustBarHTML;
   }
 
   // ============================================================
