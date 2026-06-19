@@ -928,7 +928,7 @@ window.logoutMember = async function () {
         </div>
         <div id="mq-picker-grid" style="padding:1rem;overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>
         <div style="padding:0.75rem 1rem;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center;flex-shrink:0">
-          Add photos by uploading to the <strong>photos/</strong> folder in your GitHub repo
+          Don't see what you're looking for? You can also paste a photo URL directly.
         </div>
       </div>`;
     document.body.appendChild(modal);
@@ -947,8 +947,8 @@ window.logoutMember = async function () {
 
     if (!photos.length) {
       grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">
-        No photos in <strong>photos/${CAT_TO_FOLDER[cat] || cat}/</strong> yet.<br>
-        Upload photos to that folder in your GitHub repo and they'll appear here automatically.
+        No library photos available for this category yet.<br>
+        No worries — just paste your own photo URL above instead.
       </div>`;
       return;
     }
