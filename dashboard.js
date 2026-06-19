@@ -172,8 +172,8 @@ window.logoutMember = async function () {
 
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
-    const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
-    window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
+    const embedCode = '&lt;div style="text-align:center"&gt;\n  &lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n  &lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;\n&lt;/div&gt;';
+    window._mqRawEmbedCode = '<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>\n</div>';
 
     return `
       <div class="mq-topbar">
@@ -1280,7 +1280,7 @@ window.logoutMember = async function () {
     const shopName = shopRecord.fields['Shop name'] || 'our shop';
     const token = shopRecord.fields['Shop token'] || '';
     const quoteLink = `https://widget.midasquote.com/?shop=${token}`;
-    const embedCode = `<div id="midasquote-widget"></div>\n<script src="https://widget.midasquote.com/widget.js?shop=${token}"></script>`;
+    const embedCode = `<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <script src="https://widget.midasquote.com/widget.js?shop=${token}"></script>\n</div>`;
 
     const socialPosts = [
       `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 2 minutes. Try it now → ${quoteLink}`,
