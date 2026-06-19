@@ -7,7 +7,7 @@
 (function () {
 
   const CONFIG = {
-      AIRTABLE_TOKEN:     'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
+      AIRTABLE_TOKEN:     'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
     BASE_ID:            'app4zrMlVLwF2xn4h',
     SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
     PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
@@ -204,6 +204,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
+          <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
         </div>
 
         <div class="mq-content">
@@ -398,6 +399,60 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Your leads and pricing data will be available for 30 days after cancellation.</p>
               <button class="mq-btn mq-btn-danger" onclick="mqOpenBillingPortal()">Cancel subscription</button>
+            </div>
+          </div>
+
+          <!-- MARKETING KIT -->
+          <div class="mq-page" id="mq-page-marketing">
+            <div class="mq-page-title">Marketing Kit</div>
+            <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">📱 Social media posts</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Copy and paste these straight into Facebook or Instagram. Your quote link is already filled in.</p>
+              <div id="mq-mk-social"></div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">🏷️ Headline options for your website</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Use one of these above your embedded widget.</p>
+              <div id="mq-mk-headlines"></div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">💬 Direct message template</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Send this to past customers or leads who might have a future project.</p>
+              <div id="mq-mk-dm"></div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">✨ Trust bar for your website</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Paste this code snippet directly above or below your widget embed code.</p>
+              <div class="mq-embed-box"><span id="mq-mk-trustbar-display"></span><button class="mq-copy-btn" id="mq-mk-trustbar-copy">Copy</button></div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">📍 Where to post</div>
+              <div style="font-size:13px;color:#374151;line-height:2">
+                ✓ Your website homepage or a dedicated "Get a Quote" page<br>
+                ✓ Pin a post to the top of your Facebook Business Page<br>
+                ✓ Local Facebook homeowner / renovation groups (check group rules first)<br>
+                ✓ Instagram bio link<br>
+                ✓ Google Business Profile — add to your website field or post an update<br>
+                ✓ Email signature<br>
+                ✓ A QR code sign for walk-in customers to scan in-store
+              </div>
+            </div>
+
+            <div class="mq-card" style="border-color:#86efac;background:#f0fdf4">
+              <div class="mq-card-title">✅ Pre-launch checklist</div>
+              <div style="font-size:13px;color:#166534;line-height:2">
+                ☐ Widget is embedded and tested on your site<br>
+                ☐ Link works on both desktop and mobile<br>
+                ☐ You've tried the quote flow yourself at least once<br>
+                ☐ Your shop info (name, phone, logo) looks correct in the widget<br>
+                ☐ You know new leads land in your Leads tab
+              </div>
             </div>
           </div>
 
@@ -1205,6 +1260,75 @@ window.logoutMember = async function () {
   };
 
   // ============================================================
+  // MARKETING KIT
+  // ============================================================
+  function initMarketingKit(shopRecord) {
+    const shopName = shopRecord.fields['Shop name'] || 'our shop';
+    const token = shopRecord.fields['Shop token'] || '';
+    const quoteLink = `https://widget.midasquote.com/?shop=${token}`;
+    const embedCode = `<div id="midasquote-widget"></div>\n<script src="https://widget.midasquote.com/widget.js?shop=${token}"></script>`;
+
+    const socialPosts = [
+      `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 2 minutes. Try it now → ${quoteLink}`,
+      `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 60 seconds — right from your phone. ${quoteLink}`,
+      `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
+      `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
+      `Hey homeowners! If you're planning a kitchen remodel, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
+    ];
+
+    const headlines = [
+      'Get a free quote online in minutes',
+      'Know your price before you even call',
+      'Get your cabinet estimate in under 2 minutes',
+      'No phone calls. No waiting. Just your price.',
+      'See what your project costs — right now',
+    ];
+
+    const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
+
+    const trustBarHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">✅</span><span>No commitment required</span></div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">📧</span><span>Results sent to your inbox</span></div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">🔒</span><span>We never sell your info</span></div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">⚡</span><span>Instant ballpark estimate</span></div>
+</div>`;
+
+    const escapeHtml = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    const socialEl = el('mq-mk-social');
+    if (socialEl) {
+      socialEl.innerHTML = socialPosts.map((post, i) => `
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:10px">
+          <div style="font-size:13px;color:#111;line-height:1.6;margin-bottom:8px">${escapeHtml(post)}</div>
+          <button class="mq-btn mq-btn-sm" onclick="mqCopyText(${JSON.stringify(post)},this)">Copy</button>
+        </div>`).join('');
+    }
+
+    const headlinesEl = el('mq-mk-headlines');
+    if (headlinesEl) {
+      headlinesEl.innerHTML = headlines.map(h => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+          <span style="font-size:13px;color:#111">${escapeHtml(h)}</span>
+          <button class="mq-btn mq-btn-sm" onclick="mqCopyText(${JSON.stringify(h)},this)">Copy</button>
+        </div>`).join('');
+    }
+
+    const dmEl = el('mq-mk-dm');
+    if (dmEl) {
+      dmEl.innerHTML = `
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px">
+          <div style="font-size:13px;color:#111;line-height:1.6;margin-bottom:8px">${escapeHtml(dmTemplate)}</div>
+          <button class="mq-btn mq-btn-sm" onclick="mqCopyText(${JSON.stringify(dmTemplate)},this)">Copy</button>
+        </div>`;
+    }
+
+    const trustDisplay = el('mq-mk-trustbar-display');
+    const trustCopyBtn = el('mq-mk-trustbar-copy');
+    if (trustDisplay) trustDisplay.textContent = trustBarHTML;
+    if (trustCopyBtn) trustCopyBtn.onclick = () => mqCopyText(trustBarHTML, trustCopyBtn);
+  }
+
+  // ============================================================
   // INIT
   // ============================================================
   async function init() {
@@ -1268,6 +1392,13 @@ window.logoutMember = async function () {
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
+    if (page === 'marketing') {
+      const socialEl = document.getElementById('mq-mk-social');
+      if (socialEl && !socialEl.dataset.loaded && window._mqShopRecord) {
+        socialEl.dataset.loaded = 'true';
+        initMarketingKit(window._mqShopRecord);
+      }
+    }
     if (page === 'billing') {
       const planEl = document.getElementById('mq-billing-plan');
       if (planEl && planEl.textContent === 'Loading plan info...') {
