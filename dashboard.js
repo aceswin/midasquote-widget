@@ -426,6 +426,16 @@ window.logoutMember = async function () {
             </div>
 
             <div class="mq-card">
+              <div class="mq-card-title">🎯 Quote page header</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">A clean intro section to place above your widget. Here's what it looks like:</p>
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:0.5rem;margin-bottom:1.25rem">
+                <div id="mq-mk-header-preview"></div>
+              </div>
+              <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Code to copy:</p>
+              <div class="mq-embed-box"><span id="mq-mk-header-display"></span><button class="mq-copy-btn" id="mq-mk-header-copy">Copy</button></div>
+            </div>
+
+            <div class="mq-card">
               <div class="mq-card-title">✨ Trust bar for your website</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Paste this code snippet directly above or below your widget embed code. Here's what it looks like:</p>
               <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1.25rem">
@@ -1290,6 +1300,16 @@ window.logoutMember = async function () {
 
     const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
 
+    const heroHeaderHTML = `<div style="text-align:center;padding:2rem 1rem 1.5rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b8763a;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;gap:10px">
+    <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
+    Instant Pricing
+    <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
+  </div>
+  <h2 style="font-size:28px;font-weight:600;color:#1a1a1a;line-height:1.2;margin:0 0 0.75rem">Get your cabinet estimate<br/>in under 2 minutes</h2>
+  <p style="font-size:14px;color:#6b7280;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
+</div>`;
+
     const trustBarHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
   <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">✅</span><span>No commitment required</span></div>
   <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">📧</span><span>Results sent to your inbox</span></div>
@@ -1325,6 +1345,13 @@ window.logoutMember = async function () {
           <button class="mq-btn mq-btn-sm" onclick="mqCopyText(${JSON.stringify(dmTemplate)},this)">Copy</button>
         </div>`;
     }
+
+    const headerDisplay = el('mq-mk-header-display');
+    const headerCopyBtn = el('mq-mk-header-copy');
+    const headerPreview = el('mq-mk-header-preview');
+    if (headerDisplay) headerDisplay.textContent = heroHeaderHTML;
+    if (headerCopyBtn) headerCopyBtn.onclick = () => mqCopyText(heroHeaderHTML, headerCopyBtn);
+    if (headerPreview) headerPreview.innerHTML = heroHeaderHTML;
 
     const trustDisplay = el('mq-mk-trustbar-display');
     const trustCopyBtn = el('mq-mk-trustbar-copy');
