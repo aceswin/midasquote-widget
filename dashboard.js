@@ -881,8 +881,8 @@ window.logoutMember = async function () {
   // GitHub photo library — reads directly from repo folders, no manifest needed
   // Folder structure: photos/materials/, photos/doors/, photos/countertops/, etc.
   const GH_REPO = 'aceswin/midasquote-widget';
-  const GH_BASE = `https://raw.githubusercontent.com/${GH_REPO}/main/photos`;
-  const GH_API  = `https://api.github.com/repos/${GH_REPO}/contents/photos`;
+  const GH_BASE = `https://raw.githubusercontent.com/${GH_REPO}/main`;
+  const GH_API  = `https://api.github.com/repos/${GH_REPO}/contents`;
 
   // Map line item categories to photo folder names
   const CAT_TO_FOLDER = {
