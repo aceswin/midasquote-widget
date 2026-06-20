@@ -1752,16 +1752,19 @@ window.logoutMember = async function () {
         ctx.fillText('⚡', pad + chipSize/2, pad + chipSize/2 + 4);
 
         // Strong drop shadow on all text from here down — keeps it readable on any photo, even light ones
-        ctx.shadowColor = 'rgba(0,0,0,0.8)';
-        ctx.shadowBlur = 18;
+        ctx.shadowColor = 'rgba(0,0,0,0.9)';
+        ctx.shadowBlur = 26;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 3;
+        ctx.shadowOffsetY = 4;
 
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = '#ffffff';
         ctx.font = '600 44px -apple-system, sans-serif';
         ctx.fillText(shopName, pad + chipSize + 28, pad + chipSize/2 - 4);
+        ctx.shadowBlur = 14; ctx.shadowOffsetY = 2;
+        ctx.fillText(shopName, pad + chipSize + 28, pad + chipSize/2 - 4);
+        ctx.shadowBlur = 26; ctx.shadowOffsetY = 4;
         if (city) {
           ctx.fillStyle = 'rgba(255,255,255,0.85)';
           ctx.font = '400 30px -apple-system, sans-serif';
@@ -1774,7 +1777,7 @@ window.logoutMember = async function () {
         ctx.font = '600 32px -apple-system, sans-serif';
         ctx.fillText('INSTANT PRICING', pad, y);
 
-        // Headline
+        // Headline — double shadow pass for extra weight
         y += 80;
         const headlineFont = '600 80px -apple-system, sans-serif';
         ctx.font = headlineFont;
@@ -1783,13 +1786,18 @@ window.logoutMember = async function () {
         headlineLines.forEach(line => {
           ctx.font = headlineFont;
           ctx.fillText(line, pad, y);
+          ctx.shadowBlur = 14; ctx.shadowOffsetY = 2;
+          ctx.fillText(line, pad, y);
+          ctx.shadowBlur = 26; ctx.shadowOffsetY = 4;
           y += 92;
         });
 
-        // Subtext
+        // Subtext — double shadow pass too
         y += 30;
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.font = '400 38px -apple-system, sans-serif';
+        ctx.fillText('No phone calls. No waiting. Just your price.', pad, y);
+        ctx.shadowBlur = 14; ctx.shadowOffsetY = 2;
         ctx.fillText('No phone calls. No waiting. Just your price.', pad, y);
 
         // Turn off shadow before drawing the solid white CTA pill (it has its own shadow below)
@@ -1981,10 +1989,14 @@ window.logoutMember = async function () {
         qrCtx.textAlign = 'center';
         qrCtx.textBaseline = 'alphabetic';
         qrCtx.save();
-        qrCtx.shadowColor = 'rgba(0,0,0,0.7)';
-        qrCtx.shadowBlur = 16;
-        qrCtx.shadowOffsetY = 3;
+        qrCtx.shadowColor = 'rgba(0,0,0,0.9)';
+        qrCtx.shadowBlur = 28;
+        qrCtx.shadowOffsetY = 4;
         qrCtx.fillStyle = fillColor;
+        qrCtx.fillText(text, x, y);
+        // Second pass for extra weight — blurred shadows alone can look soft, so stack two
+        qrCtx.shadowBlur = 16;
+        qrCtx.shadowOffsetY = 2;
         qrCtx.fillText(text, x, y);
         qrCtx.restore();
       }
@@ -2050,24 +2062,28 @@ window.logoutMember = async function () {
         const pad = 84;
         qrCtx.textAlign = 'center';
 
-        // Headline — sits just below the banner with even breathing room
-        let y = bannerH + 90;
+        // Calculate QR position first so we can center the headline in the space above it
+        const qrSize = 560;
+        const cardPad = 40;
+        const ctaHForCalc = 116;
         const headlineFont = '700 62px -apple-system, sans-serif';
         const lines = wrapTextQr(qrHeadline, headlineFont, QW - pad*2);
+        const headlineBlockH = lines.length * 74;
+
+        const availTop = bannerH + 30;
+        const availBottom = QH - pad - ctaHForCalc - 60;
+        const qrBlockH = qrSize + cardPad*2;
+        const qrX = (QW - qrSize) / 2;
+        const qrY = availBottom - qrBlockH + cardPad - 10;
+
+        // Headline — vertically centered in the gap between the banner and the QR card
+        const headlineGapTop = availTop;
+        const headlineGapBottom = qrY - cardPad - 30;
+        let y = headlineGapTop + (headlineGapBottom - headlineGapTop - headlineBlockH) / 2 + 50;
         lines.forEach(line => {
           shadowText(line, QW/2, y, headlineFont, posterTextColor);
           y += 74;
         });
-
-        // QR code area — centred in the remaining space between headline and CTA
-        const qrSize = 560;
-        const cardPad = 40;
-        const ctaHForCalc = 116;
-        const availTop = y + 40;
-        const availBottom = QH - pad - ctaHForCalc - 60;
-        const qrBlockH = qrSize + cardPad*2;
-        const qrX = (QW - qrSize) / 2;
-        const qrY = availTop + Math.max(0, (availBottom - availTop - qrBlockH) / 2) + cardPad;
 
         if (!qrLink) {
           drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
