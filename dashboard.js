@@ -1715,6 +1715,9 @@ window.logoutMember = async function () {
 
       function drawGraphic() {
         ctx.clearRect(0,0,W,H);
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
 
         // Background — photo (cover-fit + dark overlay) or solid
         if (bgImage) {
@@ -1748,13 +1751,19 @@ window.logoutMember = async function () {
         ctx.textBaseline = 'middle';
         ctx.fillText('⚡', pad + chipSize/2, pad + chipSize/2 + 4);
 
+        // Strong drop shadow on all text from here down — keeps it readable on any photo, even light ones
+        ctx.shadowColor = 'rgba(0,0,0,0.65)';
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 3;
+
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = '#ffffff';
         ctx.font = '600 44px -apple-system, sans-serif';
         ctx.fillText(shopName, pad + chipSize + 28, pad + chipSize/2 - 4);
         if (city) {
-          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
           ctx.font = '400 30px -apple-system, sans-serif';
           ctx.fillText(city, pad + chipSize + 28, pad + chipSize/2 + 36);
         }
@@ -1779,18 +1788,28 @@ window.logoutMember = async function () {
 
         // Subtext
         y += 30;
-        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.font = '400 38px -apple-system, sans-serif';
         ctx.fillText('No phone calls. No waiting. Just your price.', pad, y);
 
-        // Bottom CTA pill — bigger, more prominent
+        // Turn off shadow before drawing the solid white CTA pill (it has its own shadow below)
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+
+        // Bottom CTA pill — bigger, more prominent, own drop shadow for depth
         const ctaH = 116;
         const ctaW = 400;
         const ctaY = H - pad - ctaH;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.35)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetY = 6;
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
         ctx.roundRect(pad, ctaY, ctaW, ctaH, 22);
         ctx.fill();
+        ctx.restore();
         ctx.fillStyle = '#1a1a1a';
         ctx.font = '700 46px -apple-system, sans-serif';
         ctx.textAlign = 'center';
@@ -1961,11 +1980,13 @@ window.logoutMember = async function () {
         qrCtx.font = font;
         qrCtx.textAlign = 'center';
         qrCtx.textBaseline = 'alphabetic';
-        qrCtx.fillStyle = 'rgba(0,0,0,0.55)';
-        qrCtx.fillText(text, x + 2, y + 3);
-        qrCtx.fillText(text, x - 2, y + 3);
+        qrCtx.save();
+        qrCtx.shadowColor = 'rgba(0,0,0,0.7)';
+        qrCtx.shadowBlur = 16;
+        qrCtx.shadowOffsetY = 3;
         qrCtx.fillStyle = fillColor;
         qrCtx.fillText(text, x, y);
+        qrCtx.restore();
       }
 
       function drawQrPoster() {
@@ -2413,7 +2434,7 @@ window.logoutMember = async function () {
         const ctaHForCalc = 104;
         const ctaYForCalc = H - padTB - ctaHForCalc;
         const bulletsAreaTop = y + 30;
-        const bulletsAreaBottom = ctaYForCalc - 40;
+        const bulletsAreaBottom = ctaYForCalc - 80;
         const bullets = ['No phone calls', 'Instant ballpark price', 'No obligation'];
         const bulletLineHeight = 78;
         const bulletsBlockHeight = bullets.length * bulletLineHeight;
