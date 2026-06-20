@@ -1948,6 +1948,15 @@ window.logoutMember = async function () {
         } catch(e) { return hex; }
       }
 
+      function getTextColorQr(hex) {
+        try {
+          hex = hex.replace('#','');
+          const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+          const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+        } catch(e) { return '#ffffff'; }
+      }
+
       function shadowText(text, x, y, font, fillColor) {
         qrCtx.font = font;
         qrCtx.textAlign = 'center';
@@ -1961,6 +1970,7 @@ window.logoutMember = async function () {
 
       function drawQrPoster() {
         qrCtx.clearRect(0,0,QW,QH);
+        let posterTextColor = '#ffffff';
 
         if (qrBgImage) {
           const imgRatio = qrBgImage.width / qrBgImage.height;
@@ -1977,6 +1987,7 @@ window.logoutMember = async function () {
         } else {
           // Subtle gradient instead of flat black for more visual depth
           const baseColor = qrCustomColor || '#262422';
+          posterTextColor = getTextColorQr(baseColor);
           const grad = qrCtx.createLinearGradient(0, 0, 0, QH);
           grad.addColorStop(0, shadeColorQr(baseColor, 8));
           grad.addColorStop(1, shadeColorQr(baseColor, -22));
@@ -1992,7 +2003,7 @@ window.logoutMember = async function () {
         qrCtx.fillRect(0, 0, QW, 14);
 
         // Shop name top — with shadow for legibility over any photo
-        shadowText(shopName, QW/2, pad + 44, '700 50px -apple-system, sans-serif', '#ffffff');
+        shadowText(shopName, QW/2, pad + 44, '700 50px -apple-system, sans-serif', posterTextColor);
 
         // Small divider accent under shop name
         const dividerY = pad + 74;
@@ -2004,7 +2015,7 @@ window.logoutMember = async function () {
         const headlineFont = '700 66px -apple-system, sans-serif';
         const lines = wrapTextQr(qrHeadline, headlineFont, QW - pad*2);
         lines.forEach(line => {
-          shadowText(line, QW/2, y, headlineFont, '#ffffff');
+          shadowText(line, QW/2, y, headlineFont, posterTextColor);
           y += 78;
         });
 
@@ -2066,7 +2077,7 @@ window.logoutMember = async function () {
         }
 
         // Subtext with shadow
-        shadowText('No phone calls. No waiting.', QW/2, y, '500 36px -apple-system, sans-serif', 'rgba(255,255,255,0.92)');
+        shadowText('No phone calls. No waiting.', QW/2, y, '500 36px -apple-system, sans-serif', posterTextColor);
 
         // Bottom CTA button — bigger, bolder, brand-coloured accent border
         const ctaH = 116;
@@ -2223,6 +2234,16 @@ window.logoutMember = async function () {
         } catch(e) { return hex; }
       }
 
+      // Picks black or white text automatically based on background brightness — guarantees readability on any colour
+      function getTextColor(hex) {
+        try {
+          hex = hex.replace('#','');
+          const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+          const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+        } catch(e) { return '#ffffff'; }
+      }
+
       function signShadowText(text, x, y, font, fillColor, align) {
         signCtx.font = font;
         signCtx.textAlign = align || 'center';
@@ -2355,6 +2376,9 @@ window.logoutMember = async function () {
         const padL = 90, padTB = 90;
         const bandW = W * 0.52;
         const signColor = signCustomColor || brandColor2;
+        const textColor = getTextColor(signColor);
+        const textColorMuted = textColor === '#ffffff' ? 'rgba(255,255,255,0.78)' : 'rgba(26,26,26,0.7)';
+        const textColorSoft = textColor === '#ffffff' ? 'rgba(255,255,255,0.95)' : 'rgba(26,26,26,0.85)';
 
         // ── LEFT: Solid brand-colour band — always legible, never fights a photo ──
         const bandGrad = signCtx.createLinearGradient(0, 0, bandW, 0);
@@ -2365,7 +2389,7 @@ window.logoutMember = async function () {
 
         signCtx.textAlign = 'left';
         signCtx.textBaseline = 'alphabetic';
-        signCtx.fillStyle = 'rgba(255,255,255,0.78)';
+        signCtx.fillStyle = textColorMuted;
         signCtx.font = '700 32px -apple-system, sans-serif';
         signCtx.fillText(signHeadline.toUpperCase(), padL, padTB + 10);
 
@@ -2377,7 +2401,7 @@ window.logoutMember = async function () {
           nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
           nameLines = wrapTextSign(shopName, nameFont, bandW - padL - 40);
         }
-        signCtx.fillStyle = '#ffffff';
+        signCtx.fillStyle = textColor;
         signCtx.font = nameFont;
         let y = padTB + 110;
         nameLines.forEach(line => {
@@ -2385,22 +2409,24 @@ window.logoutMember = async function () {
           y += nameFontSize * 1.1;
         });
 
-        y += 14;
-        signCtx.fillStyle = 'rgba(255,255,255,0.4)';
-        signCtx.fillRect(padL, y, 90, 5);
-
-        // Fill the space below the divider with a few trust bullet points
-        y += 60;
+        // Fill the remaining space with bigger, vertically centered trust bullets
+        const ctaHForCalc = 104;
+        const ctaYForCalc = H - padTB - ctaHForCalc;
+        const bulletsAreaTop = y + 30;
+        const bulletsAreaBottom = ctaYForCalc - 40;
         const bullets = ['No phone calls', 'Instant ballpark price', 'No obligation'];
-        signCtx.font = '500 32px -apple-system, sans-serif';
+        const bulletLineHeight = 78;
+        const bulletsBlockHeight = bullets.length * bulletLineHeight;
+        let by = bulletsAreaTop + (bulletsAreaBottom - bulletsAreaTop - bulletsBlockHeight) / 2 + bulletLineHeight * 0.7;
+        signCtx.font = '600 42px -apple-system, sans-serif';
         bullets.forEach(b => {
-          signCtx.fillStyle = '#ffffff';
+          signCtx.fillStyle = textColor;
           signCtx.beginPath();
-          signCtx.arc(padL + 8, y - 11, 8, 0, Math.PI*2);
+          signCtx.arc(padL + 11, by - 14, 10, 0, Math.PI*2);
           signCtx.fill();
-          signCtx.fillStyle = 'rgba(255,255,255,0.92)';
-          signCtx.fillText(b, padL + 32, y);
-          y += 56;
+          signCtx.fillStyle = textColorSoft;
+          signCtx.fillText(b, padL + 40, by);
+          by += bulletLineHeight;
         });
 
         const ctaH = 104, ctaW = 360;
@@ -2486,6 +2512,8 @@ window.logoutMember = async function () {
 
         const pad = 80;
         const signColor = signCustomColor || brandColor2;
+        const textColor = getTextColor(signColor);
+        const textColorMuted = textColor === '#ffffff' ? 'rgba(255,255,255,0.78)' : 'rgba(26,26,26,0.7)';
 
         // ── TOP: Solid brand-colour band — guaranteed legible no matter what photo is chosen ──
         const bandH = 460;
@@ -2499,7 +2527,7 @@ window.logoutMember = async function () {
         signCtx.textBaseline = 'alphabetic';
 
         // Small eyebrow
-        signCtx.fillStyle = 'rgba(255,255,255,0.78)';
+        signCtx.fillStyle = textColorMuted;
         signCtx.font = '700 32px -apple-system, sans-serif';
         signCtx.fillText(signHeadline.toUpperCase(), W/2, 96);
 
@@ -2515,16 +2543,12 @@ window.logoutMember = async function () {
         }
         const nameLineHeight = nameFontSize * 1.08;
         let ny = bandH/2 - ((nameLines.length-1) * nameLineHeight)/2 + nameFontSize*0.32;
-        signCtx.fillStyle = '#ffffff';
+        signCtx.fillStyle = textColor;
         signCtx.font = nameFont;
         nameLines.forEach(line => {
           signCtx.fillText(line, W/2, ny);
           ny += nameLineHeight;
         });
-
-        // Thin white divider under the band
-        signCtx.fillStyle = 'rgba(255,255,255,0.35)';
-        signCtx.fillRect(W/2 - 50, bandH - 36, 100, 4);
 
         // ── BOTTOM: photo fills the rest, lighter overlay is fine since no text sits directly on it ──
         const photoY = bandH;
