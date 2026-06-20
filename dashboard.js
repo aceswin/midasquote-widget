@@ -2063,7 +2063,7 @@ window.logoutMember = async function () {
         qrCtx.textAlign = 'center';
 
         // Calculate QR position first so we can center the headline in the space above it
-        const qrSize = 560;
+        const qrSize = 520;
         const cardPad = 40;
         const ctaHForCalc = 116;
         const headlineFont = '700 62px -apple-system, sans-serif';
@@ -2071,7 +2071,7 @@ window.logoutMember = async function () {
         const headlineBlockH = lines.length * 74;
 
         const availTop = bannerH + 30;
-        const availBottom = QH - pad - ctaHForCalc - 60;
+        const availBottom = QH - pad - ctaHForCalc - 150;
         const qrBlockH = qrSize + cardPad*2;
         const qrX = (QW - qrSize) / 2;
         const qrY = availBottom - qrBlockH + cardPad - 10;
