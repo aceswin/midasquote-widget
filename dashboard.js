@@ -437,7 +437,15 @@ window.logoutMember = async function () {
 
             <div class="mq-card">
               <div class="mq-card-title">📱 Social media posts</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Copy and paste these straight into Facebook or Instagram. Your quote link is already filled in.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
+                <label class="mq-label" style="display:block;margin-bottom:6px">Link to use in these posts</label>
+                <div style="display:flex;gap:8px">
+                  <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1"/>
+                  <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
+                </div>
+                <span class="mq-hint">Paste the link to your quote page — if you leave this blank, the posts below use your raw widget link instead</span>
+              </div>
               <div id="mq-mk-social"></div>
             </div>
 
@@ -1322,20 +1330,26 @@ window.logoutMember = async function () {
   // Persisted across re-renders so re-opening or refreshing Marketing Kit doesn't lose an uploaded background photo
   let _mqGraphicBgImage = null;
   let _mqGraphicOverlayOpacity = 0.62;
+  let _mqCustomPostLink = '';
 
   function initMarketingKit(shopRecord) {
     const shopName = shopRecord.fields['Shop name'] || 'our shop';
     const token = shopRecord.fields['Shop token'] || '';
-    const quoteLink = `https://widget.midasquote.com/?shop=${token}`;
+    const defaultQuoteLink = `https://widget.midasquote.com/?shop=${token}`;
     const embedCode = `<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <script src="https://widget.midasquote.com/widget.js?shop=${token}"></script>\n</div>`;
 
-    const socialPosts = [
-      `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 2 minutes. Try it now → ${quoteLink}`,
-      `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 60 seconds — right from your phone. ${quoteLink}`,
-      `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
-      `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
-      `Hey homeowners! If you're planning a kitchen remodel, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
-    ];
+    function buildSocialPosts(quoteLink) {
+      return [
+        `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 2 minutes. Try it now → ${quoteLink}`,
+        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 60 seconds — right from your phone. ${quoteLink}`,
+        `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
+        `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
+        `Hey homeowners! If you're planning a kitchen remodel, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
+      ];
+    }
+
+    const quoteLink = _mqCustomPostLink || defaultQuoteLink;
+    const socialPosts = buildSocialPosts(quoteLink);
 
     const headlines = [
       'Get a free quote online in minutes',
@@ -1367,12 +1381,28 @@ window.logoutMember = async function () {
     const escapeHtml = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
     const socialEl = el('mq-mk-social');
-    if (socialEl) {
-      socialEl.innerHTML = socialPosts.map((post, i) => `
+    function renderSocialPosts(posts) {
+      if (!socialEl) return;
+      socialEl.innerHTML = posts.map((post, i) => `
         <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:10px">
           <div style="font-size:13px;color:#111;line-height:1.6;margin-bottom:8px">${escapeHtml(post)}</div>
           <button class="mq-btn mq-btn-sm" onclick="mqCopyText(${JSON.stringify(post)},this)">Copy</button>
         </div>`).join('');
+    }
+    renderSocialPosts(socialPosts);
+
+    const postLinkInput = el('mq-mk-post-link');
+    const postLinkApplyBtn = el('mq-mk-post-link-apply');
+    if (postLinkInput) postLinkInput.value = _mqCustomPostLink;
+    if (postLinkApplyBtn) {
+      postLinkApplyBtn.onclick = () => {
+        const val = (postLinkInput?.value || '').trim();
+        _mqCustomPostLink = val;
+        const newLink = val || defaultQuoteLink;
+        renderSocialPosts(buildSocialPosts(newLink));
+        postLinkApplyBtn.textContent = 'Applied ✓';
+        setTimeout(() => { postLinkApplyBtn.textContent = 'Apply'; }, 1500);
+      };
     }
 
     const headlinesEl = el('mq-mk-headlines');
