@@ -337,6 +337,24 @@ window.logoutMember = async function () {
             <div class="mq-page-title">Embed code</div>
             <div class="mq-page-sub">Paste this code into your website where you want the widget to appear</div>
             <div class="mq-card">
+              <div class="mq-card-title">🎯 Quote page header <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">A clean intro section to place above your widget. Here's what it looks like:</p>
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:0.5rem;margin-bottom:1.25rem">
+                <div id="mq-mk-header-preview"></div>
+              </div>
+              <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Code to copy — paste this directly above your trust bar and embed code below:</p>
+              <div class="mq-embed-box"><span id="mq-mk-header-display"></span><button class="mq-copy-btn" id="mq-mk-header-copy">Copy</button></div>
+            </div>
+            <div class="mq-card">
+              <div class="mq-card-title">✨ Trust bar <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Paste this code snippet directly above your widget embed code below. Here's what it looks like:</p>
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1.25rem">
+                <div id="mq-mk-trustbar-preview"></div>
+              </div>
+              <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Code to copy:</p>
+              <div class="mq-embed-box"><span id="mq-mk-trustbar-display"></span><button class="mq-copy-btn" id="mq-mk-trustbar-copy">Copy</button></div>
+            </div>
+            <div class="mq-card">
               <div class="mq-card-title">📋 Your embed code</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy the code below and paste it into your website's HTML where you want the quote widget to appear. Works on Wix, Squarespace, WordPress, Webflow, GoDaddy and any custom site.</p>
               <div class="mq-embed-box"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-2">Copy</button></div>
@@ -455,26 +473,6 @@ window.logoutMember = async function () {
               <div class="mq-card-title">💬 Direct message template</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Send this to past customers or leads who might have a future project.</p>
               <div id="mq-mk-dm"></div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">🎯 Quote page header</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">A clean intro section to place above your widget. Here's what it looks like:</p>
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:0.5rem;margin-bottom:1.25rem">
-                <div id="mq-mk-header-preview"></div>
-              </div>
-              <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Code to copy:</p>
-              <div class="mq-embed-box"><span id="mq-mk-header-display"></span><button class="mq-copy-btn" id="mq-mk-header-copy">Copy</button></div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">✨ Trust bar for your website</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Paste this code snippet directly above or below your widget embed code. Here's what it looks like:</p>
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1.25rem">
-                <div id="mq-mk-trustbar-preview"></div>
-              </div>
-              <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Code to copy:</p>
-              <div class="mq-embed-box"><span id="mq-mk-trustbar-display"></span><button class="mq-copy-btn" id="mq-mk-trustbar-copy">Copy</button></div>
             </div>
 
             <div class="mq-card">
@@ -810,7 +808,7 @@ window.logoutMember = async function () {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, {
+      const updatedFields = {
         'Shop name':         gv('mq-shop-name'),
         'Phone':             gv('mq-shop-phone'),
         'City':              gv('mq-shop-city'),
@@ -823,7 +821,16 @@ window.logoutMember = async function () {
         'Disclaimer text':   gv('mq-shop-disclaimer'),
         'Consultation link': gv('mq-shop-consult-link'),
         'Consultation email': gv('mq-shop-consult-email'),
-      });
+      };
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, updatedFields);
+      // Keep the in-memory record in sync so other tabs (like Marketing Kit) reflect changes immediately
+      Object.assign(shopRec.fields, updatedFields);
+      // If Marketing Kit has already been opened this session, force it to rebuild with fresh data
+      const socialEl = document.getElementById('mq-mk-social');
+      if (socialEl) {
+        socialEl.dataset.loaded = '';
+        initMarketingKit(shopRec);
+      }
       showMsg('mq-shop-msg', '✓ Shop info saved!');
     } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
   };
@@ -1312,6 +1319,10 @@ window.logoutMember = async function () {
   // ============================================================
   // MARKETING KIT
   // ============================================================
+  // Persisted across re-renders so re-opening or refreshing Marketing Kit doesn't lose an uploaded background photo
+  let _mqGraphicBgImage = null;
+  let _mqGraphicOverlayOpacity = 0.62;
+
   function initMarketingKit(shopRecord) {
     const shopName = shopRecord.fields['Shop name'] || 'our shop';
     const token = shopRecord.fields['Shop token'] || '';
@@ -1414,8 +1425,8 @@ window.logoutMember = async function () {
         } catch(e) { return '#d4a574'; }
       })();
 
-      let bgImage = null;
-      let overlayOpacity = 0.62;
+      let bgImage = _mqGraphicBgImage;
+      let overlayOpacity = _mqGraphicOverlayOpacity;
 
       function wrapText(text, font, maxWidth) {
         ctx.font = font;
@@ -1526,6 +1537,13 @@ window.logoutMember = async function () {
       const overlaySlider = el('mq-mk-overlay-slider');
       const overlayVal = el('mq-mk-overlay-val');
 
+      // If a background photo was already set in a previous render, restore the slider UI to match
+      if (bgImage && overlayRow) {
+        overlayRow.style.display = 'flex';
+        if (overlaySlider) overlaySlider.value = Math.round(overlayOpacity * 100);
+        if (overlayVal) overlayVal.textContent = Math.round(overlayOpacity * 100) + '%';
+      }
+
       if (bgPhotoInput) {
         bgPhotoInput.onchange = (e) => {
           const file = e.target.files && e.target.files[0];
@@ -1535,6 +1553,7 @@ window.logoutMember = async function () {
             const img = new Image();
             img.onload = () => {
               bgImage = img;
+              _mqGraphicBgImage = img;
               drawGraphic();
               if (overlayRow) overlayRow.style.display = 'flex';
             };
@@ -1547,6 +1566,7 @@ window.logoutMember = async function () {
       if (overlaySlider) {
         overlaySlider.oninput = () => {
           overlayOpacity = parseInt(overlaySlider.value, 10) / 100;
+          _mqGraphicOverlayOpacity = overlayOpacity;
           if (overlayVal) overlayVal.textContent = overlaySlider.value + '%';
           drawGraphic();
         };
@@ -1556,6 +1576,7 @@ window.logoutMember = async function () {
       if (removeBgBtn) {
         removeBgBtn.onclick = () => {
           bgImage = null;
+          _mqGraphicBgImage = null;
           if (bgPhotoInput) bgPhotoInput.value = '';
           if (overlayRow) overlayRow.style.display = 'none';
           drawGraphic();
@@ -1637,7 +1658,7 @@ window.logoutMember = async function () {
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
-    if (page === 'marketing') {
+    if (page === 'marketing' || page === 'embed') {
       const socialEl = document.getElementById('mq-mk-social');
       if (socialEl && !socialEl.dataset.loaded && window._mqShopRecord) {
         socialEl.dataset.loaded = 'true';
