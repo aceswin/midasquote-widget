@@ -310,6 +310,13 @@ window.logoutMember = async function () {
               </div>
               <div class="mq-toggle-row" style="margin-bottom:1.5rem">
                 <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">We offer financing</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Shows a friendly "Financing available" note on the widget's quote results</div>
+                </div>
+                <div class="mq-toggle" id="mq-financing-toggle" onclick="mqToggleFinancing()"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+                <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Show "View our products" link on widget</div>
                   <div style="font-size:12px;color:#6b7280;margin-top:2px">Customers can browse your showroom before getting a quote</div>
                 </div>
@@ -816,6 +823,10 @@ window.logoutMember = async function () {
     if (toggle) {
       const isOn = f['Show showroom'] !== false;
       toggle.classList.toggle('on', isOn);
+    }
+    const financingToggle = el('mq-financing-toggle');
+    if (financingToggle) {
+      financingToggle.classList.toggle('on', f['Offers financing'] === true);
     }
   }
 
@@ -1393,6 +1404,20 @@ window.logoutMember = async function () {
       shopRec.fields['Show showroom'] = !isOn;
       showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
+  };
+
+  window.mqToggleFinancing = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const toggle = el('mq-financing-toggle');
+    if (!toggle) return;
+    const isOn = toggle.classList.contains('on');
+    toggle.classList.toggle('on', !isOn);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Offers financing': !isOn });
+      shopRec.fields['Offers financing'] = !isOn;
+      showMsg('mq-shop-msg', !isOn ? '✓ Financing note will show on your widget.' : '✓ Financing note hidden from widget.');
+    } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
 
   window.mqUpdateLeadStatus = async function(id, status) {

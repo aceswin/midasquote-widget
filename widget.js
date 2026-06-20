@@ -216,6 +216,7 @@
       #midasquote-widget .mq-powered-by a{color:#9ca3af;text-decoration:none;font-weight:500;transition:color 0.15s}
       #midasquote-widget .mq-powered-by a:hover{color:#1a1a1a}
       #midasquote-widget .mq-powered-by svg{opacity:0.45}
+      #midasquote-widget .mq-financing-note{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px}
       #midasquote-widget .mq-cta-row{display:flex;gap:8px;margin-top:1rem}
       #midasquote-widget .mq-cta-row button{flex:1;padding:10px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111;font-family:inherit}
       #midasquote-widget .mq-pri{background:${bc}!important;color:#fff!important;border-color:${bc}!important}
@@ -427,6 +428,9 @@
   function buildWidgetHTML(shop, specs, data) {
     const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
+    const financingHTML = shop['Offers financing'] === true
+      ? `<div class="mq-financing-note">💳 Financing available</div>`
+      : '';
 
     return `
       <div class="mq-header">
@@ -470,6 +474,7 @@
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
+          ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -502,6 +507,7 @@
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
+          ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -562,6 +568,7 @@
             <button onclick="mqShowConsultModal()">Ask a question ↗</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
+          ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
           </div>
         </div>
