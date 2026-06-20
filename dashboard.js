@@ -428,6 +428,14 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A square Instagram/Facebook-ready graphic with your shop name, brand colour, and quote link already on it. Download and post — no design needed.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
+                <div style="display:flex;gap:8px;width:100%;max-width:280px">
+                  <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
+                    📷 Add background photo
+                    <input type="file" id="mq-mk-bg-photo" accept="image/*" style="display:none"/>
+                  </label>
+                  <button class="mq-btn mq-btn-sm" id="mq-mk-bg-remove" style="flex-shrink:0">✕</button>
+                </div>
+                <span style="font-size:11px;color:#9ca3af;text-align:center">Optional — use a photo of your shop or recent work for the background</span>
                 <button class="mq-btn mq-btn-primary" id="mq-mk-download-btn" style="width:100%;max-width:280px">⬇️ Download graphic (PNG)</button>
               </div>
             </div>
@@ -1386,6 +1394,7 @@ window.logoutMember = async function () {
     // Social graphic — drawn on canvas, downloadable as PNG
     const canvas = el('mq-mk-canvas');
     const downloadBtn = el('mq-mk-download-btn');
+    const bgPhotoInput = el('mq-mk-bg-photo');
     if (canvas && canvas.getContext) {
       const ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
@@ -1395,12 +1404,15 @@ window.logoutMember = async function () {
         try {
           const hex = brandColor.replace('#','');
           const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-          const lighten = (c) => Math.min(255, Math.round(c + (255 - c) * 0.35));
+          const lighten = (c) => Math.min(255, Math.round(c + (255 - c) * 0.45));
           return `rgb(${lighten(r)},${lighten(g)},${lighten(b)})`;
         } catch(e) { return '#d4a574'; }
       })();
 
-      function wrapText(text, maxWidth) {
+      let bgImage = null;
+
+      function wrapText(text, font, maxWidth) {
+        ctx.font = font;
         const words = text.split(' ');
         const lines = [];
         let line = '';
@@ -1419,74 +1431,120 @@ window.logoutMember = async function () {
 
       function drawGraphic() {
         ctx.clearRect(0,0,W,H);
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(0,0,W,H);
 
-        const pad = 76;
+        // Background — photo (cover-fit + dark overlay) or solid
+        if (bgImage) {
+          const imgRatio = bgImage.width / bgImage.height;
+          const canvasRatio = W / H;
+          let dw, dh, dx, dy;
+          if (imgRatio > canvasRatio) {
+            dh = H; dw = H * imgRatio; dx = (W - dw) / 2; dy = 0;
+          } else {
+            dw = W; dh = W / imgRatio; dx = 0; dy = (H - dh) / 2;
+          }
+          ctx.drawImage(bgImage, dx, dy, dw, dh);
+          ctx.fillStyle = 'rgba(10,10,10,0.62)';
+          ctx.fillRect(0,0,W,H);
+        } else {
+          ctx.fillStyle = '#1a1a1a';
+          ctx.fillRect(0,0,W,H);
+        }
+
+        const pad = 90;
 
         // Logo chip + shop name
+        const chipSize = 100;
         ctx.fillStyle = brandColor;
-        const chipSize = 88;
         ctx.beginPath();
-        ctx.roundRect(pad, pad, chipSize, chipSize, 22);
+        ctx.roundRect(pad, pad, chipSize, chipSize, 24);
         ctx.fill();
         ctx.fillStyle = '#fff';
-        ctx.font = '600 44px -apple-system, sans-serif';
+        ctx.font = '500 50px -apple-system, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('⚡', pad + chipSize/2, pad + chipSize/2 + 4);
 
         ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = '#ffffff';
-        ctx.font = '500 38px -apple-system, sans-serif';
-        ctx.fillText(shopName, pad + chipSize + 24, pad + chipSize/2 - 8);
+        ctx.font = '600 44px -apple-system, sans-serif';
+        ctx.fillText(shopName, pad + chipSize + 28, pad + chipSize/2 - 4);
         if (city) {
-          ctx.fillStyle = 'rgba(255,255,255,0.5)';
-          ctx.font = '400 26px -apple-system, sans-serif';
-          ctx.fillText(city, pad + chipSize + 24, pad + chipSize/2 + 28);
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.font = '400 30px -apple-system, sans-serif';
+          ctx.fillText(city, pad + chipSize + 28, pad + chipSize/2 + 36);
         }
 
         // Eyebrow
-        let y = pad + chipSize + 90;
+        let y = pad + chipSize + 130;
         ctx.fillStyle = accentColor;
-        ctx.font = '600 30px -apple-system, sans-serif';
+        ctx.font = '600 32px -apple-system, sans-serif';
         ctx.fillText('INSTANT PRICING', pad, y);
 
         // Headline
-        y += 70;
+        y += 80;
+        const headlineFont = '600 80px -apple-system, sans-serif';
+        ctx.font = headlineFont;
         ctx.fillStyle = '#ffffff';
-        ctx.font = '500 72px -apple-system, sans-serif';
-        const headlineLines = wrapText('Get your cabinet quote in under 2 minutes', W - pad*2);
+        const headlineLines = wrapText('Get your cabinet quote in under 2 minutes', headlineFont, W - pad*2);
         headlineLines.forEach(line => {
+          ctx.font = headlineFont;
           ctx.fillText(line, pad, y);
-          y += 86;
+          y += 92;
         });
 
         // Subtext
-        y += 24;
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = '400 34px -apple-system, sans-serif';
+        y += 30;
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.font = '400 38px -apple-system, sans-serif';
         ctx.fillText('No phone calls. No waiting. Just your price.', pad, y);
 
         // Bottom CTA pill
-        const ctaY = H - pad - 70;
+        const ctaH = 92;
+        const ctaW = 320;
+        const ctaY = H - pad - ctaH;
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.roundRect(pad, ctaY, 280, 70, 16);
+        ctx.roundRect(pad, ctaY, ctaW, ctaH, 18);
         ctx.fill();
         ctx.fillStyle = '#1a1a1a';
-        ctx.font = '500 32px -apple-system, sans-serif';
+        ctx.font = '600 36px -apple-system, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Get a quote →', pad + 140, ctaY + 45);
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Get a quote →', pad + ctaW/2, ctaY + ctaH/2 + 2);
 
         // Footer link
         ctx.textAlign = 'left';
-        ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        ctx.font = '400 26px -apple-system, sans-serif';
-        ctx.fillText('midasquote.com', pad, H - 30);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        ctx.font = '400 28px -apple-system, sans-serif';
+        ctx.fillText('midasquote.com', pad, H - 36);
       }
 
       drawGraphic();
+
+      if (bgPhotoInput) {
+        bgPhotoInput.onchange = (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => { bgImage = img; drawGraphic(); };
+            img.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        };
+      }
+
+      const removeBgBtn = el('mq-mk-bg-remove');
+      if (removeBgBtn) {
+        removeBgBtn.onclick = () => {
+          bgImage = null;
+          if (bgPhotoInput) bgPhotoInput.value = '';
+          drawGraphic();
+        };
+      }
 
       if (downloadBtn) {
         downloadBtn.onclick = () => {
