@@ -1450,15 +1450,22 @@ window.logoutMember = async function () {
     const postLinkApplyBtn = el('mq-mk-post-link-apply');
     if (postLinkInput) postLinkInput.value = _mqCustomPostLink;
     if (postLinkApplyBtn) {
-      postLinkApplyBtn.onclick = () => {
+      postLinkApplyBtn.onclick = async () => {
         const val = (postLinkInput?.value || '').trim();
         _mqCustomPostLink = val;
         const newLink = val || defaultQuoteLink;
         renderSocialPosts(buildSocialPosts(newLink));
         if (typeof window._mqRedrawQrPoster === 'function') window._mqRedrawQrPoster();
         if (typeof window._mqRedrawSign === 'function') window._mqRedrawSign();
-        postLinkApplyBtn.textContent = 'Applied ✓';
-        setTimeout(() => { postLinkApplyBtn.textContent = 'Apply'; }, 1500);
+        postLinkApplyBtn.textContent = 'Saving...';
+        try {
+          await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Marketing link': val });
+          shopRecord.fields['Marketing link'] = val;
+          postLinkApplyBtn.textContent = 'Saved ✓';
+        } catch(e) {
+          postLinkApplyBtn.textContent = 'Error — try again';
+        }
+        setTimeout(() => { postLinkApplyBtn.textContent = 'Apply'; }, 1800);
       };
     }
 
@@ -1685,6 +1692,7 @@ window.logoutMember = async function () {
     if (qrCanvas && qrCanvas.getContext) {
       const qrCtx = qrCanvas.getContext('2d');
       const QW = qrCanvas.width, QH = qrCanvas.height;
+      const brandColor = shopRecord.fields['Brand colour'] || '#1a1a1a';
       let qrBgImage = _mqQrBgImage;
       let qrOverlayOpacity = _mqQrOverlayOpacity;
       let qrLibState = 'loading'; // 'loading' | 'ready' | 'failed'
@@ -2241,6 +2249,7 @@ window.logoutMember = async function () {
     }
 
     window._mqShopRecord = shopRecord;
+    _mqCustomPostLink = shopRecord.fields['Marketing link'] || '';
     container.innerHTML = buildHTML(shopRecord.fields);
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
