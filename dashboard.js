@@ -632,16 +632,38 @@ window.logoutMember = async function () {
   // ============================================================
   // COPY HELPERS
   // ============================================================
+  function mqFallbackCopy(text) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      return true;
+    } catch(e) { return false; }
+  }
   window.mqCopyEmbed = function(btn) {
     const code = window._mqRawEmbedCode || '';
-    navigator.clipboard.writeText(code).then(() => {
-      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); }
-    });
+    const ok = () => { if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
+    const fail = () => { if (btn) { btn.textContent = 'Copy failed'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(ok).catch(() => { mqFallbackCopy(code) ? ok() : fail(); });
+    } else {
+      mqFallbackCopy(code) ? ok() : fail();
+    }
   };
   window.mqCopyText = function(text, btn) {
-    navigator.clipboard.writeText(text).then(() => {
-      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); }
-    });
+    const ok = () => { if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
+    const fail = () => { if (btn) { btn.textContent = 'Copy failed'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok).catch(() => { mqFallbackCopy(text) ? ok() : fail(); });
+    } else {
+      mqFallbackCopy(text) ? ok() : fail();
+    }
   };
 
   // ============================================================
@@ -1472,8 +1494,11 @@ window.logoutMember = async function () {
       socialEl.innerHTML = posts.map((post, i) => `
         <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:10px">
           <div style="font-size:13px;color:#111;line-height:1.6;margin-bottom:8px">${escapeHtml(post)}</div>
-          <button class="mq-btn mq-btn-sm" onclick="mqCopyText(${JSON.stringify(post)},this)">Copy</button>
+          <button class="mq-btn mq-btn-sm" data-copy-idx="${i}">Copy</button>
         </div>`).join('');
+      socialEl.querySelectorAll('button[data-copy-idx]').forEach(btn => {
+        btn.onclick = () => mqCopyText(posts[parseInt(btn.dataset.copyIdx, 10)], btn);
+      });
     }
     renderSocialPosts(socialPosts);
 
@@ -1502,11 +1527,14 @@ window.logoutMember = async function () {
 
     const headlinesEl = el('mq-mk-headlines');
     if (headlinesEl) {
-      headlinesEl.innerHTML = headlines.map(h => `
+      headlinesEl.innerHTML = headlines.map((h, i) => `
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6">
           <span style="font-size:13px;color:#111">${escapeHtml(h)}</span>
-          <button class="mq-btn mq-btn-sm" onclick="mqCopyText(${JSON.stringify(h)},this)">Copy</button>
+          <button class="mq-btn mq-btn-sm" data-copy-idx="${i}">Copy</button>
         </div>`).join('');
+      headlinesEl.querySelectorAll('button[data-copy-idx]').forEach(btn => {
+        btn.onclick = () => mqCopyText(headlines[parseInt(btn.dataset.copyIdx, 10)], btn);
+      });
     }
 
     const dmEl = el('mq-mk-dm');
@@ -1514,8 +1542,10 @@ window.logoutMember = async function () {
       dmEl.innerHTML = `
         <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px">
           <div style="font-size:13px;color:#111;line-height:1.6;margin-bottom:8px">${escapeHtml(dmTemplate)}</div>
-          <button class="mq-btn mq-btn-sm" onclick="mqCopyText(${JSON.stringify(dmTemplate)},this)">Copy</button>
+          <button class="mq-btn mq-btn-sm" id="mq-mk-dm-copy-btn">Copy</button>
         </div>`;
+      const dmCopyBtn = el('mq-mk-dm-copy-btn');
+      if (dmCopyBtn) dmCopyBtn.onclick = () => mqCopyText(dmTemplate, dmCopyBtn);
     }
 
     const headerDisplay = el('mq-mk-header-display');
