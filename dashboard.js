@@ -2064,6 +2064,18 @@ window.logoutMember = async function () {
       let signOrientation = 'portrait'; // 'portrait' | 'landscape'
       let signHeadline = _mqSignHeadline || 'Another project by';
 
+      function shadeColor(hex, percent) {
+        try {
+          hex = hex.replace('#','');
+          let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+          const amt = Math.round(2.55 * percent);
+          r = Math.max(0, Math.min(255, r + amt));
+          g = Math.max(0, Math.min(255, g + amt));
+          b = Math.max(0, Math.min(255, b + amt));
+          return `rgb(${r},${g},${b})`;
+        } catch(e) { return hex; }
+      }
+
       function signShadowText(text, x, y, font, fillColor, align) {
         signCtx.font = font;
         signCtx.textAlign = align || 'center';
@@ -2192,32 +2204,48 @@ window.logoutMember = async function () {
         const W = 1620, H = 1080;
         signCanvas.width = W; signCanvas.height = H;
         signCtx.clearRect(0,0,W,H);
-        drawBackground(W, H);
-
-        signCtx.fillStyle = brandColor2;
-        signCtx.fillRect(0, 0, 22, H);
 
         const padL = 90, padTB = 90;
-        signCtx.textAlign = 'left';
-        signShadowText(signHeadline.toUpperCase(), padL, padTB + 10, '700 34px -apple-system, sans-serif', 'rgba(255,255,255,0.7)', 'left');
+        const bandW = W * 0.52;
 
-        const nameFont = '700 84px -apple-system, sans-serif';
-        const nameLines = wrapTextSign(shopName, nameFont, W * 0.58 - padL);
-        let y = padTB + 100;
+        // ── LEFT: Solid brand-colour band — always legible, never fights a photo ──
+        const bandGrad = signCtx.createLinearGradient(0, 0, bandW, 0);
+        bandGrad.addColorStop(0, shadeColor(brandColor2, -18));
+        bandGrad.addColorStop(1, brandColor2);
+        signCtx.fillStyle = bandGrad;
+        signCtx.fillRect(0, 0, bandW, H);
+
+        signCtx.textAlign = 'left';
+        signCtx.textBaseline = 'alphabetic';
+        signCtx.fillStyle = 'rgba(255,255,255,0.78)';
+        signCtx.font = '700 32px -apple-system, sans-serif';
+        signCtx.fillText(signHeadline.toUpperCase(), padL, padTB + 10);
+
+        let nameFontSize = 90;
+        let nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+        let nameLines = wrapTextSign(shopName, nameFont, bandW - padL - 40);
+        while (nameLines.length > 3 && nameFontSize > 56) {
+          nameFontSize -= 8;
+          nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+          nameLines = wrapTextSign(shopName, nameFont, bandW - padL - 40);
+        }
+        signCtx.fillStyle = '#ffffff';
+        signCtx.font = nameFont;
+        let y = padTB + 110;
         nameLines.forEach(line => {
-          signShadowText(line, padL, y, nameFont, '#ffffff', 'left');
-          y += 92;
+          signCtx.fillText(line, padL, y);
+          y += nameFontSize * 1.1;
         });
 
-        y += 18;
-        signCtx.fillStyle = brandColor2;
-        signCtx.fillRect(padL, y, 90, 6);
+        y += 14;
+        signCtx.fillStyle = 'rgba(255,255,255,0.4)';
+        signCtx.fillRect(padL, y, 90, 5);
 
-        const ctaH = 100, ctaW = 360;
+        const ctaH = 104, ctaW = 360;
         const ctaY = H - padTB - ctaH;
         signCtx.save();
-        signCtx.shadowColor = 'rgba(0,0,0,0.4)';
-        signCtx.shadowBlur = 20;
+        signCtx.shadowColor = 'rgba(0,0,0,0.3)';
+        signCtx.shadowBlur = 18;
         signCtx.shadowOffsetY = 6;
         signCtx.fillStyle = '#ffffff';
         signCtx.beginPath();
@@ -2231,55 +2259,134 @@ window.logoutMember = async function () {
         signCtx.fillText('Get a quote \u2192', padL + ctaW/2, ctaY + ctaH/2 + 2);
         signCtx.textBaseline = 'alphabetic';
 
+        // ── RIGHT: photo area ──
+        const photoX = bandW;
+        const photoW = W - bandW;
+        if (signBgImage) {
+          const imgRatio = signBgImage.width / signBgImage.height;
+          const areaRatio = photoW / H;
+          let dw, dh, dx, dy;
+          if (imgRatio > areaRatio) {
+            dh = H; dw = H * imgRatio; dx = photoX - (dw - photoW) / 2; dy = 0;
+          } else {
+            dw = photoW; dh = photoW / imgRatio; dx = photoX; dy = (H - dh) / 2;
+          }
+          signCtx.save();
+          signCtx.beginPath();
+          signCtx.rect(photoX, 0, photoW, H);
+          signCtx.clip();
+          signCtx.drawImage(signBgImage, dx, dy, dw, dh);
+          signCtx.fillStyle = `rgba(10,10,10,${signOverlayOpacity * 0.5})`;
+          signCtx.fillRect(photoX, 0, photoW, H);
+          signCtx.restore();
+        } else {
+          const grad = signCtx.createLinearGradient(photoX, 0, W, 0);
+          grad.addColorStop(0, '#262422');
+          grad.addColorStop(1, '#15130f');
+          signCtx.fillStyle = grad;
+          signCtx.fillRect(photoX, 0, photoW, H);
+        }
+
         const qrSize = 420;
-        const qrX = W - padL - qrSize;
+        const qrX = photoX + (photoW - qrSize) / 2;
         const qrY = H/2 - qrSize/2;
         const cardPad = 30;
         drawQrInto(qrX, qrY, qrSize, cardPad);
         signShadowText('Scan me', qrX + qrSize/2, qrY + qrSize + 70, '600 28px -apple-system, sans-serif', 'rgba(255,255,255,0.85)', 'center');
       }
 
+
       function drawSignPortrait() {
         const W = 1080, H = 1620;
         signCanvas.width = W; signCanvas.height = H;
         signCtx.clearRect(0,0,W,H);
-        drawBackground(W, H);
 
-        signCtx.fillStyle = brandColor2;
-        signCtx.fillRect(0, 0, W, 16);
+        const pad = 80;
 
-        const pad = 90;
+        // ── TOP: Solid brand-colour band — guaranteed legible no matter what photo is chosen ──
+        const bandH = 460;
+        const bandGrad = signCtx.createLinearGradient(0, 0, 0, bandH);
+        bandGrad.addColorStop(0, brandColor2);
+        bandGrad.addColorStop(1, shadeColor(brandColor2, -18));
+        signCtx.fillStyle = bandGrad;
+        signCtx.fillRect(0, 0, W, bandH);
+
         signCtx.textAlign = 'center';
-        signShadowText(signHeadline.toUpperCase(), W/2, pad + 40, '700 36px -apple-system, sans-serif', 'rgba(255,255,255,0.7)', 'center');
+        signCtx.textBaseline = 'alphabetic';
 
-        const nameFont = '700 76px -apple-system, sans-serif';
-        const nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
-        let y = pad + 130;
+        // Small eyebrow
+        signCtx.fillStyle = 'rgba(255,255,255,0.78)';
+        signCtx.font = '700 32px -apple-system, sans-serif';
+        signCtx.fillText(signHeadline.toUpperCase(), W/2, 96);
+
+        // HERO: shop name — huge, the main thing visible from the street
+        let nameFontSize = 104;
+        let nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+        let nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
+        // Shrink if it wraps to more than 2 lines so it still fits the band
+        while (nameLines.length > 2 && nameFontSize > 64) {
+          nameFontSize -= 8;
+          nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+          nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
+        }
+        const nameLineHeight = nameFontSize * 1.08;
+        let ny = bandH/2 - ((nameLines.length-1) * nameLineHeight)/2 + nameFontSize*0.32;
+        signCtx.fillStyle = '#ffffff';
+        signCtx.font = nameFont;
         nameLines.forEach(line => {
-          signShadowText(line, W/2, y, nameFont, '#ffffff', 'center');
-          y += 86;
+          signCtx.fillText(line, W/2, ny);
+          ny += nameLineHeight;
         });
 
-        y += 20;
-        signCtx.fillStyle = brandColor2;
-        signCtx.fillRect(W/2 - 45, y, 90, 6);
-        y += 70;
+        // Thin white divider under the band
+        signCtx.fillStyle = 'rgba(255,255,255,0.35)';
+        signCtx.fillRect(W/2 - 50, bandH - 36, 100, 4);
 
-        const qrSize = 600;
+        // ── BOTTOM: photo fills the rest, lighter overlay is fine since no text sits directly on it ──
+        const photoY = bandH;
+        const photoH = H - bandH;
+        if (signBgImage) {
+          const imgRatio = signBgImage.width / signBgImage.height;
+          const areaRatio = W / photoH;
+          let dw, dh, dx, dy;
+          if (imgRatio > areaRatio) {
+            dh = photoH; dw = photoH * imgRatio; dx = (W - dw) / 2; dy = photoY;
+          } else {
+            dw = W; dh = W / imgRatio; dx = 0; dy = photoY - (dh - photoH) / 2;
+          }
+          signCtx.save();
+          signCtx.beginPath();
+          signCtx.rect(0, photoY, W, photoH);
+          signCtx.clip();
+          signCtx.drawImage(signBgImage, dx, dy, dw, dh);
+          signCtx.fillStyle = `rgba(10,10,10,${signOverlayOpacity * 0.6})`;
+          signCtx.fillRect(0, photoY, W, photoH);
+          signCtx.restore();
+        } else {
+          const grad = signCtx.createLinearGradient(0, photoY, 0, H);
+          grad.addColorStop(0, '#262422');
+          grad.addColorStop(1, '#15130f');
+          signCtx.fillStyle = grad;
+          signCtx.fillRect(0, photoY, W, photoH);
+        }
+
+        // QR card — overlaps the band/photo seam for visual interest, always on solid white regardless of overlay
+        const qrSize = 480;
         const qrX = (W - qrSize) / 2;
-        const qrY = y;
-        const cardPad = 36;
+        const qrY = bandH - qrSize * 0.22;
+        const cardPad = 32;
         drawQrInto(qrX, qrY, qrSize, cardPad);
-        y = qrY + qrSize + cardPad + 76;
 
-        signShadowText('Scan me', W/2, y, '600 32px -apple-system, sans-serif', 'rgba(255,255,255,0.85)', 'center');
+        let y = qrY + qrSize + cardPad + 56;
+        signShadowText('Scan me', W/2, y, '600 30px -apple-system, sans-serif', 'rgba(255,255,255,0.9)', 'center');
 
-        const ctaH = 112, ctaW = 420;
+        // CTA pill near the bottom
+        const ctaH = 108, ctaW = 400;
         const ctaY = H - pad - ctaH;
         const ctaX = (W - ctaW) / 2;
         signCtx.save();
-        signCtx.shadowColor = 'rgba(0,0,0,0.4)';
-        signCtx.shadowBlur = 22;
+        signCtx.shadowColor = 'rgba(0,0,0,0.45)';
+        signCtx.shadowBlur = 24;
         signCtx.shadowOffsetY = 8;
         signCtx.fillStyle = '#ffffff';
         signCtx.beginPath();
@@ -2287,7 +2394,7 @@ window.logoutMember = async function () {
         signCtx.fill();
         signCtx.restore();
         signCtx.fillStyle = '#1a1a1a';
-        signCtx.font = '700 46px -apple-system, sans-serif';
+        signCtx.font = '700 44px -apple-system, sans-serif';
         signCtx.textAlign = 'center';
         signCtx.textBaseline = 'middle';
         signCtx.fillText('Get a quote \u2192', W/2, ctaY + ctaH/2 + 2);
