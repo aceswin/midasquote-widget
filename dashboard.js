@@ -2062,39 +2062,48 @@ window.logoutMember = async function () {
         const pad = 84;
         qrCtx.textAlign = 'center';
 
-        // Calculate QR position first so we can center the headline in the space above it
+        // Treat headline + QR + subtext as ONE block, then center that whole block
+        // in the space between the banner and the CTA button — much more predictable.
         const qrSize = 520;
         const cardPad = 40;
         const ctaHForCalc = 116;
         const headlineFont = '700 62px -apple-system, sans-serif';
         const lines = wrapTextQr(qrHeadline, headlineFont, QW - pad*2);
-        const headlineBlockH = lines.length * 74;
+        const headlineLineH = 74;
+        const subtextLineH = 44;
 
-        const availTop = bannerH + 30;
-        const availBottom = QH - pad - ctaHForCalc - 150;
-        const qrBlockH = qrSize + cardPad*2;
-        const qrX = (QW - qrSize) / 2;
-        const qrY = availBottom - qrBlockH + cardPad - 10;
+        const gapHeadlineToQr = 50;   // space between bottom of headline and top of QR card
+        const gapQrToSubtext = 50;    // space between bottom of QR card and subtext
+        const qrCardH = qrSize + cardPad*2;
 
-        // Headline — vertically centered in the gap between the banner and the QR card
-        const headlineGapTop = availTop;
-        const headlineGapBottom = qrY - cardPad - 30;
-        let y = headlineGapTop + (headlineGapBottom - headlineGapTop - headlineBlockH) / 2 + 50;
+        // Total height = all headline lines + gap + QR card + gap + one subtext line
+        const totalBlockH = (lines.length * headlineLineH) + gapHeadlineToQr + qrCardH + gapQrToSubtext + subtextLineH;
+
+        const availTop = bannerH;
+        const availBottom = QH - pad - ctaHForCalc - 40;
+        const blockTop = availTop + Math.max(0, (availBottom - availTop - totalBlockH) / 2);
+
+        // Headline — baseline of first line sits ~0.75x the line height down from blockTop
+        let y = blockTop + headlineLineH * 0.75;
         lines.forEach(line => {
           shadowText(line, QW/2, y, headlineFont, posterTextColor);
-          y += 74;
+          y += headlineLineH;
         });
+
+        // QR card sits right after the headline block, with a fixed gap
+        const qrX = (QW - qrSize) / 2;
+        const qrY = blockTop + (lines.length * headlineLineH) + gapHeadlineToQr;
 
         if (!qrLink) {
           drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
             ['No link added yet'],
             'Set your quote page link in "Social media posts" above');
-          y = qrY + qrSize + cardPad + 80;
+          y = qrY + qrSize + cardPad + gapQrToSubtext;
         } else if (qrLibState !== 'ready') {
           drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
             [qrLibState === 'failed' ? 'Couldn\u2019t load QR code' : 'Loading QR code\u2026'],
             qrLibState === 'failed' ? 'Check your connection and reopen this tab' : null);
-          y = qrY + qrSize + cardPad + 80;
+          y = qrY + qrSize + cardPad + gapQrToSubtext;
         } else {
           try {
             const qr = window.mqQrGen(0, 'M');
@@ -2129,10 +2138,10 @@ window.logoutMember = async function () {
                 }
               }
             }
-            y = qrY + qrSize + cardPad + 80;
+            y = qrY + qrSize + cardPad + gapQrToSubtext;
           } catch(e) {
             drawPlaceholderCard(qrX, qrY, qrSize, cardPad, ['Couldn\u2019t generate QR code'], null);
-            y = qrY + qrSize + cardPad + 80;
+            y = qrY + qrSize + cardPad + gapQrToSubtext;
           }
         }
 
