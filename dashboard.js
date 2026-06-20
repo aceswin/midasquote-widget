@@ -23,6 +23,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
     EMAIL_WORKER:       'https://midasquote-email.jordan132001.workers.dev',
     FROM_EMAIL:         'quotes@midasquote.com',
+    IMAGE_UPLOAD_URL:   'https://midasquote-image-worker.jordan132001.workers.dev',
+    IMAGE_UPLOAD_SECRET:'mq-upload-7f3k9xQ2',
   };
 
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
@@ -678,6 +680,57 @@ window.logoutMember = async function () {
   };
 
   // ============================================================
+  // IMAGE UPLOAD — permanent hosting via Cloudflare R2 (replaces fragile pasted links)
+  // ============================================================
+  async function mqUploadImage(file, shopToken, category) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('shopToken', shopToken || 'unknown-shop');
+    formData.append('category', category || 'general');
+    const res = await fetch(CONFIG.IMAGE_UPLOAD_URL, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${CONFIG.IMAGE_UPLOAD_SECRET}` },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Upload failed');
+    }
+    return data.url;
+  }
+
+  // Wires a hidden file input + visible "Upload photo" button to actually upload and
+  // fill the given target URL input field once done. Shows inline status feedback.
+  function mqWireUploadButton(uploadBtnId, fileInputId, statusElId, targetInputId, shopToken, category, onDone) {
+    const uploadBtn = uploadBtnId ? document.getElementById(uploadBtnId) : null;
+    const fileInput = document.getElementById(fileInputId);
+    const statusEl = document.getElementById(statusElId);
+    const targetInput = document.getElementById(targetInputId);
+    if (!fileInput) return;
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      if (statusEl) { statusEl.textContent = 'Uploading…'; statusEl.style.color = '#6b7280'; }
+      fileInput.disabled = true;
+      if (uploadBtn) uploadBtn.disabled = true;
+      try {
+        const url = await mqUploadImage(file, shopToken, category);
+        if (targetInput) targetInput.value = url;
+        if (statusEl) { statusEl.textContent = '✓ Uploaded!'; statusEl.style.color = '#16a34a'; }
+        if (typeof onDone === 'function') onDone(url);
+      } catch (e) {
+        if (statusEl) { statusEl.textContent = 'Upload failed — try again'; statusEl.style.color = '#dc2626'; }
+      } finally {
+        fileInput.disabled = false;
+        if (uploadBtn) uploadBtn.disabled = false;
+        fileInput.value = '';
+        setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 4000);
+      }
+    };
+  }
+
+  // ============================================================
   // LOAD DATA
   // ============================================================
   async function loadShop(shopToken) {
@@ -1258,7 +1311,12 @@ window.logoutMember = async function () {
             onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
           Hide from showroom
         </label>
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Photo URL (optional)</div>
+        <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+          📤 Upload a photo
+          <input type="file" id="mq-upload-file-${key}" accept="image/*" style="display:none"/>
+        </label>
+        <div id="mq-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
         <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
           style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
           oninput="mqMarkProductsDirty()"/>
@@ -1300,6 +1358,21 @@ window.logoutMember = async function () {
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
         : catsOrdered.map(catSection).join('') + specSection;
+
+      // Wire up upload buttons for every photo card just rendered
+      const shopToken = shopRecord.fields['Shop token'] || 'unknown-shop';
+      content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
+        const key = fileInput.id.replace('mq-upload-file-', '');
+        mqWireUploadButton(
+          null,
+          'mq-upload-file-' + key,
+          'mq-upload-status-' + key,
+          'mq-photo-' + key,
+          shopToken,
+          'products',
+          (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
+        );
+      });
     }
 
     const linkText = el('mq-showroom-link-text');
