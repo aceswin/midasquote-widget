@@ -1752,8 +1752,8 @@ window.logoutMember = async function () {
         ctx.fillText('⚡', pad + chipSize/2, pad + chipSize/2 + 4);
 
         // Strong drop shadow on all text from here down — keeps it readable on any photo, even light ones
-        ctx.shadowColor = 'rgba(0,0,0,0.65)';
-        ctx.shadowBlur = 14;
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 18;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 3;
 
@@ -1770,7 +1770,7 @@ window.logoutMember = async function () {
 
         // Eyebrow
         let y = pad + chipSize + 130;
-        ctx.fillStyle = accentColor;
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.font = '600 32px -apple-system, sans-serif';
         ctx.fillText('INSTANT PRICING', pad, y);
 
@@ -1991,60 +1991,83 @@ window.logoutMember = async function () {
 
       function drawQrPoster() {
         qrCtx.clearRect(0,0,QW,QH);
+        const baseColor = qrCustomColor || brandColor;
+        const bannerTextColor = getTextColorQr(baseColor);
+
+        // ── Solid banner at the top for the shop name — same legibility guarantee as the yard sign ──
+        const bannerH = 220;
+        const bannerGrad = qrCtx.createLinearGradient(0, 0, 0, bannerH);
+        bannerGrad.addColorStop(0, baseColor);
+        bannerGrad.addColorStop(1, shadeColorQr(baseColor, -18));
+        qrCtx.fillStyle = bannerGrad;
+        qrCtx.fillRect(0, 0, QW, bannerH);
+
+        qrCtx.textAlign = 'center';
+        qrCtx.textBaseline = 'alphabetic';
+        qrCtx.fillStyle = bannerTextColor;
+        let nameFontSize = 64;
+        let nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+        let nameLines = wrapTextQr(shopName, nameFont, QW - 140);
+        while (nameLines.length > 1 && nameFontSize > 40) {
+          nameFontSize -= 6;
+          nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+          nameLines = wrapTextQr(shopName, nameFont, QW - 140);
+        }
+        qrCtx.font = nameFont;
+        qrCtx.fillText(nameLines[0], QW/2, bannerH/2 + nameFontSize*0.34);
+
+        // ── Photo / solid background fills the rest ──
+        const bodyY = bannerH;
+        const bodyH = QH - bannerH;
         let posterTextColor = '#ffffff';
 
         if (qrBgImage) {
           const imgRatio = qrBgImage.width / qrBgImage.height;
-          const canvasRatio = QW / QH;
+          const areaRatio = QW / bodyH;
           let dw, dh, dx, dy;
-          if (imgRatio > canvasRatio) {
-            dh = QH; dw = QH * imgRatio; dx = (QW - dw) / 2; dy = 0;
+          if (imgRatio > areaRatio) {
+            dh = bodyH; dw = bodyH * imgRatio; dx = (QW - dw) / 2; dy = bodyY;
           } else {
-            dw = QW; dh = QW / imgRatio; dx = 0; dy = (QH - dh) / 2;
+            dw = QW; dh = QW / imgRatio; dx = 0; dy = bodyY - (dh - bodyH) / 2;
           }
+          qrCtx.save();
+          qrCtx.beginPath();
+          qrCtx.rect(0, bodyY, QW, bodyH);
+          qrCtx.clip();
           qrCtx.drawImage(qrBgImage, dx, dy, dw, dh);
-          qrCtx.fillStyle = `rgba(10,10,10,${qrOverlayOpacity})`;
-          qrCtx.fillRect(0,0,QW,QH);
+          qrCtx.fillStyle = `rgba(10,10,10,${qrOverlayOpacity * 0.6})`;
+          qrCtx.fillRect(0, bodyY, QW, bodyH);
+          qrCtx.restore();
         } else {
-          // Subtle gradient instead of flat black for more visual depth
-          const baseColor = qrCustomColor || '#262422';
           posterTextColor = getTextColorQr(baseColor);
-          const grad = qrCtx.createLinearGradient(0, 0, 0, QH);
-          grad.addColorStop(0, shadeColorQr(baseColor, 8));
-          grad.addColorStop(1, shadeColorQr(baseColor, -22));
+          const grad = qrCtx.createLinearGradient(0, bodyY, 0, QH);
+          grad.addColorStop(0, shadeColorQr(baseColor, 4));
+          grad.addColorStop(1, shadeColorQr(baseColor, -26));
           qrCtx.fillStyle = grad;
-          qrCtx.fillRect(0,0,QW,QH);
+          qrCtx.fillRect(0, bodyY, QW, bodyH);
         }
 
         const pad = 84;
         qrCtx.textAlign = 'center';
 
-        // Top brand accent stripe
-        qrCtx.fillStyle = brandColor;
-        qrCtx.fillRect(0, 0, QW, 14);
-
-        // Shop name top — with shadow for legibility over any photo
-        shadowText(shopName, QW/2, pad + 44, '700 50px -apple-system, sans-serif', posterTextColor);
-
-        // Small divider accent under shop name
-        const dividerY = pad + 74;
-        qrCtx.fillStyle = brandColor;
-        qrCtx.fillRect(QW/2 - 36, dividerY, 72, 5);
-
-        // Headline — generous gap below divider
-        let y = dividerY + 110;
-        const headlineFont = '700 66px -apple-system, sans-serif';
+        // Headline — sits just below the banner with even breathing room
+        let y = bannerH + 90;
+        const headlineFont = '700 62px -apple-system, sans-serif';
         const lines = wrapTextQr(qrHeadline, headlineFont, QW - pad*2);
         lines.forEach(line => {
           shadowText(line, QW/2, y, headlineFont, posterTextColor);
-          y += 78;
+          y += 74;
         });
 
-        // QR code area — generous breathing room above
-        const qrSize = 580;
-        const qrX = (QW - qrSize) / 2;
-        const qrY = y + 70;
+        // QR code area — centred in the remaining space between headline and CTA
+        const qrSize = 560;
         const cardPad = 40;
+        const ctaHForCalc = 116;
+        const availTop = y + 40;
+        const availBottom = QH - pad - ctaHForCalc - 60;
+        const qrBlockH = qrSize + cardPad*2;
+        const qrX = (QW - qrSize) / 2;
+        const qrY = availTop + Math.max(0, (availBottom - availTop - qrBlockH) / 2) + cardPad;
 
         if (!qrLink) {
           drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
