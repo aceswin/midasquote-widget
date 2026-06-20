@@ -502,6 +502,11 @@ window.logoutMember = async function () {
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
                   <input type="text" id="mq-mk-qr-headline" placeholder="Scan for an instant price" maxlength="60" style="font-size:13px"/>
                 </div>
+                <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
+                  <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Background colour</label>
+                  <input type="color" id="mq-mk-qr-color" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                  <button class="mq-btn mq-btn-sm" id="mq-mk-qr-color-reset" style="flex-shrink:0">Reset</button>
+                </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
                     📷 Add background photo
@@ -531,6 +536,11 @@ window.logoutMember = async function () {
                 <div style="width:100%;max-width:280px">
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Eyebrow text (above shop name)</label>
                   <input type="text" id="mq-mk-sign-headline" placeholder="Another project by" maxlength="40" style="font-size:13px"/>
+                </div>
+                <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
+                  <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Band colour</label>
+                  <input type="color" id="mq-mk-sign-color" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                  <button class="mq-btn mq-btn-sm" id="mq-mk-sign-color-reset" style="flex-shrink:0">Use brand colour</button>
                 </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
@@ -1427,6 +1437,8 @@ window.logoutMember = async function () {
   let _mqGraphicHeadline = '';
   let _mqQrHeadline = '';
   let _mqSignHeadline = '';
+  let _mqQrCustomColor = '';
+  let _mqSignCustomColor = '';
   let _mqQrLibLoading = null;
 
   let _mqHeadlineSaveTimer = null;
@@ -1434,7 +1446,7 @@ window.logoutMember = async function () {
     clearTimeout(_mqHeadlineSaveTimer);
     _mqHeadlineSaveTimer = setTimeout(async () => {
       try {
-        const payload = JSON.stringify({ graphic: _mqGraphicHeadline, qr: _mqQrHeadline, sign: _mqSignHeadline });
+        const payload = JSON.stringify({ graphic: _mqGraphicHeadline, qr: _mqQrHeadline, sign: _mqSignHeadline, qrColor: _mqQrCustomColor, signColor: _mqSignCustomColor });
         await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Marketing headlines': payload });
         shopRecord.fields['Marketing headlines'] = payload;
       } catch(e) {}
@@ -1772,6 +1784,7 @@ window.logoutMember = async function () {
       let qrOverlayOpacity = _mqQrOverlayOpacity;
       let qrLibState = 'loading'; // 'loading' | 'ready' | 'failed'
       let qrHeadline = _mqQrHeadline || 'Scan for an instant price';
+      let qrCustomColor = _mqQrCustomColor || '';
 
       // QR generation library is bundled inline (no external CDN dependency)
       function loadQrLib() {
@@ -1825,6 +1838,18 @@ window.logoutMember = async function () {
         qrCtx.textBaseline = 'alphabetic';
       }
 
+      function shadeColorQr(hex, percent) {
+        try {
+          hex = hex.replace('#','');
+          let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+          const amt = Math.round(2.55 * percent);
+          r = Math.max(0, Math.min(255, r + amt));
+          g = Math.max(0, Math.min(255, g + amt));
+          b = Math.max(0, Math.min(255, b + amt));
+          return `rgb(${r},${g},${b})`;
+        } catch(e) { return hex; }
+      }
+
       function shadowText(text, x, y, font, fillColor) {
         qrCtx.font = font;
         qrCtx.textAlign = 'center';
@@ -1853,9 +1878,10 @@ window.logoutMember = async function () {
           qrCtx.fillRect(0,0,QW,QH);
         } else {
           // Subtle gradient instead of flat black for more visual depth
+          const baseColor = qrCustomColor || '#262422';
           const grad = qrCtx.createLinearGradient(0, 0, 0, QH);
-          grad.addColorStop(0, '#262422');
-          grad.addColorStop(1, '#15130f');
+          grad.addColorStop(0, shadeColorQr(baseColor, 8));
+          grad.addColorStop(1, shadeColorQr(baseColor, -22));
           qrCtx.fillStyle = grad;
           qrCtx.fillRect(0,0,QW,QH);
         }
@@ -1989,6 +2015,27 @@ window.logoutMember = async function () {
         };
       }
 
+      const qrColorInput = el('mq-mk-qr-color');
+      const qrColorResetBtn = el('mq-mk-qr-color-reset');
+      if (qrColorInput) {
+        qrColorInput.value = qrCustomColor || '#262422';
+        qrColorInput.oninput = () => {
+          qrCustomColor = qrColorInput.value;
+          _mqQrCustomColor = qrCustomColor;
+          drawQrPoster();
+          saveHeadlinesDebounced(shopRecord);
+        };
+      }
+      if (qrColorResetBtn) {
+        qrColorResetBtn.onclick = () => {
+          qrCustomColor = '';
+          _mqQrCustomColor = '';
+          if (qrColorInput) qrColorInput.value = '#262422';
+          drawQrPoster();
+          saveHeadlinesDebounced(shopRecord);
+        };
+      }
+
       const qrBgPhotoInput = el('mq-mk-qr-bg-photo');
       const qrOverlayRow = el('mq-mk-qr-overlay-row');
       const qrOverlaySlider = el('mq-mk-qr-overlay-slider');
@@ -2064,6 +2111,7 @@ window.logoutMember = async function () {
       let signLink = _mqCustomPostLink || '';
       let signOrientation = 'portrait'; // 'portrait' | 'landscape'
       let signHeadline = _mqSignHeadline || 'Another project by';
+      let signCustomColor = _mqSignCustomColor || '';
 
       function shadeColor(hex, percent) {
         try {
@@ -2151,7 +2199,7 @@ window.logoutMember = async function () {
           signCtx.fill();
           signCtx.restore();
 
-          signCtx.strokeStyle = brandColor2;
+          signCtx.strokeStyle = signCustomColor || brandColor2;
           signCtx.lineWidth = 4;
           signCtx.beginPath();
           signCtx.roundRect(qrX - cardPad + 8, qrY - cardPad + 8, qrSize + cardPad*2 - 16, qrSize + cardPad*2 - 16, 16);
@@ -2208,11 +2256,12 @@ window.logoutMember = async function () {
 
         const padL = 90, padTB = 90;
         const bandW = W * 0.52;
+        const signColor = signCustomColor || brandColor2;
 
         // ── LEFT: Solid brand-colour band — always legible, never fights a photo ──
         const bandGrad = signCtx.createLinearGradient(0, 0, bandW, 0);
-        bandGrad.addColorStop(0, shadeColor(brandColor2, -18));
-        bandGrad.addColorStop(1, brandColor2);
+        bandGrad.addColorStop(0, shadeColor(signColor, -18));
+        bandGrad.addColorStop(1, signColor);
         signCtx.fillStyle = bandGrad;
         signCtx.fillRect(0, 0, bandW, H);
 
@@ -2241,6 +2290,20 @@ window.logoutMember = async function () {
         y += 14;
         signCtx.fillStyle = 'rgba(255,255,255,0.4)';
         signCtx.fillRect(padL, y, 90, 5);
+
+        // Fill the space below the divider with a few trust bullet points
+        y += 60;
+        const bullets = ['No phone calls', 'Instant ballpark price', 'No obligation'];
+        signCtx.font = '500 32px -apple-system, sans-serif';
+        bullets.forEach(b => {
+          signCtx.fillStyle = '#ffffff';
+          signCtx.beginPath();
+          signCtx.arc(padL + 8, y - 11, 8, 0, Math.PI*2);
+          signCtx.fill();
+          signCtx.fillStyle = 'rgba(255,255,255,0.92)';
+          signCtx.fillText(b, padL + 32, y);
+          y += 56;
+        });
 
         const ctaH = 104, ctaW = 360;
         const ctaY = H - padTB - ctaH;
@@ -2293,7 +2356,28 @@ window.logoutMember = async function () {
         const qrY = H/2 - qrSize/2;
         const cardPad = 30;
         drawQrInto(qrX, qrY, qrSize, cardPad);
-        signShadowText('Scan me', qrX + qrSize/2, qrY + qrSize + 70, '600 28px -apple-system, sans-serif', 'rgba(255,255,255,0.85)', 'center');
+
+        // "Scan me" on a solid dark pill so it's always legible
+        const scanY = qrY + qrSize + cardPad + 56;
+        signCtx.font = '600 28px -apple-system, sans-serif';
+        const scanText = 'Scan me';
+        const scanTextW = signCtx.measureText(scanText).width;
+        const pillW = scanTextW + 56;
+        const pillH = 52;
+        signCtx.save();
+        signCtx.shadowColor = 'rgba(0,0,0,0.3)';
+        signCtx.shadowBlur = 14;
+        signCtx.shadowOffsetY = 4;
+        signCtx.fillStyle = 'rgba(20,18,15,0.88)';
+        signCtx.beginPath();
+        signCtx.roundRect(qrX + qrSize/2 - pillW/2, scanY - pillH/2, pillW, pillH, pillH/2);
+        signCtx.fill();
+        signCtx.restore();
+        signCtx.fillStyle = '#ffffff';
+        signCtx.textAlign = 'center';
+        signCtx.textBaseline = 'middle';
+        signCtx.fillText(scanText, qrX + qrSize/2, scanY + 2);
+        signCtx.textBaseline = 'alphabetic';
       }
 
 
@@ -2303,12 +2387,13 @@ window.logoutMember = async function () {
         signCtx.clearRect(0,0,W,H);
 
         const pad = 80;
+        const signColor = signCustomColor || brandColor2;
 
         // ── TOP: Solid brand-colour band — guaranteed legible no matter what photo is chosen ──
         const bandH = 460;
         const bandGrad = signCtx.createLinearGradient(0, 0, 0, bandH);
-        bandGrad.addColorStop(0, brandColor2);
-        bandGrad.addColorStop(1, shadeColor(brandColor2, -18));
+        bandGrad.addColorStop(0, signColor);
+        bandGrad.addColorStop(1, shadeColor(signColor, -18));
         signCtx.fillStyle = bandGrad;
         signCtx.fillRect(0, 0, W, bandH);
 
@@ -2455,6 +2540,27 @@ window.logoutMember = async function () {
           const val = signHeadlineInput.value.trim();
           _mqSignHeadline = val;
           signHeadline = val || 'Another project by';
+          drawSign();
+          saveHeadlinesDebounced(shopRecord);
+        };
+      }
+
+      const signColorInput = el('mq-mk-sign-color');
+      const signColorResetBtn = el('mq-mk-sign-color-reset');
+      if (signColorInput) {
+        signColorInput.value = signCustomColor || brandColor2;
+        signColorInput.oninput = () => {
+          signCustomColor = signColorInput.value;
+          _mqSignCustomColor = signCustomColor;
+          drawSign();
+          saveHeadlinesDebounced(shopRecord);
+        };
+      }
+      if (signColorResetBtn) {
+        signColorResetBtn.onclick = () => {
+          signCustomColor = '';
+          _mqSignCustomColor = '';
+          if (signColorInput) signColorInput.value = brandColor2;
           drawSign();
           saveHeadlinesDebounced(shopRecord);
         };
@@ -2636,6 +2742,8 @@ window.logoutMember = async function () {
       _mqGraphicHeadline = savedHeadlines.graphic || '';
       _mqQrHeadline = savedHeadlines.qr || '';
       _mqSignHeadline = savedHeadlines.sign || '';
+      _mqQrCustomColor = savedHeadlines.qrColor || '';
+      _mqSignCustomColor = savedHeadlines.signColor || '';
     } catch(e) {}
     container.innerHTML = buildHTML(shopRecord.fields);
 
