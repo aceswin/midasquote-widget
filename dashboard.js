@@ -1731,7 +1731,40 @@ window.logoutMember = async function () {
         const qrSize = 620;
         const qrX = (QW - qrSize) / 2;
         const qrY = y + 30;
+        const cardPad = 36;
 
+        if (!qrLink) {
+          // No link set yet — show a clear placeholder instead of a blank space
+          qrCtx.fillStyle = '#ffffff';
+          qrCtx.beginPath();
+          qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
+          qrCtx.fill();
+          qrCtx.fillStyle = '#9ca3af';
+          qrCtx.font = '500 34px -apple-system, sans-serif';
+          qrCtx.textAlign = 'center';
+          qrCtx.textBaseline = 'middle';
+          const msgLines = wrapTextQr('No link added yet', '500 34px -apple-system, sans-serif', qrSize - 60);
+          let my = qrY + qrSize/2 - ((msgLines.length-1) * 40)/2;
+          msgLines.forEach(line => { qrCtx.fillText(line, qrX + qrSize/2, my); my += 40; });
+          qrCtx.font = '400 24px -apple-system, sans-serif';
+          qrCtx.fillStyle = '#c0c5cb';
+          qrCtx.fillText('Set it in "Social media posts" above', qrX + qrSize/2, my + 14);
+          qrCtx.textBaseline = 'alphabetic';
+          y = qrY + qrSize + cardPad + 60;
+        } else if (!window.qrcode) {
+          // Library still loading or failed to load
+          qrCtx.fillStyle = '#ffffff';
+          qrCtx.beginPath();
+          qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
+          qrCtx.fill();
+          qrCtx.fillStyle = '#9ca3af';
+          qrCtx.font = '500 34px -apple-system, sans-serif';
+          qrCtx.textAlign = 'center';
+          qrCtx.textBaseline = 'middle';
+          qrCtx.fillText('Loading QR code…', qrX + qrSize/2, qrY + qrSize/2);
+          qrCtx.textBaseline = 'alphabetic';
+          y = qrY + qrSize + cardPad + 60;
+        } else {
         try {
           const qr = window.qrcode(0, 'M');
           qr.addData(qrLink);
@@ -1740,7 +1773,6 @@ window.logoutMember = async function () {
           const cell = qrSize / count;
 
           // White rounded card behind QR
-          const cardPad = 36;
           qrCtx.fillStyle = '#ffffff';
           qrCtx.beginPath();
           qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
@@ -1757,7 +1789,18 @@ window.logoutMember = async function () {
 
           y = qrY + qrSize + cardPad + 60;
         } catch(e) {
-          y = qrY + 60;
+          qrCtx.fillStyle = '#ffffff';
+          qrCtx.beginPath();
+          qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
+          qrCtx.fill();
+          qrCtx.fillStyle = '#9ca3af';
+          qrCtx.font = '500 30px -apple-system, sans-serif';
+          qrCtx.textAlign = 'center';
+          qrCtx.textBaseline = 'middle';
+          qrCtx.fillText('Couldn\'t generate QR code', qrX + qrSize/2, qrY + qrSize/2);
+          qrCtx.textBaseline = 'alphabetic';
+          y = qrY + qrSize + cardPad + 60;
+        }
         }
 
         // Subtext below QR
