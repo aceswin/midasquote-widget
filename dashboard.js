@@ -460,6 +460,10 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A square Instagram/Facebook-ready graphic with your shop name, brand colour, and quote link already on it. Download and post — no design needed.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
+                <div style="width:100%;max-width:280px">
+                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
+                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 2 minutes" maxlength="60" style="font-size:13px"/>
+                </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
                     📷 Add background photo
@@ -494,6 +498,10 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A print-ready poster with a QR code linking straight to your quote page — perfect for a sandwich board, front desk, or restroom poster. Walk-in customers just scan and go.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-qr-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
+                <div style="width:100%;max-width:280px">
+                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
+                  <input type="text" id="mq-mk-qr-headline" placeholder="Scan for an instant price" maxlength="60" style="font-size:13px"/>
+                </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
                     📷 Add background photo
@@ -520,6 +528,10 @@ window.logoutMember = async function () {
               </div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-sign-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
+                <div style="width:100%;max-width:280px">
+                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Eyebrow text (above shop name)</label>
+                  <input type="text" id="mq-mk-sign-headline" placeholder="Another project by" maxlength="40" style="font-size:13px"/>
+                </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
                     📷 Add background photo
@@ -1389,7 +1401,22 @@ window.logoutMember = async function () {
   let _mqQrOverlayOpacity = 0.62;
   let _mqSignBgImage = null;
   let _mqSignOverlayOpacity = 0.62;
+  let _mqGraphicHeadline = '';
+  let _mqQrHeadline = '';
+  let _mqSignHeadline = '';
   let _mqQrLibLoading = null;
+
+  let _mqHeadlineSaveTimer = null;
+  function saveHeadlinesDebounced(shopRecord) {
+    clearTimeout(_mqHeadlineSaveTimer);
+    _mqHeadlineSaveTimer = setTimeout(async () => {
+      try {
+        const payload = JSON.stringify({ graphic: _mqGraphicHeadline, qr: _mqQrHeadline, sign: _mqSignHeadline });
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Marketing headlines': payload });
+        shopRecord.fields['Marketing headlines'] = payload;
+      } catch(e) {}
+    }, 800);
+  }
 
   function initMarketingKit(shopRecord) {
     const shopName = shopRecord.fields['Shop name'] || 'our shop';
@@ -1525,6 +1552,7 @@ window.logoutMember = async function () {
 
       let bgImage = _mqGraphicBgImage;
       let overlayOpacity = _mqGraphicOverlayOpacity;
+      let graphicHeadline = _mqGraphicHeadline || 'Get your cabinet quote in under 2 minutes';
 
       function wrapText(text, font, maxWidth) {
         ctx.font = font;
@@ -1601,7 +1629,7 @@ window.logoutMember = async function () {
         const headlineFont = '600 80px -apple-system, sans-serif';
         ctx.font = headlineFont;
         ctx.fillStyle = '#ffffff';
-        const headlineLines = wrapText('Get your cabinet quote in under 2 minutes', headlineFont, W - pad*2);
+        const headlineLines = wrapText(graphicHeadline, headlineFont, W - pad*2);
         headlineLines.forEach(line => {
           ctx.font = headlineFont;
           ctx.fillText(line, pad, y);
@@ -1630,6 +1658,18 @@ window.logoutMember = async function () {
       }
 
       drawGraphic();
+
+      const graphicHeadlineInput = el('mq-mk-graphic-headline');
+      if (graphicHeadlineInput) {
+        graphicHeadlineInput.value = _mqGraphicHeadline || '';
+        graphicHeadlineInput.oninput = () => {
+          const val = graphicHeadlineInput.value.trim();
+          _mqGraphicHeadline = val;
+          graphicHeadline = val || 'Get your cabinet quote in under 2 minutes';
+          drawGraphic();
+          saveHeadlinesDebounced(shopRecord);
+        };
+      }
 
       const overlayRow = el('mq-mk-overlay-row');
       const overlaySlider = el('mq-mk-overlay-slider');
@@ -1700,6 +1740,7 @@ window.logoutMember = async function () {
       let qrBgImage = _mqQrBgImage;
       let qrOverlayOpacity = _mqQrOverlayOpacity;
       let qrLibState = 'loading'; // 'loading' | 'ready' | 'failed'
+      let qrHeadline = _mqQrHeadline || 'Scan for an instant price';
 
       // QR generation library is bundled inline (no external CDN dependency)
       function loadQrLib() {
@@ -1806,7 +1847,7 @@ window.logoutMember = async function () {
         // Headline — generous gap below divider
         let y = dividerY + 110;
         const headlineFont = '700 66px -apple-system, sans-serif';
-        const lines = wrapTextQr('Scan for an instant price', headlineFont, QW - pad*2);
+        const lines = wrapTextQr(qrHeadline, headlineFont, QW - pad*2);
         lines.forEach(line => {
           shadowText(line, QW/2, y, headlineFont, '#ffffff');
           y += 78;
@@ -1905,6 +1946,18 @@ window.logoutMember = async function () {
       drawQrPoster();
       loadQrLib().then(() => { qrLink = getQrLink(); drawQrPoster(); });
 
+      const qrHeadlineInput = el('mq-mk-qr-headline');
+      if (qrHeadlineInput) {
+        qrHeadlineInput.value = _mqQrHeadline || '';
+        qrHeadlineInput.oninput = () => {
+          const val = qrHeadlineInput.value.trim();
+          _mqQrHeadline = val;
+          qrHeadline = val || 'Scan for an instant price';
+          drawQrPoster();
+          saveHeadlinesDebounced(shopRecord);
+        };
+      }
+
       const qrBgPhotoInput = el('mq-mk-qr-bg-photo');
       const qrOverlayRow = el('mq-mk-qr-overlay-row');
       const qrOverlaySlider = el('mq-mk-qr-overlay-slider');
@@ -1979,6 +2032,7 @@ window.logoutMember = async function () {
       let signOverlayOpacity = _mqSignOverlayOpacity;
       let signLink = _mqCustomPostLink || '';
       let signOrientation = 'portrait'; // 'portrait' | 'landscape'
+      let signHeadline = _mqSignHeadline || 'Another project by';
 
       function signShadowText(text, x, y, font, fillColor, align) {
         signCtx.font = font;
@@ -2115,7 +2169,7 @@ window.logoutMember = async function () {
 
         const padL = 90, padTB = 90;
         signCtx.textAlign = 'left';
-        signShadowText('ANOTHER PROJECT BY', padL, padTB + 10, '700 34px -apple-system, sans-serif', 'rgba(255,255,255,0.7)', 'left');
+        signShadowText(signHeadline.toUpperCase(), padL, padTB + 10, '700 34px -apple-system, sans-serif', 'rgba(255,255,255,0.7)', 'left');
 
         const nameFont = '700 84px -apple-system, sans-serif';
         const nameLines = wrapTextSign(shopName, nameFont, W * 0.58 - padL);
@@ -2166,7 +2220,7 @@ window.logoutMember = async function () {
 
         const pad = 90;
         signCtx.textAlign = 'center';
-        signShadowText('ANOTHER PROJECT BY', W/2, pad + 40, '700 36px -apple-system, sans-serif', 'rgba(255,255,255,0.7)', 'center');
+        signShadowText(signHeadline.toUpperCase(), W/2, pad + 40, '700 36px -apple-system, sans-serif', 'rgba(255,255,255,0.7)', 'center');
 
         const nameFont = '700 76px -apple-system, sans-serif';
         const nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
@@ -2228,6 +2282,18 @@ window.logoutMember = async function () {
 
       drawSign();
       loadQrLib().then(() => { drawSign(); });
+
+      const signHeadlineInput = el('mq-mk-sign-headline');
+      if (signHeadlineInput) {
+        signHeadlineInput.value = _mqSignHeadline || '';
+        signHeadlineInput.oninput = () => {
+          const val = signHeadlineInput.value.trim();
+          _mqSignHeadline = val;
+          signHeadline = val || 'Another project by';
+          drawSign();
+          saveHeadlinesDebounced(shopRecord);
+        };
+      }
 
       const orientPortraitBtn = el('mq-mk-sign-orient-portrait');
       const orientLandscapeBtn = el('mq-mk-sign-orient-landscape');
@@ -2346,6 +2412,12 @@ window.logoutMember = async function () {
 
     window._mqShopRecord = shopRecord;
     _mqCustomPostLink = shopRecord.fields['Marketing link'] || '';
+    try {
+      const savedHeadlines = shopRecord.fields['Marketing headlines'] ? JSON.parse(shopRecord.fields['Marketing headlines']) : {};
+      _mqGraphicHeadline = savedHeadlines.graphic || '';
+      _mqQrHeadline = savedHeadlines.qr || '';
+      _mqSignHeadline = savedHeadlines.sign || '';
+    } catch(e) {}
     container.innerHTML = buildHTML(shopRecord.fields);
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
