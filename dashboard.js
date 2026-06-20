@@ -436,6 +436,11 @@ window.logoutMember = async function () {
                   <button class="mq-btn mq-btn-sm" id="mq-mk-bg-remove" style="flex-shrink:0">✕</button>
                 </div>
                 <span style="font-size:11px;color:#9ca3af;text-align:center">Optional — use a photo of your shop or recent work for the background</span>
+                <div id="mq-mk-overlay-row" style="display:none;width:100%;max-width:280px;align-items:center;gap:10px">
+                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Darkness</span>
+                  <input type="range" id="mq-mk-overlay-slider" min="0" max="90" value="62" style="flex:1"/>
+                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-overlay-val">62%</span>
+                </div>
                 <button class="mq-btn mq-btn-primary" id="mq-mk-download-btn" style="width:100%;max-width:280px">⬇️ Download graphic (PNG)</button>
               </div>
             </div>
@@ -1410,6 +1415,7 @@ window.logoutMember = async function () {
       })();
 
       let bgImage = null;
+      let overlayOpacity = 0.62;
 
       function wrapText(text, font, maxWidth) {
         ctx.font = font;
@@ -1443,7 +1449,7 @@ window.logoutMember = async function () {
             dw = W; dh = W / imgRatio; dx = 0; dy = (H - dh) / 2;
           }
           ctx.drawImage(bgImage, dx, dy, dw, dh);
-          ctx.fillStyle = 'rgba(10,10,10,0.62)';
+          ctx.fillStyle = `rgba(10,10,10,${overlayOpacity})`;
           ctx.fillRect(0,0,W,H);
         } else {
           ctx.fillStyle = '#1a1a1a';
@@ -1499,29 +1505,26 @@ window.logoutMember = async function () {
         ctx.font = '400 38px -apple-system, sans-serif';
         ctx.fillText('No phone calls. No waiting. Just your price.', pad, y);
 
-        // Bottom CTA pill
-        const ctaH = 92;
-        const ctaW = 320;
+        // Bottom CTA pill — bigger, more prominent
+        const ctaH = 116;
+        const ctaW = 400;
         const ctaY = H - pad - ctaH;
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.roundRect(pad, ctaY, ctaW, ctaH, 18);
+        ctx.roundRect(pad, ctaY, ctaW, ctaH, 22);
         ctx.fill();
         ctx.fillStyle = '#1a1a1a';
-        ctx.font = '600 36px -apple-system, sans-serif';
+        ctx.font = '700 46px -apple-system, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('Get a quote →', pad + ctaW/2, ctaY + ctaH/2 + 2);
-
-        // Footer link
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = 'rgba(255,255,255,0.45)';
-        ctx.font = '400 28px -apple-system, sans-serif';
-        ctx.fillText('midasquote.com', pad, H - 36);
       }
 
       drawGraphic();
+
+      const overlayRow = el('mq-mk-overlay-row');
+      const overlaySlider = el('mq-mk-overlay-slider');
+      const overlayVal = el('mq-mk-overlay-val');
 
       if (bgPhotoInput) {
         bgPhotoInput.onchange = (e) => {
@@ -1530,10 +1533,22 @@ window.logoutMember = async function () {
           const reader = new FileReader();
           reader.onload = (ev) => {
             const img = new Image();
-            img.onload = () => { bgImage = img; drawGraphic(); };
+            img.onload = () => {
+              bgImage = img;
+              drawGraphic();
+              if (overlayRow) overlayRow.style.display = 'flex';
+            };
             img.src = ev.target.result;
           };
           reader.readAsDataURL(file);
+        };
+      }
+
+      if (overlaySlider) {
+        overlaySlider.oninput = () => {
+          overlayOpacity = parseInt(overlaySlider.value, 10) / 100;
+          if (overlayVal) overlayVal.textContent = overlaySlider.value + '%';
+          drawGraphic();
         };
       }
 
@@ -1542,6 +1557,7 @@ window.logoutMember = async function () {
         removeBgBtn.onclick = () => {
           bgImage = null;
           if (bgPhotoInput) bgPhotoInput.value = '';
+          if (overlayRow) overlayRow.style.display = 'none';
           drawGraphic();
         };
       }
