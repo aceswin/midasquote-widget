@@ -1652,24 +1652,33 @@ window.logoutMember = async function () {
     // ── QR POSTER ──
     const qrCanvas = el('mq-mk-qr-canvas');
     if (qrCanvas && qrCanvas.getContext) {
-      function loadQrLib() {
-        if (window.qrcode) return Promise.resolve();
-        if (_mqQrLibLoading) return _mqQrLibLoading;
-        _mqQrLibLoading = new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/qrcode.js';
-          s.onload = resolve;
-          s.onerror = reject;
-          document.body.appendChild(s);
-        });
-        return _mqQrLibLoading;
-      }
-
       const qrCtx = qrCanvas.getContext('2d');
       const QW = qrCanvas.width, QH = qrCanvas.height;
-      const brandColor = shopRecord.fields['Brand colour'] || '#1a1a1a';
       let qrBgImage = _mqQrBgImage;
       let qrOverlayOpacity = _mqQrOverlayOpacity;
+      let qrLibState = window.qrcode ? 'ready' : 'loading'; // 'loading' | 'ready' | 'failed'
+
+      function loadQrLib() {
+        if (window.qrcode) { qrLibState = 'ready'; return Promise.resolve(); }
+        if (_mqQrLibLoading) return _mqQrLibLoading;
+        const sources = [
+          'https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/qrcode.js',
+          'https://unpkg.com/qrcode-generator@2.0.4/qrcode.js',
+        ];
+        function tryLoad(i) {
+          return new Promise((resolve) => {
+            if (i >= sources.length) { qrLibState = 'failed'; resolve(); return; }
+            const s = document.createElement('script');
+            s.src = sources[i];
+            const timeout = setTimeout(() => { s.remove(); tryLoad(i+1).then(resolve); }, 4000);
+            s.onload = () => { clearTimeout(timeout); qrLibState = window.qrcode ? 'ready' : 'failed'; resolve(); };
+            s.onerror = () => { clearTimeout(timeout); s.remove(); tryLoad(i+1).then(resolve); };
+            document.body.appendChild(s);
+          });
+        }
+        _mqQrLibLoading = tryLoad(0);
+        return _mqQrLibLoading;
+      }
 
       function wrapTextQr(text, font, maxWidth) {
         qrCtx.font = font;
@@ -1687,6 +1696,28 @@ window.logoutMember = async function () {
         });
         if (line) lines.push(line);
         return lines;
+      }
+
+      function drawPlaceholderCard(qrX, qrY, qrSize, cardPad, lines, subline) {
+        qrCtx.fillStyle = '#ffffff';
+        qrCtx.beginPath();
+        qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
+        qrCtx.fill();
+        qrCtx.fillStyle = '#6b7280';
+        qrCtx.font = '600 36px -apple-system, sans-serif';
+        qrCtx.textAlign = 'center';
+        qrCtx.textBaseline = 'middle';
+        const lineHeight = 44;
+        let my = qrY + qrSize/2 - ((lines.length-1) * lineHeight)/2 - (subline ? 16 : 0);
+        lines.forEach(line => { qrCtx.fillText(line, qrX + qrSize/2, my); my += lineHeight; });
+        if (subline) {
+          qrCtx.font = '400 26px -apple-system, sans-serif';
+          qrCtx.fillStyle = '#9ca3af';
+          const subLines = wrapTextQr(subline, '400 26px -apple-system, sans-serif', qrSize - 70);
+          my += 14;
+          subLines.forEach(line => { qrCtx.fillText(line, qrX + qrSize/2, my); my += 32; });
+        }
+        qrCtx.textBaseline = 'alphabetic';
       }
 
       function drawQrPoster() {
@@ -1714,110 +1745,95 @@ window.logoutMember = async function () {
         // Shop name top
         qrCtx.textAlign = 'center';
         qrCtx.fillStyle = '#ffffff';
-        qrCtx.font = '600 56px -apple-system, sans-serif';
-        qrCtx.fillText(shopName, QW/2, pad + 50);
+        qrCtx.font = '600 52px -apple-system, sans-serif';
+        qrCtx.fillText(shopName, QW/2, pad + 46);
 
-        // Headline
-        qrCtx.font = '600 64px -apple-system, sans-serif';
-        const lines = wrapTextQr('Scan for an instant price', '600 64px -apple-system, sans-serif', QW - pad*2);
-        let y = pad + 140;
+        // Headline — extra gap below shop name
+        let y = pad + 150;
+        const headlineFont = '600 62px -apple-system, sans-serif';
+        const lines = wrapTextQr('Scan for an instant price', headlineFont, QW - pad*2);
         lines.forEach(line => {
-          qrCtx.font = '600 64px -apple-system, sans-serif';
+          qrCtx.font = headlineFont;
           qrCtx.fillText(line, QW/2, y);
-          y += 76;
+          y += 74;
         });
 
-        // QR code — generate and draw
-        const qrSize = 620;
+        // QR code area
+        const qrSize = 600;
         const qrX = (QW - qrSize) / 2;
-        const qrY = y + 30;
+        const qrY = y + 60;
         const cardPad = 36;
 
         if (!qrLink) {
-          // No link set yet — show a clear placeholder instead of a blank space
-          qrCtx.fillStyle = '#ffffff';
-          qrCtx.beginPath();
-          qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
-          qrCtx.fill();
-          qrCtx.fillStyle = '#9ca3af';
-          qrCtx.font = '500 34px -apple-system, sans-serif';
-          qrCtx.textAlign = 'center';
-          qrCtx.textBaseline = 'middle';
-          const msgLines = wrapTextQr('No link added yet', '500 34px -apple-system, sans-serif', qrSize - 60);
-          let my = qrY + qrSize/2 - ((msgLines.length-1) * 40)/2;
-          msgLines.forEach(line => { qrCtx.fillText(line, qrX + qrSize/2, my); my += 40; });
-          qrCtx.font = '400 24px -apple-system, sans-serif';
-          qrCtx.fillStyle = '#c0c5cb';
-          qrCtx.fillText('Set it in "Social media posts" above', qrX + qrSize/2, my + 14);
-          qrCtx.textBaseline = 'alphabetic';
-          y = qrY + qrSize + cardPad + 60;
-        } else if (!window.qrcode) {
-          // Library still loading or failed to load
-          qrCtx.fillStyle = '#ffffff';
-          qrCtx.beginPath();
-          qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
-          qrCtx.fill();
-          qrCtx.fillStyle = '#9ca3af';
-          qrCtx.font = '500 34px -apple-system, sans-serif';
-          qrCtx.textAlign = 'center';
-          qrCtx.textBaseline = 'middle';
-          qrCtx.fillText('Loading QR code…', qrX + qrSize/2, qrY + qrSize/2);
-          qrCtx.textBaseline = 'alphabetic';
-          y = qrY + qrSize + cardPad + 60;
+          drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
+            ['No link added yet'],
+            'Set your quote page link in "Social media posts" above');
+          y = qrY + qrSize + cardPad + 70;
+        } else if (qrLibState !== 'ready') {
+          drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
+            [qrLibState === 'failed' ? 'Couldn\u2019t load QR code' : 'Loading QR code\u2026'],
+            qrLibState === 'failed' ? 'Check your connection and reopen this tab' : null);
+          y = qrY + qrSize + cardPad + 70;
         } else {
-        try {
-          const qr = window.qrcode(0, 'M');
-          qr.addData(qrLink);
-          qr.make();
-          const count = qr.getModuleCount();
-          const cell = qrSize / count;
+          try {
+            const qr = window.qrcode(0, 'M');
+            qr.addData(qrLink);
+            qr.make();
+            const count = qr.getModuleCount();
+            const cell = qrSize / count;
 
-          // White rounded card behind QR
-          qrCtx.fillStyle = '#ffffff';
-          qrCtx.beginPath();
-          qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
-          qrCtx.fill();
+            qrCtx.fillStyle = '#ffffff';
+            qrCtx.beginPath();
+            qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
+            qrCtx.fill();
 
-          qrCtx.fillStyle = '#1a1a1a';
-          for (let row = 0; row < count; row++) {
-            for (let col = 0; col < count; col++) {
-              if (qr.isDark(row, col)) {
-                qrCtx.fillRect(qrX + col*cell, qrY + row*cell, cell+0.5, cell+0.5);
+            qrCtx.fillStyle = '#1a1a1a';
+            for (let row = 0; row < count; row++) {
+              for (let col = 0; col < count; col++) {
+                if (qr.isDark(row, col)) {
+                  qrCtx.fillRect(qrX + col*cell, qrY + row*cell, cell+0.5, cell+0.5);
+                }
               }
             }
+            y = qrY + qrSize + cardPad + 70;
+          } catch(e) {
+            drawPlaceholderCard(qrX, qrY, qrSize, cardPad, ['Couldn\u2019t generate QR code'], null);
+            y = qrY + qrSize + cardPad + 70;
           }
-
-          y = qrY + qrSize + cardPad + 60;
-        } catch(e) {
-          qrCtx.fillStyle = '#ffffff';
-          qrCtx.beginPath();
-          qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
-          qrCtx.fill();
-          qrCtx.fillStyle = '#9ca3af';
-          qrCtx.font = '500 30px -apple-system, sans-serif';
-          qrCtx.textAlign = 'center';
-          qrCtx.textBaseline = 'middle';
-          qrCtx.fillText('Couldn\'t generate QR code', qrX + qrSize/2, qrY + qrSize/2);
-          qrCtx.textBaseline = 'alphabetic';
-          y = qrY + qrSize + cardPad + 60;
-        }
         }
 
-        // Subtext below QR
-        qrCtx.fillStyle = 'rgba(255,255,255,0.8)';
-        qrCtx.font = '400 38px -apple-system, sans-serif';
+        // Subtext
+        qrCtx.fillStyle = 'rgba(255,255,255,0.75)';
+        qrCtx.font = '400 34px -apple-system, sans-serif';
         qrCtx.fillText('No phone calls. No waiting.', QW/2, y);
+
+        // Bottom CTA button — sexy, prominent
+        const ctaH = 110;
+        const ctaW = 420;
+        const ctaY = QH - pad - ctaH;
+        const ctaX = (QW - ctaW) / 2;
+        qrCtx.fillStyle = '#ffffff';
+        qrCtx.beginPath();
+        qrCtx.roundRect(ctaX, ctaY, ctaW, ctaH, 20);
+        qrCtx.fill();
+        qrCtx.fillStyle = '#1a1a1a';
+        qrCtx.font = '700 44px -apple-system, sans-serif';
+        qrCtx.textAlign = 'center';
+        qrCtx.textBaseline = 'middle';
+        qrCtx.fillText('Get a quote →', QW/2, ctaY + ctaH/2 + 2);
+        qrCtx.textBaseline = 'alphabetic';
       }
 
       function getQrLink() {
-        return _mqCustomPostLink || defaultQuoteLink;
+        return _mqCustomPostLink || '';
       }
 
       let qrLink = getQrLink();
 
       window._mqRedrawQrPoster = () => { qrLink = getQrLink(); drawQrPoster(); };
 
-      loadQrLib().then(() => { qrLink = getQrLink(); drawQrPoster(); }).catch(() => {});
+      drawQrPoster();
+      loadQrLib().then(() => { qrLink = getQrLink(); drawQrPoster(); });
 
       const qrBgPhotoInput = el('mq-mk-qr-bg-photo');
       const qrOverlayRow = el('mq-mk-qr-overlay-row');
@@ -1872,6 +1888,10 @@ window.logoutMember = async function () {
 
       if (qrDownloadBtn) {
         qrDownloadBtn.onclick = () => {
+          if (!qrLink) {
+            alert('Please add a link in the "Social media posts" section above first.');
+            return;
+          }
           const link = document.createElement('a');
           link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'quote-poster') + '-qr-poster.png';
           link.href = qrCanvas.toDataURL('image/png');
