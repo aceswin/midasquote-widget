@@ -396,10 +396,10 @@ window.logoutMember = async function () {
             <div class="mq-page-title">My Products</div>
             <div class="mq-page-sub">Add photos to your materials and options — these appear on your customer showroom page</div>
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
-              <strong>💡 How to add a photo URL:</strong><br>
-              <strong>Option 1 —</strong> Find a photo on your website, Facebook, or anywhere online. Right-click the image → <em>"Copy image address"</em> → paste it in the box below.<br>
-              <strong>Option 2 —</strong> Upload your own photo for free at <a href="https://imgbb.com" target="_blank" style="color:#92400e;font-weight:600">imgbb.com</a> — upload, then copy the "Direct link" and paste it below.<br>
-              <strong>Option 3 —</strong> Click <em>"📷 Choose from library"</em> to pick from our curated cabinet & countertop photo collection.
+              <strong>💡 How to add a photo:</strong><br>
+              <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item below and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
+              <strong>Option 2 —</strong> Click <em>"📷 Choose from library"</em> to pick from our curated cabinet & countertop photo collection.<br>
+              <strong>Option 3 —</strong> Already have a photo hosted somewhere reliable? Paste its direct image link instead — just avoid social media links, since those expire and will eventually break.
             </div>
             <div id="mq-products-msg"></div>
             <div id="mq-products-content"><div class="mq-loading">Loading your products...</div></div>
