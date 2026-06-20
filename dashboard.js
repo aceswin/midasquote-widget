@@ -513,9 +513,13 @@ window.logoutMember = async function () {
 
             <div class="mq-card">
               <div class="mq-card-title">🏗️ Job site / yard sign</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A landscape "Another project by..." sign for the job site lawn, fence, or trailer — with a QR code so passersby can get their own quote.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">A sandwich-board or yard sign with "Another project by..." and a QR code — works great printed for a job site lawn, fence, or sandwich board.</p>
+              <div style="display:flex;gap:8px;justify-content:center;margin-bottom:1.25rem">
+                <button class="mq-btn mq-btn-sm" id="mq-mk-sign-orient-portrait" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a">📱 Portrait (sandwich board)</button>
+                <button class="mq-btn mq-btn-sm" id="mq-mk-sign-orient-landscape">🖥️ Landscape (yard sign)</button>
+              </div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-sign-canvas" width="1620" height="1080" style="width:280px;height:187px;border-radius:10px;display:block"></canvas>
+                <canvas id="mq-mk-sign-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
                     📷 Add background photo
@@ -1751,6 +1755,8 @@ window.logoutMember = async function () {
 
       function shadowText(text, x, y, font, fillColor) {
         qrCtx.font = font;
+        qrCtx.textAlign = 'center';
+        qrCtx.textBaseline = 'alphabetic';
         qrCtx.fillStyle = 'rgba(0,0,0,0.55)';
         qrCtx.fillText(text, x + 2, y + 3);
         qrCtx.fillText(text, x - 2, y + 3);
@@ -1964,20 +1970,20 @@ window.logoutMember = async function () {
       }
     }
 
-    // ── YARD SIGN ──
+    // ── YARD SIGN / SANDWICH BOARD ──
     const signCanvas = el('mq-mk-sign-canvas');
     if (signCanvas && signCanvas.getContext) {
       const signCtx = signCanvas.getContext('2d');
-      const SW = signCanvas.width, SH = signCanvas.height;
       const brandColor2 = shopRecord.fields['Brand colour'] || '#1a1a1a';
       let signBgImage = _mqSignBgImage;
       let signOverlayOpacity = _mqSignOverlayOpacity;
       let signLink = _mqCustomPostLink || '';
-      let signLibState = window.mqQrGen ? 'ready' : 'loading';
+      let signOrientation = 'portrait'; // 'portrait' | 'landscape'
 
       function signShadowText(text, x, y, font, fillColor, align) {
         signCtx.font = font;
         signCtx.textAlign = align || 'center';
+        signCtx.textBaseline = 'alphabetic';
         signCtx.fillStyle = 'rgba(0,0,0,0.5)';
         signCtx.fillText(text, x + 2, y + 3);
         signCtx.fillStyle = fillColor;
@@ -2002,57 +2008,129 @@ window.logoutMember = async function () {
         return lines;
       }
 
-      function drawSign() {
-        signCtx.clearRect(0,0,SW,SH);
+      function drawQrInto(qrX, qrY, qrSize, cardPad) {
+        if (!signLink) {
+          signCtx.fillStyle = '#ffffff';
+          signCtx.beginPath();
+          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
+          signCtx.fill();
+          signCtx.fillStyle = '#6b7280';
+          signCtx.font = '600 26px -apple-system, sans-serif';
+          signCtx.textAlign = 'center';
+          signCtx.textBaseline = 'middle';
+          const msgLines = wrapTextSign('No link added yet', '600 26px -apple-system, sans-serif', qrSize - 50);
+          let my = qrY + qrSize/2 - ((msgLines.length-1)*32)/2;
+          msgLines.forEach(line => { signCtx.fillText(line, qrX + qrSize/2, my); my += 32; });
+          signCtx.textBaseline = 'alphabetic';
+          return;
+        }
+        if (!window.mqQrGen) {
+          signCtx.fillStyle = '#ffffff';
+          signCtx.beginPath();
+          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
+          signCtx.fill();
+          signCtx.fillStyle = '#6b7280';
+          signCtx.font = '600 26px -apple-system, sans-serif';
+          signCtx.textAlign = 'center';
+          signCtx.textBaseline = 'middle';
+          signCtx.fillText('QR unavailable', qrX + qrSize/2, qrY + qrSize/2);
+          signCtx.textBaseline = 'alphabetic';
+          return;
+        }
+        try {
+          const qr = window.mqQrGen(0, 'M');
+          qr.addData(signLink);
+          qr.make();
+          const count = qr.getModuleCount();
+          const cell = qrSize / count;
 
+          signCtx.save();
+          signCtx.shadowColor = 'rgba(0,0,0,0.35)';
+          signCtx.shadowBlur = 22;
+          signCtx.shadowOffsetY = 8;
+          signCtx.fillStyle = '#ffffff';
+          signCtx.beginPath();
+          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
+          signCtx.fill();
+          signCtx.restore();
+
+          signCtx.strokeStyle = brandColor2;
+          signCtx.lineWidth = 4;
+          signCtx.beginPath();
+          signCtx.roundRect(qrX - cardPad + 8, qrY - cardPad + 8, qrSize + cardPad*2 - 16, qrSize + cardPad*2 - 16, 16);
+          signCtx.stroke();
+
+          signCtx.fillStyle = '#1a1a1a';
+          for (let row = 0; row < count; row++) {
+            for (let col = 0; col < count; col++) {
+              if (qr.isDark(row, col)) {
+                signCtx.fillRect(qrX + col*cell, qrY + row*cell, cell+0.5, cell+0.5);
+              }
+            }
+          }
+        } catch(e) {
+          signCtx.fillStyle = '#ffffff';
+          signCtx.beginPath();
+          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
+          signCtx.fill();
+          signCtx.fillStyle = '#6b7280';
+          signCtx.font = '600 26px -apple-system, sans-serif';
+          signCtx.textAlign = 'center';
+          signCtx.textBaseline = 'middle';
+          signCtx.fillText('QR error', qrX + qrSize/2, qrY + qrSize/2);
+          signCtx.textBaseline = 'alphabetic';
+        }
+      }
+
+      function drawBackground(W, H) {
         if (signBgImage) {
           const imgRatio = signBgImage.width / signBgImage.height;
-          const canvasRatio = SW / SH;
+          const canvasRatio = W / H;
           let dw, dh, dx, dy;
           if (imgRatio > canvasRatio) {
-            dh = SH; dw = SH * imgRatio; dx = (SW - dw) / 2; dy = 0;
+            dh = H; dw = H * imgRatio; dx = (W - dw) / 2; dy = 0;
           } else {
-            dw = SW; dh = SW / imgRatio; dx = 0; dy = (SH - dh) / 2;
+            dw = W; dh = W / imgRatio; dx = 0; dy = (H - dh) / 2;
           }
           signCtx.drawImage(signBgImage, dx, dy, dw, dh);
           signCtx.fillStyle = `rgba(10,10,10,${signOverlayOpacity})`;
-          signCtx.fillRect(0,0,SW,SH);
+          signCtx.fillRect(0,0,W,H);
         } else {
-          const grad = signCtx.createLinearGradient(0, 0, SW, SH);
+          const grad = signCtx.createLinearGradient(0, 0, W, H);
           grad.addColorStop(0, '#262422');
           grad.addColorStop(1, '#15130f');
           signCtx.fillStyle = grad;
-          signCtx.fillRect(0,0,SW,SH);
+          signCtx.fillRect(0,0,W,H);
         }
+      }
 
-        // Brand-coloured side bar
+      function drawSignLandscape() {
+        const W = 1620, H = 1080;
+        signCanvas.width = W; signCanvas.height = H;
+        signCtx.clearRect(0,0,W,H);
+        drawBackground(W, H);
+
         signCtx.fillStyle = brandColor2;
-        signCtx.fillRect(0, 0, 22, SH);
+        signCtx.fillRect(0, 0, 22, H);
 
-        const padL = 90;
-        const padTB = 90;
-
-        // Left side: text block
+        const padL = 90, padTB = 90;
         signCtx.textAlign = 'left';
         signShadowText('ANOTHER PROJECT BY', padL, padTB + 10, '700 34px -apple-system, sans-serif', 'rgba(255,255,255,0.7)', 'left');
 
         const nameFont = '700 84px -apple-system, sans-serif';
-        const nameLines = wrapTextSign(shopName, nameFont, SW * 0.58 - padL);
+        const nameLines = wrapTextSign(shopName, nameFont, W * 0.58 - padL);
         let y = padTB + 100;
         nameLines.forEach(line => {
           signShadowText(line, padL, y, nameFont, '#ffffff', 'left');
           y += 92;
         });
 
-        // Brand-colour divider
         y += 18;
         signCtx.fillStyle = brandColor2;
         signCtx.fillRect(padL, y, 90, 6);
 
-        // Bottom-left: CTA button
-        const ctaH = 100;
-        const ctaW = 360;
-        const ctaY = SH - padTB - ctaH;
+        const ctaH = 100, ctaW = 360;
+        const ctaY = H - padTB - ctaH;
         signCtx.save();
         signCtx.shadowColor = 'rgba(0,0,0,0.4)';
         signCtx.shadowBlur = 20;
@@ -2069,90 +2147,108 @@ window.logoutMember = async function () {
         signCtx.fillText('Get a quote \u2192', padL + ctaW/2, ctaY + ctaH/2 + 2);
         signCtx.textBaseline = 'alphabetic';
 
-        // Right side: QR code
         const qrSize = 420;
-        const qrX = SW - padL - qrSize;
-        const qrY = SH/2 - qrSize/2;
+        const qrX = W - padL - qrSize;
+        const qrY = H/2 - qrSize/2;
         const cardPad = 30;
+        drawQrInto(qrX, qrY, qrSize, cardPad);
+        signShadowText('Scan me', qrX + qrSize/2, qrY + qrSize + 70, '600 28px -apple-system, sans-serif', 'rgba(255,255,255,0.85)', 'center');
+      }
 
-        if (!signLink) {
-          signCtx.fillStyle = '#ffffff';
-          signCtx.beginPath();
-          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
-          signCtx.fill();
-          signCtx.fillStyle = '#6b7280';
-          signCtx.font = '600 26px -apple-system, sans-serif';
-          signCtx.textAlign = 'center';
-          signCtx.textBaseline = 'middle';
-          const msgLines = wrapTextSign('No link added yet', '600 26px -apple-system, sans-serif', qrSize - 50);
-          let my = qrY + qrSize/2 - ((msgLines.length-1)*32)/2;
-          msgLines.forEach(line => { signCtx.fillText(line, qrX + qrSize/2, my); my += 32; });
-          signCtx.textBaseline = 'alphabetic';
-        } else if (!window.mqQrGen) {
-          signCtx.fillStyle = '#ffffff';
-          signCtx.beginPath();
-          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
-          signCtx.fill();
-          signCtx.fillStyle = '#6b7280';
-          signCtx.font = '600 26px -apple-system, sans-serif';
-          signCtx.textAlign = 'center';
-          signCtx.textBaseline = 'middle';
-          signCtx.fillText('QR unavailable', qrX + qrSize/2, qrY + qrSize/2);
-          signCtx.textBaseline = 'alphabetic';
+      function drawSignPortrait() {
+        const W = 1080, H = 1620;
+        signCanvas.width = W; signCanvas.height = H;
+        signCtx.clearRect(0,0,W,H);
+        drawBackground(W, H);
+
+        signCtx.fillStyle = brandColor2;
+        signCtx.fillRect(0, 0, W, 16);
+
+        const pad = 90;
+        signCtx.textAlign = 'center';
+        signShadowText('ANOTHER PROJECT BY', W/2, pad + 40, '700 36px -apple-system, sans-serif', 'rgba(255,255,255,0.7)', 'center');
+
+        const nameFont = '700 76px -apple-system, sans-serif';
+        const nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
+        let y = pad + 130;
+        nameLines.forEach(line => {
+          signShadowText(line, W/2, y, nameFont, '#ffffff', 'center');
+          y += 86;
+        });
+
+        y += 20;
+        signCtx.fillStyle = brandColor2;
+        signCtx.fillRect(W/2 - 45, y, 90, 6);
+        y += 70;
+
+        const qrSize = 600;
+        const qrX = (W - qrSize) / 2;
+        const qrY = y;
+        const cardPad = 36;
+        drawQrInto(qrX, qrY, qrSize, cardPad);
+        y = qrY + qrSize + cardPad + 76;
+
+        signShadowText('Scan me', W/2, y, '600 32px -apple-system, sans-serif', 'rgba(255,255,255,0.85)', 'center');
+
+        const ctaH = 112, ctaW = 420;
+        const ctaY = H - pad - ctaH;
+        const ctaX = (W - ctaW) / 2;
+        signCtx.save();
+        signCtx.shadowColor = 'rgba(0,0,0,0.4)';
+        signCtx.shadowBlur = 22;
+        signCtx.shadowOffsetY = 8;
+        signCtx.fillStyle = '#ffffff';
+        signCtx.beginPath();
+        signCtx.roundRect(ctaX, ctaY, ctaW, ctaH, 20);
+        signCtx.fill();
+        signCtx.restore();
+        signCtx.fillStyle = '#1a1a1a';
+        signCtx.font = '700 46px -apple-system, sans-serif';
+        signCtx.textAlign = 'center';
+        signCtx.textBaseline = 'middle';
+        signCtx.fillText('Get a quote \u2192', W/2, ctaY + ctaH/2 + 2);
+        signCtx.textBaseline = 'alphabetic';
+      }
+
+      function drawSign() {
+        // Sync the displayed canvas size to match orientation aspect ratio
+        const displayEl = signCanvas;
+        if (signOrientation === 'landscape') {
+          displayEl.style.width = '280px';
+          displayEl.style.height = '187px';
+          drawSignLandscape();
         } else {
-          try {
-            const qr = window.mqQrGen(0, 'M');
-            qr.addData(signLink);
-            qr.make();
-            const count = qr.getModuleCount();
-            const cell = qrSize / count;
-
-            signCtx.save();
-            signCtx.shadowColor = 'rgba(0,0,0,0.35)';
-            signCtx.shadowBlur = 22;
-            signCtx.shadowOffsetY = 8;
-            signCtx.fillStyle = '#ffffff';
-            signCtx.beginPath();
-            signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
-            signCtx.fill();
-            signCtx.restore();
-
-            signCtx.strokeStyle = brandColor2;
-            signCtx.lineWidth = 4;
-            signCtx.beginPath();
-            signCtx.roundRect(qrX - cardPad + 8, qrY - cardPad + 8, qrSize + cardPad*2 - 16, qrSize + cardPad*2 - 16, 16);
-            signCtx.stroke();
-
-            signCtx.fillStyle = '#1a1a1a';
-            for (let row = 0; row < count; row++) {
-              for (let col = 0; col < count; col++) {
-                if (qr.isDark(row, col)) {
-                  signCtx.fillRect(qrX + col*cell, qrY + row*cell, cell+0.5, cell+0.5);
-                }
-              }
-            }
-          } catch(e) {
-            signCtx.fillStyle = '#ffffff';
-            signCtx.beginPath();
-            signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
-            signCtx.fill();
-            signCtx.fillStyle = '#6b7280';
-            signCtx.font = '600 26px -apple-system, sans-serif';
-            signCtx.textAlign = 'center';
-            signCtx.textBaseline = 'middle';
-            signCtx.fillText('QR error', qrX + qrSize/2, qrY + qrSize/2);
-            signCtx.textBaseline = 'alphabetic';
-          }
+          displayEl.style.width = '200px';
+          displayEl.style.height = '300px';
+          drawSignPortrait();
         }
-
-        // Small "scan me" label under QR
-        signShadowText('Scan me', qrX + qrSize/2, qrY + qrSize + 50, '600 28px -apple-system, sans-serif', 'rgba(255,255,255,0.85)', 'center');
       }
 
       window._mqRedrawSign = () => { signLink = _mqCustomPostLink || ''; drawSign(); };
 
       drawSign();
       loadQrLib().then(() => { drawSign(); });
+
+      const orientPortraitBtn = el('mq-mk-sign-orient-portrait');
+      const orientLandscapeBtn = el('mq-mk-sign-orient-landscape');
+      function setOrientButtons() {
+        if (orientPortraitBtn) {
+          orientPortraitBtn.style.background = signOrientation === 'portrait' ? '#1a1a1a' : '';
+          orientPortraitBtn.style.color = signOrientation === 'portrait' ? '#fff' : '';
+          orientPortraitBtn.style.borderColor = signOrientation === 'portrait' ? '#1a1a1a' : '';
+        }
+        if (orientLandscapeBtn) {
+          orientLandscapeBtn.style.background = signOrientation === 'landscape' ? '#1a1a1a' : '';
+          orientLandscapeBtn.style.color = signOrientation === 'landscape' ? '#fff' : '';
+          orientLandscapeBtn.style.borderColor = signOrientation === 'landscape' ? '#1a1a1a' : '';
+        }
+      }
+      if (orientPortraitBtn) {
+        orientPortraitBtn.onclick = () => { signOrientation = 'portrait'; setOrientButtons(); drawSign(); };
+      }
+      if (orientLandscapeBtn) {
+        orientLandscapeBtn.onclick = () => { signOrientation = 'landscape'; setOrientButtons(); drawSign(); };
+      }
 
       const signBgPhotoInput = el('mq-mk-sign-bg-photo');
       const signOverlayRow = el('mq-mk-sign-overlay-row');
@@ -2212,7 +2308,7 @@ window.logoutMember = async function () {
             return;
           }
           const link = document.createElement('a');
-          link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'job-site') + '-yard-sign.png';
+          link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'job-site') + '-' + signOrientation + '-sign.png';
           link.href = signCanvas.toDataURL('image/png');
           link.click();
         };
