@@ -424,6 +424,15 @@ window.logoutMember = async function () {
             </div>
 
             <div class="mq-card">
+              <div class="mq-card-title">🖼️ Social graphic — ready to post</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A square Instagram/Facebook-ready graphic with your shop name, brand colour, and quote link already on it. Download and post — no design needed.</p>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+                <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
+                <button class="mq-btn mq-btn-primary" id="mq-mk-download-btn" style="width:100%;max-width:280px">⬇️ Download graphic (PNG)</button>
+              </div>
+            </div>
+
+            <div class="mq-card">
               <div class="mq-card-title">🏷️ Headline options for your website</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Use one of these above your embedded widget.</p>
               <div id="mq-mk-headlines"></div>
@@ -1373,6 +1382,121 @@ window.logoutMember = async function () {
     if (trustDisplay) trustDisplay.textContent = trustBarHTML;
     if (trustCopyBtn) trustCopyBtn.onclick = () => mqCopyText(trustBarHTML, trustCopyBtn);
     if (trustPreview) trustPreview.innerHTML = trustBarHTML;
+
+    // Social graphic — drawn on canvas, downloadable as PNG
+    const canvas = el('mq-mk-canvas');
+    const downloadBtn = el('mq-mk-download-btn');
+    if (canvas && canvas.getContext) {
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const brandColor = shopRecord.fields['Brand colour'] || '#1a1a1a';
+      const city = shopRecord.fields['City'] || '';
+      const accentColor = (() => {
+        try {
+          const hex = brandColor.replace('#','');
+          const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+          const lighten = (c) => Math.min(255, Math.round(c + (255 - c) * 0.35));
+          return `rgb(${lighten(r)},${lighten(g)},${lighten(b)})`;
+        } catch(e) { return '#d4a574'; }
+      })();
+
+      function wrapText(text, maxWidth) {
+        const words = text.split(' ');
+        const lines = [];
+        let line = '';
+        words.forEach(word => {
+          const test = line ? line + ' ' + word : word;
+          if (ctx.measureText(test).width > maxWidth && line) {
+            lines.push(line);
+            line = word;
+          } else {
+            line = test;
+          }
+        });
+        if (line) lines.push(line);
+        return lines;
+      }
+
+      function drawGraphic() {
+        ctx.clearRect(0,0,W,H);
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0,0,W,H);
+
+        const pad = 76;
+
+        // Logo chip + shop name
+        ctx.fillStyle = brandColor;
+        const chipSize = 88;
+        ctx.beginPath();
+        ctx.roundRect(pad, pad, chipSize, chipSize, 22);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = '600 44px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⚡', pad + chipSize/2, pad + chipSize/2 + 4);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '500 38px -apple-system, sans-serif';
+        ctx.fillText(shopName, pad + chipSize + 24, pad + chipSize/2 - 8);
+        if (city) {
+          ctx.fillStyle = 'rgba(255,255,255,0.5)';
+          ctx.font = '400 26px -apple-system, sans-serif';
+          ctx.fillText(city, pad + chipSize + 24, pad + chipSize/2 + 28);
+        }
+
+        // Eyebrow
+        let y = pad + chipSize + 90;
+        ctx.fillStyle = accentColor;
+        ctx.font = '600 30px -apple-system, sans-serif';
+        ctx.fillText('INSTANT PRICING', pad, y);
+
+        // Headline
+        y += 70;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '500 72px -apple-system, sans-serif';
+        const headlineLines = wrapText('Get your cabinet quote in under 2 minutes', W - pad*2);
+        headlineLines.forEach(line => {
+          ctx.fillText(line, pad, y);
+          y += 86;
+        });
+
+        // Subtext
+        y += 24;
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = '400 34px -apple-system, sans-serif';
+        ctx.fillText('No phone calls. No waiting. Just your price.', pad, y);
+
+        // Bottom CTA pill
+        const ctaY = H - pad - 70;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(pad, ctaY, 280, 70, 16);
+        ctx.fill();
+        ctx.fillStyle = '#1a1a1a';
+        ctx.font = '500 32px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Get a quote →', pad + 140, ctaY + 45);
+
+        // Footer link
+        ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.font = '400 26px -apple-system, sans-serif';
+        ctx.fillText('midasquote.com', pad, H - 30);
+      }
+
+      drawGraphic();
+
+      if (downloadBtn) {
+        downloadBtn.onclick = () => {
+          const link = document.createElement('a');
+          link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'quote-graphic') + '-social-graphic.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
+      }
+    }
   }
 
   // ============================================================
