@@ -546,6 +546,7 @@ window.logoutMember = async function () {
                   <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-sign-overlay-val">62%</span>
                 </div>
                 <button class="mq-btn mq-btn-primary" id="mq-mk-sign-download-btn" style="width:100%;max-width:280px">⬇️ Download sign (PNG)</button>
+                <button class="mq-btn mq-btn-sm" id="mq-mk-qr-only-download-btn" style="width:100%;max-width:280px">⬇️ Download just the QR code</button>
               </div>
             </div>
 
@@ -2370,18 +2371,45 @@ window.logoutMember = async function () {
           signCtx.fillRect(0, photoY, W, photoH);
         }
 
-        // QR card — overlaps the band/photo seam for visual interest, always on solid white regardless of overlay
-        const qrSize = 480;
-        const qrX = (W - qrSize) / 2;
-        const qrY = bandH - qrSize * 0.22;
+        // QR card — centered in the space between the band and the CTA button
+        const qrSize = 460;
         const cardPad = 32;
+        const scanLabelH = 70; // reserved space for the "Scan me" pill below the card
+        const ctaH = 108;
+        const ctaTopGap = 50; // gap between scan label and CTA button
+        const availTop = bandH + 50;
+        const availBottom = H - pad - ctaH - ctaTopGap;
+        const availHeight = availBottom - availTop;
+        const qrBlockHeight = qrSize + cardPad*2 + scanLabelH;
+        const qrX = (W - qrSize) / 2;
+        const qrY = availTop + (availHeight - qrBlockHeight) / 2 + cardPad;
+
         drawQrInto(qrX, qrY, qrSize, cardPad);
 
-        let y = qrY + qrSize + cardPad + 56;
-        signShadowText('Scan me', W/2, y, '600 30px -apple-system, sans-serif', 'rgba(255,255,255,0.9)', 'center');
+        // "Scan me" on a solid dark pill so it's always legible over the photo
+        const scanY = qrY + qrSize + cardPad + 44;
+        signCtx.font = '600 28px -apple-system, sans-serif';
+        const scanText = 'Scan me';
+        const scanTextW = signCtx.measureText(scanText).width;
+        const pillW = scanTextW + 56;
+        const pillH = 52;
+        signCtx.save();
+        signCtx.shadowColor = 'rgba(0,0,0,0.3)';
+        signCtx.shadowBlur = 14;
+        signCtx.shadowOffsetY = 4;
+        signCtx.fillStyle = 'rgba(20,18,15,0.88)';
+        signCtx.beginPath();
+        signCtx.roundRect(W/2 - pillW/2, scanY - pillH/2 - 6, pillW, pillH, pillH/2);
+        signCtx.fill();
+        signCtx.restore();
+        signCtx.fillStyle = '#ffffff';
+        signCtx.textAlign = 'center';
+        signCtx.textBaseline = 'middle';
+        signCtx.fillText(scanText, W/2, scanY - 6 + 2);
+        signCtx.textBaseline = 'alphabetic';
 
         // CTA pill near the bottom
-        const ctaH = 108, ctaW = 400;
+        const ctaW = 400;
         const ctaY = H - pad - ctaH;
         const ctaX = (W - ctaW) / 2;
         signCtx.save();
@@ -2514,6 +2542,60 @@ window.logoutMember = async function () {
           link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'job-site') + '-' + signOrientation + '-sign.png';
           link.href = signCanvas.toDataURL('image/png');
           link.click();
+        };
+      }
+
+      const qrOnlyDownloadBtn = el('mq-mk-qr-only-download-btn');
+      if (qrOnlyDownloadBtn) {
+        qrOnlyDownloadBtn.onclick = () => {
+          if (!signLink) {
+            alert('Please add a link in the "Social media posts" section above first.');
+            return;
+          }
+          if (!window.mqQrGen) {
+            alert('QR code is still loading — please try again in a moment.');
+            return;
+          }
+          try {
+            const size = 800;
+            const cardPad = 40;
+            const qrCanvasOnly = document.createElement('canvas');
+            qrCanvasOnly.width = size + cardPad*2;
+            qrCanvasOnly.height = size + cardPad*2;
+            const octx = qrCanvasOnly.getContext('2d');
+
+            // White background with rounded corners and a thin brand-colour ring
+            octx.fillStyle = '#ffffff';
+            octx.beginPath();
+            octx.roundRect(0, 0, qrCanvasOnly.width, qrCanvasOnly.height, 28);
+            octx.fill();
+            octx.strokeStyle = brandColor2;
+            octx.lineWidth = 5;
+            octx.beginPath();
+            octx.roundRect(10, 10, qrCanvasOnly.width - 20, qrCanvasOnly.height - 20, 22);
+            octx.stroke();
+
+            const qr = window.mqQrGen(0, 'M');
+            qr.addData(signLink);
+            qr.make();
+            const count = qr.getModuleCount();
+            const cell = size / count;
+            octx.fillStyle = '#1a1a1a';
+            for (let row = 0; row < count; row++) {
+              for (let col = 0; col < count; col++) {
+                if (qr.isDark(row, col)) {
+                  octx.fillRect(cardPad + col*cell, cardPad + row*cell, cell+0.5, cell+0.5);
+                }
+              }
+            }
+
+            const link = document.createElement('a');
+            link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'quote') + '-qr-code.png';
+            link.href = qrCanvasOnly.toDataURL('image/png');
+            link.click();
+          } catch(e) {
+            alert('Something went wrong generating the QR code. Please try again.');
+          }
         };
       }
     }
