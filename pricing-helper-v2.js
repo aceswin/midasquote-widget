@@ -1796,12 +1796,13 @@
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
 
     function trimRow(r) {
-      const linkedDoor = r.fields['Linked door style'];
+      let linkedDoors = [];
+      try { linkedDoors = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linkedDoors = []; }
       return `
         <div class="mqph-row">
           <div style="flex:1;min-width:0">
             <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
-            ${linkedDoor ? `<div style="font-size:11px;color:#16a34a;margin-top:2px">🔗 Auto-applies with "${linkedDoor}"</div>` : ''}
+            ${linkedDoors.length ? `<div style="font-size:11px;color:#16a34a;margin-top:2px">🔗 Auto-applies with: ${linkedDoors.join(', ')}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
             <span style="color:#6b7280;font-size:11px">Supply:</span>
@@ -1846,9 +1847,9 @@
               <input type="text" id="mqph-trim-name" placeholder="e.g. Standard crown — Maple"/>
             </div>
             <div class="mqph-field">
-              <label>Auto-apply with door style <span style="text-transform:none;font-weight:400;color:#9ca3af">(optional)</span></label>
-              <select id="mqph-trim-door-link"><option value="">None — customer picks manually</option></select>
-              <div style="font-size:11px;color:#9ca3af;margin-top:4px">If set, this trim is automatically added whenever a customer chooses this door style — no extra step for them.</div>
+              <label>Auto-apply with door styles <span style="text-transform:none;font-weight:400;color:#9ca3af">(optional, pick as many as apply)</span></label>
+              <div id="mqph-trim-door-link-list" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;max-height:160px;overflow-y:auto"></div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">If checked, this trim is automatically suggested whenever a customer chooses one of these door styles — they can still switch it themselves if they want something different.</div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
@@ -1969,13 +1970,22 @@
     } catch(e) { alert('Error saving. Please try again.'); }
   };
 
-  function populateTrimDoorOptions(selectedDoorName) {
-    const sel = document.getElementById('mqph-trim-door-link');
-    if (!sel) return;
+  function populateTrimDoorOptions(selectedDoorNames) {
+    const list = document.getElementById('mqph-trim-door-link-list');
+    if (!list) return;
+    const selected = Array.isArray(selectedDoorNames) ? selectedDoorNames : (selectedDoorNames ? [selectedDoorNames] : []);
     const doorItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='door');
-    sel.innerHTML = '<option value="">None — customer picks manually</option>' +
-      doorItems.map(d => `<option value="${(d.fields['Name']||'').replace(/"/g,'&quot;')}">${d.fields['Name']||''}</option>`).join('');
-    if (selectedDoorName) sel.value = selectedDoorName;
+    if (!doorItems.length) {
+      list.innerHTML = '<div style="font-size:12px;color:#9ca3af">No door styles set up yet.</div>';
+      return;
+    }
+    list.innerHTML = doorItems.map((d,i) => {
+      const name = d.fields['Name']||'';
+      const checked = selected.includes(name) ? 'checked' : '';
+      return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;cursor:pointer;padding:4px 0">
+        <input type="checkbox" class="mqph-trim-door-checkbox" value="${name.replace(/"/g,'&quot;')}" ${checked} style="width:auto"/> ${name}
+      </label>`;
+    }).join('');
   }
 
   window.mqphOpenTrimAdd = function() {
@@ -1985,7 +1995,7 @@
     document.getElementById('mqph-trim-supply-rate').value = '';
     document.getElementById('mqph-trim-install-rate').value = '';
     document.getElementById('mqph-trim-active').checked = true;
-    populateTrimDoorOptions('');
+    populateTrimDoorOptions([]);
     document.getElementById('mqph-trim-modal-overlay').classList.add('show');
   };
 
@@ -1997,7 +2007,9 @@
     document.getElementById('mqph-trim-supply-rate').value = rec.fields['Rate']||'';
     document.getElementById('mqph-trim-install-rate').value = rec.fields['Install rate']||'';
     document.getElementById('mqph-trim-active').checked = rec.fields['Active']!==false;
-    populateTrimDoorOptions(rec.fields['Linked door style']||'');
+    let linkedDoors = [];
+    try { linkedDoors = rec.fields['Linked door style'] ? JSON.parse(rec.fields['Linked door style']) : []; } catch(e) { linkedDoors = []; }
+    populateTrimDoorOptions(linkedDoors);
     document.getElementById('mqph-trim-modal-overlay').classList.add('show');
   };
 
@@ -2006,13 +2018,13 @@
   window.mqphSaveTrimItem = async function() {
     const name = document.getElementById('mqph-trim-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
-    const linkedDoor = document.getElementById('mqph-trim-door-link').value;
+    const linkedDoors = Array.from(document.querySelectorAll('.mqph-trim-door-checkbox:checked')).map(cb => cb.value);
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'trim',
       Rate:parseFloat(document.getElementById('mqph-trim-supply-rate').value||0),
       'Install rate':parseFloat(document.getElementById('mqph-trim-install-rate').value||0),
       Unit:'lin ft|lin ft', Description:'type:trim',
-      'Linked door style': linkedDoor,
+      'Linked door style': JSON.stringify(linkedDoors),
       Active:document.getElementById('mqph-trim-active').checked,
     };
     try {

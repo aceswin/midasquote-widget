@@ -302,11 +302,13 @@
     const { li } = data;
     TRIM = {};
     (li.trimItems || []).forEach((item, i) => {
+      let linkedDoors = [];
+      try { linkedDoors = item['Linked door style'] ? JSON.parse(item['Linked door style']) : []; } catch(e) { linkedDoors = []; }
       TRIM[`trim_${i}`] = {
-        label:      item['Name'],
-        ps:         item['Rate']||0,          // supply rate, per linear foot
-        pi:         item['Install rate']||0,  // install rate, per linear foot
-        linkedDoor: item['Linked door style']||'',
+        label:       item['Name'],
+        ps:          item['Rate']||0,          // supply rate, per linear foot
+        pi:          item['Install rate']||0,  // install rate, per linear foot
+        linkedDoors: linkedDoors,
       };
     });
   }
@@ -748,10 +750,10 @@
       }
       const doorItem=(data.li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)];
       const doorName=doorItem?doorItem['Name']:'';
-      const matchKey=Object.keys(TRIM).find(k=>TRIM[k].linkedDoor && TRIM[k].linkedDoor===doorName);
+      const matchKey=Object.keys(TRIM).find(k=>TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
       if(matchKey){
         trimSelect.value=matchKey;
-        if(note){ note.textContent=`✓ ${TRIM[matchKey].label} added automatically with this door style`; note.style.display='block'; }
+        if(note){ note.textContent=`✓ ${TRIM[matchKey].label} suggested for this door style — feel free to change it below`; note.style.display='block'; }
       } else {
         trimSelect.value='none';
         if(note) note.style.display='none';
