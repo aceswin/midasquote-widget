@@ -608,7 +608,14 @@
             </div>
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
-              <div style="font-size:12px;color:#6b7280;margin-bottom:6px">If that includes an island or any other run that won't have backsplash, subtract those feet below for a more accurate price.</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <label style="font-size:13px;color:#374151;min-width:170px">Side splashes</label>
+                <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
+              </div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
+                A side splash is the short piece against a wall at the end of a run with no upper cabinet beside it (e.g. next to a fridge or doorway). Each one adds 2 linear feet to your backsplash total — count how many you have.
+              </div>
+              <div style="font-size:12px;color:#6b7280;margin-bottom:6px">If your base cabinet footage includes an island or any other run that won't have backsplash, subtract those feet below for a more accurate price.</div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px">Subtract feet (islands, etc.)</label>
                 <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" oninput="mqRefreshBsFt('b')" style="width:70px"/>
@@ -1004,6 +1011,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const coId  = prefix==='ct' ? 'mq-ct-cab-co'     : `mq-${prefix}-cab-co`;
         const cutsId= prefix==='ct' ? 'mq-ct-cab-cuts'   : `mq-${prefix}-cab-cuts`;
         const bsSubtractId = `mq-${prefix}-cab-bs-subtract`;
+        const bsSidesId = `mq-${prefix}-cab-bs-sides`;
         if (bFt > 0) {
           const linFt = bFt;
           const sqft  = linFt * (ctDepth / 12);
@@ -1015,9 +1023,10 @@ window.mqTogDrawerConfig=(prefix)=>{
             const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
             const bsVal = gv(bsId);
             const bsOpt = (bsVal && bsVal!=='none') ? bsOptionsFor(m)[parseInt(bsVal,10)] : null;
-            // Backsplash only runs along walls — net out any feet the customer
-            // flagged as islands or other runs without backsplash.
-            const bsLinFt = Math.max(0, linFt - gn(bsSubtractId, 0));
+            // Backsplash only runs along walls — add 2 ft per side splash, then
+            // net out any feet the customer flagged as islands or other runs
+            // without backsplash. Mirrors the live readout in mqRefreshBsFt.
+            const bsLinFt = Math.max(0, (linFt + gn(bsSidesId, 0)*2) - gn(bsSubtractId, 0));
             let bsCost = 0;
             if (bsOpt && bsLinFt > 0) {
               const heightIn = bsOpt.heightIn || 4;
@@ -1230,11 +1239,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       block.style.display = hasBs ? 'block' : 'none';
       if (!hasBs) return;
       const baseFt = gn(`mq-${prefix}-bft`, 0);
+      const sides = gn(`mq-${prefix}-cab-bs-sides`, 0);
       const subtractFt = gn(`mq-${prefix}-cab-bs-subtract`, 0);
-      const netFt = Math.max(0, baseFt - subtractFt);
+      const autoFt = baseFt + sides*2;
+      const netFt = Math.max(0, autoFt - subtractFt);
       const autoEl = document.getElementById(`mq-${prefix}-cab-bsft-auto`);
       const netEl  = document.getElementById(`mq-${prefix}-cab-bsft-net`);
-      if (autoEl) autoEl.textContent = baseFt;
+      if (autoEl) autoEl.textContent = autoFt;
       if (netEl)  netEl.textContent  = netFt;
     };
 
