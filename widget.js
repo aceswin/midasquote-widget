@@ -406,7 +406,7 @@
         </div>
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
-          <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60"/></div>
+          <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')"/></div>
           <div class="mq-field"><label class="mq-label">Height</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36–40")</option></select></div>
         </div>
@@ -596,15 +596,24 @@
             <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes 25" depth)</span></span>
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
-            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts')">${ctMatOpts()}</select></div>
+            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')">${ctMatOpts()}</select></div>
             <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:flex-end">
               <div class="mq-field" style="margin-bottom:0">
                 <label class="mq-label">Backsplash</label>
-                <select id="mq-b-cab-bs" style="min-width:160px"><option value="none">None</option></select>
+                <select id="mq-b-cab-bs" style="min-width:160px" onchange="mqRefreshBsFt('b')"><option value="none">None</option></select>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
                 <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
               </label>
+            </div>
+            <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
+              <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
+              <div style="font-size:12px;color:#6b7280;margin-bottom:6px">If that includes an island or any other run that won't have backsplash, subtract those feet below for a more accurate price.</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <label style="font-size:13px;color:#374151;min-width:170px">Subtract feet (islands, etc.)</label>
+                <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" oninput="mqRefreshBsFt('b')" style="width:70px"/>
+              </div>
+              <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
             <div id="mq-b-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem"></div>
           </div>
@@ -994,6 +1003,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const bsId  = prefix==='ct' ? 'mq-ct-cab-bs'     : `mq-${prefix}-cab-bs`;
         const coId  = prefix==='ct' ? 'mq-ct-cab-co'     : `mq-${prefix}-cab-co`;
         const cutsId= prefix==='ct' ? 'mq-ct-cab-cuts'   : `mq-${prefix}-cab-cuts`;
+        const bsSubtractId = `mq-${prefix}-cab-bs-subtract`;
         if (bFt > 0) {
           const linFt = bFt;
           const sqft  = linFt * (ctDepth / 12);
@@ -1005,19 +1015,22 @@ window.mqTogDrawerConfig=(prefix)=>{
             const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
             const bsVal = gv(bsId);
             const bsOpt = (bsVal && bsVal!=='none') ? bsOptionsFor(m)[parseInt(bsVal,10)] : null;
+            // Backsplash only runs along walls — net out any feet the customer
+            // flagged as islands or other runs without backsplash.
+            const bsLinFt = Math.max(0, linFt - gn(bsSubtractId, 0));
             let bsCost = 0;
-            if (bsOpt) {
+            if (bsOpt && bsLinFt > 0) {
               const heightIn = bsOpt.heightIn || 4;
-              const bsSqft   = linFt * (heightIn/12);
+              const bsSqft   = bsLinFt * (heightIn/12);
               const bsRate   = bsOpt.supplyRate!=null ? bsOpt.supplyRate : m.ps;
-              const bsSupply = m.supplyUnit === 'lin ft' ? linFt*bsRate : bsSqft*bsRate;
-              bsCost = bsSupply + linFt * (bsOpt.installRate||0);
+              const bsSupply = m.supplyUnit === 'lin ft' ? bsLinFt*bsRate : bsSqft*bsRate;
+              bsCost = bsSupply + bsLinFt * (bsOpt.installRate||0);
             }
             const coChecked = document.getElementById(coId)?.checked;
             const cutoutCost = coChecked ? cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`${cutsId}-q-${i}`)*(o.rate||0),0) : 0;
             const cost = supplyCost + installCost + bsCost + cutoutCost;
             sub += cost;
-            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft)${bsOpt?` + backsplash (${bsOpt.label})`:''}`, cost:Math.round(cost)});
+            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft)${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}`, cost:Math.round(cost)});
           }
         }
       }
@@ -1171,6 +1184,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(checked) {
         window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
         window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
+        window.mqRefreshBsFt(prefix);
       }
     };
     window.mqCalcSurfDims=(id)=>{
@@ -1207,6 +1221,21 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!matSel || !container) return;
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       container.innerHTML = cutoutRowsHtml(m, `${cutsContainerId}-q`);
+    };
+    window.mqRefreshBsFt=(prefix)=>{
+      const block = document.getElementById(`mq-${prefix}-cab-bsft-block`);
+      if (!block) return; // only exists on the "both" tab cabinet-attached block
+      const bsSel = document.getElementById(`mq-${prefix}-cab-bs`);
+      const hasBs = bsSel && bsSel.value !== 'none';
+      block.style.display = hasBs ? 'block' : 'none';
+      if (!hasBs) return;
+      const baseFt = gn(`mq-${prefix}-bft`, 0);
+      const subtractFt = gn(`mq-${prefix}-cab-bs-subtract`, 0);
+      const netFt = Math.max(0, baseFt - subtractFt);
+      const autoEl = document.getElementById(`mq-${prefix}-cab-bsft-auto`);
+      const netEl  = document.getElementById(`mq-${prefix}-cab-bsft-net`);
+      if (autoEl) autoEl.textContent = baseFt;
+      if (netEl)  netEl.textContent  = netFt;
     };
 
     addSurfaceInternal('ct','Kitchen run');
