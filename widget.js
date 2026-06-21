@@ -669,6 +669,20 @@
           <button class="mq-modal-btn" onclick="mqSubmitLead()">Show my estimate →</button>
           <button class="mq-modal-skip" onclick="mqSkipLead()">Skip for now</button>
         </div>
+      </div>
+
+      <!-- CONSULT EMAIL FALLBACK MODAL -->
+      <div class="mq-overlay" id="mq-consult-email-overlay">
+        <div class="mq-modal">
+          <p class="mq-modal-title">Get in touch</p>
+          <p class="mq-modal-sub">Send your question or consultation request to:</p>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span id="mq-consult-email-display" style="font-size:14px;font-weight:600;color:#111;word-break:break-all">—</span>
+            <button class="mq-btn mq-btn-sm" id="mq-consult-email-copy-btn" onclick="mqCopyConsultEmail()" style="flex-shrink:0">Copy</button>
+          </div>
+          <button class="mq-modal-btn" onclick="mqOpenConsultMailto()">Open in email app ↗</button>
+          <button class="mq-modal-skip" onclick="document.getElementById('mq-consult-email-overlay').classList.remove('show')">Close</button>
+        </div>
       </div>`;
   }
 
@@ -897,10 +911,47 @@ window.mqTogDrawerConfig=(prefix)=>{
         return;
       }
       if(consultEmail){
-        window.location.href='mailto:'+consultEmail+'?subject='+encodeURIComponent('Consultation request — '+(shop['Shop name']||''));
+        window._mqConsultEmail = consultEmail;
+        const display = document.getElementById('mq-consult-email-display');
+        if (display) display.textContent = consultEmail;
+        const copyBtn = document.getElementById('mq-consult-email-copy-btn');
+        if (copyBtn) copyBtn.textContent = 'Copy';
+        document.getElementById('mq-consult-email-overlay')?.classList.add('show');
         return;
       }
       window.mqShowLead(()=>{});
+    };
+
+    window.mqOpenConsultMailto=()=>{
+      const email = window._mqConsultEmail||'';
+      if (!email) return;
+      const shop=window._mqShopData||{};
+      window.location.href='mailto:'+email+'?subject='+encodeURIComponent('Consultation request — '+(shop['Shop name']||''));
+    };
+
+    window.mqCopyConsultEmail=()=>{
+      const email = window._mqConsultEmail||'';
+      if (!email) return;
+      const btn = document.getElementById('mq-consult-email-copy-btn');
+      const resetLabel = () => { if (btn) btn.textContent = 'Copy'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(email).then(() => {
+          if (btn) btn.textContent = 'Copied ✓';
+          setTimeout(resetLabel, 2000);
+        }).catch(() => { if (btn) btn.textContent = 'Copy failed'; setTimeout(resetLabel, 2000); });
+      } else {
+        // Fallback for older browsers without the Clipboard API
+        const ta = document.createElement('textarea');
+        ta.value = email;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); if (btn) btn.textContent = 'Copied ✓'; }
+        catch(e) { if (btn) btn.textContent = 'Copy failed'; }
+        document.body.removeChild(ta);
+        setTimeout(resetLabel, 2000);
+      }
     };
 
     function getMaterialRates(matKey, mat) {
