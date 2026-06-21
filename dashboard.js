@@ -1092,6 +1092,8 @@ window.logoutMember = async function () {
     hinge:      'hinges',
     countertop: 'countertops',
     specialty:  'specialty',
+    trim_crown:   'crown',
+    trim_valance: 'valance',
   };
 
   const _photoCache = {};
@@ -1281,8 +1283,12 @@ window.logoutMember = async function () {
     const byCategory = {};
     (lineItemsData || []).forEach(r => {
       if (!r.fields || r.fields['Active'] === false) return;
-      const cat = r.fields['Category'];
+      let cat = r.fields['Category'];
       if (!cat || EXCLUDED_CATS.has(cat.toLowerCase())) return;
+      // Split trim into separate crown / valance buckets so they show as distinct sections
+      if (cat === 'trim') {
+        cat = (r.fields['Trim type'] === 'valance') ? 'trim_valance' : 'trim_crown';
+      }
       if (!byCategory[cat]) byCategory[cat] = [];
       // Deduplicate by base name (strip "— uppers"/"— bases" suffix)
       const ITEM_EXCLUDE = /backsplash|cutout|cooktop/i;
@@ -1299,6 +1305,8 @@ window.logoutMember = async function () {
       drawer:   { title:'🗄️ Drawer Configurations', emoji:'🗄️' },
       hinge:    { title:'🔧 Door Hinges',          emoji:'🔧' },
       countertop:{ title:'🪨 Countertop Materials', emoji:'🪨' },
+      trim_crown:   { title:'👑 Crown Moulding',   emoji:'👑' },
+      trim_valance: { title:'📏 Valance',          emoji:'📏' },
     };
 
     // Build Products for showroom — all item names per category
@@ -1379,7 +1387,7 @@ window.logoutMember = async function () {
 
     const content = el('mq-products-content');
     if (content) {
-      const catsOrdered = ['material','door','drawer','hinge','countertop'];
+      const catsOrdered = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance'];
       const hasCats = catsOrdered.some(c => byCategory[c]?.length);
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'

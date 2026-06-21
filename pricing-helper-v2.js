@@ -1795,6 +1795,9 @@
     const trimItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='trim')
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
 
+    const crownItems   = trimItems.filter(r => (r.fields['Trim type']||'crown') === 'crown');
+    const valanceItems = trimItems.filter(r => r.fields['Trim type'] === 'valance');
+
     function trimRow(r) {
       let linkedDoors = [];
       try { linkedDoors = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linkedDoors = []; }
@@ -1819,6 +1822,12 @@
         </div>`;
     }
 
+    const trimSection = (title, items, emptyMsg) => items.length > 0
+      ? `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
+         ${items.map(trimRow).join('')}`
+      : `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
+         <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`;
+
     return `
       <div class="mqph-ct-block">
         <div class="mqph-cat-header">
@@ -1826,9 +1835,9 @@
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenTrimAdd()">+ Add style</button>
         </div>
         <div id="mqph-trim-msg" class="mqph-msg"></div>
-        ${trimItems.length > 0
-          ? trimItems.map(trimRow).join('')
-          : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">No crown moulding or valance styles yet — add one above. Cost is automatically calculated from the customer's upper cabinet linear footage, plus any wall returns they enter.</div>`}
+        ${trimSection('Crown moulding', crownItems, 'No crown moulding styles yet — add one above.')}
+        ${trimSection('Valance', valanceItems, 'No valance styles yet — add one above.')}
+        <div style="padding:0.75rem 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6">Customers can choose crown, valance, both, or neither — cost is calculated from the upper cabinet linear footage plus any wall returns they enter.</div>
       </div>
 
       <!-- Trim add/edit modal -->
@@ -1841,6 +1850,10 @@
           <div class="mqph-modal-body">
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#92400e;line-height:1.6">
               Pricing isn't always equal across crown/valance styles — standard crown, crown to the ceiling, crown with a riser, different materials, etc. all cost differently. Add as many styles as you offer, each with its own rate. Since this is a ballpark estimate, use your average per-linear-foot pricing for each style.
+            </div>
+            <div class="mqph-field">
+              <label>Type</label>
+              <select id="mqph-trim-type"><option value="crown">Crown moulding</option><option value="valance">Valance</option></select>
             </div>
             <div class="mqph-field">
               <label>Style name</label>
@@ -1993,6 +2006,7 @@
   window.mqphOpenTrimAdd = function() {
     currentTrimEditId = null;
     document.getElementById('mqph-trim-modal-title').textContent = 'Add crown / valance style';
+    document.getElementById('mqph-trim-type').value = 'crown';
     document.getElementById('mqph-trim-name').value = '';
     document.getElementById('mqph-trim-supply-rate').value = '';
     document.getElementById('mqph-trim-install-rate').value = '';
@@ -2005,6 +2019,7 @@
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
     currentTrimEditId = id;
     document.getElementById('mqph-trim-modal-title').textContent = 'Edit crown / valance style';
+    document.getElementById('mqph-trim-type').value = rec.fields['Trim type'] || 'crown';
     document.getElementById('mqph-trim-name').value = rec.fields['Name']||'';
     document.getElementById('mqph-trim-supply-rate').value = rec.fields['Rate']||'';
     document.getElementById('mqph-trim-install-rate').value = rec.fields['Install rate']||'';
@@ -2020,12 +2035,14 @@
   window.mqphSaveTrimItem = async function() {
     const name = document.getElementById('mqph-trim-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
+    const trimType = document.getElementById('mqph-trim-type').value;
     const linkedDoors = Array.from(document.querySelectorAll('.mqph-trim-door-checkbox:checked')).map(cb => cb.value);
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'trim',
       Rate:parseFloat(document.getElementById('mqph-trim-supply-rate').value||0),
       'Install rate':parseFloat(document.getElementById('mqph-trim-install-rate').value||0),
       Unit:'lin ft|lin ft', Description:'type:trim',
+      'Trim type': trimType,
       'Linked door style': JSON.stringify(linkedDoors),
       Active:document.getElementById('mqph-trim-active').checked,
     };
