@@ -1103,11 +1103,12 @@ window.logoutMember = async function () {
       const res = await fetch(`${GH_API}/${folder}`);
       if (!res.ok) { _photoCache[folder] = []; return []; }
       const files = await res.json();
+      if (!Array.isArray(files)) { _photoCache[folder] = []; return []; }
       const photos = files
-        .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name))
+        .filter(f => f && f.name && /\.(jpg|jpeg|png|webp)$/i.test(f.name))
         .map(f => ({
           url:   `${GH_BASE}/${folder}/${f.name}`,
-          label: f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          label: (f.name || '').replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
         }));
       _photoCache[folder] = photos;
       return photos;
@@ -1153,15 +1154,24 @@ window.logoutMember = async function () {
       return;
     }
 
-    grid.innerHTML = photos.map(p => `
-      <div onclick="mqSelectLibraryPhoto('${p.url}')" title="${p.label}"
+    const escapeHtmlLib = (s) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    grid.innerHTML = photos.map((p, i) => `
+      <div data-photo-idx="${i}" title="${escapeHtmlLib(p.label)}"
         style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:all 0.15s;display:flex;flex-direction:column"
         onmouseover="this.style.borderColor='#1a1a1a';this.style.transform='scale(1.02)'"
         onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='scale(1)'">
         <img src="${p.url}" style="width:100%;height:100px;object-fit:cover;display:block;flex-shrink:0"
           onerror="this.parentElement.style.display='none'"/>
-        <div style="padding:6px 8px;font-size:11px;font-weight:500;color:#374151;text-align:center;line-height:1.35;word-break:break-word;min-height:30px;display:flex;align-items:center;justify-content:center">${p.label}</div>
+        <div style="padding:6px 8px;font-size:11px;font-weight:500;color:#374151;text-align:center;line-height:1.35;word-break:break-word;min-height:30px;display:flex;align-items:center;justify-content:center">${escapeHtmlLib(p.label)}</div>
       </div>`).join('');
+
+    // Use safe event binding instead of inline onclick strings — avoids breakage from
+    // special characters (quotes, apostrophes) that can appear in uploaded filenames
+    grid.querySelectorAll('[data-photo-idx]').forEach(card => {
+      const idx = parseInt(card.dataset.photoIdx, 10);
+      card.onclick = () => mqSelectLibraryPhoto(photos[idx].url);
+    });
   };
 
   window.mqClosePhotoPicker = function() {
