@@ -394,31 +394,7 @@
           <div class="mq-field"><label class="mq-label">Height</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36–40")</option></select></div>
         </div>
-        ${hasTrim?`<div class="mq-sec" style="margin-top:8px">
-          <p class="mq-sec-title">Crown moulding / valance</p>
-          <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
-          ${hasCrown?`<div class="mq-grid2" style="margin-bottom:8px">
-            <div class="mq-field"><label class="mq-label">Crown moulding</label>
-              <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')">${trimOpts('crown')}</select>
-            </div>
-            <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none">
-              <label class="mq-label">Returns to wall</label>
-              <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            </div>
-          </div>`:''}
-          ${hasValance?`<div class="mq-grid2">
-            <div class="mq-field"><label class="mq-label">Valance</label>
-              <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')">${trimOpts('valance')}</select>
-            </div>
-            <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none">
-              <label class="mq-label">Returns to wall</label>
-              <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            </div>
-          </div>`:''}
-          <div id="mq-${prefix}-trim-help" style="display:none;font-size:11px;color:#6b7280;margin-top:6px;line-height:1.5">
-            A "return" is where the crown or valance turns and meets the wall (for example, at the end of a run with no upper cabinet on either side). Each return adds 1 linear foot to your trim total — count how many you have.
-          </div>
-        </div>`:''}
+        </div>
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
           <label style="font-size:13px;cursor:pointer">Different styles for uppers and lowers</label>
@@ -461,6 +437,31 @@
             <label class="mq-label">Drawer type</label>
             <select id="mq-${prefix}-drawer-config">${drawerConfigOpts}</select>
           </div>
+        </div>
+      </div>`:''}
+      ${hasTrim?`<div class="mq-sec">
+        <p class="mq-sec-title">Crown moulding / valance</p>
+        <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
+        ${hasCrown?`<div class="mq-grid2" style="margin-bottom:8px">
+          <div class="mq-field"><label class="mq-label">Crown moulding</label>
+            <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')">${trimOpts('crown')}</select>
+          </div>
+          <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none">
+            <label class="mq-label">Returns to wall</label>
+            <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
+          </div>
+        </div>`:''}
+        ${hasValance?`<div class="mq-grid2">
+          <div class="mq-field"><label class="mq-label">Valance</label>
+            <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')">${trimOpts('valance')}</select>
+          </div>
+          <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none">
+            <label class="mq-label">Returns to wall</label>
+            <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
+          </div>
+        </div>`:''}
+        <div id="mq-${prefix}-trim-help" style="display:none;font-size:11px;color:#6b7280;margin-top:6px;line-height:1.5">
+          A "return" is where the crown or valance turns and meets the wall (for example, at the end of a run with no upper cabinet on either side). Each return adds 1 linear foot to your trim total — count how many you have.
         </div>
       </div>`:''}
       <div class="mq-sec">
