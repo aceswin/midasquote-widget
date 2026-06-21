@@ -274,7 +274,13 @@ window.logoutMember = async function () {
                 <div class="mq-field"><label class="mq-label">City</label><input type="text" id="mq-shop-city"/></div>
                 <div class="mq-field"><label class="mq-label">Website URL</label><input type="url" id="mq-shop-website"/></div>
                 <div class="mq-field"><label class="mq-label">Lead notify email</label><input type="email" id="mq-shop-email"/><span class="mq-hint">Where new lead notifications go</span></div>
-                <div class="mq-field"><label class="mq-label">Brand colour</label><input type="text" id="mq-shop-color" placeholder="#1a1a1a"/><span class="mq-hint">Hex code for widget buttons</span></div>
+                <div class="mq-field"><label class="mq-label">Brand colour</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input type="text" id="mq-shop-color" placeholder="#1a1a1a" style="flex:1"/>
+                    <input type="color" id="mq-shop-color-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                  </div>
+                  <span class="mq-hint">Hex code for widget buttons</span>
+                </div>
               </div>
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field">
@@ -813,6 +819,25 @@ window.logoutMember = async function () {
     set('mq-shop-website', f['Website']);
     set('mq-shop-email', f['Lead notify email']);
     set('mq-shop-color', f['Brand colour']);
+    {
+      const swatch = el('mq-shop-color-swatch');
+      const textField = el('mq-shop-color');
+      const loadedColor = f['Brand colour'];
+      if (swatch) {
+        swatch.value = /^#[0-9a-fA-F]{6}$/.test(loadedColor) ? loadedColor : '#1a1a1a';
+        // Wire bidirectional sync once — guard against duplicate listeners if
+        // populateShop runs again (e.g. after a save/reload cycle).
+        if (swatch && !swatch.dataset.mqWired) {
+          swatch.dataset.mqWired = '1';
+          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; });
+          if (textField) {
+            textField.addEventListener('input', () => {
+              if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) swatch.value = textField.value;
+            });
+          }
+        }
+      }
+    }
     set('mq-shop-range-low',  f['Quote range low']  || '10');
     set('mq-shop-range-high', f['Quote range high'] || '15');
     set('mq-shop-logo', f['Logo URL']);
