@@ -1759,7 +1759,7 @@
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Backsplash height options</div>
               <div class="mqph-info" style="margin-bottom:0.75rem">
-                Supply rate defaults to this material's own rate when you add a new option, but you can edit it per option — useful if a tall backsplash needs a different slab cut than the standard 4". Set a label, height, supply rate, and install rate for each. The customer picks one option in the widget.
+                Supply rate defaults to this material's own rate when you add a new option, but you can edit it per option. Set a label, height, supply rate, and install rate for each. The customer picks one option in the widget.
               </div>
               <div id="mqph-ct-bs-list"></div>
               <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphAddBsOption()" style="margin-top:6px">+ Add height option</button>
