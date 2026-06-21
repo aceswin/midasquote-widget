@@ -1982,8 +1982,10 @@
     list.innerHTML = doorItems.map((d,i) => {
       const name = d.fields['Name']||'';
       const checked = selected.includes(name) ? 'checked' : '';
-      return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;cursor:pointer;padding:4px 0">
-        <input type="checkbox" class="mqph-trim-door-checkbox" value="${name.replace(/"/g,'&quot;')}" ${checked} style="width:auto"/> ${name}
+      return `<label class="mqph-trim-door-row" style="display:flex !important;flex-direction:row !important;align-items:center !important;gap:8px !important;font-size:13px !important;font-weight:400 !important;text-transform:none !important;letter-spacing:normal !important;color:#374151 !important;cursor:pointer;padding:6px 4px;border-radius:6px"
+        onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background='transparent'">
+        <input type="checkbox" class="mqph-trim-door-checkbox" value="${name.replace(/"/g,'&quot;')}" ${checked} style="width:16px !important;height:16px !important;flex-shrink:0;margin:0 !important"/>
+        <span style="flex:1">${name}</span>
       </label>`;
     }).join('');
   }
