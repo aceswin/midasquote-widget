@@ -277,6 +277,16 @@
           const unitParts = (item['Unit']||'sqft|sqft').split('|');
           let bsOptions = [];
           try { bsOptions = item['Backsplash options'] ? JSON.parse(item['Backsplash options']) : []; } catch(e) { bsOptions = []; }
+          let cutoutOptions = [];
+          try { cutoutOptions = item['Cutout options'] ? JSON.parse(item['Cutout options']) : []; } catch(e) { cutoutOptions = []; }
+          // Fall back to older flat sink/cooktop fields if this material predates
+          // the Cutout options list format.
+          if (!cutoutOptions.length && (item['Sink cutout rate']!=null || item['Cooktop cutout rate']!=null)) {
+            cutoutOptions = [
+              {label:'Sink cutout', rate:item['Sink cutout rate']!=null?item['Sink cutout rate']:180},
+              {label:'Cooktop cutout', rate:item['Cooktop cutout rate']!=null?item['Cooktop cutout rate']:220},
+            ];
+          }
           CT_MAT[`ct_${i}`] = {
             label:       item['Name'],
             ps:          item['Rate']||0,
@@ -284,22 +294,22 @@
             supplyUnit:  (unitParts[0]||'sqft').trim(),
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
-            sinkRate:    item['Sink cutout rate']!=null ? item['Sink cutout rate'] : null,
-            cookRate:    item['Cooktop cutout rate']!=null ? item['Cooktop cutout rate'] : null,
+            cutoutOptions: Array.isArray(cutoutOptions) ? cutoutOptions : [],
           };
         });
     } else {
       const legacyBs = [{label:'4" standard', heightIn:4, installRate:pricing['Backsplash rate']||12}];
-      CT_MAT['lam']       = {label:'Laminate',                ps:pricing['Lam supply']||18,   pi:12, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['ss_econ']   = {label:'Solid surface — Economy', ps:pricing['SS econ supply']||38, pi:18, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['ss_mid']    = {label:'Solid surface — Mid',     ps:pricing['SS mid supply']||58,  pi:18, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['ss_prem']   = {label:'Solid surface — Premium', ps:pricing['SS prem supply']||90, pi:22, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['gran_econ'] = {label:'Granite — Economy',       ps:pricing['Gran econ supply']||45,  pi:25, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['gran_mid']  = {label:'Granite — Mid',           ps:pricing['Gran mid supply']||72,   pi:25, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['gran_prem'] = {label:'Granite — Premium',       ps:pricing['Gran prem supply']||130, pi:30, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['quartz']    = {label:'Engineered quartz',       ps:pricing['Quartz supply']||85,  pi:25, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['marble']    = {label:'Marble',                  ps:pricing['Marble supply']||110, pi:30, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
-      CT_MAT['butcher']   = {label:'Butcher block',           ps:pricing['Butcher supply']||42, pi:18, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, sinkRate:null, cookRate:null};
+      const legacyCutouts = [{label:'Sink cutout', rate:pricing['Sink cutout']||180}, {label:'Cooktop cutout', rate:pricing['Cooktop cutout']||220}];
+      CT_MAT['lam']       = {label:'Laminate',                ps:pricing['Lam supply']||18,   pi:12, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['ss_econ']   = {label:'Solid surface — Economy', ps:pricing['SS econ supply']||38, pi:18, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['ss_mid']    = {label:'Solid surface — Mid',     ps:pricing['SS mid supply']||58,  pi:18, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['ss_prem']   = {label:'Solid surface — Premium', ps:pricing['SS prem supply']||90, pi:22, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['gran_econ'] = {label:'Granite — Economy',       ps:pricing['Gran econ supply']||45,  pi:25, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['gran_mid']  = {label:'Granite — Mid',           ps:pricing['Gran mid supply']||72,   pi:25, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['gran_prem'] = {label:'Granite — Premium',       ps:pricing['Gran prem supply']||130, pi:30, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['quartz']    = {label:'Engineered quartz',       ps:pricing['Quartz supply']||85,  pi:25, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['marble']    = {label:'Marble',                  ps:pricing['Marble supply']||110, pi:30, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
+      CT_MAT['butcher']   = {label:'Butcher block',           ps:pricing['Butcher supply']||42, pi:18, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
     }
   }
 
@@ -586,7 +596,7 @@
             <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes 25" depth)</span></span>
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
-            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs')">${ctMatOpts()}</select></div>
+            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts')">${ctMatOpts()}</select></div>
             <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:flex-end">
               <div class="mq-field" style="margin-bottom:0">
                 <label class="mq-label">Backsplash</label>
@@ -596,10 +606,7 @@
                 <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
               </label>
             </div>
-            <div id="mq-b-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:13px;color:#6b7280;min-width:110px">Sink cutouts</label><input type="number" id="mq-b-cab-sink" value="0" min="0" max="4" style="width:55px"/></div>
-              <div style="display:flex;align-items:center;gap:8px"><label style="font-size:13px;color:#6b7280;min-width:110px">Cooktop cutouts</label><input type="number" id="mq-b-cab-cook" value="0" min="0" max="2" style="width:55px"/></div>
-            </div>
+            <div id="mq-b-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem"></div>
           </div>
         </div>
         <div class="mq-sec"><p class="mq-sec-title">Additional surfaces</p>
@@ -728,14 +735,21 @@
       if (m && Array.isArray(m.bsOptions) && m.bsOptions.length) return m.bsOptions;
       return [{label:'4" standard', heightIn:4, installRate:legacyBsInstallRate}];
     }
-    // Per-material cutout rates — falls back to the shop's old global rate.
-    function sinkRateFor(m) { return (m && m.sinkRate!=null) ? m.sinkRate : legacySinkR; }
-    function cookRateFor(m) { return (m && m.cookRate!=null) ? m.cookRate : legacyCookR; }
+    // Per-material cutout options — falls back to legacy Sink/Cooktop globals
+    // if this material hasn't been migrated to per-material pricing yet.
+    function cutoutOptionsFor(m) {
+      if (m && Array.isArray(m.cutoutOptions) && m.cutoutOptions.length) return m.cutoutOptions;
+      return [{label:'Sink cutout', rate:legacySinkR}, {label:'Cooktop cutout', rate:legacyCookR}];
+    }
     function bsOptsHtml(m) {
       return bsOptionsFor(m).map((o,i)=>`<option value="${i}">${(o.label||'Backsplash').replace(/"/g,'&quot;')}</option>`).join('');
     }
+    function cutoutRowsHtml(m, idPrefix) {
+      return cutoutOptionsFor(m).map((o,i)=>
+        `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:13px;color:#6b7280;min-width:110px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label><input type="number" id="${idPrefix}-${i}" value="0" min="0" max="10" style="width:55px"/></div>`
+      ).join('');
+    }
 
-    const EDGE     = {eased:0,bevel:4,bullnose:8,ogee:14,waterfall:28};
     const ctDepth  = 25;
 
     const diffOn={},specQty={},surfCounts={},surfs={};
@@ -979,8 +993,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const matId = prefix==='ct' ? 'mq-ct-ct-mat-cab' : `mq-${prefix}-ct-mat-cab`;
         const bsId  = prefix==='ct' ? 'mq-ct-cab-bs'     : `mq-${prefix}-cab-bs`;
         const coId  = prefix==='ct' ? 'mq-ct-cab-co'     : `mq-${prefix}-cab-co`;
-        const sinkId= prefix==='ct' ? 'mq-ct-cab-sink'   : `mq-${prefix}-cab-sink`;
-        const cookId= prefix==='ct' ? 'mq-ct-cab-cook'   : `mq-${prefix}-cab-cook`;
+        const cutsId= prefix==='ct' ? 'mq-ct-cab-cuts'   : `mq-${prefix}-cab-cuts`;
         if (bFt > 0) {
           const linFt = bFt;
           const sqft  = linFt * (ctDepth / 12);
@@ -996,11 +1009,12 @@ window.mqTogDrawerConfig=(prefix)=>{
             if (bsOpt) {
               const heightIn = bsOpt.heightIn || 4;
               const bsSqft   = linFt * (heightIn/12);
-              const bsSupply = m.supplyUnit === 'lin ft' ? linFt*m.ps : bsSqft*m.ps;
+              const bsRate   = bsOpt.supplyRate!=null ? bsOpt.supplyRate : m.ps;
+              const bsSupply = m.supplyUnit === 'lin ft' ? linFt*bsRate : bsSqft*bsRate;
               bsCost = bsSupply + linFt * (bsOpt.installRate||0);
             }
             const coChecked = document.getElementById(coId)?.checked;
-            const cutoutCost = coChecked ? gn(sinkId)*sinkRateFor(m) + gn(cookId)*cookRateFor(m) : 0;
+            const cutoutCost = coChecked ? cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`${cutsId}-q-${i}`)*(o.rate||0),0) : 0;
             const cost = supplyCost + installCost + bsCost + cutoutCost;
             sub += cost;
             lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft)${bsOpt?` + backsplash (${bsOpt.label})`:''}`, cost:Math.round(cost)});
@@ -1010,7 +1024,7 @@ window.mqTogDrawerConfig=(prefix)=>{
 
       Object.keys(surfs[prefix]).forEach(id=>{
         if(!document.getElementById('mqsc-'+id)) return;
-        const mat=gv('mqsm-'+id), edge=gv('mqse-'+id);
+        const mat=gv('mqsm-'+id);
         const siOv=gv('mqssi-'+id), si=siOv==='inherit'?gv(ctSiId):siOv;
         const m=CT_MAT[mat]||Object.values(CT_MAT)[0];
         if (!m) return;
@@ -1025,11 +1039,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (bsOpt) {
           const heightIn = bsOpt.heightIn || 4;
           const bsSqft   = linFt*(heightIn/12);
-          const bsSupply = m.supplyUnit==='lin ft' ? linFt*m.ps : bsSqft*m.ps;
+          const bsRate   = bsOpt.supplyRate!=null ? bsOpt.supplyRate : m.ps;
+          const bsSupply = m.supplyUnit==='lin ft' ? linFt*bsRate : bsSqft*bsRate;
           bsCost = bsSupply + linFt*(bsOpt.installRate||0);
         }
-        const cost = supplyCost+installCost+linFt*(EDGE[edge]||0)+bsCost
-          +(document.getElementById('mqsco-'+id)?.checked?gn('mqssink-'+id)*sinkRateFor(m)+gn('mqscook-'+id)*cookRateFor(m):0);
+        const cost = supplyCost+installCost+bsCost
+          +(document.getElementById('mqsco-'+id)?.checked?cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`mqscuts-${id}-q-${i}`)*(o.rate||0),0):0);
         sub+=cost;
         lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft)${bsOpt?` + backsplash (${bsOpt.label})`:''}`,cost:Math.round(cost)});
       });
@@ -1128,10 +1143,8 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div class="mq-field"><label class="mq-label" style="color:#16a34a">Auto-calculated</label>
             <div style="font-size:13px;color:#6b7280;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
         </div>
-        <div class="mq-grid3" style="margin-bottom:1rem">
-          <div class="mq-field"><label class="mq-label">Material</label><select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}')">${ctMatOpts()}</select></div>
-          <div class="mq-field"><label class="mq-label">Edge profile</label>
-            <select id="mqse-${id}"><option value="eased">Eased</option><option value="bevel">Bevel (+$4/ft)</option><option value="bullnose">Bullnose (+$8/ft)</option><option value="ogee">Ogee (+$14/ft)</option><option value="waterfall">Waterfall (+$28/ft)</option></select></div>
+        <div class="mq-grid2" style="margin-bottom:1rem">
+          <div class="mq-field"><label class="mq-label">Material</label><select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}')">${ctMatOpts()}</select></div>
           <div class="mq-field"><label class="mq-label">Install</label>
             <select id="mqssi-${id}"><option value="inherit">Same as project</option><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
         </div>
@@ -1143,12 +1156,10 @@ window.mqTogDrawerConfig=(prefix)=>{
           </div>
           <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')"/> Cutouts needed</label>
         </div>
-        <div id="mqscuts-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f9fafb;border-radius:6px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:13px;color:#6b7280;min-width:110px">Sink cutouts</label><input type="number" id="mqssink-${id}" value="0" min="0" max="4" style="width:55px"/></div>
-          <div style="display:flex;align-items:center;gap:8px"><label style="font-size:13px;color:#6b7280;min-width:110px">Cooktop cutouts</label><input type="number" id="mqscook-${id}" value="0" min="0" max="2" style="width:55px"/></div>
-        </div>`;
+        <div id="mqscuts-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>`;
       document.getElementById(containerId)?.appendChild(card);
       window.mqRefreshBsOpts(`mqsm-${id}`, `mqsbs-${id}`);
+      window.mqRefreshCutoutOpts(`mqsm-${id}`, `mqscuts-${id}`);
     }
 
     window.mqAddSurface=(prefix)=>addSurfaceInternal(prefix);
@@ -1157,7 +1168,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       const matDiv  = document.getElementById(`mq-${prefix}-cab-mat`);
       if(matDiv) matDiv.style.display=checked?'block':'none';
-      if(checked) window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
+      if(checked) {
+        window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
+        window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
+      }
     };
     window.mqCalcSurfDims=(id)=>{
       const w=parseFloat(document.getElementById(`mqsw-${id}`)?.value||0);
@@ -1186,6 +1200,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       bsSel.innerHTML = '<option value="none">None</option>' + bsOptsHtml(m);
       // Try to keep the same option index selected across material changes when possible
       if (prevVal !== 'none' && bsSel.querySelector(`option[value="${prevVal}"]`)) bsSel.value = prevVal;
+    };
+    window.mqRefreshCutoutOpts=(matSelectId, cutsContainerId)=>{
+      const matSel = document.getElementById(matSelectId);
+      const container = document.getElementById(cutsContainerId);
+      if (!matSel || !container) return;
+      const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
+      container.innerHTML = cutoutRowsHtml(m, `${cutsContainerId}-q`);
     };
 
     addSurfaceInternal('ct','Kitchen run');
