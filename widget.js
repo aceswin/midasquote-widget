@@ -387,7 +387,7 @@
           <div class="mq-field"><label class="mq-label">Room type</label>
             <select id="mq-${prefix}-room"><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option><option value="laundry">Laundry room</option><option value="garage">Garage</option><option value="office">Home office</option><option value="other">Other</option></select></div>
           ${hasInstall?`<div class="mq-field"><label class="mq-label">Supply + install?</label>
-            <select id="mq-${prefix}-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>`:''}
+            <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>`:''}
         </div>
       </div>
       <div class="mq-sec">
@@ -407,7 +407,7 @@
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')"/></div>
-          <div class="mq-field"><label class="mq-label">Height</label>
+          <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36–40")</option></select></div>
         </div>
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
@@ -512,7 +512,11 @@
       </div>
       <div class="mq-powered-by" style="margin-top:0;padding-top:0;border-top:none;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
       <div class="mq-tab-bar">
-        <button class="mq-tab active" onclick="mqSwitchTab('cabinets',this)">
+        <button class="mq-tab active" onclick="mqSwitchTab('both',this)">
+          <span class="mq-tab-icon">✨</span>
+          <span class="mq-tab-label"><span class="mq-tab-title">Both</span><span class="mq-tab-sub">Full project quote</span></span>
+        </button>
+        <button class="mq-tab" onclick="mqSwitchTab('cabinets',this)">
           <span class="mq-tab-icon">🪵</span>
           <span class="mq-tab-label"><span class="mq-tab-title">Cabinets</span><span class="mq-tab-sub">Cabinet quote only</span></span>
         </button>
@@ -520,14 +524,10 @@
           <span class="mq-tab-icon">🪨</span>
           <span class="mq-tab-label"><span class="mq-tab-title">Countertops</span><span class="mq-tab-sub">Countertop quote only</span></span>
         </button>
-        <button class="mq-tab" onclick="mqSwitchTab('both',this)">
-          <span class="mq-tab-icon">✨</span>
-          <span class="mq-tab-label"><span class="mq-tab-title">Both</span><span class="mq-tab-sub">Full project quote</span></span>
-        </button>
       </div>
 
       <!-- CABINET TAB -->
-      <div class="mq-tab-content active" id="mq-tab-cabinets">
+      <div class="mq-tab-content" id="mq-tab-cabinets">
         ${cabinetForm('c', specs, data)}
         <button class="mq-calc-btn" id="mq-c-calc-btn" onclick="mqCalcCabinets()">Calculate cabinet estimate</button>
         <div class="mq-loading" id="mq-c-loading">Building your estimate...</div>
@@ -540,7 +540,7 @@
           <div class="mq-disclaimer">⚠ ${disc}</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
-            <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
+            <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
@@ -573,7 +573,7 @@
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
-            <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[2])">Get full project quote ✨</button>
+            <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
@@ -582,7 +582,7 @@
       </div>
 
       <!-- BOTH TAB -->
-      <div class="mq-tab-content" id="mq-tab-both">
+      <div class="mq-tab-content active" id="mq-tab-both">
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪵 Cabinet details</div><div class="mq-both-divider-line"></div></div>
         ${cabinetForm('b', specs, data)}
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
@@ -1286,6 +1286,15 @@ window.mqTogDrawerConfig=(prefix)=>{
       const netEl  = document.getElementById(`mqs-bsft-net-${id}`);
       if (autoEl) autoEl.textContent = autoFt;
       if (netEl)  netEl.textContent  = netFt;
+    };
+    window.mqSyncCtSi=(prefix)=>{
+      // Only the "both" tab has a separate countertop supply/install field to
+      // sync into — default it to match the cabinet choice so people don't
+      // accidentally leave it mismatched. They can still change it after.
+      if (prefix !== 'b') return;
+      const cabSi = document.getElementById('mq-b-si');
+      const ctSi  = document.getElementById('mq-b-ct-si');
+      if (cabSi && ctSi) ctSi.value = cabSi.value;
     };
 
     addSurfaceInternal('ct','Kitchen run');
