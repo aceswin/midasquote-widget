@@ -609,17 +609,17 @@
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                <label style="font-size:13px;color:#374151;min-width:170px">Side splashes</label>
+                <label style="font-size:13px;color:#374151;min-width:170px">Side splashes (Quantity)</label>
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run with no upper cabinet beside it (e.g. next to a fridge or doorway). Each one adds 2 linear feet to your backsplash total — count how many you have.
+                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
               </div>
-              <div style="font-size:12px;color:#6b7280;margin-bottom:6px">If your base cabinet footage includes an island or any other run that won't have backsplash, subtract those feet below for a more accurate price.</div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px">Subtract feet (islands, etc.)</label>
                 <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
+              <div style="font-size:12px;color:#6b7280;margin-top:6px">If your base cabinet footage includes an island or any other run that won't have backsplash, subtract those feet above for a more accurate price.</div>
               <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
             <div id="mq-b-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem"></div>
