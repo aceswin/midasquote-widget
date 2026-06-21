@@ -1796,9 +1796,13 @@
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
 
     function trimRow(r) {
+      const linkedDoor = r.fields['Linked door style'];
       return `
         <div class="mqph-row">
-          <div style="flex:1;min-width:0"><div class="mqph-row-name">${r.fields['Name']||'—'}</div></div>
+          <div style="flex:1;min-width:0">
+            <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+            ${linkedDoor ? `<div style="font-size:11px;color:#16a34a;margin-top:2px">🔗 Auto-applies with "${linkedDoor}"</div>` : ''}
+          </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
             <span style="color:#6b7280;font-size:11px">Supply:</span>
             <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
@@ -1840,6 +1844,11 @@
             <div class="mqph-field">
               <label>Style name</label>
               <input type="text" id="mqph-trim-name" placeholder="e.g. Standard crown — Maple"/>
+            </div>
+            <div class="mqph-field">
+              <label>Auto-apply with door style <span style="text-transform:none;font-weight:400;color:#9ca3af">(optional)</span></label>
+              <select id="mqph-trim-door-link"><option value="">None — customer picks manually</option></select>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">If set, this trim is automatically added whenever a customer chooses this door style — no extra step for them.</div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
@@ -1960,6 +1969,15 @@
     } catch(e) { alert('Error saving. Please try again.'); }
   };
 
+  function populateTrimDoorOptions(selectedDoorName) {
+    const sel = document.getElementById('mqph-trim-door-link');
+    if (!sel) return;
+    const doorItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='door');
+    sel.innerHTML = '<option value="">None — customer picks manually</option>' +
+      doorItems.map(d => `<option value="${(d.fields['Name']||'').replace(/"/g,'&quot;')}">${d.fields['Name']||''}</option>`).join('');
+    if (selectedDoorName) sel.value = selectedDoorName;
+  }
+
   window.mqphOpenTrimAdd = function() {
     currentTrimEditId = null;
     document.getElementById('mqph-trim-modal-title').textContent = 'Add crown / valance style';
@@ -1967,6 +1985,7 @@
     document.getElementById('mqph-trim-supply-rate').value = '';
     document.getElementById('mqph-trim-install-rate').value = '';
     document.getElementById('mqph-trim-active').checked = true;
+    populateTrimDoorOptions('');
     document.getElementById('mqph-trim-modal-overlay').classList.add('show');
   };
 
@@ -1978,6 +1997,7 @@
     document.getElementById('mqph-trim-supply-rate').value = rec.fields['Rate']||'';
     document.getElementById('mqph-trim-install-rate').value = rec.fields['Install rate']||'';
     document.getElementById('mqph-trim-active').checked = rec.fields['Active']!==false;
+    populateTrimDoorOptions(rec.fields['Linked door style']||'');
     document.getElementById('mqph-trim-modal-overlay').classList.add('show');
   };
 
@@ -1986,11 +2006,13 @@
   window.mqphSaveTrimItem = async function() {
     const name = document.getElementById('mqph-trim-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
+    const linkedDoor = document.getElementById('mqph-trim-door-link').value;
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'trim',
       Rate:parseFloat(document.getElementById('mqph-trim-supply-rate').value||0),
       'Install rate':parseFloat(document.getElementById('mqph-trim-install-rate').value||0),
       Unit:'lin ft|lin ft', Description:'type:trim',
+      'Linked door style': linkedDoor,
       Active:document.getElementById('mqph-trim-active').checked,
     };
     try {

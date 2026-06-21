@@ -303,9 +303,10 @@
     TRIM = {};
     (li.trimItems || []).forEach((item, i) => {
       TRIM[`trim_${i}`] = {
-        label: item['Name'],
-        ps:    item['Rate']||0,          // supply rate, per linear foot
-        pi:    item['Install rate']||0,  // install rate, per linear foot
+        label:      item['Name'],
+        ps:         item['Rate']||0,          // supply rate, per linear foot
+        pi:         item['Install rate']||0,  // install rate, per linear foot
+        linkedDoor: item['Linked door style']||'',
       };
     });
   }
@@ -388,6 +389,7 @@
         </div>
         ${hasTrim?`<div class="mq-sec" style="margin-top:8px">
           <p class="mq-sec-title">Crown moulding / valance</p>
+          <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
           <div class="mq-grid2">
             <div class="mq-field"><label class="mq-label">Style</label>
               <select id="mq-${prefix}-trim" onchange="mqTogTrimReturns('${prefix}')">${trimOpts()}</select>
@@ -408,7 +410,7 @@
         <div id="mq-${prefix}-shared">
           <div class="mq-grid3">
             <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-mat">${mOpts}</select></div>
-            <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-door">${dOpts}</select></div>
+            <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)">${dOpts}</select></div>
             ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-hinge">${hingeOpts}</select></div>`:''}
           </div>
         </div>
@@ -416,7 +418,7 @@
           <div class="mq-sub-sec"><p class="mq-sub-title">Upper cabinets</p>
             <div class="mq-grid3">
               <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-u-mat">${mOpts}</select></div>
-              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-u-door">${dOpts}</select></div>
+              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-u-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)">${dOpts}</select></div>
               ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-u-hinge">${hingeOpts}</select></div>`:''}
             </div>
           </div>
@@ -731,6 +733,30 @@
       const show=trimKey&&trimKey!=='none';
       if(wrap) wrap.style.display=show?'block':'none';
       if(help) help.style.display=show?'block':'none';
+    };
+
+    window.mqApplyLinkedTrim=(prefix, doorKey)=>{
+      const trimSelect=document.getElementById(`mq-${prefix}-trim`);
+      if(!trimSelect) return; // shop has no trim styles configured
+      const noteId=`mq-${prefix}-trim-auto-note`;
+      let note=document.getElementById(noteId);
+      if(!doorKey || doorKey==='none'){
+        trimSelect.value='none';
+        if(note) note.style.display='none';
+        mqTogTrimReturns(prefix);
+        return;
+      }
+      const doorItem=(data.li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)];
+      const doorName=doorItem?doorItem['Name']:'';
+      const matchKey=Object.keys(TRIM).find(k=>TRIM[k].linkedDoor && TRIM[k].linkedDoor===doorName);
+      if(matchKey){
+        trimSelect.value=matchKey;
+        if(note){ note.textContent=`✓ ${TRIM[matchKey].label} added automatically with this door style`; note.style.display='block'; }
+      } else {
+        trimSelect.value='none';
+        if(note) note.style.display='none';
+      }
+      mqTogTrimReturns(prefix);
     };
 
     window.mqTogMeasure=(btn)=>{
