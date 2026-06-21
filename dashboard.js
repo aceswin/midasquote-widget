@@ -1122,12 +1122,18 @@ window.logoutMember = async function () {
     modal.id = 'mq-photo-picker';
     modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1rem';
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:14px;width:100%;max-width:760px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="background:#fff;border-radius:14px;width:100%;max-width:780px;display:flex;flex-direction:column;overflow:hidden">
         <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div style="font-size:15px;font-weight:600;color:#111">📷 Choose from library</div>
           <button onclick="mqClosePhotoPicker()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1">×</button>
         </div>
-        <div id="mq-picker-grid" style="padding:1rem;overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;align-content:start"></div>
+        <div style="position:relative;display:flex;align-items:center">
+          <button onclick="document.getElementById('mq-picker-grid').scrollBy({left:-400,behavior:'smooth'})"
+            style="flex-shrink:0;width:36px;height:36px;margin-left:8px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:16px;color:#374151;box-shadow:0 2px 6px rgba(0,0,0,0.1)">‹</button>
+          <div id="mq-picker-grid" style="padding:1rem;overflow-x:auto;overflow-y:hidden;flex:1;display:flex;gap:12px;scroll-behavior:smooth"></div>
+          <button onclick="document.getElementById('mq-picker-grid').scrollBy({left:400,behavior:'smooth'})"
+            style="flex-shrink:0;width:36px;height:36px;margin-right:8px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:16px;color:#374151;box-shadow:0 2px 6px rgba(0,0,0,0.1)">›</button>
+        </div>
         <div style="padding:0.75rem 1rem;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center;flex-shrink:0">
           Don't see what you're looking for? You can also paste a photo URL directly.
         </div>
@@ -1158,19 +1164,18 @@ window.logoutMember = async function () {
 
     grid.innerHTML = photos.map((p, i) => `
       <div data-photo-idx="${i}" title="${escapeHtmlLib(p.label)}"
-        style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:all 0.15s;display:flex;flex-direction:column"
-        onmouseover="this.style.borderColor='#1a1a1a';this.style.transform='scale(1.02)'"
-        onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='scale(1)'">
+        style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:all 0.15s;display:flex;flex-direction:column;width:170px;flex:0 0 170px">
         <img src="${p.url}" style="width:100%;height:100px;object-fit:cover;display:block;flex-shrink:0"
           onerror="this.parentElement.style.display='none'"/>
-        <div style="padding:6px 8px;font-size:11px;font-weight:500;color:#374151;text-align:center;line-height:1.35;word-break:break-word;min-height:30px;display:flex;align-items:center;justify-content:center">${escapeHtmlLib(p.label)}</div>
+        <div style="padding:6px 8px;font-size:11px;font-weight:500;color:#374151;text-align:center;line-height:1.35;word-break:break-word;min-height:30px;flex-shrink:0;display:flex;align-items:center;justify-content:center">${escapeHtmlLib(p.label)}</div>
       </div>`).join('');
 
-    // Use safe event binding instead of inline onclick strings — avoids breakage from
-    // special characters (quotes, apostrophes) that can appear in uploaded filenames
+    // Hover effect + safe click binding — avoids breakage from special characters in filenames
     grid.querySelectorAll('[data-photo-idx]').forEach(card => {
       const idx = parseInt(card.dataset.photoIdx, 10);
       card.onclick = () => mqSelectLibraryPhoto(photos[idx].url);
+      card.onmouseover = () => { card.style.borderColor = '#1a1a1a'; };
+      card.onmouseout = () => { card.style.borderColor = '#e5e7eb'; };
     });
   };
 
