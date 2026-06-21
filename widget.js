@@ -394,7 +394,6 @@
           <div class="mq-field"><label class="mq-label">Height</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36–40")</option></select></div>
         </div>
-        </div>
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
           <label style="font-size:13px;cursor:pointer">Different styles for uppers and lowers</label>
