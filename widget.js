@@ -71,6 +71,7 @@
       taxItems:        byCategory('tax'),
       otherItems:      byCategory('other'),
       countertopItems: byCategory('countertop'),
+      trimItems:       byCategory('trim'),
     };
 
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
@@ -296,6 +297,24 @@
     }
   }
 
+  let TRIM = {};
+  function buildTRIM(data) {
+    const { li } = data;
+    TRIM = {};
+    (li.trimItems || []).forEach((item, i) => {
+      TRIM[`trim_${i}`] = {
+        label: item['Name'],
+        ps:    item['Rate']||0,          // supply rate, per linear foot
+        pi:    item['Install rate']||0,  // install rate, per linear foot
+      };
+    });
+  }
+
+  function trimOpts() {
+    const opts = Object.entries(TRIM).map(([k,t])=>`<option value="${k}">${t.label}</option>`).join('');
+    return `<option value="none">None</option>` + opts;
+  }
+
   function ctMatOpts() {
     return Object.entries(CT_MAT).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('') ||
       `<option value="lam">Laminate</option>`;
@@ -332,6 +351,7 @@
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
     const hasDrawers = li.drawers.length > 0;
     const hasHinges  = li.hinges.length > 0;
+    const hasTrim    = (li.trimItems || []).length > 0;
     const hasInstall = !hasDynamic || li.installItems.length > 0;
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
@@ -366,6 +386,21 @@
           <div class="mq-field"><label class="mq-label">Height</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36–40")</option></select></div>
         </div>
+        ${hasTrim?`<div class="mq-sec" style="margin-top:8px">
+          <p class="mq-sec-title">Crown moulding / valance</p>
+          <div class="mq-grid2">
+            <div class="mq-field"><label class="mq-label">Style</label>
+              <select id="mq-${prefix}-trim" onchange="mqTogTrimReturns('${prefix}')">${trimOpts()}</select>
+            </div>
+            <div class="mq-field" id="mq-${prefix}-trim-returns-wrap" style="display:none">
+              <label class="mq-label">Returns to wall</label>
+              <input type="number" id="mq-${prefix}-trim-returns" value="0" min="0" max="20"/>
+            </div>
+          </div>
+          <div id="mq-${prefix}-trim-help" style="display:none;font-size:11px;color:#6b7280;margin-top:6px;line-height:1.5">
+            A "return" is where the crown or valance turns and meets the wall (for example, at the end of a run with no upper cabinet on either side). Each return adds 1 linear foot to your trim total — count how many you have.
+          </div>
+        </div>`:''}
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
           <label style="font-size:13px;cursor:pointer">Different styles for uppers and lowers</label>
@@ -689,6 +724,15 @@
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
     };
 
+    window.mqTogTrimReturns=(prefix)=>{
+      const trimKey=gv(`mq-${prefix}-trim`);
+      const wrap=document.getElementById(`mq-${prefix}-trim-returns-wrap`);
+      const help=document.getElementById(`mq-${prefix}-trim-help`);
+      const show=trimKey&&trimKey!=='none';
+      if(wrap) wrap.style.display=show?'block':'none';
+      if(help) help.style.display=show?'block':'none';
+    };
+
     window.mqTogMeasure=(btn)=>{
   const guide=document.getElementById('mq-measure-guide');
   const arrow=document.getElementById('mq-measure-arrow');
@@ -803,6 +847,16 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
+      const trimKey = gv(`mq-${prefix}-trim`);
+      let trimCost = 0;
+      if (trimKey && trimKey !== 'none' && TRIM[trimKey]) {
+        const trim = TRIM[trimKey];
+        const returns = gn(`mq-${prefix}-trim-returns`, 0);
+        const trimFt = uFt + returns;
+        trimCost = trimFt * (trim.ps + trim.pi);
+        if (trimFt > 0) lines.push({label:`${trim.label} (${trimFt} lin ft incl. ${returns} return${returns===1?'':'s'})`,cost:Math.round(trimCost)});
+      }
+
       let specTotal=0;
       specs.forEach((s,i)=>{
         if(!specQty[prefix][i]) return;
@@ -817,7 +871,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const sub=uCost+bCost+specTotal+remCost;
+      const sub=uCost+bCost+specTotal+remCost+trimCost;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
 
       const total=sub;
@@ -1048,6 +1102,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     window._mqShopData=shop;
     injectStyles(shop['Brand colour']||'#1a1a1a');
     buildCTMAT(data);
+    buildTRIM(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
   }

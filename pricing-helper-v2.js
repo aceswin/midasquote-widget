@@ -202,6 +202,7 @@
     material:'🪵 Box materials', door:'🚪 Door styles', drawer:'🗄️ Drawer configurations',
     hinge:'🔧 Door hinges', install:'🔧 Installation & removal',
     zone:'🚗 Travel zones', tax:'🧾 Tax', other:'📋 Other',
+    trim:'👑 Crown moulding / valance',
   };
 
   // Categories fully owned by the wizard — wiped on every full wizard run
@@ -414,7 +415,7 @@
           ✅ Separate upper and base rates<br/>
           ✅ Installation and removal rates
         </div>
-        <div class="mqph-warn">⚠️ <strong>Running the wizard replaces all existing pricing.</strong> Specialty items and countertop rates are not affected.</div>
+        <div class="mqph-warn">⚠️ <strong>Running the wizard replaces all existing pricing.</strong> Specialty items, countertop rates, and crown/valance rates are not affected.</div>
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:13px;color:#374151">Need to add or change your shop items first?</span>
           <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>
@@ -1350,6 +1351,7 @@
     visibleItems.forEach(r => {
       const c = r.fields['Category'] || 'other';
       if (c === 'countertop') return; // handled by buildCTHtml()
+      if (c === 'trim') return; // handled by buildTrimHtml()
       if (!groups[c]) groups[c] = [];
       groups[c].push(r);
     });
@@ -1401,6 +1403,7 @@
       `}
 
       ${buildCTHtml()}
+      ${buildTrimHtml()}
 
       <!-- Mini-wizard overlay -->
       <div class="mqph-overlay" id="mqph-mini-overlay">
@@ -1788,7 +1791,87 @@
       </div>`;
   }
 
+  function buildTrimHtml() {
+    const trimItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='trim')
+      .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+
+    function trimRow(r) {
+      return `
+        <div class="mqph-row">
+          <div style="flex:1;min-width:0"><div class="mqph-row-name">${r.fields['Name']||'—'}</div></div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
+            <span style="color:#6b7280;font-size:11px">Supply:</span>
+            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/lin ft</span>
+            <span style="color:#d1d5db;margin:0 4px">·</span>
+            <span style="color:#6b7280;font-size:11px">Install:</span>
+            <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/lin ft</span>
+          </div>
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenTrimEdit('${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+        </div>`;
+    }
+
+    return `
+      <div class="mqph-ct-block">
+        <div class="mqph-cat-header">
+          <span class="mqph-cat-title">👑 Crown moulding / valance</span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenTrimAdd()">+ Add style</button>
+        </div>
+        <div id="mqph-trim-msg" class="mqph-msg"></div>
+        ${trimItems.length > 0
+          ? trimItems.map(trimRow).join('')
+          : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">No crown moulding or valance styles yet — add one above. Cost is automatically calculated from the customer's upper cabinet linear footage, plus any wall returns they enter.</div>`}
+      </div>
+
+      <!-- Trim add/edit modal -->
+      <div class="mqph-overlay" id="mqph-trim-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-trim-modal-title">Add crown / valance style</h3></div>
+            <button class="mqph-modal-close" onclick="mqphCloseTrimModal()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#92400e;line-height:1.6">
+              Pricing isn't always equal across crown/valance styles — standard crown, crown to the ceiling, crown with a riser, different materials, etc. all cost differently. Add as many styles as you offer, each with its own rate. Since this is a ballpark estimate, use your average per-linear-foot pricing for each style.
+            </div>
+            <div class="mqph-field">
+              <label>Style name</label>
+              <input type="text" id="mqph-trim-name" placeholder="e.g. Standard crown — Maple"/>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:13px;color:#6b7280">$</span>
+                <input type="number" id="mqph-trim-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">/ lin ft</span>
+              </div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate (per linear foot)</div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:13px;color:#6b7280">$</span>
+                <input type="number" id="mqph-trim-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">/ lin ft</span>
+              </div>
+            </div>
+            <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
+              <label style="text-transform:none;font-size:13px;font-weight:500">Active</label>
+              <input type="checkbox" id="mqph-trim-active" checked style="width:auto"/>
+            </div>
+          </div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseTrimModal()">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" onclick="mqphSaveTrimItem()" style="margin-left:auto">Save</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
   let currentCTEditId = null;
+  let currentTrimEditId = null;
 
   window.mqphTogCTType = function() {
     const type = document.getElementById('mqph-ct-type')?.value;
@@ -1873,6 +1956,47 @@
       if (currentCTEditId) { await atUpdate(LINE_ITEMS_TABLE, currentCTEditId, fields); }
       else { fields['Sort order'] = lineItems.filter(r=>r.fields?.['Category']==='countertop').length + 1; await atCreate(LINE_ITEMS_TABLE, fields); }
       mqphCloseCTModal();
+      await loadAndRender();
+    } catch(e) { alert('Error saving. Please try again.'); }
+  };
+
+  window.mqphOpenTrimAdd = function() {
+    currentTrimEditId = null;
+    document.getElementById('mqph-trim-modal-title').textContent = 'Add crown / valance style';
+    document.getElementById('mqph-trim-name').value = '';
+    document.getElementById('mqph-trim-supply-rate').value = '';
+    document.getElementById('mqph-trim-install-rate').value = '';
+    document.getElementById('mqph-trim-active').checked = true;
+    document.getElementById('mqph-trim-modal-overlay').classList.add('show');
+  };
+
+  window.mqphOpenTrimEdit = function(id) {
+    const rec = lineItems.find(r=>r.id===id); if(!rec) return;
+    currentTrimEditId = id;
+    document.getElementById('mqph-trim-modal-title').textContent = 'Edit crown / valance style';
+    document.getElementById('mqph-trim-name').value = rec.fields['Name']||'';
+    document.getElementById('mqph-trim-supply-rate').value = rec.fields['Rate']||'';
+    document.getElementById('mqph-trim-install-rate').value = rec.fields['Install rate']||'';
+    document.getElementById('mqph-trim-active').checked = rec.fields['Active']!==false;
+    document.getElementById('mqph-trim-modal-overlay').classList.add('show');
+  };
+
+  window.mqphCloseTrimModal = function() { document.getElementById('mqph-trim-modal-overlay')?.classList.remove('show'); };
+
+  window.mqphSaveTrimItem = async function() {
+    const name = document.getElementById('mqph-trim-name').value.trim();
+    if (!name) { alert('Please enter a name.'); return; }
+    const fields = {
+      shop:[shopRecord._recordId], Name:name, Category:'trim',
+      Rate:parseFloat(document.getElementById('mqph-trim-supply-rate').value||0),
+      'Install rate':parseFloat(document.getElementById('mqph-trim-install-rate').value||0),
+      Unit:'lin ft|lin ft', Description:'type:trim',
+      Active:document.getElementById('mqph-trim-active').checked,
+    };
+    try {
+      if (currentTrimEditId) { await atUpdate(LINE_ITEMS_TABLE, currentTrimEditId, fields); }
+      else { fields['Sort order'] = lineItems.filter(r=>r.fields?.['Category']==='trim').length + 1; await atCreate(LINE_ITEMS_TABLE, fields); }
+      mqphCloseTrimModal();
       await loadAndRender();
     } catch(e) { alert('Error saving. Please try again.'); }
   };
