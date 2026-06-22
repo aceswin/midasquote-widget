@@ -99,17 +99,32 @@
       <div class="mq-page-title">Shop info</div>
       <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
       <div class="mq-card">
-        <div class="mq-grid2">
+        <div class="mq-grid2" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" value="Maple & Stone Cabinetry"/></div>
           <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" value="(615) 555-0182"/></div>
           <div class="mq-field"><label class="mq-label">City</label><input type="text" value="Nashville, TN"/></div>
           <div class="mq-field"><label class="mq-label">Website URL</label><input type="url" value="https://mapleandstone.com"/></div>
           <div class="mq-field"><label class="mq-label">Lead notify email</label><input type="email" value="hello@mapleandstone.com"/><span class="mq-hint">Where new lead notifications go</span></div>
-          <div class="mq-field"><label class="mq-label">Brand colour</label><input type="text" value="#3d3830"/><span class="mq-hint">Hex code for widget buttons</span></div>
-          <div class="mq-field"><label class="mq-label">Quote range — low (%)</label><input type="number" value="12"/><span class="mq-hint">Quote shows up to 12% below your estimate</span></div>
-          <div class="mq-field"><label class="mq-label">Quote range — high (%)</label><input type="number" value="18"/><span class="mq-hint">Quote shows up to 18% above your estimate</span></div>
+          <div class="mq-field"><label class="mq-label">Brand colour</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="text" value="#3d3830" style="flex:1"/>
+              <input type="color" value="#3d3830" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+            </div>
+            <span class="mq-hint">Click the swatch to pick visually, or type a hex code</span>
+          </div>
         </div>
-        <div class="mq-field"><label class="mq-label">Disclaimer text</label><textarea>Ballpark estimate only. Contact us for a full quote.</textarea></div>
+        <div class="mq-grid2" style="margin-bottom:1rem">
+          <div class="mq-field"><label class="mq-label">Quote range — low (% below estimate)</label><input type="number" value="10"/><span class="mq-hint">Quote shows up to 10% below your estimate</span></div>
+          <div class="mq-field"><label class="mq-label">Quote range — high (% above estimate)</label><input type="number" value="15"/><span class="mq-hint">Quote shows up to 15% above your estimate</span></div>
+        </div>
+        <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Logo URL</label><input type="url" placeholder="https://yoursite.com/logo.png"/><span class="mq-hint">Direct link to your logo image — appears in the widget header</span></div>
+        <div class="mq-field" style="margin-bottom:1.5rem"><label class="mq-label">Disclaimer text</label><textarea>Ballpark estimate only. Contact us for a full quote.</textarea><span class="mq-hint">Shown at the bottom of every quote</span></div>
+        <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">"Book a consultation" link <span style="font-weight:400;color:#9ca3af">(optional)</span></label><input type="url" placeholder="https://yoursite.com/contact"/><span class="mq-hint">Widget button opens this page in a new tab instead of the default contact form</span></div>
+        <div class="mq-field" style="margin-bottom:1.5rem"><label class="mq-label">Or, consultation email <span style="font-weight:400;color:#9ca3af">(optional)</span></label><input type="email" placeholder="sales@yourshop.com"/><span class="mq-hint">Used only if no link is set — shows a popup with your email and a copy button (no clunky email-app prompt)</span></div>
+        <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+          <div><div style="font-size:13px;font-weight:500">We offer financing</div><div style="font-size:12px;color:var(--text-mid);margin-top:2px">Shows a "Financing available" note on the widget's quote results</div></div>
+          <div class="mq-toggle"></div>
+        </div>
         <div class="mq-toggle-row" style="margin-bottom:1.5rem">
           <div><div style="font-size:13px;font-weight:500">Show "View our products" link on widget</div><div style="font-size:12px;color:var(--text-mid);margin-top:2px">Customers can browse your showroom before getting a quote</div></div>
           <div class="mq-toggle on"></div>
@@ -223,7 +238,27 @@
           </table></div>
         </div>
       </div>
+    </div>
+    <!-- TRIM -->
+    <div class="mq-card" id="card-trim" style="margin-top:1rem">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280;margin-bottom:1rem">🪵 TRIM — CROWN MOULDING &amp; VALANCE</div>
+      <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Crown moulding and valance are priced per linear foot and live here in Pricing, not in Specialty items. Add as many styles as you offer — standard crown, ceiling-height crown, valance, etc. — each with its own rate.</p>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <div style="padding:10px 16px;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:600">Crown &amp; Valance styles</span>
+          <button class="mq-btn mq-btn-sm">+ Add style</button>
+        </div>
+        <table class="mq-table">
+          <tbody>
+            <tr><td><strong>Crown moulding — standard</strong><div style="font-size:11px;color:#9ca3af">Upper cabinet linear footage + wall returns</div></td><td style="font-weight:500">$8.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            <tr><td><strong>Crown — ceiling height</strong><div style="font-size:11px;color:#9ca3af">Full-height crown to ceiling</div></td><td style="font-weight:500">$14.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            <tr><td><strong>Valance</strong><div style="font-size:11px;color:#9ca3af">Open valance between uppers</div></td><td style="font-weight:500">$6.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
     </div><!-- /page-pricing -->
+
     <!-- SPECIALTY -->
     <div class="mq-page" id="page-specialty">
       <div class="mq-section-header">
@@ -234,8 +269,6 @@
         <table class="mq-table">
           <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Active</th></tr></thead>
           <tbody>
-            <tr><td style="color:var(--text-light)">⠿</td><td>Crown moulding</td><td><input type="number" value="8" style="width:70px"/></td><td><input type="checkbox" checked/></td><td><input type="checkbox" checked/></td></tr>
-            <tr><td style="color:var(--text-light)">⠿</td><td>Valance</td><td><input type="number" value="6" style="width:70px"/></td><td><input type="checkbox" checked/></td><td><input type="checkbox" checked/></td></tr>
             <tr><td style="color:var(--text-light)">⠿</td><td>Glass door inserts</td><td><input type="number" value="120" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
             <tr><td style="color:var(--text-light)">⠿</td><td>Lazy Susan</td><td><input type="number" value="95" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
             <tr><td style="color:var(--text-light)">⠿</td><td>Pull-out trash</td><td><input type="number" value="110" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
@@ -249,15 +282,35 @@
     <!-- EMBED CODE -->
     <div class="mq-page" id="page-embed">
       <div class="mq-page-title">Embed code</div>
-      <div class="mq-page-sub">Paste this into your website where you want the widget to appear</div>
+      <div class="mq-page-sub">Paste this code into your website where you want the widget to appear</div>
+      <div class="mq-card">
+        <div class="mq-card-title">🎯 Quote page header <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">A clean intro section to place above your widget. Here's what it looks like:</p>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1rem;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#b8763a;margin-bottom:6px">Instant Pricing</div>
+          <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Get your cabinet estimate in under 2 minutes</div>
+          <div style="font-size:13px;color:#6b7280">No phone calls, no waiting — answer a few questions and get your ballpark price right now.</div>
+        </div>
+        <button class="mq-btn mq-btn-sm">Copy header code</button>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">✨ Trust bar <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Paste this directly above your embed code to show a row of trust signals to customers.</p>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1rem;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;font-size:12px;color:#6b7280">
+          <span>⚡ Instant estimate</span>
+          <span>🔒 No commitment</span>
+          <span>📞 We follow up within 24h</span>
+        </div>
+        <button class="mq-btn mq-btn-sm">Copy trust bar code</button>
+      </div>
       <div class="mq-card">
         <div class="mq-card-title">📋 Your embed code</div>
-        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Works on Wix, Squarespace, WordPress, Webflow, GoDaddy and any custom site.</p>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Copy the code below and paste it into your website where you want the widget to appear. Works on Wix, Squarespace, WordPress, Webflow, GoDaddy and any custom site.</p>
         <div class="mq-embed-box">&lt;div id="midasquote-widget"&gt;&lt;/div&gt;<br/>&lt;script src="https://widget.midasquote.com/widget.js?shop=maple-stone-demo"&gt;&lt;/script&gt;<button class="mq-copy-btn">Copy</button></div>
       </div>
       <div class="mq-card">
-        <div class="mq-card-title">📱 Shop mode — for walk-in customers</div>
-        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Pull this up on a tablet at your shop. No lead capture — just the quote tool.</p>
+        <div class="mq-card-title">📱 Shop mode</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Use this link to pull up the widget on your phone or tablet for walk-in customers. No lead capture — just the quote tool.</p>
         <div class="mq-embed-box">https://widget.midasquote.com/?shop=maple-stone-demo&mode=shop<button class="mq-copy-btn">Copy</button></div>
       </div>
       <div class="mq-card">
@@ -267,6 +320,7 @@
           <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
           <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
           <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
+          <div><strong>Need help?</strong> Email <a href="mailto:hello@midasquote.com" style="color:#1a1a1a">hello@midasquote.com</a></div>
         </div>
       </div>
     </div>
@@ -275,6 +329,12 @@
     <div class="mq-page" id="page-products">
       <div class="mq-page-title">My Products</div>
       <div class="mq-page-sub">Add photos to your materials and options — these appear on your customer showroom page</div>
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
+        <strong>💡 How to add a photo:</strong><br>
+        <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
+        <strong>Option 2 —</strong> Click <em>"📷 Choose from library"</em> to pick from our curated cabinet & countertop photo collection.<br>
+        <strong>Option 3 —</strong> Already have a photo hosted somewhere? Paste its direct image link — just avoid social media links since those expire.
+      </div>
       <div class="mq-card">
         <div class="mq-card-title">🪵 Box Materials</div>
         <div class="product-grid">
@@ -287,7 +347,7 @@
       </div>
       <div class="mq-card">
         <div class="mq-card-title">🔗 Your showroom link</div>
-        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Share this with customers so they can browse your materials before getting a quote.</p>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Share this with customers so they can browse your products before getting a quote.</p>
         <div class="mq-embed-box">https://widget.midasquote.com/showroom.html?shop=maple-stone-demo<button class="mq-copy-btn">Copy</button></div>
         <button class="mq-btn" style="margin-top:10px">Open showroom ↗</button>
       </div>
@@ -521,7 +581,7 @@ const STEPS = [
   {
     page: 'overview',
     target: 'stat-leads',
-    label: 'Step 1 of 13 — Dashboard',
+    label: 'Step 1 of 14 — Dashboard',
     title: 'Your live stats, always up to date',
     body: 'The moment a customer submits a quote request on your website, it shows up here. Total leads, new this week, how many you\'ve booked, and your estimated pipeline value — all calculated automatically.',
     placement: 'bottom'
@@ -529,7 +589,7 @@ const STEPS = [
   {
     page: 'overview',
     target: 'card-recent-leads',
-    label: 'Step 2 of 13 — Recent Leads',
+    label: 'Step 2 of 14 — Recent Leads',
     title: 'Your 5 most recent quote requests',
     body: 'Every lead shows the customer\'s name, what they\'re quoting, the price range the widget showed them, and their current status. You can see the full list and manage all leads from the Leads tab.',
     placement: 'top'
@@ -537,7 +597,7 @@ const STEPS = [
   {
     page: 'leads',
     target: 'page-leads',
-    label: 'Step 3 of 13 — Leads',
+    label: 'Step 3 of 14 — Leads',
     title: 'Every lead, fully manageable',
     body: 'Filter by status, update a lead\'s stage with one click (New → Contacted → Booked), and keep your pipeline organized. Every lead includes name, email, phone, quote type, and the exact estimate range they received.',
     placement: 'top'
@@ -545,7 +605,7 @@ const STEPS = [
   {
     page: 'shop',
     target: 'page-shop',
-    label: 'Step 4 of 13 — Shop Info',
+    label: 'Step 4 of 14 — Shop Info',
     title: 'Your shop info, your widget\'s identity',
     body: 'Everything here feeds directly into your widget — shop name, phone, city, logo, and disclaimer text. Pick your brand colour with the visual colour picker (or paste a hex code directly) so your widget buttons match your brand. You can also set a "Book a consultation" link or email — if you use an email, customers get a clean pop-up with your address and a copy button instead of a clunky email-app prompt.',
     placement: 'top'
@@ -553,7 +613,7 @@ const STEPS = [
   {
     page: 'pricing',
     target: 'wizard-callout',
-    label: 'Step 5 of 13 — Pricing Wizard',
+    label: 'Step 5 of 14 — Pricing Wizard',
     title: 'The wizard that reverse-engineers your pricing',
     body: 'Not sure what your per-linear-foot rates are? The wizard walks you through quoting a small run of cabinets in a few different scenarios and reverse-engineers your rates automatically. There\'s also a Mini Wizard on any individual item you\'re unsure about — same idea, one line at a time.',
     placement: 'bottom'
@@ -561,39 +621,47 @@ const STEPS = [
   {
     page: 'pricing',
     target: 'pricing-rates',
-    label: 'Step 6 of 13 — Countertop Pricing',
+    label: 'Step 6 of 14 — Countertop Pricing',
     title: 'Each countertop material is fully bundled',
     body: 'Countertop materials now carry their own backsplash height options and cutout pricing — no separate items to keep in sync. Add a material like Granite or Quartz, then set its backsplash heights (4" standard, 18" tall, whatever you offer), supply and install rate per option, and your own sink and cooktop cutout rates. The customer picks one backsplash height in the widget and it prices correctly every time.',
     placement: 'top'
   },
   {
+    page: 'pricing',
+    target: 'card-trim',
+    label: 'Step 7 of 14 — Crown Moulding & Valance',
+    title: 'Trim pricing lives here, not in Specialty Items',
+    body: 'Crown moulding and valance are priced per linear foot and have their own dedicated section in Pricing. Add as many styles as you offer — standard crown, ceiling-height crown, valance — each with its own rate. The widget calculates trim from upper cabinet footage plus any wall returns the customer enters.',
+    placement: 'top'
+  },
+  {
     page: 'specialty',
     target: 'page-specialty',
-    label: 'Step 7 of 13 — Specialty Items',
+    label: 'Step 8 of 14 — Specialty Items',
     title: 'Add-ons that show as options in your widget',
-    body: 'Crown moulding, lazy Susans, pull-out trash, under-cabinet lighting — whatever you offer. Each item appears as an optional checkbox in your widget. Set a flat price or a per-linear-foot rate and drag to reorder them.',
+    body: 'Glass door inserts, lazy Susans, pull-out trash, under-cabinet lighting, deep pot drawers — whatever add-ons you offer. Each item appears as an optional checkbox in your widget. Set a flat price or a per-linear-foot rate and drag to reorder them.',
     placement: 'top'
   },
   {
     page: 'embed',
     target: 'page-embed',
-    label: 'Step 8 of 13 — Embed Code',
-    title: 'Two lines of code, anywhere on your site',
-    body: 'Copy your unique embed code and paste it into any website — Wix, Squarespace, WordPress, Webflow, or custom HTML. You also get a shop mode link for walk-in customers on a tablet — no lead capture, just the quote tool.',
+    label: 'Step 9 of 14 — Embed Code',
+    title: 'Everything you need to go live on your site',
+    body: 'Your Embed Code tab has five things: a ready-made Quote page header and Trust bar you can paste above the widget (optional but they boost conversions), your actual two-line embed code, a Shop Mode link for tablets at your location, and step-by-step installation instructions for every major platform.',
     placement: 'top'
   },
   {
     page: 'products',
     target: 'page-products',
-    label: 'Step 9 of 13 — My Products',
-    title: 'Build your customer showroom',
-    body: 'Add a photo for each material and door style you offer. These populate your showroom page, which customers can browse right from the widget\'s "See our products" button before they even start a quote.',
+    label: 'Step 10 of 14 — My Products',
+    title: 'Build your customer showroom with real photos',
+    body: 'Add a photo for each material and door style you offer — three ways: upload straight from your device, pick from our curated cabinet & countertop library, or paste a direct image link. These populate your showroom page, which customers can browse right from the widget\'s "See our products" button before they even start a quote.',
     placement: 'top'
   },
   {
     page: 'marketing',
     target: 'card-mk-social',
-    label: 'Step 10 of 13 — Social Posts & Graphic',
+    label: 'Step 11 of 14 — Social Posts & Graphic',
     title: 'Ready-made social content, personalized to your shop',
     body: 'Pre-written Facebook and Instagram posts are ready to copy — just paste your quote page link once and it updates all the posts. Below that, a square 1080×1080 social graphic has your shop name and brand colour already on it. Add a photo of your own work as the background, adjust the darkness, and download — no design app needed.',
     placement: 'top'
@@ -601,7 +669,7 @@ const STEPS = [
   {
     page: 'marketing',
     target: 'card-mk-headlines',
-    label: 'Step 11 of 13 — Headline & DM Templates',
+    label: 'Step 12 of 14 — Headline & DM Templates',
     title: 'Copy for your website and your inbox',
     body: 'Headline options give you ready-made text to paste above your embedded widget — so customers know what they\'re looking at before they start. The direct message template is something you can copy and send to past customers or leads who might have a future project coming up.',
     placement: 'top'
@@ -609,7 +677,7 @@ const STEPS = [
   {
     page: 'marketing',
     target: 'card-mk-qr',
-    label: 'Step 12 of 13 — QR Poster & Yard Sign',
+    label: 'Step 13 of 14 — QR Poster & Yard Sign',
     title: 'Print-ready graphics for the real world',
     body: 'The QR poster is sized for printing — perfect for a front desk, sandwich board, or restroom wall. Walk-in customers just scan and go straight to your quote page. The yard sign puts your shop name and a QR code on a job site sign in portrait or landscape — great for a lawn, fence, or truck tailgate. Both auto-generate from your brand colour and let you swap in a background photo.',
     placement: 'top'
@@ -617,7 +685,7 @@ const STEPS = [
   {
     page: 'billing',
     target: 'page-billing',
-    label: 'Step 13 of 13 — Billing',
+    label: 'Step 14 of 14 — Billing',
     title: 'Simple, transparent billing',
     body: 'Manage your plan, update your payment method, and download invoices — all from one place. Upgrade to annual and save $120/year. Cancel any time and your widget stays active until the end of your billing period.',
     placement: 'top'
