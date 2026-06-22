@@ -553,25 +553,25 @@
 
 <script>
 // ── WIZARD TOGGLE ──
-function showWizard() {
+window.showWizard = function() {
   document.getElementById('wizard-demo').style.display = 'block';
   document.getElementById('wizard-callout').style.display = 'none';
   document.getElementById('wizard-demo').scrollIntoView({behavior:'smooth',block:'start'});
-}
-function hideWizard() {
+};
+window.hideWizard = function() {
   document.getElementById('wizard-demo').style.display = 'none';
   document.getElementById('wizard-callout').style.display = 'block';
-}
+};
 
 // ── PAGE NAV ──
-function goPage(name, navEl) {
+window.goPage = function(name, navEl) {
   document.querySelectorAll('.mq-nav-item').forEach(i => i.classList.remove('active'));
   document.querySelectorAll('.mq-page').forEach(p => p.classList.remove('active'));
   if (navEl) navEl.classList.add('active');
   else { const n = document.getElementById('nav-' + name); if (n) n.classList.add('active'); }
   const p = document.getElementById('page-' + name);
   if (p) p.classList.add('active');
-}
+};
 
 // ── TOUR STEPS ──
 const STEPS = [
@@ -689,54 +689,49 @@ const STEPS = [
   }
 ];
 
-let currentStep = 0;
-let tourActive = false;
+window.currentStep = 0;
+window.tourActive = false;
 
-function startTour() {
+window.startTour = function() {
   document.getElementById('tour-start').style.display = 'none';
-  tourActive = true;
+  window.tourActive = true;
   document.getElementById('tour-overlay').style.display = 'block';
-  buildDots();
-  showStep(0);
-}
+  window.buildDots();
+  window.showStep(0);
+};
 
-function skipTour() {
+window.skipTour = function() {
   document.getElementById('tour-start').style.display = 'none';
-}
+};
 
-function buildDots() {
+window.buildDots = function() {
   const dots = document.getElementById('tour-dots');
   dots.innerHTML = STEPS.map((_, i) => `<div class="tour-dot" id="dot-${i}"></div>`).join('');
-}
+};
 
-function showStep(idx) {
+window.showStep = function(idx) {
   const step = STEPS[idx];
-  currentStep = idx;
+  window.currentStep = idx;
 
-  // Switch page
-  goPage(step.page);
+  window.goPage(step.page);
 
-  // Update tooltip content
   document.getElementById('tour-step-label').textContent = step.label;
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-body').textContent = step.body;
 
-  // Dots
   document.querySelectorAll('.tour-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
 
-  // Buttons
   document.getElementById('tour-prev').style.display = idx === 0 ? 'none' : '';
   document.getElementById('tour-next').textContent = idx === STEPS.length - 1 ? 'Finish 🎉' : 'Next →';
 
-  // Scroll target into view first
   const target = document.getElementById(step.target);
   if (target) {
     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => positionTour(target, step.placement), 350);
+    setTimeout(() => window.positionTour(target, step.placement), 350);
   }
-}
+};
 
-function positionTour(target, placement) {
+window.positionTour = function(target, placement) {
   const rect = target.getBoundingClientRect();
   const hl   = document.getElementById('tour-highlight');
   const tt   = document.getElementById('tour-tooltip');
@@ -745,22 +740,17 @@ function positionTour(target, placement) {
   const vpH  = window.innerHeight;
   const isMobile = vpW < 768;
 
-  // Highlight — fixed, so just use viewport rect directly
   hl.style.top    = (rect.top - pad) + 'px';
   hl.style.left   = (rect.left - pad) + 'px';
   hl.style.width  = (rect.width + pad * 2) + 'px';
   hl.style.height = (rect.height + pad * 2) + 'px';
 
-  // Tooltip width — full width on mobile with margins
   const margin = 16;
   const ttW = isMobile ? vpW - margin * 2 : Math.min(320, vpW - margin * 2);
 
-  // Ideal center
   let left = rect.left + rect.width / 2 - ttW / 2;
-  // Clamp horizontal to always stay inside viewport
   left = Math.max(margin, Math.min(left, vpW - ttW - margin));
 
-  // Measure tooltip height after setting width
   tt.style.width = ttW + 'px';
   tt.style.visibility = 'hidden';
   tt.style.top = '0px';
@@ -768,13 +758,11 @@ function positionTour(target, placement) {
   const ttH = tt.offsetHeight || 240;
   tt.style.visibility = '';
 
-  // Try preferred placement first
   let top;
   const spaceAbove = rect.top - pad - 12 - ttH;
   const spaceBelow = vpH - rect.bottom - pad - 12;
 
   if (isMobile) {
-    // On mobile always pin to bottom of screen with safe area
     top = vpH - ttH - 80;
     top = Math.max(80, top);
   } else if (placement === 'bottom' && spaceBelow >= ttH) {
@@ -784,45 +772,39 @@ function positionTour(target, placement) {
   } else if (spaceBelow >= ttH) {
     top = rect.bottom + pad + 12;
   } else {
-    // Not enough space either side — float in center of screen
     top = Math.max(80, vpH / 2 - ttH / 2);
   }
 
-  // Final clamp — never go off top or bottom
   top = Math.max(70, Math.min(top, vpH - ttH - 16));
-
   tt.style.top  = top + 'px';
   tt.style.left = left + 'px';
-}
+};
 
-function tourStep(dir) {
-  const next = currentStep + dir;
-  if (next >= STEPS.length) {
-    endTour();
-    return;
-  }
+window.tourStep = function(dir) {
+  const next = window.currentStep + dir;
+  if (next >= STEPS.length) { window.endTour(); return; }
   if (next < 0) return;
-  showStep(next);
-}
+  window.showStep(next);
+};
 
-function endTour() {
+window.endTour = function() {
   document.getElementById('tour-overlay').style.display = 'none';
-  tourActive = false;
+  window.tourActive = false;
   document.getElementById('tour-end').style.display = 'flex';
-}
+};
 
 // Reposition on scroll/resize
 window.addEventListener('scroll', () => {
-  if (!tourActive) return;
-  const step = STEPS[currentStep];
+  if (!window.tourActive) return;
+  const step = STEPS[window.currentStep];
   const target = document.getElementById(step.target);
-  if (target) positionTour(target, step.placement);
+  if (target) window.positionTour(target, step.placement);
 }, { passive: true });
 
 window.addEventListener('resize', () => {
-  if (!tourActive) return;
-  const step = STEPS[currentStep];
+  if (!window.tourActive) return;
+  const step = STEPS[window.currentStep];
   const target = document.getElementById(step.target);
-  if (target) positionTour(target, step.placement);
+  if (target) window.positionTour(target, step.placement);
 });
 </script>
