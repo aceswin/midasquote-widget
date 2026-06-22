@@ -1,0 +1,828 @@
+<!-- DEMO BANNER -->
+<div class="demo-banner">
+  📋 Interactive dashboard tour — see exactly what your shop gets. &nbsp;<a href="https://www.midasquote.com" target="_blank">Get started at MidasQuote →</a>
+</div>
+
+<!-- TOPBAR -->
+<div class="mq-topbar">
+  <div>
+    <div class="mq-topbar-brand">⚡ MidasQuote</div>
+    <div class="mq-topbar-shop">Maple & Stone Cabinetry</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="mq-btn mq-btn-sm" onclick="window.open('https://midasquote.com/quote','_blank')">Preview widget ↗</button>
+    <button class="mq-btn mq-btn-sm">Log out</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="mq-layout">
+
+  <!-- SIDEBAR -->
+  <div class="mq-sidebar" id="sidebar">
+    <div class="mq-nav-section">Overview</div>
+    <div class="mq-nav-item active" id="nav-overview" onclick="goPage('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
+    <div class="mq-nav-item" id="nav-leads" onclick="goPage('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
+    <div class="mq-nav-section">Setup</div>
+    <div class="mq-nav-item" id="nav-shop" onclick="goPage('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
+    <div class="mq-nav-item" id="nav-pricing" onclick="goPage('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
+    <div class="mq-nav-item" id="nav-specialty" onclick="goPage('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
+    <div class="mq-nav-item" id="nav-embed" onclick="goPage('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
+    <div class="mq-nav-item" id="nav-products" onclick="goPage('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
+    <div class="mq-nav-item" id="nav-marketing" onclick="goPage('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
+    <div class="mq-nav-item" id="nav-billing" onclick="goPage('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="mq-content" id="main-content">
+
+    <!-- OVERVIEW -->
+    <div class="mq-page active" id="page-overview">
+      <div class="mq-page-title">Welcome back 👋</div>
+      <div class="mq-page-sub">Here's what's happening with your widget</div>
+      <div class="mq-stat-grid">
+        <div class="mq-stat" id="stat-leads"><div class="mq-stat-val">24</div><div class="mq-stat-lbl">Total leads</div></div>
+        <div class="mq-stat mq-stat-green" id="stat-new"><div class="mq-stat-val">7</div><div class="mq-stat-lbl">New this week</div></div>
+        <div class="mq-stat" id="stat-booked"><div class="mq-stat-val">4</div><div class="mq-stat-lbl">Booked</div></div>
+        <div class="mq-stat" id="stat-value"><div class="mq-stat-val">$186,400</div><div class="mq-stat-lbl">Est. pipeline value</div></div>
+      </div>
+      <div class="mq-card" id="card-recent-leads">
+        <div class="mq-card-title">📋 Recent leads</div>
+        <table class="mq-table">
+          <thead><tr><th>Name</th><th>Type</th><th>Estimate</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Sarah Mitchell</strong></td><td>Cabinets + Countertops</td><td>$18,200 – $21,800</td><td><span class="mq-badge mq-badge-blue">New</span></td></tr>
+            <tr><td><strong>James & Carol Tran</strong></td><td>Cabinets only</td><td>$12,400 – $14,700</td><td><span class="mq-badge mq-badge-yellow">Contacted</span></td></tr>
+            <tr><td><strong>Derek Hoover</strong></td><td>Countertops only</td><td>$4,100 – $4,900</td><td><span class="mq-badge mq-badge-green">Booked</span></td></tr>
+            <tr><td><strong>Amanda Perkins</strong></td><td>Cabinets + Countertops</td><td>$22,600 – $27,100</td><td><span class="mq-badge mq-badge-blue">New</span></td></tr>
+            <tr><td><strong>Mike Oduya</strong></td><td>Cabinets only</td><td>$8,800 – $10,500</td><td><span class="mq-badge mq-badge-red">Lost</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mq-card" id="card-embed-overview">
+        <div class="mq-card-title">🔗 Your widget embed code</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:8px">Copy and paste this into your website where you want the widget to appear.</p>
+        <div class="mq-embed-box">&lt;div id="midasquote-widget"&gt;&lt;/div&gt;<br/>&lt;script src="https://widget.midasquote.com/widget.js?shop=maple-stone-demo"&gt;&lt;/script&gt;<button class="mq-copy-btn">Copy</button></div>
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="mq-page" id="page-leads">
+      <div class="mq-section-header">
+        <div>
+          <div class="mq-page-title">Leads</div>
+          <div class="mq-page-sub">All quote requests from your widget</div>
+        </div>
+        <select style="font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;width:auto">
+          <option>All leads</option><option>New</option><option>Contacted</option><option>Booked</option><option>Lost</option>
+        </select>
+      </div>
+      <div class="mq-card" style="padding:0;overflow:hidden">
+        <div class="mq-table-wrap"><table class="mq-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Estimate</th><th>Status</th><th>Update</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Sarah Mitchell</strong></td><td>sarah.m@gmail.com</td><td>(615) 402-8811</td><td>Both</td><td>$18,200 – $21,800</td><td><span class="mq-badge mq-badge-blue">New</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option>New</option><option>Contacted</option><option>Booked</option><option>Lost</option></select></td></tr>
+            <tr><td><strong>James & Carol Tran</strong></td><td>jtran@outlook.com</td><td>(615) 884-2200</td><td>Cabinets</td><td>$12,400 – $14,700</td><td><span class="mq-badge mq-badge-yellow">Contacted</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option>New</option><option selected>Contacted</option><option>Booked</option><option>Lost</option></select></td></tr>
+            <tr><td><strong>Derek Hoover</strong></td><td>dhoover@me.com</td><td>(615) 231-9944</td><td>Countertops</td><td>$4,100 – $4,900</td><td><span class="mq-badge mq-badge-green">Booked</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option>New</option><option>Contacted</option><option selected>Booked</option><option>Lost</option></select></td></tr>
+            <tr><td><strong>Amanda Perkins</strong></td><td>amanda.p@yahoo.com</td><td>(629) 554-7712</td><td>Both</td><td>$22,600 – $27,100</td><td><span class="mq-badge mq-badge-blue">New</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option selected>New</option><option>Contacted</option><option>Booked</option><option>Lost</option></select></td></tr>
+            <tr><td><strong>Mike Oduya</strong></td><td>m.oduya@gmail.com</td><td>(615) 770-3388</td><td>Cabinets</td><td>$8,800 – $10,500</td><td><span class="mq-badge mq-badge-red">Lost</span></td><td><select style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;width:auto"><option>New</option><option>Contacted</option><option>Booked</option><option selected>Lost</option></select></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- SHOP INFO -->
+    <div class="mq-page" id="page-shop">
+      <div class="mq-page-title">Shop info</div>
+      <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
+      <div class="mq-card">
+        <div class="mq-grid2" style="margin-bottom:1rem">
+          <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" value="Maple & Stone Cabinetry"/></div>
+          <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" value="(615) 555-0182"/></div>
+          <div class="mq-field"><label class="mq-label">City</label><input type="text" value="Nashville, TN"/></div>
+          <div class="mq-field"><label class="mq-label">Website URL</label><input type="url" value="https://mapleandstone.com"/></div>
+          <div class="mq-field"><label class="mq-label">Lead notify email</label><input type="email" value="hello@mapleandstone.com"/><span class="mq-hint">Where new lead notifications go</span></div>
+          <div class="mq-field"><label class="mq-label">Brand colour</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="text" value="#3d3830" style="flex:1"/>
+              <input type="color" value="#3d3830" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+            </div>
+            <span class="mq-hint">Click the swatch to pick visually, or type a hex code</span>
+          </div>
+        </div>
+        <div class="mq-grid2" style="margin-bottom:1rem">
+          <div class="mq-field"><label class="mq-label">Quote range — low (% below estimate)</label><input type="number" value="10"/><span class="mq-hint">Quote shows up to 10% below your estimate</span></div>
+          <div class="mq-field"><label class="mq-label">Quote range — high (% above estimate)</label><input type="number" value="15"/><span class="mq-hint">Quote shows up to 15% above your estimate</span></div>
+        </div>
+        <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Logo URL</label><input type="url" placeholder="https://yoursite.com/logo.png"/><span class="mq-hint">Direct link to your logo image — appears in the widget header</span></div>
+        <div class="mq-field" style="margin-bottom:1.5rem"><label class="mq-label">Disclaimer text</label><textarea>Ballpark estimate only. Contact us for a full quote.</textarea><span class="mq-hint">Shown at the bottom of every quote</span></div>
+        <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">"Book a consultation" link <span style="font-weight:400;color:#9ca3af">(optional)</span></label><input type="url" placeholder="https://yoursite.com/contact"/><span class="mq-hint">Widget button opens this page in a new tab instead of the default contact form</span></div>
+        <div class="mq-field" style="margin-bottom:1.5rem"><label class="mq-label">Or, consultation email <span style="font-weight:400;color:#9ca3af">(optional)</span></label><input type="email" placeholder="sales@yourshop.com"/><span class="mq-hint">Used only if no link is set — shows a popup with your email and a copy button (no clunky email-app prompt)</span></div>
+        <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+          <div><div style="font-size:13px;font-weight:500">We offer financing</div><div style="font-size:12px;color:var(--text-mid);margin-top:2px">Shows a "Financing available" note on the widget's quote results</div></div>
+          <div class="mq-toggle"></div>
+        </div>
+        <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+          <div><div style="font-size:13px;font-weight:500">Show "View our products" link on widget</div><div style="font-size:12px;color:var(--text-mid);margin-top:2px">Customers can browse your showroom before getting a quote</div></div>
+          <div class="mq-toggle on"></div>
+        </div>
+        <button class="mq-btn mq-btn-primary">Save shop info</button>
+      </div>
+    </div>
+
+    <!-- PRICING -->
+    <div class="mq-page" id="page-pricing">
+
+      <!-- Header with buttons matching real dashboard -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px;margin-bottom:6px">&#9881;&#65039; Pricing</div>
+          <div style="font-size:13px;color:var(--text-mid)">Your rates — changes apply to your widget immediately.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="mq-btn mq-btn-sm">&#129308; Edit shop items</button>
+          <button class="mq-btn mq-btn-sm" onclick="showWizard()">&#129497; Re-run pricing wizard</button>
+          <button class="mq-btn mq-btn-sm mq-btn-danger">&#128465;&#65039; Start fresh</button>
+        </div>
+      </div>
+
+      <!-- WIZARD CALLOUT -->
+      <div id="wizard-callout" class="mq-card" style="border:2px solid #f59e0b;background:#fffbeb;margin-bottom:1.5rem">
+        <div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+          <div style="font-size:36px;line-height:1">&#129497;</div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:6px">The Pricing Wizard — your secret weapon</div>
+            <div style="font-size:13px;color:#6b7280;line-height:1.7;margin-bottom:1rem">
+              Not sure what your per-linear-foot rates are? No problem. The wizard asks you to price a <strong style="color:#111">standard 4’ run of cabinets</strong> in a few common variations — just enter what you’d actually charge a customer for each one. It reverse-engineers your rates automatically from your real-world pricing. There’s also a <strong style="color:#111">Mini Wizard</strong> on any individual line item you’re unsure about — same idea, one item at a time.
+            </div>
+            <button class="mq-btn mq-btn-primary" onclick="showWizard()">Run the pricing wizard →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WIZARD FORM (hidden by default, shown on click) -->
+      <div id="wizard-demo" style="display:none">
+        <div class="mq-card" style="border:2px solid #1a1a1a;margin-bottom:1.5rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
+            <div style="font-size:15px;font-weight:700;color:#111">&#129497; Pricing Wizard — Step 1 of 3</div>
+            <button class="mq-btn mq-btn-sm" onclick="hideWizard()">✕ Close</button>
+          </div>
+          <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:1.5rem;overflow:hidden">
+            <div style="width:33%;height:100%;background:#1a1a1a;border-radius:2px"></div>
+          </div>
+          <div style="font-size:14px;font-weight:600;color:#111;margin-bottom:6px">Quote a standard 4-foot run of cabinets</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">
+            We’ll ask you to price the same 4’ run a few different ways — different materials, with and without doors, supply only vs. installed. Just enter what you’d actually charge a customer for each scenario. The wizard calculates your per-linear-foot rates automatically.
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:13px;color:#166534;line-height:1.6">
+            <strong>Scenario 1 of 4:</strong> 4 ft uppers + 4 ft bases — Melamine box, no doors, supply only (no install). What would you charge?
+          </div>
+          <div class="mq-grid2" style="margin-bottom:1rem">
+            <div class="mq-field"><label class="mq-label">Your price for this job ($)</label><input type="number" placeholder="e.g. 1800"/></div>
+            <div class="mq-field"><label class="mq-label">Does this include tax?</label><select><option>No — tax not included</option><option>Yes — tax included</option></select></div>
+          </div>
+          <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem;margin-bottom:1.25rem;font-size:13px;color:#92400e;line-height:1.6">
+            &#128161; <strong>Mini Wizard:</strong> Already have most rates set but unsure about one item? Click <em>"Edit shop items"</em> and use the mini wizard on just that line — enter your price for a single 4’ run scenario and it calculates that rate on its own.
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="mq-btn" onclick="hideWizard()">Cancel</button>
+            <button class="mq-btn mq-btn-primary">Next scenario →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXISTING RATES (shown below wizard callout) -->
+      <div id="pricing-rates">
+        <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f3f4f6">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280">&#128295; INSTALLATION &amp; REMOVAL</div>
+            <button class="mq-btn mq-btn-sm">+ Add</button>
+          </div>
+          <div class="mq-table-wrap"><table class="mq-table">
+            <tbody>
+              <tr><td><strong>Install — uppers (no doors)</strong><div style="font-size:11px;color:#9ca3af">Upper box install, no doors</div></td><td style="font-weight:500">$60.75</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Install — uppers (with doors)</strong><div style="font-size:11px;color:#9ca3af">Upper install with doors hung</div></td><td style="font-weight:500">$79.35</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Install — bases (no doors)</strong><div style="font-size:11px;color:#9ca3af">Base box install, no doors</div></td><td style="font-weight:500">$108.75</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Removal — existing cabinets</strong><div style="font-size:11px;color:#9ca3af">Demo and haul away old cabinets</div></td><td style="font-weight:500">$20.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f3f4f6">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280">&#129717; BOX MATERIALS</div>
+            <button class="mq-btn mq-btn-sm">+ Add</button>
+          </div>
+          <div class="mq-table-wrap"><table class="mq-table">
+            <tbody>
+              <tr><td><strong>Melamine — uppers</strong></td><td style="font-weight:500">$155.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Melamine — bases</strong></td><td style="font-weight:500">$155.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Plywood — uppers</strong></td><td style="font-weight:500">$210.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Plywood — bases</strong></td><td style="font-weight:500">$210.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="mq-card" style="padding:0;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f3f4f6">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280">&#129704; COUNTERTOP PRICING</div>
+            <button class="mq-btn mq-btn-sm">+ Add item</button>
+          </div>
+          <div class="mq-table-wrap"><table class="mq-table">
+            <tbody>
+              <tr><td><strong>Quartz</strong></td><td style="font-weight:500">$88.00</td><td style="font-size:11px;color:#9ca3af">per sq ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Granite — mid</strong></td><td style="font-weight:500">$75.00</td><td style="font-size:11px;color:#9ca3af">per sq ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+              <tr><td><strong>Marble</strong></td><td style="font-weight:500">$115.00</td><td style="font-size:11px;color:#9ca3af">per sq ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+    <!-- TRIM -->
+    <div class="mq-card" id="card-trim" style="margin-top:1rem">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280;margin-bottom:1rem">🪵 TRIM — CROWN MOULDING &amp; VALANCE</div>
+      <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Crown moulding and valance are priced per linear foot and live here in Pricing, not in Specialty items. Add as many styles as you offer — standard crown, ceiling-height crown, valance, etc. — each with its own rate.</p>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <div style="padding:10px 16px;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:600">Crown &amp; Valance styles</span>
+          <button class="mq-btn mq-btn-sm">+ Add style</button>
+        </div>
+        <table class="mq-table">
+          <tbody>
+            <tr><td><strong>Crown moulding — standard</strong><div style="font-size:11px;color:#9ca3af">Upper cabinet linear footage + wall returns</div></td><td style="font-weight:500">$8.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            <tr><td><strong>Crown — ceiling height</strong><div style="font-size:11px;color:#9ca3af">Full-height crown to ceiling</div></td><td style="font-weight:500">$14.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+            <tr><td><strong>Valance</strong><div style="font-size:11px;color:#9ca3af">Open valance between uppers</div></td><td style="font-weight:500">$6.00</td><td style="font-size:11px;color:#9ca3af">per lin ft</td><td><div class="mq-toggle on" style="transform:scale(0.85)"></div></td><td><button class="mq-btn mq-btn-sm">Edit</button></td><td><button class="mq-btn mq-btn-sm mq-btn-danger">Delete</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </div><!-- /page-pricing -->
+
+    <!-- SPECIALTY -->
+    <div class="mq-page" id="page-specialty">
+      <div class="mq-section-header">
+        <div><div class="mq-page-title">Specialty items</div><div class="mq-page-sub">Add-ons that appear as checkboxes in your widget</div></div>
+        <button class="mq-btn mq-btn-primary mq-btn-sm">+ New item</button>
+      </div>
+      <div class="mq-card" style="padding:0;overflow:hidden">
+        <table class="mq-table">
+          <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Active</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Glass door inserts</td><td><input type="number" value="120" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Lazy Susan</td><td><input type="number" value="95" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Pull-out trash</td><td><input type="number" value="110" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Under-cabinet lighting</td><td><input type="number" value="12" style="width:70px"/></td><td><input type="checkbox" checked/></td><td><input type="checkbox" checked/></td></tr>
+            <tr><td style="color:var(--text-light)">⠿</td><td>Deep pot drawers</td><td><input type="number" value="85" style="width:70px"/></td><td><input type="checkbox"/></td><td><input type="checkbox" checked/></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EMBED CODE -->
+    <div class="mq-page" id="page-embed">
+      <div class="mq-page-title">Embed code</div>
+      <div class="mq-page-sub">Paste this code into your website where you want the widget to appear</div>
+      <div class="mq-card">
+        <div class="mq-card-title">🎯 Quote page header <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">A clean intro section to place above your widget. Here's what it looks like:</p>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1rem;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#b8763a;margin-bottom:6px">Instant Pricing</div>
+          <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Get your cabinet estimate in under 2 minutes</div>
+          <div style="font-size:13px;color:#6b7280">No phone calls, no waiting — answer a few questions and get your ballpark price right now.</div>
+        </div>
+        <button class="mq-btn mq-btn-sm">Copy header code</button>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">✨ Trust bar <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Paste this directly above your embed code to show a row of trust signals to customers.</p>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1rem;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;font-size:12px;color:#6b7280">
+          <span>⚡ Instant estimate</span>
+          <span>🔒 No commitment</span>
+          <span>📞 We follow up within 24h</span>
+        </div>
+        <button class="mq-btn mq-btn-sm">Copy trust bar code</button>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">📋 Your embed code</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Copy the code below and paste it into your website where you want the widget to appear. Works on Wix, Squarespace, WordPress, Webflow, GoDaddy and any custom site.</p>
+        <div class="mq-embed-box">&lt;div id="midasquote-widget"&gt;&lt;/div&gt;<br/>&lt;script src="https://widget.midasquote.com/widget.js?shop=maple-stone-demo"&gt;&lt;/script&gt;<button class="mq-copy-btn">Copy</button></div>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">📱 Shop mode</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Use this link to pull up the widget on your phone or tablet for walk-in customers. No lead capture — just the quote tool.</p>
+        <div class="mq-embed-box">https://widget.midasquote.com/?shop=maple-stone-demo&mode=shop<button class="mq-copy-btn">Copy</button></div>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">💡 Installation help</div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
+          <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
+          <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
+          <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
+          <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
+          <div><strong>Need help?</strong> Email <a href="mailto:hello@midasquote.com" style="color:#1a1a1a">hello@midasquote.com</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY PRODUCTS -->
+    <div class="mq-page" id="page-products">
+      <div class="mq-page-title">My Products</div>
+      <div class="mq-page-sub">Add photos to your materials and options — these appear on your customer showroom page</div>
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
+        <strong>💡 How to add a photo:</strong><br>
+        <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
+        <strong>Option 2 —</strong> Click <em>"📷 Choose from library"</em> to pick from our curated cabinet & countertop photo collection.<br>
+        <strong>Option 3 —</strong> Already have a photo hosted somewhere? Paste its direct image link — just avoid social media links since those expire.
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">🪵 Box Materials</div>
+        <div class="product-grid">
+          <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#d4a96a,#b8864a)">🪵</div><div class="product-name">Maple</div><input type="text" placeholder="Paste photo URL..." style="font-size:11px;margin-top:6px"/></div>
+          <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#8b6f4e,#6b5237)">🌰</div><div class="product-name">Walnut</div><input type="text" placeholder="Paste photo URL..." style="font-size:11px;margin-top:6px"/></div>
+          <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#c8a97a,#a88558)">🌿</div><div class="product-name">White Oak</div><input type="text" placeholder="Paste photo URL..." style="font-size:11px;margin-top:6px"/></div>
+          <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#e8e0d4,#d4c8b8)">🎨</div><div class="product-name">Painted MDF</div><input type="text" placeholder="Paste photo URL..." style="font-size:11px;margin-top:6px"/></div>
+        </div>
+        <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%">Save photos</button>
+      </div>
+      <div class="mq-card">
+        <div class="mq-card-title">🔗 Your showroom link</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Share this with customers so they can browse your products before getting a quote.</p>
+        <div class="mq-embed-box">https://widget.midasquote.com/showroom.html?shop=maple-stone-demo<button class="mq-copy-btn">Copy</button></div>
+        <button class="mq-btn" style="margin-top:10px">Open showroom ↗</button>
+      </div>
+    </div>
+
+    <!-- MARKETING KIT -->
+    <div class="mq-page" id="page-marketing">
+      <div class="mq-page-title">Marketing Kit</div>
+      <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
+
+      <div class="mq-card" id="card-mk-social">
+        <div class="mq-card-title">📱 Social media posts</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram. Paste your quote page link once — it updates all the posts below automatically.</p>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1rem">
+          <label style="font-size:11px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Link to use in these posts</label>
+          <div style="display:flex;gap:8px">
+            <input type="url" placeholder="https://yoursite.com/get-a-quote" style="flex:1;font-size:13px"/>
+            <button class="mq-btn mq-btn-sm">Apply</button>
+          </div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+          <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:8px">🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 2 minutes. Try it now → yoursite.com/get-a-quote</div>
+          <button class="mq-btn mq-btn-sm">Copy</button>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+          <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:8px">Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 60 seconds — right from your phone.</div>
+          <button class="mq-btn mq-btn-sm">Copy</button>
+        </div>
+      </div>
+
+      <div class="mq-card" id="card-mk-graphic">
+        <div class="mq-card-title">🖼️ Social graphic — ready to post</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">A square 1080×1080 Instagram/Facebook-ready graphic with your shop name, brand colour, and quote link already on it. Add a photo of your own work as the background, adjust the darkness, and download — no design app needed.</p>
+        <div style="display:flex;justify-content:center;margin-bottom:1rem">
+          <div style="width:240px;height:240px;border-radius:14px;overflow:hidden;position:relative;background:#1a1a1a">
+            <img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/tour/kitchen-sample.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"/>
+            <div style="position:absolute;inset:0;background:rgba(10,10,10,0.62)"></div>
+            <div style="position:absolute;inset:0;padding:18px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:22px;height:22px;background:#b8763a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px">⚡</div>
+                <div>
+                  <div style="font-size:11px;font-weight:600;color:#fff;line-height:1.2">Maple & Stone</div>
+                  <div style="font-size:9px;color:rgba(255,255,255,0.6)">Nashville, TN</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:8px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#d4a574;margin-bottom:4px">Instant Pricing</div>
+                <div style="font-size:16px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:10px">Get your cabinet quote in under 2 minutes</div>
+                <div style="background:#fff;color:#1a1a1a;font-size:11px;font-weight:700;padding:8px 14px;border-radius:8px;display:inline-block">Get a quote →</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:8px">
+          <button class="mq-btn mq-btn-sm">📷 Add background photo</button>
+          <button class="mq-btn mq-btn-primary mq-btn-sm">⬇️ Download graphic (PNG)</button>
+        </div>
+      </div>
+
+      <div class="mq-card" id="card-mk-headlines">
+        <div class="mq-card-title">🏷️ Headline options for your website</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Use one of these above your embedded widget so customers know exactly what they're looking at before they start.</p>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Get an instant cabinet & countertop estimate</div>
+          <div style="font-size:12px;color:var(--text-mid)">No phone calls. No waiting. Answer a few questions and get your price range in under 2 minutes.</div>
+        </div>
+        <button class="mq-btn mq-btn-sm">Copy</button>
+      </div>
+
+      <div class="mq-card" id="card-mk-dm">
+        <div class="mq-card-title">💬 Direct message template</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:0.75rem">Send this to past customers or leads who might have a future project.</p>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text);line-height:1.6;margin-bottom:8px">
+          Hey! Just wanted to let you know we now have an instant quoting tool on our website — you can get a ballpark price on cabinets or countertops in under 2 minutes, right from your phone. No pressure, just thought it might be handy if you ever have a project coming up 👉 yoursite.com/get-a-quote
+        </div>
+        <button class="mq-btn mq-btn-sm">Copy</button>
+      </div>
+
+      <div class="mq-card" id="card-mk-qr">
+        <div class="mq-card-title">🖨️ Printable QR poster</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">A print-ready poster with a QR code linking straight to your quote page — perfect for a front desk, sandwich board, or restroom wall. Walk-in customers just scan and go. Customize the headline, background colour, and photo.</p>
+        <div style="display:flex;justify-content:center;margin-bottom:1rem">
+          <div style="width:150px;height:225px;border-radius:10px;background:#1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:#fff;text-align:center;line-height:1.3">Scan for an instant price</div>
+            <div style="width:80px;height:80px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px">⬛</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.6);text-align:center">Maple & Stone Cabinetry</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center">
+          <button class="mq-btn mq-btn-primary mq-btn-sm">⬇️ Download poster (PNG)</button>
+        </div>
+      </div>
+
+      <div class="mq-card" id="card-mk-sign">
+        <div class="mq-card-title">🏗️ Job site / yard sign</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">A "Another project by..." sign with your shop name and a QR code — works great printed for a job site lawn, fence, or sandwich board. Switch between portrait (sandwich board) and landscape (yard sign). Auto-uses your brand colour for the banner, or pick a custom colour.</p>
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:1rem">
+          <button class="mq-btn mq-btn-sm" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a">📱 Portrait (sandwich board)</button>
+          <button class="mq-btn mq-btn-sm">🖥️ Landscape (yard sign)</button>
+        </div>
+        <div style="display:flex;justify-content:center;margin-bottom:1rem">
+          <div style="width:150px;height:225px;border-radius:10px;background:#2d2a26;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px">
+            <div style="font-size:9px;color:rgba(255,255,255,0.6);text-align:center">Another project by</div>
+            <div style="font-size:14px;font-weight:700;color:#fff;text-align:center">Maple & Stone Cabinetry</div>
+            <div style="width:70px;height:70px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px">⬛</div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.5);text-align:center">Scan for an instant quote</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:8px">
+          <button class="mq-btn mq-btn-primary mq-btn-sm">⬇️ Download sign (PNG)</button>
+          <button class="mq-btn mq-btn-sm">⬇️ Download QR code only</button>
+        </div>
+      </div>
+
+      <div class="mq-card" id="card-mk-where">
+        <div class="mq-card-title">📍 Where to post</div>
+        <div style="font-size:13px;color:#374151;line-height:2">
+          ✓ Your website homepage or a dedicated "Get a Quote" page<br>
+          ✓ Pin a post to the top of your Facebook Business Page<br>
+          ✓ Local Facebook homeowner / renovation groups (check group rules first)<br>
+          ✓ Instagram bio link<br>
+          ✓ Google Business Profile — add to your website field or post an update<br>
+          ✓ Email signature<br>
+          ✓ A QR code sign for walk-in customers to scan in-store
+        </div>
+      </div>
+
+      <div class="mq-card" style="border-color:#86efac;background:#f0fdf4">
+        <div class="mq-card-title">✅ Pre-launch checklist</div>
+        <div style="font-size:13px;color:#166534;line-height:2">
+          ☐ Widget is embedded and tested on your site<br>
+          ☐ Link works on both desktop and mobile<br>
+          ☐ You've tried the quote flow yourself at least once<br>
+          ☐ Your shop info (name, phone, logo) looks correct in the widget<br>
+          ☐ You know new leads land in your Leads tab
+        </div>
+      </div>
+    </div>
+
+    <!-- BILLING -->
+    <div class="mq-page" id="page-billing">
+      <div class="mq-page-title">Billing</div>
+      <div class="mq-page-sub">Manage your subscription, payment method, and invoices</div>
+      <div class="mq-card">
+        <div class="mq-card-title">📋 Current plan</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="mq-badge mq-badge-green">Active</span>
+          <span style="font-size:14px;font-weight:500">MidasQuote — $39/month</span>
+        </div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem">Next billing date: July 16, 2026</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="mq-btn mq-btn-primary">Manage plan</button>
+          <button class="mq-btn">Upgrade to annual (save $120/yr)</button>
+        </div>
+      </div>
+      <div class="mq-card"><div class="mq-card-title">💳 Payment method</div><p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem">Visa ending in 4242 — expires 08/28</p><button class="mq-btn">Update payment method</button></div>
+      <div class="mq-card"><div class="mq-card-title">🧾 Invoices</div><p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem">View and download your past invoices.</p><button class="mq-btn">View invoices</button></div>
+      <div class="mq-card" style="border-color:#fca5a5">
+        <div class="mq-card-title" style="color:#dc2626">⚠️ Cancel subscription</div>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:1.25rem;line-height:1.6">You can cancel at any time — your widget stays active until the end of your billing period. Your leads and data are kept for 30 days.</p>
+        <button class="mq-btn mq-btn-danger">Cancel subscription</button>
+      </div>
+    </div>
+
+  </div><!-- /mq-content -->
+</div><!-- /mq-layout -->
+
+<!-- TOUR START SCREEN -->
+<div id="tour-start">
+  <div class="tour-start-card">
+    <div class="tour-start-icon">⚡</div>
+    <div class="tour-start-title">Welcome to your MidasQuote dashboard</div>
+    <div class="tour-start-body">This is an interactive tour of everything you get as a MidasQuote shop owner. Click through each section to see how it works — no account needed.</div>
+    <button class="tour-start-btn" onclick="startTour()">Start the tour →</button>
+    <div class="tour-start-skip" onclick="skipTour()">Skip tour and explore freely</div>
+  </div>
+</div>
+
+<!-- TOUR END SCREEN -->
+<div id="tour-end">
+  <div class="tour-end-card">
+    <div class="confetti">🎉</div>
+    <div class="tour-start-title">That's your dashboard!</div>
+    <div class="tour-start-body" style="margin-bottom:1.5rem">Every quote request from your widget lands here automatically. Your pricing, your leads, your products — all in one place. Ready to get your own?</div>
+    <button class="tour-start-btn" onclick="window.open('https://www.midasquote.com','_blank')">Get MidasQuote for my shop →</button>
+    <div class="tour-start-skip" onclick="document.getElementById('tour-end').style.display='none'">Keep exploring the dashboard</div>
+  </div>
+</div>
+
+<!-- TOUR OVERLAY -->
+<div id="tour-overlay" style="display:none">
+  <div class="tour-highlight" id="tour-highlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-step-label" id="tour-step-label"></div>
+    <div class="tour-title" id="tour-title"></div>
+    <div class="tour-body" id="tour-body"></div>
+    <div class="tour-footer">
+      <div class="tour-dots" id="tour-dots"></div>
+      <div class="tour-btns">
+        <button class="tour-btn" id="tour-prev" onclick="tourStep(-1)">← Back</button>
+        <button class="tour-btn tour-btn-next" id="tour-next" onclick="tourStep(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── WIZARD TOGGLE ──
+function showWizard() {
+  document.getElementById('wizard-demo').style.display = 'block';
+  document.getElementById('wizard-callout').style.display = 'none';
+  document.getElementById('wizard-demo').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function hideWizard() {
+  document.getElementById('wizard-demo').style.display = 'none';
+  document.getElementById('wizard-callout').style.display = 'block';
+}
+
+// ── PAGE NAV ──
+function goPage(name, navEl) {
+  document.querySelectorAll('.mq-nav-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.mq-page').forEach(p => p.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  else { const n = document.getElementById('nav-' + name); if (n) n.classList.add('active'); }
+  const p = document.getElementById('page-' + name);
+  if (p) p.classList.add('active');
+}
+
+// ── TOUR STEPS ──
+const STEPS = [
+  {
+    page: 'overview',
+    target: 'stat-leads',
+    label: 'Step 1 of 14 — Dashboard',
+    title: 'Your live stats, always up to date',
+    body: 'The moment a customer submits a quote request on your website, it shows up here. Total leads, new this week, how many you\'ve booked, and your estimated pipeline value — all calculated automatically.',
+    placement: 'bottom'
+  },
+  {
+    page: 'overview',
+    target: 'card-recent-leads',
+    label: 'Step 2 of 14 — Recent Leads',
+    title: 'Your 5 most recent quote requests',
+    body: 'Every lead shows the customer\'s name, what they\'re quoting, the price range the widget showed them, and their current status. You can see the full list and manage all leads from the Leads tab.',
+    placement: 'top'
+  },
+  {
+    page: 'leads',
+    target: 'page-leads',
+    label: 'Step 3 of 14 — Leads',
+    title: 'Every lead, fully manageable',
+    body: 'Filter by status, update a lead\'s stage with one click (New → Contacted → Booked), and keep your pipeline organized. Every lead includes name, email, phone, quote type, and the exact estimate range they received.',
+    placement: 'top'
+  },
+  {
+    page: 'shop',
+    target: 'page-shop',
+    label: 'Step 4 of 14 — Shop Info',
+    title: 'Your shop info, your widget\'s identity',
+    body: 'Everything here feeds directly into your widget — shop name, phone, city, logo, and disclaimer text. Pick your brand colour with the visual colour picker (or paste a hex code directly) so your widget buttons match your brand. You can also set a "Book a consultation" link or email — if you use an email, customers get a clean pop-up with your address and a copy button instead of a clunky email-app prompt.',
+    placement: 'top'
+  },
+  {
+    page: 'pricing',
+    target: 'wizard-callout',
+    label: 'Step 5 of 14 — Pricing Wizard',
+    title: 'The wizard that reverse-engineers your pricing',
+    body: 'Not sure what your per-linear-foot rates are? The wizard walks you through quoting a small run of cabinets in a few different scenarios and reverse-engineers your rates automatically. There\'s also a Mini Wizard on any individual item you\'re unsure about — same idea, one line at a time.',
+    placement: 'bottom'
+  },
+  {
+    page: 'pricing',
+    target: 'pricing-rates',
+    label: 'Step 6 of 14 — Countertop Pricing',
+    title: 'Each countertop material is fully bundled',
+    body: 'Countertop materials now carry their own backsplash height options and cutout pricing — no separate items to keep in sync. Add a material like Granite or Quartz, then set its backsplash heights (4" standard, 18" tall, whatever you offer), supply and install rate per option, and your own sink and cooktop cutout rates. The customer picks one backsplash height in the widget and it prices correctly every time.',
+    placement: 'top'
+  },
+  {
+    page: 'pricing',
+    target: 'card-trim',
+    label: 'Step 7 of 14 — Crown Moulding & Valance',
+    title: 'Trim pricing lives here, not in Specialty Items',
+    body: 'Crown moulding and valance are priced per linear foot and have their own dedicated section in Pricing. Add as many styles as you offer — standard crown, ceiling-height crown, valance — each with its own rate. The widget calculates trim from upper cabinet footage plus any wall returns the customer enters.',
+    placement: 'top'
+  },
+  {
+    page: 'specialty',
+    target: 'page-specialty',
+    label: 'Step 8 of 14 — Specialty Items',
+    title: 'Add-ons that show as options in your widget',
+    body: 'Glass door inserts, lazy Susans, pull-out trash, under-cabinet lighting, deep pot drawers — whatever add-ons you offer. Each item appears as an optional checkbox in your widget. Set a flat price or a per-linear-foot rate and drag to reorder them.',
+    placement: 'top'
+  },
+  {
+    page: 'embed',
+    target: 'page-embed',
+    label: 'Step 9 of 14 — Embed Code',
+    title: 'Everything you need to go live on your site',
+    body: 'Your Embed Code tab has five things: a ready-made Quote page header and Trust bar you can paste above the widget (optional but they boost conversions), your actual two-line embed code, a Shop Mode link for tablets at your location, and step-by-step installation instructions for every major platform.',
+    placement: 'top'
+  },
+  {
+    page: 'products',
+    target: 'page-products',
+    label: 'Step 10 of 14 — My Products',
+    title: 'Build your customer showroom with real photos',
+    body: 'Add a photo for each material and door style you offer — three ways: upload straight from your device, pick from our curated cabinet & countertop library, or paste a direct image link. These populate your showroom page, which customers can browse right from the widget\'s "See our products" button before they even start a quote.',
+    placement: 'top'
+  },
+  {
+    page: 'marketing',
+    target: 'card-mk-social',
+    label: 'Step 11 of 14 — Social Posts & Graphic',
+    title: 'Ready-made social content, personalized to your shop',
+    body: 'Pre-written Facebook and Instagram posts are ready to copy — just paste your quote page link once and it updates all the posts. Below that, a square 1080×1080 social graphic has your shop name and brand colour already on it. Add a photo of your own work as the background, adjust the darkness, and download — no design app needed.',
+    placement: 'top'
+  },
+  {
+    page: 'marketing',
+    target: 'card-mk-headlines',
+    label: 'Step 12 of 14 — Headline & DM Templates',
+    title: 'Copy for your website and your inbox',
+    body: 'Headline options give you ready-made text to paste above your embedded widget — so customers know what they\'re looking at before they start. The direct message template is something you can copy and send to past customers or leads who might have a future project coming up.',
+    placement: 'top'
+  },
+  {
+    page: 'marketing',
+    target: 'card-mk-qr',
+    label: 'Step 13 of 14 — QR Poster & Yard Sign',
+    title: 'Print-ready graphics for the real world',
+    body: 'The QR poster is sized for printing — perfect for a front desk, sandwich board, or restroom wall. Walk-in customers just scan and go straight to your quote page. The yard sign puts your shop name and a QR code on a job site sign in portrait or landscape — great for a lawn, fence, or truck tailgate. Both auto-generate from your brand colour and let you swap in a background photo.',
+    placement: 'top'
+  },
+  {
+    page: 'billing',
+    target: 'page-billing',
+    label: 'Step 14 of 14 — Billing',
+    title: 'Simple, transparent billing',
+    body: 'Manage your plan, update your payment method, and download invoices — all from one place. Upgrade to annual and save $120/year. Cancel any time and your widget stays active until the end of your billing period.',
+    placement: 'top'
+  }
+];
+
+let currentStep = 0;
+let tourActive = false;
+
+function startTour() {
+  document.getElementById('tour-start').style.display = 'none';
+  tourActive = true;
+  document.getElementById('tour-overlay').style.display = 'block';
+  buildDots();
+  showStep(0);
+}
+
+function skipTour() {
+  document.getElementById('tour-start').style.display = 'none';
+}
+
+function buildDots() {
+  const dots = document.getElementById('tour-dots');
+  dots.innerHTML = STEPS.map((_, i) => `<div class="tour-dot" id="dot-${i}"></div>`).join('');
+}
+
+function showStep(idx) {
+  const step = STEPS[idx];
+  currentStep = idx;
+
+  // Switch page
+  goPage(step.page);
+
+  // Update tooltip content
+  document.getElementById('tour-step-label').textContent = step.label;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-body').textContent = step.body;
+
+  // Dots
+  document.querySelectorAll('.tour-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+
+  // Buttons
+  document.getElementById('tour-prev').style.display = idx === 0 ? 'none' : '';
+  document.getElementById('tour-next').textContent = idx === STEPS.length - 1 ? 'Finish 🎉' : 'Next →';
+
+  // Scroll target into view first
+  const target = document.getElementById(step.target);
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => positionTour(target, step.placement), 350);
+  }
+}
+
+function positionTour(target, placement) {
+  const rect = target.getBoundingClientRect();
+  const hl   = document.getElementById('tour-highlight');
+  const tt   = document.getElementById('tour-tooltip');
+  const pad  = 8;
+  const vpW  = window.innerWidth;
+  const vpH  = window.innerHeight;
+  const isMobile = vpW < 768;
+
+  // Highlight — fixed, so just use viewport rect directly
+  hl.style.top    = (rect.top - pad) + 'px';
+  hl.style.left   = (rect.left - pad) + 'px';
+  hl.style.width  = (rect.width + pad * 2) + 'px';
+  hl.style.height = (rect.height + pad * 2) + 'px';
+
+  // Tooltip width — full width on mobile with margins
+  const margin = 16;
+  const ttW = isMobile ? vpW - margin * 2 : Math.min(320, vpW - margin * 2);
+
+  // Ideal center
+  let left = rect.left + rect.width / 2 - ttW / 2;
+  // Clamp horizontal to always stay inside viewport
+  left = Math.max(margin, Math.min(left, vpW - ttW - margin));
+
+  // Measure tooltip height after setting width
+  tt.style.width = ttW + 'px';
+  tt.style.visibility = 'hidden';
+  tt.style.top = '0px';
+  tt.style.left = left + 'px';
+  const ttH = tt.offsetHeight || 240;
+  tt.style.visibility = '';
+
+  // Try preferred placement first
+  let top;
+  const spaceAbove = rect.top - pad - 12 - ttH;
+  const spaceBelow = vpH - rect.bottom - pad - 12;
+
+  if (isMobile) {
+    // On mobile always pin to bottom of screen with safe area
+    top = vpH - ttH - 80;
+    top = Math.max(80, top);
+  } else if (placement === 'bottom' && spaceBelow >= ttH) {
+    top = rect.bottom + pad + 12;
+  } else if (spaceAbove >= ttH) {
+    top = rect.top - ttH - pad - 12;
+  } else if (spaceBelow >= ttH) {
+    top = rect.bottom + pad + 12;
+  } else {
+    // Not enough space either side — float in center of screen
+    top = Math.max(80, vpH / 2 - ttH / 2);
+  }
+
+  // Final clamp — never go off top or bottom
+  top = Math.max(70, Math.min(top, vpH - ttH - 16));
+
+  tt.style.top  = top + 'px';
+  tt.style.left = left + 'px';
+}
+
+function tourStep(dir) {
+  const next = currentStep + dir;
+  if (next >= STEPS.length) {
+    endTour();
+    return;
+  }
+  if (next < 0) return;
+  showStep(next);
+}
+
+function endTour() {
+  document.getElementById('tour-overlay').style.display = 'none';
+  tourActive = false;
+  document.getElementById('tour-end').style.display = 'flex';
+}
+
+// Reposition on scroll/resize
+window.addEventListener('scroll', () => {
+  if (!tourActive) return;
+  const step = STEPS[currentStep];
+  const target = document.getElementById(step.target);
+  if (target) positionTour(target, step.placement);
+}, { passive: true });
+
+window.addEventListener('resize', () => {
+  if (!tourActive) return;
+  const step = STEPS[currentStep];
+  const target = document.getElementById(step.target);
+  if (target) positionTour(target, step.placement);
+});
+</script>
