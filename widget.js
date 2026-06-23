@@ -400,7 +400,7 @@
             <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
             <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
             <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
-            <div style="margin-bottom:6px"><strong>Not sure?</strong> A standard kitchen is usually 10–20 linear feet for each. Just use your best guess — this is a ballpark estimate!</div>
+            <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
             <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet wide, enter 12.</div>
           </div>
         </div>
