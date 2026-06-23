@@ -393,10 +393,10 @@
       <div class="mq-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
         <div style="margin-bottom:1rem">
-          <button type="button" onclick="mqTogMeasure(this)" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em;width:100%;text-align:left">
-            <span id="mq-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> 📏 How to measure your space
+          <button type="button" onclick="mqTogMeasure('${prefix}')" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em;width:100%;text-align:left">
+            <span id="mq-${prefix}-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> 📏 How to measure your space
           </button>
-          <div id="mq-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">
+          <div id="mq-${prefix}-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">
             <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
             <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
             <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
@@ -855,9 +855,10 @@
       mqTogTrimReturns(prefix);
     };
 
-    window.mqTogMeasure=(btn)=>{
-  const guide=document.getElementById('mq-measure-guide');
-  const arrow=document.getElementById('mq-measure-arrow');
+    window.mqTogMeasure=(prefix)=>{
+  const guide=document.getElementById(`mq-${prefix}-measure-guide`);
+  const arrow=document.getElementById(`mq-${prefix}-measure-arrow`);
+  if(!guide||!arrow) return;
   const open=guide.style.display==='none';
   guide.style.display=open?'block':'none';
   arrow.style.transform=open?'rotate(90deg)':'rotate(0deg)';
