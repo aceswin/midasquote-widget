@@ -314,12 +314,19 @@ window.logoutMember = async function () {
                 <input type="email" id="mq-shop-consult-email" placeholder="sales@yourshop.com"/>
                 <span class="mq-hint">Used only if no link is set above — opens a pre-filled email instead</span>
               </div>
-              <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">We offer financing</div>
                   <div style="font-size:12px;color:#6b7280;margin-top:2px">Shows a friendly "Financing available" note on the widget's quote results</div>
                 </div>
                 <div class="mq-toggle" id="mq-financing-toggle" onclick="mqToggleFinancing()"></div>
+              </div>
+              <div id="mq-financing-link-wrap" style="display:none;margin-bottom:1.5rem;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px">
+                <div class="mq-field" style="margin-bottom:0">
+                  <label class="mq-label">Pre-approval link <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+                  <input type="url" id="mq-financing-link" placeholder="https://yourfinancingpartner.com/apply"/>
+                  <span class="mq-hint">If you have a link where customers can apply for financing, enter it here. The "Ask a question" button on your widget will become "Get pre-approved →" and send them straight there.</span>
+                </div>
               </div>
               <div class="mq-toggle-row" style="margin-bottom:1.5rem">
                 <div>
@@ -850,9 +857,13 @@ window.logoutMember = async function () {
       toggle.classList.toggle('on', isOn);
     }
     const financingToggle = el('mq-financing-toggle');
+    const financingLinkWrap = el('mq-financing-link-wrap');
     if (financingToggle) {
-      financingToggle.classList.toggle('on', f['Offers financing'] === true);
+      const isOn = f['Offers financing'] === true;
+      financingToggle.classList.toggle('on', isOn);
+      if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
     }
+    set('mq-financing-link', f['Financing link']);
   }
 
   function populatePricing(pricing) {
@@ -1017,6 +1028,7 @@ window.logoutMember = async function () {
         'Disclaimer text':   gv('mq-shop-disclaimer'),
         'Consultation link': gv('mq-shop-consult-link'),
         'Consultation email': gv('mq-shop-consult-email'),
+        'Financing link':    gv('mq-financing-link'),
       };
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, updatedFields);
       // Keep the in-memory record in sync so other tabs (like Marketing Kit) reflect changes immediately
@@ -1461,11 +1473,13 @@ window.logoutMember = async function () {
     if (!toggle) return;
     const isOn = toggle.classList.contains('on');
     toggle.classList.toggle('on', !isOn);
+    const linkWrap = el('mq-financing-link-wrap');
+    if (linkWrap) linkWrap.style.display = !isOn ? 'block' : 'none';
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Offers financing': !isOn });
       shopRec.fields['Offers financing'] = !isOn;
       showMsg('mq-shop-msg', !isOn ? '✓ Financing note will show on your widget.' : '✓ Financing note hidden from widget.');
-    } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+    } catch(e) { toggle.classList.toggle('on', isOn); if (linkWrap) linkWrap.style.display = isOn ? 'block' : 'none'; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
 
   window.mqUpdateLeadStatus = async function(id, status) {

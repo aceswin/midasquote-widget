@@ -476,7 +476,7 @@
           </div>
         </div>`:''}
         <div id="mq-${prefix}-trim-help" style="display:none;font-size:11px;color:#6b7280;margin-top:6px;line-height:1.5">
-          A "return" is where the crown or valance turns and meets the wall (for example, at the end of a run with no upper cabinet on either side). Each return adds 1 linear foot to your trim total — count how many you have.
+          A "return" is where the crown or valance turns and meets the wall. Each return adds 1 linear foot to your trim total — count how many you have.
         </div>
       </div>`:''}
       <div class="mq-sec">
@@ -500,6 +500,10 @@
     const financingHTML = shop['Offers financing'] === true
       ? `<div class="mq-financing-note">💳 Financing available</div>`
       : '';
+    const financingLink = (shop['Financing link'] || '').trim();
+    const askQuestionBtn = financingLink
+      ? `<button onclick="window.open('${financingLink}','_blank')">Get pre-approved ↗</button>`
+      : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
 
     return `
       <div class="mq-header">
@@ -648,7 +652,7 @@
           <div class="mq-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row" style="margin-top:1rem">
-            <button onclick="mqShowConsultModal()">Ask a question ↗</button>
+            ${askQuestionBtn}
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
