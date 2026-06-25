@@ -418,10 +418,10 @@ window.logoutMember = async function () {
             <div id="mq-products-content"><div class="mq-loading">Loading your products...</div></div>
             <div class="mq-card" style="margin-top:1rem">
               <div class="mq-card-title">🔗 Your showroom link</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Share this with customers so they can browse your products before getting a quote.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Share this with customers so they can browse your products before getting a quote.</p>
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show View our products link"</strong> is turned on in your Shop Info tab, this link is automatically included in your widget — no extra setup needed.</div>
               <div class="mq-embed-box"><span id="mq-showroom-link-text"></span><button class="mq-copy-btn" id="mq-showroom-copy-btn">Copy</button></div>
               <button class="mq-btn" style="margin-top:10px" id="mq-showroom-open-btn">Open showroom ↗</button>
-              <p style="font-size:12px;color:#9ca3af;margin-top:10px">💡 If <strong>"Show View our products link"</strong> is turned on in your Shop Info tab, this link is automatically included in your widget — no extra setup needed.</p>
             </div>
           </div>
 
