@@ -2523,7 +2523,7 @@ window.logoutMember = async function () {
         signCtx.textAlign = 'left';
         signCtx.textBaseline = 'alphabetic';
         signCtx.fillStyle = textColorMuted;
-        signCtx.font = '700 32px -apple-system, sans-serif';
+        signCtx.font = '700 38px -apple-system, sans-serif';
         signCtx.fillText(signHeadline.toUpperCase(), padL, padTB + 10);
 
         let nameFontSize = 90;
@@ -2661,7 +2661,7 @@ window.logoutMember = async function () {
 
         // Small eyebrow
         signCtx.fillStyle = textColorMuted;
-        signCtx.font = '700 32px -apple-system, sans-serif';
+        signCtx.font = '700 38px -apple-system, sans-serif';
         signCtx.fillText(signHeadline.toUpperCase(), W/2, 96);
 
         // HERO: shop name — huge, the main thing visible from the street
