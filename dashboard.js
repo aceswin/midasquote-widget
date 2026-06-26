@@ -2982,11 +2982,10 @@ window.logoutMember = async function () {
         if (member) shopToken = member.metaData?.shopToken || member.customFields?.shopToken;
       } catch(e) {}
     }
-   if (!shoptoken) {
-  container.innerHTML = '<div style="padding:4rem;text-align:center;color:#dc2626;font-size:14px">Unable to load your dashboard. Please <a href="/login" style="color:#1a1a1a;font-weight:600">log in again</a> or contact support at hello@midasquote.com</div>';
+   if (!shopToken) {
+  container.innerHTML = '<div style="padding:4rem;text-align:center;color:#dc2626;font-size:14px">Unable to load your dashboard. Please <a href="/login" style="color:#1a1a1a;font-weight:600">log in again</a> or contact support at support@midasquote.com</div>';
   return;
 }
-
     const shopRecord = await loadShop(shopToken);
     if (!shopRecord) {
       container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at hello@midasquote.com</div>';
