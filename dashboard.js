@@ -622,7 +622,7 @@ window.logoutMember = async function () {
   window.mqUpgradeToAnnual = async function() {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: 'prc_midasquote-annual-0o2d0axt',
+        priceId: 'prc_midasquote-annual-plan-hui0rv4',
       });
     } catch(e) {
       console.error('Upgrade error:', e);
