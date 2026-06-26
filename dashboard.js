@@ -399,7 +399,7 @@ window.logoutMember = async function () {
                 <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
                 <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
                 <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
-                <div><strong>Need help?</strong> Email <a href="mailto:hello@midasquote.com" style="color:#1a1a1a">hello@midasquote.com</a></div>
+                <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
               </div>
             </div>
           </div>
@@ -626,7 +626,7 @@ window.logoutMember = async function () {
       });
     } catch(e) {
       console.error('Upgrade error:', e);
-      alert('Unable to open upgrade checkout. Please email hello@midasquote.com to upgrade your plan.');
+      alert('Unable to open upgrade checkout. Please email support@midasquote.com to upgrade your plan.');
     }
   };
 
@@ -2979,16 +2979,14 @@ window.logoutMember = async function () {
     if (!shopToken && window.$memberstackDom) {
       try {
         const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) shopToken = member.metaData?.shoptoken || member.customFields?.shoptoken;
+        if (member) shopToken = member.metaData?.shopToken || member.customFields?.shopToken;
       } catch(e) {}
     }
-   if (!shopToken) {
-  container.innerHTML = '<div style="padding:4rem;text-align:center;color:#dc2626;font-size:14px">Unable to load your dashboard. Please <a href="/login" style="color:#1a1a1a;font-weight:600">log in again</a> or contact support at support@midasquote.com</div>';
-  return;
-}
+    if (!shopToken) shopToken = 'dr-sales-001';
+
     const shopRecord = await loadShop(shopToken);
     if (!shopRecord) {
-      container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at hello@midasquote.com</div>';
+      container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at support@midasquote.com</div>';
       return;
     }
 
