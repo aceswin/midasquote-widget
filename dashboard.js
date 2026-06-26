@@ -2979,7 +2979,7 @@ window.logoutMember = async function () {
     if (!shopToken && window.$memberstackDom) {
       try {
         const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) shopToken = member.metaData?.shopToken || member.customFields?.shopToken;
+        if (member) shopToken = member.metaData?.shoptoken || member.customFields?.shoptoken;
       } catch(e) {}
     }
    if (!shopToken) {
