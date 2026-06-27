@@ -1738,7 +1738,7 @@
                 <span style="font-size:13px;color:#6b7280">$</span>
                 <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsSupplyRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
-                <select id="mqph-ct-supply-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                <select id="mqph-ct-supply-unit" onchange="mqphSyncBsSupplyRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
                 </select>
               </div>
@@ -1749,7 +1749,7 @@
                 <span style="font-size:13px;color:#6b7280">$</span>
                 <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsInstallRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
-                <select id="mqph-ct-install-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                <select id="mqph-ct-install-unit" onchange="mqphSyncBsInstallRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
                 </select>
               </div>
@@ -1895,6 +1895,26 @@
   let currentBsOptions = []; // in-memory list while the CT modal is open
   let currentCutoutOptions = []; // in-memory list while the CT modal is open
 
+  // Called by oninput on the supply rate field and onchange on supply unit dropdown
+  window.mqphSyncBsSupplyRate = function() {
+    const rate = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value || 0);
+    const unit = document.getElementById('mqph-ct-supply-unit')?.value || 'sqft';
+    currentBsOptions.forEach(o => {
+      if (o._supplyAutoSync !== false) { o.supplyRate = rate; o.supplyUnit = unit; }
+    });
+    mqphRenderBsList();
+  };
+
+  // Called by oninput on the install rate field and onchange on install unit dropdown
+  window.mqphSyncBsInstallRate = function() {
+    const rate = parseFloat(document.getElementById('mqph-ct-install-rate')?.value || 0);
+    const unit = document.getElementById('mqph-ct-install-unit')?.value || 'sqft';
+    currentBsOptions.forEach(o => {
+      if (o._installAutoSync !== false) { o.installRate = rate; o.installUnit = unit; }
+    });
+    mqphRenderBsList();
+  };
+
   function mqphRenderBsList() {
     const list = document.getElementById('mqph-ct-bs-list');
     if (!list) return;
@@ -1992,7 +2012,6 @@
 
   window.mqphOpenCTAdd = function() {
     currentCTEditId = null;
-    currentBsOptions = [{label:'4" standard', heightIn:4, supplyRate:0, installRate:12}];
     currentCutoutOptions = [{label:'Sink cutout', rate:180}, {label:'Cooktop cutout', rate:220}];
     document.getElementById('mqph-ct-modal-title').textContent = 'Add countertop material';
     document.getElementById('mqph-ct-name').value = '';
@@ -2001,6 +2020,8 @@
     document.getElementById('mqph-ct-install-rate').value = '';
     document.getElementById('mqph-ct-install-unit').value = 'sqft';
     document.getElementById('mqph-ct-active').checked = true;
+    // Default row starts at 0 — auto-sync flags mean it will update live as user types rates above
+    currentBsOptions = [{ label:'4" standard', heightIn:4, supplyRate:0, supplyUnit:'sqft', installRate:0, installUnit:'sqft', _supplyAutoSync:true, _installAutoSync:true }];
     mqphRenderBsList();
     mqphRenderCutoutList();
     document.getElementById('mqph-ct-modal-overlay').classList.add('show');
@@ -2010,26 +2031,31 @@
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
     currentCTEditId = id;
     currentBsOptions = getBsOptions(rec);
-    // Backfill supplyRate for options saved before this field existed, so the
-    // input shows a sensible number instead of blank/zero.
-    const matSupply = rec.fields['Rate']||0;
-    currentBsOptions.forEach(o => { if (o.supplyRate==null) o.supplyRate = matSupply; });
+    const matSupply  = rec.fields['Rate']||0;
+    const matInstall = rec.fields['Install rate']||0;
+    const unitParts  = (rec.fields['Unit']||'sqft|sqft').split('|');
+    const matSupplyUnit  = (unitParts[0]||'sqft').trim();
+    const matInstallUnit = (unitParts[1]||'sqft').trim();
+    // Backfill any missing rate/unit fields on existing bs rows
+    currentBsOptions.forEach(o => {
+      if (o.supplyRate==null)  { o.supplyRate  = matSupply;  o._supplyAutoSync  = true; }
+      if (o.supplyUnit==null)  o.supplyUnit  = matSupplyUnit;
+      if (o.installRate==null) { o.installRate = matInstall; o._installAutoSync = true; }
+      if (o.installUnit==null) o.installUnit = matInstallUnit;
+    });
     currentCutoutOptions = getCutoutOptions(rec);
-    // Backfill from older flat sink/cooktop fields if this material predates
-    // the Cutout options list format.
     if (!currentCutoutOptions.length && (rec.fields['Sink cutout rate']!=null || rec.fields['Cooktop cutout rate']!=null)) {
       currentCutoutOptions = [
         {label:'Sink cutout', rate:rec.fields['Sink cutout rate']!=null?rec.fields['Sink cutout rate']:180},
         {label:'Cooktop cutout', rate:rec.fields['Cooktop cutout rate']!=null?rec.fields['Cooktop cutout rate']:220},
       ];
     }
-    const unitParts = (rec.fields['Unit']||'sqft|sqft').split('|');
     document.getElementById('mqph-ct-modal-title').textContent = 'Edit countertop material';
     document.getElementById('mqph-ct-name').value = rec.fields['Name']||'';
-    document.getElementById('mqph-ct-supply-rate').value  = rec.fields['Rate']||'';
-    document.getElementById('mqph-ct-supply-unit').value  = (unitParts[0]||'sqft').trim();
-    document.getElementById('mqph-ct-install-rate').value = rec.fields['Install rate']||'';
-    document.getElementById('mqph-ct-install-unit').value = (unitParts[1]||'sqft').trim();
+    document.getElementById('mqph-ct-supply-rate').value  = matSupply||'';
+    document.getElementById('mqph-ct-supply-unit').value  = matSupplyUnit;
+    document.getElementById('mqph-ct-install-rate').value = matInstall||'';
+    document.getElementById('mqph-ct-install-unit').value = matInstallUnit;
     document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
     mqphRenderBsList();
     mqphRenderCutoutList();
