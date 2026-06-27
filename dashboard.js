@@ -356,7 +356,7 @@ window.logoutMember = async function () {
             </div>
             <div id="mq-spec-msg"></div>
             <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot (e.g. lighting rail, crown moulding), check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items (e.g. a lazy Susan, a garbage pullout), leave it unchecked and enter the flat price.
+              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot, check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items, leave it unchecked and enter the flat price.
             </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
