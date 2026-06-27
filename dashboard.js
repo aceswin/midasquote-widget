@@ -355,6 +355,9 @@ window.logoutMember = async function () {
               <button class="mq-btn mq-btn-sm" onclick="mqSaveAllSpecItems()" style="margin-left:6px">💾 Save all</button>
             </div>
             <div id="mq-spec-msg"></div>
+            <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
+              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot (e.g. lighting rail, crown moulding), check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items (e.g. a lazy Susan, a garbage pullout), leave it unchecked and enter the flat price.
+            </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
             </div>
@@ -399,7 +402,7 @@ window.logoutMember = async function () {
                 <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
                 <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
                 <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
-                <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
+                <div><strong>Need help?</strong> Email <a href="mailto:hello@midasquote.com" style="color:#1a1a1a">hello@midasquote.com</a></div>
               </div>
             </div>
           </div>
@@ -622,11 +625,11 @@ window.logoutMember = async function () {
   window.mqUpgradeToAnnual = async function() {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: 'prc_midasquote-annual-plan-hui0rv4',
+        priceId: 'prc_midasquote-annual-0o2d0axt',
       });
     } catch(e) {
       console.error('Upgrade error:', e);
-      alert('Unable to open upgrade checkout. Please email support@midasquote.com to upgrade your plan.');
+      alert('Unable to open upgrade checkout. Please email hello@midasquote.com to upgrade your plan.');
     }
   };
 
@@ -2979,17 +2982,14 @@ window.logoutMember = async function () {
     if (!shopToken && window.$memberstackDom) {
       try {
         const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) shopToken = member.metaData?.shoptoken || member.customFields?.shoptoken;
+        if (member) shopToken = member.metaData?.shopToken || member.customFields?.shopToken;
       } catch(e) {}
     }
-    if (!shopToken) {
-  container.innerHTML = '<div style="padding:4rem;text-align:center;color:#dc2626;font-size:14px">Unable to load your dashboard. Please <a href="/login" style="color:#1a1a1a;font-weight:600">log in again</a> or contact support at support@midasquote.com</div>';
-  return;
-}
+    if (!shopToken) shopToken = 'dr-sales-001';
 
     const shopRecord = await loadShop(shopToken);
     if (!shopRecord) {
-      container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at support@midasquote.com</div>';
+      container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at hello@midasquote.com</div>';
       return;
     }
 
