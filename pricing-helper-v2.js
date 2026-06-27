@@ -1398,7 +1398,7 @@
           <button class="mqph-btn mqph-btn-primary" onclick="mqphStartItemSetup()">Set up shop items →</button>
         </div>` : `
 
-        ${Object.entries(groups).map(([cat,recs]) => `
+        ${['material','door','drawer','hinge','zone','install','other','tax'].filter(cat => groups[cat]).map(cat => [cat, groups[cat]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
           <div class="mqph-cat-block">
             <div class="mqph-cat-header">
               <span class="mqph-cat-title">${CAT_LABELS[cat]||cat}</span>
