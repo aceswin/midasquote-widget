@@ -366,7 +366,7 @@ window.logoutMember = async function () {
           <!-- EMBED CODE -->
           <div class="mq-page" id="mq-page-embed">
             <div class="mq-page-title">Embed code</div>
-            <div class="mq-page-sub">Paste this code into your website where you want the widget to appear</div>
+            <div class="mq-page-sub">Paste these HTML codes into your website where you want each to appear</div>
             <div class="mq-card">
               <div class="mq-card-title">🎯 Quote page header <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">A clean intro section to place above your widget. Here's what it looks like:</p>
@@ -391,8 +391,8 @@ window.logoutMember = async function () {
               <div class="mq-embed-box"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-2">Copy</button></div>
             </div>
             <div class="mq-card">
-              <div class="mq-card-title">📱 Shop mode</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use this link to pull up the widget on your phone or tablet for walk-in customers. No lead capture — just the quote tool.</p>
+              <div class="mq-card-title">📱 Direct quote link</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This link opens your quote tool directly — no website needed. Use it on your phone or tablet for walk-in customers, or share it straight from your social media pages, Google Business Profile, or anywhere else you connect with customers online. No lead capture form — just the quote tool.</p>
               <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
             </div>
             <div class="mq-card">
