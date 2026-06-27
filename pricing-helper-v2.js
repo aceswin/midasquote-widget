@@ -721,7 +721,7 @@
                 name: d.fields['Name'] + ' — some drawers',
                 category: 'drawer',
                 rate: Math.round(someRate*100)/100,
-                unit: 'per lin ft',
+                unit: 'per lin ft upcharge',
                 description: 'Some drawers rate (1 drawer per cabinet)',
                 active: true,
               });
@@ -733,7 +733,7 @@
                 name: d.fields['Name'] + ' — mostly drawers',
                 category: 'drawer',
                 rate: Math.round(mostlyRate*100)/100,
-                unit: 'per lin ft',
+                unit: 'per lin ft upcharge',
                 description: 'Mostly drawers rate (averaged 1-drawer + bank)',
                 active: true,
               });
@@ -1393,7 +1393,7 @@
                   <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
-                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
+                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
                 <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
                 <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
                 <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
