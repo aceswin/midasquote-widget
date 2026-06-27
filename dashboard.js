@@ -2982,10 +2982,13 @@ window.logoutMember = async function () {
     if (!shopToken && window.$memberstackDom) {
       try {
         const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) shopToken = member.metaData?.shopToken || member.customFields?.shopToken;
+        if (member) shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
       } catch(e) {}
     }
-    if (!shopToken) shopToken = 'dr-sales-001';
+    if (!shopToken) {
+      container.innerHTML = '<div style="padding:4rem;text-align:center;color:#dc2626;font-size:14px">Unable to load your dashboard — shop token not found. Please <a href="/login" style="color:#1a1a1a;font-weight:600">log in again</a> or contact support at support@midasquote.com</div>';
+      return;
+    }
 
     const shopRecord = await loadShop(shopToken);
     if (!shopRecord) {
