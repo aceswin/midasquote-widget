@@ -1371,6 +1371,7 @@
       const c = r.fields['Category'] || 'other';
       if (c === 'countertop') return; // handled by buildCTHtml()
       if (c === 'trim') return; // handled by buildTrimHtml()
+      if (c === 'drawer_config') return; // config chips — not shown in editor, only in Edit Shop Items
       if (!groups[c]) groups[c] = [];
       groups[c].push(r);
     });
