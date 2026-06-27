@@ -2038,9 +2038,9 @@
     const matInstallUnit = (unitParts[1]||'sqft').trim();
     // Backfill any missing rate/unit fields on existing bs rows
     currentBsOptions.forEach(o => {
-      if (o.supplyRate==null)  { o.supplyRate  = matSupply;  o._supplyAutoSync  = true; }
+      if (o.supplyRate==null || o.supplyRate===0)  { o.supplyRate  = matSupply;  o._supplyAutoSync  = true; }
       if (o.supplyUnit==null)  o.supplyUnit  = matSupplyUnit;
-      if (o.installRate==null) { o.installRate = matInstall; o._installAutoSync = true; }
+      if (o.installRate==null || o.installRate===0) { o.installRate = matInstall; o._installAutoSync = true; }
       if (o.installUnit==null) o.installUnit = matInstallUnit;
     });
     currentCutoutOptions = getCutoutOptions(rec);
