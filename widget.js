@@ -1088,8 +1088,11 @@ window.mqTogDrawerConfig=(prefix)=>{
               const heightIn = bsOpt.heightIn || 4;
               const bsSqft   = bsLinFt * (heightIn/12);
               const bsRate   = bsOpt.supplyRate!=null ? bsOpt.supplyRate : m.ps;
-              const bsSupply = m.supplyUnit === 'lin ft' ? bsLinFt*bsRate : bsSqft*bsRate;
-              bsCost = bsSupply + bsLinFt * (bsOpt.installRate||0);
+              const bsSupplyUnit  = bsOpt.supplyUnit  || m.supplyUnit  || 'sqft';
+              const bsInstallUnit = bsOpt.installUnit || m.installUnit || 'lin ft';
+              const bsSupply = bsSupplyUnit  === 'lin ft' ? bsLinFt*bsRate : bsSqft*bsRate;
+              const bsInstall = bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0);
+              bsCost = bsSupply + bsInstall;
             }
             const coChecked = document.getElementById(coId)?.checked;
             const cutoutCost = coChecked ? cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`${cutsId}-q-${i}`)*(o.rate||0),0) : 0;
@@ -1121,8 +1124,11 @@ window.mqTogDrawerConfig=(prefix)=>{
           const heightIn = bsOpt.heightIn || 4;
           const bsSqft   = bsLinFt*(heightIn/12);
           const bsRate   = bsOpt.supplyRate!=null ? bsOpt.supplyRate : m.ps;
-          const bsSupply = m.supplyUnit==='lin ft' ? bsLinFt*bsRate : bsSqft*bsRate;
-          bsCost = bsSupply + bsLinFt*(bsOpt.installRate||0);
+          const bsSupplyUnit  = bsOpt.supplyUnit  || m.supplyUnit  || 'sqft';
+          const bsInstallUnit = bsOpt.installUnit || m.installUnit || 'lin ft';
+          const bsSupply = bsSupplyUnit  === 'lin ft' ? bsLinFt*bsRate : bsSqft*bsRate;
+          const bsInstall = bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0);
+          bsCost = bsSupply + bsInstall;
         }
         const cost = supplyCost+installCost+bsCost
           +(document.getElementById('mqsco-'+id)?.checked?cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`mqscuts-${id}-q-${i}`)*(o.rate||0),0):0);
