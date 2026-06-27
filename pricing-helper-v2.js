@@ -721,7 +721,7 @@
                 name: d.fields['Name'] + ' — some drawers',
                 category: 'drawer',
                 rate: Math.round(someRate*100)/100,
-                unit: 'per lin ft',
+                unit: 'per lin ft upcharge',
                 description: 'Some drawers rate (1 drawer per cabinet)',
                 active: true,
               });
