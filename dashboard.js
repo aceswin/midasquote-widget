@@ -402,7 +402,7 @@ window.logoutMember = async function () {
                 <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
                 <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
                 <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
-                <div><strong>Need help?</strong> Email <a href="mailto:hello@midasquote.com" style="color:#1a1a1a">hello@midasquote.com</a></div>
+                <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
               </div>
             </div>
           </div>
@@ -625,11 +625,11 @@ window.logoutMember = async function () {
   window.mqUpgradeToAnnual = async function() {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: 'prc_midasquote-annual-0o2d0axt',
+        priceId: 'prc_midasquote-annual-plan-hui0rv4',
       });
     } catch(e) {
       console.error('Upgrade error:', e);
-      alert('Unable to open upgrade checkout. Please email hello@midasquote.com to upgrade your plan.');
+      alert('Unable to open upgrade checkout. Please email support@midasquote.com to upgrade your plan.');
     }
   };
 
@@ -2981,7 +2981,7 @@ window.logoutMember = async function () {
 
     const shopRecord = await loadShop(shopToken);
     if (!shopRecord) {
-      container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at hello@midasquote.com</div>';
+      container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at support@midasquote.com</div>';
       return;
     }
 
