@@ -284,7 +284,11 @@
       </div>
 
       ${CATEGORIES.map(cat => {
-        const items = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+        // For drawers: only show base config names, not the wizard-generated sub-items
+        const allItems = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+        const items = cat.id === 'drawer'
+          ? allItems.filter(r => !/\s*—\s*(some|mostly) drawers\s*$/i.test(r.fields['Name']||''))
+          : allItems;
         return `
           <div class="mqph-setup-card">
             <div class="mqph-setup-header">
@@ -721,7 +725,7 @@
                 name: d.fields['Name'] + ' — some drawers',
                 category: 'drawer',
                 rate: Math.round(someRate*100)/100,
-                unit: 'per lin ft upcharge',
+                unit: 'per lin ft',
                 description: 'Some drawers rate (1 drawer per cabinet)',
                 active: true,
               });
@@ -733,7 +737,7 @@
                 name: d.fields['Name'] + ' — mostly drawers',
                 category: 'drawer',
                 rate: Math.round(mostlyRate*100)/100,
-                unit: 'per lin ft upcharge',
+                unit: 'per lin ft',
                 description: 'Mostly drawers rate (averaged 1-drawer + bank)',
                 active: true,
               });
@@ -1290,7 +1294,7 @@
           const someRate = Math.round(((p0 - bl2.blBasePrice) / 4) * 100) / 100;
           const rec1 = await atCreate(LINE_ITEMS_TABLE, {
             shop:[shopRecord._recordId], Name:`${name} — some drawers`, Category:'drawer',
-            Rate:someRate, Unit:'per lin ft', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1,
+            Rate:someRate, Unit:'per lin ft upcharge', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1,
           });
           if (rec1?.id) lineItems.push(rec1);
         }
@@ -1299,7 +1303,7 @@
           const mostlyRate = Math.round((((p0 + p1) / 2 - bl2.blBasePrice) / 4) * 100) / 100;
           const rec2 = await atCreate(LINE_ITEMS_TABLE, {
             shop:[shopRecord._recordId], Name:`${name} — mostly drawers`, Category:'drawer',
-            Rate:mostlyRate, Unit:'per lin ft', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':sortBase+2,
+            Rate:mostlyRate, Unit:'per lin ft upcharge', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':sortBase+2,
           });
           if (rec2?.id) lineItems.push(rec2);
         }
@@ -1363,8 +1367,8 @@
           <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px">⚙️ Pricing</h2>
           <p style="font-size:13px;color:#6b7280">Your rates — changes apply to your widget immediately.</p>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="mqph-btn mqph-btn-secondary" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${wizardHasRun ? `<div style="font-size:12px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;max-width:340px;line-height:1.5">✨ Add new items using the <strong>+ Add</strong> buttons below, or <button class="mqph-btn-ghost" style="font-size:12px;padding:0;color:#1d4ed8;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit" onclick="mqphGoToWizard()">re-run the pricing wizard</button> to reprice everything.</div>` : `<button class="mqph-btn mqph-btn-secondary" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>`}
           <button class="mqph-btn mqph-btn-secondary" onclick="mqphGoToWizard()">🧙 Re-run pricing wizard</button>
           <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDeleteAll()">🗑️ Start fresh</button>
         </div>
@@ -1393,7 +1397,7 @@
                   <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
-                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
+                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
                 <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
                 <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
                 <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
@@ -1736,9 +1740,9 @@
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate</div>
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="font-size:13px;color:#6b7280">$</span>
-                <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsSupplyRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
-                <select id="mqph-ct-supply-unit" onchange="mqphSyncBsSupplyRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                <select id="mqph-ct-supply-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
                 </select>
               </div>
@@ -1747,9 +1751,9 @@
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate</div>
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="font-size:13px;color:#6b7280">$</span>
-                <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsInstallRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
-                <select id="mqph-ct-install-unit" onchange="mqphSyncBsInstallRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                <select id="mqph-ct-install-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
                 </select>
               </div>
@@ -1895,72 +1899,28 @@
   let currentBsOptions = []; // in-memory list while the CT modal is open
   let currentCutoutOptions = []; // in-memory list while the CT modal is open
 
-  // Called by oninput on the supply rate field and onchange on supply unit dropdown
-  window.mqphSyncBsSupplyRate = function() {
-    const rate = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value || 0);
-    const unit = document.getElementById('mqph-ct-supply-unit')?.value || 'sqft';
-    currentBsOptions.forEach(o => {
-      if (o._supplyAutoSync !== false) { o.supplyRate = rate; o.supplyUnit = unit; }
-    });
-    mqphRenderBsList();
-  };
-
-  // Called by oninput on the install rate field and onchange on install unit dropdown
-  window.mqphSyncBsInstallRate = function() {
-    const rate = parseFloat(document.getElementById('mqph-ct-install-rate')?.value || 0);
-    const unit = document.getElementById('mqph-ct-install-unit')?.value || 'sqft';
-    currentBsOptions.forEach(o => {
-      if (o._installAutoSync !== false) { o.installRate = rate; o.installUnit = unit; }
-    });
-    mqphRenderBsList();
-  };
-
   function mqphRenderBsList() {
     const list = document.getElementById('mqph-ct-bs-list');
     if (!list) return;
     if (!currentBsOptions.length) {
-      list.innerHTML = `<div style="font-size:12px;color:#9ca3af;padding:6px 0">No height options yet — add one below.</div>`;
+      list.innerHTML = `<div style="font-size:12px;color:#9ca3af;padding:6px 0">No height options yet — add one below (e.g. "4" standard").</div>`;
       return;
     }
-    const matSupplyUnit  = document.getElementById('mqph-ct-supply-unit')?.value  || 'sqft';
-    const matInstallUnit = document.getElementById('mqph-ct-install-unit')?.value || 'sqft';
-    const unitOpts = (selected) => ['sqft','lin ft'].map(u => `<option value="${u}" ${u===selected?'selected':''}>${u}</option>`).join('');
     list.innerHTML = currentBsOptions.map((o,i) => `
-      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:8px">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-          <div style="display:flex;flex-direction:column;gap:3px;flex:2;min-width:110px">
-            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Name</span>
-            <input type="text" value="${(o.label||'').replace(/"/g,'&quot;')}" placeholder='e.g. 4" standard' oninput="mqphUpdateBsOption(${i},'label',this.value,false)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%"/>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:3px;width:80px">
-            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Height (in)</span>
-            <input type="number" value="${o.heightIn!=null?o.heightIn:''}" placeholder="4" oninput="mqphUpdateBsOption(${i},'heightIn',this.value,false)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%;text-align:right"/>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:3px;min-width:90px">
-            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Supply $</span>
-            <div style="display:flex;gap:4px;align-items:center">
-              <input type="number" value="${o.supplyRate!=null?o.supplyRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'supplyRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:80px;text-align:right"/>
-              <select onchange="mqphUpdateBsOption(${i},'supplyUnit',this.value,false)" style="font-family:inherit;font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 6px;min-width:60px">${unitOpts(o.supplyUnit||matSupplyUnit)}</select>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:3px;min-width:90px">
-            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Install $</span>
-            <div style="display:flex;gap:4px;align-items:center">
-              <input type="number" value="${o.installRate!=null?o.installRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'installRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:80px;text-align:right"/>
-              <select onchange="mqphUpdateBsOption(${i},'installUnit',this.value,false)" style="font-family:inherit;font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 6px;min-width:60px">${unitOpts(o.installUnit||matInstallUnit)}</select>
-            </div>
-          </div>
-          <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveBsOption(${i})" style="flex-shrink:0;margin-bottom:1px">✕</button>
-        </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input type="text" value="${(o.label||'').replace(/"/g,'&quot;')}" placeholder="Label, e.g. 4&quot; standard" oninput="mqphUpdateBsOption(${i},'label',this.value)" style="flex:1;min-width:120px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+        <input type="number" value="${o.heightIn!=null?o.heightIn:''}" placeholder="Height (in)" oninput="mqphUpdateBsOption(${i},'heightIn',this.value)" style="width:90px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+        <span style="font-size:11px;color:#9ca3af">Supply $</span>
+        <input type="number" value="${o.supplyRate!=null?o.supplyRate:''}" placeholder="Supply rate" step="0.01" oninput="mqphUpdateBsOption(${i},'supplyRate',this.value)" style="width:90px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+        <span style="font-size:11px;color:#9ca3af">Install $</span>
+        <input type="number" value="${o.installRate!=null?o.installRate:''}" placeholder="Install rate" step="0.01" oninput="mqphUpdateBsOption(${i},'installRate',this.value)" style="width:90px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+        <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveBsOption(${i})">✕</button>
       </div>`).join('');
   }
 
   window.mqphAddBsOption = function() {
-    const matSupply  = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value  || 0);
-    const matInstall = parseFloat(document.getElementById('mqph-ct-install-rate')?.value || 0);
-    const matSupplyUnit  = document.getElementById('mqph-ct-supply-unit')?.value  || 'sqft';
-    const matInstallUnit = document.getElementById('mqph-ct-install-unit')?.value || 'sqft';
-    currentBsOptions.push({ label:'', heightIn:4, supplyRate:matSupply, supplyUnit:matSupplyUnit, installRate:matInstall, installUnit:matInstallUnit, _supplyAutoSync:true, _installAutoSync:true });
+    const matSupply = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value || 0);
+    currentBsOptions.push({label:'', heightIn:4, supplyRate:matSupply, installRate:0});
     mqphRenderBsList();
   };
 
@@ -2001,17 +1961,14 @@
     currentCutoutOptions[i][key] = key==='rate' ? parseFloat(val||0) : val;
   };
 
-  window.mqphUpdateBsOption = function(i, key, val, manualEdit) {
+  window.mqphUpdateBsOption = function(i, key, val) {
     if (!currentBsOptions[i]) return;
     currentBsOptions[i][key] = (key==='heightIn'||key==='installRate'||key==='supplyRate') ? parseFloat(val||0) : val;
-    if (manualEdit) {
-      if (key === 'supplyRate')  currentBsOptions[i]._supplyAutoSync  = false;
-      if (key === 'installRate') currentBsOptions[i]._installAutoSync = false;
-    }
   };
 
   window.mqphOpenCTAdd = function() {
     currentCTEditId = null;
+    currentBsOptions = [{label:'4" standard', heightIn:4, supplyRate:0, installRate:12}];
     currentCutoutOptions = [{label:'Sink cutout', rate:180}, {label:'Cooktop cutout', rate:220}];
     document.getElementById('mqph-ct-modal-title').textContent = 'Add countertop material';
     document.getElementById('mqph-ct-name').value = '';
@@ -2020,8 +1977,6 @@
     document.getElementById('mqph-ct-install-rate').value = '';
     document.getElementById('mqph-ct-install-unit').value = 'sqft';
     document.getElementById('mqph-ct-active').checked = true;
-    // Default row starts at 0 — auto-sync flags mean it will update live as user types rates above
-    currentBsOptions = [{ label:'4" standard', heightIn:4, supplyRate:0, supplyUnit:'sqft', installRate:0, installUnit:'sqft', _supplyAutoSync:true, _installAutoSync:true }];
     mqphRenderBsList();
     mqphRenderCutoutList();
     document.getElementById('mqph-ct-modal-overlay').classList.add('show');
@@ -2031,31 +1986,26 @@
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
     currentCTEditId = id;
     currentBsOptions = getBsOptions(rec);
-    const matSupply  = rec.fields['Rate']||0;
-    const matInstall = rec.fields['Install rate']||0;
-    const unitParts  = (rec.fields['Unit']||'sqft|sqft').split('|');
-    const matSupplyUnit  = (unitParts[0]||'sqft').trim();
-    const matInstallUnit = (unitParts[1]||'sqft').trim();
-    // Backfill any missing rate/unit fields on existing bs rows
-    currentBsOptions.forEach(o => {
-      if (o.supplyRate==null || o.supplyRate===0)  { o.supplyRate  = matSupply;  o._supplyAutoSync  = true; }
-      if (o.supplyUnit==null)  o.supplyUnit  = matSupplyUnit;
-      if (o.installRate==null || o.installRate===0) { o.installRate = matInstall; o._installAutoSync = true; }
-      if (o.installUnit==null) o.installUnit = matInstallUnit;
-    });
+    // Backfill supplyRate for options saved before this field existed, so the
+    // input shows a sensible number instead of blank/zero.
+    const matSupply = rec.fields['Rate']||0;
+    currentBsOptions.forEach(o => { if (o.supplyRate==null) o.supplyRate = matSupply; });
     currentCutoutOptions = getCutoutOptions(rec);
+    // Backfill from older flat sink/cooktop fields if this material predates
+    // the Cutout options list format.
     if (!currentCutoutOptions.length && (rec.fields['Sink cutout rate']!=null || rec.fields['Cooktop cutout rate']!=null)) {
       currentCutoutOptions = [
         {label:'Sink cutout', rate:rec.fields['Sink cutout rate']!=null?rec.fields['Sink cutout rate']:180},
         {label:'Cooktop cutout', rate:rec.fields['Cooktop cutout rate']!=null?rec.fields['Cooktop cutout rate']:220},
       ];
     }
+    const unitParts = (rec.fields['Unit']||'sqft|sqft').split('|');
     document.getElementById('mqph-ct-modal-title').textContent = 'Edit countertop material';
     document.getElementById('mqph-ct-name').value = rec.fields['Name']||'';
-    document.getElementById('mqph-ct-supply-rate').value  = matSupply||'';
-    document.getElementById('mqph-ct-supply-unit').value  = matSupplyUnit;
-    document.getElementById('mqph-ct-install-rate').value = matInstall||'';
-    document.getElementById('mqph-ct-install-unit').value = matInstallUnit;
+    document.getElementById('mqph-ct-supply-rate').value  = rec.fields['Rate']||'';
+    document.getElementById('mqph-ct-supply-unit').value  = (unitParts[0]||'sqft').trim();
+    document.getElementById('mqph-ct-install-rate').value = rec.fields['Install rate']||'';
+    document.getElementById('mqph-ct-install-unit').value = (unitParts[1]||'sqft').trim();
     document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
     mqphRenderBsList();
     mqphRenderCutoutList();
@@ -2070,7 +2020,7 @@
     const su = document.getElementById('mqph-ct-supply-unit').value;
     const iu = document.getElementById('mqph-ct-install-unit').value;
     // Drop any half-filled backsplash/cutout rows (no label) before saving
-    const cleanBsOptions = currentBsOptions.filter(o => (o.label||'').trim().length > 0);
+    const cleanBsOptions = currentBsOptions.filter(o => (o.label||'').trim().length > 0).map(({label, heightIn, supplyRate, supplyUnit, installRate, installUnit}) => ({label, heightIn, supplyRate, supplyUnit, installRate, installUnit}));
     const cleanCutoutOptions = currentCutoutOptions.filter(o => (o.label||'').trim().length > 0);
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'countertop',
