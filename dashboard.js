@@ -779,20 +779,10 @@ window.logoutMember = async function () {
   }
 
   const DEFAULT_SPECIALTY_ITEMS = [
-    { name:'Tall cabinets',              price:0,  perFt:false, sort:1  },
-    { name:'Appliance garage',           price:0,  perFt:false, sort:2  },
-    { name:'Blind corner solution',      price:0,  perFt:false, sort:3  },
-    { name:'Double garbage pullout',     price:0,  perFt:false, sort:4  },
-    { name:'Toe kick drawers',           price:0,  perFt:false, sort:5  },
-    { name:'Lazy Susan',                 price:0,  perFt:false, sort:6  },
-    { name:'Wine rack / cabinet',        price:0,  perFt:false, sort:7  },
-    { name:'Spice rack',                 price:0,  perFt:false, sort:8  },
-    { name:'Pull-out shelves',           price:0,  perFt:false, sort:9  },
-    { name:'Pot drawers',                price:0,  perFt:false, sort:10 },
-    { name:'Pantry unit',                price:0,  perFt:false, sort:11 },
-    { name:'Desk / homework station',    price:0,  perFt:false, sort:12 },
-    { name:'Glass door fronts',          price:0,  perFt:false, sort:13 },
-
+    { name:'Single garbage pullout',     price:0,  perFt:false, sort:1 },
+    { name:'Lazy Susan',                 price:0,  perFt:false, sort:2 },
+    { name:'10x10 Glass door inserts',   price:0,  perFt:false, sort:3 },
+    { name:'Tall cabinet with pullouts', price:0,  perFt:false, sort:4 },
   ];
 
   async function ensureSpecialtyDefaults(shopRecord) {
