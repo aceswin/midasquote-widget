@@ -194,7 +194,7 @@
     { id:'material', label:'🪵 Box materials',          sub:'The material used to build the cabinet boxes (e.g. White melamine, Prefinished birch plywood, Painted MDF)', placeholder:'e.g. White melamine' },
     { id:'door',     label:'🚪 Door styles',             sub:'Include the finish in the name — each door+finish combo is a separate item (e.g. "Maple shaker — stained & lacquered", "MDF slab — painted")', placeholder:'e.g. Maple shaker — stained & lacquered' },
     { id:'drawer_config', label:'🗄️ Drawer configurations',  sub:'Combine box material + slide type in the name (e.g. "Prefinished birch — soft-close undermount")', placeholder:'e.g. Prefinished birch — soft-close undermount' },
-    { id:'hinge',    label:'🔧 Door hinges',             sub:'Hinge options you offer — your cheapest hinge is the baseline, others become upcharges', placeholder:'e.g. Concealed hinge' },
+    { id:'hinge',    label:'🔧 Door hinges',             sub:'Pre-added — Hinge options you offer — your cheapest hinge is the baseline, others become upcharges. Most shops only need these 2 options.', placeholder:'e.g. Push to open hinge system' },
 
   ];
 
