@@ -721,7 +721,7 @@
                 name: d.fields['Name'] + ' — some drawers',
                 category: 'drawer',
                 rate: Math.round(someRate*100)/100,
-                unit: 'per lin ft upcharge',
+                unit: 'per lin ft',
                 description: 'Some drawers rate (1 drawer per cabinet)',
                 active: true,
               });
@@ -1290,7 +1290,7 @@
           const someRate = Math.round(((p0 - bl2.blBasePrice) / 4) * 100) / 100;
           const rec1 = await atCreate(LINE_ITEMS_TABLE, {
             shop:[shopRecord._recordId], Name:`${name} — some drawers`, Category:'drawer',
-            Rate:someRate, Unit:'per lin ft', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1,
+            Rate:someRate, Unit:'per lin ft upcharge', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1,
           });
           if (rec1?.id) lineItems.push(rec1);
         }
