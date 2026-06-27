@@ -414,7 +414,19 @@
   // WIZARD STEPS
   // ============================================================
   function buildWizardSteps() {
-    const materials  = getByCategory('material');
+    // Deduplicate materials by base name — strip "— uppers"/"— bases" so wizard
+    // only shows one entry per material (e.g. "White melamine" not both variants)
+    const allMaterials = getByCategory('material');
+    const seenMatNames = new Set();
+    const materials = allMaterials.filter(m => {
+      const baseName = (m.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+      if (seenMatNames.has(baseName)) return false;
+      seenMatNames.add(baseName);
+      return true;
+    }).map(m => ({
+      ...m,
+      fields: { ...m.fields, Name: (m.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim() }
+    }));
     const doorStyles = getByCategory('door');
     // drawer_config = user-defined base names (source for wizard steps)
     // drawer = priced sub-records created by wizard (some/mostly variants)
