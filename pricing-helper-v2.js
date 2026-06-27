@@ -284,11 +284,27 @@
       </div>
 
       ${CATEGORIES.map(cat => {
-        // For drawers: only show base config names, not the wizard-generated sub-items
+        // For drawers: deduplicate by base name — strip "— some/mostly drawers" suffix
+        // so shop owners see just "3rd best", not "3rd best — some drawers" etc.
         const allItems = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
-        const items = cat.id === 'drawer'
-          ? allItems.filter(r => !/\s*—\s*(some|mostly) drawers\s*$/i.test(r.fields['Name']||''))
-          : allItems;
+        let items;
+        if (cat.id === 'drawer') {
+          const seenBaseNames = new Set();
+          items = allItems.filter(r => {
+            const baseName = (r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
+            if (seenBaseNames.has(baseName)) return false;
+            seenBaseNames.add(baseName);
+            return true;
+          }).map(r => ({
+            ...r,
+            fields: {
+              ...r.fields,
+              Name: (r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()
+            }
+          }));
+        } else {
+          items = allItems;
+        }
         return `
           <div class="mqph-setup-card">
             <div class="mqph-setup-header">
