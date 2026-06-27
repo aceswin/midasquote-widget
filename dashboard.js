@@ -792,8 +792,7 @@ window.logoutMember = async function () {
     { name:'Pantry unit',                price:0,  perFt:false, sort:11 },
     { name:'Desk / homework station',    price:0,  perFt:false, sort:12 },
     { name:'Glass door fronts',          price:0,  perFt:false, sort:13 },
-    { name:'Undervalence lighting rail', price:0,  perFt:true,  sort:14 },
-    { name:'Crown moulding',             price:0,  perFt:true,  sort:15 },
+
   ];
 
   async function ensureSpecialtyDefaults(shopRecord) {
