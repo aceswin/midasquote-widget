@@ -194,7 +194,7 @@
     { id:'material', label:'🪵 Box materials',          sub:'The material used to build the cabinet boxes (e.g. White melamine, Prefinished birch plywood, Painted MDF)', placeholder:'e.g. White melamine' },
     { id:'door',     label:'🚪 Door styles',             sub:'Include the finish in the name — each door+finish combo is a separate item (e.g. "Maple shaker — stained & lacquered", "MDF slab — painted")', placeholder:'e.g. Maple shaker — stained & lacquered' },
     { id:'drawer',   label:'🗄️ Drawer configurations',  sub:'Combine box material + slide type in the name (e.g. "Prefinished birch — soft-close undermount")', placeholder:'e.g. Prefinished birch — soft-close undermount' },
-    { id:'hinge',    label:'🔧 Door hinges',             sub:'Pre-added — Hinge options you offer — your cheapest hinge is the baseline, others become upcharges. Most shops only need these 2 options.', placeholder:'e.g. Push to open hinge system' },
+    { id:'hinge',    label:'🔧 Door hinges',             sub:'Hinge options you offer — your cheapest hinge is the baseline, others become upcharges', placeholder:'e.g. Concealed hinge' },
 
   ];
 
@@ -721,7 +721,7 @@
                 name: d.fields['Name'] + ' — some drawers',
                 category: 'drawer',
                 rate: Math.round(someRate*100)/100,
-                unit: 'per lin ft upcharge',
+                unit: 'per lin ft',
                 description: 'Some drawers rate (1 drawer per cabinet)',
                 active: true,
               });
@@ -733,7 +733,7 @@
                 name: d.fields['Name'] + ' — mostly drawers',
                 category: 'drawer',
                 rate: Math.round(mostlyRate*100)/100,
-                unit: 'per lin ft upcharge',
+                unit: 'per lin ft',
                 description: 'Mostly drawers rate (averaged 1-drawer + bank)',
                 active: true,
               });
@@ -1290,7 +1290,7 @@
           const someRate = Math.round(((p0 - bl2.blBasePrice) / 4) * 100) / 100;
           const rec1 = await atCreate(LINE_ITEMS_TABLE, {
             shop:[shopRecord._recordId], Name:`${name} — some drawers`, Category:'drawer',
-            Rate:someRate, Unit:'per lin ft upcharge', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1,
+            Rate:someRate, Unit:'per lin ft', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1,
           });
           if (rec1?.id) lineItems.push(rec1);
         }
@@ -1299,7 +1299,7 @@
           const mostlyRate = Math.round((((p0 + p1) / 2 - bl2.blBasePrice) / 4) * 100) / 100;
           const rec2 = await atCreate(LINE_ITEMS_TABLE, {
             shop:[shopRecord._recordId], Name:`${name} — mostly drawers`, Category:'drawer',
-            Rate:mostlyRate, Unit:'per lin ft upcharge', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':sortBase+2,
+            Rate:mostlyRate, Unit:'per lin ft', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':sortBase+2,
           });
           if (rec2?.id) lineItems.push(rec2);
         }
@@ -1393,7 +1393,7 @@
                   <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
-                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
+                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
                 <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
                 <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
                 <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
@@ -1736,7 +1736,7 @@
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate</div>
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="font-size:13px;color:#6b7280">$</span>
-                <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsSupplyRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
                 <select id="mqph-ct-supply-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
@@ -1747,7 +1747,7 @@
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate</div>
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="font-size:13px;color:#6b7280">$</span>
-                <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsInstallRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
                 <select id="mqph-ct-install-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
@@ -1895,28 +1895,57 @@
   let currentBsOptions = []; // in-memory list while the CT modal is open
   let currentCutoutOptions = []; // in-memory list while the CT modal is open
 
+  // Sync supply rate to backsplash rows that are still on auto-sync
+  window.mqphSyncBsSupplyRate = function() {
+    const rate = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value || 0);
+    currentBsOptions.forEach(o => { if (o._supplyAutoSync !== false) { o.supplyRate = rate; } });
+    mqphRenderBsList();
+  };
+
+  // Sync install rate to backsplash rows that are still on auto-sync
+  window.mqphSyncBsInstallRate = function() {
+    const rate = parseFloat(document.getElementById('mqph-ct-install-rate')?.value || 0);
+    currentBsOptions.forEach(o => { if (o._installAutoSync !== false) { o.installRate = rate; } });
+    mqphRenderBsList();
+  };
+
   function mqphRenderBsList() {
     const list = document.getElementById('mqph-ct-bs-list');
     if (!list) return;
     if (!currentBsOptions.length) {
-      list.innerHTML = `<div style="font-size:12px;color:#9ca3af;padding:6px 0">No height options yet — add one below (e.g. "4" standard").</div>`;
+      list.innerHTML = `<div style="font-size:12px;color:#9ca3af;padding:6px 0">No height options yet — add one below.</div>`;
       return;
     }
+    const matSupplyUnit  = document.getElementById('mqph-ct-supply-unit')?.value  || 'sqft';
+    const matInstallUnit = document.getElementById('mqph-ct-install-unit')?.value || 'sqft';
     list.innerHTML = currentBsOptions.map((o,i) => `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-        <input type="text" value="${(o.label||'').replace(/"/g,'&quot;')}" placeholder="Label, e.g. 4&quot; standard" oninput="mqphUpdateBsOption(${i},'label',this.value)" style="flex:1;min-width:120px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-        <input type="number" value="${o.heightIn!=null?o.heightIn:''}" placeholder="Height (in)" oninput="mqphUpdateBsOption(${i},'heightIn',this.value)" style="width:90px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-        <span style="font-size:11px;color:#9ca3af">Supply $</span>
-        <input type="number" value="${o.supplyRate!=null?o.supplyRate:''}" placeholder="Supply rate" step="0.01" oninput="mqphUpdateBsOption(${i},'supplyRate',this.value)" style="width:90px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-        <span style="font-size:11px;color:#9ca3af">Install $</span>
-        <input type="number" value="${o.installRate!=null?o.installRate:''}" placeholder="Install rate" step="0.01" oninput="mqphUpdateBsOption(${i},'installRate',this.value)" style="width:90px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-        <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveBsOption(${i})">✕</button>
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:3px;flex:2;min-width:110px">
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Name</span>
+            <input type="text" value="${(o.label||'').replace(/"/g,'&quot;')}" placeholder='e.g. 4" standard' oninput="mqphUpdateBsOption(${i},'label',this.value,false)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;width:90px">
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Height (in)</span>
+            <input type="number" value="${o.heightIn!=null?o.heightIn:''}" placeholder="4" oninput="mqphUpdateBsOption(${i},'heightIn',this.value,false)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%;text-align:right"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;width:110px">
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Supply $ / ${matSupplyUnit}</span>
+            <input type="number" value="${o.supplyRate!=null?o.supplyRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'supplyRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%;text-align:right"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;width:110px">
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Install $ / lin ft</span>
+            <input type="number" value="${o.installRate!=null?o.installRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'installRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%;text-align:right"/>
+          </div>
+          <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveBsOption(${i})" style="flex-shrink:0;margin-bottom:1px">✕</button>
+        </div>
       </div>`).join('');
   }
 
   window.mqphAddBsOption = function() {
-    const matSupply = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value || 0);
-    currentBsOptions.push({label:'', heightIn:4, supplyRate:matSupply, installRate:0});
+    const matSupply  = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value  || 0);
+    const matInstall = parseFloat(document.getElementById('mqph-ct-install-rate')?.value || 0);
+    currentBsOptions.push({ label:'', heightIn:4, supplyRate:matSupply, installRate:matInstall, _supplyAutoSync:true, _installAutoSync:true });
     mqphRenderBsList();
   };
 
@@ -1957,14 +1986,19 @@
     currentCutoutOptions[i][key] = key==='rate' ? parseFloat(val||0) : val;
   };
 
-  window.mqphUpdateBsOption = function(i, key, val) {
+  window.mqphUpdateBsOption = function(i, key, val, manualEdit) {
     if (!currentBsOptions[i]) return;
     currentBsOptions[i][key] = (key==='heightIn'||key==='installRate'||key==='supplyRate') ? parseFloat(val||0) : val;
+    // Mark as manually edited so auto-sync stops overwriting it
+    if (manualEdit) {
+      if (key === 'supplyRate')  currentBsOptions[i]._supplyAutoSync  = false;
+      if (key === 'installRate') currentBsOptions[i]._installAutoSync = false;
+    }
   };
 
   window.mqphOpenCTAdd = function() {
     currentCTEditId = null;
-    currentBsOptions = [{label:'4" standard', heightIn:4, supplyRate:0, installRate:12}];
+    currentBsOptions = [{ label:'4" standard', heightIn:4, supplyRate:0, installRate:0, _supplyAutoSync:true, _installAutoSync:true }];
     currentCutoutOptions = [{label:'Sink cutout', rate:180}, {label:'Cooktop cutout', rate:220}];
     document.getElementById('mqph-ct-modal-title').textContent = 'Add countertop material';
     document.getElementById('mqph-ct-name').value = '';
@@ -1984,8 +2018,12 @@
     currentBsOptions = getBsOptions(rec);
     // Backfill supplyRate for options saved before this field existed, so the
     // input shows a sensible number instead of blank/zero.
-    const matSupply = rec.fields['Rate']||0;
-    currentBsOptions.forEach(o => { if (o.supplyRate==null) o.supplyRate = matSupply; });
+    const matSupply  = rec.fields['Rate']||0;
+    const matInstall = rec.fields['Install rate']||0;
+    currentBsOptions.forEach(o => {
+      if (o.supplyRate==null)  { o.supplyRate  = matSupply;  o._supplyAutoSync  = true; }
+      if (o.installRate==null) { o.installRate = matInstall; o._installAutoSync = true; }
+    });
     currentCutoutOptions = getCutoutOptions(rec);
     // Backfill from older flat sink/cooktop fields if this material predates
     // the Cutout options list format.
@@ -2016,7 +2054,7 @@
     const su = document.getElementById('mqph-ct-supply-unit').value;
     const iu = document.getElementById('mqph-ct-install-unit').value;
     // Drop any half-filled backsplash/cutout rows (no label) before saving
-    const cleanBsOptions = currentBsOptions.filter(o => (o.label||'').trim().length > 0);
+    const cleanBsOptions = currentBsOptions.filter(o => (o.label||'').trim().length > 0).map(({label, heightIn, supplyRate, installRate}) => ({label, heightIn, supplyRate, installRate}));
     const cleanCutoutOptions = currentCutoutOptions.filter(o => (o.label||'').trim().length > 0);
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'countertop',
