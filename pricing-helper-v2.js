@@ -284,9 +284,23 @@
       </div>
 
       ${CATEGORIES.map(cat => {
-        // drawer_config chips show clean base names directly — no deduplication needed
         const allItems = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
-        const items = allItems;
+        let items;
+        if (cat.id === 'material') {
+          // Deduplicate by base name — strip "— uppers"/"— bases" so only one chip per material
+          const seenBaseNames = new Set();
+          items = allItems.filter(r => {
+            const baseName = (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+            if (seenBaseNames.has(baseName)) return false;
+            seenBaseNames.add(baseName);
+            return true;
+          }).map(r => ({
+            ...r,
+            fields: { ...r.fields, Name: (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim() }
+          }));
+        } else {
+          items = allItems;
+        }
         return `
           <div class="mqph-setup-card">
             <div class="mqph-setup-header">
