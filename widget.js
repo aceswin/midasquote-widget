@@ -514,7 +514,6 @@
         </div>
         ${shop['Show showroom'] !== false && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:12px;font-weight:600;color:#fff;text-decoration:none;background:${shop['Brand colour']||'#1a1a1a'};border-radius:24px;padding:10px 20px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:7px;transition:all 0.2s;box-shadow:0 8px 24px rgba(0,0,0,0.28),0 2px 6px rgba(0,0,0,0.15);font-weight:700;letter-spacing:0.01em" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,0.32),0 3px 8px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.28),0 2px 6px rgba(0,0,0,0.15)'>🖼️ See our showroom</a>` : ''}
       </div>
-      <div class="mq-powered-by" style="margin-top:0;padding-top:0;border-top:none;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
       <div class="mq-tab-bar">
         <button class="mq-tab active" onclick="mqSwitchTab('both',this)">
           <span class="mq-tab-icon">✨</span>
