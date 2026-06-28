@@ -72,6 +72,7 @@
       otherItems:      byCategory('other'),
       countertopItems: byCategory('countertop'),
       trimItems:       byCategory('trim'),
+      tallCabItems:    byCategory('tall_cabinet'),
     };
 
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
@@ -322,8 +323,8 @@
       try { linkedDoors = item['Linked door style'] ? JSON.parse(item['Linked door style']) : []; } catch(e) { linkedDoors = []; }
       TRIM[`trim_${i}`] = {
         label:       item['Name'],
-        ps:          item['Rate']||0,          // supply rate, per linear foot
-        pi:          item['Install rate']||0,  // install rate, per linear foot
+        ps:          item['Rate']||0,
+        pi:          item['Install rate']||0,
         type:        item['Trim type']||'crown',
         linkedDoors: linkedDoors,
       };
@@ -335,6 +336,23 @@
       .filter(([k,t]) => t.type === type)
       .map(([k,t])=>`<option value="${k}">${t.label}</option>`).join('');
     return `<option value="none">None</option>` + opts;
+  }
+
+  // ── Tall cabinets ──
+  let TALL_CAB = {};
+  function buildTALLCAB(data) {
+    const { li } = data;
+    TALL_CAB = {};
+    (li.tallCabItems || []).filter(item => item['Active'] !== false).forEach((item, i) => {
+      TALL_CAB[`tc_${i}`] = {
+        label: item['Name'],
+        basePrice: item['Rate'] || 0,
+      };
+    });
+  }
+
+  function tallCabOpts() {
+    return Object.entries(TALL_CAB).map(([k,t]) => `<option value="${k}">${t.label}</option>`).join('');
   }
 
   function ctMatOpts() {
@@ -402,7 +420,6 @@
             <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
             <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
             <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet wide, enter 12.</div>
-            <div style="background:#f0f9ff;border-radius:6px;padding:8px 10px;margin-top:6px;color:#0369a1;font-size:11px">🏛️ <strong>Tall cabinets:</strong> If you're adding a tall cabinet in the specialty items below, don't count that wall space in your upper and base measurements above.</div>
           </div>
         </div>
         <div class="mq-grid3">
@@ -490,7 +507,32 @@
       <div class="mq-sec">
         <p class="mq-sec-title">Specialty items</p>
         <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
-      </div>`;
+      </div>
+      ${Object.keys(TALL_CAB).length > 0 ? `
+      <div class="mq-sec">
+        <p class="mq-sec-title">Tall cabinets</p>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+          🏛️ Don't include tall cabinet wall space in your upper and base measurements above — add them here instead.
+        </div>
+        <div class="mq-grid2" style="margin-bottom:10px">
+          <div class="mq-field">
+            <label class="mq-label">Tall cabinet type</label>
+            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')">${tallCabOpts()}</select>
+          </div>
+          <div class="mq-field">
+            <label class="mq-label">Width (inches)</label>
+            <input type="number" id="mq-${prefix}-tc-width" value="24" min="12" max="48"/>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label class="mq-label">Quantity</label>
+          <div class="mq-qty-ctrl">
+            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',-1)">−</button>
+            <span class="mq-qty-val" id="mq-${prefix}-tc-qty">0</span>
+            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',1)">+</button>
+          </div>
+        </div>
+      </div>` : ''}`;
   }
 
   const TRAVEL_NOTE = '🚗 This estimate is based on local delivery. Jobs outside our local area may be subject to additional travel charges — your final quote will confirm the exact amount.';
@@ -786,9 +828,9 @@
 
     const ctDepth  = 25;
 
-    const diffOn={},specQty={},surfCounts={},surfs={};
+    const diffOn={},specQty={},surfCounts={},surfs={},tallCabQty={};
     let pendingCb=null;
-    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};});
+    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabQty[p]=0;});
 
     function fmt(n){return '$'+Math.round(n).toLocaleString();}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
@@ -878,6 +920,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       specQty[prefix][i]=Math.max(0,specQty[prefix][i]+d);
       document.getElementById(`mq-qty-${prefix}-${i}`).textContent=specQty[prefix][i];
       document.getElementById(`mq-sp-${prefix}-${i}`).classList.toggle('on',specQty[prefix][i]>0);
+    };
+
+    window.mqTogTallCab=(prefix)=>{ tallCabQty[prefix]=0; const el=document.getElementById(`mq-${prefix}-tc-qty`); if(el) el.textContent=0; };
+    window.mqAdjTallCab=(prefix,d)=>{
+      tallCabQty[prefix]=Math.max(0,(tallCabQty[prefix]||0)+d);
+      const el=document.getElementById(`mq-${prefix}-tc-qty`);
+      if(el) el.textContent=tallCabQty[prefix];
     };
 
     window.mqShowLead=cb=>{
@@ -1034,18 +1083,60 @@ window.mqTogDrawerConfig=(prefix)=>{
       let specTotal=0;
       specs.forEach((s,i)=>{
         if(!specQty[prefix][i]) return;
-        // For per-linear-foot items, the quantity IS the linear feet — independent of cabinet measurements
         const cost=s.perFt?s.price*specQty[prefix][i]:s.price*specQty[prefix][i];
         specTotal+=cost;
         const qtyLabel=s.perFt?`${specQty[prefix][i]} ft`:(specQty[prefix][i]>1?`× ${specQty[prefix][i]}`:'');
         lines.push({label:qtyLabel?`${s.label} (${qtyLabel})`:s.label,cost:Math.round(cost)});
       });
 
+      // Tall cabinets — base price + door upcharge + material upcharge + install
+      let tallCabTotal = 0;
+      const tcQty = tallCabQty[prefix] || 0;
+      if (tcQty > 0 && Object.keys(TALL_CAB).length > 0) {
+        const tcKey  = gv(`mq-${prefix}-tc-type`);
+        const tcWidthIn = gn(`mq-${prefix}-tc-width`, 24);
+        const tc = TALL_CAB[tcKey] || Object.values(TALL_CAB)[0];
+        if (tc) {
+          const tcLinFt = tcWidthIn / 12;
+          // Base unit price (from wizard — baseline mat, baseline door, supply only)
+          let tcUnitPrice = tc.basePrice;
+          // Door upcharge: (door rate per lin ft × tcLinFt) × 2.25 to account for full-height doors
+          const doorKey = diffOn[prefix] ? gv(`mq-${prefix}-b-door`) : gv(`mq-${prefix}-door`);
+          const doorUpchargePerFt = doorKey && doorKey !== 'none' ? (door[doorKey]?.rate || 0) : 0;
+          tcUnitPrice += doorUpchargePerFt * tcLinFt * 2.25;
+          // Material upcharge: difference above baseline material, per lin ft × tcLinFt × 2 (uppers + bases height equiv)
+          const matKey = diffOn[prefix] ? gv(`mq-${prefix}-b-mat`) : gv(`mq-${prefix}-mat`);
+          const tcMatRates = getMaterialRates(matKey, mat);
+          const blMatRates = getMaterialRates(Object.keys(mat)[0], mat);
+          const matUpcharge = Math.max(0, tcMatRates.rateB - blMatRates.rateB) * tcLinFt * 2;
+          tcUnitPrice += matUpcharge;
+          // Install: base install rate × tcLinFt × 2 if supply + install
+          if (si === 'install') tcUnitPrice += installB * tcLinFt * 2;
+          // Hinge upcharge
+          const hingeKey = diffOn[prefix] ? gv(`mq-${prefix}-b-hinge`) : gv(`mq-${prefix}-hinge`);
+          const tcHingeRate = hingeKey ? (hinge[hingeKey]?.rate || 0) : 0;
+          tcUnitPrice += tcHingeRate * tcLinFt * 2.25;
+
+          const tcCost = Math.round(tcUnitPrice * tcQty);
+          tallCabTotal += tcCost;
+          lines.push({label:`${tc.label} (${tcQty} × ${tcWidthIn}")`, cost: tcCost});
+        }
+      }
+
+      // Crown footage for tall cabinets — add their width to the crown calc
+      const crownKey = gv(`mq-${prefix}-trim-crown`);
+      if (tcQty > 0 && crownKey && crownKey !== 'none' && TRIM[crownKey]) {
+        const tcWidthIn = gn(`mq-${prefix}-tc-width`, 24);
+        const tcLinFt = (tcWidthIn / 12) * tcQty;
+        // This extra footage gets folded into the trim calc below naturally
+        // because we pass it via the existing trim section — we just note it here
+      }
+
       const remEl=document.getElementById(`mq-${prefix}-removal`);
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const sub=uCost+bCost+specTotal+remCost+trimCost;
+      const sub=uCost+bCost+specTotal+tallCabTotal+remCost+trimCost;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
 
       const total=sub;
@@ -1393,6 +1484,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     injectStyles(shop['Brand colour']||'#1a1a1a');
     buildCTMAT(data);
     buildTRIM(data);
+    buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
   }

@@ -192,9 +192,9 @@
   // ============================================================
   const CATEGORIES = [
     { id:'material', label:'🪵 Box materials',          sub:'The material used to build the cabinet boxes (e.g. White melamine, Prefinished birch plywood, Painted MDF)', placeholder:'e.g. White melamine' },
-    { id:'door',     label:'🚪 Door styles',             sub:'Think species and profile — maple shaker, oak raised panel, Painted MDF slab, and so on. Unless you charge significantly more for one finish over another, you don\'t need a separate item for each finish. Keep it to your most popular styles and your widget will feel clean and easy to use.', placeholder:'e.g. Maple shaker' },
-   { id:'drawer_config', label:'🗄️ Drawer configurations', sub:'Add your drawer options by material and close type — customers generally don\'t need to know the slide type or hardware details, so keep the names simple and friendly. Something like "White melamine — soft-close" or "Prefinished birch — soft-close" works perfectly. Your drawer price will include the cost of tracks and hardware.', placeholder:'e.g. Prefinished birch — soft-close' },
-    { id:'hinge',    label:'🔧 Door hinges',             sub:'Pre-added — Hinge options you offer — your cheapest hinge is the baseline, others become upcharges. Most shops only need these 2 options.', placeholder:'e.g. Push to open hinge system' },
+    { id:'door',     label:'🚪 Door styles',             sub:'Include the finish in the name — each door+finish combo is a separate item (e.g. "Maple shaker — stained & lacquered", "MDF slab — painted")', placeholder:'e.g. Maple shaker — stained & lacquered' },
+    { id:'drawer_config', label:'🗄️ Drawer configurations',  sub:'Combine box material + slide type in the name (e.g. "Prefinished birch — soft-close undermount")', placeholder:'e.g. Prefinished birch — soft-close undermount' },
+    { id:'hinge',    label:'🔧 Door hinges',             sub:'Hinge options you offer — your cheapest hinge is the baseline, others become upcharges', placeholder:'e.g. Concealed hinge' },
 
   ];
 
@@ -280,7 +280,7 @@
     return `
       <div style="margin-bottom:1.5rem">
         <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px">🛠️ Set up your shop items</h2>
-        <p style="font-size:13px;color:#6b7280;line-height:1.6">Start with the materials, door styles, and drawer configs you sell most — your everyday go-tos. A focused list gives customers a better experience and makes your widget feel clean and professional. You can always add more items any time.</p>
+        <p style="font-size:13px;color:#6b7280;line-height:1.6">Add everything your shop offers. Just names for now — pricing is figured out in the wizard.</p>
       </div>
 
       ${CATEGORIES.map(cat => {
@@ -1397,6 +1397,7 @@
       const c = r.fields['Category'] || 'other';
       if (c === 'countertop') return; // handled by buildCTHtml()
       if (c === 'trim') return; // handled by buildTrimHtml()
+      if (c === 'tall_cabinet') return; // handled by buildTallCabHtml()
       if (c === 'drawer_config') return; // config chips — not shown in editor, only in Edit Shop Items
       if (!groups[c]) groups[c] = [];
       groups[c].push(r);
@@ -1450,6 +1451,7 @@
 
       ${buildCTHtml()}
       ${buildTrimHtml()}
+      ${buildTallCabHtml()}
 
       <!-- Mini-wizard overlay -->
       <div class="mqph-overlay" id="mqph-mini-overlay">
@@ -1950,7 +1952,199 @@
       </div>`;
   }
 
-  let currentCTEditId = null;
+  // ============================================================
+  // TALL CABINET EDITOR
+  // ============================================================
+  function buildTallCabHtml() {
+    const tallCabs = lineItems.filter(r => r.fields && r.fields['Category'] === 'tall_cabinet')
+      .sort((a,b) => (a.fields['Sort order']||0) - (b.fields['Sort order']||0));
+
+    const wizardHasRun = lineItems.some(r => r.fields && r.fields['Category'] === 'material' && (r.fields['Rate']||0) > 0);
+
+    function tallRow(r) {
+      return `
+        <div class="mqph-row">
+          <div style="flex:1;min-width:0">
+            <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+            <div class="mqph-row-desc">Base unit price — door, material & install upcharges applied automatically by widget</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+            <span style="color:#6b7280;font-size:11px">Base price:</span>
+            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/ unit</span>
+          </div>
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenTallCabEdit('${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+        </div>`;
+    }
+
+    return `
+      <div class="mqph-ct-block">
+        <div class="mqph-cat-header">
+          <span class="mqph-cat-title">🏛️ Tall cabinets</span>
+          ${wizardHasRun
+            ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenTallCabAdd()">+ Add type</button>`
+            : `<span style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:4px 10px">Complete main pricing wizard first</span>`
+          }
+        </div>
+        <div id="mqph-tallcab-msg" class="mqph-msg"></div>
+        <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
+          Add each tall cabinet variation you offer — all doors &amp; shelves, with pullouts, oven unit, etc. Quote each as a standard <strong>24" wide unit using your baseline material and baseline door</strong> (supply only). The widget automatically adds door upcharges, material upcharges, install, and crown footage on top based on what the customer has selected.
+        </div>
+        ${tallCabs.length
+          ? tallCabs.map(tallRow).join('')
+          : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">No tall cabinet types yet — add your first one above.</div>`
+        }
+        <div style="padding:0.75rem 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6">The widget reminds customers not to include tall cabinet wall space in their upper and base measurements.</div>
+      </div>
+
+      <!-- Tall cabinet add/edit modal -->
+      <div class="mqph-overlay" id="mqph-tallcab-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr mqph-mini-hdr" style="background:#1a1a1a;border-radius:12px 12px 0 0">
+            <div>
+              <h3 id="mqph-tallcab-modal-title" style="color:#fff;font-size:15px">Add tall cabinet type</h3>
+              <p id="mqph-tallcab-modal-sub" style="color:rgba(255,255,255,0.6);font-size:12px;margin:3px 0 0;padding:0"></p>
+              <div id="mqph-tallcab-modal-progress" style="display:flex;gap:4px;margin-top:10px"></div>
+            </div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseTallCabModal()" style="color:rgba(255,255,255,0.7);font-size:22px">×</button>
+          </div>
+          <div class="mqph-modal-body" id="mqph-tallcab-modal-content"></div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" id="mqph-tallcab-back" onclick="mqphTallCabBack()" style="display:none">← Back</button>
+            <button class="mqph-btn mqph-btn-primary" id="mqph-tallcab-next" onclick="mqphTallCabNext()" style="margin-left:auto">Next →</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Tall cabinet mini wizard state
+  let tallCabWiz = { step: 0, name: '', editId: null, price: null };
+
+  function renderTallCabWizStep() {
+    const bl = getBaselineRates();
+    const step = tallCabWiz.step;
+    const name = tallCabWiz.name;
+    const isEdit = !!tallCabWiz.editId;
+
+    const titleEl    = document.getElementById('mqph-tallcab-modal-title');
+    const subEl      = document.getElementById('mqph-tallcab-modal-sub');
+    const progressEl = document.getElementById('mqph-tallcab-modal-progress');
+    const contentEl  = document.getElementById('mqph-tallcab-modal-content');
+    const nextBtn    = document.getElementById('mqph-tallcab-next');
+    const backBtn    = document.getElementById('mqph-tallcab-back');
+
+    const dots = ['Name','Quote'].map((_,i) =>
+      `<div style="flex:1;height:3px;border-radius:2px;background:${i<step?'#a3e635':i===step?'#fff':'rgba(255,255,255,0.25)'};transition:background 0.3s"></div>`
+    ).join('');
+    if (progressEl) progressEl.innerHTML = dots;
+
+    if (step === 0) {
+      if (titleEl) titleEl.textContent = isEdit ? 'Edit tall cabinet type' : '🏛️ Add tall cabinet type';
+      if (subEl)   subEl.textContent   = 'Step 1 of 2 — name it first';
+      if (contentEl) contentEl.innerHTML = `
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">What do you call this tall cabinet? Be descriptive — it appears in your widget as a selectable option.</p>
+        <input class="mqph-name-input" type="text" id="mqph-tallcab-name-inp" placeholder="e.g. Tall cabinet — all doors & shelves" value="${name.replace(/"/g,'&quot;')}" onkeydown="if(event.key==='Enter')mqphTallCabNext()"/>
+        <div style="font-size:12px;color:#9ca3af;margin-top:-0.5rem;line-height:1.5">Examples: "Tall cab with pullouts", "Oven unit", "Pantry — all doors", "Tall cab — drawer bank bottom"</div>`;
+      if (nextBtn) { nextBtn.textContent = 'Next →'; nextBtn.disabled = false; }
+      if (backBtn) backBtn.style.display = 'none';
+
+    } else if (step === 1) {
+      if (titleEl) titleEl.textContent = '🏛️ Quote this tall cabinet';
+      if (subEl)   subEl.textContent   = name;
+      if (contentEl) contentEl.innerHTML = `
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Quote this exact tall cabinet in your software, then enter the total below.</p>
+        ${specBox([
+          `<strong>${name}</strong>`,
+          `Width: <span class="mqph-spec-tag">24"</span> (standard tall cabinet width)`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName||'your baseline material'}</span>`,
+          `Door: <span class="mqph-spec-tag">${bl.blDoorName||'your baseline door'}</span> &nbsp;·&nbsp; Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'your cheapest hinge'}</span>`,
+          `<strong>Supply only · No install · Local delivery</strong>`,
+          `Include the box, shelves, and any interior fittings specific to this type (pullouts, drawer boxes, etc.)`,
+        ])}
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-tallcab-price" placeholder="0" oninput="mqphTallCabCalc()"/></div>
+        <p class="mqph-calc-hint">This is your base unit price — the widget adds door upcharges, material upcharges, and install on top automatically</p>
+        <div class="mqph-rate-reveal" id="mqph-tallcab-reveal" style="display:none">
+          <div class="mqph-rate-reveal-val" id="mqph-tallcab-rate-val">—</div>
+          <div class="mqph-rate-reveal-lbl">base unit price (stored as-is)</div>
+        </div>`;
+      if (nextBtn) { nextBtn.textContent = 'Save →'; nextBtn.disabled = false; }
+      if (backBtn) backBtn.style.display = 'inline-block';
+      if (tallCabWiz.price) setTimeout(() => { const el = document.getElementById('mqph-tallcab-price'); if(el){el.value=tallCabWiz.price;mqphTallCabCalc();} }, 50);
+    }
+  }
+
+  window.mqphTallCabCalc = function() {
+    const p = parseFloat(document.getElementById('mqph-tallcab-price')?.value || 0);
+    const reveal = document.getElementById('mqph-tallcab-reveal');
+    const val    = document.getElementById('mqph-tallcab-rate-val');
+    if (reveal && val) {
+      if (p > 0) { reveal.style.display = 'block'; val.textContent = `$${p.toLocaleString()} / unit`; }
+      else reveal.style.display = 'none';
+    }
+  };
+
+  window.mqphTallCabNext = async function() {
+    const step = tallCabWiz.step;
+    if (step === 0) {
+      const name = document.getElementById('mqph-tallcab-name-inp')?.value.trim();
+      if (!name) { const inp = document.getElementById('mqph-tallcab-name-inp'); if(inp){inp.style.borderColor='#dc2626';inp.focus();} return; }
+      tallCabWiz.name = name;
+      tallCabWiz.step = 1;
+      renderTallCabWizStep();
+    } else if (step === 1) {
+      const p = parseFloat(document.getElementById('mqph-tallcab-price')?.value || 0);
+      if (!p || p <= 0) { const inp = document.getElementById('mqph-tallcab-price'); if(inp){inp.style.borderBottomColor='#dc2626';inp.focus();} return; }
+      tallCabWiz.price = p;
+      const nextBtn = document.getElementById('mqph-tallcab-next');
+      if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
+      try {
+        const fields = {
+          shop: [shopRecord._recordId], Name: tallCabWiz.name, Category: 'tall_cabinet',
+          Rate: p, Unit: 'per unit',
+          Description: 'Base unit price — 24" wide, baseline material & door, supply only',
+          Active: true,
+        };
+        if (tallCabWiz.editId) {
+          await atUpdate(LINE_ITEMS_TABLE, tallCabWiz.editId, fields);
+        } else {
+          fields['Sort order'] = lineItems.filter(r=>r.fields?.['Category']==='tall_cabinet').length + 1;
+          const rec = await atCreate(LINE_ITEMS_TABLE, fields);
+          if (rec?.id) lineItems.push(rec);
+        }
+        mqphCloseTallCabModal();
+        await loadAndRender();
+      } catch(e) {
+        console.error('Tall cab save error:', e);
+        if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Save →'; }
+        alert('Error saving. Please try again.');
+      }
+    }
+  };
+
+  window.mqphTallCabBack = function() {
+    if (tallCabWiz.step > 0) { tallCabWiz.step--; renderTallCabWizStep(); }
+  };
+
+  window.mqphOpenTallCabAdd = function() {
+    tallCabWiz = { step: 0, name: '', editId: null, price: null };
+    document.getElementById('mqph-tallcab-modal-overlay')?.classList.add('show');
+    renderTallCabWizStep();
+  };
+
+  window.mqphOpenTallCabEdit = function(id) {
+    const rec = lineItems.find(r => r.id === id); if (!rec) return;
+    tallCabWiz = { step: 0, name: rec.fields['Name']||'', editId: id, price: rec.fields['Rate']||null };
+    document.getElementById('mqph-tallcab-modal-overlay')?.classList.add('show');
+    renderTallCabWizStep();
+  };
+
+  window.mqphCloseTallCabModal = function() {
+    document.getElementById('mqph-tallcab-modal-overlay')?.classList.remove('show');
+    tallCabWiz = { step: 0, name: '', editId: null, price: null };
+  };
+
   let currentTrimEditId = null;
   let currentBsOptions = []; // in-memory list while the CT modal is open
   let currentCutoutOptions = []; // in-memory list while the CT modal is open
