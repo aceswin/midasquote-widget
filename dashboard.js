@@ -2227,7 +2227,7 @@ window.logoutMember = async function () {
       }
 
       function getQrLink() {
-        return _mqCustomPostLink || '';
+        return _mqCustomPostLink || defaultQuoteLink;
       }
 
       let qrLink = getQrLink();
@@ -2342,7 +2342,7 @@ window.logoutMember = async function () {
       const brandColor2 = shopRecord.fields['Brand colour'] || '#1a1a1a';
       let signBgImage = _mqSignBgImage;
       let signOverlayOpacity = _mqSignOverlayOpacity;
-      let signLink = _mqCustomPostLink || '';
+      let signLink = _mqCustomPostLink || defaultQuoteLink;
       let signOrientation = 'portrait'; // 'portrait' | 'landscape'
       let signHeadline = _mqSignHeadline || 'Another project by';
       let signCustomColor = _mqSignCustomColor || '';
@@ -2775,7 +2775,7 @@ window.logoutMember = async function () {
         }
       }
 
-      window._mqRedrawSign = () => { signLink = _mqCustomPostLink || ''; drawSign(); };
+      window._mqRedrawSign = () => { signLink = _mqCustomPostLink || defaultQuoteLink; drawSign(); };
 
       drawSign();
       loadQrLib().then(() => { drawSign(); });
