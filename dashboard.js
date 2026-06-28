@@ -3035,10 +3035,15 @@ window.logoutMember = async function () {
     container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;font-size:14px;color:#6b7280">Loading your dashboard...</div>';
 
     let shopToken = new URLSearchParams(window.location.search).get('shop');
+    let memberHasActivePlan = null;
     if (!shopToken && window.$memberstackDom) {
       try {
         const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
+        if (member) {
+          shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
+          const plans = member?.planConnections || [];
+          memberHasActivePlan = plans.length > 0;
+        }
       } catch(e) {}
     }
     if (!shopToken) {
@@ -3053,6 +3058,16 @@ window.logoutMember = async function () {
     }
 
     window._mqShopRecord = shopRecord;
+
+    // Sync subscription status to Airtable so the widget gate stays accurate
+    // Only manages Active/Cancelled — Trial and Paused are set manually and left alone
+    if (memberHasActivePlan !== null) {
+      const currentStatus = shopRecord.fields['Status'];
+      const newStatus = memberHasActivePlan ? 'Active' : 'Cancelled';
+      if (currentStatus !== 'Trial' && currentStatus !== 'Paused' && currentStatus !== newStatus) {
+        try { await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Status': newStatus }); shopRecord.fields['Status'] = newStatus; } catch(e) {}
+      }
+    }
 
     _mqCustomPostLink = shopRecord.fields['Marketing link'] || '';
     try {
