@@ -295,18 +295,9 @@ window.logoutMember = async function () {
                 </div>
               </div>
               <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Shop logo</label>
-                <div id="mq-shop-logo-preview" style="margin-bottom:8px;display:none">
-                  <img id="mq-shop-logo-img" src="" alt="Logo preview" style="height:56px;max-width:200px;object-fit:contain;border:1px solid #e5e7eb;border-radius:8px;padding:6px;background:#f9fafb"/>
-                </div>
-                <label class="mq-btn mq-btn-sm" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px">
-                  📤 Upload logo image
-                  <input type="file" id="mq-shop-logo-file" accept="image/*" style="display:none"/>
-                </label>
-                <div id="mq-shop-logo-upload-status" style="font-size:11px;color:#6b7280;margin-bottom:6px;min-height:14px"></div>
-                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a direct image URL:</div>
-                <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png" oninput="mqRefreshLogoPreview()"/>
-                <span class="mq-hint">Appears in the top-left corner of your widget</span>
+                <label class="mq-label">Logo URL</label>
+                <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png"/>
+                <span class="mq-hint">Direct link to your logo image — appears in the widget header</span>
               </div>
               <div class="mq-field" style="margin-bottom:1.5rem">
                 <label class="mq-label">Disclaimer text</label>
@@ -358,15 +349,15 @@ window.logoutMember = async function () {
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
-                <div class="mq-page-sub">Add-ons that appear as options in your widget. Include the full cost in your price — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
+                <div class="mq-page-sub">Add-ons that appear as options in your widget</div>
               </div>
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
               <button class="mq-btn mq-btn-sm" onclick="mqSaveAllSpecItems()" style="margin-left:6px">💾 Save all</button>
             </div>
-           <div id="mq-spec-msg"></div>
-<div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-  💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot, check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items, leave it unchecked and enter the flat price.
-</div>
+            <div id="mq-spec-msg"></div>
+            <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
+              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot, check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items, leave it unchecked and enter the flat price.
+            </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
             </div>
@@ -375,33 +366,63 @@ window.logoutMember = async function () {
           <!-- EMBED CODE -->
           <div class="mq-page" id="mq-page-embed">
             <div class="mq-page-title">Embed code</div>
-            <div class="mq-page-sub">Paste these HTML codes into your website where you want each to appear</div>
+            <div class="mq-page-sub">Pick what you want, then copy one combined block of code to paste into your website.</div>
+
+            <!-- Combined builder card -->
+            <div class="mq-card" style="border:2px solid #1a1a1a">
+              <div class="mq-card-title" style="font-size:15px">🧩 Build your embed code</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Check the pieces you want — the combined code updates automatically. Paste it all in one go.</p>
+
+              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem">
+                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                  <input type="checkbox" id="mq-embed-chk-header" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:#111">🎯 Quote page header</div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px">Big headline + subtitle above your widget</div>
+                  </div>
+                </label>
+                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                  <input type="checkbox" id="mq-embed-chk-trust" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:#111">✅ Trust bar</div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px">"No commitment required · Results sent to inbox" row</div>
+                  </div>
+                </label>
+                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                  <input type="checkbox" id="mq-embed-chk-widget" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:#111">📋 Widget embed code</div>
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px">The quote widget itself — required for it to appear</div>
+                  </div>
+                </label>
+              </div>
+
+              <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-combined-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
+              <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
+            </div>
+
+            <!-- Individual codes (collapsed by default) -->
             <div class="mq-card">
-              <div class="mq-card-title">🎯 Quote page header <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">A clean intro section to place above your widget. Here's what it looks like:</p>
+              <div class="mq-card-title">🎯 Quote page header <span style="font-weight:400;color:#9ca3af;font-size:12px">(preview)</span></div>
               <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:0.5rem;margin-bottom:1.25rem">
                 <div id="mq-mk-header-preview"></div>
               </div>
-              <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Code to copy — paste this directly above your trust bar and embed code below:</p>
               <div class="mq-embed-box"><span id="mq-mk-header-display"></span><button class="mq-copy-btn" id="mq-mk-header-copy">Copy</button></div>
             </div>
             <div class="mq-card">
-              <div class="mq-card-title">✨ Trust bar <span style="font-weight:400;color:#9ca3af;font-size:12px">(optional)</span></div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Paste this code snippet directly above your widget embed code below. Here's what it looks like:</p>
+              <div class="mq-card-title">✨ Trust bar <span style="font-weight:400;color:#9ca3af;font-size:12px">(preview)</span></div>
               <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1.25rem">
                 <div id="mq-mk-trustbar-preview"></div>
               </div>
-              <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Code to copy:</p>
               <div class="mq-embed-box"><span id="mq-mk-trustbar-display"></span><button class="mq-copy-btn" id="mq-mk-trustbar-copy">Copy</button></div>
             </div>
             <div class="mq-card">
-              <div class="mq-card-title">📋 Your embed code</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy the code below and paste it into your website's HTML where you want the quote widget to appear. Works on Wix, Squarespace, WordPress, Webflow, GoDaddy and any custom site.</p>
+              <div class="mq-card-title">📋 Widget embed code only</div>
               <div class="mq-embed-box"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-2">Copy</button></div>
             </div>
             <div class="mq-card">
               <div class="mq-card-title">📱 Direct quote link</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This link opens your quote tool directly — no website needed. Use it on your phone or tablet for walk-in customers, or share it straight from your social media pages, Google Business Profile, or anywhere else you connect with customers online. No lead capture form — just the quote tool.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed.</p>
               <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
             </div>
             <div class="mq-card">
@@ -479,14 +500,14 @@ window.logoutMember = async function () {
             <div class="mq-card">
               <div class="mq-card-title">📱 Social media posts</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
-              <div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:14px 16px;margin-bottom:1.25rem">
-                <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:10px">👇 Set your quote page link first — this updates everything below</div>
-                <label class="mq-label" style="display:block;margin-bottom:6px;color:#374151">Your quote page URL</label>
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
+                <label class="mq-label" style="display:block;margin-bottom:6px">Link to use in these posts</label>
                 <div style="display:flex;gap:8px">
                   <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1"/>
                   <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
                 </div>
-                <div style="font-size:12px;color:#92400e;margin-top:8px;line-height:1.5">This link will be used in every post, graphic, and QR code below. If you leave it blank, your raw widget URL is used instead.</div>
+                <span class="mq-hint">Paste the link to your quote page — if you leave this blank, the posts below use your raw widget link instead</span>
+                <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link will automatically be used across all marketing items on this page — posts, graphics, QR codes, and everything else.</div>
               </div>
               <div id="mq-mk-social"></div>
             </div>
@@ -693,7 +714,35 @@ window.logoutMember = async function () {
       return true;
     } catch(e) { return false; }
   }
-  window.mqCopyEmbed = function(btn) {
+  window.mqUpdateCombinedEmbed = function() {
+    // Small delay so checkbox state updates before we read it
+    setTimeout(() => {
+      const wantHeader = document.getElementById('mq-embed-chk-header')?.checked;
+      const wantTrust  = document.getElementById('mq-embed-chk-trust')?.checked;
+      const wantWidget = document.getElementById('mq-embed-chk-widget')?.checked;
+      const headerCode = window._mqRawHeaderCode || '';
+      const trustCode  = window._mqRawTrustCode  || '';
+      const widgetCode = window._mqRawEmbedCode   || '';
+      const parts = [];
+      if (wantHeader && headerCode) parts.push(headerCode);
+      if (wantTrust  && trustCode)  parts.push(trustCode);
+      if (wantWidget && widgetCode) parts.push(widgetCode);
+      const combined = parts.join('\n\n');
+      const display = document.getElementById('mq-combined-embed-display');
+      if (display) display.textContent = combined || '— Select at least one item above —';
+      window._mqRawCombinedEmbed = combined;
+    }, 10);
+  };
+
+  window.mqCopyCombinedEmbed = function(btn) {
+    const code = window._mqRawCombinedEmbed || '';
+    if (!code) { if (btn) { btn.textContent = 'Nothing selected!'; setTimeout(() => btn.textContent = '📋 Copy combined code', 2000); } return; }
+    const ok   = () => { if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '📋 Copy combined code', 2000); } };
+    const fail = () => { if (btn) { btn.textContent = 'Copy failed'; setTimeout(() => btn.textContent = '📋 Copy combined code', 2000); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(ok).catch(() => { mqFallbackCopy(code) ? ok() : fail(); });
+    } else { mqFallbackCopy(code) ? ok() : fail(); }
+  };
     const code = window._mqRawEmbedCode || '';
     const ok = () => { if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
     const fail = () => { if (btn) { btn.textContent = 'Copy failed'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
@@ -851,26 +900,6 @@ window.logoutMember = async function () {
     set('mq-shop-range-low',  f['Quote range low']  || '10');
     set('mq-shop-range-high', f['Quote range high'] || '15');
     set('mq-shop-logo', f['Logo URL']);
-    mqRefreshLogoPreview();
-    mqWireUploadButton(
-      null,
-      'mq-shop-logo-file',
-      'mq-shop-logo-upload-status',
-      'mq-shop-logo',
-      (window._mqShopRecord && window._mqShopRecord.fields && window._mqShopRecord.fields['Shop token']) || 'unknown-shop',
-      'logos',
-      async (url) => {
-        mqRefreshLogoPreview();
-        const shopRec = window._mqShopRecord;
-        if (shopRec) {
-          try {
-            await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Logo URL': url });
-            shopRec.fields['Logo URL'] = url;
-            showMsg('mq-shop-msg', '✓ Logo uploaded and saved!');
-          } catch(e) { showMsg('mq-shop-msg', 'Logo uploaded but save failed — click Save shop info to retry.', 'error'); }
-        }
-      }
-    );
     set('mq-shop-disclaimer', f['Disclaimer text']);
     set('mq-shop-consult-link', f['Consultation link']);
     set('mq-shop-consult-email', f['Consultation email']);
@@ -887,27 +916,6 @@ window.logoutMember = async function () {
       if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
     }
     set('mq-financing-link', f['Financing link']);
-
-    // ── Autosave: fire mqSaveShop 1.5s after the user stops editing any field ──
-    let _shopAutoSaveTimer = null;
-    const shopAutoSave = () => {
-      clearTimeout(_shopAutoSaveTimer);
-      showMsg('mq-shop-msg', '…saving');
-      _shopAutoSaveTimer = setTimeout(() => { window.mqSaveShop(); }, 1500);
-    };
-    const shopFieldIds = [
-      'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
-      'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
-      'mq-shop-logo','mq-shop-disclaimer','mq-shop-consult-link',
-      'mq-shop-consult-email','mq-financing-link'
-    ];
-    shopFieldIds.forEach(id => {
-      const field = el(id);
-      if (field) field.addEventListener('input', shopAutoSave);
-    });
-    // Color swatch uses 'change' not 'input'
-    const swatch = el('mq-shop-color-swatch');
-    if (swatch) swatch.addEventListener('change', shopAutoSave);
   }
 
   function populatePricing(pricing) {
@@ -1043,23 +1051,6 @@ window.logoutMember = async function () {
   // ============================================================
   // SAVE FUNCTIONS
   // ============================================================
-  window.mqRefreshLogoPreview = function() {
-    const urlInput = el('mq-shop-logo');
-    const preview  = el('mq-shop-logo-preview');
-    const img      = el('mq-shop-logo-img');
-    if (!urlInput || !preview || !img) return;
-    const url = urlInput.value.trim();
-    if (url) {
-      img.src = url;
-      img.onerror = () => { preview.style.display = 'none'; };
-      img.onload  = () => { preview.style.display = 'block'; };
-      preview.style.display = 'block';
-    } else {
-      preview.style.display = 'none';
-      img.src = '';
-    }
-  };
-
   window.mqToggleShowroom = function() {
     const toggle = el('mq-showroom-toggle');
     if (!toggle) return;
@@ -1100,7 +1091,7 @@ window.logoutMember = async function () {
         socialEl.dataset.loaded = '';
         initMarketingKit(shopRec);
       }
-      showMsg('mq-shop-msg', '✓ Saved!');
+      showMsg('mq-shop-msg', '✓ Shop info saved!');
     } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -1738,7 +1729,7 @@ window.logoutMember = async function () {
 
     const postLinkInput = el('mq-mk-post-link');
     const postLinkApplyBtn = el('mq-mk-post-link-apply');
-    if (postLinkInput) postLinkInput.value = _mqCustomPostLink || defaultQuoteLink;
+    if (postLinkInput) postLinkInput.value = _mqCustomPostLink;
     if (postLinkApplyBtn) {
       postLinkApplyBtn.onclick = async () => {
         const val = (postLinkInput?.value || '').trim();
@@ -1788,6 +1779,12 @@ window.logoutMember = async function () {
     if (headerDisplay) headerDisplay.textContent = heroHeaderHTML;
     if (headerCopyBtn) headerCopyBtn.onclick = () => mqCopyText(heroHeaderHTML, headerCopyBtn);
     if (headerPreview) headerPreview.innerHTML = heroHeaderHTML;
+
+    // Store raw codes so the combined embed builder on the Embed tab can access them
+    window._mqRawHeaderCode = heroHeaderHTML;
+    window._mqRawTrustCode  = trustBarHTML;
+    // Trigger combined embed display to populate now that codes are ready
+    if (typeof window.mqUpdateCombinedEmbed === 'function') window.mqUpdateCombinedEmbed();
 
     const trustDisplay = el('mq-mk-trustbar-display');
     const trustCopyBtn = el('mq-mk-trustbar-copy');
@@ -2294,7 +2291,7 @@ window.logoutMember = async function () {
       }
 
       function getQrLink() {
-        return _mqCustomPostLink || defaultQuoteLink;
+        return _mqCustomPostLink || '';
       }
 
       let qrLink = getQrLink();
@@ -2409,7 +2406,7 @@ window.logoutMember = async function () {
       const brandColor2 = shopRecord.fields['Brand colour'] || '#1a1a1a';
       let signBgImage = _mqSignBgImage;
       let signOverlayOpacity = _mqSignOverlayOpacity;
-      let signLink = _mqCustomPostLink || defaultQuoteLink;
+      let signLink = _mqCustomPostLink || '';
       let signOrientation = 'portrait'; // 'portrait' | 'landscape'
       let signHeadline = _mqSignHeadline || 'Another project by';
       let signCustomColor = _mqSignCustomColor || '';
@@ -2842,7 +2839,7 @@ window.logoutMember = async function () {
         }
       }
 
-      window._mqRedrawSign = () => { signLink = _mqCustomPostLink || defaultQuoteLink; drawSign(); };
+      window._mqRedrawSign = () => { signLink = _mqCustomPostLink || ''; drawSign(); };
 
       drawSign();
       loadQrLib().then(() => { drawSign(); });
@@ -3035,17 +3032,10 @@ window.logoutMember = async function () {
     container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;font-size:14px;color:#6b7280">Loading your dashboard...</div>';
 
     let shopToken = new URLSearchParams(window.location.search).get('shop');
-    let memberHasActivePlan = null;
-    let memberStripeCustomerId = null;
     if (!shopToken && window.$memberstackDom) {
       try {
         const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) {
-          shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
-          const plans = member?.planConnections || [];
-          memberHasActivePlan = plans.length > 0;
-          memberStripeCustomerId = member.stripeCustomerId || member.customerId || plans[0]?.payment?.stripeCustomerId || null;
-        }
+        if (member) shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
       } catch(e) {}
     }
     if (!shopToken) {
@@ -3060,13 +3050,6 @@ window.logoutMember = async function () {
     }
 
     window._mqShopRecord = shopRecord;
-
-    // Save Stripe customer ID to Airtable if we have it and it's not stored yet
-    // This is what lets the Stripe webhook find the right shop when a subscription cancels
-    if (memberStripeCustomerId && !shopRecord.fields['Stripe customer ID']) {
-      try { await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Stripe customer ID': memberStripeCustomerId }); shopRecord.fields['Stripe customer ID'] = memberStripeCustomerId; } catch(e) {}
-    }
-
     _mqCustomPostLink = shopRecord.fields['Marketing link'] || '';
     try {
       const savedHeadlines = shopRecord.fields['Marketing headlines'] ? JSON.parse(shopRecord.fields['Marketing headlines']) : {};
@@ -3116,6 +3099,9 @@ window.logoutMember = async function () {
       if (socialEl && !socialEl.dataset.loaded && window._mqShopRecord) {
         socialEl.dataset.loaded = 'true';
         initMarketingKit(window._mqShopRecord);
+      } else if (page === 'embed' && window._mqRawHeaderCode) {
+        // Codes already loaded — just refresh the combined display
+        window.mqUpdateCombinedEmbed();
       }
     }
     if (page === 'billing') {
