@@ -1990,7 +1990,7 @@
         </div>
         <div id="mqph-tallcab-msg" class="mqph-msg"></div>
         <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
-          Add each tall cabinet variation you offer — all doors &amp; shelves, with pullouts, oven unit, etc. Quote each as a standard <strong>24" wide unit using your baseline material and baseline door</strong> (supply only). The widget automatically adds door upcharges, material upcharges, install, and crown footage on top based on what the customer has selected.
+          Add each tall cabinet variation you offer — with pullouts, oven unit, pantry, etc. Quote each as a standard <strong>24" wide unit using your baseline material, no doors</strong> (supply only). The widget automatically calculates door upcharges, material upcharges, hinge upcharges, and install on top based on what the customer has selected.
         </div>
         ${tallCabs.length
           ? tallCabs.map(tallRow).join('')
@@ -2059,12 +2059,12 @@
           `<strong>${name}</strong>`,
           `Width: <span class="mqph-spec-tag">24"</span> (standard tall cabinet width)`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName||'your baseline material'}</span>`,
-          `Door: <span class="mqph-spec-tag">${bl.blDoorName||'your baseline door'}</span> &nbsp;·&nbsp; Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'your cheapest hinge'}</span>`,
-          `<strong>Supply only · No install · Local delivery</strong>`,
+          `<strong>No doors · No hinges · Supply only · No install · Local delivery</strong>`,
           `Include the box, shelves, and any interior fittings specific to this type (pullouts, drawer boxes, etc.)`,
+          `<span style="color:#1e40af">Door upcharges, hinge upcharges, material upcharges, and install will be calculated automatically by the widget based on what the customer selects.</span>`,
         ])}
         <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-tallcab-price" placeholder="0" oninput="mqphTallCabCalc()"/></div>
-        <p class="mqph-calc-hint">This is your base unit price — the widget adds door upcharges, material upcharges, and install on top automatically</p>
+        <p class="mqph-calc-hint">Base unit price only — door, hinge, material & install upcharges are added automatically</p>
         <div class="mqph-rate-reveal" id="mqph-tallcab-reveal" style="display:none">
           <div class="mqph-rate-reveal-val" id="mqph-tallcab-rate-val">—</div>
           <div class="mqph-rate-reveal-lbl">base unit price (stored as-is)</div>
