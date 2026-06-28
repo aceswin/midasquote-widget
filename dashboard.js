@@ -3061,15 +3061,6 @@ window.logoutMember = async function () {
 
     window._mqShopRecord = shopRecord;
 
-    // Sync subscription status — only promotes to Active automatically.
-    // Cancelled is handled manually or via Stripe webhook so trial end dates are respected.
-    if (memberHasActivePlan === true) {
-      const currentStatus = shopRecord.fields['Status'];
-      if (currentStatus !== 'Active') {
-        try { await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Status': 'Active' }); shopRecord.fields['Status'] = 'Active'; } catch(e) {}
-      }
-    }
-
     // Save Stripe customer ID to Airtable if we have it and it's not stored yet
     // This is what lets the Stripe webhook find the right shop when a subscription cancels
     if (memberStripeCustomerId && !shopRecord.fields['Stripe customer ID']) {
