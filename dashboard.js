@@ -715,7 +715,6 @@ window.logoutMember = async function () {
     } catch(e) { return false; }
   }
   window.mqUpdateCombinedEmbed = function() {
-    // Small delay so checkbox state updates before we read it
     setTimeout(() => {
       const wantHeader = document.getElementById('mq-embed-chk-header')?.checked;
       const wantTrust  = document.getElementById('mq-embed-chk-trust')?.checked;
@@ -727,7 +726,10 @@ window.logoutMember = async function () {
       if (wantHeader && headerCode) parts.push(headerCode);
       if (wantTrust  && trustCode)  parts.push(trustCode);
       if (wantWidget && widgetCode) parts.push(widgetCode);
-      const combined = parts.join('\n\n');
+      let combined = '';
+      if (parts.length) {
+        combined = `<div style="text-align:center;max-width:900px;margin:0 auto">\n\n${parts.join('\n\n')}\n\n</div>`;
+      }
       const display = document.getElementById('mq-combined-embed-display');
       if (display) display.textContent = combined || '— Select at least one item above —';
       window._mqRawCombinedEmbed = combined;
@@ -743,6 +745,8 @@ window.logoutMember = async function () {
       navigator.clipboard.writeText(code).then(ok).catch(() => { mqFallbackCopy(code) ? ok() : fail(); });
     } else { mqFallbackCopy(code) ? ok() : fail(); }
   };
+
+  window.mqCopyEmbed = function(btn) {
     const code = window._mqRawEmbedCode || '';
     const ok = () => { if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
     const fail = () => { if (btn) { btn.textContent = 'Copy failed'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
