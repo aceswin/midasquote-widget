@@ -1376,6 +1376,18 @@ window.mqTogDrawerConfig=(prefix)=>{
     const data=await loadShopData(shopToken);
     if(!data) return;
     const {shop,specs}=data;
+
+    // ── Subscription gate ──
+    const activeStatuses = ['Active', 'Trial'];
+    if (shop['Status'] && !activeStatuses.includes(shop['Status'])) {
+      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#6b7280;font-size:14px;line-height:1.6">
+        <div style="font-size:2rem;margin-bottom:0.75rem">🔒</div>
+        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Estimator unavailable</div>
+        <div>This quoting tool is temporarily offline. Please contact the shop directly for a quote.</div>
+      </div>`;
+      return;
+    }
+
     window._mqShopData=shop;
     injectStyles(shop['Brand colour']||'#1a1a1a');
     buildCTMAT(data);
