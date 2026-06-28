@@ -174,7 +174,7 @@
       #midasquote-widget .mq-tab-content{display:none;padding:1.5rem}
       #midasquote-widget .mq-tab-content.active{display:block}
       #midasquote-widget .mq-sec{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 3px 12px rgba(0,0,0,0.08)}
-      #midasquote-widget .mq-sec-title{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem}
+      #midasquote-widget .mq-sec-title{font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem}
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-field{display:flex;flex-direction:column;gap:5px}
@@ -428,6 +428,7 @@
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36–40")</option></select></div>
         </div>
+        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px 12px;margin-top:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> If you'll be including any full-height tall cabinets, do not count that wall space in the measurements above — there is a dedicated tall cabinet section below.</div>` : ''}
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
           <label style="font-size:13px;cursor:pointer">Different styles for uppers and lowers</label>
@@ -472,6 +473,31 @@
           </div>
         </div>
       </div>`:''}
+      ${Object.keys(TALL_CAB).length > 0 ? `
+      <div class="mq-sec">
+        <p class="mq-sec-title">Tall cabinets</p>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+          🏛️ Don't include tall cabinet wall space in your upper and base measurements above — add them here instead.
+        </div>
+        <div class="mq-grid2" style="margin-bottom:10px">
+          <div class="mq-field">
+            <label class="mq-label">Tall cabinet type</label>
+            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')">${tallCabOpts()}</select>
+          </div>
+          <div class="mq-field">
+            <label class="mq-label">Width (inches)</label>
+            <input type="number" id="mq-${prefix}-tc-width" value="24" min="12" max="48"/>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label class="mq-label">Quantity</label>
+          <div class="mq-qty-ctrl">
+            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',-1)">−</button>
+            <span class="mq-qty-val" id="mq-${prefix}-tc-qty">0</span>
+            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',1)">+</button>
+          </div>
+        </div>
+      </div>` : ''}
       ${hasTrim?`<div class="mq-sec">
         <p class="mq-sec-title">Crown moulding / valance</p>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
@@ -507,32 +533,7 @@
       <div class="mq-sec">
         <p class="mq-sec-title">Specialty items</p>
         <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
-      </div>
-      ${Object.keys(TALL_CAB).length > 0 ? `
-      <div class="mq-sec">
-        <p class="mq-sec-title">Tall cabinets</p>
-        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
-          🏛️ Don't include tall cabinet wall space in your upper and base measurements above — add them here instead.
-        </div>
-        <div class="mq-grid2" style="margin-bottom:10px">
-          <div class="mq-field">
-            <label class="mq-label">Tall cabinet type</label>
-            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')">${tallCabOpts()}</select>
-          </div>
-          <div class="mq-field">
-            <label class="mq-label">Width (inches)</label>
-            <input type="number" id="mq-${prefix}-tc-width" value="24" min="12" max="48"/>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <label class="mq-label">Quantity</label>
-          <div class="mq-qty-ctrl">
-            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',-1)">−</button>
-            <span class="mq-qty-val" id="mq-${prefix}-tc-qty">0</span>
-            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',1)">+</button>
-          </div>
-        </div>
-      </div>` : ''}`;
+      </div>`;
   }
 
   const TRAVEL_NOTE = '🚗 This estimate is based on local delivery. Jobs outside our local area may be subject to additional travel charges — your final quote will confirm the exact amount.';
