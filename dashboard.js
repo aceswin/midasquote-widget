@@ -358,7 +358,7 @@ window.logoutMember = async function () {
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
-                <div class="mq-page-sub">Add-ons that appear as options in your widget</div>
+                <div class="mq-page-sub">Add-ons that appear as options in your widget. Include the full cost in your price — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
               <button class="mq-btn mq-btn-sm" onclick="mqSaveAllSpecItems()" style="margin-left:6px">💾 Save all</button>
