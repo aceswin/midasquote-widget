@@ -1123,15 +1123,6 @@ window.mqTogDrawerConfig=(prefix)=>{
         }
       }
 
-      // Crown footage for tall cabinets — add their width to the crown calc
-      const crownKey = gv(`mq-${prefix}-trim-crown`);
-      if (tcQty > 0 && crownKey && crownKey !== 'none' && TRIM[crownKey]) {
-        const tcWidthIn = gn(`mq-${prefix}-tc-width`, 24);
-        const tcLinFt = (tcWidthIn / 12) * tcQty;
-        // This extra footage gets folded into the trim calc below naturally
-        // because we pass it via the existing trim section — we just note it here
-      }
-
       const remEl=document.getElementById(`mq-${prefix}-removal`);
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
