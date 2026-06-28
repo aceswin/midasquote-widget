@@ -858,6 +858,27 @@ window.logoutMember = async function () {
       if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
     }
     set('mq-financing-link', f['Financing link']);
+
+    // ── Autosave: fire mqSaveShop 1.5s after the user stops editing any field ──
+    let _shopAutoSaveTimer = null;
+    const shopAutoSave = () => {
+      clearTimeout(_shopAutoSaveTimer);
+      showMsg('mq-shop-msg', '…saving');
+      _shopAutoSaveTimer = setTimeout(() => { window.mqSaveShop(); }, 1500);
+    };
+    const shopFieldIds = [
+      'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
+      'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
+      'mq-shop-logo','mq-shop-disclaimer','mq-shop-consult-link',
+      'mq-shop-consult-email','mq-financing-link'
+    ];
+    shopFieldIds.forEach(id => {
+      const field = el(id);
+      if (field) field.addEventListener('input', shopAutoSave);
+    });
+    // Color swatch uses 'change' not 'input'
+    const swatch = el('mq-shop-color-swatch');
+    if (swatch) swatch.addEventListener('change', shopAutoSave);
   }
 
   function populatePricing(pricing) {
@@ -1033,7 +1054,7 @@ window.logoutMember = async function () {
         socialEl.dataset.loaded = '';
         initMarketingKit(shopRec);
       }
-      showMsg('mq-shop-msg', '✓ Shop info saved!');
+      showMsg('mq-shop-msg', '✓ Saved!');
     } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
   };
 
