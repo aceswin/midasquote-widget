@@ -295,18 +295,9 @@ window.logoutMember = async function () {
                 </div>
               </div>
               <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Shop logo</label>
-                <div id="mq-shop-logo-preview" style="margin-bottom:8px;display:none">
-                  <img id="mq-shop-logo-img" src="" alt="Logo preview" style="height:56px;max-width:200px;object-fit:contain;border:1px solid #e5e7eb;border-radius:8px;padding:6px;background:#f9fafb"/>
-                </div>
-                <label class="mq-btn mq-btn-sm" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px">
-                  📤 Upload logo image
-                  <input type="file" id="mq-shop-logo-file" accept="image/*" style="display:none"/>
-                </label>
-                <div id="mq-shop-logo-upload-status" style="font-size:11px;color:#6b7280;margin-bottom:6px;min-height:14px"></div>
-                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a direct image URL:</div>
-                <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png" oninput="mqRefreshLogoPreview()"/>
-                <span class="mq-hint">Appears in the top-left corner of your widget</span>
+                <label class="mq-label">Logo URL</label>
+                <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png"/>
+                <span class="mq-hint">Direct link to your logo image — appears in the widget header</span>
               </div>
               <div class="mq-field" style="margin-bottom:1.5rem">
                 <label class="mq-label">Disclaimer text</label>
@@ -479,14 +470,14 @@ window.logoutMember = async function () {
             <div class="mq-card">
               <div class="mq-card-title">📱 Social media posts</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
-                <label class="mq-label" style="display:block;margin-bottom:6px">Link to use in these posts</label>
+              <div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:14px 16px;margin-bottom:1.25rem">
+                <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:10px">👇 Set your quote page link first — this updates everything below</div>
+                <label class="mq-label" style="display:block;margin-bottom:6px;color:#374151">Your quote page URL</label>
                 <div style="display:flex;gap:8px">
                   <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1"/>
                   <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
                 </div>
-                <span class="mq-hint">Paste the link to your quote page — if you leave this blank, the posts below use your raw widget link instead</span>
-                <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link will automatically be used across all marketing items on this page — posts, graphics, QR codes, and everything else.</div>
+                <div style="font-size:12px;color:#92400e;margin-top:8px;line-height:1.5">This link will be used in every post, graphic, and QR code below. If you leave it blank, your raw widget URL is used instead.</div>
               </div>
               <div id="mq-mk-social"></div>
             </div>
@@ -851,28 +842,6 @@ window.logoutMember = async function () {
     set('mq-shop-range-low',  f['Quote range low']  || '10');
     set('mq-shop-range-high', f['Quote range high'] || '15');
     set('mq-shop-logo', f['Logo URL']);
-    mqRefreshLogoPreview();
-    // Wire the logo upload button — uses the same R2 infrastructure as My Products
-    mqWireUploadButton(
-      null,
-      'mq-shop-logo-file',
-      'mq-shop-logo-upload-status',
-      'mq-shop-logo',
-      (window._mqShopRecord && window._mqShopRecord.fields && window._mqShopRecord.fields['Shop token']) || 'unknown-shop',
-      'logos',
-      async (url) => {
-        mqRefreshLogoPreview();
-        // Auto-save the new logo URL to Airtable immediately so it takes effect right away
-        const shopRec = window._mqShopRecord;
-        if (shopRec) {
-          try {
-            await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Logo URL': url });
-            shopRec.fields['Logo URL'] = url;
-            showMsg('mq-shop-msg', '✓ Logo uploaded and saved!');
-          } catch(e) { showMsg('mq-shop-msg', 'Logo uploaded but save failed — click Save shop info to retry.', 'error'); }
-        }
-      }
-    );
     set('mq-shop-disclaimer', f['Disclaimer text']);
     set('mq-shop-consult-link', f['Consultation link']);
     set('mq-shop-consult-email', f['Consultation email']);
@@ -1024,23 +993,6 @@ window.logoutMember = async function () {
   // ============================================================
   // SAVE FUNCTIONS
   // ============================================================
-  window.mqRefreshLogoPreview = function() {
-    const urlInput = el('mq-shop-logo');
-    const preview  = el('mq-shop-logo-preview');
-    const img      = el('mq-shop-logo-img');
-    if (!urlInput || !preview || !img) return;
-    const url = urlInput.value.trim();
-    if (url) {
-      img.src = url;
-      img.onerror = () => { preview.style.display = 'none'; };
-      img.onload  = () => { preview.style.display = 'block'; };
-      preview.style.display = 'block';
-    } else {
-      preview.style.display = 'none';
-      img.src = '';
-    }
-  };
-
   window.mqToggleShowroom = function() {
     const toggle = el('mq-showroom-toggle');
     if (!toggle) return;
@@ -1719,7 +1671,7 @@ window.logoutMember = async function () {
 
     const postLinkInput = el('mq-mk-post-link');
     const postLinkApplyBtn = el('mq-mk-post-link-apply');
-    if (postLinkInput) postLinkInput.value = _mqCustomPostLink;
+    if (postLinkInput) postLinkInput.value = _mqCustomPostLink || defaultQuoteLink;
     if (postLinkApplyBtn) {
       postLinkApplyBtn.onclick = async () => {
         const val = (postLinkInput?.value || '').trim();
