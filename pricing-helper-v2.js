@@ -280,7 +280,7 @@
     return `
       <div style="margin-bottom:1.5rem">
         <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px">🛠️ Set up your shop items</h2>
-        <p style="font-size:13px;color:#6b7280;line-height:1.6">Add everything your shop offers. Just names for now — pricing is figured out in the wizard.</p>
+        <p style="font-size:13px;color:#6b7280;line-height:1.6">Start with the materials, door styles, and drawer configs you sell most — your everyday go-tos, not the rare special orders. A focused list gives customers a better experience and makes your widget feel clean and professional. You can always add more items any time.</p>
       </div>
 
       ${CATEGORIES.map(cat => {
