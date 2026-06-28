@@ -402,6 +402,7 @@
             <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
             <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
             <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet wide, enter 12.</div>
+            <div style="background:#f0f9ff;border-radius:6px;padding:8px 10px;margin-top:6px;color:#0369a1;font-size:11px">🏛️ <strong>Tall cabinets:</strong> If you're adding a tall cabinet in the specialty items below, don't count that wall space in your upper and base measurements above.</div>
           </div>
         </div>
         <div class="mq-grid3">
