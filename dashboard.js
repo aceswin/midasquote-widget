@@ -3036,6 +3036,7 @@ window.logoutMember = async function () {
 
     let shopToken = new URLSearchParams(window.location.search).get('shop');
     let memberHasActivePlan = null;
+    let memberStripeCustomerId = null;
     if (!shopToken && window.$memberstackDom) {
       try {
         const { data: member } = await window.$memberstackDom.getCurrentMember();
@@ -3043,6 +3044,7 @@ window.logoutMember = async function () {
           shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
           const plans = member?.planConnections || [];
           memberHasActivePlan = plans.length > 0;
+          memberStripeCustomerId = member.stripeCustomerId || member.customerId || plans[0]?.payment?.stripeCustomerId || null;
         }
       } catch(e) {}
     }
@@ -3059,14 +3061,19 @@ window.logoutMember = async function () {
 
     window._mqShopRecord = shopRecord;
 
-    // Sync subscription status to Airtable so the widget gate stays accurate
-    // Only manages Active/Cancelled — Trial and Paused are set manually and left alone
-    if (memberHasActivePlan !== null) {
+    // Sync subscription status — only promotes to Active automatically.
+    // Cancelled is handled manually or via Stripe webhook so trial end dates are respected.
+    if (memberHasActivePlan === true) {
       const currentStatus = shopRecord.fields['Status'];
-      const newStatus = memberHasActivePlan ? 'Active' : 'Cancelled';
-      if (currentStatus !== 'Trial' && currentStatus !== 'Paused' && currentStatus !== newStatus) {
-        try { await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Status': newStatus }); shopRecord.fields['Status'] = newStatus; } catch(e) {}
+      if (currentStatus !== 'Active') {
+        try { await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Status': 'Active' }); shopRecord.fields['Status'] = 'Active'; } catch(e) {}
       }
+    }
+
+    // Save Stripe customer ID to Airtable if we have it and it's not stored yet
+    // This is what lets the Stripe webhook find the right shop when a subscription cancels
+    if (memberStripeCustomerId && !shopRecord.fields['Stripe customer ID']) {
+      try { await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Stripe customer ID': memberStripeCustomerId }); shopRecord.fields['Stripe customer ID'] = memberStripeCustomerId; } catch(e) {}
     }
 
     _mqCustomPostLink = shopRecord.fields['Marketing link'] || '';
