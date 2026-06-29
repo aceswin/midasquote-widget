@@ -1821,7 +1821,7 @@ window.logoutMember = async function () {
 
     const postLinkInput = el('mq-mk-post-link');
     const postLinkApplyBtn = el('mq-mk-post-link-apply');
-    if (postLinkInput) postLinkInput.value = _mqCustomPostLink;
+    if (postLinkInput) postLinkInput.value = _mqCustomPostLink || defaultQuoteLink;
     if (postLinkApplyBtn) {
       postLinkApplyBtn.onclick = async () => {
         const val = (postLinkInput?.value || '').trim();
@@ -2383,7 +2383,7 @@ window.logoutMember = async function () {
       }
 
       function getQrLink() {
-        return _mqCustomPostLink || '';
+        return _mqCustomPostLink || defaultQuoteLink;
       }
 
       let qrLink = getQrLink();
@@ -2498,7 +2498,7 @@ window.logoutMember = async function () {
       const brandColor2 = shopRecord.fields['Brand colour'] || '#1a1a1a';
       let signBgImage = _mqSignBgImage;
       let signOverlayOpacity = _mqSignOverlayOpacity;
-      let signLink = _mqCustomPostLink || '';
+      let signLink = _mqCustomPostLink || defaultQuoteLink;
       let signOrientation = 'portrait'; // 'portrait' | 'landscape'
       let signHeadline = _mqSignHeadline || 'Another project by';
       let signCustomColor = _mqSignCustomColor || '';
@@ -2931,7 +2931,7 @@ window.logoutMember = async function () {
         }
       }
 
-      window._mqRedrawSign = () => { signLink = _mqCustomPostLink || ''; drawSign(); };
+      window._mqRedrawSign = () => { signLink = _mqCustomPostLink || defaultQuoteLink; drawSign(); };
 
       drawSign();
       loadQrLib().then(() => { drawSign(); });
@@ -3124,10 +3124,17 @@ window.logoutMember = async function () {
     container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;font-size:14px;color:#6b7280">Loading your dashboard...</div>';
 
     let shopToken = new URLSearchParams(window.location.search).get('shop');
+    let memberHasActivePlan = null;
+    let memberStripeCustomerId = null;
     if (!shopToken && window.$memberstackDom) {
       try {
         const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
+        if (member) {
+          shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
+          const plans = member?.planConnections || [];
+          memberHasActivePlan = plans.length > 0;
+          memberStripeCustomerId = member.stripeCustomerId || member.customerId || plans[0]?.payment?.stripeCustomerId || null;
+        }
       } catch(e) {}
     }
     if (!shopToken) {
@@ -3142,6 +3149,12 @@ window.logoutMember = async function () {
     }
 
     window._mqShopRecord = shopRecord;
+
+    // Save Stripe customer ID to Airtable if we have it and it's not stored yet
+    if (memberStripeCustomerId && !shopRecord.fields['Stripe customer ID']) {
+      try { await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Stripe customer ID': memberStripeCustomerId }); shopRecord.fields['Stripe customer ID'] = memberStripeCustomerId; } catch(e) {}
+    }
+
     _mqCustomPostLink = shopRecord.fields['Marketing link'] || '';
     try {
       const savedHeadlines = shopRecord.fields['Marketing headlines'] ? JSON.parse(shopRecord.fields['Marketing headlines']) : {};
