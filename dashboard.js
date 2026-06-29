@@ -341,6 +341,9 @@ window.logoutMember = async function () {
 
           <!-- PRICING -->
           <div class="mq-page" id="mq-page-pricing">
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
+              🔧 <strong>Handles & knobs:</strong> Do not include hardware costs in your pricing here. If you supply handles or knobs, add them as a specialty item instead — that way shops who don't supply hardware aren't affected.
+            </div>
             <div id="mq-pricing-helper-v2"></div>
           </div>
 
@@ -357,6 +360,8 @@ window.logoutMember = async function () {
             <div id="mq-spec-msg"></div>
             <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
               💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot, check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items, leave it unchecked and enter the flat price.
+              <br><br>
+              🔧 <strong>Handles & knobs:</strong> If you supply cabinet hardware, add it here as a specialty item (e.g. "Hardware allowance" or a flat rate per job). If you don't supply handles, leave it out — the widget automatically tells customers that hardware is not included.
             </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>

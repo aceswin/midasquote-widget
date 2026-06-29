@@ -586,6 +586,7 @@
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
           <div class="mq-disclaimer">⚠ ${disc}</div>
+          <div class="mq-disclaimer" style="margin-top:6px">🔧 Cabinet handles and knobs are not included in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
@@ -694,6 +695,7 @@
             <div class="mq-grand-val" id="mq-b-grand">—</div>
           </div>
           <div class="mq-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
+          <div class="mq-disclaimer" style="margin-top:6px">🔧 Cabinet handles and knobs are not included in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row" style="margin-top:1rem">
             ${askQuestionBtn}
