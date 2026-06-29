@@ -1504,7 +1504,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25);animation:mqSlideUp 0.3s ease">
             <div style="font-size:36px;margin-bottom:12px">🖼️</div>
             <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">First time here?</div>
-            <div style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:1.5rem">Browse our products first to see the materials and door styles we offer — then come back to get your quote.</div>
+            <div style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:1.5rem">Browse our products first to see the materials, door styles, and specialty items we offer — then come back to get your quote.</div>
             <a href="${showroomUrl}" target="_blank" onclick="mqDismissShowroomPopup()" style="display:block;background:${bc};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;margin-bottom:10px;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">View our products →</a>
             <button onclick="mqDismissShowroomPopup()" style="background:none;border:none;font-size:13px;color:#9ca3af;cursor:pointer;font-family:inherit;padding:4px">Skip, just get a quote</button>
           </div>
