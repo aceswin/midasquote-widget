@@ -1061,24 +1061,31 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
+      // Tall cabinet footage to add to crown/valance — each tall cab adds its width in lin ft
+      const tcQtyForTrim = tallCabQty[prefix] || 0;
+      const tcWidthInForTrim = gn(`mq-${prefix}-tc-width`, 24);
+      const tcLinFtForTrim = tcQtyForTrim > 0 && Object.keys(TALL_CAB).length > 0 ? (tcWidthInForTrim / 12) * tcQtyForTrim : 0;
+
       let trimCost = 0;
       const crownKey = gv(`mq-${prefix}-trim-crown`);
       if (crownKey && crownKey !== 'none' && TRIM[crownKey]) {
         const trim = TRIM[crownKey];
         const returns = gn(`mq-${prefix}-trim-crown-returns`, 0);
-        const trimFt = uFt + returns;
+        const trimFt = uFt + returns + tcLinFtForTrim;
         const cost = trimFt * (trim.ps + trim.pi);
         trimCost += cost;
-        if (trimFt > 0) lines.push({label:`${trim.label} (${trimFt} lin ft incl. ${returns} return${returns===1?'':'s'})`,cost:Math.round(cost)});
+        const tcNote = tcLinFtForTrim > 0 ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
+        if (trimFt > 0) lines.push({label:`${trim.label} (${(uFt+returns).toFixed(0)} lin ft${tcNote})`,cost:Math.round(cost)});
       }
       const valanceKey = gv(`mq-${prefix}-trim-valance`);
       if (valanceKey && valanceKey !== 'none' && TRIM[valanceKey]) {
         const trim = TRIM[valanceKey];
         const returns = gn(`mq-${prefix}-trim-valance-returns`, 0);
-        const trimFt = uFt + returns;
+        const trimFt = uFt + returns + tcLinFtForTrim;
         const cost = trimFt * (trim.ps + trim.pi);
         trimCost += cost;
-        if (trimFt > 0) lines.push({label:`${trim.label} (${trimFt} lin ft incl. ${returns} return${returns===1?'':'s'})`,cost:Math.round(cost)});
+        const tcNote = tcLinFtForTrim > 0 ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
+        if (trimFt > 0) lines.push({label:`${trim.label} (${(uFt+returns).toFixed(0)} lin ft${tcNote})`,cost:Math.round(cost)});
       }
 
       let specTotal=0;
