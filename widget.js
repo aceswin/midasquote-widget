@@ -1489,6 +1489,38 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
+
+    // ── First-visit showroom popup ──
+    // Only shows if showroom is enabled, and only once per browser per shop
+    if (shop['Show showroom'] !== false && shop['Shop token']) {
+      const storageKey = `mq_showroom_seen_${shop['Shop token']}`;
+      if (!localStorage.getItem(storageKey)) {
+        const bc = shop['Brand colour'] || '#1a1a1a';
+        const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}`;
+        const popup = document.createElement('div');
+        popup.id = 'mq-showroom-popup';
+        popup.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqFadeIn 0.25s ease`;
+        popup.innerHTML = `
+          <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25);animation:mqSlideUp 0.3s ease">
+            <div style="font-size:36px;margin-bottom:12px">🖼️</div>
+            <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">First time here?</div>
+            <div style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:1.5rem">Browse our products first to see the materials and door styles we offer — then come back to get your quote.</div>
+            <a href="${showroomUrl}" target="_blank" onclick="mqDismissShowroomPopup()" style="display:block;background:${bc};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;margin-bottom:10px;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">View our products →</a>
+            <button onclick="mqDismissShowroomPopup()" style="background:none;border:none;font-size:13px;color:#9ca3af;cursor:pointer;font-family:inherit;padding:4px">Skip, just get a quote</button>
+          </div>
+          <style>
+            @keyframes mqFadeIn{from{opacity:0}to{opacity:1}}
+            @keyframes mqSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+          </style>`;
+        window.mqDismissShowroomPopup = function() {
+          localStorage.setItem(storageKey, '1');
+          const p = document.getElementById('mq-showroom-popup');
+          if (p) { p.style.opacity='0'; p.style.transition='opacity 0.2s'; setTimeout(()=>p.remove(), 200); }
+        };
+        // Show after 1 second so widget loads first
+        setTimeout(() => document.body.appendChild(popup), 1000);
+      }
+    }
   }
 
   init();
