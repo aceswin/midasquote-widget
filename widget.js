@@ -182,6 +182,7 @@
       #midasquote-widget .mq-hint{font-size:11px;color:#9ca3af;margin-top:2px;line-height:1.4}
       #midasquote-widget input,#midasquote-widget select{font-family:inherit;font-size:13px;color:#111;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
+      #midasquote-widget .mq-qty-input{width:44px!important;padding:2px 4px!important;text-align:center!important;box-shadow:none!important}
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
@@ -378,7 +379,7 @@
         </div>
         <div class="mq-qty-ctrl">
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-          <input type="number" id="mq-qty-${prefix}-${i}" value="0" min="0" style="width:44px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit" oninput="mqSetQty('${prefix}',${i},this.value)"/>
+          <input type="number" id="mq-qty-${prefix}-${i}" value="0" min="0" class="mq-qty-input" oninput="mqSetQty('${prefix}',${i},this.value)"/>
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
         </div>
       </div>`).join('');
