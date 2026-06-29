@@ -378,7 +378,7 @@
         </div>
         <div class="mq-qty-ctrl">
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-          <span class="mq-qty-val" id="mq-qty-${prefix}-${i}">0</span>
+          <input type="number" id="mq-qty-${prefix}-${i}" value="0" min="0" style="width:44px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit" oninput="mqSetQty('${prefix}',${i},this.value)"/>
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
         </div>
       </div>`).join('');
@@ -873,7 +873,6 @@
       if(!crownSelect && !valanceSelect) return; // shop has no trim styles configured
       const noteId=`mq-${prefix}-trim-auto-note`;
       let note=document.getElementById(noteId);
-      const suggestions=[];
 
       if(!doorKey || doorKey==='none'){
         if(crownSelect) crownSelect.value='none';
@@ -889,17 +888,12 @@
       const crownMatchKey=Object.keys(TRIM).find(k=>TRIM[k].type==='crown' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
       const valanceMatchKey=Object.keys(TRIM).find(k=>TRIM[k].type==='valance' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
 
-      if(crownSelect){
-        if(crownMatchKey){ crownSelect.value=crownMatchKey; suggestions.push(TRIM[crownMatchKey].label); }
-        else crownSelect.value='none';
-      }
-      if(valanceSelect){
-        if(valanceMatchKey){ valanceSelect.value=valanceMatchKey; suggestions.push(TRIM[valanceMatchKey].label); }
-        else valanceSelect.value='none';
-      }
-
+      // Don't auto-select — just show a suggestion note so the customer stays in control
       if(note){
-        if(suggestions.length){ note.textContent=`✓ ${suggestions.join(' & ')} suggested for this door style — feel free to change it below`; note.style.display='block'; }
+        const suggestions=[];
+        if(crownMatchKey) suggestions.push(TRIM[crownMatchKey].label);
+        if(valanceMatchKey) suggestions.push(TRIM[valanceMatchKey].label);
+        if(suggestions.length){ note.textContent=`💡 ${suggestions.join(' & ')} is typically used with this door style — add it below if you'd like it included`; note.style.display='block'; }
         else note.style.display='none';
       }
       mqTogTrimReturns(prefix);
@@ -922,8 +916,16 @@ window.mqTogDrawerConfig=(prefix)=>{
     window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0)mqAdjQty(prefix,i,1);else mqAdjQty(prefix,i,-specQty[prefix][i]);};
     window.mqAdjQty=(prefix,i,d)=>{
       specQty[prefix][i]=Math.max(0,specQty[prefix][i]+d);
-      document.getElementById(`mq-qty-${prefix}-${i}`).textContent=specQty[prefix][i];
-      document.getElementById(`mq-sp-${prefix}-${i}`).classList.toggle('on',specQty[prefix][i]>0);
+      const inp=document.getElementById(`mq-qty-${prefix}-${i}`);
+      if(inp) inp.value=specQty[prefix][i];
+      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',specQty[prefix][i]>0);
+    };
+    window.mqSetQty=(prefix,i,val)=>{
+      const n=Math.max(0,parseInt(val,10)||0);
+      specQty[prefix][i]=n;
+      const inp=document.getElementById(`mq-qty-${prefix}-${i}`);
+      if(inp) inp.value=n;
+      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
     };
 
     window.mqTogTallCab=(prefix)=>{ tallCabQty[prefix]=0; const el=document.getElementById(`mq-${prefix}-tc-qty`); if(el) el.textContent=0; };
