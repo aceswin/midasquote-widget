@@ -295,9 +295,18 @@ window.logoutMember = async function () {
                 </div>
               </div>
               <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Logo URL</label>
-                <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png"/>
-                <span class="mq-hint">Direct link to your logo image — appears in the widget header</span>
+                <label class="mq-label">Shop logo</label>
+                <div id="mq-shop-logo-preview" style="margin-bottom:8px;display:none">
+                  <img id="mq-shop-logo-img" src="" alt="Logo preview" style="height:56px;max-width:200px;object-fit:contain;border:1px solid #e5e7eb;border-radius:8px;padding:6px;background:#f9fafb"/>
+                </div>
+                <label class="mq-btn mq-btn-sm" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px">
+                  📤 Upload logo image
+                  <input type="file" id="mq-shop-logo-file" accept="image/*" style="display:none"/>
+                </label>
+                <div id="mq-shop-logo-upload-status" style="font-size:11px;color:#6b7280;margin-bottom:6px;min-height:14px"></div>
+                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a direct image URL:</div>
+                <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png" oninput="mqRefreshLogoPreview()"/>
+                <span class="mq-hint">Appears in the top-left corner of your widget</span>
               </div>
               <div class="mq-field" style="margin-bottom:1.5rem">
                 <label class="mq-label">Disclaimer text</label>
@@ -926,6 +935,26 @@ window.logoutMember = async function () {
     set('mq-shop-range-low',  f['Quote range low']  || '10');
     set('mq-shop-range-high', f['Quote range high'] || '15');
     set('mq-shop-logo', f['Logo URL']);
+    mqRefreshLogoPreview();
+    mqWireUploadButton(
+      null,
+      'mq-shop-logo-file',
+      'mq-shop-logo-upload-status',
+      'mq-shop-logo',
+      (window._mqShopRecord && window._mqShopRecord.fields && window._mqShopRecord.fields['Shop token']) || 'unknown-shop',
+      'logos',
+      async (url) => {
+        mqRefreshLogoPreview();
+        const shopRec = window._mqShopRecord;
+        if (shopRec) {
+          try {
+            await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Logo URL': url });
+            shopRec.fields['Logo URL'] = url;
+            showMsg('mq-shop-msg', '✓ Logo uploaded and saved!');
+          } catch(e) { showMsg('mq-shop-msg', 'Logo uploaded but save failed — click Save shop info to retry.', 'error'); }
+        }
+      }
+    );
     set('mq-shop-disclaimer', f['Disclaimer text']);
     set('mq-shop-consult-link', f['Consultation link']);
     set('mq-shop-consult-email', f['Consultation email']);
@@ -942,6 +971,26 @@ window.logoutMember = async function () {
       if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
     }
     set('mq-financing-link', f['Financing link']);
+
+    // ── Autosave: fire mqSaveShop 1.5s after the user stops editing any field ──
+    let _shopAutoSaveTimer = null;
+    const shopAutoSave = () => {
+      clearTimeout(_shopAutoSaveTimer);
+      showMsg('mq-shop-msg', '…saving');
+      _shopAutoSaveTimer = setTimeout(() => { window.mqSaveShop(); }, 1500);
+    };
+    const shopFieldIds = [
+      'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
+      'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
+      'mq-shop-logo','mq-shop-disclaimer','mq-shop-consult-link',
+      'mq-shop-consult-email','mq-financing-link'
+    ];
+    shopFieldIds.forEach(id => {
+      const field = el(id);
+      if (field) field.addEventListener('input', shopAutoSave);
+    });
+    const swatch = el('mq-shop-color-swatch');
+    if (swatch) swatch.addEventListener('change', shopAutoSave);
   }
 
   function populatePricing(pricing) {
@@ -1077,6 +1126,23 @@ window.logoutMember = async function () {
   // ============================================================
   // SAVE FUNCTIONS
   // ============================================================
+  window.mqRefreshLogoPreview = function() {
+    const urlInput = el('mq-shop-logo');
+    const preview  = el('mq-shop-logo-preview');
+    const img      = el('mq-shop-logo-img');
+    if (!urlInput || !preview || !img) return;
+    const url = urlInput.value.trim();
+    if (url) {
+      img.src = url;
+      img.onerror = () => { preview.style.display = 'none'; };
+      img.onload  = () => { preview.style.display = 'block'; };
+      preview.style.display = 'block';
+    } else {
+      preview.style.display = 'none';
+      img.src = '';
+    }
+  };
+
   window.mqToggleShowroom = function() {
     const toggle = el('mq-showroom-toggle');
     if (!toggle) return;
