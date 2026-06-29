@@ -182,7 +182,6 @@
       #midasquote-widget .mq-hint{font-size:11px;color:#9ca3af;margin-top:2px;line-height:1.4}
       #midasquote-widget input,#midasquote-widget select{font-family:inherit;font-size:13px;color:#111;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
-      #midasquote-widget .mq-qty-input{width:44px!important;padding:2px 4px!important;text-align:center!important;box-shadow:none!important}
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
@@ -379,7 +378,7 @@
         </div>
         <div class="mq-qty-ctrl">
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-          <input type="number" id="mq-qty-${prefix}-${i}" value="0" min="0" class="mq-qty-input" oninput="mqSetQty('${prefix}',${i},this.value)"/>
+          <span class="mq-qty-val" id="mq-qty-${prefix}-${i}">0</span>
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
         </div>
       </div>`).join('');
@@ -917,16 +916,9 @@ window.mqTogDrawerConfig=(prefix)=>{
     window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0)mqAdjQty(prefix,i,1);else mqAdjQty(prefix,i,-specQty[prefix][i]);};
     window.mqAdjQty=(prefix,i,d)=>{
       specQty[prefix][i]=Math.max(0,specQty[prefix][i]+d);
-      const inp=document.getElementById(`mq-qty-${prefix}-${i}`);
-      if(inp) inp.value=specQty[prefix][i];
+      const el=document.getElementById(`mq-qty-${prefix}-${i}`);
+      if(el) el.textContent=specQty[prefix][i];
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',specQty[prefix][i]>0);
-    };
-    window.mqSetQty=(prefix,i,val)=>{
-      const n=Math.max(0,parseInt(val,10)||0);
-      specQty[prefix][i]=n;
-      const inp=document.getElementById(`mq-qty-${prefix}-${i}`);
-      if(inp) inp.value=n;
-      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
     };
 
     window.mqTogTallCab=(prefix)=>{ tallCabQty[prefix]=0; const el=document.getElementById(`mq-${prefix}-tc-qty`); if(el) el.textContent=0; };
@@ -1496,33 +1488,34 @@ window.mqTogDrawerConfig=(prefix)=>{
     // ── First-visit showroom popup ──
     // Only shows if showroom is enabled, and only once per browser per shop
     if (shop['Show showroom'] !== false && shop['Shop token']) {
-      const storageKey = `mq_showroom_seen_${shop['Shop token']}`;
-      if (!localStorage.getItem(storageKey)) {
-        const bc = shop['Brand colour'] || '#1a1a1a';
-        const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}`;
-        const popup = document.createElement('div');
-        popup.id = 'mq-showroom-popup';
-        popup.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqFadeIn 0.25s ease`;
-        popup.innerHTML = `
-          <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25);animation:mqSlideUp 0.3s ease">
-            <div style="font-size:36px;margin-bottom:12px">🖼️</div>
-            <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">First time here?</div>
-            <div style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:1.5rem">Browse our products first to see the materials, door styles, and specialty items we offer — then come back to get your quote.</div>
-            <a href="${showroomUrl}" target="_blank" onclick="mqDismissShowroomPopup()" style="display:block;background:${bc};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;margin-bottom:10px;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">View our products →</a>
-            <button onclick="mqDismissShowroomPopup()" style="background:none;border:none;font-size:13px;color:#9ca3af;cursor:pointer;font-family:inherit;padding:4px">Skip, just get a quote</button>
-          </div>
-          <style>
-            @keyframes mqFadeIn{from{opacity:0}to{opacity:1}}
-            @keyframes mqSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-          </style>`;
-        window.mqDismissShowroomPopup = function() {
-          localStorage.setItem(storageKey, '1');
-          const p = document.getElementById('mq-showroom-popup');
-          if (p) { p.style.opacity='0'; p.style.transition='opacity 0.2s'; setTimeout(()=>p.remove(), 200); }
-        };
-        // Show after 1 second so widget loads first
-        setTimeout(() => document.body.appendChild(popup), 1000);
-      }
+      try {
+        const storageKey = `mq_showroom_seen_${shop['Shop token']}`;
+        if (!localStorage.getItem(storageKey)) {
+          const bc = shop['Brand colour'] || '#1a1a1a';
+          const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}`;
+          const popup = document.createElement('div');
+          popup.id = 'mq-showroom-popup';
+          popup.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqFadeIn 0.25s ease`;
+          popup.innerHTML = `
+            <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25);animation:mqSlideUp 0.3s ease">
+              <div style="font-size:36px;margin-bottom:12px">🖼️</div>
+              <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">First time here?</div>
+              <div style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:1.5rem">Browse our products first to see the materials, door styles, and specialty items we offer — then come back to get your quote.</div>
+              <a href="${showroomUrl}" target="_blank" onclick="mqDismissShowroomPopup()" style="display:block;background:${bc};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;margin-bottom:10px;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">View our products →</a>
+              <button onclick="mqDismissShowroomPopup()" style="background:none;border:none;font-size:13px;color:#9ca3af;cursor:pointer;font-family:inherit;padding:4px">Skip, just get a quote</button>
+            </div>
+            <style>
+              @keyframes mqFadeIn{from{opacity:0}to{opacity:1}}
+              @keyframes mqSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+            </style>`;
+          window.mqDismissShowroomPopup = function() {
+            try { localStorage.setItem(storageKey, '1'); } catch(e) {}
+            const p = document.getElementById('mq-showroom-popup');
+            if (p) { p.style.opacity='0'; p.style.transition='opacity 0.2s'; setTimeout(()=>p.remove(), 200); }
+          };
+          setTimeout(() => document.body.appendChild(popup), 1000);
+        }
+      } catch(e) { /* localStorage unavailable — skip popup */ }
     }
   }
 
