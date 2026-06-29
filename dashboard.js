@@ -397,6 +397,13 @@ window.logoutMember = async function () {
                 </label>
               </div>
 
+              <!-- Live preview -->
+              <div id="mq-embed-preview-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:1.25rem;transform:scale(0.75);transform-origin:top left;width:133%;margin-right:-33%">
+                <div id="mq-embed-preview-header"></div>
+                <div id="mq-embed-preview-trust"></div>
+                <div style="background:#fff;border:1.5px dashed #d1d5db;border-radius:10px;padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af" id="mq-embed-preview-widget">📋 Widget appears here</div>
+              </div>
+
               <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-combined-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
               <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
             </div>
@@ -733,6 +740,16 @@ window.logoutMember = async function () {
       const display = document.getElementById('mq-combined-embed-display');
       if (display) display.textContent = combined || '— Select at least one item above —';
       window._mqRawCombinedEmbed = combined;
+
+      // Update live preview
+      const previewHeader = document.getElementById('mq-embed-preview-header');
+      const previewTrust  = document.getElementById('mq-embed-preview-trust');
+      const previewWidget = document.getElementById('mq-embed-preview-widget');
+      if (previewHeader) previewHeader.innerHTML = (wantHeader && headerCode) ? headerCode : '';
+      if (previewTrust)  previewTrust.innerHTML  = (wantTrust  && trustCode)  ? trustCode  : '';
+      if (previewWidget) {
+        previewWidget.style.display = wantWidget ? 'block' : 'none';
+      }
     }, 10);
   };
 
