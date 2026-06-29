@@ -424,7 +424,7 @@
             <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet wide, enter 12.</div>
           </div>
         </div>
-        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> If you'll be including any tall cabinets (eg. Pantry cabinet), do not count that wall space in the measurements below — there is a dedicated tall cabinet section further down.</div>` : ''}
+        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them below.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')"/></div>
