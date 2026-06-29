@@ -1455,7 +1455,6 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     addSurfaceInternal('ct','Kitchen run');
-    addSurfaceInternal('b','Kitchen run');
   }
 
   // ============================================================
