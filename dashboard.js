@@ -728,7 +728,7 @@ window.logoutMember = async function () {
       if (wantWidget && widgetCode) parts.push(widgetCode);
       let combined = '';
       if (parts.length) {
-        combined = `<div style="text-align:center;max-width:900px;margin:0 auto">\n\n${parts.join('\n\n')}\n\n</div>`;
+        combined = `<div style="max-width:900px;margin:0 auto">\n\n${parts.join('\n\n')}\n\n</div>`;
       }
       const display = document.getElementById('mq-combined-embed-display');
       if (display) display.textContent = combined || '— Select at least one item above —';
