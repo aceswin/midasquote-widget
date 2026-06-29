@@ -180,7 +180,8 @@
       #midasquote-widget .mq-field{display:flex;flex-direction:column;gap:5px}
       #midasquote-widget .mq-label{font-size:13px;color:#6b7280}
       #midasquote-widget .mq-hint{font-size:11px;color:#9ca3af;margin-top:2px;line-height:1.4}
-      #midasquote-widget input,#midasquote-widget select{font-family:inherit;font-size:13px;color:#111;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+      #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+      #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
@@ -378,7 +379,7 @@
         </div>
         <div class="mq-qty-ctrl">
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-          <span class="mq-qty-val" id="mq-qty-${prefix}-${i}">0</span>
+          <span class="mq-qty-val" id="mq-qty-${prefix}-${i}" onclick="mqEditQty('${prefix}',${i})" style="cursor:pointer;min-width:28px;padding:2px 4px;border-radius:4px" title="Tap to type a number">0</span>
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
         </div>
       </div>`).join('');
@@ -919,6 +920,34 @@ window.mqTogDrawerConfig=(prefix)=>{
       const el=document.getElementById(`mq-qty-${prefix}-${i}`);
       if(el) el.textContent=specQty[prefix][i];
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',specQty[prefix][i]>0);
+    };
+    window.mqEditQty=(prefix,i)=>{
+      const span=document.getElementById(`mq-qty-${prefix}-${i}`);
+      if(!span) return;
+      const cur=specQty[prefix][i]||0;
+      const inp=document.createElement('input');
+      inp.type='number';
+      inp.value=cur;
+      inp.min='0';
+      inp.style.cssText='width:44px;text-align:center;font-size:13px;font-weight:500;border:1px solid #1a1a1a;border-radius:4px;padding:2px 4px;font-family:inherit;-webkit-appearance:none;-moz-appearance:textfield';
+      span.replaceWith(inp);
+      inp.focus();
+      inp.select();
+      const done=()=>{
+        const n=Math.max(0,parseInt(inp.value,10)||0);
+        specQty[prefix][i]=n;
+        const newSpan=document.createElement('span');
+        newSpan.className='mq-qty-val';
+        newSpan.id=`mq-qty-${prefix}-${i}`;
+        newSpan.textContent=n;
+        newSpan.style.cssText='cursor:pointer;min-width:28px;padding:2px 4px;border-radius:4px';
+        newSpan.title='Tap to type a number';
+        newSpan.onclick=()=>mqEditQty(prefix,i);
+        inp.replaceWith(newSpan);
+        document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
+      };
+      inp.onblur=done;
+      inp.onkeydown=e=>{if(e.key==='Enter')inp.blur();};
     };
 
     window.mqTogTallCab=(prefix)=>{ tallCabQty[prefix]=0; const el=document.getElementById(`mq-${prefix}-tc-qty`); if(el) el.textContent=0; };
