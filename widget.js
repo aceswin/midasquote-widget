@@ -500,6 +500,7 @@
       </div>` : ''}
       ${hasTrim?`<div class="mq-sec">
         <p class="mq-sec-title">Crown moulding / valance</p>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
         ${hasCrown?`<div class="mq-grid2" style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
