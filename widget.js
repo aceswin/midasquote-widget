@@ -184,8 +184,6 @@
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
-      #midasquote-widget input{text-indent:8px}
-      #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
@@ -481,7 +479,7 @@
       <div class="mq-sec">
         <p class="mq-sec-title">Tall cabinets</p>
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
-          🏛️ Don't include tall cabinet wall space in your upper and base measurements above — add them here instead.
+          🏛️ Add tall cabinets separately here.
         </div>
         <div class="mq-grid2" style="margin-bottom:10px">
           <div class="mq-field">
@@ -669,10 +667,10 @@
                 A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
-                <label style="font-size:13px;color:#374151;min-width:170px">Subtract feet (islands, etc.)</label>
+                <label style="font-size:13px;color:#374151;min-width:170px">No backsplash cabinets (lin ft)</label>
                 <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" step="0.1" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
-              <div style="font-size:12px;color:#6b7280;margin-top:6px">Decimals are fine, e.g. 6.5. If your base cabinet footage includes an island or any other run that won't have backsplash, subtract those feet above for a more accurate price.</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
               <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
             <div id="mq-b-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem"></div>
@@ -1350,10 +1348,10 @@ window.mqTogDrawerConfig=(prefix)=>{
             A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <label style="font-size:13px;color:#374151;min-width:170px">Subtract feet (no backsplash)</label>
+            <label style="font-size:13px;color:#374151;min-width:170px">No backsplash cabinets (lin ft)</label>
             <input type="number" id="mqs-bs-subtract-${id}" value="0" min="0" step="0.1" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
-          <div style="font-size:12px;color:#6b7280;margin-top:6px">Decimals are fine, e.g. 6.5. If part of this surface won't have backsplash — like a vanity's center tower cabinet sitting on the counter — subtract those feet above for a more accurate price.</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
           <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mqs-bsft-net-${id}">0</strong> ft</div>
         </div>
         <div id="mqscuts-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>`;
