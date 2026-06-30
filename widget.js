@@ -159,14 +159,12 @@
     s.textContent = `
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
       #midasquote-widget{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:20px auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.10)}
-      @media(max-width:480px){#midasquote-widget{margin:12px 10px}}
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
       #midasquote-widget .mq-logo img{width:100%;height:100%;object-fit:cover}
       #midasquote-widget .mq-shop-name{font-size:14px;font-weight:600;color:#111}
       #midasquote-widget .mq-shop-sub{font-size:12px;color:#6b7280}
       #midasquote-widget .mq-tab-bar{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;gap:8px}
-      @media(max-width:480px){#midasquote-widget .mq-tab-bar{padding:8px 10px;gap:6px}}
       #midasquote-widget .mq-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-tab.active{background:${bc};color:#fff;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget .mq-tab-icon{font-size:18px;flex-shrink:0}
