@@ -1058,6 +1058,7 @@ window.logoutMember = async function () {
         <td>${f['Customer email'] || '—'}</td>
         <td>${f['Customer phone'] || '—'}</td>
         <td>${f['Quote type'] || '—'}</td>
+        <td>${f['Room type'] || '—'}</td>
         <td>${f['Estimate low'] ? fmt(f['Estimate low']) + ' – ' + fmt(f['Estimate high']) : '—'}</td>
         <td><span class="mq-badge mq-badge-${color}">${f['Status'] || 'New'}</span></td>
         <td>
@@ -1071,7 +1072,7 @@ window.logoutMember = async function () {
         <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteLead('${r.id}')">Delete</button></td>
       </tr>`;
     }).join('');
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Estimate</th><th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Room</th><th>Estimate</th><th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {

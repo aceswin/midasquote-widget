@@ -91,14 +91,14 @@
   // ============================================================
   // EMAIL & LEAD
   // ============================================================
-  async function saveLead(data, lead, quoteType, low, high, lines) {
+  async function saveLead(data, lead, quoteType, low, high, lines, roomType) {
     const { shop } = data;
     try {
       await atCreate(CONFIG.LEADS_TABLE, {
         'Lead ID':`${lead.name} — ${new Date().toLocaleDateString()}`,
         'Shop':[shop._recordId], 'Customer name':lead.name,
         'Customer email':lead.email, 'Customer phone':lead.phone,
-        'Quote type':quoteType, 'Estimate low':low, 'Estimate high':high,
+        'Quote type':quoteType, 'Room type':roomType||'', 'Estimate low':low, 'Estimate high':high,
         'Quote details':JSON.stringify(lines), 'Source':'Website', 'Status':'New',
       });
     } catch(e) { console.error('Lead save failed', e); }
@@ -1259,7 +1259,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');document.getElementById('mq-c-result').scrollIntoView({behavior:'smooth',block:'start'});
         document.getElementById('mq-c-calc-btn').disabled=false;
-        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines);
+        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel);
       });
     };
 
@@ -1300,7 +1300,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');document.getElementById('mq-b-result').scrollIntoView({behavior:'smooth',block:'start'});
           document.getElementById('mq-b-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'— CABINETS —',cost:0},...cab.lines,{label:'— COUNTERTOPS —',cost:0},...ct.lines]);
+          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'— CABINETS —',cost:0},...cab.lines,{label:'— COUNTERTOPS —',cost:0},...ct.lines],cab.roomLabel);
         },1200);
       });
     };
