@@ -487,25 +487,29 @@ window.logoutMember = async function () {
             <div class="mq-card" style="margin-bottom:1rem">
               <div class="mq-card-title">📋 Current plan</div>
               <div id="mq-billing-plan" style="font-size:14px;color:#6b7280;margin-bottom:1.25rem">Loading plan info...</div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <div id="mq-billing-active-actions" style="display:none;gap:10px;flex-wrap:wrap">
                 <button class="mq-btn mq-btn-primary" onclick="mqOpenBillingPortal()">Manage plan</button>
                 <button class="mq-btn" onclick="mqUpgradeToAnnual()">Upgrade to annual</button>
               </div>
+              <div id="mq-billing-reactivate-actions" style="display:none;gap:10px;flex-wrap:wrap">
+                <button class="mq-btn mq-btn-primary" onclick="mqReactivate('prc_midasquote-monthly-plan-i7d0ryx')">Reactivate — Monthly</button>
+                <button class="mq-btn" onclick="mqReactivate('prc_midasquote-annual-plan-hui0rv4')">Reactivate — Annual</button>
+              </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1rem">
+            <div class="mq-card" style="margin-bottom:1rem" id="mq-billing-payment-card">
               <div class="mq-card-title">💳 Payment method</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Update your credit card or billing details.</p>
               <button class="mq-btn" onclick="mqOpenBillingPortal()">Update payment method</button>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1rem">
+            <div class="mq-card" style="margin-bottom:1rem" id="mq-billing-invoices-card">
               <div class="mq-card-title">🧾 Invoices</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">View and download your past invoices.</p>
               <button class="mq-btn" onclick="mqOpenBillingPortal()">View invoices</button>
             </div>
 
-            <div class="mq-card" style="border-color:#fca5a5">
+            <div class="mq-card" style="border-color:#fca5a5" id="mq-billing-cancel-card">
               <div class="mq-card-title" style="color:#dc2626">⚠️ Cancel subscription</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Your leads and pricing data will be available for 30 days after cancellation.</p>
@@ -681,6 +685,20 @@ window.logoutMember = async function () {
     } catch(e) {
       console.error('Upgrade error:', e);
       alert('Unable to open upgrade checkout. Please email support@midasquote.com to upgrade your plan.');
+    }
+  };
+
+  // Used when a member's subscription has fully ended (not just scheduled to
+  // cancel) — the Stripe Customer Portal has no "resubscribe" option in that
+  // case, so we relaunch checkout directly via Memberstack instead.
+  window.mqReactivate = async function(priceId) {
+    try {
+      await window.$memberstackDom.purchasePlansWithCheckout({
+        priceId: priceId || 'prc_midasquote-monthly-plan-i7d0ryx',
+      });
+    } catch(e) {
+      console.error('Reactivate error:', e);
+      alert('Unable to open checkout. Please email support@midasquote.com to reactivate your plan.');
     }
   };
 
@@ -3212,22 +3230,45 @@ window.logoutMember = async function () {
     if (page === 'billing') {
       const planEl = document.getElementById('mq-billing-plan');
       if (planEl && planEl.textContent === 'Loading plan info...') {
-        try {
-          const { data: member } = await window.$memberstackDom.getCurrentMember();
-          const plans = member?.planConnections || [];
-          if (plans.length > 0) {
-            const plan = plans[0];
-            planEl.innerHTML = `
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                <span style="background:#dcfce7;color:#166534;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">Active</span>
-                <span style="font-size:14px;font-weight:500;color:#111">${plan.planName || plan.plan?.name || 'MidasQuote'}</span>
-              </div>
-              <p style="font-size:13px;color:#6b7280">Your subscription is active. Manage it using the buttons below.</p>`;
-          } else {
-            planEl.innerHTML = `<p style="font-size:13px;color:#6b7280">No active plan found. <a href="/pricing" style="color:#1a1a1a;font-weight:500">View plans →</a></p>`;
-          }
-        } catch(e) {
-          planEl.innerHTML = `<p style="font-size:13px;color:#6b7280">Use the buttons below to manage your subscription.</p>`;
+        const activeActions = document.getElementById('mq-billing-active-actions');
+        const reactivateActions = document.getElementById('mq-billing-reactivate-actions');
+        const paymentCard = document.getElementById('mq-billing-payment-card');
+        const invoicesCard = document.getElementById('mq-billing-invoices-card');
+        const cancelCard = document.getElementById('mq-billing-cancel-card');
+        // Airtable's Status field is updated instantly by the Stripe webhook
+        // and is the source of truth for billing state — Memberstack's own
+        // planConnections data lags behind real cancellations, so we don't
+        // use it here.
+        const status = window._mqShopRecord?.fields?.['Status'] || '';
+        const isActive = status === 'Active' || status === 'Trial';
+        if (isActive) {
+          planEl.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="background:#dcfce7;color:#166534;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${status || 'Active'}</span>
+              <span style="font-size:14px;font-weight:500;color:#111">MidasQuote</span>
+            </div>
+            <p style="font-size:13px;color:#6b7280">Your subscription is active. Manage it using the buttons below.</p>`;
+          if (activeActions) activeActions.style.display = 'flex';
+          if (reactivateActions) reactivateActions.style.display = 'none';
+          if (paymentCard) paymentCard.style.display = 'block';
+          if (invoicesCard) invoicesCard.style.display = 'block';
+          if (cancelCard) cancelCard.style.display = 'block';
+        } else {
+          // Status is Cancelled, Paused, or unknown — subscription isn't
+          // active. The Stripe Customer Portal can't resubscribe a fully
+          // cancelled sub, so we surface reactivation buttons here instead.
+          const label = status || 'Inactive';
+          planEl.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="background:#fee2e2;color:#dc2626;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${label}</span>
+              <span style="font-size:14px;font-weight:500;color:#111">No active plan</span>
+            </div>
+            <p style="font-size:13px;color:#6b7280">Your subscription has ended. You still have dashboard access for now — pick a plan below to reactivate your widget.</p>`;
+          if (activeActions) activeActions.style.display = 'none';
+          if (reactivateActions) reactivateActions.style.display = 'flex';
+          if (paymentCard) paymentCard.style.display = 'none';
+          if (invoicesCard) invoicesCard.style.display = 'none';
+          if (cancelCard) cancelCard.style.display = 'none';
         }
       }
     }
