@@ -429,7 +429,7 @@
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')"/></div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
-            <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Tall (36–40")</option></select></div>
+            <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
         </div>
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
@@ -660,14 +660,14 @@
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                <label style="font-size:13px;color:#374151;min-width:170px">Side splashes (Quantity)</label>
+                <label style="font-size:13px;color:#374151;min-width:170px"><strong>Side splashes</strong> (Quantity)</label>
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
                 A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
-                <label style="font-size:13px;color:#374151;min-width:170px">No backsplash cabinets (lin ft)</label>
+                <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
                 <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" step="0.1" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
@@ -1341,14 +1341,14 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mqs-bsft-block-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
           <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <label style="font-size:13px;color:#374151;min-width:170px">Side splashes (Quantity)</label>
+            <label style="font-size:13px;color:#374151;min-width:170px"><strong>Side splashes</strong> (Quantity)</label>
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
             A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <label style="font-size:13px;color:#374151;min-width:170px">No backsplash cabinets (lin ft)</label>
+            <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
             <input type="number" id="mqs-bs-subtract-${id}" value="0" min="0" step="0.1" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
