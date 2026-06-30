@@ -19,6 +19,10 @@
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
 
+  // Generate a session ID once per page load — used to group quote attempts
+  // from the same visitor in the dashboard, even if they skip contact info.
+  const _mqSessionId = Math.random().toString(36).slice(2,10).toUpperCase();
+
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
   const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
@@ -98,7 +102,7 @@
         'Lead ID':`${lead.name} — ${new Date().toLocaleDateString()}`,
         'Shop':[shop._recordId], 'Customer name':lead.name,
         'Customer email':lead.email, 'Customer phone':lead.phone,
-        'Quote type':quoteType, 'Room type':roomType||'', 'Estimate low':low, 'Estimate high':high,
+        'Quote type':quoteType, 'Room type':roomType||'', 'Session ID':_mqSessionId, 'Estimate low':low, 'Estimate high':high,
         'Quote details':JSON.stringify(lines), 'Source':'Website', 'Status':'New',
       });
     } catch(e) { console.error('Lead save failed', e); }
@@ -184,6 +188,9 @@
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
+      #midasquote-widget select,#midasquote-widget input{font-size:15px;font-family:inherit}
+      #midasquote-widget input{text-indent:8px}
+      #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
@@ -954,7 +961,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       // Scroll the overlay into view so it appears at the user's current position
       overlay.scrollIntoView({behavior:'smooth',block:'center'});
     };
-    window.mqSkipLead=()=>{document.getElementById('mq-lead-overlay').classList.remove('show');if(pendingCb){pendingCb(null);pendingCb=null;}};
+    window.mqSkipLead=()=>{
+      document.getElementById('mq-lead-overlay').classList.remove('show');
+      // Treat skip the same as submit — save whatever's in the fields (even if
+      // blank) so the shop owner sees all quote attempts, not just the ones
+      // where the customer filled in their info.
+      const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone')};
+      if(pendingCb){pendingCb(lead);pendingCb=null;}
+    };
     window.mqSubmitLead=async()=>{
       const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone')};
       // Remember for next time so they don't have to re-type

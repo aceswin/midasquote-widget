@@ -118,6 +118,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-stat-val{font-size:26px;font-weight:700;color:#111;margin-bottom:6px}
       #midasquote-dashboard .mq-stat-lbl{font-size:12px;color:#6b7280;font-weight:500}
       #midasquote-dashboard .mq-stat-green .mq-stat-val{color:#16a34a}
+      #midasquote-dashboard .mq-stat-purple .mq-stat-val{color:#6366f1}
       #midasquote-dashboard .mq-table{width:100%;border-collapse:collapse}
       #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:left}
       #midasquote-dashboard .mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:#111}
@@ -222,8 +223,9 @@ window.logoutMember = async function () {
             <div class="mq-page-title">Welcome back 👋</div>
             <div class="mq-page-sub">Here's what's happening with your widget</div>
             <div class="mq-stat-grid" id="mq-stats">
-              <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-leads">—</div><div class="mq-stat-lbl">Total leads</div></div>
+              <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-leads">—</div><div class="mq-stat-lbl">Quotes generated</div></div>
               <div class="mq-stat mq-stat-green"><div class="mq-stat-val" id="mq-stat-new">—</div><div class="mq-stat-lbl">New this week</div></div>
+              <div class="mq-stat mq-stat-purple"><div class="mq-stat-val" id="mq-stat-contacts">—</div><div class="mq-stat-lbl">With contact info</div></div>
               <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-booked">—</div><div class="mq-stat-lbl">Booked</div></div>
               <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-value">—</div><div class="mq-stat-lbl">Est. pipeline value</div></div>
             </div>
@@ -1049,12 +1051,24 @@ window.logoutMember = async function () {
 
   function renderLeads(leads, limit) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
+
+    // Build a map of session ID → count so we can badge rows that share a session
+    const sessionCounts = {};
+    leads.forEach(r => {
+      const sid = r.fields['Session ID'];
+      if (sid) sessionCounts[sid] = (sessionCounts[sid] || 0) + 1;
+    });
+
     const rows = (limit ? leads.slice(0, limit) : leads).map(r => {
       const f = r.fields;
       const statusColors = { New: 'blue', Contacted: 'yellow', Booked: 'green', Lost: 'red' };
       const color = statusColors[f['Status']] || 'grey';
+      const sid = f['Session ID'];
+      const sessionBadge = sid && sessionCounts[sid] > 1
+        ? `<span title="Session ${sid}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">🔗 ${sessionCounts[sid]} attempts</span>`
+        : '';
       return `<tr>
-        <td><strong>${f['Customer name'] || '—'}</strong></td>
+        <td><strong>${f['Customer name'] || '—'}</strong>${sessionBadge ? '<br>'+sessionBadge : ''}</td>
         <td>${f['Customer email'] || '—'}</td>
         <td>${f['Customer phone'] || '—'}</td>
         <td>${f['Quote type'] || '—'}</td>
@@ -1081,11 +1095,13 @@ window.logoutMember = async function () {
     const newThisWeek = leads.filter(r => new Date(r.fields['Created'] || r.createdTime) > oneWeekAgo).length;
     const booked = leads.filter(r => r.fields['Status'] === 'Booked').length;
     const pipeline = leads.reduce((sum, r) => sum + (r.fields['Estimate high'] || 0), 0);
+    const withContact = leads.filter(r => r.fields['Customer email'] || r.fields['Customer phone']).length;
     const set = (id, val) => { const e = el(id); if (e) e.textContent = val; };
     set('mq-stat-leads', total);
     set('mq-stat-new', newThisWeek);
     set('mq-stat-booked', booked);
     set('mq-stat-value', fmt(pipeline));
+    set('mq-stat-contacts', withContact);
   }
 
   function renderSpecialty(specs, shopRecord) {
