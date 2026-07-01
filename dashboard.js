@@ -621,6 +621,17 @@ window.logoutMember = async function () {
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Eyebrow text (above shop name)</label>
                   <input type="text" id="mq-mk-sign-headline" placeholder="Another project by" maxlength="40" style="font-size:13px"/>
                 </div>
+                <div style="width:100%;max-width:280px">
+                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Shop name font</label>
+                  <select id="mq-mk-sign-font" style="font-size:13px;width:100%">
+                    <option value="-apple-system, sans-serif">Default (System)</option>
+                    <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica — Clean & Modern</option>
+                    <option value="Georgia, serif">Georgia — Warm & Premium</option>
+                    <option value="'Trebuchet MS', sans-serif">Trebuchet — Friendly & Bold</option>
+                    <option value="'Times New Roman', serif">Times New Roman — Classic</option>
+                    <option value="Impact, 'Arial Narrow', sans-serif">Impact — Strong & Punchy</option>
+                  </select>
+                </div>
                 <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
                   <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Band colour</label>
                   <input type="color" id="mq-mk-sign-color" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
@@ -2537,6 +2548,7 @@ window.logoutMember = async function () {
       let signOrientation = 'portrait'; // 'portrait' | 'landscape'
       let signHeadline = _mqSignHeadline || 'Another project by';
       let signCustomColor = _mqSignCustomColor || '';
+      let signFontFamily = '-apple-system, sans-serif';
 
       function shadeColor(hex, percent) {
         try {
@@ -2710,20 +2722,25 @@ window.logoutMember = async function () {
         signCtx.fillText(signHeadline.toUpperCase(), padL, padTB + 10);
 
         let nameFontSize = 90;
-        let nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+        let nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
         let nameLines = wrapTextSign(shopName, nameFont, bandW - padL - 40);
         while (nameLines.length > 3 && nameFontSize > 56) {
           nameFontSize -= 8;
-          nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+          nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
           nameLines = wrapTextSign(shopName, nameFont, bandW - padL - 40);
         }
         signCtx.fillStyle = textColor;
         signCtx.font = nameFont;
-        let y = padTB + 110;
+        signCtx.save();
+        signCtx.shadowColor = 'rgba(0,0,0,0.7)';
+        signCtx.shadowBlur = 20;
+        signCtx.shadowOffsetY = 5;
+        let y = padTB + 120;
         nameLines.forEach(line => {
           signCtx.fillText(line, padL, y);
           y += nameFontSize * 1.1;
         });
+        signCtx.restore();
 
         // Fill the remaining space with bigger, vertically centered trust bullets
         const ctaHForCalc = 104;
@@ -2842,29 +2859,37 @@ window.logoutMember = async function () {
         signCtx.textAlign = 'center';
         signCtx.textBaseline = 'alphabetic';
 
-        // Small eyebrow
+        // Small eyebrow — stays near top
         signCtx.fillStyle = textColorMuted;
-        signCtx.font = '700 38px -apple-system, sans-serif';
-        signCtx.fillText(signHeadline.toUpperCase(), W/2, 96);
+        signCtx.font = `700 38px -apple-system, sans-serif`;
+        signCtx.letterSpacing = '3px';
+        signCtx.fillText(signHeadline.toUpperCase(), W/2, 110);
+        signCtx.letterSpacing = '0px';
 
-        // HERO: shop name — huge, the main thing visible from the street
+        // HERO: shop name — pushed down from eyebrow, strong drop shadow
         let nameFontSize = 104;
-        let nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+        let nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
         let nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
-        // Shrink if it wraps to more than 2 lines so it still fits the band
         while (nameLines.length > 2 && nameFontSize > 64) {
           nameFontSize -= 8;
-          nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+          nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
           nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
         }
         const nameLineHeight = nameFontSize * 1.08;
-        let ny = bandH/2 - ((nameLines.length-1) * nameLineHeight)/2 + nameFontSize*0.32;
+        // Push shop name further down from eyebrow — was bandH/2 centered, now lower
+        let ny = 200 + nameFontSize * 0.8;
         signCtx.fillStyle = textColor;
         signCtx.font = nameFont;
+        // Strong drop shadow for shop name
+        signCtx.save();
+        signCtx.shadowColor = 'rgba(0,0,0,0.7)';
+        signCtx.shadowBlur = 20;
+        signCtx.shadowOffsetY = 5;
         nameLines.forEach(line => {
           signCtx.fillText(line, W/2, ny);
           ny += nameLineHeight;
         });
+        signCtx.restore();
 
         // ── BOTTOM: photo fills the rest, lighter overlay is fine since no text sits directly on it ──
         const photoY = bandH;
@@ -2980,6 +3005,14 @@ window.logoutMember = async function () {
           signHeadline = val || 'Another project by';
           drawSign();
           saveHeadlinesDebounced(shopRecord);
+        };
+      }
+
+      const signFontSelect = el('mq-mk-sign-font');
+      if (signFontSelect) {
+        signFontSelect.onchange = () => {
+          signFontFamily = signFontSelect.value;
+          drawSign();
         };
       }
 
