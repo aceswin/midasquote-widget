@@ -632,7 +632,7 @@ window.logoutMember = async function () {
                 <button class="mq-btn mq-btn-sm" id="mq-mk-sign-orient-landscape">🖥️ Landscape (yard sign)</button>
               </div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-sign-canvas" width="1080" height="1620" style="width:200px;height:300px;min-height:300px;border-radius:10px;display:block"></canvas>
+                <canvas id="mq-mk-sign-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
                 <div style="width:100%;max-width:280px">
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Eyebrow text (above shop name)</label>
                   <input type="text" id="mq-mk-sign-headline" placeholder="Another project by" maxlength="40" style="font-size:13px"/>
@@ -3029,8 +3029,8 @@ window.logoutMember = async function () {
         // Sync the displayed canvas size to match orientation aspect ratio
         const displayEl = signCanvas;
         if (signOrientation === 'landscape') {
-          displayEl.style.width = '300px';
-          displayEl.style.height = '200px';
+          displayEl.style.width = '280px';
+          displayEl.style.height = '187px';
           drawSignLandscape();
         } else {
           displayEl.style.width = '200px';
