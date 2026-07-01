@@ -2300,11 +2300,11 @@ window.logoutMember = async function () {
         qrCtx.textBaseline = 'alphabetic';
         qrCtx.fillStyle = bannerTextColor;
         let nameFontSize = 64;
-        let nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+        let nameFont = `800 ${nameFontSize}px ${qrFontFamily}`;
         let nameLines = wrapTextQr(shopName, nameFont, QW - 140);
         while (nameLines.length > 1 && nameFontSize > 40) {
           nameFontSize -= 6;
-          nameFont = `800 ${nameFontSize}px -apple-system, sans-serif`;
+          nameFont = `800 ${nameFontSize}px ${qrFontFamily}`;
           nameLines = wrapTextQr(shopName, nameFont, QW - 140);
         }
         qrCtx.font = nameFont;
@@ -2895,7 +2895,7 @@ window.logoutMember = async function () {
         const textColorMuted = textColor === '#ffffff' ? 'rgba(255,255,255,0.78)' : 'rgba(26,26,26,0.7)';
 
         // ── TOP: Solid brand-colour band — guaranteed legible no matter what photo is chosen ──
-        const bandH = 460;
+        const bandH = 560;
         const bandGrad = signCtx.createLinearGradient(0, 0, 0, bandH);
         bandGrad.addColorStop(0, signColor);
         bandGrad.addColorStop(1, shadeColor(signColor, -18));
@@ -2905,14 +2905,14 @@ window.logoutMember = async function () {
         signCtx.textAlign = 'center';
         signCtx.textBaseline = 'alphabetic';
 
-        // Small eyebrow — stays near top
+        // Small eyebrow — stays near top with letter spacing for polish
         signCtx.fillStyle = textColorMuted;
         signCtx.font = `700 38px -apple-system, sans-serif`;
         signCtx.letterSpacing = '3px';
         signCtx.fillText(signHeadline.toUpperCase(), W/2, 110);
         signCtx.letterSpacing = '0px';
 
-        // HERO: shop name — pushed down from eyebrow, strong drop shadow
+        // HERO: shop name — centered in band below eyebrow, with font choice + letter spacing
         let nameFontSize = 104;
         let nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
         let nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
@@ -2921,12 +2921,12 @@ window.logoutMember = async function () {
           nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
           nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
         }
-        const nameLineHeight = nameFontSize * 1.08;
-        // Push shop name further down from eyebrow — was bandH/2 centered, now lower
-        let ny = 200 + nameFontSize * 0.8;
+        const nameLineHeight = nameFontSize * 1.1;
+        const nameBlockH = nameLines.length * nameLineHeight;
+        // Center name block in the space below eyebrow (140px) and bottom of band
+        let ny = 160 + (bandH - 160 - nameBlockH) / 2 + nameFontSize * 0.75;
         signCtx.fillStyle = textColor;
         signCtx.font = nameFont;
-        // Strong drop shadow for shop name
         signCtx.save();
         signCtx.shadowColor = 'rgba(0,0,0,0.7)';
         signCtx.shadowBlur = 20;
