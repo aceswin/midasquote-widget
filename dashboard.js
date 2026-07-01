@@ -20,7 +20,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
     LEADS_TABLE:        'tblPcoTI8zCCHLICi',
     LINE_ITEMS_TABLE:   'tblCkJsJ2OC6DgXok',
-    RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
+    RESEND_API_KEY:     '',  // Removed — email sending goes through Cloudflare Worker which holds the key securely
     EMAIL_WORKER:       'https://midasquote-email.jordan132001.workers.dev',
     FROM_EMAIL:         'quotes@midasquote.com',
     IMAGE_UPLOAD_URL:   'https://midasquote-image-worker.jordan132001.workers.dev',
