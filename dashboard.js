@@ -632,7 +632,7 @@ window.logoutMember = async function () {
                 <button class="mq-btn mq-btn-sm" id="mq-mk-sign-orient-landscape">🖥️ Landscape (yard sign)</button>
               </div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-sign-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
+                <canvas id="mq-mk-sign-canvas" width="1080" height="1620" style="width:200px;height:300px;min-height:300px;border-radius:10px;display:block"></canvas>
                 <div style="width:100%;max-width:280px">
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Eyebrow text (above shop name)</label>
                   <input type="text" id="mq-mk-sign-headline" placeholder="Another project by" maxlength="40" style="font-size:13px"/>
@@ -2191,7 +2191,6 @@ window.logoutMember = async function () {
       let qrCustomColor = _mqQrCustomColor || '';
       let qrFontFamily = '-apple-system, sans-serif';
       let qrLetterSpacing = 0;
-      let signLetterSpacing = 0;
 
       // QR generation library is bundled inline (no external CDN dependency)
       function loadQrLib() {
@@ -2593,6 +2592,7 @@ window.logoutMember = async function () {
       let signHeadline = _mqSignHeadline || 'Another project by';
       let signCustomColor = _mqSignCustomColor || '';
       let signFontFamily = '-apple-system, sans-serif';
+      let signLetterSpacing = 0;
 
       function shadeColor(hex, percent) {
         try {
