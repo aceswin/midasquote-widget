@@ -586,6 +586,22 @@ window.logoutMember = async function () {
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
                   <input type="text" id="mq-mk-qr-headline" placeholder="Scan for an instant price" maxlength="60" style="font-size:13px"/>
                 </div>
+                <div style="width:100%;max-width:280px">
+                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline font</label>
+                  <select id="mq-mk-qr-font" style="font-size:13px;width:100%">
+                    <option value="-apple-system, sans-serif">Default (System)</option>
+                    <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica — Clean & Modern</option>
+                    <option value="Georgia, serif">Georgia — Warm & Premium</option>
+                    <option value="'Trebuchet MS', sans-serif">Trebuchet — Friendly & Bold</option>
+                    <option value="'Times New Roman', serif">Times New Roman — Classic</option>
+                    <option value="Impact, 'Arial Narrow', sans-serif">Impact — Strong & Punchy</option>
+                  </select>
+                </div>
+                <div style="width:100%;max-width:280px;align-items:center;gap:10px;display:flex">
+                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Letter spacing</span>
+                  <input type="range" id="mq-mk-qr-letter-spacing" min="0" max="20" value="0" style="flex:1"/>
+                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-qr-letter-spacing-val">0px</span>
+                </div>
                 <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
                   <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Background colour</label>
                   <input type="color" id="mq-mk-qr-color" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
@@ -631,6 +647,11 @@ window.logoutMember = async function () {
                     <option value="'Times New Roman', serif">Times New Roman — Classic</option>
                     <option value="Impact, 'Arial Narrow', sans-serif">Impact — Strong & Punchy</option>
                   </select>
+                </div>
+                <div style="width:100%;max-width:280px;align-items:center;gap:10px;display:flex">
+                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Letter spacing</span>
+                  <input type="range" id="mq-mk-sign-letter-spacing" min="0" max="20" value="0" style="flex:1"/>
+                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-sign-letter-spacing-val">0px</span>
                 </div>
                 <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
                   <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Band colour</label>
@@ -2168,6 +2189,9 @@ window.logoutMember = async function () {
       let qrLibState = 'loading'; // 'loading' | 'ready' | 'failed'
       let qrHeadline = _mqQrHeadline || 'Scan for an instant price';
       let qrCustomColor = _mqQrCustomColor || '';
+      let qrFontFamily = '-apple-system, sans-serif';
+      let qrLetterSpacing = 0;
+      let signLetterSpacing = 0;
 
       // QR generation library is bundled inline (no external CDN dependency)
       function loadQrLib() {
@@ -2325,13 +2349,13 @@ window.logoutMember = async function () {
         const qrSize = 520;
         const cardPad = 40;
         const ctaHForCalc = 116;
-        const headlineFont = '700 62px -apple-system, sans-serif';
+        const headlineFont = `700 62px ${qrFontFamily}`;
         const lines = wrapTextQr(qrHeadline, headlineFont, QW - pad*2);
         const headlineLineH = 74;
         const subtextLineH = 44;
 
-        const gapHeadlineToQr = 50;   // space between bottom of headline and top of QR card
-        const gapQrToSubtext = 50;    // space between bottom of QR card and subtext
+        const gapHeadlineToQr = 80;   // space between bottom of headline and top of QR card
+        const gapQrToSubtext = 80;    // space between bottom of QR card and subtext
         const qrCardH = qrSize + cardPad*2;
 
         // Total height = all headline lines + gap + QR card + gap + one subtext line
@@ -2344,7 +2368,9 @@ window.logoutMember = async function () {
         // Headline — baseline of first line sits ~0.75x the line height down from blockTop
         let y = blockTop + headlineLineH * 0.75;
         lines.forEach(line => {
+          qrCtx.letterSpacing = qrLetterSpacing + 'px';
           shadowText(line, QW/2, y, headlineFont, posterTextColor);
+          qrCtx.letterSpacing = '0px';
           y += headlineLineH;
         });
 
@@ -2448,6 +2474,24 @@ window.logoutMember = async function () {
           qrHeadline = val || 'Scan for an instant price';
           drawQrPoster();
           saveHeadlinesDebounced(shopRecord);
+        };
+      }
+
+      const qrFontSelect = el('mq-mk-qr-font');
+      if (qrFontSelect) {
+        qrFontSelect.onchange = () => {
+          qrFontFamily = qrFontSelect.value;
+          drawQrPoster();
+        };
+      }
+
+      const qrLetterSpacingSlider = el('mq-mk-qr-letter-spacing');
+      const qrLetterSpacingVal = el('mq-mk-qr-letter-spacing-val');
+      if (qrLetterSpacingSlider) {
+        qrLetterSpacingSlider.oninput = () => {
+          qrLetterSpacing = parseInt(qrLetterSpacingSlider.value, 10);
+          if (qrLetterSpacingVal) qrLetterSpacingVal.textContent = qrLetterSpacing + 'px';
+          drawQrPoster();
         };
       }
 
@@ -2737,7 +2781,9 @@ window.logoutMember = async function () {
         signCtx.shadowOffsetY = 5;
         let y = padTB + 120;
         nameLines.forEach(line => {
+          signCtx.letterSpacing = signLetterSpacing + 'px';
           signCtx.fillText(line, padL, y);
+          signCtx.letterSpacing = '0px';
           y += nameFontSize * 1.1;
         });
         signCtx.restore();
@@ -2886,7 +2932,9 @@ window.logoutMember = async function () {
         signCtx.shadowBlur = 20;
         signCtx.shadowOffsetY = 5;
         nameLines.forEach(line => {
+          signCtx.letterSpacing = signLetterSpacing + 'px';
           signCtx.fillText(line, W/2, ny);
+          signCtx.letterSpacing = '0px';
           ny += nameLineHeight;
         });
         signCtx.restore();
@@ -3012,6 +3060,16 @@ window.logoutMember = async function () {
       if (signFontSelect) {
         signFontSelect.onchange = () => {
           signFontFamily = signFontSelect.value;
+          drawSign();
+        };
+      }
+
+      const signLetterSpacingSlider = el('mq-mk-sign-letter-spacing');
+      const signLetterSpacingVal = el('mq-mk-sign-letter-spacing-val');
+      if (signLetterSpacingSlider) {
+        signLetterSpacingSlider.oninput = () => {
+          signLetterSpacing = parseInt(signLetterSpacingSlider.value, 10);
+          if (signLetterSpacingVal) signLetterSpacingVal.textContent = signLetterSpacing + 'px';
           drawSign();
         };
       }
