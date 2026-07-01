@@ -2762,7 +2762,7 @@ window.logoutMember = async function () {
         signCtx.textAlign = 'left';
         signCtx.textBaseline = 'alphabetic';
         signCtx.fillStyle = textColorMuted;
-        signCtx.font = '700 38px -apple-system, sans-serif';
+        signCtx.font = `700 38px ${signFontFamily}`;
         signCtx.fillText(signHeadline.toUpperCase(), padL, padTB + 10);
 
         let nameFontSize = 90;
@@ -2907,7 +2907,7 @@ window.logoutMember = async function () {
 
         // Small eyebrow — stays near top with letter spacing for polish
         signCtx.fillStyle = textColorMuted;
-        signCtx.font = `700 38px -apple-system, sans-serif`;
+        signCtx.font = `700 38px ${signFontFamily}`;
         signCtx.letterSpacing = '3px';
         signCtx.fillText(signHeadline.toUpperCase(), W/2, 110);
         signCtx.letterSpacing = '0px';
@@ -3029,8 +3029,8 @@ window.logoutMember = async function () {
         // Sync the displayed canvas size to match orientation aspect ratio
         const displayEl = signCanvas;
         if (signOrientation === 'landscape') {
-          displayEl.style.width = '280px';
-          displayEl.style.height = '187px';
+          displayEl.style.width = '300px';
+          displayEl.style.height = '200px';
           drawSignLandscape();
         } else {
           displayEl.style.width = '200px';
