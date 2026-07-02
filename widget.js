@@ -466,6 +466,7 @@
             <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)">${dOpts}</select></div>
             ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-hinge">${hingeOpts}</select></div>`:''}
           </div>
+          <p class="mq-hint" style="margin-top:6px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <div id="mq-${prefix}-diff" style="display:none">
           <div class="mq-sub-sec"><p class="mq-sub-title">Upper cabinets</p>
@@ -638,6 +639,7 @@
           <p class="mq-sec-title">Surfaces</p>
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
+          <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <button class="mq-calc-btn" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
         <div class="mq-loading" id="mq-ct-loading">Building your estimate...</div>
