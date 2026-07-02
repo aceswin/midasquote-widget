@@ -197,7 +197,7 @@
       #midasquote-widget .mq-tab-content.active{display:block}
       #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-sec-title{font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem}
-      #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+      #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-field{display:flex;flex-direction:column;gap:5px;min-width:0}
       #midasquote-widget .mq-label{font-size:13px;color:#6b7280}
