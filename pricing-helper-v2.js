@@ -503,7 +503,7 @@ window.mqphGoToWizard = function() {
             `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `<strong>No doors · No drawers · No hardware · Supply only · No delivery included (unless local delivery is already part of your normal pricing)</strong>`,
+            `<strong>No doors · No drawers · No hardware · Supply only</strong>`,
           ])}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
           <div id="mqph-r-bl-u" class="mqph-result"></div>`;
@@ -529,7 +529,7 @@ window.mqphGoToWizard = function() {
             `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `<strong>No doors · No drawers · Supply only · No delivery included (unless local delivery is already part of your normal pricing) · Include toe kick</strong>`,
+            `<strong>No doors · No drawers · Supply only · Include toe kick</strong>`,
           ])}
           ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was $${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
