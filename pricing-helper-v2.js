@@ -15,7 +15,6 @@
   let wizardBaseline = null;
   let wizardStep = 0;
   let wizardItems = [];
-  let wizardFinishing = false;
   let currentEditId = null;
 
   // Mini-wizard state
@@ -195,7 +194,7 @@
     { id:'material', label:'🪵 Box materials',          sub:'The material used to build the cabinet boxes (e.g. White melamine, Prefinished birch plywood, Painted MDF)', placeholder:'e.g. White melamine' },
     { id:'door',     label:'🚪 Door styles',             sub:'Include the finish in the name — each door+finish combo is a separate item (e.g. "Maple shaker — stained & lacquered", "MDF slab — painted")', placeholder:'e.g. Maple shaker — stained & lacquered' },
     { id:'drawer_config', label:'🗄️ Drawer configurations',  sub:'Combine box material + slide type in the name (e.g. "Prefinished birch — soft-close undermount")', placeholder:'e.g. Prefinished birch — soft-close undermount' },
-    { id:'hinge',    label:'🔧 Door hinges',             sub:'Hinge options you offer — your cheapest hinge is the baseline, others become upcharges', placeholder:'e.g. Concealed hinge' },
+    { id:'hinge',    label:'🔧 Door hinges',             sub:'Pre-added — Hinge options you offer — your cheapest hinge is the baseline, others become upcharges. Most shops only need these 2 options.', placeholder:'e.g. Push to open hinge system' },
 
   ];
 
@@ -219,7 +218,7 @@
     { name:'Install — bases (with doors)',  unit:'per lin ft', description:'Base install rate with doors hung' },
     { name:'Cabinet removal',               unit:'per lin ft', description:'Remove & dispose existing cabinets' },
   ];
-  const DEFAULT_HINGES = ['Soft-close hinges','Regular hinges'];
+  const DEFAULT_HINGES = ['Regular hinges','Soft-close hinges'];
 
   // ============================================================
   // HELPERS
@@ -406,7 +405,7 @@
   };
 
   window.mqphGoToWizard = function() {
-    wizardStep = 0; wizardItems = []; wizardBaseline = null; wizardFinishing = false;
+    wizardStep = 0; wizardItems = []; wizardBaseline = null;
     const container = document.getElementById('mq-pricing-helper-v2');
     if (container) { container.innerHTML = buildWizardHTML(); renderWizardStep(0); }
   };
@@ -572,15 +571,9 @@
           const others = materials.filter((_,i) => i !== blIdx);
           others.forEach((m,idx) => {
             const p = parseFloat(document.getElementById(`mqph-mat-${idx}`)?.value||0);
-            if (p>0 && wizardBaseline) {
-              // The quote here is a bases-spec job (matches baseline bases spec, incl. toe kick),
-              // so treat it as an upcharge over baseline bases — same pattern as door/hinge/drawer
-              // upcharges — then apply that upcharge to BOTH baseline uppers and baseline bases.
-              const upcharge  = (p - wizardBaseline.basePrice) / 4;
-              const upperRate = (wizardBaseline.upperRate || 0) + upcharge;
-              const baseRate  = (wizardBaseline.baseRate  || 0) + upcharge;
-              wizardItems.push({ name:m.fields['Name']+' — uppers', category:'material', rate:Math.round(upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline uppers + material upcharge', active:true });
-              wizardItems.push({ name:m.fields['Name']+' — bases',  category:'material', rate:Math.round(baseRate*100)/100, unit:'per lin ft — bases',  description:'Baseline bases + material upcharge',  active:true });
+            if (p>0) {
+              wizardItems.push({ name:m.fields['Name']+' — uppers', category:'material', rate:Math.round((p/4)*100)/100, unit:'per lin ft — uppers', description:'Material rate uppers', active:true });
+              wizardItems.push({ name:m.fields['Name']+' — bases',  category:'material', rate:Math.round((p/4)*100)/100, unit:'per lin ft — bases',  description:'Material rate bases',  active:true });
             }
           });
         }
@@ -896,13 +889,7 @@
   window.mqphCalcMatUp = function(idx) {
     const p=parseFloat(document.getElementById(`mqph-mat-${idx}`)?.value||0);
     const res=document.getElementById(`mqph-r-mat-${idx}`); if(!res) return;
-    if(p>0 && wizardBaseline){
-      const upcharge  = (p - wizardBaseline.basePrice) / 4;
-      const upperRate = (wizardBaseline.upperRate || 0) + upcharge;
-      const baseRate  = (wizardBaseline.baseRate  || 0) + upcharge;
-      res.style.display='block';
-      res.innerHTML=`<strong>Upcharge:</strong> <span class="mqph-result-val">$${upcharge.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;→ uppers $${upperRate.toFixed(2)}/ft · bases $${baseRate.toFixed(2)}/ft</span>`;
-    }
+    if(p>0){res.style.display='block';res.innerHTML=`<strong>Rate:</strong> <span class="mqph-result-val">$${(p/4).toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcDoorBaseline = function() {
@@ -1024,8 +1011,6 @@
   // FINISH WIZARD — full wipe + rewrite
   // ============================================================
   async function mqphFinishWizard() {
-    if (wizardFinishing) return; // already saving — ignore a duplicate double-click trigger
-    wizardFinishing = true;
     const container=document.getElementById('mq-pricing-helper-v2');
     if(container) container.innerHTML='<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Saving your pricing…</div>';
 
