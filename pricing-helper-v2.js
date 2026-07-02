@@ -12,9 +12,10 @@
   let shopRecord = null;
   let pricingRecord = null;
   let lineItems = [];
-  let wizardBaseline = null;
+let wizardBaseline = null;
   let wizardStep = 0;
   let wizardItems = [];
+  let wizardFinishing = false;
   let currentEditId = null;
 
   // Mini-wizard state
@@ -403,8 +404,8 @@
     if (chip) chip.remove();
   };
 
-  window.mqphGoToWizard = function() {
-    wizardStep = 0; wizardItems = []; wizardBaseline = null;
+window.mqphGoToWizard = function() {
+    wizardStep = 0; wizardItems = []; wizardBaseline = null; wizardFinishing = false;
     const container = document.getElementById('mq-pricing-helper-v2');
     if (container) { container.innerHTML = buildWizardHTML(); renderWizardStep(0); }
   };
@@ -1009,7 +1010,9 @@
   // ============================================================
   // FINISH WIZARD — full wipe + rewrite
   // ============================================================
-  async function mqphFinishWizard() {
+ async function mqphFinishWizard() {
+    if (wizardFinishing) return; // already saving — ignore a duplicate trigger
+    wizardFinishing = true;
     const container=document.getElementById('mq-pricing-helper-v2');
     if(container) container.innerHTML='<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Saving your pricing…</div>';
 
