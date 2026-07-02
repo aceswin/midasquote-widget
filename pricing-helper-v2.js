@@ -192,8 +192,8 @@
   // ============================================================
   const CATEGORIES = [
     { id:'material', label:'🪵 Box materials',          sub:'The material used to build the cabinet boxes (e.g. White melamine, Prefinished birch plywood, Painted MDF)', placeholder:'e.g. White melamine' },
-    { id:'door',     label:'🚪 Door styles',             sub:'Include the finish in the name — each door+finish combo is a separate item (e.g. "Maple shaker — stained & lacquered", "MDF slab — painted")', placeholder:'e.g. Maple shaker — stained & lacquered' },
-    { id:'drawer_config', label:'🗄️ Drawer configurations',  sub:'Combine box material + slide type in the name (e.g. "Prefinished birch — soft-close undermount")', placeholder:'e.g. Prefinished birch — soft-close undermount' },
+    { id:'door',     label:'🚪 Door styles',             sub:'Think species and profile — maple shaker, oak raised panel, MDF slab, and so on. Unless you charge significantly more for one finish over another, you don't need a separate item for each finish. Keep it to your most popular styles.', placeholder:'e.g. Maple shaker' },
+    { id:'drawer_config', label:'🗄️ Drawer configurations',  sub:'Add your drawer options by material and close type — that's all customers care about. Something like 'White melamine — soft-close' or 'Prefinished birch — soft-close'. Skip the slide type and hardware details — keep it customer-friendly.', placeholder:'e.g. Prefinished birch — soft-close' },
     { id:'hinge',    label:'🔧 Door hinges',             sub:'Pre-added — Hinge options you offer — your cheapest hinge is the baseline, others become upcharges. Most shops only need these 2 options.', placeholder:'e.g. Push to open hinge system' },
 
   ];
@@ -280,7 +280,7 @@
     return `
       <div style="margin-bottom:1.5rem">
         <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px">🛠️ Set up your shop items</h2>
-        <p style="font-size:13px;color:#6b7280;line-height:1.6">Add everything your shop offers. Just names for now — pricing is figured out in the wizard.</p>
+        <p style="font-size:13px;color:#6b7280;line-height:1.6">Start with the materials, door styles, and drawer configs you sell most — your everyday go-tos, not the rare special orders. A focused list gives customers a better experience and makes your widget feel clean and professional.</p>
       </div>
 
       ${CATEGORIES.map(cat => {
@@ -503,7 +503,7 @@
             `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `<strong>No doors · No drawers · No hardware · Supply only · No delivery(Unless you deliver locally for supply only jobs)</strong>`,
+            `<strong>No doors · No drawers · No hardware · Supply only · No delivery included (unless local delivery is already part of your normal pricing)</strong>`,
           ])}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
           <div id="mqph-r-bl-u" class="mqph-result"></div>`;
@@ -529,7 +529,7 @@
             `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `<strong>No doors · No drawers · Supply only · No delivery(Unless you deliver locally for supply only jobs) · Include toe kick</strong>`,
+            `<strong>No doors · No drawers · Supply only · No delivery included (unless local delivery is already part of your normal pricing) · Include toe kick</strong>`,
           ])}
           ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was $${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
