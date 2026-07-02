@@ -1104,7 +1104,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       // Tall cabinet footage to add to crown/valance — each tall cab adds its width in lin ft
       const tcQtyForTrim = tallCabQty[prefix] || 0;
       const tcWidthInForTrim = gn(`mq-${prefix}-tc-width`, 24);
-      const tcLinFtForTrim = tcQtyForTrim > 0 && Object.keys(TALL_CAB).length > 0 ? (tcWidthInForTrim / 12) * tcQtyForTrim : 0;
+      const tcLinFtForTrim = tcQtyForTrim > 0 && Object.keys(TALL_CAB).length > 0 ? ((tcWidthInForTrim + 12) / 12) * tcQtyForTrim : 0;
 
       let trimCost = 0;
       const crownKey = gv(`mq-${prefix}-trim-crown`);
