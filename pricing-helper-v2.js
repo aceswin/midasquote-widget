@@ -193,7 +193,7 @@
   const CATEGORIES = [
     { id:'material', label:'🪵 Box materials',          sub:'The material used to build the cabinet boxes (e.g. White melamine, Prefinished birch plywood, Painted MDF)', placeholder:'e.g. White melamine' },
     { id:'door',     label:'🚪 Door styles',             sub:'Think species and profile — maple shaker, oak raised panel, MDF slab, and so on. Unless you charge significantly more for one finish over another, you don\'t need a separate item for each finish. Keep it to your most popular styles.', placeholder:'e.g. Maple shaker' },
-    { id:'drawer_config', label:'🗄️ Drawer configurations',  sub:'Add your drawer options by material and close type — that\'s all customers care about. Something like 'White melamine — soft-close' or 'Prefinished birch — soft-close'. Skip the slide type and hardware details — keep it customer-friendly.', placeholder:'e.g. Prefinished birch — soft-close' },
+    { id:'drawer_config', label:'🗄️ Drawer configurations',  sub:'Add your drawer options by material and close type — that\'s all customers care about. Something like \'White melamine — soft-close' or 'Prefinished birch — soft-close'. Skip the slide type and hardware details — keep it customer-friendly.', placeholder:'e.g. Prefinished birch — soft-close' },
     { id:'hinge',    label:'🔧 Door hinges',             sub:'Pre-added — Hinge options you offer — your cheapest hinge is the baseline, others become upcharges. Most shops only need these 2 options.', placeholder:'e.g. Push to open hinge system' },
 
   ];
