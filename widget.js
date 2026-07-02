@@ -26,15 +26,33 @@
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
   const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
+  // Retry helper — mobile connections (switching wifi/cellular, brief drops)
+  // are far more likely to hit a transient network blip than desktop.
+  // Retries up to 3 times with a short increasing delay before giving up.
+  async function fetchWithRetry(url, options, attempts = 3, delayMs = 400) {
+    let lastErr;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res;
+      } catch (err) {
+        lastErr = err;
+        if (i < attempts - 1) await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+      }
+    }
+    throw lastErr;
+  }
+
   async function atGet(table, formula) {
     const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
-    const res = await fetch(url, { headers: AT_HEADS });
+    const res = await fetchWithRetry(url, { headers: AT_HEADS });
     const data = await res.json();
     return data.records || [];
   }
 
   async function atCreate(table, fields) {
-    const res = await fetch(`${AT_BASE}/${table}`, { method:'POST', headers:AT_HEADS, body:JSON.stringify({fields}) });
+    const res = await fetchWithRetry(`${AT_BASE}/${table}`, { method:'POST', headers:AT_HEADS, body:JSON.stringify({fields}) });
     return await res.json();
   }
 
@@ -1484,8 +1502,28 @@ window.mqTogDrawerConfig=(prefix)=>{
       <div style="font-size:14px;color:#6b7280;letter-spacing:0.01em;">Loading estimator…</div>
       <style>@keyframes mqSpin{to{transform:rotate(360deg)}}</style>
     </div>`;
-    const data=await loadShopData(shopToken);
-    if(!data) return;
+    let data;
+    try {
+      data = await loadShopData(shopToken);
+    } catch (err) {
+      console.error('MidasQuote: failed to load shop data', err);
+      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#6b7280;font-size:14px;line-height:1.6">
+        <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
+        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Having trouble loading your estimate</div>
+        <div style="margin-bottom:1rem">This is usually just a slow or dropped connection. Please try again.</div>
+        <button onclick="this.closest('#midasquote-widget').dispatchEvent(new Event('mq-retry'))" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Try again</button>
+      </div>`;
+      container.addEventListener('mq-retry', () => init(), { once: true });
+      return;
+    }
+    if(!data) {
+      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#6b7280;font-size:14px;line-height:1.6">
+        <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
+        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Estimator unavailable</div>
+        <div>This quote tool isn't configured correctly. Please contact the site owner.</div>
+      </div>`;
+      return;
+    }
     const {shop,specs}=data;
 
     // ── Subscription gate ──
