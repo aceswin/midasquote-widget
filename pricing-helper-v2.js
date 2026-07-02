@@ -571,15 +571,9 @@
           const others = materials.filter((_,i) => i !== blIdx);
           others.forEach((m,idx) => {
             const p = parseFloat(document.getElementById(`mqph-mat-${idx}`)?.value||0);
-            if (p>0 && wizardBaseline) {
-              // The quote here is a bases-spec job (matches baseline bases spec, incl. toe kick),
-              // so treat it as an upcharge over baseline bases — same pattern as door/hinge/drawer
-              // upcharges — then apply that upcharge to BOTH baseline uppers and baseline bases.
-              const upcharge  = (p - wizardBaseline.basePrice) / 4;
-              const upperRate = (wizardBaseline.upperRate || 0) + upcharge;
-              const baseRate  = (wizardBaseline.baseRate  || 0) + upcharge;
-              wizardItems.push({ name:m.fields['Name']+' — uppers', category:'material', rate:Math.round(upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline uppers + material upcharge', active:true });
-              wizardItems.push({ name:m.fields['Name']+' — bases',  category:'material', rate:Math.round(baseRate*100)/100, unit:'per lin ft — bases',  description:'Baseline bases + material upcharge',  active:true });
+            if (p>0) {
+              wizardItems.push({ name:m.fields['Name']+' — uppers', category:'material', rate:Math.round((p/4)*100)/100, unit:'per lin ft — uppers', description:'Material rate uppers', active:true });
+              wizardItems.push({ name:m.fields['Name']+' — bases',  category:'material', rate:Math.round((p/4)*100)/100, unit:'per lin ft — bases',  description:'Material rate bases',  active:true });
             }
           });
         }
@@ -895,13 +889,7 @@
   window.mqphCalcMatUp = function(idx) {
     const p=parseFloat(document.getElementById(`mqph-mat-${idx}`)?.value||0);
     const res=document.getElementById(`mqph-r-mat-${idx}`); if(!res) return;
-    if(p>0 && wizardBaseline){
-      const upcharge  = (p - wizardBaseline.basePrice) / 4;
-      const upperRate = (wizardBaseline.upperRate || 0) + upcharge;
-      const baseRate  = (wizardBaseline.baseRate  || 0) + upcharge;
-      res.style.display='block';
-      res.innerHTML=`<strong>Upcharge:</strong> <span class="mqph-result-val">$${upcharge.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;→ uppers $${upperRate.toFixed(2)}/ft · bases $${baseRate.toFixed(2)}/ft</span>`;
-    }
+    if(p>0){res.style.display='block';res.innerHTML=`<strong>Rate:</strong> <span class="mqph-result-val">$${(p/4).toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcDoorBaseline = function() {
