@@ -495,7 +495,7 @@
               <option value="mostly">Mostly drawers</option>
             </select>
           </div>
-          <div class="mq-field" id="mq-${prefix}-drawer-config-wrap">
+          <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none">
             <label class="mq-label">Drawer type</label>
             <select id="mq-${prefix}-drawer-config">${drawerConfigOpts}</select>
           </div>
