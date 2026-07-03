@@ -629,13 +629,6 @@
       <!-- COUNTERTOP TAB -->
       <div class="mq-tab-content" id="mq-tab-countertops">
         <div class="mq-sec">
-          <p class="mq-sec-title">Project options</p>
-          <div class="mq-grid2">
-            <div class="mq-field"><label class="mq-label">Supply + install?</label>
-              <select id="mq-ct-si" onchange="document.getElementById('mq-ct-result')?.classList.remove('show')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
-          </div>
-        </div>
-        <div class="mq-sec">
           <p class="mq-sec-title">Surfaces</p>
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
@@ -1236,7 +1229,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       Object.keys(surfs[prefix]).forEach(id=>{
         if(!document.getElementById('mqsc-'+id)) return;
         const mat=gv('mqsm-'+id);
-        const siOv=gv('mqssi-'+id), si=siOv==='inherit'?gv(ctSiId):siOv;
+        const siOv=gv('mqssi-'+id), si=siOv==='inherit'?gv(ctSiId):(siOv||'supply');
         const m=CT_MAT[mat]||Object.values(CT_MAT)[0];
         if (!m) return;
         const w=gn('mqsw-'+id,0), d=gn('mqsd-'+id,ctDepth);
@@ -1308,7 +1301,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         setTimeout(async()=>{
           const r=calcCountertop('ct');
           const active=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length;
-          document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s) · ${gv('mq-ct-si')==='install'?'Supply + install':'Supply only'}`;
+          document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');document.getElementById('mq-ct-result').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1364,7 +1357,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div class="mq-grid2" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">Material</label><select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshSurfBsFt('${id}')">${ctMatOpts()}</select></div>
           <div class="mq-field"><label class="mq-label">Install</label>
-            <select id="mqssi-${id}"><option value="inherit">Same as project</option><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
+            <select id="mqssi-${id}">${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
         </div>
         <div class="mq-divider"></div>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-end">
