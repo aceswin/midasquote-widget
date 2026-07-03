@@ -1221,6 +1221,8 @@ window.mqTogDrawerConfig=(prefix)=>{
               const bsSupplyUnit  = bsOpt.supplyUnit  || m.supplyUnit  || 'sqft';
               const bsInstallUnit = bsOpt.installUnit || m.installUnit || 'lin ft';
               const bsSupply  = bsSupplyUnit  === 'lin ft' ? bsLinFt*bsRate : bsSqft*bsRate;
+              const bsInstall = si==='install' ? (bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0)) : 0;
+              bsCost = bsSupply + bsInstall;
               const bsInstall = bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0);
               bsCost = bsSupply + bsInstall;
             }
