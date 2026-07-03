@@ -632,7 +632,7 @@
           <p class="mq-sec-title">Project options</p>
           <div class="mq-grid2">
             <div class="mq-field"><label class="mq-label">Supply + install?</label>
-              <select id="mq-ct-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
+              <select id="mq-ct-si" onchange="document.getElementById('mq-ct-result')?.classList.remove('show')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
           </div>
         </div>
         <div class="mq-sec">
