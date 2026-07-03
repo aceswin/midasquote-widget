@@ -801,12 +801,12 @@ window.mqphGoToWizard = function() {
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
             <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔼 Upper cabinets — install only</div>
             <div class="mqph-input-row"><label>4ft uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-            <div class="mqph-input-row"><label>4ft uppers, <strong>with doors</strong> (hang & adjust)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
             <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔽 Base cabinets — install only</div>
             <div class="mqph-input-row"><label>4ft bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-            <div class="mqph-input-row"><label>4ft bases, <strong>with doors</strong> (hang & adjust)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div id="mqph-r-install" class="mqph-result"></div>
           <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
@@ -1440,9 +1440,11 @@ window.mqphGoToWizard = function() {
           <div class="mqph-cat-block">
             <div class="mqph-cat-header">
               <span class="mqph-cat-title">${CAT_LABELS[cat]||cat}</span>
-              ${MINI_WIZ_CATS.includes(cat)
-                ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
-                : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenAdd('${cat}')">+ Add</button>`
+              ${cat==='install'
+                ? ''
+                : MINI_WIZ_CATS.includes(cat)
+                  ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
+                  : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenAdd('${cat}')">+ Add</button>`
               }
             </div>
             ${recs.sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0)).map(r=>`
