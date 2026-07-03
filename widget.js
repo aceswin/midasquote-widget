@@ -199,7 +199,7 @@
       #midasquote-widget .mq-sec-title{font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem}
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
-      #midasquote-widget .mq-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+      #midasquote-widget .mq-field{flex-direction:column;gap:5px;min-width:0}
       #midasquote-widget .mq-label{font-size:13px;color:#6b7280}
       #midasquote-widget .mq-hint{font-size:11px;color:#9ca3af;margin-top:2px;line-height:1.4}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
