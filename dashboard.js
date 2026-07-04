@@ -353,7 +353,7 @@ window.logoutMember = async function () {
           <!-- PRICING -->
           <div class="mq-page" id="mq-page-pricing">
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
-              🔧 <strong>Handles & knobs:</strong> Do not include hardware costs in your pricing here. If you supply handles or knobs, add them as a specialty item instead — that way shops who don't supply hardware aren't affected.
+              🔧 <strong>Handles & knobs:</strong> Do not include hardware costs in your pricing here. If you supply handles or knobs, add them as a specialty items instead.
             </div>
             <div id="mq-pricing-helper-v2"></div>
           </div>
