@@ -191,6 +191,7 @@ window.logoutMember = async function () {
           <div class="mq-topbar-shop">${shop['Shop name'] || 'My Shop'}</div>
         </div>
         <div class="mq-topbar-actions">
+          <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#6b7280;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#6b7280'">Help</a>
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
           <button 
   type="button"
