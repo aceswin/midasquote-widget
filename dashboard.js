@@ -316,15 +316,18 @@ window.logoutMember = async function () {
                 <textarea id="mq-shop-disclaimer" placeholder="Ballpark estimate only. Contact us for a full quote."></textarea>
                 <span class="mq-hint">Shown at the bottom of every quote</span>
               </div>
+              <div id="mq-shop-consult-warning" class="mq-msg-error" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px">
+                ⚠️ Please fill in at least one — a consultation link or a consultation email. Without one, customers just get sent to your quote form instead when they click "Ask a question" or "Book a consultation."
+              </div>
               <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">"Book a consultation" link <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
-                <input type="url" id="mq-shop-consult-link" placeholder="https://yoursite.com/contact"/>
+                <label class="mq-label">"Book a consultation" link <span style="font-weight:400;color:#9ca3af">(choose this or the email below)</span></label>
+                <input type="url" id="mq-shop-consult-link" placeholder="https://yoursite.com/contact" oninput="mqCheckConsultFields()"/>
                 <span class="mq-hint">If set, the widget's "Book a consultation" button opens this page in a new tab instead of the default contact form</span>
               </div>
               <div class="mq-field" style="margin-bottom:1.5rem">
-                <label class="mq-label">Or, consultation email <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
-                <input type="email" id="mq-shop-consult-email" placeholder="sales@yourshop.com"/>
-                <span class="mq-hint">Used only if no link is set above — opens a pre-filled email instead</span>
+                <label class="mq-label">Or, consultation email <span style="font-weight:400;color:#9ca3af">(choose this or the link above)</span></label>
+                <input type="email" id="mq-shop-consult-email" placeholder="sales@yourshop.com" oninput="mqCheckConsultFields()"/>
+                <span class="mq-hint">Used only if no link is set above — opens a pre-filled email instead. At least one of these two fields is required.</span>
               </div>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
