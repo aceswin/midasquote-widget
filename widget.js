@@ -128,7 +128,7 @@
     const lineRows = (lines||[]).filter(l=>l&&l.label&&l.cost!==undefined)
       .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`).join('');
 
-    await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
+    if (!lead._isSkip) await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#1a1a1a">New ${quoteType} quote lead</h2>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
@@ -146,7 +146,7 @@
         </div>
       </div>`);
 
-    if (lead.email) {
+  if (lead.email && !lead._isSkip) {
       const customerLineRows = (lines||[]).filter(l=>l&&l.label&&!l.bold)
         .sort((a,b)=>b.cost-a.cost)
         .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
@@ -979,8 +979,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.getElementById('mq-lead-overlay').classList.remove('show');
       // Treat skip the same as submit — save whatever's in the fields (even if
       // blank) so the shop owner sees all quote attempts, not just the ones
-      // where the customer filled in their info.
-      const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone')};
+      // where the customer filled in their info. Tagged so saveLead knows to
+      // skip sending emails for this one.
+      const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone'),_isSkip:true};
       if(pendingCb){pendingCb(lead);pendingCb=null;}
     };
     window.mqSubmitLead=async()=>{
