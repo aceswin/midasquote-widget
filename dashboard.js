@@ -1014,6 +1014,13 @@ window.logoutMember = async function () {
     set('mq-shop-disclaimer', f['Disclaimer text']);
     set('mq-shop-consult-link', f['Consultation link']);
     set('mq-shop-consult-email', f['Consultation email']);
+    window.mqCheckConsultFields = function() {
+      const link = el('mq-shop-consult-link')?.value?.trim() || '';
+      const email = el('mq-shop-consult-email')?.value?.trim() || '';
+      const warning = el('mq-shop-consult-warning');
+      if (warning) warning.style.display = (!link && !email) ? 'block' : 'none';
+    };
+    window.mqCheckConsultFields();
     const toggle = el('mq-showroom-toggle');
     if (toggle) {
       const isOn = f['Show showroom'] !== false;
