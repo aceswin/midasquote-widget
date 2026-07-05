@@ -669,6 +669,21 @@
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')">${ctMatOpts()}</select></div>
+            <div style="background:#f9fafb;border-radius:6px;padding:10px 12px;margin-bottom:0.75rem">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
+                <input type="checkbox" id="mq-b-cab-dw" onchange="mqRefreshBsFt('b')" style="width:auto;flex-shrink:0"/> Add extra space for a dishwasher <span style="color:#9ca3af;font-weight:400">(+24")</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:auto;flex-shrink:0"/> Add additional counter space
+              </label>
+              <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px">
+                <label style="font-size:13px;color:#374151">Additional space (feet)</label>
+                <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
+              </div>
+              <div style="font-size:13px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
+                📐 Countertop area: <strong id="mq-b-cab-ctft">0</strong> lin ft &nbsp;·&nbsp; <strong id="mq-b-cab-ctsqft">0</strong> sqft
+              </div>
+            </div>
             <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:flex-end">
               <div class="mq-field" style="margin-bottom:0">
                 <label class="mq-label">Backsplash</label>
@@ -1192,8 +1207,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         const cutsId= prefix==='ct' ? 'mq-ct-cab-cuts'   : `mq-${prefix}-cab-cuts`;
         const bsSubtractId = `mq-${prefix}-cab-bs-subtract`;
         const bsSidesId = `mq-${prefix}-cab-bs-sides`;
-        if (bFt > 0) {
-          const linFt = bFt;
+        const dwChecked = document.getElementById(`mq-${prefix}-cab-dw`)?.checked;
+        const extraChecked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
+        const extraFt = extraChecked ? gn(`mq-${prefix}-cab-extra-ft`, 0) : 0;
+        const totalCtFt = bFt + (dwChecked?2:0) + extraFt;
+        if (totalCtFt > 0) {
+          const linFt = totalCtFt;
           const sqft  = linFt * (ctDepth / 12);
           const mat   = gv(matId);
           const si    = gv(ctSiId);
@@ -1421,6 +1440,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       const el=document.getElementById(cutsId);
       if(el) el.style.display=document.getElementById(coId)?.checked?'block':'none';
     };
+    window.mqTogCabExtra=(prefix)=>{
+      const checked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
+      const wrap = document.getElementById(`mq-${prefix}-cab-extra-wrap`);
+      if(wrap) wrap.style.display = checked ? 'flex' : 'none';
+      mqRefreshBsFt(prefix);
+    };
     window.mqTogCuts=id=>{document.getElementById('mqscuts-'+id).style.display=document.getElementById('mqsco-'+id).checked?'block':'none';};
     window.mqRefreshBsOpts=(matSelectId, bsSelectId)=>{
       const matSel = document.getElementById(matSelectId);
@@ -1440,16 +1465,27 @@ window.mqTogDrawerConfig=(prefix)=>{
       container.innerHTML = cutoutRowsHtml(m, `${cutsContainerId}-q`);
     };
     window.mqRefreshBsFt=(prefix)=>{
+      // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
+      const baseFt = gn(`mq-${prefix}-bft`, 0);
+      const dwChecked = document.getElementById(`mq-${prefix}-cab-dw`)?.checked;
+      const extraChecked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
+      const extraFt = extraChecked ? gn(`mq-${prefix}-cab-extra-ft`, 0) : 0;
+      const totalCtFt = baseFt + (dwChecked?2:0) + extraFt;
+
+      const ctftEl = document.getElementById(`mq-${prefix}-cab-ctft`);
+      const ctsqftEl = document.getElementById(`mq-${prefix}-cab-ctsqft`);
+      if (ctftEl) ctftEl.textContent = Math.round(totalCtFt*10)/10;
+      if (ctsqftEl) ctsqftEl.textContent = Math.round(totalCtFt*(ctDepth/12)*10)/10;
+
       const block = document.getElementById(`mq-${prefix}-cab-bsft-block`);
       if (!block) return; // only exists on the "both" tab cabinet-attached block
       const bsSel = document.getElementById(`mq-${prefix}-cab-bs`);
       const hasBs = bsSel && bsSel.value !== 'none';
       block.style.display = hasBs ? 'block' : 'none';
       if (!hasBs) return;
-      const baseFt = gn(`mq-${prefix}-bft`, 0);
       const sides = gn(`mq-${prefix}-cab-bs-sides`, 0);
       const subtractFt = gn(`mq-${prefix}-cab-bs-subtract`, 0);
-      const autoFt = baseFt + sides*2;
+      const autoFt = totalCtFt + sides*2;
       const netFt = Math.max(0, autoFt - subtractFt);
       const autoEl = document.getElementById(`mq-${prefix}-cab-bsft-auto`);
       const netEl  = document.getElementById(`mq-${prefix}-cab-bsft-net`);
