@@ -1199,9 +1199,9 @@ window.mqTogDrawerConfig=(prefix)=>{
           tcUnitPrice += matUpcharge;
           // Install: base install rate × tcLinFt × 2 if supply + install
           if (si === 'install') tcUnitPrice += installB * tcLinFt * 2;
-          // Hinge upcharge
+          // Hinge upcharge — only applies if doors are actually being added (no doors = no hinges needed)
           const hingeKey = diffOn[prefix] ? gv(`mq-${prefix}-b-hinge`) : gv(`mq-${prefix}-hinge`);
-          const tcHingeRate = hingeKey ? (hinge[hingeKey]?.rate || 0) : 0;
+          const tcHingeRate = (hingeKey && doorKey && doorKey !== 'none') ? (hinge[hingeKey]?.rate || 0) : 0;
           tcUnitPrice += tcHingeRate * tcLinFt * 2.25;
 
           const tcCost = Math.round(tcUnitPrice * tcQty);
