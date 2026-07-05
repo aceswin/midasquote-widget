@@ -610,7 +610,7 @@
         <div class="mq-loading" id="mq-c-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-c-result">
           <div class="mq-res-hdr">
-            <div><p class="mq-res-title" id="mq-c-res-title">Cabinet estimate</p><p class="mq-res-sub" id="mq-c-res-sub">—</p></div>
+            <div><p class="mq-res-title" id="mq-c-res-title">Cabinet estimate</p><p class="mq-res-sub" id="mq-c-res-sub">—</p><p class="mq-hint" id="mq-c-vanity-note" style="display:none;color:#1d4ed8">✓ Pricing adjusted for standard vanity sizes</p></div>
             <div><div class="mq-res-range-lbl">Estimated range</div><div class="mq-res-range" id="mq-c-res-range">—</div></div>
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
@@ -720,8 +720,9 @@
         <div class="mq-loading" id="mq-b-loading">Building your full project estimate...</div>
         <div class="mq-combined-result" id="mq-b-result">
           <div class="mq-combined-title">✨ Full project estimate</div>
-          <div class="mq-combined-section">
+         <div class="mq-combined-section">
             <div class="mq-combined-section-title">🪵 Cabinets</div>
+            <p class="mq-hint" id="mq-b-vanity-note" style="display:none;color:#1d4ed8;margin-bottom:6px">✓ Pricing adjusted for standard vanity sizes</p>
             <div id="mq-b-cab-rows"></div>
           </div>
           <div class="mq-combined-section">
@@ -1197,7 +1198,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const total=sub;
       const low=Math.round(total*(window._mqRangeLow||0.9)/100)*100, high=Math.round(total*(window._mqRangeHigh||1.15)/100)*100;
       const roomLabel={kitchen:'Kitchen',bathroom:'Bathroom',laundry:'Laundry room',garage:'Garage',office:'Home office',other:'Room'}[gv(`mq-${prefix}-room`)]||'Cabinet';
-      return {lines,sub:Math.round(sub),total:Math.round(total),low,high,roomLabel,si,uFt,bFt};
+      return {lines,sub:Math.round(sub),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,isVanity};
     }
 
     function calcCountertop(prefix) {
@@ -1310,6 +1311,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         const r=calcCabinet('c');
         document.getElementById('mq-c-res-title').textContent=r.roomLabel+' cabinet estimate';
         document.getElementById('mq-c-res-sub').textContent=`${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
+        const vanityNoteC = document.getElementById('mq-c-vanity-note');
+        if (vanityNoteC) vanityNoteC.style.display = r.isVanity ? 'block' : 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r);
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');document.getElementById('mq-c-result').scrollIntoView({behavior:'smooth',block:'start'});
