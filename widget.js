@@ -1348,6 +1348,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         document.getElementById('mq-b-result').classList.remove('show');
         setTimeout(async()=>{
           const cab=calcCabinet('b'),ct=calcCountertop('b');
+          const vanityNoteB = document.getElementById('mq-b-vanity-note');
+          if (vanityNoteB) vanityNoteB.style.display = cab.isVanity ? 'block' : 'none';
           const cabRows=document.getElementById('mq-b-cab-rows');cabRows.innerHTML='';
           [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;cabRows.appendChild(d);});
           const ctRows=document.getElementById('mq-b-ct-rows');ctRows.innerHTML='';
