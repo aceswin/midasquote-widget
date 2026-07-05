@@ -1344,7 +1344,7 @@ window.logoutMember = async function () {
   const GH_API  = `https://api.github.com/repos/${GH_REPO}/contents`;
 
   // Map line item categories to photo folder names
-  const CAT_TO_FOLDER = {
+ const CAT_TO_FOLDER = {
     material:   'materials',
     door:       'doors',
     drawer:     'drawers',
@@ -1353,6 +1353,7 @@ window.logoutMember = async function () {
     specialty:  'specialty',
     trim_crown:   'crown',
     trim_valance: 'valance',
+    tall_cabinet: 'tallcabinets',
   };
 
   const _photoCache = {};
