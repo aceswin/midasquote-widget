@@ -430,7 +430,9 @@
         <p class="mq-sec-title">Project basics</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Room type</label>
-            <select id="mq-${prefix}-room"><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option><option value="laundry">Laundry room</option><option value="garage">Garage</option><option value="office">Home office</option><option value="other">Other</option></select></div>
+            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}')"><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option><option value="laundry">Laundry room</option><option value="garage">Garage</option><option value="office">Home office</option><option value="other">Other</option></select>
+            <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8">✓ Box, door, and drawer pricing adjusted for standard vanity sizes</p>
+          </div>
           ${hasInstall?`<div class="mq-field"><label class="mq-label">Supply + install?</label>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>`:''}
         </div>
@@ -891,6 +893,10 @@
       document.getElementById(`mq-${prefix}-diff-tog`).classList.toggle('on',diffOn[prefix]);
       document.getElementById(`mq-${prefix}-shared`).style.display=diffOn[prefix]?'none':'block';
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
+    };
+    window.mqTogVanityNote=(prefix)=>{
+      const note = document.getElementById(`mq-${prefix}-room-vanity-note`);
+      if (note) note.style.display = gv(`mq-${prefix}-room`)==='bathroom' ? 'block' : 'none';
     };
 
     window.mqTogTrimReturns=(prefix)=>{
