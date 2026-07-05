@@ -1092,6 +1092,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       const uHingeRate= uDoorKey==='none'?0:(hinge[uHingeKey]?.rate||0);
       const bHingeRate= bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
 
+      // Vanity cabinets run smaller than kitchen cabinets at the same linear
+      // footage — knock a bit off box, door, and drawer cost only. Hinges,
+      // install, and everything else (specialty items, cutouts) stay full price
+      // since hardware and labor don't shrink just because the box is smaller.
+      const isVanity   = gv(`mq-${prefix}-room`) === 'bathroom';
+      const vanityMult = isVanity ? 0.95 : 1;
+
       const uInstall = si==='install'?installU:0;
       const bInstall = si==='install'?(
         drawerTier==='some'   ? installBSome   :
@@ -1099,8 +1106,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         installB
       ):0;
 
-      const uPft  = (uMat.rateU + uDoorRate + uHingeRate + uInstall) * hMult;
-      const bPft  = bMat.rateB+bDoorRate+bHingeRate+drawerRate+bInstall;
+      const uPft  = ((uMat.rateU + uDoorRate) * vanityMult + uHingeRate + uInstall) * hMult;
+      const bPft  = (bMat.rateB + bDoorRate + drawerRate) * vanityMult + bHingeRate + bInstall;
       const uCost = uFt*uPft, bCost=bFt*bPft;
 
       const lines=[];
