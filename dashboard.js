@@ -1566,6 +1566,7 @@ window.logoutMember = async function () {
       countertop:{ title:'🪨 Countertop Materials', emoji:'🪨' },
       trim_crown:   { title:'👑 Crown Moulding',   emoji:'👑' },
       trim_valance: { title:'📏 Valance',          emoji:'📏' },
+      tall_cabinet: { title:'🏛️ Tall Cabinets',    emoji:'🏛️' },
     };
 
     // Build Products for showroom — all item names per category
@@ -1646,7 +1647,7 @@ window.logoutMember = async function () {
 
     const content = el('mq-products-content');
     if (content) {
-      const catsOrdered = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance'];
+      const catsOrdered = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance','tall_cabinet'];
       const hasCats = catsOrdered.some(c => byCategory[c]?.length);
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
