@@ -430,7 +430,7 @@
         <p class="mq-sec-title">Project basics</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Room type</label>
-            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}')"><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option><option value="laundry">Laundry room</option><option value="garage">Garage</option><option value="office">Home office</option><option value="other">Other</option></select>
+            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}')"><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option><option value="laundry">Laundry room</option><option value="garage">Garage</option><option value="office">Home office</option><option value="other">Other</option></select>
             <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8">✓ Box, door, and drawer pricing adjusted for standard vanity sizes</p>
           </div>
           ${hasInstall?`<div class="mq-field"><label class="mq-label">Supply + install?</label>
@@ -672,9 +672,11 @@
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')">${ctMatOpts()}</select></div>
             <div style="background:#f9fafb;border-radius:6px;padding:10px 12px;margin-bottom:0.75rem">
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
-                <input type="checkbox" id="mq-b-cab-dw" onchange="mqRefreshBsFt('b')" style="width:auto;flex-shrink:0"/> Add extra space for a dishwasher <span style="color:#9ca3af;font-weight:400">(+24")</span>
-              </label>
+            <div id="mq-b-cab-dw-wrap">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
+                  <input type="checkbox" id="mq-b-cab-dw" onchange="mqRefreshBsFt('b')" style="width:auto;flex-shrink:0"/> Add extra space for a dishwasher <span style="color:#9ca3af;font-weight:400">(+24")</span>
+                </label>
+              </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
                 <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:auto;flex-shrink:0"/> Add additional counter space
               </label>
@@ -897,6 +899,20 @@
     window.mqTogVanityNote=(prefix)=>{
       const note = document.getElementById(`mq-${prefix}-room-vanity-note`);
       if (note) note.style.display = gv(`mq-${prefix}-room`)==='bathroom' ? 'block' : 'none';
+    };
+    window.mqTogDwOption=(prefix)=>{
+      const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
+      if (!wrap) return; // only exists on the Both tab
+      const room = gv(`mq-${prefix}-room`);
+      const showDw = room==='kitchen' || room==='other';
+      wrap.style.display = showDw ? 'block' : 'none';
+      if (!showDw) {
+        const dwCheckbox = document.getElementById(`mq-${prefix}-cab-dw`);
+        if (dwCheckbox && dwCheckbox.checked) {
+          dwCheckbox.checked = false;
+          mqRefreshBsFt(prefix);
+        }
+      }
     };
 
     window.mqTogTrimReturns=(prefix)=>{
