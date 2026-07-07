@@ -1684,7 +1684,7 @@ window.logoutMember = async function () {
     const isOn = toggle.classList.contains('on');
     toggle.classList.toggle('on', !isOn);
     try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Show showroom': !isOn });
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Show showroom': !isOn ? 'Show' : 'Hide' });
       shopRec.fields['Show showroom'] = !isOn;
       showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
@@ -1700,7 +1700,8 @@ window.logoutMember = async function () {
     const linkWrap = el('mq-financing-link-wrap');
     if (linkWrap) linkWrap.style.display = !isOn ? 'block' : 'none';
     try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Offers financing': !isOn });
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Offers financing': !isOn ? 'Yes' : 'No' });
+shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       shopRec.fields['Offers financing'] = !isOn;
       showMsg('mq-shop-msg', !isOn ? '✓ Financing note will show on your widget.' : '✓ Financing note hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); if (linkWrap) linkWrap.style.display = isOn ? 'block' : 'none'; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
