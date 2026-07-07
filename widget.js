@@ -325,15 +325,15 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:12px;color:#6b7280;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
-      #midasquote-widget .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
+      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
       .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
       .mq-hover-preview .mq-hp-label{font-size:11px;color:#374151;text-align:center;margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:180px}
-      #midasquote-widget .mq-lightbox.show{display:flex}
-      #midasquote-widget .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
-      #midasquote-widget .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
-      #midasquote-widget .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:11px}
+      .mq-lightbox.show{display:flex}
+      .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+      .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
+      .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:11px}
     `;
     document.head.appendChild(s);
   }
@@ -469,7 +469,6 @@
   window.mqPhotoLightbox = function(src, label) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
-      const widgetRoot = document.getElementById('midasquote-widget');
       lb = document.createElement('div');
       lb.id = 'mq-lightbox';
       lb.className = 'mq-lightbox';
@@ -478,7 +477,10 @@
         <img id="mq-lightbox-img" src=""/>
         <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
         <div class="mq-lightbox-hint">Tap anywhere to close</div>`;
-      (widgetRoot || document.body).appendChild(lb);
+      // Appended to document.body (not the widget container) so position:fixed
+      // can't be broken by a transformed ancestor somewhere in the host page —
+      // same fix already used for the hover preview.
+      document.body.appendChild(lb);
     }
     document.getElementById('mq-lightbox-img').src = src;
     document.getElementById('mq-lightbox-label').textContent = label || '';
@@ -740,7 +742,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you would have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -751,7 +753,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you would have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
           </div>
         </div>`:''}
       </div>`:''}
@@ -907,7 +909,7 @@
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you would have.
+                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
@@ -1631,7 +1633,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you would have.
+            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
