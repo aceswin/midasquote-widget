@@ -984,7 +984,7 @@
 
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
-      let installU=0, installB=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
+      let installUWithDoors=0, installUNoDoors=0, installBWithDoors=0, installBNoDoors=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
 
       if (hasDynamic) {
         li.materials.forEach((m,i) => {
@@ -1006,17 +1006,28 @@
         });
         li.hinges.forEach((h,i) => { hinge[`dyn_${i}`] = { label:h['Name'], rate:h['Rate']||0 }; });
 
-        const iu       = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && !i['Name']?.toLowerCase().includes('drawer'));
-        const ib       = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('with doors'));
+        // Install rates need to match whether doors are actually present — a
+        // generic "upper" match (ignoring door status) or a hardcoded "with
+        // doors" assumption for bases both silently used the wrong rate.
+        // Look for explicit no-doors/with-doors variants first, and fall back
+        // to a generic match only for shops that haven't split their pricing
+        // that way, so nothing breaks for existing setups.
+        const iuGeneric   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && !i['Name']?.toLowerCase().includes('drawer'));
+        const iuWithDoors = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && i['Name']?.toLowerCase().includes('with doors')) || iuGeneric;
+        const iuNoDoors   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && i['Name']?.toLowerCase().includes('no doors')) || iuGeneric;
+        const ibWithDoors = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('with doors'));
+        const ibNoDoors   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('no doors')) || ibWithDoors;
         const ibSome   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('some drawers'));
         const ibMostly = li.installItems.find(i=>i['Name']?.toLowerCase().includes('mostly drawers'));
         const rem      = li.otherItems.find(i=>i['Name']?.toLowerCase().includes('removal')) ||
                          li.installItems.find(i=>i['Name']?.toLowerCase().includes('removal'));
         const tax      = li.taxItems[0];
-        installU       = iu?iu['Rate']||0:0;
-        installB       = ib?ib['Rate']||0:0;
-        installBSome   = ibSome?ibSome['Rate']||0:installB;
-        installBMostly = ibMostly?ibMostly['Rate']||0:installB;
+        installUWithDoors = iuWithDoors?iuWithDoors['Rate']||0:0;
+        installUNoDoors   = iuNoDoors?iuNoDoors['Rate']||0:0;
+        installBWithDoors = ibWithDoors?ibWithDoors['Rate']||0:0;
+        installBNoDoors   = ibNoDoors?ibNoDoors['Rate']||0:0;
+        installBSome   = ibSome?ibSome['Rate']||0:installBWithDoors;
+        installBMostly = ibMostly?ibMostly['Rate']||0:installBWithDoors;
         removalRate    = rem?rem['Rate']||0:0;
         taxRate        = tax?(tax['Rate']||0)/100:0;
       } else {
@@ -1026,14 +1037,14 @@
         door['shaker']  = {label:'Shaker', rate:pricing['Shaker multiplier']||0};
         hinge['softclose'] = {label:'Soft-close', rate:pricing['Soft close hinges']||12};
         hinge['regular']   = {label:'Regular',    rate:0};
-        installU       = pricing['Install rate uppers']||85;
-        installB       = installU;
-        installBSome   = Math.round(installB*1.10*100)/100;
-        installBMostly = Math.round(installB*1.15*100)/100;
+        installUWithDoors = installUNoDoors = pricing['Install rate uppers']||85;
+        installBWithDoors = installBNoDoors = installUWithDoors;
+        installBSome   = Math.round(installBWithDoors*1.10*100)/100;
+        installBMostly = Math.round(installBWithDoors*1.15*100)/100;
         removalRate    = pricing['Removal rate']||18;
         taxRate        = (pricing['Tax rate']||5)/100;
       }
-      return { mat, door, drawer, hinge, installU, installB, installBSome, installBMostly, removalRate };
+      return { mat, door, drawer, hinge, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
     }
 
     // Legacy global fallback rates (used only if a material has no per-material
@@ -1331,7 +1342,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,installU,installB,installBSome,installBMostly,removalRate}=P();
+      const {mat,door,drawer,hinge,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
       const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
       const hMult={standard:1.0,tall:1.30}[gv(`mq-${prefix}-ht`)]||1.0;
@@ -1365,11 +1376,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       const isVanity   = gv(`mq-${prefix}-room`) === 'bathroom';
       const vanityMult = isVanity ? 0.95 : 1;
 
-      const uInstall = si==='install'?installU:0;
+      const uInstall = si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0;
       const bInstall = si==='install'?(
         drawerTier==='some'   ? installBSome   :
         drawerTier==='mostly' ? installBMostly :
-        installB
+        (bDoorKey==='none'?installBNoDoors:installBWithDoors)
       ):0;
 
       // Material/door/hinge only — no install baked in, so it can show as its
@@ -1426,8 +1437,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         const blMatRates = getMaterialRates(Object.keys(mat)[0], mat);
         const matUpcharge = Math.max(0, tcMatRates.rateB - blMatRates.rateB) * tcLinFt * 2;
         tcUnitPrice += matUpcharge;
-        // Install: base install rate × tcLinFt × 2 if supply + install
-        if (si === 'install') tcUnitPrice += installB * tcLinFt * 2;
+        // Install: base install rate × tcLinFt × 2 if supply + install — door-aware, same as regular bases
+        if (si === 'install') tcUnitPrice += (doorKey==='none'?installBNoDoors:installBWithDoors) * tcLinFt * 2;
         // Hinge upcharge — only applies if doors are actually being added (no doors = no hinges needed)
         const hingeKey = diffOn[prefix] ? gv(`mq-${prefix}-b-hinge`) : gv(`mq-${prefix}-hinge`);
         const tcHingeRate = (hingeKey && doorKey && doorKey !== 'none') ? (hinge[hingeKey]?.rate || 0) : 0;
