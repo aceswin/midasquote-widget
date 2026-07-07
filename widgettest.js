@@ -1181,7 +1181,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     function addTallCabInternal(prefix){
       tallCabCounts[prefix]++;
       const id=`tc${prefix}${tallCabCounts[prefix]}`;
-      tallCabs[prefix][id]=1; // default qty 1 — adding a card means they want at least one
+      tallCabs[prefix][id]=0; // starts at 0 so the card (with photos) is visible right away without silently counting as "added"
       const containerId=`mq-${prefix}-tallcabs`;
       const card=document.createElement('div');
       card.className='mq-surface-card';
@@ -1206,7 +1206,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <label class="mq-label" style="display:block;margin-bottom:5px">Quantity</label>
             <div class="mq-qty-ctrl">
               <button class="mq-qty-btn" onclick="mqAdjTallCabQty('${prefix}','${id}',-1)">−</button>
-              <span class="mq-qty-val" id="mq-tc-qty-${id}">1</span>
+              <span class="mq-qty-val" id="mq-tc-qty-${id}">0</span>
               <button class="mq-qty-btn" onclick="mqAdjTallCabQty('${prefix}','${id}',1)">+</button>
             </div>
           </div>
@@ -1794,6 +1794,13 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     addSurfaceInternal('ct','Kitchen run');
+    // Auto-add one starting tall cabinet card per tab so the photo picker is
+    // visible immediately on load — starts at qty 0 so it doesn't silently
+    // count as "added" until the customer actually wants one.
+    if (Object.keys(TALL_CAB).length > 0) {
+      addTallCabInternal('c');
+      addTallCabInternal('b');
+    }
   }
 
   // ============================================================
