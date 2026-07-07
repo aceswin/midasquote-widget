@@ -740,6 +740,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -750,11 +751,9 @@
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
           </div>
         </div>`:''}
-        <div id="mq-${prefix}-trim-help" style="display:none;font-size:11px;color:#6b7280;margin-top:6px;line-height:1.5">
-          A "return" is where the crown or valance turns and meets the wall. Each return adds 1 linear foot to your trim total — count how many you have.
-        </div>
       </div>`:''}
       <div class="mq-sec">
         <p class="mq-sec-title">Removal</p>
@@ -1124,12 +1123,10 @@
       const valanceKey=gv(`mq-${prefix}-trim-valance`);
       const crownWrap=document.getElementById(`mq-${prefix}-trim-crown-returns-wrap`);
       const valanceWrap=document.getElementById(`mq-${prefix}-trim-valance-returns-wrap`);
-      const help=document.getElementById(`mq-${prefix}-trim-help`);
       const showCrown=crownKey&&crownKey!=='none';
       const showValance=valanceKey&&valanceKey!=='none';
       if(crownWrap) crownWrap.style.display=showCrown?'block':'none';
       if(valanceWrap) valanceWrap.style.display=showValance?'block':'none';
-      if(help) help.style.display=(showCrown||showValance)?'block':'none';
     };
 
     window.mqApplyLinkedTrim=(prefix, doorKey)=>{
