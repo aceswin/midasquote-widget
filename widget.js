@@ -1359,9 +1359,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bHingeRate= bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
 
       // Vanity cabinets run smaller than kitchen cabinets at the same linear
-      // footage — knock a bit off box, door, and drawer cost only. Hinges,
-      // install, and everything else (specialty items, cutouts) stay full price
-      // since hardware and labor don't shrink just because the box is smaller.
+      // footage — but "vanity" specifically means the base cabinet under a
+      // sink. It never applies to uppers (a bathroom's upper cabinets, if any,
+      // aren't inherently smaller just because the room is a bathroom).
       const isVanity   = gv(`mq-${prefix}-room`) === 'bathroom';
       const vanityMult = isVanity ? 0.95 : 1;
 
@@ -1372,15 +1372,26 @@ window.mqTogDrawerConfig=(prefix)=>{
         installB
       ):0;
 
-      const uPft  = ((uMat.rateU + uDoorRate) * vanityMult + uHingeRate + uInstall) * hMult;
-      const bPft  = (bMat.rateB + bDoorRate + drawerRate) * vanityMult + bHingeRate + bInstall;
+      // Material/door/hinge only — no install baked in, so it can show as its
+      // own line item for the shop. Height multiplier still applies to the
+      // whole upper-cabinet box (material + install together), same as before.
+      const uMatDoorHinge = uMat.rateU + uDoorRate + uHingeRate;
+      const bMatDoorHinge = (bMat.rateB + bDoorRate + drawerRate) * vanityMult + bHingeRate;
+      const uPft  = (uMatDoorHinge + uInstall) * hMult;
+      const bPft  = bMatDoorHinge + bInstall;
       const uCost = uFt*uPft, bCost=bFt*bPft;
+      const uMatCost = uFt * uMatDoorHinge * hMult;
+      const uInstallCost = uFt * uInstall * hMult;
+      const bMatCost = bFt * bMatDoorHinge;
+      const bInstallCost = bFt * bInstall;
 
       const lines=[];
       const uDoorLabel=uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
       const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
-      if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uCost)});
-      if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
+      if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uMatCost)});
+      if(uFt>0&&uInstallCost>0) lines.push({label:`Upper cabinet install (${uFt} lin ft)`,cost:Math.round(uInstallCost)});
+      if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost)});
+      if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       // Tall cabinets — loop over every card the customer added. Each one
