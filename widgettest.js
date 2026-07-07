@@ -1173,6 +1173,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
     };
 
+    function renumberTallCabs(prefix){
+      const container=document.getElementById(`mq-${prefix}-tallcabs`);
+      if(!container) return;
+      container.querySelectorAll('.mq-surface-num').forEach((el,i)=>{ el.textContent=i+1; });
+    }
     function addTallCabInternal(prefix){
       tallCabCounts[prefix]++;
       const id=`tc${prefix}${tallCabCounts[prefix]}`;
@@ -1207,11 +1212,13 @@ window.mqTogDrawerConfig=(prefix)=>{
           </div>
         </div>`;
       document.getElementById(containerId)?.appendChild(card);
+      renumberTallCabs(prefix);
     }
     window.mqAddTallCab=(prefix)=>addTallCabInternal(prefix);
     window.mqRemoveTallCab=(prefix,id)=>{
       document.getElementById(`mq-tc-card-${id}`)?.remove();
       delete tallCabs[prefix][id];
+      renumberTallCabs(prefix);
     };
     window.mqAdjTallCabQty=(prefix,id,d)=>{
       tallCabs[prefix][id]=Math.max(0,(tallCabs[prefix][id]||0)+d);
