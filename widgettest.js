@@ -61,6 +61,17 @@
   // ============================================================
   // LOAD SHOP DATA
   // ============================================================
+  // Matches the dashboard's "My Products" tab photo-key format so the widget
+  // can find real photos for materials/doors/hinges/drawers/trim/countertops.
+  // Format: li_<category>_<normalized-name> — different from the
+  // spec_<recordId> pattern used for specialty items, since these are
+  // deduped/grouped by name rather than by Airtable record id.
+  function photoKeyFor(cat, name) {
+    const baseName = (name||'').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
+    const norm = baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    return `li_${cat}_${norm}`;
+  }
+
   async function loadShopData(token) {
     const shops = await atGet(CONFIG.SHOPS_TABLE, `{Shop token} = "${token}"`);
     if (!shops.length) { console.error('MidasQuote: Shop not found:', token); return null; }
@@ -105,18 +116,12 @@
       tallCabItems:    byCategory('tall_cabinet'),
     };
 
-    // Match photos uploaded via the dashboard's "My Products" tab. That tab
-    // keys photos as li_<category>_<normalized-name> — different from the
-    // spec_<recordId> pattern used for specialty items above, since materials/
-    // doors/hinges are deduped by name rather than by Airtable record id.
-    function photoKeyFor(cat, name) {
-      const baseName = (name||'').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
-      const norm = baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-      return `li_${cat}_${norm}`;
-    }
+    // Match photos uploaded via the dashboard's "My Products" tab (see the
+    // module-level photoKeyFor helper above for the key format).
     li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; });
     li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; });
     li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; });
+    li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; });
 
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
     li.localRadius = localZone?.['Rate'] || 15;
@@ -134,7 +139,7 @@
         photoUrl: shopPhotos['spec_' + r.id] || '',
       }));
 
-    return { shop, pricing:p, specs, li, hasDynamic };
+    return { shop, pricing:p, specs, li, hasDynamic, shopPhotos };
   }
 
   // ============================================================
@@ -333,7 +338,7 @@
   let CT_MAT = {};
 
   function buildCTMAT(data) {
-    const { li, pricing } = data;
+    const { li, pricing, shopPhotos } = data;
     CT_MAT = {};
     const hasDynamicCT = li.countertopItems.length > 0;
     if (hasDynamicCT) {
@@ -364,6 +369,7 @@
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
             cutoutOptions: Array.isArray(cutoutOptions) ? cutoutOptions : [],
+            photoUrl:    (shopPhotos||{})[photoKeyFor('countertop', item['Name'])] || '',
           };
         });
     } else {
@@ -384,17 +390,21 @@
 
   let TRIM = {};
   function buildTRIM(data) {
-    const { li } = data;
+    const { li, shopPhotos } = data;
     TRIM = {};
     (li.trimItems || []).forEach((item, i) => {
       let linkedDoors = [];
       try { linkedDoors = item['Linked door style'] ? JSON.parse(item['Linked door style']) : []; } catch(e) { linkedDoors = []; }
+      const type = item['Trim type']||'crown';
       TRIM[`trim_${i}`] = {
         label:       item['Name'],
         ps:          item['Rate']||0,
         pi:          item['Install rate']||0,
-        type:        item['Trim type']||'crown',
+        type:        type,
         linkedDoors: linkedDoors,
+        // Dashboard groups crown/valance into separate pseudo-categories
+        // (trim_crown / trim_valance) for photo purposes, not just "trim"
+        photoUrl:    (shopPhotos||{})[photoKeyFor(`trim_${type}`, item['Name'])] || '',
       };
     });
   }
@@ -428,6 +438,13 @@
       `<option value="lam">Laminate</option>`;
   }
 
+  function ctMatItems() {
+    const entries = Object.entries(CT_MAT);
+    return entries.length
+      ? entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨'}))
+      : [{value:'lam', label:'Laminate', icon:'🪨'}];
+  }
+
   // ============================================================
   // BUILD WIDGET HTML
   // ============================================================
@@ -438,7 +455,7 @@
 
   // Lightbox for enlarging specialty item photos — same pattern as the
   // showroom page, kept inline here so it works without leaving the widget.
-  window.mqSpecLightbox = function(src, label) {
+  window.mqPhotoLightbox = function(src, label) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
       const widgetRoot = document.getElementById('midasquote-widget');
@@ -468,7 +485,9 @@
         ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
       const selectedClass = i===0 ? ' selected' : '';
-      return `<button type="button" class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" onclick="mqPickVisual('${selectId}',this)">${thumb}<span class="mq-vpicker-label">${it.label}</span></button>`;
+      const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
+      const safeLabel = (it.label||'').replace(/'/g,"\\'");
+      return `<button type="button" class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-photo="${safePhoto}" data-label="${safeLabel}" onclick="mqPickVisual('${selectId}',this)">${thumb}<span class="mq-vpicker-label">${it.label}</span></button>`;
     }).join('');
     return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
@@ -480,6 +499,11 @@
     sel.dispatchEvent(new Event('change', { bubbles: true }));
     document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => c.classList.remove('selected'));
     chipEl.classList.add('selected');
+    // Show the photo full-size the moment they pick it, so they can actually
+    // see the detail instead of just a 48px thumbnail — tap anywhere to close.
+    const photo = chipEl.getAttribute('data-photo');
+    const label = chipEl.getAttribute('data-label');
+    if (photo) window.mqPhotoLightbox(photo, label);
   };
 
   function specHTML(specs, prefix) {
@@ -487,7 +511,7 @@
     return specs.map((s,i)=>{
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
-        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqSpecLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
+        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}">
@@ -506,7 +530,7 @@
   }
 
   function cabinetForm(prefix, specs, data) {
-    const { li, hasDynamic } = data;
+    const { li, hasDynamic, shopPhotos } = data;
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -518,6 +542,7 @@
     const hasInstall = !hasDynamic || li.installItems.length > 0;
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
+    const drawerConfigItems = drawerConfigNames.map((n,i)=>({value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️'}));
 
     // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
     // the shop has real pricing data, or the legacy fallback values when not)
@@ -533,6 +558,12 @@
     const hingeItems = li.hinges.length > 0
       ? li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧'}))
       : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
+    const crownItems = [{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑'}))
+    );
+    const valanceItems = [{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏'}))
+    );
 
     return `
       <div class="mq-sec">
@@ -620,7 +651,8 @@
           </div>
           <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none">
             <label class="mq-label">Drawer type</label>
-            <select id="mq-${prefix}-drawer-config">${drawerConfigOpts}</select>
+            ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems)}
+            <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
           </div>
         </div>
       </div>`:''}
@@ -655,7 +687,8 @@
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
         ${hasCrown?`<div class="mq-grid2" style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
-            <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')">${trimOpts('crown')}</select>
+            ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
+            <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none">
             <label class="mq-label">Returns to wall</label>
@@ -664,7 +697,8 @@
         </div>`:''}
         ${hasValance?`<div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Valance</label>
-            <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')">${trimOpts('valance')}</select>
+            ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems)}
+            <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none">
             <label class="mq-label">Returns to wall</label>
@@ -791,7 +825,9 @@
             <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes standard depth counter)</span></span>
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
-            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')">${ctMatOpts()}</select></div>
+            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
+              ${pickerRow('mq-b-ct-mat-cab', ctMatItems())}
+              <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
             <div style="background:#f9fafb;border-radius:6px;padding:10px 12px;margin-bottom:0.75rem">
             <div id="mq-b-cab-dw-wrap">
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
@@ -1530,7 +1566,9 @@ window.mqTogDrawerConfig=(prefix)=>{
             <div style="font-size:13px;color:#6b7280;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
         </div>
         <div class="mq-grid2" style="margin-bottom:1rem">
-          <div class="mq-field"><label class="mq-label">Material</label><select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshSurfBsFt('${id}')">${ctMatOpts()}</select></div>
+          <div class="mq-field"><label class="mq-label">Material</label>
+            ${pickerRow(`mqsm-${id}`, ctMatItems())}
+            <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
           <div class="mq-field"><label class="mq-label">Install</label>
             <select id="mqssi-${id}">${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
         </div>
