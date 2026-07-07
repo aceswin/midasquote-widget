@@ -326,6 +326,10 @@
       #midasquote-widget .mq-grand-sub{font-size:12px;color:#6b7280;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
       #midasquote-widget .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
+      .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
+      .mq-hover-preview.show{display:block}
+      .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
+      .mq-hover-preview .mq-hp-label{font-size:11px;color:#374151;text-align:center;margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:180px}
       #midasquote-widget .mq-lightbox.show{display:flex}
       #midasquote-widget .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
       #midasquote-widget .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
@@ -481,6 +485,41 @@
     lb.classList.add('show');
   };
 
+  // Desktop-only hover preview — appended to document.body (not inside the
+  // widget) so the picker row's horizontal scroll container can't clip it.
+  // Gated by a real hover+fine-pointer check so touch devices never trigger it,
+  // even if a stray mouseenter-style event fires on tap.
+  let _mqHoverPreviewEl = null;
+  function ensureHoverPreview() {
+    if (_mqHoverPreviewEl) return _mqHoverPreviewEl;
+    _mqHoverPreviewEl = document.createElement('div');
+    _mqHoverPreviewEl.className = 'mq-hover-preview';
+    _mqHoverPreviewEl.innerHTML = `<img/><div class="mq-hp-label"></div>`;
+    document.body.appendChild(_mqHoverPreviewEl);
+    return _mqHoverPreviewEl;
+  }
+  window.mqHoverPreviewShow = function(chipEl, photoUrl, label) {
+    if (!photoUrl) return;
+    if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const preview = ensureHoverPreview();
+    preview.querySelector('img').src = photoUrl;
+    preview.querySelector('.mq-hp-label').textContent = label || '';
+    const rect = chipEl.getBoundingClientRect();
+    const showAbove = rect.top > 210; // enough room above; otherwise fall back to below
+    preview.style.left = Math.min(Math.max(rect.left + rect.width/2, 100), window.innerWidth - 100) + 'px';
+    if (showAbove) {
+      preview.style.top = (rect.top - 8) + 'px';
+      preview.style.transform = 'translate(-50%, -100%)';
+    } else {
+      preview.style.top = (rect.bottom + 8) + 'px';
+      preview.style.transform = 'translate(-50%, 0)';
+    }
+    preview.classList.add('show');
+  };
+  window.mqHoverPreviewHide = function() {
+    if (_mqHoverPreviewEl) _mqHoverPreviewEl.classList.remove('show');
+  };
+
   // Visual chip picker for materials/doors/hinges. Renders a horizontally
   // scrollable row of thumbnail+label chips. A hidden <select> with the same
   // id/options sits alongside it so every existing gv()/onchange reference
@@ -494,7 +533,7 @@
       const selectedClass = i===0 ? ' selected' : '';
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
-      return `<button type="button" class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-photo="${safePhoto}" data-label="${safeLabel}" onclick="mqPickVisual('${selectId}',this)">${thumb}<span class="mq-vpicker-label">${it.label}</span></button>`;
+      return `<button type="button" class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-photo="${safePhoto}" data-label="${safeLabel}" onclick="mqPickVisual('${selectId}',this)" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()">${thumb}<span class="mq-vpicker-label">${it.label}</span></button>`;
     }).join('');
     return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
@@ -518,7 +557,7 @@
     return specs.map((s,i)=>{
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
-        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
+        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}">

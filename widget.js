@@ -1,5 +1,7 @@
 /*
- * MidasQuote Widget v3.3
+ * MidasQuote Widget v3.3 — TEST BUILD (widgettest.js)
+ * Adds visual thumbnails to specialty items so customers don't have to
+ * guess what unfamiliar terms mean without leaving the widget.
  */
 
 (function() {
@@ -18,7 +20,7 @@
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
-
+//This is the widget test file
   // Generate a session ID once per page load — used to group quote attempts
   // from the same visitor in the dashboard, even if they skip contact info.
   const _mqSessionId = Math.random().toString(36).slice(2,10).toUpperCase();
@@ -59,6 +61,17 @@
   // ============================================================
   // LOAD SHOP DATA
   // ============================================================
+  // Matches the dashboard's "My Products" tab photo-key format so the widget
+  // can find real photos for materials/doors/hinges/drawers/trim/countertops.
+  // Format: li_<category>_<normalized-name> — different from the
+  // spec_<recordId> pattern used for specialty items, since these are
+  // deduped/grouped by name rather than by Airtable record id.
+  function photoKeyFor(cat, name) {
+    const baseName = (name||'').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
+    const norm = baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    return `li_${cat}_${norm}`;
+  }
+
   async function loadShopData(token) {
     const shops = await atGet(CONFIG.SHOPS_TABLE, `{Shop token} = "${token}"`);
     if (!shops.length) { console.error('MidasQuote: Shop not found:', token); return null; }
@@ -67,6 +80,12 @@
     window._mqRangeLow  = (100 - (parseFloat(shop['Quote range low'])  || 10)) / 100;
     window._mqRangeHigh = (100 + (parseFloat(shop['Quote range high']) || 15)) / 100;
     shop._recordId = shopRecord.id;
+
+    // Parse the shop's saved product photos (same JSON field the dashboard's
+    // My Products tab and showroom page already read) so the widget can show
+    // real thumbnails instead of just text labels for unfamiliar terms.
+    let shopPhotos = {};
+    try { shopPhotos = shop['Photos'] ? JSON.parse(shop['Photos']) : {}; } catch(e) { shopPhotos = {}; }
 
     const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
     const p = pricing.length ? pricing[0].fields : {};
@@ -97,6 +116,13 @@
       tallCabItems:    byCategory('tall_cabinet'),
     };
 
+    // Match photos uploaded via the dashboard's "My Products" tab (see the
+    // module-level photoKeyFor helper above for the key format).
+    li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; });
+    li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; });
+    li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; });
+    li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; });
+
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
     li.localRadius = localZone?.['Rate'] || 15;
 
@@ -105,9 +131,15 @@
     const specRecords = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
     const specs = specRecords
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0))
-      .map(r=>({ id:r.id, label:r.fields['Item name']||r.fields['Special Items'], price:r.fields['Price']||0, perFt:r.fields['Per linear foot']||false }));
+      .map(r=>({
+        id:r.id,
+        label:r.fields['Item name']||r.fields['Special Items'],
+        price:r.fields['Price']||0,
+        perFt:r.fields['Per linear foot']||false,
+        photoUrl: shopPhotos['spec_' + r.id] || '',
+      }));
 
-    return { shop, pricing:p, specs, li, hasDynamic };
+    return { shop, pricing:p, specs, li, hasDynamic, shopPhotos };
   }
 
   // ============================================================
@@ -214,6 +246,15 @@
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
       #midasquote-widget .mq-spec-name{font-size:13px;color:#111;flex:1;cursor:pointer}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
+      #midasquote-widget .mq-spec-thumb{width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
+      #midasquote-widget .mq-spec-thumb-placeholder{width:38px;height:38px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:16px;color:#9ca3af;border:1px solid #e5e7eb}
+      #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
+      #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
+      #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9ca3af}
+      #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
+      #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
       #midasquote-widget .mq-qty-ctrl{display:flex;align-items:center;gap:4px}
       #midasquote-widget .mq-qty-btn{width:22px;height:22px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#111;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
       #midasquote-widget .mq-qty-val{font-size:13px;font-weight:500;min-width:16px;text-align:center}
@@ -222,8 +263,10 @@
       #midasquote-widget .mq-tog.on{background:${bc}}
       #midasquote-widget .mq-tog::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
       #midasquote-widget .mq-tog.on::after{left:18px}
-      #midasquote-widget .mq-sub-sec{background:#f9fafb;border-radius:8px;padding:1rem;margin-top:0.75rem}
-      #midasquote-widget .mq-sub-title{font-size:11px;font-weight:600;color:#6b7280;margin:0 0 0.75rem;text-transform:uppercase;letter-spacing:0.05em}
+      #midasquote-widget .mq-sub-sec{background:#f9fafb;border-radius:8px;padding:1rem;margin-top:0.75rem;border-left:4px solid #d1d5db}
+      #midasquote-widget .mq-sub-sec.mq-sub-upper{border-left-color:#3b82f6;background:#eff6ff}
+      #midasquote-widget .mq-sub-sec.mq-sub-base{border-left-color:#f59e0b;background:#fffbeb}
+      #midasquote-widget .mq-sub-title{font-size:15px;font-weight:700;color:#111;margin:0 0 0.85rem;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.08)}
       #midasquote-widget .mq-calc-btn{width:100%;padding:13px;font-size:15px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;margin-top:0.5rem;transition:opacity 0.15s;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,0.25)}
       #midasquote-widget .mq-calc-btn:hover{opacity:0.88}
       #midasquote-widget .mq-calc-btn:disabled{opacity:0.4;cursor:not-allowed}
@@ -282,6 +325,11 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:12px;color:#6b7280;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
+      #midasquote-widget .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
+      #midasquote-widget .mq-lightbox.show{display:flex}
+      #midasquote-widget .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+      #midasquote-widget .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
+      #midasquote-widget .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:11px}
     `;
     document.head.appendChild(s);
   }
@@ -292,7 +340,7 @@
   let CT_MAT = {};
 
   function buildCTMAT(data) {
-    const { li, pricing } = data;
+    const { li, pricing, shopPhotos } = data;
     CT_MAT = {};
     const hasDynamicCT = li.countertopItems.length > 0;
     if (hasDynamicCT) {
@@ -323,6 +371,7 @@
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
             cutoutOptions: Array.isArray(cutoutOptions) ? cutoutOptions : [],
+            photoUrl:    (shopPhotos||{})[photoKeyFor('countertop', item['Name'])] || '',
           };
         });
     } else {
@@ -343,17 +392,21 @@
 
   let TRIM = {};
   function buildTRIM(data) {
-    const { li } = data;
+    const { li, shopPhotos } = data;
     TRIM = {};
     (li.trimItems || []).forEach((item, i) => {
       let linkedDoors = [];
       try { linkedDoors = item['Linked door style'] ? JSON.parse(item['Linked door style']) : []; } catch(e) { linkedDoors = []; }
+      const type = item['Trim type']||'crown';
       TRIM[`trim_${i}`] = {
         label:       item['Name'],
         ps:          item['Rate']||0,
         pi:          item['Install rate']||0,
-        type:        item['Trim type']||'crown',
+        type:        type,
         linkedDoors: linkedDoors,
+        // Dashboard groups crown/valance into separate pseudo-categories
+        // (trim_crown / trim_valance) for photo purposes, not just "trim"
+        photoUrl:    (shopPhotos||{})[photoKeyFor(`trim_${type}`, item['Name'])] || '',
       };
     });
   }
@@ -368,12 +421,13 @@
   // ── Tall cabinets ──
   let TALL_CAB = {};
   function buildTALLCAB(data) {
-    const { li } = data;
+    const { li, shopPhotos } = data;
     TALL_CAB = {};
     (li.tallCabItems || []).filter(item => item['Active'] !== false).forEach((item, i) => {
       TALL_CAB[`tc_${i}`] = {
         label: item['Name'],
         basePrice: item['Rate'] || 0,
+        photoUrl: (shopPhotos||{})[photoKeyFor('tall_cabinet', item['Name'])] || '',
       };
     });
   }
@@ -382,9 +436,20 @@
     return Object.entries(TALL_CAB).map(([k,t]) => `<option value="${k}">${t.label}</option>`).join('');
   }
 
+  function tallCabItems() {
+    return Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️'}));
+  }
+
   function ctMatOpts() {
     return Object.entries(CT_MAT).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('') ||
       `<option value="lam">Laminate</option>`;
+  }
+
+  function ctMatItems() {
+    const entries = Object.entries(CT_MAT);
+    return entries.length
+      ? entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨'}))
+      : [{value:'lam', label:'Laminate', icon:'🪨'}];
   }
 
   // ============================================================
@@ -395,10 +460,69 @@
     return fallbackOpts || '';
   }
 
+  // Lightbox for enlarging specialty item photos — same pattern as the
+  // showroom page, kept inline here so it works without leaving the widget.
+  window.mqPhotoLightbox = function(src, label) {
+    let lb = document.getElementById('mq-lightbox');
+    if (!lb) {
+      const widgetRoot = document.getElementById('midasquote-widget');
+      lb = document.createElement('div');
+      lb.id = 'mq-lightbox';
+      lb.className = 'mq-lightbox';
+      lb.onclick = () => lb.classList.remove('show');
+      lb.innerHTML = `
+        <img id="mq-lightbox-img" src=""/>
+        <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
+        <div class="mq-lightbox-hint">Tap anywhere to close</div>`;
+      (widgetRoot || document.body).appendChild(lb);
+    }
+    document.getElementById('mq-lightbox-img').src = src;
+    document.getElementById('mq-lightbox-label').textContent = label || '';
+    lb.classList.add('show');
+  };
+
+  // Visual chip picker for materials/doors/hinges. Renders a horizontally
+  // scrollable row of thumbnail+label chips. A hidden <select> with the same
+  // id/options sits alongside it so every existing gv()/onchange reference
+  // elsewhere in the file keeps working completely untouched — clicking a
+  // chip just sets that hidden select's value and fires a real 'change' event.
+  function pickerRow(selectId, items, extraOnChangeAttr) {
+    const chips = items.map((it,i)=>{
+      const thumb = it.photoUrl
+        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
+        : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
+      const selectedClass = i===0 ? ' selected' : '';
+      const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
+      const safeLabel = (it.label||'').replace(/'/g,"\\'");
+      return `<button type="button" class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-photo="${safePhoto}" data-label="${safeLabel}" onclick="mqPickVisual('${selectId}',this)">${thumb}<span class="mq-vpicker-label">${it.label}</span></button>`;
+    }).join('');
+    return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
+  }
+
+  window.mqPickVisual = function(selectId, chipEl) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.value = chipEl.getAttribute('data-value');
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => c.classList.remove('selected'));
+    chipEl.classList.add('selected');
+    // Show the photo full-size the moment they pick it, so they can actually
+    // see the detail instead of just a 48px thumbnail — tap anywhere to close.
+    const photo = chipEl.getAttribute('data-photo');
+    const label = chipEl.getAttribute('data-label');
+    if (photo) window.mqPhotoLightbox(photo, label);
+  };
+
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:13px;color:#6b7280">No specialty items configured yet.</p>';
-    return specs.map((s,i)=>`
+    return specs.map((s,i)=>{
+      const safeLabel = (s.label||'').replace(/'/g,"\\'");
+      const thumb = s.photoUrl
+        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
+        : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
+      return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}">
+        ${thumb}
         <div style="flex:1;min-width:0">
           <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
           <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perFt ? 'linear feet' : 'quantity'}</div>
@@ -408,11 +532,12 @@
           <input type="text" inputmode="numeric" pattern="[0-9]*" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   function cabinetForm(prefix, specs, data) {
-    const { li, hasDynamic } = data;
+    const { li, hasDynamic, shopPhotos } = data;
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -424,6 +549,28 @@
     const hasInstall = !hasDynamic || li.installItems.length > 0;
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
+    const drawerConfigItems = drawerConfigNames.map((n,i)=>({value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️'}));
+
+    // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
+    // the shop has real pricing data, or the legacy fallback values when not)
+    // so picking a chip always sets a value the existing calc logic already understands.
+    const mItems = li.materials.length > 0
+      ? li.materials.map((m,i)=>({value:`dyn_${i}`, label:m._baseName||m['Name'], photoUrl:m.photoUrl, icon:'🪵'}))
+      : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
+    const dItems = [{value:'none',label:'No doors',icon:'🚫'}].concat(
+      li.doorStyles.length > 0
+        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪'}))
+        : [{value:'slab',label:'Slab',icon:'🚪'},{value:'shaker',label:'Shaker',icon:'🚪'}]
+    );
+    const hingeItems = li.hinges.length > 0
+      ? li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧'}))
+      : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
+    const crownItems = [{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑'}))
+    );
+    const valanceItems = [{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏'}))
+    );
 
     return `
       <div class="mq-sec">
@@ -463,27 +610,39 @@
           <label style="font-size:13px;cursor:pointer">Different styles for uppers and lowers</label>
         </div>
         <div id="mq-${prefix}-shared">
-          <div class="mq-grid3">
-            <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-mat">${mOpts}</select></div>
-            <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)">${dOpts}</select></div>
-            ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-hinge">${hingeOpts}</select></div>`:''}
-          </div>
+          <div class="mq-field"><label class="mq-label">Box material</label>
+            ${pickerRow(`mq-${prefix}-mat`, mItems)}
+            <select id="mq-${prefix}-mat" style="display:none">${mOpts}</select></div>
+          <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
+            ${pickerRow(`mq-${prefix}-door`, dItems)}
+            <select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
+          ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
+            ${pickerRow(`mq-${prefix}-hinge`, hingeItems)}
+            <select id="mq-${prefix}-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           <p class="mq-hint" style="margin-top:6px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <div id="mq-${prefix}-diff" style="display:none">
-          <div class="mq-sub-sec"><p class="mq-sub-title">Upper cabinets</p>
-            <div class="mq-grid3">
-              <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-u-mat">${mOpts}</select></div>
-              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-u-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)">${dOpts}</select></div>
-              ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-u-hinge">${hingeOpts}</select></div>`:''}
-            </div>
+          <div class="mq-sub-sec mq-sub-upper"><p class="mq-sub-title">🔼 Upper cabinets</p>
+            <div class="mq-field"><label class="mq-label">Box material</label>
+              ${pickerRow(`mq-${prefix}-u-mat`, mItems)}
+              <select id="mq-${prefix}-u-mat" style="display:none">${mOpts}</select></div>
+            <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
+              ${pickerRow(`mq-${prefix}-u-door`, dItems)}
+              <select id="mq-${prefix}-u-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
+            ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
+              ${pickerRow(`mq-${prefix}-u-hinge`, hingeItems)}
+              <select id="mq-${prefix}-u-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           </div>
-          <div class="mq-sub-sec" style="margin-top:8px"><p class="mq-sub-title">Base cabinets</p>
-            <div class="mq-grid3">
-              <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-b-mat">${mOpts}</select></div>
-              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-b-door">${dOpts}</select></div>
-              ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-b-hinge">${hingeOpts}</select></div>`:''}
-            </div>
+          <div class="mq-sub-sec mq-sub-base" style="margin-top:8px"><p class="mq-sub-title">🔽 Base cabinets</p>
+            <div class="mq-field"><label class="mq-label">Box material</label>
+              ${pickerRow(`mq-${prefix}-b-mat`, mItems)}
+              <select id="mq-${prefix}-b-mat" style="display:none">${mOpts}</select></div>
+            <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
+              ${pickerRow(`mq-${prefix}-b-door`, dItems)}
+              <select id="mq-${prefix}-b-door" style="display:none">${dOpts}</select></div>
+            ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
+              ${pickerRow(`mq-${prefix}-b-hinge`, hingeItems)}
+              <select id="mq-${prefix}-b-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           </div>
         </div>
       </div>
@@ -499,7 +658,8 @@
           </div>
           <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none">
             <label class="mq-label">Drawer type</label>
-            <select id="mq-${prefix}-drawer-config">${drawerConfigOpts}</select>
+            ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems)}
+            <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
           </div>
         </div>
       </div>`:''}
@@ -512,7 +672,8 @@
         <div class="mq-grid2" style="margin-bottom:10px">
           <div class="mq-field">
             <label class="mq-label">Tall cabinet type</label>
-            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')">${tallCabOpts()}</select>
+            ${pickerRow(`mq-${prefix}-tc-type`, tallCabItems())}
+            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')" style="display:none">${tallCabOpts()}</select>
           </div>
           <div class="mq-field">
             <label class="mq-label">Width (inches)</label>
@@ -534,7 +695,8 @@
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
         ${hasCrown?`<div class="mq-grid2" style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
-            <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')">${trimOpts('crown')}</select>
+            ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
+            <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none">
             <label class="mq-label">Returns to wall</label>
@@ -543,7 +705,8 @@
         </div>`:''}
         ${hasValance?`<div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Valance</label>
-            <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')">${trimOpts('valance')}</select>
+            ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems)}
+            <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none">
             <label class="mq-label">Returns to wall</label>
@@ -670,7 +833,9 @@
             <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes standard depth counter)</span></span>
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
-            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label><select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')">${ctMatOpts()}</select></div>
+            <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
+              ${pickerRow('mq-b-ct-mat-cab', ctMatItems())}
+              <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
             <div style="background:#f9fafb;border-radius:6px;padding:10px 12px;margin-bottom:0.75rem">
             <div id="mq-b-cab-dw-wrap">
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
@@ -1409,7 +1574,9 @@ window.mqTogDrawerConfig=(prefix)=>{
             <div style="font-size:13px;color:#6b7280;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
         </div>
         <div class="mq-grid2" style="margin-bottom:1rem">
-          <div class="mq-field"><label class="mq-label">Material</label><select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshSurfBsFt('${id}')">${ctMatOpts()}</select></div>
+          <div class="mq-field"><label class="mq-label">Material</label>
+            ${pickerRow(`mqsm-${id}`, ctMatItems())}
+            <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
           <div class="mq-field"><label class="mq-label">Install</label>
             <select id="mqssi-${id}">${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
         </div>
