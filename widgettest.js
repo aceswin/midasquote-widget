@@ -732,23 +732,23 @@
         <p class="mq-sec-title">Crown moulding / valance</p>
         <div style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
-        ${hasCrown?`<div class="mq-grid2" style="margin-bottom:8px">
+        ${hasCrown?`<div style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
             ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
-          <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none">
-            <label class="mq-label">Returns to wall</label>
+          <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
+            <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
           </div>
         </div>`:''}
-        ${hasValance?`<div class="mq-grid2">
+        ${hasValance?`<div>
           <div class="mq-field"><label class="mq-label">Valance</label>
             ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems)}
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
-          <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none">
-            <label class="mq-label">Returns to wall</label>
+          <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
+            <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
           </div>
         </div>`:''}
