@@ -437,11 +437,13 @@
   }
 
   function tallCabOpts() {
-    return Object.entries(TALL_CAB).map(([k,t]) => `<option value="${k}">${t.label}</option>`).join('');
+    return `<option value="none">None</option>` + Object.entries(TALL_CAB).map(([k,t]) => `<option value="${k}">${t.label}</option>`).join('');
   }
 
   function tallCabItems() {
-    return Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️'}));
+    return [{value:'none', label:'None', icon:'🚫'}].concat(
+      Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️'}))
+    );
   }
 
   function ctMatOpts() {
@@ -1197,7 +1199,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div class="mq-field" style="margin-bottom:10px">
           <label class="mq-label">Type</label>
           ${pickerRow(`mq-tc-type-${id}`, tallCabItems())}
-          <select id="mq-tc-type-${id}" style="display:none">${tallCabOpts()}</select>
+          <select id="mq-tc-type-${id}" onchange="mqTogTallCabNone('${prefix}','${id}')" style="display:none">${tallCabOpts()}</select>
         </div>
         <div style="display:flex;align-items:flex-end;gap:2rem;flex-wrap:wrap">
           <div class="mq-field" style="margin-bottom:0">
@@ -1226,6 +1228,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       tallCabs[prefix][id]=Math.max(0,(tallCabs[prefix][id]||0)+d);
       const el=document.getElementById(`mq-tc-qty-${id}`);
       if(el) el.textContent=tallCabs[prefix][id];
+    };
+    window.mqTogTallCabNone=(prefix,id)=>{
+      if (gv(`mq-tc-type-${id}`) !== 'none') return;
+      tallCabs[prefix][id]=0;
+      const el=document.getElementById(`mq-tc-qty-${id}`);
+      if(el) el.textContent=0;
     };
 
     window.mqShowLead=cb=>{
@@ -1385,8 +1393,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         const tcQty = tallCabs[prefix][id] || 0;
         if (tcQty <= 0) return;
         const tcKey = gv(`mq-tc-type-${id}`);
+        if (!tcKey || tcKey === 'none') return;
         const tcWidthIn = gn(`mq-tc-width-${id}`, 24);
-        const tc = TALL_CAB[tcKey] || Object.values(TALL_CAB)[0];
+        const tc = TALL_CAB[tcKey];
         if (!tc) return;
         const tcLinFt = tcWidthIn / 12;
         // Trim footage gets an extra 12" per cabinet for the return where crown/valance
