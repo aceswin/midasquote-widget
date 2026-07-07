@@ -689,19 +689,21 @@
       </div>
       ${hasDrawers?`<div class="mq-sec">
         <p class="mq-sec-title">Drawers</p>
-        <div class="mq-grid2">
-          <div class="mq-field"><label class="mq-label">Drawer amount</label>
-            <select id="mq-${prefix}-drawer-tier" onchange="mqTogDrawerConfig('${prefix}')">
-              <option value="none">No drawers</option>
-              <option value="some">Some drawers</option>
-              <option value="mostly">Mostly drawers</option>
-            </select>
-          </div>
-          <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none">
-            <label class="mq-label">Drawer type</label>
-            ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems)}
-            <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
-          </div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+          🗄️ Choose the approximate amount of drawers your project will have.
+        </div>
+        <div class="mq-field">
+          <label class="mq-label">Drawer amount</label>
+          <select id="mq-${prefix}-drawer-tier" onchange="mqTogDrawerConfig('${prefix}')">
+            <option value="none">No drawers</option>
+            <option value="some">Some drawers</option>
+            <option value="mostly">Mostly drawers</option>
+          </select>
+        </div>
+        <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none;margin-top:10px">
+          <label class="mq-label">Drawer type</label>
+          ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems)}
+          <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
         </div>
       </div>`:''}
       ${Object.keys(TALL_CAB).length > 0 ? `
