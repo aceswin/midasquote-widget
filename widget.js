@@ -710,23 +710,23 @@
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
           🏛️ Add tall cabinets separately here.
         </div>
-        <div class="mq-grid2" style="margin-bottom:10px">
-          <div class="mq-field">
-            <label class="mq-label">Tall cabinet type</label>
-            ${pickerRow(`mq-${prefix}-tc-type`, tallCabItems())}
-            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')" style="display:none">${tallCabOpts()}</select>
-          </div>
-          <div class="mq-field">
-            <label class="mq-label">Width (inches)</label>
-            <input type="number" id="mq-${prefix}-tc-width" value="24" min="12" max="48"/>
-          </div>
+        <div class="mq-field" style="margin-bottom:10px">
+          <label class="mq-label">Tall cabinet type</label>
+          ${pickerRow(`mq-${prefix}-tc-type`, tallCabItems())}
+          <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')" style="display:none">${tallCabOpts()}</select>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <label class="mq-label">Quantity</label>
-          <div class="mq-qty-ctrl">
-            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',-1)">−</button>
-            <span class="mq-qty-val" id="mq-${prefix}-tc-qty">0</span>
-            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',1)">+</button>
+        <div style="display:flex;align-items:flex-end;gap:2rem;flex-wrap:wrap">
+          <div class="mq-field" style="margin-bottom:0">
+            <label class="mq-label">Width (inches)</label>
+            <input type="number" id="mq-${prefix}-tc-width" value="24" min="12" max="48" style="width:100px"/>
+          </div>
+          <div>
+            <label class="mq-label" style="display:block;margin-bottom:5px">Quantity</label>
+            <div class="mq-qty-ctrl">
+              <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',-1)">−</button>
+              <span class="mq-qty-val" id="mq-${prefix}-tc-qty">0</span>
+              <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',1)">+</button>
+            </div>
           </div>
         </div>
       </div>` : ''}
@@ -742,7 +742,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you would have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -753,7 +753,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you would have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
           </div>
         </div>`:''}
       </div>`:''}
@@ -909,7 +909,7 @@
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you would have.
+                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
@@ -1633,7 +1633,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you would have.
+            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
