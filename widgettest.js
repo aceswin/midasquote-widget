@@ -105,6 +105,19 @@
       tallCabItems:    byCategory('tall_cabinet'),
     };
 
+    // Match photos uploaded via the dashboard's "My Products" tab. That tab
+    // keys photos as li_<category>_<normalized-name> — different from the
+    // spec_<recordId> pattern used for specialty items above, since materials/
+    // doors/hinges are deduped by name rather than by Airtable record id.
+    function photoKeyFor(cat, name) {
+      const baseName = (name||'').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
+      const norm = baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+      return `li_${cat}_${norm}`;
+    }
+    li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; });
+    li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; });
+    li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; });
+
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
     li.localRadius = localZone?.['Rate'] || 15;
 
@@ -230,6 +243,13 @@
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:38px;height:38px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:16px;color:#9ca3af;border:1px solid #e5e7eb}
+      #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
+      #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
+      #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9ca3af}
+      #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
+      #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
       #midasquote-widget .mq-qty-ctrl{display:flex;align-items:center;gap:4px}
       #midasquote-widget .mq-qty-btn{width:22px;height:22px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#111;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
       #midasquote-widget .mq-qty-val{font-size:13px;font-weight:500;min-width:16px;text-align:center}
@@ -437,6 +457,31 @@
     lb.classList.add('show');
   };
 
+  // Visual chip picker for materials/doors/hinges. Renders a horizontally
+  // scrollable row of thumbnail+label chips. A hidden <select> with the same
+  // id/options sits alongside it so every existing gv()/onchange reference
+  // elsewhere in the file keeps working completely untouched — clicking a
+  // chip just sets that hidden select's value and fires a real 'change' event.
+  function pickerRow(selectId, items, extraOnChangeAttr) {
+    const chips = items.map((it,i)=>{
+      const thumb = it.photoUrl
+        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
+        : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
+      const selectedClass = i===0 ? ' selected' : '';
+      return `<button type="button" class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" onclick="mqPickVisual('${selectId}',this)">${thumb}<span class="mq-vpicker-label">${it.label}</span></button>`;
+    }).join('');
+    return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
+  }
+
+  window.mqPickVisual = function(selectId, chipEl) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.value = chipEl.getAttribute('data-value');
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => c.classList.remove('selected'));
+    chipEl.classList.add('selected');
+  };
+
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:13px;color:#6b7280">No specialty items configured yet.</p>';
     return specs.map((s,i)=>{
@@ -473,6 +518,21 @@
     const hasInstall = !hasDynamic || li.installItems.length > 0;
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
+
+    // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
+    // the shop has real pricing data, or the legacy fallback values when not)
+    // so picking a chip always sets a value the existing calc logic already understands.
+    const mItems = li.materials.length > 0
+      ? li.materials.map((m,i)=>({value:`dyn_${i}`, label:m._baseName||m['Name'], photoUrl:m.photoUrl, icon:'🪵'}))
+      : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
+    const dItems = [{value:'none',label:'No doors',icon:'🚫'}].concat(
+      li.doorStyles.length > 0
+        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪'}))
+        : [{value:'slab',label:'Slab',icon:'🚪'},{value:'shaker',label:'Shaker',icon:'🚪'}]
+    );
+    const hingeItems = li.hinges.length > 0
+      ? li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧'}))
+      : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
 
     return `
       <div class="mq-sec">
@@ -512,27 +572,39 @@
           <label style="font-size:13px;cursor:pointer">Different styles for uppers and lowers</label>
         </div>
         <div id="mq-${prefix}-shared">
-          <div class="mq-grid3">
-            <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-mat">${mOpts}</select></div>
-            <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)">${dOpts}</select></div>
-            ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-hinge">${hingeOpts}</select></div>`:''}
-          </div>
+          <div class="mq-field"><label class="mq-label">Box material</label>
+            ${pickerRow(`mq-${prefix}-mat`, mItems)}
+            <select id="mq-${prefix}-mat" style="display:none">${mOpts}</select></div>
+          <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
+            ${pickerRow(`mq-${prefix}-door`, dItems)}
+            <select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
+          ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
+            ${pickerRow(`mq-${prefix}-hinge`, hingeItems)}
+            <select id="mq-${prefix}-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           <p class="mq-hint" style="margin-top:6px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <div id="mq-${prefix}-diff" style="display:none">
           <div class="mq-sub-sec"><p class="mq-sub-title">Upper cabinets</p>
-            <div class="mq-grid3">
-              <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-u-mat">${mOpts}</select></div>
-              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-u-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)">${dOpts}</select></div>
-              ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-u-hinge">${hingeOpts}</select></div>`:''}
-            </div>
+            <div class="mq-field"><label class="mq-label">Box material</label>
+              ${pickerRow(`mq-${prefix}-u-mat`, mItems)}
+              <select id="mq-${prefix}-u-mat" style="display:none">${mOpts}</select></div>
+            <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
+              ${pickerRow(`mq-${prefix}-u-door`, dItems)}
+              <select id="mq-${prefix}-u-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
+            ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
+              ${pickerRow(`mq-${prefix}-u-hinge`, hingeItems)}
+              <select id="mq-${prefix}-u-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           </div>
           <div class="mq-sub-sec" style="margin-top:8px"><p class="mq-sub-title">Base cabinets</p>
-            <div class="mq-grid3">
-              <div class="mq-field"><label class="mq-label">Box material</label><select id="mq-${prefix}-b-mat">${mOpts}</select></div>
-              <div class="mq-field"><label class="mq-label">Door style</label><select id="mq-${prefix}-b-door">${dOpts}</select></div>
-              ${hasHinges?`<div class="mq-field"><label class="mq-label">Door hinges</label><select id="mq-${prefix}-b-hinge">${hingeOpts}</select></div>`:''}
-            </div>
+            <div class="mq-field"><label class="mq-label">Box material</label>
+              ${pickerRow(`mq-${prefix}-b-mat`, mItems)}
+              <select id="mq-${prefix}-b-mat" style="display:none">${mOpts}</select></div>
+            <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
+              ${pickerRow(`mq-${prefix}-b-door`, dItems)}
+              <select id="mq-${prefix}-b-door" style="display:none">${dOpts}</select></div>
+            ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
+              ${pickerRow(`mq-${prefix}-b-hinge`, hingeItems)}
+              <select id="mq-${prefix}-b-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           </div>
         </div>
       </div>
