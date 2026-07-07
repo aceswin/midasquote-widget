@@ -325,15 +325,15 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:12px;color:#6b7280;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
-      #midasquote-widget .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
+      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
       .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
       .mq-hover-preview .mq-hp-label{font-size:11px;color:#374151;text-align:center;margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:180px}
-      #midasquote-widget .mq-lightbox.show{display:flex}
-      #midasquote-widget .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
-      #midasquote-widget .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
-      #midasquote-widget .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:11px}
+      .mq-lightbox.show{display:flex}
+      .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+      .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
+      .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:11px}
     `;
     document.head.appendChild(s);
   }
@@ -469,7 +469,6 @@
   window.mqPhotoLightbox = function(src, label) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
-      const widgetRoot = document.getElementById('midasquote-widget');
       lb = document.createElement('div');
       lb.id = 'mq-lightbox';
       lb.className = 'mq-lightbox';
@@ -478,7 +477,10 @@
         <img id="mq-lightbox-img" src=""/>
         <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
         <div class="mq-lightbox-hint">Tap anywhere to close</div>`;
-      (widgetRoot || document.body).appendChild(lb);
+      // Appended to document.body (not the widget container) so position:fixed
+      // can't be broken by a transformed ancestor somewhere in the host page —
+      // same fix already used for the hover preview.
+      document.body.appendChild(lb);
     }
     document.getElementById('mq-lightbox-img').src = src;
     document.getElementById('mq-lightbox-label').textContent = label || '';
@@ -706,27 +708,10 @@
       <div class="mq-sec">
         <p class="mq-sec-title">Tall cabinets</p>
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
-          🏛️ Add tall cabinets separately here.
+          🏛️ Add each tall cabinet separately — pick a type, width, and quantity, then add another for a different type.
         </div>
-        <div class="mq-grid2" style="margin-bottom:10px">
-          <div class="mq-field">
-            <label class="mq-label">Tall cabinet type</label>
-            ${pickerRow(`mq-${prefix}-tc-type`, tallCabItems())}
-            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')" style="display:none">${tallCabOpts()}</select>
-          </div>
-          <div class="mq-field">
-            <label class="mq-label">Width (inches)</label>
-            <input type="number" id="mq-${prefix}-tc-width" value="24" min="12" max="48"/>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <label class="mq-label">Quantity</label>
-          <div class="mq-qty-ctrl">
-            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',-1)">−</button>
-            <span class="mq-qty-val" id="mq-${prefix}-tc-qty">0</span>
-            <button class="mq-qty-btn" onclick="mqAdjTallCab('${prefix}',1)">+</button>
-          </div>
-        </div>
+        <div id="mq-${prefix}-tallcabs"></div>
+        <button class="mq-add-surface-btn" onclick="mqAddTallCab('${prefix}')">+ Add a tall cabinet</button>
       </div>` : ''}
       ${hasTrim?`<div class="mq-sec">
         <p class="mq-sec-title">Crown moulding / valance</p>
@@ -1078,9 +1063,9 @@
 
     const ctDepth  = 25.5;
 
-    const diffOn={},specQty={},surfCounts={},surfs={},tallCabQty={};
+    const diffOn={},specQty={},surfCounts={},surfs={},tallCabs={},tallCabCounts={};
     let pendingCb=null;
-    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabQty[p]=0;});
+    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
 
     function fmt(n){return '$'+Math.round(n).toLocaleString();}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
@@ -1188,11 +1173,50 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
     };
 
-    window.mqTogTallCab=(prefix)=>{ tallCabQty[prefix]=0; const el=document.getElementById(`mq-${prefix}-tc-qty`); if(el) el.textContent=0; };
-    window.mqAdjTallCab=(prefix,d)=>{
-      tallCabQty[prefix]=Math.max(0,(tallCabQty[prefix]||0)+d);
-      const el=document.getElementById(`mq-${prefix}-tc-qty`);
-      if(el) el.textContent=tallCabQty[prefix];
+    function addTallCabInternal(prefix){
+      tallCabCounts[prefix]++;
+      const id=`tc${prefix}${tallCabCounts[prefix]}`;
+      tallCabs[prefix][id]=1; // default qty 1 — adding a card means they want at least one
+      const containerId=`mq-${prefix}-tallcabs`;
+      const card=document.createElement('div');
+      card.className='mq-surface-card';
+      card.id=`mq-tc-card-${id}`;
+      card.innerHTML=`
+        <div class="mq-surface-header">
+          <div class="mq-surface-num">${tallCabCounts[prefix]}</div>
+          <span style="font-size:14px;font-weight:500;color:#111;flex:1">Tall cabinet</span>
+          <button class="mq-remove-btn" onclick="mqRemoveTallCab('${prefix}','${id}')">Remove</button>
+        </div>
+        <div class="mq-field" style="margin-bottom:10px">
+          <label class="mq-label">Type</label>
+          ${pickerRow(`mq-tc-type-${id}`, tallCabItems())}
+          <select id="mq-tc-type-${id}" style="display:none">${tallCabOpts()}</select>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:2rem;flex-wrap:wrap">
+          <div class="mq-field" style="margin-bottom:0">
+            <label class="mq-label">Width (inches)</label>
+            <input type="number" id="mq-tc-width-${id}" value="24" min="12" max="48" style="width:100px"/>
+          </div>
+          <div>
+            <label class="mq-label" style="display:block;margin-bottom:5px">Quantity</label>
+            <div class="mq-qty-ctrl">
+              <button class="mq-qty-btn" onclick="mqAdjTallCabQty('${prefix}','${id}',-1)">−</button>
+              <span class="mq-qty-val" id="mq-tc-qty-${id}">1</span>
+              <button class="mq-qty-btn" onclick="mqAdjTallCabQty('${prefix}','${id}',1)">+</button>
+            </div>
+          </div>
+        </div>`;
+      document.getElementById(containerId)?.appendChild(card);
+    }
+    window.mqAddTallCab=(prefix)=>addTallCabInternal(prefix);
+    window.mqRemoveTallCab=(prefix,id)=>{
+      document.getElementById(`mq-tc-card-${id}`)?.remove();
+      delete tallCabs[prefix][id];
+    };
+    window.mqAdjTallCabQty=(prefix,id,d)=>{
+      tallCabs[prefix][id]=Math.max(0,(tallCabs[prefix][id]||0)+d);
+      const el=document.getElementById(`mq-tc-qty-${id}`);
+      if(el) el.textContent=tallCabs[prefix][id];
     };
 
     window.mqShowLead=cb=>{
@@ -1341,10 +1365,48 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
-      // Tall cabinet footage to add to crown/valance — each tall cab adds its width in lin ft
-      const tcQtyForTrim = tallCabQty[prefix] || 0;
-      const tcWidthInForTrim = gn(`mq-${prefix}-tc-width`, 24);
-      const tcLinFtForTrim = tcQtyForTrim > 0 && Object.keys(TALL_CAB).length > 0 ? ((tcWidthInForTrim + 12) / 12) * tcQtyForTrim : 0;
+      // Tall cabinets — loop over every card the customer added. Each one
+      // contributes its own cost (base price + door/material/install/hinge
+      // upcharges) and its own linear footage toward crown/valance trim.
+      let tallCabTotal = 0;
+      let tcLinFtForTrim = 0;
+      const tallCabLines = [];
+      Object.keys(tallCabs[prefix] || {}).forEach(id => {
+        if (!document.getElementById(`mq-tc-card-${id}`)) return; // card removed
+        const tcQty = tallCabs[prefix][id] || 0;
+        if (tcQty <= 0) return;
+        const tcKey = gv(`mq-tc-type-${id}`);
+        const tcWidthIn = gn(`mq-tc-width-${id}`, 24);
+        const tc = TALL_CAB[tcKey] || Object.values(TALL_CAB)[0];
+        if (!tc) return;
+        const tcLinFt = tcWidthIn / 12;
+        // Trim footage gets an extra 12" per cabinet for the return where crown/valance
+        // transitions from this tall cabinet's depth back to the shallower upper cabinets —
+        // kept separate from tcLinFt so it doesn't inflate the cabinet's own cost math.
+        tcLinFtForTrim += ((tcWidthIn + 12) / 12) * tcQty;
+        // Base unit price (from wizard — baseline mat, baseline door, supply only)
+        let tcUnitPrice = tc.basePrice;
+        // Door upcharge: (door rate per lin ft × tcLinFt) × 2.25 to account for full-height doors
+        const doorKey = diffOn[prefix] ? gv(`mq-${prefix}-b-door`) : gv(`mq-${prefix}-door`);
+        const doorUpchargePerFt = doorKey && doorKey !== 'none' ? (door[doorKey]?.rate || 0) : 0;
+        tcUnitPrice += doorUpchargePerFt * tcLinFt * 2.25;
+        // Material upcharge: difference above baseline material, per lin ft × tcLinFt × 2 (uppers + bases height equiv)
+        const matKey = diffOn[prefix] ? gv(`mq-${prefix}-b-mat`) : gv(`mq-${prefix}-mat`);
+        const tcMatRates = getMaterialRates(matKey, mat);
+        const blMatRates = getMaterialRates(Object.keys(mat)[0], mat);
+        const matUpcharge = Math.max(0, tcMatRates.rateB - blMatRates.rateB) * tcLinFt * 2;
+        tcUnitPrice += matUpcharge;
+        // Install: base install rate × tcLinFt × 2 if supply + install
+        if (si === 'install') tcUnitPrice += installB * tcLinFt * 2;
+        // Hinge upcharge — only applies if doors are actually being added (no doors = no hinges needed)
+        const hingeKey = diffOn[prefix] ? gv(`mq-${prefix}-b-hinge`) : gv(`mq-${prefix}-hinge`);
+        const tcHingeRate = (hingeKey && doorKey && doorKey !== 'none') ? (hinge[hingeKey]?.rate || 0) : 0;
+        tcUnitPrice += tcHingeRate * tcLinFt * 2.25;
+
+        const tcCost = Math.round(tcUnitPrice * tcQty);
+        tallCabTotal += tcCost;
+        tallCabLines.push({label:`${tc.label} (${tcQty} × ${tcWidthIn}")`, cost: tcCost});
+      });
 
       let trimCost = 0;
       const crownKey = gv(`mq-${prefix}-trim-crown`);
@@ -1367,6 +1429,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const tcNote = tcLinFtForTrim > 0 ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
         if (trimFt > 0) lines.push({label:`${trim.label} (${(uFt+returns).toFixed(0)} lin ft${tcNote})`,cost:Math.round(cost)});
       }
+      lines.push(...tallCabLines);
 
       let specTotal=0;
       specs.forEach((s,i)=>{
@@ -1376,40 +1439,6 @@ window.mqTogDrawerConfig=(prefix)=>{
         const qtyLabel=s.perFt?`${specQty[prefix][i]} ft`:(specQty[prefix][i]>1?`× ${specQty[prefix][i]}`:'');
         lines.push({label:qtyLabel?`${s.label} (${qtyLabel})`:s.label,cost:Math.round(cost)});
       });
-
-      // Tall cabinets — base price + door upcharge + material upcharge + install
-      let tallCabTotal = 0;
-      const tcQty = tallCabQty[prefix] || 0;
-      if (tcQty > 0 && Object.keys(TALL_CAB).length > 0) {
-        const tcKey  = gv(`mq-${prefix}-tc-type`);
-        const tcWidthIn = gn(`mq-${prefix}-tc-width`, 24);
-        const tc = TALL_CAB[tcKey] || Object.values(TALL_CAB)[0];
-        if (tc) {
-          const tcLinFt = tcWidthIn / 12;
-          // Base unit price (from wizard — baseline mat, baseline door, supply only)
-          let tcUnitPrice = tc.basePrice;
-          // Door upcharge: (door rate per lin ft × tcLinFt) × 2.25 to account for full-height doors
-          const doorKey = diffOn[prefix] ? gv(`mq-${prefix}-b-door`) : gv(`mq-${prefix}-door`);
-          const doorUpchargePerFt = doorKey && doorKey !== 'none' ? (door[doorKey]?.rate || 0) : 0;
-          tcUnitPrice += doorUpchargePerFt * tcLinFt * 2.25;
-          // Material upcharge: difference above baseline material, per lin ft × tcLinFt × 2 (uppers + bases height equiv)
-          const matKey = diffOn[prefix] ? gv(`mq-${prefix}-b-mat`) : gv(`mq-${prefix}-mat`);
-          const tcMatRates = getMaterialRates(matKey, mat);
-          const blMatRates = getMaterialRates(Object.keys(mat)[0], mat);
-          const matUpcharge = Math.max(0, tcMatRates.rateB - blMatRates.rateB) * tcLinFt * 2;
-          tcUnitPrice += matUpcharge;
-          // Install: base install rate × tcLinFt × 2 if supply + install
-          if (si === 'install') tcUnitPrice += installB * tcLinFt * 2;
-          // Hinge upcharge — only applies if doors are actually being added (no doors = no hinges needed)
-          const hingeKey = diffOn[prefix] ? gv(`mq-${prefix}-b-hinge`) : gv(`mq-${prefix}-hinge`);
-          const tcHingeRate = (hingeKey && doorKey && doorKey !== 'none') ? (hinge[hingeKey]?.rate || 0) : 0;
-          tcUnitPrice += tcHingeRate * tcLinFt * 2.25;
-
-          const tcCost = Math.round(tcUnitPrice * tcQty);
-          tallCabTotal += tcCost;
-          lines.push({label:`${tc.label} (${tcQty} × ${tcWidthIn}")`, cost: tcCost});
-        }
-      }
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
