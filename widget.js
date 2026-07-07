@@ -742,7 +742,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you would have.</div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -753,7 +753,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you would have.</div>
           </div>
         </div>`:''}
       </div>`:''}
@@ -909,7 +909,7 @@
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
+                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you would have.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
@@ -1633,7 +1633,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
+            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you would have.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
