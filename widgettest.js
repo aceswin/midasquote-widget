@@ -263,8 +263,10 @@
       #midasquote-widget .mq-tog.on{background:${bc}}
       #midasquote-widget .mq-tog::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
       #midasquote-widget .mq-tog.on::after{left:18px}
-      #midasquote-widget .mq-sub-sec{background:#f9fafb;border-radius:8px;padding:1rem;margin-top:0.75rem}
-      #midasquote-widget .mq-sub-title{font-size:11px;font-weight:600;color:#6b7280;margin:0 0 0.75rem;text-transform:uppercase;letter-spacing:0.05em}
+      #midasquote-widget .mq-sub-sec{background:#f9fafb;border-radius:8px;padding:1rem;margin-top:0.75rem;border-left:4px solid #d1d5db}
+      #midasquote-widget .mq-sub-sec.mq-sub-upper{border-left-color:#3b82f6;background:#eff6ff}
+      #midasquote-widget .mq-sub-sec.mq-sub-base{border-left-color:#f59e0b;background:#fffbeb}
+      #midasquote-widget .mq-sub-title{font-size:15px;font-weight:700;color:#111;margin:0 0 0.85rem;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.08)}
       #midasquote-widget .mq-calc-btn{width:100%;padding:13px;font-size:15px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;margin-top:0.5rem;transition:opacity 0.15s;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,0.25)}
       #midasquote-widget .mq-calc-btn:hover{opacity:0.88}
       #midasquote-widget .mq-calc-btn:disabled{opacity:0.4;cursor:not-allowed}
@@ -419,18 +421,23 @@
   // ── Tall cabinets ──
   let TALL_CAB = {};
   function buildTALLCAB(data) {
-    const { li } = data;
+    const { li, shopPhotos } = data;
     TALL_CAB = {};
     (li.tallCabItems || []).filter(item => item['Active'] !== false).forEach((item, i) => {
       TALL_CAB[`tc_${i}`] = {
         label: item['Name'],
         basePrice: item['Rate'] || 0,
+        photoUrl: (shopPhotos||{})[photoKeyFor('tall_cabinet', item['Name'])] || '',
       };
     });
   }
 
   function tallCabOpts() {
     return Object.entries(TALL_CAB).map(([k,t]) => `<option value="${k}">${t.label}</option>`).join('');
+  }
+
+  function tallCabItems() {
+    return Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️'}));
   }
 
   function ctMatOpts() {
@@ -615,7 +622,7 @@
           <p class="mq-hint" style="margin-top:6px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <div id="mq-${prefix}-diff" style="display:none">
-          <div class="mq-sub-sec"><p class="mq-sub-title">Upper cabinets</p>
+          <div class="mq-sub-sec mq-sub-upper"><p class="mq-sub-title">🔼 Upper cabinets</p>
             <div class="mq-field"><label class="mq-label">Box material</label>
               ${pickerRow(`mq-${prefix}-u-mat`, mItems)}
               <select id="mq-${prefix}-u-mat" style="display:none">${mOpts}</select></div>
@@ -626,7 +633,7 @@
               ${pickerRow(`mq-${prefix}-u-hinge`, hingeItems)}
               <select id="mq-${prefix}-u-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           </div>
-          <div class="mq-sub-sec" style="margin-top:8px"><p class="mq-sub-title">Base cabinets</p>
+          <div class="mq-sub-sec mq-sub-base" style="margin-top:8px"><p class="mq-sub-title">🔽 Base cabinets</p>
             <div class="mq-field"><label class="mq-label">Box material</label>
               ${pickerRow(`mq-${prefix}-b-mat`, mItems)}
               <select id="mq-${prefix}-b-mat" style="display:none">${mOpts}</select></div>
@@ -665,7 +672,8 @@
         <div class="mq-grid2" style="margin-bottom:10px">
           <div class="mq-field">
             <label class="mq-label">Tall cabinet type</label>
-            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')">${tallCabOpts()}</select>
+            ${pickerRow(`mq-${prefix}-tc-type`, tallCabItems())}
+            <select id="mq-${prefix}-tc-type" onchange="mqTogTallCab('${prefix}')" style="display:none">${tallCabOpts()}</select>
           </div>
           <div class="mq-field">
             <label class="mq-label">Width (inches)</label>
