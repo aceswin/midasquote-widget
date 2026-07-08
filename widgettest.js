@@ -34,11 +34,15 @@
   async function fetchWithRetry(url, options, attempts = 3, delayMs = 400) {
     let lastErr;
     for (let i = 0; i < attempts; i++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout per attempt
       try {
-        const res = await fetch(url, options);
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res;
       } catch (err) {
+        clearTimeout(timeoutId);
         lastErr = err;
         if (i < attempts - 1) await new Promise(r => setTimeout(r, delayMs * (i + 1)));
       }
@@ -249,12 +253,16 @@
       #midasquote-widget .mq-spec-thumb{width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:38px;height:38px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:16px;color:#9ca3af;border:1px solid #e5e7eb}
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
-      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
       #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9ca3af}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
+      #midasquote-widget .mq-vpicker-select-btn{margin-top:5px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-select-btn{background:${bc};border-color:${bc};color:#fff}
+      #midasquote-widget .mq-vpicker-thumb{cursor:zoom-in}
+      #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
       #midasquote-widget .mq-qty-ctrl{display:flex;align-items:center;gap:4px}
       #midasquote-widget .mq-qty-btn{width:22px;height:22px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#111;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
       #midasquote-widget .mq-qty-val{font-size:13px;font-weight:500;min-width:16px;text-align:center}
@@ -531,29 +539,31 @@
   // chip just sets that hidden select's value and fires a real 'change' event.
   function pickerRow(selectId, items, extraOnChangeAttr) {
     const chips = items.map((it,i)=>{
-      const thumb = it.photoUrl
-        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
-        : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
-      const selectedClass = i===0 ? ' selected' : '';
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
-      return `<button type="button" class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-photo="${safePhoto}" data-label="${safeLabel}" onclick="mqPickVisual('${selectId}',this)" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()">${thumb}<span class="mq-vpicker-label">${it.label}</span></button>`;
+      const thumb = it.photoUrl
+        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
+        : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
+      const selectedClass = i===0 ? ' selected' : '';
+      const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()">${thumb}<span class="mq-vpicker-label">${it.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
     return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
 
-  window.mqPickVisual = function(selectId, chipEl) {
+  window.mqPickVisual = function(selectId, btnEl) {
+    const chipEl = btnEl.closest('.mq-vpicker-chip');
     const sel = document.getElementById(selectId);
-    if (!sel) return;
+    if (!sel || !chipEl) return;
     sel.value = chipEl.getAttribute('data-value');
     sel.dispatchEvent(new Event('change', { bubbles: true }));
-    document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => {
+      c.classList.remove('selected');
+      const b = c.querySelector('.mq-vpicker-select-btn');
+      if (b) b.textContent = 'Select';
+    });
     chipEl.classList.add('selected');
-    // Show the photo full-size the moment they pick it, so they can actually
-    // see the detail instead of just a 48px thumbnail — tap anywhere to close.
-    const photo = chipEl.getAttribute('data-photo');
-    const label = chipEl.getAttribute('data-label');
-    if (photo) window.mqPhotoLightbox(photo, label);
+    btnEl.textContent = '✓ Selected';
   };
 
   function specHTML(specs, prefix) {
@@ -762,11 +772,12 @@
   function buildWidgetHTML(shop, specs, data) {
     const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
-    const financingHTML = shop['Offers financing'] === true
+    const financingOn = shop['Offers financing'] === 'Yes';
+    const financingHTML = financingOn
       ? `<div class="mq-financing-note">💳 Financing available</div>`
       : '';
     const financingLink = (shop['Financing link'] || '').trim();
-    const askQuestionBtn = financingLink
+    const askQuestionBtn = (financingOn && financingLink)
       ? `<button onclick="window.open('${financingLink}','_blank')">Get pre-approved ↗</button>`
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
 
@@ -777,7 +788,7 @@
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
         </div>
-        ${shop['Show showroom'] !== false && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:12px;font-weight:600;color:#fff;text-decoration:none;background:${shop['Brand colour']||'#1a1a1a'};border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
+        ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:12px;font-weight:600;color:#fff;text-decoration:none;background:${shop['Brand colour']||'#1a1a1a'};border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
       </div>
       <div class="mq-powered-by" style="margin-top:10px;padding-top:0;border-top:none;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
       <div class="mq-tab-bar">
@@ -983,7 +994,7 @@
 
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
-      let installU=0, installB=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
+      let installUWithDoors=0, installUNoDoors=0, installBWithDoors=0, installBNoDoors=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
 
       if (hasDynamic) {
         li.materials.forEach((m,i) => {
@@ -1005,17 +1016,28 @@
         });
         li.hinges.forEach((h,i) => { hinge[`dyn_${i}`] = { label:h['Name'], rate:h['Rate']||0 }; });
 
-        const iu       = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && !i['Name']?.toLowerCase().includes('drawer'));
-        const ib       = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('with doors'));
+        // Install rates need to match whether doors are actually present — a
+        // generic "upper" match (ignoring door status) or a hardcoded "with
+        // doors" assumption for bases both silently used the wrong rate.
+        // Look for explicit no-doors/with-doors variants first, and fall back
+        // to a generic match only for shops that haven't split their pricing
+        // that way, so nothing breaks for existing setups.
+        const iuGeneric   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && !i['Name']?.toLowerCase().includes('drawer'));
+        const iuWithDoors = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && i['Name']?.toLowerCase().includes('with doors')) || iuGeneric;
+        const iuNoDoors   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('upper') && i['Name']?.toLowerCase().includes('no doors')) || iuGeneric;
+        const ibWithDoors = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('with doors'));
+        const ibNoDoors   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('base') && i['Name']?.toLowerCase().includes('no doors')) || ibWithDoors;
         const ibSome   = li.installItems.find(i=>i['Name']?.toLowerCase().includes('some drawers'));
         const ibMostly = li.installItems.find(i=>i['Name']?.toLowerCase().includes('mostly drawers'));
         const rem      = li.otherItems.find(i=>i['Name']?.toLowerCase().includes('removal')) ||
                          li.installItems.find(i=>i['Name']?.toLowerCase().includes('removal'));
         const tax      = li.taxItems[0];
-        installU       = iu?iu['Rate']||0:0;
-        installB       = ib?ib['Rate']||0:0;
-        installBSome   = ibSome?ibSome['Rate']||0:installB;
-        installBMostly = ibMostly?ibMostly['Rate']||0:installB;
+        installUWithDoors = iuWithDoors?iuWithDoors['Rate']||0:0;
+        installUNoDoors   = iuNoDoors?iuNoDoors['Rate']||0:0;
+        installBWithDoors = ibWithDoors?ibWithDoors['Rate']||0:0;
+        installBNoDoors   = ibNoDoors?ibNoDoors['Rate']||0:0;
+        installBSome   = ibSome?ibSome['Rate']||0:installBWithDoors;
+        installBMostly = ibMostly?ibMostly['Rate']||0:installBWithDoors;
         removalRate    = rem?rem['Rate']||0:0;
         taxRate        = tax?(tax['Rate']||0)/100:0;
       } else {
@@ -1025,14 +1047,14 @@
         door['shaker']  = {label:'Shaker', rate:pricing['Shaker multiplier']||0};
         hinge['softclose'] = {label:'Soft-close', rate:pricing['Soft close hinges']||12};
         hinge['regular']   = {label:'Regular',    rate:0};
-        installU       = pricing['Install rate uppers']||85;
-        installB       = installU;
-        installBSome   = Math.round(installB*1.10*100)/100;
-        installBMostly = Math.round(installB*1.15*100)/100;
+        installUWithDoors = installUNoDoors = pricing['Install rate uppers']||85;
+        installBWithDoors = installBNoDoors = installUWithDoors;
+        installBSome   = Math.round(installBWithDoors*1.10*100)/100;
+        installBMostly = Math.round(installBWithDoors*1.15*100)/100;
         removalRate    = pricing['Removal rate']||18;
         taxRate        = (pricing['Tax rate']||5)/100;
       }
-      return { mat, door, drawer, hinge, installU, installB, installBSome, installBMostly, removalRate };
+      return { mat, door, drawer, hinge, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
     }
 
     // Legacy global fallback rates (used only if a material has no per-material
@@ -1330,7 +1352,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,installU,installB,installBSome,installBMostly,removalRate}=P();
+      const {mat,door,drawer,hinge,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
       const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
       const hMult={standard:1.0,tall:1.30}[gv(`mq-${prefix}-ht`)]||1.0;
@@ -1358,28 +1380,39 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bHingeRate= bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
 
       // Vanity cabinets run smaller than kitchen cabinets at the same linear
-      // footage — knock a bit off box, door, and drawer cost only. Hinges,
-      // install, and everything else (specialty items, cutouts) stay full price
-      // since hardware and labor don't shrink just because the box is smaller.
+      // footage — but "vanity" specifically means the base cabinet under a
+      // sink. It never applies to uppers (a bathroom's upper cabinets, if any,
+      // aren't inherently smaller just because the room is a bathroom).
       const isVanity   = gv(`mq-${prefix}-room`) === 'bathroom';
       const vanityMult = isVanity ? 0.95 : 1;
 
-      const uInstall = si==='install'?installU:0;
+      const uInstall = si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0;
       const bInstall = si==='install'?(
         drawerTier==='some'   ? installBSome   :
         drawerTier==='mostly' ? installBMostly :
-        installB
+        (bDoorKey==='none'?installBNoDoors:installBWithDoors)
       ):0;
 
-      const uPft  = ((uMat.rateU + uDoorRate) * vanityMult + uHingeRate + uInstall) * hMult;
-      const bPft  = (bMat.rateB + bDoorRate + drawerRate) * vanityMult + bHingeRate + bInstall;
+      // Material/door/hinge only — no install baked in, so it can show as its
+      // own line item for the shop. Height multiplier still applies to the
+      // whole upper-cabinet box (material + install together), same as before.
+      const uMatDoorHinge = uMat.rateU + uDoorRate + uHingeRate;
+      const bMatDoorHinge = (bMat.rateB + bDoorRate + drawerRate) * vanityMult + bHingeRate;
+      const uPft  = (uMatDoorHinge + uInstall) * hMult;
+      const bPft  = bMatDoorHinge + bInstall;
       const uCost = uFt*uPft, bCost=bFt*bPft;
+      const uMatCost = uFt * uMatDoorHinge * hMult;
+      const uInstallCost = uFt * uInstall * hMult;
+      const bMatCost = bFt * bMatDoorHinge;
+      const bInstallCost = bFt * bInstall;
 
       const lines=[];
       const uDoorLabel=uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
       const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
-      if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uCost)});
-      if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bCost)});
+      if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uMatCost)});
+      if(uFt>0&&uInstallCost>0) lines.push({label:`Upper cabinet install (${uFt} lin ft)`,cost:Math.round(uInstallCost)});
+      if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost)});
+      if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       // Tall cabinets — loop over every card the customer added. Each one
@@ -1414,8 +1447,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         const blMatRates = getMaterialRates(Object.keys(mat)[0], mat);
         const matUpcharge = Math.max(0, tcMatRates.rateB - blMatRates.rateB) * tcLinFt * 2;
         tcUnitPrice += matUpcharge;
-        // Install: base install rate × tcLinFt × 2 if supply + install
-        if (si === 'install') tcUnitPrice += installB * tcLinFt * 2;
+        // Install: base install rate × tcLinFt × 2 if supply + install — door-aware, same as regular bases
+        if (si === 'install') tcUnitPrice += (doorKey==='none'?installBNoDoors:installBWithDoors) * tcLinFt * 2;
         // Hinge upcharge — only applies if doors are actually being added (no doors = no hinges needed)
         const hingeKey = diffOn[prefix] ? gv(`mq-${prefix}-b-hinge`) : gv(`mq-${prefix}-hinge`);
         const tcHingeRate = (hingeKey && doorKey && doorKey !== 'none') ? (hinge[hingeKey]?.rate || 0) : 0;
@@ -1870,7 +1903,7 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     // ── First-visit showroom popup ──
     // Only shows if showroom is enabled, and only once per browser per shop
-    if (shop['Show showroom'] !== false && shop['Shop token']) {
+    if (shop['Show showroom'] !== 'Hide' && shop['Shop token']) {
       try {
         const storageKey = `mq_showroom_seen_${shop['Shop token']}`;
         if (!localStorage.getItem(storageKey)) {
