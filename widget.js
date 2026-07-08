@@ -253,12 +253,16 @@
       #midasquote-widget .mq-spec-thumb{width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:38px;height:38px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:16px;color:#9ca3af;border:1px solid #e5e7eb}
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
-      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
       #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9ca3af}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
+      #midasquote-widget .mq-vpicker-select-btn{margin-top:5px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-select-btn{background:${bc};border-color:${bc};color:#fff}
+      #midasquote-widget .mq-vpicker-thumb{cursor:zoom-in}
+      #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
       #midasquote-widget .mq-qty-ctrl{display:flex;align-items:center;gap:4px}
       #midasquote-widget .mq-qty-btn{width:22px;height:22px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#111;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
       #midasquote-widget .mq-qty-val{font-size:13px;font-weight:500;min-width:16px;text-align:center}
@@ -535,29 +539,31 @@
   // chip just sets that hidden select's value and fires a real 'change' event.
   function pickerRow(selectId, items, extraOnChangeAttr) {
     const chips = items.map((it,i)=>{
-      const thumb = it.photoUrl
-        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
-        : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
-      const selectedClass = i===0 ? ' selected' : '';
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
-      return `<button type="button" class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-photo="${safePhoto}" data-label="${safeLabel}" onclick="mqPickVisual('${selectId}',this)" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()">${thumb}<span class="mq-vpicker-label">${it.label}</span></button>`;
+      const thumb = it.photoUrl
+        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
+        : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
+      const selectedClass = i===0 ? ' selected' : '';
+      const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()">${thumb}<span class="mq-vpicker-label">${it.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
     return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
 
-  window.mqPickVisual = function(selectId, chipEl) {
+  window.mqPickVisual = function(selectId, btnEl) {
+    const chipEl = btnEl.closest('.mq-vpicker-chip');
     const sel = document.getElementById(selectId);
-    if (!sel) return;
+    if (!sel || !chipEl) return;
     sel.value = chipEl.getAttribute('data-value');
     sel.dispatchEvent(new Event('change', { bubbles: true }));
-    document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => {
+      c.classList.remove('selected');
+      const b = c.querySelector('.mq-vpicker-select-btn');
+      if (b) b.textContent = 'Select';
+    });
     chipEl.classList.add('selected');
-    // Show the photo full-size the moment they pick it, so they can actually
-    // see the detail instead of just a 48px thumbnail — tap anywhere to close.
-    const photo = chipEl.getAttribute('data-photo');
-    const label = chipEl.getAttribute('data-label');
-    if (photo) window.mqPhotoLightbox(photo, label);
+    btnEl.textContent = '✓ Selected';
   };
 
   function specHTML(specs, prefix) {
