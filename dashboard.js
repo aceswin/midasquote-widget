@@ -1144,6 +1144,8 @@ window.logoutMember = async function () {
         case 'name':  av = (a.fields['Customer name']  || '').toLowerCase(); bv = (b.fields['Customer name']  || '').toLowerCase(); break;
         case 'email': av = (a.fields['Customer email'] || '').toLowerCase(); bv = (b.fields['Customer email'] || '').toLowerCase(); break;
         case 'phone': av = (a.fields['Customer phone'] || '');               bv = (b.fields['Customer phone'] || '');               break;
+        case 'type':  av = (a.fields['Quote type'] || '').toLowerCase();     bv = (b.fields['Quote type'] || '').toLowerCase();     break;
+        case 'room':  av = (a.fields['Room type'] || '').toLowerCase();      bv = (b.fields['Room type'] || '').toLowerCase();      break;
         case 'price': av = a.fields['Estimate low'] || 0;                    bv = b.fields['Estimate low'] || 0;                    break;
         case 'date':
         default:      av = new Date(a.createdTime).getTime();                bv = new Date(b.createdTime).getTime();                break;
@@ -1216,7 +1218,7 @@ window.logoutMember = async function () {
       </tr>`;
     }).join('');
     const th = (field, label) => `<th onclick="mqSortLeads('${field}')" style="cursor:pointer;user-select:none;white-space:nowrap">${label}${sortArrow(field)}</th>`;
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}<th>Type</th><th>Room</th>${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Room')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
