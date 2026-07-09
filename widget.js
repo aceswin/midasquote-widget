@@ -816,7 +816,7 @@
 
   const PRICE_LEGEND_HTML = `
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#4b5563;line-height:1.6">
-      Options below are listed by price <strong>loest to highest</strong>. Tap any photo to see it up close.
+      Options below are listed by price, <strong>lowest to highest</strong>. Tap any photo to see it up close.
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;align-items:center">
         <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-1" style="position:static;display:inline-block">$</span> Budget-friendly</span>
         <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-2" style="position:static;display:inline-block">$$</span> Mid-range</span>
