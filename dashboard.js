@@ -442,7 +442,7 @@ window.logoutMember = async function () {
               <div class="mq-card-title">📱 Direct quote link</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed.</p>
               <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
-            
+            </div>
 
 
 
@@ -500,7 +500,7 @@ window.logoutMember = async function () {
   </div>
 </div></div>
            
-          </div></div>
+          </div>
 
           <!-- MY PRODUCTS -->
           <div class="mq-page" id="mq-page-products">
