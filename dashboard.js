@@ -500,7 +500,7 @@ window.logoutMember = async function () {
   </div>
 </div></div>
            
-          </div>
+          </div></div>
 
           <!-- MY PRODUCTS -->
           <div class="mq-page" id="mq-page-products">
