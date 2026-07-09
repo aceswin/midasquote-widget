@@ -814,6 +814,16 @@
 
   const TRAVEL_NOTE = '🚗 This estimate is based on local delivery. Jobs outside our local area may be subject to additional travel charges — your final quote will confirm the exact amount.';
 
+  const PRICE_LEGEND_HTML = `
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#4b5563;line-height:1.6">
+      Options below are listed <strong>cheapest to most expensive</strong>. Tap any photo to see it up close.
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;align-items:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-1" style="position:static;display:inline-block">$</span> Budget-friendly</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-2" style="position:static;display:inline-block">$$</span> Mid-range</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-3" style="position:static;display:inline-block">$$$</span> Premium</span>
+      </div>
+    </div>`;
+
   function buildWidgetHTML(shop, specs, data) {
     const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
@@ -853,6 +863,7 @@
 
       <!-- CABINET TAB -->
       <div class="mq-tab-content" id="mq-tab-cabinets">
+        ${PRICE_LEGEND_HTML}
         ${cabinetForm('c', specs, data)}
         <button class="mq-calc-btn" id="mq-c-calc-btn" onclick="mqCalcCabinets()">Calculate cabinet estimate</button>
         <div class="mq-loading" id="mq-c-loading">Building your estimate...</div>
@@ -876,6 +887,7 @@
 
       <!-- COUNTERTOP TAB -->
       <div class="mq-tab-content" id="mq-tab-countertops">
+        ${PRICE_LEGEND_HTML}
         <div class="mq-sec">
           <p class="mq-sec-title">Surfaces</p>
           <div id="mq-ct-surfaces"></div>
@@ -903,6 +915,7 @@
 
       <!-- BOTH TAB -->
       <div class="mq-tab-content active" id="mq-tab-both">
+        ${PRICE_LEGEND_HTML}
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪵 Cabinet details</div><div class="mq-both-divider-line"></div></div>
         ${cabinetForm('b', specs, data)}
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
