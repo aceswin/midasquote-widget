@@ -269,7 +269,7 @@
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
       #midasquote-widget .mq-vpicker-badge-1{background:#dcfce7;color:#166534}
       #midasquote-widget .mq-vpicker-badge-2{background:#fef3c7;color:#92400e}
-      #midasquote-widget .mq-vpicker-badge-3{background:#1a1a1a;color:#e8c766;border:1px solid #e8c766}
+      #midasquote-widget .mq-vpicker-badge-3{background:linear-gradient(135deg,#f0d488,#d4af37);color:#1a1a1a;border:1px solid #b8901f}
       #midasquote-widget .mq-qty-ctrl{display:flex;align-items:center;gap:4px}
       #midasquote-widget .mq-qty-btn{width:22px;height:22px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#111;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
       #midasquote-widget .mq-qty-val{font-size:13px;font-weight:500;min-width:16px;text-align:center}
