@@ -696,7 +696,7 @@
             <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>
           </div>
         </div>
-        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them below.</div>` : ''}
+        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')"/></div>
@@ -784,7 +784,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, leave at 0.</div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -795,7 +795,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, leave at 0.</div>
           </div>
         </div>`:''}
       </div>`:''}
@@ -816,7 +816,7 @@
 
   const PRICE_LEGEND_HTML = `
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#4b5563;line-height:1.6">
-      Options below are listed <strong>cheapest to most expensive</strong>. Tap any photo to see it up close.
+      Options below are listed by price <strong>loest to highest</strong>. Tap any photo to see it up close.
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;align-items:center">
         <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-1" style="position:static;display:inline-block">$</span> Budget-friendly</span>
         <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-2" style="position:static;display:inline-block">$$</span> Mid-range</span>
@@ -1769,7 +1769,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
+            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, leave at 0.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
