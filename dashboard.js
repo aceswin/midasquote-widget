@@ -458,9 +458,9 @@ window.logoutMember = async function () {
 <!-- ADD TO HOMESCREEN — drop this into the Embed tab, right after your existing
      direct-link / "Preview widget" section, so it sits alongside the link
      they'd actually be adding to their homescreen. -->
-
+<br>
 <div class="mq-sec">
-  <p class="mq-sec-title">📱 Add to your homescreen</p>
+  <p class="mq-sec-title">📱 Add Midas Quote shortcut to your homescreen</p>
   <p class="mq-hint" style="margin-bottom:12px">
     Keep your quote tool one tap away — great for quoting walk-in customers on the spot, without digging through browser tabs or bookmarks.
   </p>
