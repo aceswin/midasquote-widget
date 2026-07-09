@@ -161,8 +161,12 @@
       });
     } catch(e) { console.error('Lead save failed', e); }
 
-    const lineRows = (lines||[]).filter(l=>l&&l.label&&l.cost!==undefined)
-      .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`).join('');
+    const lineRows = (lines||[])
+      .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
+      .map(l=>l.header
+        ? `<tr><td colspan="2" style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:13px;text-transform:uppercase;letter-spacing:0.04em">${l.label}</td></tr>`
+        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`
+      ).join('');
 
     if (!lead._isSkip) await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
@@ -1663,7 +1667,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');document.getElementById('mq-b-result').scrollIntoView({behavior:'smooth',block:'start'});
           document.getElementById('mq-b-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'— CABINETS —',cost:0},...cab.lines,{label:'— COUNTERTOPS —',cost:0},...ct.lines],cab.roomLabel);
+          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel);
         },1200);
       });
     };
