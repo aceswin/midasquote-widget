@@ -2,6 +2,7 @@
  * MidasQuote Dashboard v1.0
  * Shop owner backend panel
  * Loads based on Memberstack member's shopToken
+ * This is a test
  */
 
 (function () {
@@ -1130,6 +1131,52 @@ window.logoutMember = async function () {
     set('mq-p-cooktop', f['Cooktop cutout']);
   }
 
+  // Sort state for the Leads table — persists across filter changes so
+  // picking "Contacted" doesn't reset whatever sort the shop owner had set.
+  let _mqLeadSort = { field: 'date', dir: 'desc' };
+
+  function sortLeadsArray(leads) {
+    const { field, dir } = _mqLeadSort;
+    const mult = dir === 'asc' ? 1 : -1;
+    return [...leads].sort((a, b) => {
+      let av, bv;
+      switch (field) {
+        case 'name':  av = (a.fields['Customer name']  || '').toLowerCase(); bv = (b.fields['Customer name']  || '').toLowerCase(); break;
+        case 'email': av = (a.fields['Customer email'] || '').toLowerCase(); bv = (b.fields['Customer email'] || '').toLowerCase(); break;
+        case 'phone': av = (a.fields['Customer phone'] || '');               bv = (b.fields['Customer phone'] || '');               break;
+        case 'price': av = a.fields['Estimate low'] || 0;                    bv = b.fields['Estimate low'] || 0;                    break;
+        case 'date':
+        default:      av = new Date(a.createdTime).getTime();                bv = new Date(b.createdTime).getTime();                break;
+      }
+      if (av < bv) return -1 * mult;
+      if (av > bv) return 1 * mult;
+      return 0;
+    });
+  }
+
+  window.mqSortLeads = function(field) {
+    if (_mqLeadSort.field === field) {
+      _mqLeadSort.dir = _mqLeadSort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      _mqLeadSort.field = field;
+      _mqLeadSort.dir = field === 'date' ? 'desc' : 'asc'; // newest-first for date, A-Z for everything else
+    }
+    mqFilterLeads();
+  };
+
+  function sortArrow(field) {
+    if (_mqLeadSort.field !== field) return '';
+    return _mqLeadSort.dir === 'asc' ? ' ▲' : ' ▼';
+  }
+
+  function formatLeadDate(createdTime) {
+    if (!createdTime) return '—';
+    const d = new Date(createdTime);
+    const datePart = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return `${datePart} · ${timePart}`;
+  }
+
   function renderLeads(leads, limit) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
 
@@ -1149,6 +1196,7 @@ window.logoutMember = async function () {
         ? `<span title="Session ${sid}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">🔗 ${sessionCounts[sid]} attempts</span>`
         : '';
       return `<tr>
+        <td>${formatLeadDate(r.createdTime)}</td>
         <td><strong>${f['Customer name'] || '—'}</strong>${sessionBadge ? '<br>'+sessionBadge : ''}</td>
         <td>${f['Customer email'] || '—'}</td>
         <td>${f['Customer phone'] || '—'}</td>
@@ -1167,7 +1215,8 @@ window.logoutMember = async function () {
         <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteLead('${r.id}')">Delete</button></td>
       </tr>`;
     }).join('');
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Room</th><th>Estimate</th><th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    const th = (field, label) => `<th onclick="mqSortLeads('${field}')" style="cursor:pointer;user-select:none;white-space:nowrap">${label}${sortArrow(field)}</th>`;
+    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}<th>Type</th><th>Room</th>${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
@@ -1843,6 +1892,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     const filter = gv('mq-lead-filter');
     let leads = window._mqLeads || [];
     if (filter) leads = leads.filter(r => r.fields['Status'] === filter);
+    leads = sortLeadsArray(leads);
     el('mq-leads-table').innerHTML = renderLeads(leads);
   };
 
@@ -3360,10 +3410,10 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     populateShop(shopRecord);
 
     const leads = await loadLeads(shopRecord.fields['Shop name']);
-    window._mqLeads = leads;
-    renderStats(leads);
-    el('mq-recent-leads').innerHTML = renderLeads(leads, 5);
-    el('mq-leads-table').innerHTML = renderLeads(leads);
+    window._mqLeads = sortLeadsArray(leads);
+    renderStats(window._mqLeads);
+    el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
+    el('mq-leads-table').innerHTML = renderLeads(window._mqLeads);
 
     const specs = await ensureSpecialtyDefaults(shopRecord);
     renderSpecialty(specs, shopRecord);
