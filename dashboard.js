@@ -428,25 +428,7 @@ window.logoutMember = async function () {
               <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
             </div>
 
-            <!-- Individual codes (collapsed by default) -->
-            <div class="mq-card">
-              <div class="mq-card-title">🎯 Quote page header <span style="font-weight:400;color:#9ca3af;font-size:12px">(preview)</span></div>
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:0.5rem;margin-bottom:1.25rem">
-                <div id="mq-mk-header-preview"></div>
-              </div>
-              <div class="mq-embed-box"><span id="mq-mk-header-display"></span><button class="mq-copy-btn" id="mq-mk-header-copy">Copy</button></div>
-            </div>
-            <div class="mq-card">
-              <div class="mq-card-title">✨ Trust bar <span style="font-weight:400;color:#9ca3af;font-size:12px">(preview)</span></div>
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.5rem;margin-bottom:1.25rem">
-                <div id="mq-mk-trustbar-preview"></div>
-              </div>
-              <div class="mq-embed-box"><span id="mq-mk-trustbar-display"></span><button class="mq-copy-btn" id="mq-mk-trustbar-copy">Copy</button></div>
-            </div>
-            <div class="mq-card">
-              <div class="mq-card-title">📋 Widget embed code only</div>
-              <div class="mq-embed-box"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-2">Copy</button></div>
-            </div>
+           
             <div class="mq-card">
               <div class="mq-card-title">📱 Direct quote link</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed.</p>
