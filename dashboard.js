@@ -428,7 +428,16 @@ window.logoutMember = async function () {
               <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
             </div>
 
-           
+            <div class="mq-card">
+              <div class="mq-card-title">💡 Installation help</div>
+              <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
+                <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
+                <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
+                <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
+                <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
+                <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
+              </div>
+            </div>
             <div class="mq-card">
               <div class="mq-card-title">📱 Direct quote link</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed.</p>
@@ -440,9 +449,9 @@ window.logoutMember = async function () {
 <!-- ADD TO HOMESCREEN — drop this into the Embed tab, right after your existing
      direct-link / "Preview widget" section, so it sits alongside the link
      they'd actually be adding to their homescreen. -->
-<br>
-<div class="mq-sec">
-  <p class="mq-sec-title">📱 Add Midas Quote shortcut to your homescreen</p>
+
+<div class="mq-card">
+              <div class="mq-card-title">📱 Add Midas Quote shortcut to your homescreen</div>
   <p class="mq-hint" style="margin-bottom:12px">
     Keep your quote tool one tap away — great for quoting walk-in customers on the spot, without digging through browser tabs or bookmarks.
   </p>
@@ -490,17 +499,8 @@ window.logoutMember = async function () {
 
   </div>
 </div></div>
-            <div class="mq-card">
-              <div class="mq-card-title">💡 Installation help</div>
-              <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
-                <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
-                <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
-                <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
-                <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
-                <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
-              </div>
-            </div>
-          </div>
+           
+          </div></div>
 
           <!-- MY PRODUCTS -->
           <div class="mq-page" id="mq-page-products">
