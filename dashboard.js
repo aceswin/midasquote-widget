@@ -451,7 +451,63 @@ window.logoutMember = async function () {
               <div class="mq-card-title">📱 Direct quote link</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed.</p>
               <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
-            </div>
+            
+
+
+
+<!-- ADD TO HOMESCREEN — drop this into the Embed tab, right after your existing
+     direct-link / "Preview widget" section, so it sits alongside the link
+     they'd actually be adding to their homescreen. -->
+
+<div class="mq-sec">
+  <p class="mq-sec-title">📱 Add to your homescreen</p>
+  <p class="mq-hint" style="margin-bottom:12px">
+    Keep your quote tool one tap away — great for quoting walk-in customers on the spot, without digging through browser tabs or bookmarks.
+  </p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🍎 iPhone / iPad (Safari)</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Open your direct link in Safari</li>
+        <li>Tap the <strong>Share</strong> icon (square with an arrow)</li>
+        <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+        <li>Tap <strong>Add</strong> — done!</li>
+      </ol>
+    </div>
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🤖 Android</div>
+      <p style="font-size:11.5px;color:#6b7280;margin-bottom:8px;line-height:1.5">Steps vary a bit by phone brand — Samsung phones especially use a different browser by default.</p>
+      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">In Chrome:</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0 0 10px">
+        <li>Open your direct link in Chrome</li>
+        <li>Tap the <strong>⋮</strong> menu (top right)</li>
+        <li>Tap <strong>Add to Home screen</strong> — not "Add to Favorites" (that's a bookmark, not a homescreen icon)</li>
+        <li>Confirm — done!</li>
+      </ol>
+      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">On Samsung phones (Samsung Internet browser):</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Tap the menu icon (bottom right)</li>
+        <li>Tap <strong>Add page to</strong> → <strong>Home screen</strong></li>
+      </ol>
+      <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Don't see the icon right away? Check your app drawer too — some phones add it there first.</p>
+    </div>
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">💻 Desktop (Chrome)</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Open your direct link in Chrome</li>
+        <li>Click the <strong>⋮</strong> menu (top right)</li>
+        <li>Go to <strong>Cast, save, and share</strong></li>
+        <li>Click <strong>Install as app</strong></li>
+        <li>Confirm — it now opens like a regular app</li>
+      </ol>
+    </div>
+
+  </div>
+</div></div>
             <div class="mq-card">
               <div class="mq-card-title">💡 Installation help</div>
               <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
