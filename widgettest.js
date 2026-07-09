@@ -133,15 +133,14 @@
     const hasDynamic = li.materials.length > 0;
 
     const specRecords = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
-    const specs = specRecords
-      .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0))
+    const specs = assignBadges(specRecords
       .map(r=>({
         id:r.id,
         label:r.fields['Item name']||r.fields['Special Items'],
         price:r.fields['Price']||0,
         perFt:r.fields['Per linear foot']||false,
         photoUrl: shopPhotos['spec_' + r.id] || '',
-      }));
+      })));
 
     return { shop, pricing:p, specs, li, hasDynamic, shopPhotos };
   }
@@ -161,8 +160,12 @@
       });
     } catch(e) { console.error('Lead save failed', e); }
 
-    const lineRows = (lines||[]).filter(l=>l&&l.label&&l.cost!==undefined)
-      .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`).join('');
+    const lineRows = (lines||[])
+      .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
+      .map(l=>l.header
+        ? `<tr><td colspan="2" style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:13px;text-transform:uppercase;letter-spacing:0.04em">${l.label}</td></tr>`
+        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`
+      ).join('');
 
     if (!lead._isSkip) await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
@@ -263,6 +266,10 @@
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-select-btn{background:${bc};border-color:${bc};color:#fff}
       #midasquote-widget .mq-vpicker-thumb{cursor:zoom-in}
       #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
+      #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
+      #midasquote-widget .mq-vpicker-badge-1{background:#dcfce7;color:#166534}
+      #midasquote-widget .mq-vpicker-badge-2{background:#fef3c7;color:#92400e}
+      #midasquote-widget .mq-vpicker-badge-3{background:#fee2e2;color:#991b1b}
       #midasquote-widget .mq-qty-ctrl{display:flex;align-items:center;gap:4px}
       #midasquote-widget .mq-qty-btn{width:22px;height:22px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#111;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
       #midasquote-widget .mq-qty-val{font-size:13px;font-weight:500;min-width:16px;text-align:center}
@@ -449,9 +456,9 @@
   }
 
   function tallCabItems() {
-    return [{value:'none', label:'None', icon:'🚫'}].concat(
-      Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️'}))
-    );
+    return sortAndBadgeItems([{value:'none', label:'None', icon:'🚫'}].concat(
+      Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️', price:t.basePrice||0}))
+    ));
   }
 
   function ctMatOpts() {
@@ -462,7 +469,7 @@
   function ctMatItems() {
     const entries = Object.entries(CT_MAT);
     return entries.length
-      ? entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨'}))
+      ? sortAndBadgeItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨', price:(m.ps||0)+(m.pi||0)})))
       : [{value:'lam', label:'Laminate', icon:'🪨'}];
   }
 
@@ -537,6 +544,35 @@
   // id/options sits alongside it so every existing gv()/onchange reference
   // elsewhere in the file keeps working completely untouched — clicking a
   // chip just sets that hidden select's value and fires a real 'change' event.
+  // Sorts real (priced) items cheapest-first and assigns a $/$$/$$$ badge so
+  // customers can tell at a glance which options cost more. A "None" item (if
+  // present) is pinned first with no badge — it's not really a "priced" option.
+  // Badge rules: all same price -> everyone gets a single $. 2 items -> $ / $$$
+  // (no middle tier with only 2 points). 3 items -> $ / $$ / $$$ one each.
+  // 4+ items -> split by price RANGE into thirds (not by item count), so a
+  // tight cluster of similar prices doesn't get artificially split apart.
+  function assignBadges(realItems) {
+    if (!realItems.length) return realItems;
+    const sorted = [...realItems].sort((a,b)=>a.price-b.price);
+    const allEqual = sorted.every(it => it.price === sorted[0].price);
+    if (allEqual) { sorted.forEach(it => it.badge = '$'); return sorted; }
+    const n = sorted.length;
+    if (n === 2) { sorted[0].badge='$'; sorted[1].badge='$$$'; }
+    else if (n === 3) { sorted[0].badge='$'; sorted[1].badge='$$'; sorted[2].badge='$$$'; }
+    else {
+      const min = sorted[0].price, max = sorted[n-1].price, range = max-min;
+      const b1 = min + range/3, b2 = min + 2*range/3;
+      sorted.forEach(it => { it.badge = it.price<=b1 ? '$' : (it.price<=b2 ? '$$' : '$$$'); });
+    }
+    return sorted;
+  }
+  function sortAndBadgeItems(items) {
+    const noneItem = items.find(it => it.value === 'none');
+    const realItems = items.filter(it => it.value !== 'none');
+    const badged = assignBadges(realItems);
+    return noneItem ? [noneItem, ...badged] : badged;
+  }
+
   function pickerRow(selectId, items, extraOnChangeAttr) {
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
@@ -544,9 +580,10 @@
       const thumb = it.photoUrl
         ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
+      const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
       const selectedClass = i===0 ? ' selected' : '';
       const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()">${thumb}<span class="mq-vpicker-label">${it.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
     return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
@@ -573,9 +610,10 @@
       const thumb = s.photoUrl
         ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
+      const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}">
-        ${thumb}
+        <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
         <div style="flex:1;min-width:0">
           <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
           <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perFt ? 'linear feet' : 'quantity'}</div>
@@ -602,28 +640,35 @@
     const hasInstall = !hasDynamic || li.installItems.length > 0;
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
-    const drawerConfigItems = drawerConfigNames.map((n,i)=>({value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️'}));
+    const drawerConfigItems = sortAndBadgeItems(drawerConfigNames.map((n,i)=>({
+      value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️',
+      // Badge/sort by the "Some drawers" rate as the representative price for this config
+      price: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n && /some drawers/i.test(d['Name']))?.['Rate'] || 0,
+    })));
 
     // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
     // the shop has real pricing data, or the legacy fallback values when not)
     // so picking a chip always sets a value the existing calc logic already understands.
+    // Sorted cheapest-first with $/$$/$$$ badges so customers can tell at a
+    // glance which options cost more — "None" (where it exists) always stays
+    // pinned first with no badge, since it's not really a "priced" choice.
     const mItems = li.materials.length > 0
-      ? li.materials.map((m,i)=>({value:`dyn_${i}`, label:m._baseName||m['Name'], photoUrl:m.photoUrl, icon:'🪵'}))
+      ? sortAndBadgeItems(li.materials.map((m,i)=>({value:`dyn_${i}`, label:m._baseName||m['Name'], photoUrl:m.photoUrl, icon:'🪵', price:m.rateB||0})))
       : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
-    const dItems = [{value:'none',label:'No doors',icon:'🚫'}].concat(
+    const dItems = sortAndBadgeItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
       li.doorStyles.length > 0
-        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪'}))
+        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0}))
         : [{value:'slab',label:'Slab',icon:'🚪'},{value:'shaker',label:'Shaker',icon:'🚪'}]
-    );
+    ));
     const hingeItems = li.hinges.length > 0
-      ? li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧'}))
+      ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧', price:h['Rate']||0})))
       : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
-    const crownItems = [{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑'}))
-    );
-    const valanceItems = [{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏'}))
-    );
+    const crownItems = sortAndBadgeItems([{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0)}))
+    ));
+    const valanceItems = sortAndBadgeItems([{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0)}))
+    ));
 
     return `
       <div class="mq-sec">
@@ -1663,7 +1708,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');document.getElementById('mq-b-result').scrollIntoView({behavior:'smooth',block:'start'});
           document.getElementById('mq-b-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'— CABINETS —',cost:0},...cab.lines,{label:'— COUNTERTOPS —',cost:0},...ct.lines],cab.roomLabel);
+          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel);
         },1200);
       });
     };
