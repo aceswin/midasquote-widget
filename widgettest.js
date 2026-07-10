@@ -1,3 +1,5 @@
+
+
 /*
  * MidasQuote Widget v3.3 — TEST BUILD (widgettest.js)
  * Adds visual thumbnails to specialty items so customers don't have to
