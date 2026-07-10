@@ -7,13 +7,7 @@
 (function() {
 
   const CONFIG = {
-    AIRTABLE_TOKEN:  'patjvToXCjNSKQTyi.9876ae658c788ba72e9b950bab014802ed9349df9305aa7ac0ddd41596a0569e',
-    BASE_ID:         'app4zrMlVLwF2xn4h',
-    SHOPS_TABLE:     'tbl8PoF2Mu3sAdlMs',
-    PRICING_TABLE:   'tblu6AYZs8h7SIaQl',
-    SPECIALTY_TABLE: 'tbloaXeEM5K7TOZCD',
-    LEADS_TABLE:     'tblPcoTI8zCCHLICi',
-    LINE_ITEMS_TABLE:'tblCkJsJ2OC6DgXok',
+    PROXY_WORKER:    'https://midasquote-airtable-proxy.jordan132001.workers.dev',
     EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
   };
 
@@ -24,9 +18,6 @@
   // Generate a session ID once per page load — used to group quote attempts
   // from the same visitor in the dashboard, even if they skip contact info.
   const _mqSessionId = Math.random().toString(36).slice(2,10).toUpperCase();
-
-  const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
-  const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
   // Retry helper — mobile connections (switching wifi/cellular, brief drops)
   // are far more likely to hit a transient network blip than desktop.
@@ -50,18 +41,6 @@
     throw lastErr;
   }
 
-  async function atGet(table, formula) {
-    const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
-    const res = await fetchWithRetry(url, { headers: AT_HEADS });
-    const data = await res.json();
-    return data.records || [];
-  }
-
-  async function atCreate(table, fields) {
-    const res = await fetchWithRetry(`${AT_BASE}/${table}`, { method:'POST', headers:AT_HEADS, body:JSON.stringify({fields}) });
-    return await res.json();
-  }
-
   // ============================================================
   // LOAD SHOP DATA
   // ============================================================
@@ -77,9 +56,11 @@
   }
 
   async function loadShopData(token) {
-    const shops = await atGet(CONFIG.SHOPS_TABLE, `{Shop token} = "${token}"`);
-    if (!shops.length) { console.error('MidasQuote: Shop not found:', token); return null; }
-    const shopRecord = shops[0];
+    const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(token)}`, {});
+    const payload = await res.json();
+    if (payload.error || !payload.shop) { console.error('MidasQuote: Shop not found:', token); return null; }
+
+    const shopRecord = payload.shop;
     const shop = shopRecord.fields;
     window._mqRangeLow  = (100 - (parseFloat(shop['Quote range low'])  || 10)) / 100;
     window._mqRangeHigh = (100 + (parseFloat(shop['Quote range high']) || 15)) / 100;
@@ -91,10 +72,9 @@
     let shopPhotos = {};
     try { shopPhotos = shop['Photos'] ? JSON.parse(shop['Photos']) : {}; } catch(e) { shopPhotos = {}; }
 
-    const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
-    const p = pricing.length ? pricing[0].fields : {};
+    const p = payload.pricing || {};
 
-    const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({shop}))`);
+    const lineItemRecords = payload.lineItems || [];
     const sorted = lineItemRecords.filter(r=>r.fields).sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
     const byCategory = cat => sorted.filter(r=>r.fields['Category']===cat).map(r=>r.fields);
 
@@ -132,7 +112,7 @@
 
     const hasDynamic = li.materials.length > 0;
 
-    const specRecords = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+    const specRecords = payload.specialty || [];
     const specs = assignBadges(specRecords
       .map(r=>({
         id:r.id,
@@ -151,12 +131,13 @@
   async function saveLead(data, lead, quoteType, low, high, lines, roomType) {
     const { shop } = data;
     try {
-      await atCreate(CONFIG.LEADS_TABLE, {
-        'Lead ID':`${lead.name} — ${new Date().toLocaleDateString()}`,
-        'Shop':[shop._recordId], 'Customer name':lead.name,
-        'Customer email':lead.email, 'Customer phone':lead.phone,
-        'Quote type':quoteType, 'Room type':roomType||'', 'Session ID':_mqSessionId, 'Estimate low':low, 'Estimate high':high,
-        'Quote details':JSON.stringify(lines), 'Source':'Website', 'Status':'New',
+      await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shopToken, name: lead.name, email: lead.email, phone: lead.phone,
+          quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines,
+        }),
       });
     } catch(e) { console.error('Lead save failed', e); }
 
@@ -696,7 +677,7 @@
             <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>
           </div>
         </div>
-        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
+        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them below.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')"/></div>
@@ -784,7 +765,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, leave at 0.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -795,7 +776,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, leave at 0.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
           </div>
         </div>`:''}
       </div>`:''}
@@ -816,7 +797,7 @@
 
   const PRICE_LEGEND_HTML = `
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#4b5563;line-height:1.6">
-      Options below are listed by price from <strong>lowest to highest</strong>. Tap any photo to see it up close.
+      Options below are listed <strong>cheapest to most expensive</strong>. Tap any photo to see it up close.
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;align-items:center">
         <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-1" style="position:static;display:inline-block">$</span> Budget-friendly</span>
         <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-2" style="position:static;display:inline-block">$$</span> Mid-range</span>
@@ -945,18 +926,19 @@
                 <label style="font-size:13px;color:#374151">Additional space (feet)</label>
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
               </div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:8px">
+                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
+              </label>
+              <div id="mq-b-cab-cuts" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border-radius:6px"></div>
               <div style="font-size:13px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
                 📐 Countertop area: <strong id="mq-b-cab-ctft">0</strong> lin ft &nbsp;·&nbsp; <strong id="mq-b-cab-ctsqft">0</strong> sqft
               </div>
             </div>
-            <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:flex-end">
+            <div style="margin-bottom:0.75rem">
               <div class="mq-field" style="margin-bottom:0">
                 <label class="mq-label">Backsplash</label>
                 <select id="mq-b-cab-bs" style="min-width:160px" onchange="mqRefreshBsFt('b')"><option value="none">None</option></select>
               </div>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
-              </label>
             </div>
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
@@ -965,7 +947,7 @@
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
+                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
@@ -974,7 +956,6 @@
               <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
               <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
-            <div id="mq-b-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem"></div>
           </div>
         </div>
         <div class="mq-sec"><p class="mq-sec-title">Additional surfaces</p>
@@ -1769,7 +1750,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, leave at 0.
+            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
