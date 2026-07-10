@@ -3484,6 +3484,19 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         }
       }
     }
+    if (page === 'leads') {
+      const leadsTable = document.getElementById('mq-leads-table');
+      if (leadsTable && window._mqShopRecord) {
+        leadsTable.innerHTML = '<div class="mq-loading">Refreshing leads...</div>';
+        loadLeads(window._mqShopRecord.fields['Shop name']).then(leads => {
+          window._mqLeads = sortLeadsArray(leads);
+          renderStats(window._mqLeads);
+          const recentEl = document.getElementById('mq-recent-leads');
+          if (recentEl) recentEl.innerHTML = renderLeads(window._mqLeads, 5);
+          mqFilterLeads(); // re-applies whatever status filter + sort was already active
+        });
+      }
+    }
     if (page === 'products') {
       const prodContent = document.getElementById('mq-products-content');
       if (prodContent) {
