@@ -7,13 +7,7 @@
 (function() {
 
   const CONFIG = {
-    AIRTABLE_TOKEN:  'patjvToXCjNSKQTyi.9876ae658c788ba72e9b950bab014802ed9349df9305aa7ac0ddd41596a0569e',
-    BASE_ID:         'app4zrMlVLwF2xn4h',
-    SHOPS_TABLE:     'tbl8PoF2Mu3sAdlMs',
-    PRICING_TABLE:   'tblu6AYZs8h7SIaQl',
-    SPECIALTY_TABLE: 'tbloaXeEM5K7TOZCD',
-    LEADS_TABLE:     'tblPcoTI8zCCHLICi',
-    LINE_ITEMS_TABLE:'tblCkJsJ2OC6DgXok',
+    PROXY_WORKER:    'https://midasquote-airtable-proxy.jordan132001.workers.dev',
     EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
   };
 
@@ -24,9 +18,6 @@
   // Generate a session ID once per page load — used to group quote attempts
   // from the same visitor in the dashboard, even if they skip contact info.
   const _mqSessionId = Math.random().toString(36).slice(2,10).toUpperCase();
-
-  const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
-  const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
   // Retry helper — mobile connections (switching wifi/cellular, brief drops)
   // are far more likely to hit a transient network blip than desktop.
@@ -50,18 +41,6 @@
     throw lastErr;
   }
 
-  async function atGet(table, formula) {
-    const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
-    const res = await fetchWithRetry(url, { headers: AT_HEADS });
-    const data = await res.json();
-    return data.records || [];
-  }
-
-  async function atCreate(table, fields) {
-    const res = await fetchWithRetry(`${AT_BASE}/${table}`, { method:'POST', headers:AT_HEADS, body:JSON.stringify({fields}) });
-    return await res.json();
-  }
-
   // ============================================================
   // LOAD SHOP DATA
   // ============================================================
@@ -77,9 +56,11 @@
   }
 
   async function loadShopData(token) {
-    const shops = await atGet(CONFIG.SHOPS_TABLE, `{Shop token} = "${token}"`);
-    if (!shops.length) { console.error('MidasQuote: Shop not found:', token); return null; }
-    const shopRecord = shops[0];
+    const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(token)}`, {});
+    const payload = await res.json();
+    if (payload.error || !payload.shop) { console.error('MidasQuote: Shop not found:', token); return null; }
+
+    const shopRecord = payload.shop;
     const shop = shopRecord.fields;
     window._mqRangeLow  = (100 - (parseFloat(shop['Quote range low'])  || 10)) / 100;
     window._mqRangeHigh = (100 + (parseFloat(shop['Quote range high']) || 15)) / 100;
@@ -91,10 +72,9 @@
     let shopPhotos = {};
     try { shopPhotos = shop['Photos'] ? JSON.parse(shop['Photos']) : {}; } catch(e) { shopPhotos = {}; }
 
-    const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({Shop}))`);
-    const p = pricing.length ? pricing[0].fields : {};
+    const p = payload.pricing || {};
 
-    const lineItemRecords = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shop['Shop name']}", ARRAYJOIN({shop}))`);
+    const lineItemRecords = payload.lineItems || [];
     const sorted = lineItemRecords.filter(r=>r.fields).sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
     const byCategory = cat => sorted.filter(r=>r.fields['Category']===cat).map(r=>r.fields);
 
@@ -132,7 +112,7 @@
 
     const hasDynamic = li.materials.length > 0;
 
-    const specRecords = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+    const specRecords = payload.specialty || [];
     const specs = assignBadges(specRecords
       .map(r=>({
         id:r.id,
@@ -151,12 +131,13 @@
   async function saveLead(data, lead, quoteType, low, high, lines, roomType) {
     const { shop } = data;
     try {
-      await atCreate(CONFIG.LEADS_TABLE, {
-        'Lead ID':`${lead.name} — ${new Date().toLocaleDateString()}`,
-        'Shop':[shop._recordId], 'Customer name':lead.name,
-        'Customer email':lead.email, 'Customer phone':lead.phone,
-        'Quote type':quoteType, 'Room type':roomType||'', 'Session ID':_mqSessionId, 'Estimate low':low, 'Estimate high':high,
-        'Quote details':JSON.stringify(lines), 'Source':'Website', 'Status':'New',
+      await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shopToken, name: lead.name, email: lead.email, phone: lead.phone,
+          quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines,
+        }),
       });
     } catch(e) { console.error('Lead save failed', e); }
 
@@ -268,7 +249,7 @@
       #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
       #midasquote-widget .mq-vpicker-badge-1{background:#dcfce7;color:#166534}
-      #midasquote-widget .mq-vpicker-badge-2{background:#fef3c7;color:#166534}
+      #midasquote-widget .mq-vpicker-badge-2{background:#fef3c7;color:#92400e}
       #midasquote-widget .mq-vpicker-badge-3{background:linear-gradient(135deg,#f0d488,#d4af37);color:#1a1a1a;border:1px solid #b8901f}
       #midasquote-widget .mq-qty-ctrl{display:flex;align-items:center;gap:4px}
       #midasquote-widget .mq-qty-btn{width:22px;height:22px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#111;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
@@ -784,7 +765,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave at 0.</div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -795,7 +776,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave at 0.</div>
           </div>
         </div>`:''}
       </div>`:''}
@@ -813,6 +794,16 @@
   }
 
   const TRAVEL_NOTE = '🚗 This estimate is based on local delivery. Jobs outside our local area may be subject to additional travel charges — your final quote will confirm the exact amount.';
+
+  const PRICE_LEGEND_HTML = `
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#4b5563;line-height:1.6">
+      Options below are listed <strong>cheapest to most expensive</strong>. Tap any photo to see it up close.
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;align-items:center">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-1" style="position:static;display:inline-block">$</span> Budget-friendly</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-2" style="position:static;display:inline-block">$$</span> Mid-range</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-3" style="position:static;display:inline-block">$$$</span> Premium</span>
+      </div>
+    </div>`;
 
   function buildWidgetHTML(shop, specs, data) {
     const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
@@ -853,6 +844,7 @@
 
       <!-- CABINET TAB -->
       <div class="mq-tab-content" id="mq-tab-cabinets">
+        ${PRICE_LEGEND_HTML}
         ${cabinetForm('c', specs, data)}
         <button class="mq-calc-btn" id="mq-c-calc-btn" onclick="mqCalcCabinets()">Calculate cabinet estimate</button>
         <div class="mq-loading" id="mq-c-loading">Building your estimate...</div>
@@ -876,6 +868,7 @@
 
       <!-- COUNTERTOP TAB -->
       <div class="mq-tab-content" id="mq-tab-countertops">
+        ${PRICE_LEGEND_HTML}
         <div class="mq-sec">
           <p class="mq-sec-title">Surfaces</p>
           <div id="mq-ct-surfaces"></div>
@@ -903,6 +896,7 @@
 
       <!-- BOTH TAB -->
       <div class="mq-tab-content active" id="mq-tab-both">
+        ${PRICE_LEGEND_HTML}
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪵 Cabinet details</div><div class="mq-both-divider-line"></div></div>
         ${cabinetForm('b', specs, data)}
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
@@ -952,7 +946,7 @@
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
+                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave at 0.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
@@ -1756,7 +1750,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have.
+            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave at 0.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
