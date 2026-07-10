@@ -1,5 +1,3 @@
-
-
 /*
  * MidasQuote Widget v3.3 — TEST BUILD (widgettest.js)
  * Adds visual thumbnails to specialty items so customers don't have to
@@ -767,7 +765,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave at 0.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -778,7 +776,7 @@
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
             <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave at 0.</div>
+            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
           </div>
         </div>`:''}
       </div>`:''}
@@ -928,18 +926,19 @@
                 <label style="font-size:13px;color:#374151">Additional space (feet)</label>
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
               </div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:8px">
+                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
+              </label>
+              <div id="mq-b-cab-cuts" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border-radius:6px"></div>
               <div style="font-size:13px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
                 📐 Countertop area: <strong id="mq-b-cab-ctft">0</strong> lin ft &nbsp;·&nbsp; <strong id="mq-b-cab-ctsqft">0</strong> sqft
               </div>
             </div>
-            <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:flex-end">
+            <div style="margin-bottom:0.75rem">
               <div class="mq-field" style="margin-bottom:0">
                 <label class="mq-label">Backsplash</label>
                 <select id="mq-b-cab-bs" style="min-width:160px" onchange="mqRefreshBsFt('b')"><option value="none">None</option></select>
               </div>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
-              </label>
             </div>
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
@@ -948,7 +947,7 @@
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave at 0.
+                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
@@ -957,7 +956,6 @@
               <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
               <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
-            <div id="mq-b-cab-cuts" style="display:none;padding:10px 12px;background:#f9fafb;border-radius:6px;margin-bottom:0.75rem"></div>
           </div>
         </div>
         <div class="mq-sec"><p class="mq-sec-title">Additional surfaces</p>
@@ -1752,7 +1750,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave at 0.
+            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
