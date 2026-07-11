@@ -1957,6 +1957,27 @@ window.logoutMember = async function () {
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
   };
 
+  // Same pure view filter, for the Templates admin page.
+  window.mqFilterTemplateCards = function() {
+    const roomFilter = el('mq-tmpl-filter-room')?.value || '';
+    const searchFilter = (el('mq-tmpl-filter-search')?.value || '').toLowerCase().trim();
+    const grid = document.getElementById('mq-tmpl-cards-grid');
+    if (!grid) return;
+    let visibleCount = 0;
+    grid.querySelectorAll('.mq-tmpl-card-wrap').forEach(wrap => {
+      let rooms = [];
+      try { rooms = JSON.parse(wrap.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
+      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const name = wrap.getAttribute('data-name') || '';
+      const searchMatch = !searchFilter || name.includes(searchFilter);
+      const show = roomMatch && searchMatch;
+      wrap.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('mq-tmpl-filter-empty');
+    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+  };
+
   window.mqSaveProducts = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -2426,9 +2447,31 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       content.innerHTML = '<div class="mq-empty">No template items yet. Click "+ Add template item" below to add your first one.</div>';
       return;
     }
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
     content.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">
-        ${items.map(r => templateItemCard(r, savedPhotos, savedHidden)).join('')}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
+          <select id="mq-tmpl-filter-room" onchange="mqFilterTemplateCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All project types</option>
+            ${roomOptions}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
+          <input type="text" id="mq-tmpl-filter-search" oninput="mqFilterTemplateCards()" placeholder="e.g. shaker door" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+        </div>
+      </div>
+      <div id="mq-tmpl-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No template items match that filter.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px" id="mq-tmpl-cards-grid">
+        ${items.map(r => {
+          const itemName = r.fields['Item name'] || '';
+          const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
+          return `<div class="mq-tmpl-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
+            ${templateItemCard(r, savedPhotos, savedHidden)}
+          </div>`;
+        }).join('')}
       </div>
       <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveTemplatePhotos()">Save changes</button>
     `;
