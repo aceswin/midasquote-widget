@@ -2475,6 +2475,22 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       </div>
       <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveTemplatePhotos()">Save changes</button>
     `;
+
+    // Wire up upload buttons for every template card just rendered — this
+    // step was missing entirely before, so the file picker existed visually
+    // but selecting a file did nothing at all.
+    content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
+      const key = fileInput.id.replace('mq-upload-file-', '');
+      mqWireUploadButton(
+        null,
+        'mq-upload-file-' + key,
+        'mq-upload-status-' + key,
+        'mq-photo-' + key,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
+      );
+    });
   }
 
   window.mqAddTemplateItem = async function() {
