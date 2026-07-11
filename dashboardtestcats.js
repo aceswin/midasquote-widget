@@ -216,6 +216,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
+          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
         </div>
 
@@ -542,6 +543,23 @@ window.logoutMember = async function () {
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show View our products link"</strong> is turned on in your Shop Info tab, this link is automatically included in your widget — no extra setup needed.</div>
               <div class="mq-embed-box"><span id="mq-showroom-link-text"></span><button class="mq-copy-btn" id="mq-showroom-copy-btn">Copy</button></div>
               <button class="mq-btn" style="margin-top:10px" id="mq-showroom-open-btn">Open showroom ↗</button>
+            </div>
+          </div>
+
+          <!-- TEMPLATES (ADMIN ONLY) -->
+          <div class="mq-page" id="mq-page-templates">
+            <div class="mq-page-title">🔧 Templates (Admin)</div>
+            <div class="mq-page-sub">Manage the master specialty items for Refacing, Repainting, and Restaining. These are what every new shop gets automatically — add real door styles, prices, and photos here so shop owners never start from a blank page.</div>
+            <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#991b1b;line-height:1.6">
+              <strong>⚠️ This only affects you.</strong> Editing an item here changes the master copy only. Existing shops already have their own independent copies from whenever they were seeded or last pushed to — editing here never silently changes what a live shop owner already has.
+            </div>
+            <div id="mq-templates-msg"></div>
+            <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
+            <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
+            <div class="mq-card" style="margin-top:1.5rem">
+              <div class="mq-card-title">📤 Push to all shops</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Adds any template items a shop doesn't already have yet. Never touches or removes anything a shop already received from a previous push, even if you've since edited it here.</p>
+              <button class="mq-btn mq-btn-primary" onclick="mqPushTemplatesToAllShops()">Push new template items to all shops</button>
             </div>
           </div>
 
@@ -1039,6 +1057,20 @@ window.logoutMember = async function () {
     ],
   };
 
+  // Name of the special reserved shop record that holds the master template
+  // specialty items. Never shown to real customers — just an anchor for
+  // linked-record storage, same shape as any other shop.
+  const MASTER_TEMPLATE_SHOP_NAME = 'MASTER_TEMPLATE';
+
+  async function ensureMasterTemplateShop() {
+    if (window._mqMasterTemplateShop) return window._mqMasterTemplateShop;
+    const existing = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} = "${MASTER_TEMPLATE_SHOP_NAME}"`);
+    if (existing.length) { window._mqMasterTemplateShop = existing[0]; return existing[0]; }
+    const created = await atCreate(CONFIG.SHOPS_TABLE, { 'Shop name': MASTER_TEMPLATE_SHOP_NAME, 'Status': 'Inactive' });
+    window._mqMasterTemplateShop = created;
+    return created;
+  }
+
   async function ensureProjectTypeTemplates(shopRecord) {
     if (shopRecord.fields['Templates seeded']) return; // already done for this shop
 
@@ -1069,12 +1101,17 @@ window.logoutMember = async function () {
       } catch(e) { console.warn('Failed to add project type template rooms:', e); }
     }
 
-    const allItems = Object.entries(PROJECT_TYPE_TEMPLATES).flatMap(([roomId, items]) =>
-      items.map(item => ({ ...item, roomId }))
-    );
-    try {
-      await Promise.all(allItems.map(item => atCreate(CONFIG.SPECIALTY_TABLE, {
-        'Shop': [shopRecord.id],
+    // Pull from the live master template shop (editable via the admin
+    // Templates tab) — bootstrapping it from the hardcoded starter list the
+    // very first time, if it's never been touched at all.
+    const masterShop = await ensureMasterTemplateShop();
+    let masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+    if (!masterItems.length) {
+      const bootstrapItems = Object.entries(PROJECT_TYPE_TEMPLATES).flatMap(([roomId, items]) =>
+        items.map(item => ({ ...item, roomId }))
+      );
+      await Promise.all(bootstrapItems.map(item => atCreate(CONFIG.SPECIALTY_TABLE, {
+        'Shop': [masterShop.id],
         'Item name': item.name,
         'Special Items': item.name,
         'Price': item.price,
@@ -1082,6 +1119,21 @@ window.logoutMember = async function () {
         'Per square foot': item.perSqFt,
         'Active': true,
         'Visible rooms': JSON.stringify([item.roomId]),
+      })));
+      masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+    }
+
+    try {
+      await Promise.all(masterItems.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
+        'Shop': [shopRecord.id],
+        'Item name': master.fields['Item name'],
+        'Special Items': master.fields['Item name'],
+        'Price': master.fields['Price'] || 0,
+        'Per linear foot': master.fields['Per linear foot'] || false,
+        'Per square foot': master.fields['Per square foot'] || false,
+        'Active': true,
+        'Visible rooms': master.fields['Visible rooms'] || '[]',
+        'Template source ID': master.id,
       })));
       await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Templates seeded': true });
       shopRecord.fields['Templates seeded'] = true;
@@ -1894,14 +1946,18 @@ window.logoutMember = async function () {
   window.mqSaveProducts = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
+    // Scoped to this tab's own container specifically — otherwise, if the
+    // Templates admin tab has also been visited this session, its leftover
+    // inputs (same id pattern) could get swept up into the wrong shop's save.
+    const scope = document.getElementById('mq-products-content') || document;
     const photos = {};
     const hidden = {};
-    document.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
+    scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
       if (input.value.trim()) photos[key] = input.value.trim();
     });
-    document.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
+    scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
       const key = cb.id.replace('mq-hidden-', '');
       if (cb.checked) hidden[key] = true;
     });
@@ -1912,7 +1968,7 @@ window.logoutMember = async function () {
       });
       shopRec.fields['Photos']  = JSON.stringify(photos);
       shopRec.fields['Hidden']  = JSON.stringify(hidden);
-      document.querySelectorAll('.mq-products-save-btn').forEach(btn => {
+      scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
         btn.textContent = 'Saved ✓';
         btn.style.background = '#1a1a1a';
         btn.style.borderColor = '#1a1a1a';
@@ -1920,6 +1976,40 @@ window.logoutMember = async function () {
       });
       showMsg('mq-products-msg', '✓ Photos saved!');
     } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  // Same pattern as mqSaveProducts, but scoped to the Templates tab and
+  // saving to the master template shop record instead of the admin's own shop.
+  window.mqSaveTemplatePhotos = async function() {
+    const masterShop = window._mqMasterTemplateShop;
+    if (!masterShop) return;
+    const scope = document.getElementById('mq-templates-content') || document;
+    const photos = {};
+    const hidden = {};
+    scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
+      if (input.tagName !== 'INPUT') return;
+      const key = input.id.replace('mq-photo-', '');
+      if (input.value.trim()) photos[key] = input.value.trim();
+    });
+    scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
+      const key = cb.id.replace('mq-hidden-', '');
+      if (cb.checked) hidden[key] = true;
+    });
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, {
+        'Photos': JSON.stringify(photos),
+        'Hidden': JSON.stringify(hidden),
+      });
+      masterShop.fields['Photos'] = JSON.stringify(photos);
+      masterShop.fields['Hidden'] = JSON.stringify(hidden);
+      scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
+        btn.textContent = 'Saved ✓';
+        btn.style.background = '#1a1a1a';
+        btn.style.borderColor = '#1a1a1a';
+        setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
+      });
+      showMsg('mq-templates-msg', '✓ Template photos saved!');
+    } catch(e) { showMsg('mq-templates-msg', 'Error saving — please try again.', 'error'); }
   };
 
   async function initProductsTab(shopRecord, lineItemsData) {
@@ -2003,33 +2093,7 @@ window.logoutMember = async function () {
     try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
 
     function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
-      const savedUrl = savedPhotos[key] || '';
-      const isHidden = savedHidden[key] || false;
-      const preview = savedUrl
-        ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
-        : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
-      const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat)}</div>` : '';
-      return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
-        <div id="mq-photo-preview-${key}">${preview}</div>
-        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
-        ${roomLinkHtml}
-        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
-          <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
-            onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
-          Hide from showroom
-        </label>
-        <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
-          📤 Upload a photo
-          <input type="file" id="mq-upload-file-${key}" accept="image/*" style="display:none"/>
-        </label>
-        <div id="mq-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
-        <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
-          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
-          oninput="mqMarkProductsDirty()"/>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>
-      </div>`;
+      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden);
     }
 
     function catSection(cat) {
@@ -2281,6 +2345,141 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   // can span 2 underlying Airtable records per card (materials: uppers/bases;
   // drawers: some/mostly), so this saves to every id in that item's group at
   // once, keeping them consistent.
+  // Module-level so both initProductsTab (My Products) and renderTemplates
+  // (admin Templates tab) can share it, instead of it being locked inside one
+  // function's closure over a specific shop's savedPhotos/savedHidden.
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden) {
+    const savedUrl = savedPhotos[key] || '';
+    const isHidden = savedHidden[key] || false;
+    const preview = savedUrl
+      ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
+      : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
+    const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat)}</div>` : '';
+    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
+      <div id="mq-photo-preview-${key}">${preview}</div>
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
+      ${roomLinkHtml}
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
+        <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
+          onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
+        Hide from showroom
+      </label>
+      <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+        📤 Upload a photo
+        <input type="file" id="mq-upload-file-${key}" accept="image/*" style="display:none"/>
+      </label>
+      <div id="mq-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+      <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
+      <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
+        style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
+        oninput="mqMarkProductsDirty()"/>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>
+    </div>`;
+  }
+
+  // Template cards need editable name/price/unit fields too (regular My
+  // Products items get that from the separate Specialty Items tab table —
+  // templates don't have an equivalent, so it lives right on the card here).
+  function templateItemCard(r, savedPhotos, savedHidden) {
+    const itemName = r.fields['Item name'] || '';
+    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden);
+    return `<div style="display:flex;flex-direction:column;gap:6px">
+      <input type="text" value="${itemName.replace(/"/g,'&quot;')}" id="mq-spec-name-${r.id}" placeholder="Item name" style="font-size:13px;font-weight:600;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input type="number" value="${r.fields['Price']||''}" id="mq-spec-price-${r.id}" placeholder="Price" style="font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:70px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:auto"/> lin ft</label>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:auto"/> sq ft</label>
+      </div>
+      ${photoHtml}
+      <button class="mq-btn mq-btn-danger mq-btn-sm" style="width:100%" onclick="mqDeleteTemplateItem('${r.id}')">Delete template item</button>
+    </div>`;
+  }
+
+  async function renderTemplates() {
+    const masterShop = await ensureMasterTemplateShop();
+    const items = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+    window._mqTemplateItems = items;
+
+    let savedPhotos = {};
+    let savedHidden = {};
+    try { if (masterShop.fields['Photos']) savedPhotos = JSON.parse(masterShop.fields['Photos']); } catch(e) {}
+    try { if (masterShop.fields['Hidden']) savedHidden = JSON.parse(masterShop.fields['Hidden']); } catch(e) {}
+
+    const content = document.getElementById('mq-templates-content');
+    if (!content) return;
+    if (!items.length) {
+      content.innerHTML = '<div class="mq-empty">No template items yet. Click "+ Add template item" below to add your first one.</div>';
+      return;
+    }
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">
+        ${items.map(r => templateItemCard(r, savedPhotos, savedHidden)).join('')}
+      </div>
+      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveTemplatePhotos()">Save changes</button>
+    `;
+  }
+
+  window.mqAddTemplateItem = async function() {
+    const masterShop = await ensureMasterTemplateShop();
+    try {
+      await atCreate(CONFIG.SPECIALTY_TABLE, {
+        'Shop': [masterShop.id],
+        'Item name': 'New template item',
+        'Special Items': 'New template item',
+        'Price': 0,
+        'Active': true,
+      });
+      await renderTemplates();
+      showMsg('mq-templates-msg', '✓ Template item added — edit the name, price, and project types above.');
+    } catch(e) { showMsg('mq-templates-msg', 'Error adding item.', 'error'); }
+  };
+
+  window.mqDeleteTemplateItem = async function(id) {
+    if (!confirm('Delete this template item? This only affects future shops — existing shops keep their own copy.')) return;
+    try {
+      await atDelete(CONFIG.SPECIALTY_TABLE, id);
+      await renderTemplates();
+      showMsg('mq-templates-msg', '✓ Template item deleted.');
+    } catch(e) { showMsg('mq-templates-msg', 'Error deleting item.', 'error'); }
+  };
+
+  // Additive only, per your call: adds template items a shop doesn't already
+  // have (matched by Template source ID, not name — so renaming a template
+  // later never causes duplicates or misses). Never touches or removes
+  // anything a shop already has, even if you've since edited the master copy.
+  window.mqPushTemplatesToAllShops = async function() {
+    if (!confirm('Push new template items to every shop? This adds anything missing, but never changes or removes items a shop already has.')) return;
+    showMsg('mq-templates-msg', 'Pushing to all shops — this may take a moment...');
+    try {
+      const masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+      const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
+      let addedCount = 0;
+
+      for (const shop of allShops) {
+        const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+        const existingSourceIds = new Set(shopItems.map(i => i.fields['Template source ID']).filter(Boolean));
+        const missing = masterItems.filter(m => !existingSourceIds.has(m.id));
+        await Promise.all(missing.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
+          'Shop': [shop.id],
+          'Item name': master.fields['Item name'],
+          'Special Items': master.fields['Item name'],
+          'Price': master.fields['Price'] || 0,
+          'Per linear foot': master.fields['Per linear foot'] || false,
+          'Per square foot': master.fields['Per square foot'] || false,
+          'Active': true,
+          'Visible rooms': master.fields['Visible rooms'] || '[]',
+          'Template source ID': master.id,
+        })));
+        addedCount += missing.length;
+      }
+      showMsg('mq-templates-msg', `✓ Push complete — added ${addedCount} new item${addedCount===1?'':'s'} across ${allShops.length} shop${allShops.length===1?'':'s'}.`);
+    } catch(e) {
+      console.error('Push to shops failed:', e);
+      showMsg('mq-templates-msg', 'Error during push — please try again.', 'error');
+    }
+  };
+
   function lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat) {
     const rooms = window._mqRooms || defaultRoomTypes();
     let visibleRooms = [];
@@ -4011,6 +4210,14 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     populateRooms(shopRecord);
     await ensureProjectTypeTemplates(shopRecord);
 
+    // Admin Templates tab only ever shows up for the Maple & Stone demo shop.
+    // NOTE: adjust this exact name if your demo shop's actual 'Shop name'
+    // field is spelled/punctuated differently in Airtable.
+    if (shopRecord.fields['Shop name'] === 'Maple & Stone Cabinetry') {
+      const navTemplates = el('mq-nav-templates');
+      if (navTemplates) navTemplates.style.display = 'flex';
+    }
+
     const leads = await loadLeads(shopRecord.fields['Shop name']);
     window._mqLeads = sortLeadsArray(leads);
     renderStats(window._mqLeads);
@@ -4106,6 +4313,13 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
             window._mqLineItems = lineItems;
             initProductsTab(window._mqShopRecord, lineItems);
           });
+      }
+    }
+    if (page === 'templates') {
+      const tmplContent = document.getElementById('mq-templates-content');
+      if (tmplContent) {
+        tmplContent.innerHTML = '<div class="mq-loading">Loading templates...</div>';
+        renderTemplates();
       }
     }
     if (page === 'pricing') {
