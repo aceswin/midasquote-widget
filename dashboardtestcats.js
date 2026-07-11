@@ -1927,6 +1927,28 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   // and saves the list. If every configured room is checked, saves an empty
   // list instead — meaning "visible everywhere," which also automatically
   // includes any room added later, rather than needing to be re-checked.
+  // Flips the room checkbox panel to open upward instead of downward when
+  // there isn't enough room below in the viewport — same fix pattern used
+  // for the widget's photo hover preview, which had the identical problem.
+  window.mqPositionRoomPanel = function(detailsEl) {
+    if (!detailsEl.open) return;
+    const panel = detailsEl.querySelector('.mq-room-panel');
+    if (!panel) return;
+    // Reset to default (below) first so the measurement below is accurate
+    panel.style.top = '100%';
+    panel.style.bottom = 'auto';
+    panel.style.marginTop = '6px';
+    panel.style.marginBottom = '0';
+    const rect = panel.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < 0) {
+      panel.style.top = 'auto';
+      panel.style.bottom = '100%';
+      panel.style.marginTop = '0';
+      panel.style.marginBottom = '6px';
+    }
+  };
+
   window.mqToggleSpecRoom = async function(itemId) {
     const rooms = window._mqRooms || defaultRoomTypes();
     const checkedIds = rooms
@@ -1957,9 +1979,9 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:auto"/> ${r.name}
       </label>`).join('');
     return `
-      <details style="position:relative">
+      <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
         <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none" id="mq-spec-room-summary-${itemId}">${summary}</summary>
-        <div style="position:absolute;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);margin-top:6px;min-width:160px">
+        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
           ${checkboxes}
         </div>
       </details>`;
