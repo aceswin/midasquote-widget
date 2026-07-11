@@ -64,6 +64,21 @@
     catch(e) { return []; }
   }
 
+  // Implements the override rule: an item's own explicit project-type setting
+  // always wins outright. Only when an item has NEVER been individually
+  // configured does it inherit whatever the whole category is hidden for.
+  // Returns an empty array to mean "visible everywhere" — same convention
+  // already used throughout the rest of the file, so no other code needs to
+  // change to understand the result of this function.
+  function effectiveVisibleRooms(itemExplicitRooms, category) {
+    if (itemExplicitRooms && itemExplicitRooms.length) return itemExplicitRooms;
+    const categoryRooms = window._mqCategoryRooms || {};
+    const hiddenForCategory = categoryRooms[category] || [];
+    if (!hiddenForCategory.length) return [];
+    const allRoomIds = (window._mqRoomTypes || []).map(r => r.id);
+    return allRoomIds.filter(id => !hiddenForCategory.includes(id));
+  }
+
   async function loadShopData(token) {
     const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(token)}`, {});
     const payload = await res.json();
@@ -100,6 +115,13 @@
     }
     window._mqRoomTypes = roomTypes;
 
+    // Category-level hiding — e.g. hide the entire Door Styles category for
+    // "Door refacing". An item's own explicit setting always overrides this;
+    // this only applies to items that have never been individually configured.
+    let categoryRooms = {};
+    try { categoryRooms = shop['Category rooms'] ? JSON.parse(shop['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
+    window._mqCategoryRooms = categoryRooms;
+
     const p = payload.pricing || {};
 
     const lineItemRecords = payload.lineItems || [];
@@ -130,10 +152,10 @@
 
     // Match photos uploaded via the dashboard's "My Products" tab (see the
     // module-level photoKeyFor helper above for the key format).
-    li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; m.visibleRooms = parseVisibleRooms(m); });
-    li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; d.visibleRooms = parseVisibleRooms(d); });
-    li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; h.visibleRooms = parseVisibleRooms(h); });
-    li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; dr.visibleRooms = parseVisibleRooms(dr); });
+    li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; m.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(m), 'material'); });
+    li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; d.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(d), 'door'); });
+    li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; h.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(h), 'hinge'); });
+    li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; dr.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(dr), 'drawer'); });
 
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
     li.localRadius = localZone?.['Rate'] || 15;
@@ -143,8 +165,7 @@
     const specRecords = payload.specialty || [];
     const specs = assignBadges(specRecords
       .map(r=>{
-        let visibleRooms = [];
-        try { visibleRooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { visibleRooms = []; }
+        const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty');
         return {
           id:r.id,
           label:r.fields['Item name']||r.fields['Special Items'],
@@ -406,7 +427,7 @@
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
             cutoutOptions: Array.isArray(cutoutOptions) ? cutoutOptions : [],
             photoUrl:    (shopPhotos||{})[photoKeyFor('countertop', item['Name'])] || '',
-            visibleRooms: parseVisibleRooms(item),
+            visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), 'countertop'),
           };
         });
     } else {
@@ -442,7 +463,7 @@
         // Dashboard groups crown/valance into separate pseudo-categories
         // (trim_crown / trim_valance) for photo purposes, not just "trim"
         photoUrl:    (shopPhotos||{})[photoKeyFor(`trim_${type}`, item['Name'])] || '',
-        visibleRooms: parseVisibleRooms(item),
+        visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), `trim_${type}`),
       };
     });
   }
@@ -464,7 +485,7 @@
         label: item['Name'],
         basePrice: item['Rate'] || 0,
         photoUrl: (shopPhotos||{})[photoKeyFor('tall_cabinet', item['Name'])] || '',
-        visibleRooms: parseVisibleRooms(item),
+        visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), 'tall_cabinet'),
       };
     });
   }

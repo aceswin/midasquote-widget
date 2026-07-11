@@ -1140,6 +1140,13 @@ window.logoutMember = async function () {
     if (!Array.isArray(rooms) || !rooms.length) rooms = defaultRoomTypes();
     window._mqRooms = rooms;
     renderRoomsList();
+
+    // Category-level hiding: which project types each WHOLE category is
+    // hidden for (e.g. hide all Door Styles for "Door refacing"). Individual
+    // item settings still override this — see categoryRoomDisclosure below.
+    let categoryRooms = {};
+    try { categoryRooms = f['Category rooms'] ? JSON.parse(f['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
+    window._mqCategoryRooms = categoryRooms;
   }
 
   function renderRoomsList() {
@@ -1383,7 +1390,7 @@ window.logoutMember = async function () {
     container.innerHTML = `
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Project types</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => `
             <tr data-id="${r.id}" style="cursor:grab">
@@ -1392,7 +1399,6 @@ window.logoutMember = async function () {
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)"/></td>
-              <td>${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
             </tr>`).join('')}
@@ -1834,7 +1840,7 @@ window.logoutMember = async function () {
       const preview = savedUrl
         ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
         : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
-      const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids)}</div>` : '';
+      const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat)}</div>` : '';
       return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
         <div id="mq-photo-preview-${key}">${preview}</div>
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
@@ -1870,6 +1876,7 @@ window.logoutMember = async function () {
       return `<div class="mq-card">
         <div class="mq-card-title">${disp.title}</div>
         <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
+        ${categoryRoomDisclosure(cat)}
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
         <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
       </div>`;
@@ -1878,8 +1885,9 @@ window.logoutMember = async function () {
     const specSection = specItems.length ? `<div class="mq-card">
       <div class="mq-card-title">⭐ Specialty Items</div>
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
+      ${categoryRoomDisclosure('specialty')}
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-        ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']), 'specialty')).join('')}
+        ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']), 'specialty', [r.id], r.fields['Visible rooms'])).join('')}
       </div>
       <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
     </div>` : '';
@@ -2084,7 +2092,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   // can span 2 underlying Airtable records per card (materials: uppers/bases;
   // drawers: some/mostly), so this saves to every id in that item's group at
   // once, keeping them consistent.
-  function lineItemRoomDisclosure(key, visibleRoomsJson, ids) {
+  function lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat) {
     const rooms = window._mqRooms || defaultRoomTypes();
     let visibleRooms = [];
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
@@ -2092,7 +2100,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     const idsAttr = (ids||[]).join(',');
     const checkboxes = rooms.map(r => `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}')" style="width:auto"/> ${r.name}
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:auto"/> ${r.name}
       </label>`).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
@@ -2106,7 +2114,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       </details>`;
   }
 
-  window.mqToggleLineItemRoom = async function(key, idsCsv) {
+  window.mqToggleLineItemRoom = async function(key, idsCsv, cat) {
     const ids = (idsCsv||'').split(',').filter(Boolean);
     const rooms = window._mqRooms || defaultRoomTypes();
     const checkedIds = rooms
@@ -2114,11 +2122,60 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       .map(r => r.id);
     const allChecked = checkedIds.length === rooms.length;
     const toSave = allChecked ? [] : checkedIds;
+    const table = cat === 'specialty' ? CONFIG.SPECIALTY_TABLE : CONFIG.LINE_ITEMS_TABLE;
     try {
-      await Promise.all(ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Visible rooms': JSON.stringify(toSave) })));
+      await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(toSave) })));
       const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
       if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
     } catch(e) { console.error('Failed to save line item room links', e); }
+  };
+
+  // Category-level hiding — e.g. hide the entire Door Styles category for
+  // "Door refacing" in one click, instead of unchecking every door one by
+  // one. Individual items can still override this (handled widget-side):
+  // if an item has its own explicit project-type setting, that wins outright
+  // regardless of what the category says.
+  function categorySummaryText(hiddenIds, rooms) {
+    if (!hiddenIds || !hiddenIds.length) return 'Visible for all project types';
+    const names = hiddenIds.map(id => rooms.find(r=>r.id===id)?.name).filter(Boolean);
+    return names.length ? `Hidden for: ${names.join(', ')}` : 'Visible for all project types';
+  }
+
+  function categoryRoomDisclosure(cat) {
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const categoryRooms = window._mqCategoryRooms || {};
+    const hiddenIds = categoryRooms[cat] || [];
+    const summary = categorySummaryText(hiddenIds, rooms);
+    const checkboxes = rooms.map(r => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
+        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}')" style="width:auto"/> ${r.name}
+      </label>`).join('');
+    return `
+      <details style="position:relative;margin-bottom:12px" ontoggle="mqPositionRoomPanel(this)">
+        <summary style="font-size:12px;font-weight:600;color:#92400e;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;width:fit-content">
+          🗂️ <span id="mq-cat-room-summary-${cat}">${summary}</span>
+          <span style="font-size:15px;line-height:1">▾</span>
+        </summary>
+        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Check the project types where this <strong>whole category</strong> should show. Individual items below can still override this.</div>
+          ${checkboxes}
+        </div>
+      </details>`;
+  }
+
+  window.mqToggleCategoryRoom = async function(cat) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const hiddenIds = rooms.filter(r => !document.getElementById(`mq-cat-room-${cat}-${r.id}`)?.checked).map(r => r.id);
+    if (!window._mqCategoryRooms) window._mqCategoryRooms = {};
+    window._mqCategoryRooms[cat] = hiddenIds;
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Category rooms': JSON.stringify(window._mqCategoryRooms) });
+      shopRec.fields['Category rooms'] = JSON.stringify(window._mqCategoryRooms);
+      const summaryEl = document.getElementById(`mq-cat-room-summary-${cat}`);
+      if (summaryEl) summaryEl.textContent = categorySummaryText(hiddenIds, rooms);
+    } catch(e) { console.error('Failed to save category room hiding', e); }
   };
 
   window.mqDeleteSpec = async function(id) {
