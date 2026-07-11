@@ -976,7 +976,7 @@
       <!-- BOTH TAB -->
       <div class="mq-tab-content active" id="mq-tab-both">
         ${PRICE_LEGEND_HTML}
-        <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪵 Cabinet details</div><div class="mq-both-divider-line"></div></div>
+        <div class="mq-both-divider" id="mq-b-cabinet-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪵 Cabinet details</div><div class="mq-both-divider-line"></div></div>
         ${cabinetForm('b', specs, data)}
         <div id="mq-b-countertop-details-sec">
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
@@ -1330,6 +1330,9 @@
       const cabActive = rowHasReal(`mq-${prefix}-mat`);
       const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
+      // The "Cabinet details" divider only exists on the Both tab
+      const cabDivider = document.getElementById(`mq-${prefix}-cabinet-divider`);
+      if (cabDivider) cabDivider.style.display = cabActive ? '' : 'none';
       // Supply+install lives inside "Project basics" alongside Project type —
       // hide just that one field, keeping Project type/description/title visible.
       const siField = document.getElementById(`mq-${prefix}-si-field`);
