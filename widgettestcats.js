@@ -141,6 +141,7 @@
           label:r.fields['Item name']||r.fields['Special Items'],
           price:r.fields['Price']||0,
           perFt:r.fields['Per linear foot']||false,
+          perSqFt:r.fields['Per square foot']||false,
           photoUrl: shopPhotos['spec_' + r.id] || '',
           visibleRooms, // empty array = visible for every room (backward compatible default)
         };
@@ -622,7 +623,7 @@
         <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
         <div style="flex:1;min-width:0">
           <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
-          <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perFt ? 'linear feet' : 'quantity'}</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
         </div>
         <div class="mq-qty-ctrl">
           <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
@@ -1588,7 +1589,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         if(!specQty[prefix][i]) return;
         const cost=s.perFt?s.price*specQty[prefix][i]:s.price*specQty[prefix][i];
         specTotal+=cost;
-        const qtyLabel=s.perFt?`${specQty[prefix][i]} ft`:(specQty[prefix][i]>1?`× ${specQty[prefix][i]}`:'');
+        const qtyLabel=s.perSqFt?`${specQty[prefix][i]} sqft`:(s.perFt?`${specQty[prefix][i]} ft`:(specQty[prefix][i]>1?`× ${specQty[prefix][i]}`:''));
         lines.push({label:qtyLabel?`${s.label} (${qtyLabel})`:s.label,cost:Math.round(cost)});
       });
 

@@ -1340,14 +1340,15 @@ window.logoutMember = async function () {
     container.innerHTML = `
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Rooms</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Rooms</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => `
             <tr data-id="${r.id}" style="cursor:grab">
               <td style="color:#9ca3af;font-size:16px;padding:8px 12px">⠿</td>
               <td><input type="text" value="${r.fields['Item name'] || ''}" id="mq-spec-name-${r.id}" style="border:none;background:none;font-size:13px;width:160px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/></td>
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
-              <td><input type="checkbox" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecField('${r.id}','Per linear foot',this.checked)"/></td>
+              <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
+              <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)"/></td>
               <td>${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
@@ -1923,6 +1924,23 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
+  // Per lin ft and Per sq ft are mutually exclusive — checking one unchecks
+  // the other, both in the UI and in what gets saved, so an item never ends
+  // up with both pricing units on at once.
+  window.mqSaveSpecUnit = async function(id, field, checked) {
+    const otherField = field === 'Per linear foot' ? 'Per square foot' : 'Per linear foot';
+    const otherId = field === 'Per linear foot' ? `mq-spec-persqft-${id}` : `mq-spec-perft-${id}`;
+    try {
+      const updates = { [field]: checked };
+      if (checked) {
+        updates[otherField] = false;
+        const otherCheckbox = document.getElementById(otherId);
+        if (otherCheckbox) otherCheckbox.checked = false;
+      }
+      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
+    } catch(e) { console.error('Failed to save specialty unit field', e); }
+  };
+
   // Reads whatever room checkboxes are currently checked for this item,
   // and saves the list. If every configured room is checked, saves an empty
   // list instead — meaning "visible everywhere," which also automatically
@@ -2001,7 +2019,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
         <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
           <span id="mq-spec-room-summary-${itemId}">${summary}</span>
-          <span style="font-size:9px">▾</span>
+          <span style="font-size:15px;line-height:1">▾</span>
         </summary>
         <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
           ${checkboxes}
