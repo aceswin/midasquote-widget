@@ -55,6 +55,15 @@
     return `li_${cat}_${norm}`;
   }
 
+  // Safely parses the 'Visible rooms' field saved by the dashboard's My
+  // Products / Specialty items room-linking UI. Empty/missing = visible for
+  // every project type (backward compatible default for every item that's
+  // never had this touched).
+  function parseVisibleRooms(fieldsObj) {
+    try { return fieldsObj['Visible rooms'] ? JSON.parse(fieldsObj['Visible rooms']) : []; }
+    catch(e) { return []; }
+  }
+
   async function loadShopData(token) {
     const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(token)}`, {});
     const payload = await res.json();
@@ -121,10 +130,10 @@
 
     // Match photos uploaded via the dashboard's "My Products" tab (see the
     // module-level photoKeyFor helper above for the key format).
-    li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; });
-    li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; });
-    li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; });
-    li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; });
+    li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; m.visibleRooms = parseVisibleRooms(m); });
+    li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; d.visibleRooms = parseVisibleRooms(d); });
+    li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; h.visibleRooms = parseVisibleRooms(h); });
+    li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; dr.visibleRooms = parseVisibleRooms(dr); });
 
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
     li.localRadius = localZone?.['Rate'] || 15;
@@ -397,6 +406,7 @@
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
             cutoutOptions: Array.isArray(cutoutOptions) ? cutoutOptions : [],
             photoUrl:    (shopPhotos||{})[photoKeyFor('countertop', item['Name'])] || '',
+            visibleRooms: parseVisibleRooms(item),
           };
         });
     } else {
@@ -432,6 +442,7 @@
         // Dashboard groups crown/valance into separate pseudo-categories
         // (trim_crown / trim_valance) for photo purposes, not just "trim"
         photoUrl:    (shopPhotos||{})[photoKeyFor(`trim_${type}`, item['Name'])] || '',
+        visibleRooms: parseVisibleRooms(item),
       };
     });
   }
@@ -453,6 +464,7 @@
         label: item['Name'],
         basePrice: item['Rate'] || 0,
         photoUrl: (shopPhotos||{})[photoKeyFor('tall_cabinet', item['Name'])] || '',
+        visibleRooms: parseVisibleRooms(item),
       };
     });
   }
@@ -463,7 +475,7 @@
 
   function tallCabItems() {
     return sortAndBadgeItems([{value:'none', label:'None', icon:'🚫'}].concat(
-      Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️', price:t.basePrice||0}))
+      Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️', price:t.basePrice||0, visibleRooms:t.visibleRooms||[]}))
     ));
   }
 
@@ -475,7 +487,7 @@
   function ctMatItems() {
     const entries = Object.entries(CT_MAT);
     return entries.length
-      ? sortAndBadgeItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨', price:(m.ps||0)+(m.pi||0)})))
+      ? sortAndBadgeItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[]})))
       : [{value:'lam', label:'Laminate', icon:'🪨'}];
   }
 
@@ -589,7 +601,8 @@
       const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
       const selectedClass = i===0 ? ' selected' : '';
       const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      const roomsAttr = JSON.stringify(it.visibleRooms||[]).replace(/"/g,'&quot;');
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
     return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
@@ -654,6 +667,7 @@
       value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️',
       // Badge/sort by the "Some drawers" rate as the representative price for this config
       price: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n && /some drawers/i.test(d['Name']))?.['Rate'] || 0,
+      visibleRooms: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n)?.visibleRooms || [],
     })));
 
     // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
@@ -663,21 +677,21 @@
     // glance which options cost more — "None" (where it exists) always stays
     // pinned first with no badge, since it's not really a "priced" choice.
     const mItems = li.materials.length > 0
-      ? sortAndBadgeItems(li.materials.map((m,i)=>({value:`dyn_${i}`, label:m._baseName||m['Name'], photoUrl:m.photoUrl, icon:'🪵', price:m.rateB||0})))
+      ? sortAndBadgeItems(li.materials.map((m,i)=>({value:`dyn_${i}`, label:m._baseName||m['Name'], photoUrl:m.photoUrl, icon:'🪵', price:m.rateB||0, visibleRooms:m.visibleRooms||[]})))
       : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
     const dItems = sortAndBadgeItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
       li.doorStyles.length > 0
-        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0}))
+        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[]}))
         : [{value:'slab',label:'Slab',icon:'🚪'},{value:'shaker',label:'Shaker',icon:'🚪'}]
     ));
     const hingeItems = li.hinges.length > 0
-      ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧', price:h['Rate']||0})))
+      ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧', price:h['Rate']||0, visibleRooms:h.visibleRooms||[]})))
       : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
     const crownItems = sortAndBadgeItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0)}))
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[]}))
     ));
     const valanceItems = sortAndBadgeItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0)}))
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[]}))
     ));
 
     return `
@@ -685,7 +699,7 @@
         <p class="mq-sec-title">Project basics</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Project type</label>
-            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshAllPickerVisibility('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
             <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8"></p>
             <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
           </div>
@@ -1227,6 +1241,36 @@
       descEl.textContent = desc;
       descEl.style.display = 'block';
     };
+    // Covers every picker at once — materials, doors, hinges, drawer configs,
+    // crown, valance, tall cabinets, and countertop materials — since they
+    // all render as the same .mq-vpicker-row/.mq-vpicker-chip structure.
+    // Scoped to just this tab's section so changing the room on the Cabinets
+    // tab doesn't affect the Both tab's independently-set room, and vice versa.
+    // If the currently selected option in any row becomes hidden, the first
+    // still-visible option gets auto-selected instead of silently leaving a
+    // hidden (and possibly still-priced) choice active.
+    window.mqRefreshAllPickerVisibility=(prefix)=>{
+      if (prefix !== 'c' && prefix !== 'b') return; // only Cabinets/Both tabs have a room selector
+      const roomId = gv(`mq-${prefix}-room`);
+      const scope = document.getElementById(prefix==='c' ? 'mq-tab-cabinets' : 'mq-tab-both');
+      if (!scope) return;
+      scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
+        let anyVisibleSelected=false, firstVisibleChip=null;
+        row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
+          let rooms=[];
+          try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
+          const visible = !rooms.length || rooms.includes(roomId);
+          chip.style.display = visible ? '' : 'none';
+          if (visible && !firstVisibleChip) firstVisibleChip = chip;
+          if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
+        });
+        if (!anyVisibleSelected && firstVisibleChip) {
+          const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
+          const btn = firstVisibleChip.querySelector('.mq-vpicker-select-btn');
+          if (selectId && btn) window.mqPickVisual(selectId, btn);
+        }
+      });
+    };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
       if (!wrap) return; // only exists on the Both tab
@@ -1352,6 +1396,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>`;
       document.getElementById(containerId)?.appendChild(card);
       renumberTallCabs(prefix);
+      mqRefreshAllPickerVisibility(prefix);
     }
     window.mqAddTallCab=(prefix)=>addTallCabInternal(prefix);
     window.mqRemoveTallCab=(prefix,id)=>{
@@ -1860,6 +1905,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       window.mqRefreshBsOpts(`mqsm-${id}`, `mqsbs-${id}`);
       window.mqRefreshCutoutOpts(`mqsm-${id}`, `mqscuts-${id}`);
       window.mqRefreshSurfBsFt(id);
+      mqRefreshAllPickerVisibility(prefix);
     }
 
     window.mqAddSurface=(prefix)=>addSurfaceInternal(prefix);
@@ -1987,6 +2033,8 @@ window.mqTogDrawerConfig=(prefix)=>{
     mqRefreshRoomVisibility('b');
     mqShowRoomDescription('c');
     mqShowRoomDescription('b');
+    mqRefreshAllPickerVisibility('c');
+    mqRefreshAllPickerVisibility('b');
   }
 
   // ============================================================

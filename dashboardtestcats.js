@@ -1782,8 +1782,16 @@ window.logoutMember = async function () {
       const ITEM_EXCLUDE = /backsplash|cutout|cooktop/i;
       const baseName = (r.fields['Name'] || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
       if (ITEM_EXCLUDE.test(baseName)) return;
-      if (!byCategory[cat].find(x => x.baseName === baseName)) {
-        byCategory[cat].push({ id: r.id, baseName, fullName: r.fields['Name'] || baseName });
+      // Materials and drawers span 2 underlying records each (uppers/bases,
+      // some/mostly) merged into one card — track every id so room-visibility
+      // changes get applied to all of them together, keeping them in sync.
+      let existing = byCategory[cat].find(x => x.baseName === baseName);
+      if (!existing) {
+        existing = { id: r.id, ids: [r.id], baseName, fullName: r.fields['Name'] || baseName, visibleRooms: r.fields['Visible rooms'] };
+        byCategory[cat].push(existing);
+      } else {
+        existing.ids.push(r.id);
+        if (!existing.visibleRooms && r.fields['Visible rooms']) existing.visibleRooms = r.fields['Visible rooms'];
       }
     });
 
@@ -1820,15 +1828,17 @@ window.logoutMember = async function () {
     let savedHidden = {};
     try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
 
-    function photoCard(key, name, emoji, cat) {
+    function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
       const savedUrl = savedPhotos[key] || '';
       const isHidden = savedHidden[key] || false;
       const preview = savedUrl
         ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
         : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
+      const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids)}</div>` : '';
       return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
         <div id="mq-photo-preview-${key}">${preview}</div>
         <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
+        ${roomLinkHtml}
         <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
           <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
             onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
@@ -1855,7 +1865,7 @@ window.logoutMember = async function () {
       const cards = items.map(item => {
         const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
         const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
-        return photoCard(key, item.baseName, lib.emoji || disp.emoji, cat);
+        return photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
       }).join('');
       return `<div class="mq-card">
         <div class="mq-card-title">${disp.title}</div>
@@ -2069,6 +2079,47 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         </div>
       </details>`;
   }
+
+  // Same pattern as roomLinkDisclosure, but for My Products items — these
+  // can span 2 underlying Airtable records per card (materials: uppers/bases;
+  // drawers: some/mostly), so this saves to every id in that item's group at
+  // once, keeping them consistent.
+  function lineItemRoomDisclosure(key, visibleRoomsJson, ids) {
+    const rooms = window._mqRooms || defaultRoomTypes();
+    let visibleRooms = [];
+    try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
+    const summary = roomLinkSummaryText(visibleRooms, rooms);
+    const idsAttr = (ids||[]).join(',');
+    const checkboxes = rooms.map(r => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}')" style="width:auto"/> ${r.name}
+      </label>`).join('');
+    return `
+      <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
+        <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
+          <span id="mq-li-room-summary-${key}">${summary}</span>
+          <span style="font-size:15px;line-height:1">▾</span>
+        </summary>
+        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+          ${checkboxes}
+        </div>
+      </details>`;
+  }
+
+  window.mqToggleLineItemRoom = async function(key, idsCsv) {
+    const ids = (idsCsv||'').split(',').filter(Boolean);
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const checkedIds = rooms
+      .filter(r => document.getElementById(`mq-li-room-${key}-${r.id}`)?.checked)
+      .map(r => r.id);
+    const allChecked = checkedIds.length === rooms.length;
+    const toSave = allChecked ? [] : checkedIds;
+    try {
+      await Promise.all(ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Visible rooms': JSON.stringify(toSave) })));
+      const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+    } catch(e) { console.error('Failed to save line item room links', e); }
+  };
 
   window.mqDeleteSpec = async function(id) {
     if (!confirm('Delete this specialty item?')) return;
