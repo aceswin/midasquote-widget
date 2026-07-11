@@ -133,13 +133,18 @@
 
     const specRecords = payload.specialty || [];
     const specs = assignBadges(specRecords
-      .map(r=>({
-        id:r.id,
-        label:r.fields['Item name']||r.fields['Special Items'],
-        price:r.fields['Price']||0,
-        perFt:r.fields['Per linear foot']||false,
-        photoUrl: shopPhotos['spec_' + r.id] || '',
-      })));
+      .map(r=>{
+        let visibleRooms = [];
+        try { visibleRooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { visibleRooms = []; }
+        return {
+          id:r.id,
+          label:r.fields['Item name']||r.fields['Special Items'],
+          price:r.fields['Price']||0,
+          perFt:r.fields['Per linear foot']||false,
+          photoUrl: shopPhotos['spec_' + r.id] || '',
+          visibleRooms, // empty array = visible for every room (backward compatible default)
+        };
+      }));
 
     return { shop, pricing:p, specs, li, hasDynamic, shopPhotos, roomTypes };
   }
@@ -611,8 +616,9 @@
         ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
+      const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
       return `
-      <div class="mq-spec-item" id="mq-sp-${prefix}-${i}">
+      <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
         <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
         <div style="flex:1;min-width:0">
           <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
@@ -675,7 +681,7 @@
         <p class="mq-sec-title">Project basics</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Room type</label>
-            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
             <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8"></p>
           </div>
           ${hasInstall?`<div class="mq-field"><label class="mq-label">Supply + install?</label>
@@ -1178,6 +1184,30 @@
       const sign = adj > 0 ? '+' : '';
       note.textContent = `✓ Box, door, and drawer pricing adjusted ${sign}${adj}% for ${room.name}`;
       note.style.display = 'block';
+    };
+    // Shows/hides specialty items based on the currently selected room. An
+    // item with an empty visibleRooms list is visible everywhere (backward
+    // compatible default for every item that's never had this configured).
+    // If a previously-selected item gets hidden by the room switch, its
+    // quantity resets to 0 so nothing stays silently "charged" for a room
+    // it no longer applies to.
+    window.mqRefreshRoomVisibility=(prefix)=>{
+      const roomId = gv(`mq-${prefix}-room`);
+      document.querySelectorAll(`[id^="mq-sp-${prefix}-"]`).forEach(el=>{
+        let rooms=[];
+        try { rooms = JSON.parse(el.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
+        const visible = !rooms.length || rooms.includes(roomId);
+        el.style.display = visible ? '' : 'none';
+        if (!visible) {
+          const idx = parseInt(el.id.split('-').pop(), 10);
+          if (specQty[prefix] && specQty[prefix][idx] > 0) {
+            specQty[prefix][idx] = 0;
+            const qtyInput = document.getElementById(`mq-qty-${prefix}-${idx}`);
+            if (qtyInput) qtyInput.value = 0;
+            el.classList.remove('on');
+          }
+        }
+      });
     };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
@@ -1932,6 +1962,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       addTallCabInternal('c');
       addTallCabInternal('b');
     }
+    // Apply room-visibility filtering right away for whatever room is
+    // selected by default — specialty items render unfiltered in HTML first,
+    // then get filtered here so we don't need to know the room at HTML-build time.
+    mqRefreshRoomVisibility('c');
+    mqRefreshRoomVisibility('b');
   }
 
   // ============================================================

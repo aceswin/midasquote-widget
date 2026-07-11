@@ -1340,7 +1340,7 @@ window.logoutMember = async function () {
     container.innerHTML = `
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Rooms</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => `
             <tr data-id="${r.id}" style="cursor:grab">
@@ -1348,6 +1348,7 @@ window.logoutMember = async function () {
               <td><input type="text" value="${r.fields['Item name'] || ''}" id="mq-spec-name-${r.id}" style="border:none;background:none;font-size:13px;width:160px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/></td>
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td><input type="checkbox" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecField('${r.id}','Per linear foot',this.checked)"/></td>
+              <td>${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
             </tr>`).join('')}
@@ -1921,6 +1922,48 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, { [field]: value });
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
+
+  // Reads whatever room checkboxes are currently checked for this item,
+  // and saves the list. If every configured room is checked, saves an empty
+  // list instead — meaning "visible everywhere," which also automatically
+  // includes any room added later, rather than needing to be re-checked.
+  window.mqToggleSpecRoom = async function(itemId) {
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const checkedIds = rooms
+      .filter(r => document.getElementById(`mq-spec-room-${itemId}-${r.id}`)?.checked)
+      .map(r => r.id);
+    const allChecked = checkedIds.length === rooms.length;
+    const toSave = allChecked ? [] : checkedIds;
+    try {
+      await atUpdate(CONFIG.SPECIALTY_TABLE, itemId, { 'Visible rooms': JSON.stringify(toSave) });
+      const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+    } catch(e) { console.error('Failed to save room links', e); }
+  };
+
+  function roomLinkSummaryText(visibleRooms, rooms) {
+    if (!visibleRooms || !visibleRooms.length) return 'All rooms';
+    const names = visibleRooms.map(id => rooms.find(r => r.id === id)?.name).filter(Boolean);
+    return names.length ? names.join(', ') : 'All rooms';
+  }
+
+  function roomLinkDisclosure(itemId, visibleRoomsJson) {
+    const rooms = window._mqRooms || defaultRoomTypes();
+    let visibleRooms = [];
+    try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
+    const summary = roomLinkSummaryText(visibleRooms, rooms);
+    const checkboxes = rooms.map(r => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
+        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:auto"/> ${r.name}
+      </label>`).join('');
+    return `
+      <details style="position:relative">
+        <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none" id="mq-spec-room-summary-${itemId}">${summary}</summary>
+        <div style="position:absolute;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);margin-top:6px;min-width:160px">
+          ${checkboxes}
+        </div>
+      </details>`;
+  }
 
   window.mqDeleteSpec = async function(id) {
     if (!confirm('Delete this specialty item?')) return;
