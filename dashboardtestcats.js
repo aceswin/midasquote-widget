@@ -1066,9 +1066,43 @@ window.logoutMember = async function () {
     if (window._mqMasterTemplateShop) return window._mqMasterTemplateShop;
     const existing = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} = "${MASTER_TEMPLATE_SHOP_NAME}"`);
     if (existing.length) { window._mqMasterTemplateShop = existing[0]; return existing[0]; }
-    const created = await atCreate(CONFIG.SHOPS_TABLE, { 'Shop name': MASTER_TEMPLATE_SHOP_NAME, 'Status': 'Inactive' });
+    // No Status set — this reserved record never goes through the normal
+    // active/trial/cancelled lifecycle, so there's no valid value that fits.
+    const created = await atCreate(CONFIG.SHOPS_TABLE, { 'Shop name': MASTER_TEMPLATE_SHOP_NAME });
+    if (!created?.id) {
+      console.error('Failed to create master template shop:', created);
+      throw new Error('Could not create the master template shop record — check the browser console for the exact Airtable error.');
+    }
     window._mqMasterTemplateShop = created;
     return created;
+  }
+
+  // Ensures the master template shop actually has its starter items —
+  // decoupled from ensureProjectTypeTemplates (which only runs for a shop
+  // that's never been seeded) so this self-heals every time the admin visits
+  // the Templates tab, even if the admin's own shop was seeded long before
+  // this feature existed.
+  async function ensureMasterTemplateItems() {
+    const masterShop = await ensureMasterTemplateShop();
+    let masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+    if (masterItems.length) return masterItems;
+    const bootstrapItems = Object.entries(PROJECT_TYPE_TEMPLATES).flatMap(([roomId, items]) =>
+      items.map(item => ({ ...item, roomId }))
+    );
+    const results = await Promise.all(bootstrapItems.map(item => atCreate(CONFIG.SPECIALTY_TABLE, {
+      'Shop': [masterShop.id],
+      'Item name': item.name,
+      'Special Items': item.name,
+      'Price': item.price,
+      'Per linear foot': item.perFt,
+      'Per square foot': item.perSqFt,
+      'Active': true,
+      'Visible rooms': JSON.stringify([item.roomId]),
+    })));
+    const failed = results.filter(r => !r?.id);
+    if (failed.length) console.error('Some master template items failed to create:', failed);
+    masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+    return masterItems;
   }
 
   async function ensureProjectTypeTemplates(shopRecord) {
@@ -1101,27 +1135,7 @@ window.logoutMember = async function () {
       } catch(e) { console.warn('Failed to add project type template rooms:', e); }
     }
 
-    // Pull from the live master template shop (editable via the admin
-    // Templates tab) — bootstrapping it from the hardcoded starter list the
-    // very first time, if it's never been touched at all.
-    const masterShop = await ensureMasterTemplateShop();
-    let masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
-    if (!masterItems.length) {
-      const bootstrapItems = Object.entries(PROJECT_TYPE_TEMPLATES).flatMap(([roomId, items]) =>
-        items.map(item => ({ ...item, roomId }))
-      );
-      await Promise.all(bootstrapItems.map(item => atCreate(CONFIG.SPECIALTY_TABLE, {
-        'Shop': [masterShop.id],
-        'Item name': item.name,
-        'Special Items': item.name,
-        'Price': item.price,
-        'Per linear foot': item.perFt,
-        'Per square foot': item.perSqFt,
-        'Active': true,
-        'Visible rooms': JSON.stringify([item.roomId]),
-      })));
-      masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
-    }
+    const masterItems = await ensureMasterTemplateItems();
 
     try {
       await Promise.all(masterItems.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
@@ -2398,7 +2412,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
   async function renderTemplates() {
     const masterShop = await ensureMasterTemplateShop();
-    const items = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+    const items = await ensureMasterTemplateItems();
     window._mqTemplateItems = items;
 
     let savedPhotos = {};
@@ -2421,18 +2435,26 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   }
 
   window.mqAddTemplateItem = async function() {
-    const masterShop = await ensureMasterTemplateShop();
     try {
-      await atCreate(CONFIG.SPECIALTY_TABLE, {
+      const masterShop = await ensureMasterTemplateShop();
+      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
         'Shop': [masterShop.id],
         'Item name': 'New template item',
         'Special Items': 'New template item',
         'Price': 0,
         'Active': true,
       });
+      if (!created?.id) {
+        console.error('Failed to create template item:', created);
+        showMsg('mq-templates-msg', 'Error adding item — check the browser console for details.', 'error');
+        return;
+      }
       await renderTemplates();
       showMsg('mq-templates-msg', '✓ Template item added — edit the name, price, and project types above.');
-    } catch(e) { showMsg('mq-templates-msg', 'Error adding item.', 'error'); }
+    } catch(e) {
+      console.error('Failed to create template item:', e);
+      showMsg('mq-templates-msg', 'Error adding item.', 'error');
+    }
   };
 
   window.mqDeleteTemplateItem = async function(id) {
@@ -2452,7 +2474,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     if (!confirm('Push new template items to every shop? This adds anything missing, but never changes or removes items a shop already has.')) return;
     showMsg('mq-templates-msg', 'Pushing to all shops — this may take a moment...');
     try {
-      const masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+      const masterItems = await ensureMasterTemplateItems();
       const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
       let addedCount = 0;
 
