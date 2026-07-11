@@ -211,7 +211,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-section">Setup</div>
           <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
-          <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Room types</div>
+          <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
@@ -358,15 +358,15 @@ window.logoutMember = async function () {
 
           <!-- ROOM TYPES -->
           <div class="mq-page" id="mq-page-rooms">
-            <div class="mq-page-title">Room types</div>
-            <div class="mq-page-sub">Set up the rooms your widget offers, and adjust pricing up or down for each one — like a bathroom vanity running smaller than a kitchen cabinet at the same length.</div>
+            <div class="mq-page-title">Project types</div>
+            <div class="mq-page-sub">Set up the project types your widget offers — rooms, service tiers, or anything else — and adjust pricing up or down for each one. Great for things like "Kitchen Reno — Premium" vs. "Luxury," or a bathroom vanity running smaller than a kitchen cabinet at the same length.</div>
             <div class="mq-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
-                💡 The adjustment % applies to box, door, and drawer pricing only — never hinges or installation, since hardware and labor don't shrink just because a room is smaller. Leave a room at 0% for no adjustment.
+                💡 The adjustment % applies to box, door, and drawer pricing only — never hinges or installation, since hardware and labor don't shrink just because a project type is smaller or bigger. Leave one at 0% for no adjustment.
               </div>
               <div style="display:grid;grid-template-columns:1fr 140px 40px;gap:10px;margin-bottom:8px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">
-                <div>Room name</div>
+                <div>Project name</div>
                 <div>Adjustment %</div>
                 <div></div>
               </div>
@@ -1147,12 +1147,48 @@ window.logoutMember = async function () {
     if (!container) return;
     const rooms = window._mqRooms || [];
     container.innerHTML = rooms.map((r, idx) => `
-      <div style="display:grid;grid-template-columns:1fr 140px 40px;gap:10px;margin-bottom:8px;align-items:center">
-        <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Room name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+      <div class="mq-room-row" data-idx="${idx}" style="display:grid;grid-template-columns:24px 1fr 140px 40px;gap:10px;margin-bottom:8px;align-items:center">
+        <span style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
+        <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <input type="number" value="${r.adjustment||0}" id="mq-room-adj-${idx}" step="0.5" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;text-align:center"/>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
       </div>
     `).join('');
+
+    // Drag-and-drop reordering — same pattern already used for Specialty
+    // items, adapted since rooms live in one JSON list rather than separate
+    // Airtable records, so reordering just means rebuilding that array.
+    let dragging = null;
+    container.querySelectorAll('.mq-room-row').forEach(row => {
+      row.draggable = true;
+      row.addEventListener('dragstart', () => {
+        dragging = row;
+        setTimeout(() => row.style.opacity = '0.4', 0);
+      });
+      row.addEventListener('dragend', () => {
+        row.style.opacity = '1';
+        dragging = null;
+        const newRooms = [...container.querySelectorAll('.mq-room-row')].map(r => {
+          const oldIdx = r.dataset.idx;
+          return {
+            id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
+            name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
+            adjustment: parseFloat(document.getElementById(`mq-room-adj-${oldIdx}`)?.value) || 0,
+          };
+        });
+        window._mqRooms = newRooms;
+        renderRoomsList();
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        const after = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+        if (e.clientY < after) {
+          container.insertBefore(dragging, row);
+        } else {
+          container.insertBefore(dragging, row.nextSibling);
+        }
+      });
+    });
   }
 
   window.mqAddRoom = function() {
@@ -1185,7 +1221,7 @@ window.logoutMember = async function () {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(rooms) });
       shopRec.fields['Room types'] = JSON.stringify(rooms);
       renderRoomsList();
-      showMsg('mq-rooms-msg', '✓ Room types saved!');
+      showMsg('mq-rooms-msg', '✓ Project types saved!');
     } catch(e) { showMsg('mq-rooms-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -1312,7 +1348,7 @@ window.logoutMember = async function () {
       </tr>`;
     }).join('');
     const th = (field, label) => `<th onclick="mqSortLeads('${field}')" style="cursor:pointer;user-select:none;white-space:nowrap">${label}${sortArrow(field)}</th>`;
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Room')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
@@ -1340,7 +1376,7 @@ window.logoutMember = async function () {
     container.innerHTML = `
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Rooms</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Project types</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => `
             <tr data-id="${r.id}" style="cursor:grab">
@@ -2001,9 +2037,9 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   };
 
   function roomLinkSummaryText(visibleRooms, rooms) {
-    if (!visibleRooms || !visibleRooms.length) return 'All rooms';
+    if (!visibleRooms || !visibleRooms.length) return 'All project types';
     const names = visibleRooms.map(id => rooms.find(r => r.id === id)?.name).filter(Boolean);
-    return names.length ? names.join(', ') : 'All rooms';
+    return names.length ? names.join(', ') : 'All project types';
   }
 
   function roomLinkDisclosure(itemId, visibleRoomsJson) {

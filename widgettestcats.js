@@ -625,10 +625,13 @@
           <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
           <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
         </div>
-        <div class="mq-qty-ctrl">
-          <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-          <input type="text" inputmode="numeric" pattern="[0-9]*" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
-          <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div class="mq-qty-ctrl">
+            <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
+          </div>
+          ${(s.perSqFt || s.perFt) ? `<span style="font-size:9px;font-weight:600;color:#6b7280">${s.perSqFt ? 'sq ft' : 'lin ft'}</span>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -681,7 +684,7 @@
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
         <div class="mq-grid2">
-          <div class="mq-field"><label class="mq-label">Room type</label>
+          <div class="mq-field"><label class="mq-label">Project type</label>
             <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
             <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8"></p>
           </div>
