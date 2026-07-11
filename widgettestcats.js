@@ -826,9 +826,10 @@
       </div>` : ''}
       ${hasTrim?`<div class="mq-sec" id="mq-${prefix}-trim-sec">
         <p class="mq-sec-title">Crown moulding / valance</p>
-        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
+        <div id="mq-${prefix}-trim-auto-explainer" style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
+        <div id="mq-${prefix}-trim-noauto-explainer" style="display:none;font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 This project type doesn't include cabinet measurements, so enter your crown/valance linear footage directly below.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px;background:#f9fafb;border-radius:6px;padding:8px 10px">
+        <label id="mq-${prefix}-trim-manual-toggle-wrap" style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px;background:#f9fafb;border-radius:6px;padding:8px 10px">
           <input type="checkbox" id="mq-${prefix}-trim-manual-toggle" onchange="mqTogTrimManualFt('${prefix}')" style="width:auto;flex-shrink:0"/>
           Don't use upper cabinet linear footage — enter it myself
         </label>
@@ -1364,6 +1365,23 @@
         const valanceReal = rowHasReal(`mq-${prefix}-trim-valance`);
         trimSec.style.display = (crownReal || valanceReal) ? '' : 'none';
       }
+      // If there are no cabinet measurements to draw from, the "don't use
+      // upper cabinet footage" checkbox doesn't make sense to show (there's
+      // nothing to opt out of) — hide it and default straight to manual entry.
+      const toggleWrap = document.getElementById(`mq-${prefix}-trim-manual-toggle-wrap`);
+      const autoExplainer = document.getElementById(`mq-${prefix}-trim-auto-explainer`);
+      const noAutoExplainer = document.getElementById(`mq-${prefix}-trim-noauto-explainer`);
+      const manualWrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
+      const manualToggleCb = document.getElementById(`mq-${prefix}-trim-manual-toggle`);
+      if (toggleWrap) toggleWrap.style.display = cabActive ? 'flex' : 'none';
+      if (autoExplainer) autoExplainer.style.display = cabActive ? 'block' : 'none';
+      if (noAutoExplainer) noAutoExplainer.style.display = cabActive ? 'none' : 'block';
+      if (!cabActive) {
+        if (manualWrap) manualWrap.style.display = 'flex';
+        if (manualToggleCb) manualToggleCb.checked = true; // keeps it consistent even though it's hidden
+      } else if (manualToggleCb && !manualToggleCb.checked && manualWrap) {
+        manualWrap.style.display = 'none';
+      }
 
       // Countertop details — Both tab only (the standalone Countertops tab has
       // no room selector, so this never applies there). All countertop
@@ -1740,7 +1758,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       });
 
       let trimCost = 0;
-      const useManualTrimFt = document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked;
+      const useManualTrimFt = !cabSectionActive || document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked;
       const manualTrimFt = useManualTrimFt ? gn(`mq-${prefix}-trim-manual-ft`, 0) : 0;
       const crownKey = gv(`mq-${prefix}-trim-crown`);
       if (crownKey && crownKey !== 'none' && TRIM[crownKey]) {
