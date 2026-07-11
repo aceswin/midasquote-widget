@@ -1482,21 +1482,44 @@ window.logoutMember = async function () {
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
       return;
     }
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
     container.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
+          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All project types</option>
+            ${roomOptions}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
+          <input type="text" id="mq-spec-tab-filter-search" oninput="mqFilterSpecTable()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+        </div>
+      </div>
+      <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Project types</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
-          ${specs.map(r => `
-            <tr data-id="${r.id}" style="cursor:grab">
+          ${specs.map(r => {
+            let visibleRooms = [];
+            try { visibleRooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { visibleRooms = []; }
+            const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
+            const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
+            return `
+            <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" style="cursor:grab">
               <td style="color:#9ca3af;font-size:16px;padding:8px 12px">⠿</td>
               <td><input type="text" value="${r.fields['Item name'] || ''}" id="mq-spec-name-${r.id}" style="border:none;background:none;font-size:13px;width:160px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/></td>
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)"/></td>
+              <td style="font-size:12px;color:#6b7280">${roomLinkSummaryText(visibleRooms, rooms)}</td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
-            </tr>`).join('')}
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>
       </div>`;
@@ -1825,6 +1848,49 @@ window.logoutMember = async function () {
     });
   };
 
+  // Same pure view filter, for the Specialty Items tab's table specifically.
+  window.mqFilterSpecTable = function() {
+    const roomFilter = el('mq-spec-tab-filter-room')?.value || '';
+    const searchFilter = (el('mq-spec-tab-filter-search')?.value || '').toLowerCase().trim();
+    const tbody = document.getElementById('mq-spec-tbody');
+    if (!tbody) return;
+    let visibleCount = 0;
+    tbody.querySelectorAll('tr').forEach(row => {
+      let rooms = [];
+      try { rooms = JSON.parse(row.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
+      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const name = row.getAttribute('data-name') || '';
+      const searchMatch = !searchFilter || name.includes(searchFilter);
+      const show = roomMatch && searchMatch;
+      row.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('mq-spec-tab-filter-empty');
+    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+  };
+
+  // Pure view filter — doesn't touch any saved data, just shows/hides cards
+  // already on screen, so a long specialty items list stays manageable.
+  window.mqFilterSpecialtyCards = function() {
+    const roomFilter = el('mq-spec-filter-room')?.value || '';
+    const searchFilter = (el('mq-spec-filter-search')?.value || '').toLowerCase().trim();
+    const grid = document.getElementById('mq-spec-cards-grid');
+    if (!grid) return;
+    let visibleCount = 0;
+    grid.querySelectorAll('.mq-spec-card-wrap').forEach(wrap => {
+      let rooms = [];
+      try { rooms = JSON.parse(wrap.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
+      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const name = wrap.getAttribute('data-name') || '';
+      const searchMatch = !searchFilter || name.includes(searchFilter);
+      const show = roomMatch && searchMatch;
+      wrap.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('mq-spec-filter-empty');
+    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+  };
+
   window.mqSaveProducts = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -1984,12 +2050,33 @@ window.logoutMember = async function () {
       </div>`;
     }
 
+    const specRoomOptions = (window._mqRooms || defaultRoomTypes()).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
     const specSection = specItems.length ? `<div class="mq-card">
       <div class="mq-card-title">⭐ Specialty Items</div>
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
       ${categoryRoomDisclosure('specialty')}
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-        ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']), 'specialty', [r.id], r.fields['Visible rooms'])).join('')}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;background:#f9fafb;border-radius:8px">
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
+          <select id="mq-spec-filter-room" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All project types</option>
+            ${specRoomOptions}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
+          <input type="text" id="mq-spec-filter-search" oninput="mqFilterSpecialtyCards()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+        </div>
+      </div>
+      <div id="mq-spec-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px" id="mq-spec-cards-grid">
+        ${specItems.map(r => {
+          const itemName = r.fields['Item name'] || '';
+          const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
+          return `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
+            ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
+          </div>`;
+        }).join('')}
       </div>
       <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save changes</button>
     </div>` : '';
