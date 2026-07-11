@@ -724,7 +724,7 @@
             <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8"></p>
             <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
           </div>
-          ${hasInstall?`<div class="mq-field"><label class="mq-label">Supply + install?</label>
+          ${hasInstall?`<div class="mq-field" id="mq-${prefix}-si-field"><label class="mq-label">Supply + install?</label>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>`:''}
         </div>
       </div>
@@ -845,7 +845,7 @@
           </div>
         </div>`:''}
       </div>`:''}
-      <div class="mq-sec">
+      <div class="mq-sec" id="mq-${prefix}-removal-sec">
         <p class="mq-sec-title">Removal</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Remove existing cabinets?</label>
@@ -964,6 +964,7 @@
         ${PRICE_LEGEND_HTML}
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪵 Cabinet details</div><div class="mq-both-divider-line"></div></div>
         ${cabinetForm('b', specs, data)}
+        <div id="mq-b-countertop-details-sec">
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
         <div class="mq-sec"><p class="mq-sec-title">Countertop options</p>
           <div class="mq-grid2">
@@ -1026,6 +1027,7 @@
         <div class="mq-sec"><p class="mq-sec-title">Additional surfaces</p>
           <div id="mq-b-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
+        </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
         <div class="mq-loading" id="mq-b-loading">Building your full project estimate...</div>
@@ -1311,8 +1313,16 @@
         });
         return found;
       }
+      const cabActive = rowHasReal(`mq-${prefix}-mat`);
       const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
-      if (cabSec) cabSec.style.display = rowHasReal(`mq-${prefix}-mat`) ? '' : 'none';
+      if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
+      // Supply+install lives inside "Project basics" alongside Project type —
+      // hide just that one field, keeping Project type/description/title visible.
+      const siField = document.getElementById(`mq-${prefix}-si-field`);
+      if (siField) siField.style.display = cabActive ? '' : 'none';
+      // Removal only makes sense if there's a cabinet being priced at all
+      const removalSec = document.getElementById(`mq-${prefix}-removal-sec`);
+      if (removalSec) removalSec.style.display = cabActive ? '' : 'none';
 
       const drawSec = document.getElementById(`mq-${prefix}-drawers-sec`);
       if (drawSec) drawSec.style.display = rowHasReal(`mq-${prefix}-drawer-config`) ? '' : 'none';
@@ -1336,6 +1346,15 @@
         const crownReal = rowHasReal(`mq-${prefix}-trim-crown`);
         const valanceReal = rowHasReal(`mq-${prefix}-trim-valance`);
         trimSec.style.display = (crownReal || valanceReal) ? '' : 'none';
+      }
+
+      // Countertop details — Both tab only (the standalone Countertops tab has
+      // no room selector, so this never applies there). All countertop
+      // material pickers (the main one + any added surfaces) share the same
+      // underlying item list, so checking just the main one is representative.
+      if (prefix === 'b') {
+        const ctSec = document.getElementById('mq-b-countertop-details-sec');
+        if (ctSec) ctSec.style.display = rowHasReal('mq-b-ct-mat-cab') ? '' : 'none';
       }
     };
     window.mqTogDwOption=(prefix)=>{
@@ -1579,7 +1598,14 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     function calcCabinet(prefix) {
       const {mat,door,drawer,hinge,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
-      const uFt=gn(`mq-${prefix}-uft`,0), bFt=gn(`mq-${prefix}-bft`,0);
+      // If the Cabinet measurements section is hidden (no real box material
+      // for the current project type), treat linear footage as 0 regardless
+      // of whatever's still sitting in those inputs — otherwise a hidden
+      // section's leftover default values would still silently get charged.
+      const cabSecEl = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
+      const cabSectionActive = !cabSecEl || cabSecEl.style.display !== 'none';
+      const uFt = cabSectionActive ? gn(`mq-${prefix}-uft`,0) : 0;
+      const bFt = cabSectionActive ? gn(`mq-${prefix}-bft`,0) : 0;
       const si=document.getElementById(`mq-${prefix}-si`)?gv(`mq-${prefix}-si`):'supply';
       const hMult={standard:1.0,tall:1.30}[gv(`mq-${prefix}-ht`)]||1.0;
 
@@ -1737,6 +1763,16 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function calcCountertop(prefix) {
+      // Same fix as cabinets — if the whole Countertop details section is
+      // hidden (no real countertop material for this project type), don't
+      // charge for anything left over in the inputs, including any
+      // previously-added surfaces from before the project type was switched.
+      if (prefix === 'b') {
+        const ctSecEl = document.getElementById('mq-b-countertop-details-sec');
+        if (ctSecEl && ctSecEl.style.display === 'none') {
+          return {lines:[],sub:0,total:0,low:0,high:0};
+        }
+      }
       const {removalRate}=P();
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
