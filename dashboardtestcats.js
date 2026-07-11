@@ -1931,7 +1931,14 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   // there isn't enough room below in the viewport — same fix pattern used
   // for the widget's photo hover preview, which had the identical problem.
   window.mqPositionRoomPanel = function(detailsEl) {
+    // Clean up any previous outside-click listener first, regardless of
+    // whether we're opening or closing, to avoid stacking duplicates.
+    if (detailsEl._mqCloseHandler) {
+      document.removeEventListener('click', detailsEl._mqCloseHandler);
+      detailsEl._mqCloseHandler = null;
+    }
     if (!detailsEl.open) return;
+
     const panel = detailsEl.querySelector('.mq-room-panel');
     if (!panel) return;
     // Reset to default (below) first so the measurement below is accurate
@@ -1947,6 +1954,18 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       panel.style.marginTop = '0';
       panel.style.marginBottom = '6px';
     }
+
+    // Close on any click outside this details element. Deferred by one tick
+    // so the same click that opened it doesn't immediately close it again.
+    const closeHandler = (e) => {
+      if (!detailsEl.contains(e.target)) {
+        detailsEl.open = false;
+        document.removeEventListener('click', closeHandler);
+        detailsEl._mqCloseHandler = null;
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    detailsEl._mqCloseHandler = closeHandler;
   };
 
   window.mqToggleSpecRoom = async function(itemId) {
@@ -1980,7 +1999,10 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       </label>`).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
-        <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none" id="mq-spec-room-summary-${itemId}">${summary}</summary>
+        <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
+          <span id="mq-spec-room-summary-${itemId}">${summary}</span>
+          <span style="font-size:9px">▾</span>
+        </summary>
         <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
           ${checkboxes}
         </div>
