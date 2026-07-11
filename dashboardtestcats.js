@@ -2519,12 +2519,53 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     try {
       const masterItems = await ensureMasterTemplateItems();
       const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
+      // Source of truth for a project type's name/description when it needs
+      // to get auto-added to a shop that doesn't have it yet — whatever the
+      // admin named it in their own room list while tagging template items.
+      const adminRooms = window._mqRooms || defaultRoomTypes();
       let addedCount = 0;
+      let roomsAddedCount = 0;
 
       for (const shop of allShops) {
         const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
         const existingSourceIds = new Set(shopItems.map(i => i.fields['Template source ID']).filter(Boolean));
         const missing = masterItems.filter(m => !existingSourceIds.has(m.id));
+        if (!missing.length) continue;
+
+        // Make sure every project type these items are tagged to actually
+        // exists in this shop's room list — added as a draft (hidden) room
+        // if it's missing, so it never silently shows up on their live
+        // widget without them reviewing and switching it on themselves.
+        let shopRooms = [];
+        try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
+        if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
+        let shopRoomsChanged = false;
+
+        const neededRoomIds = new Set();
+        missing.forEach(m => {
+          let vr = [];
+          try { vr = m.fields['Visible rooms'] ? JSON.parse(m.fields['Visible rooms']) : []; } catch(e) { vr = []; }
+          vr.forEach(id => neededRoomIds.add(id));
+        });
+        neededRoomIds.forEach(roomId => {
+          if (!shopRooms.find(r => r.id === roomId)) {
+            const adminRoomDef = adminRooms.find(r => r.id === roomId);
+            shopRooms.push({
+              id: roomId,
+              name: adminRoomDef ? adminRoomDef.name : roomId,
+              adjustment: 0,
+              description: adminRoomDef ? (adminRoomDef.description || '') : '',
+              active: false, // draft — hidden from their widget until they review and switch it on
+            });
+            shopRoomsChanged = true;
+            roomsAddedCount++;
+          }
+        });
+        if (shopRoomsChanged) {
+          await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
+          shop.fields['Room types'] = JSON.stringify(shopRooms);
+        }
+
         await Promise.all(missing.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
           'Shop': [shop.id],
           'Item name': master.fields['Item name'],
@@ -2538,7 +2579,8 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         })));
         addedCount += missing.length;
       }
-      showMsg('mq-templates-msg', `✓ Push complete — added ${addedCount} new item${addedCount===1?'':'s'} across ${allShops.length} shop${allShops.length===1?'':'s'}.`);
+      const roomsNote = roomsAddedCount ? `, plus ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'} (hidden until reviewed)` : '';
+      showMsg('mq-templates-msg', `✓ Push complete — added ${addedCount} new item${addedCount===1?'':'s'} across ${allShops.length} shop${allShops.length===1?'':'s'}${roomsNote}.`);
     } catch(e) {
       console.error('Push to shops failed:', e);
       showMsg('mq-templates-msg', 'Error during push — please try again.', 'error');
