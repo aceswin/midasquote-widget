@@ -2533,6 +2533,10 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     if (!confirm('Push new template items to every shop? This adds anything missing, but never changes or removes items a shop already has.')) return;
     showMsg('mq-templates-msg', 'Pushing to all shops — this may take a moment...');
     try {
+      const masterShop = await ensureMasterTemplateShop();
+      let masterPhotos = {};
+      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+
       const masterItems = await ensureMasterTemplateItems();
       const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
       // Source of truth for a project type's name/description when it needs
@@ -2582,7 +2586,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           shop.fields['Room types'] = JSON.stringify(shopRooms);
         }
 
-        await Promise.all(missing.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
+        const createdRecords = await Promise.all(missing.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
           'Shop': [shop.id],
           'Item name': master.fields['Item name'],
           'Special Items': master.fields['Item name'],
@@ -2593,6 +2597,29 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           'Visible rooms': master.fields['Visible rooms'] || '[]',
           'Template source ID': master.id,
         })));
+
+        // Photos live in a separate JSON blob keyed by record ID, not on the
+        // specialty item itself — since each shop's copy gets a brand new
+        // record ID, the master's photo (keyed by the master's ID) has to be
+        // explicitly re-keyed under the new record's ID in this shop's own
+        // Photos blob, or it silently never shows up here.
+        let shopPhotos = {};
+        try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
+        let shopPhotosChanged = false;
+        createdRecords.forEach((created, idx) => {
+          if (!created?.id) return;
+          const master = missing[idx];
+          const masterPhotoUrl = masterPhotos['spec_' + master.id];
+          if (masterPhotoUrl) {
+            shopPhotos['spec_' + created.id] = masterPhotoUrl;
+            shopPhotosChanged = true;
+          }
+        });
+        if (shopPhotosChanged) {
+          await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
+          shop.fields['Photos'] = JSON.stringify(shopPhotos);
+        }
+
         addedCount += missing.length;
       }
       const roomsNote = roomsAddedCount ? `, plus ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'} (hidden until reviewed)` : '';
