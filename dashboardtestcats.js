@@ -1124,12 +1124,12 @@ window.logoutMember = async function () {
   // working example, everything else fully editable/deletable.
   function defaultRoomTypes() {
     return [
-      { id:'kitchen', name:'Kitchen',        adjustment:0  },
-      { id:'bathroom',name:'Bathroom',       adjustment:-5 },
-      { id:'laundry', name:'Laundry room',   adjustment:0  },
-      { id:'garage',  name:'Garage',         adjustment:0  },
-      { id:'office',  name:'Home office',    adjustment:0  },
-      { id:'other',   name:'Other',          adjustment:0  },
+      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'' },
+      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'' },
+      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'' },
+      { id:'garage',  name:'Garage',         adjustment:0,  description:'' },
+      { id:'office',  name:'Home office',    adjustment:0,  description:'' },
+      { id:'other',   name:'Other',          adjustment:0,  description:'' },
     ];
   }
 
@@ -1147,11 +1147,16 @@ window.logoutMember = async function () {
     if (!container) return;
     const rooms = window._mqRooms || [];
     container.innerHTML = rooms.map((r, idx) => `
-      <div class="mq-room-row" data-idx="${idx}" style="display:grid;grid-template-columns:24px 1fr 140px 40px;gap:10px;margin-bottom:8px;align-items:center">
-        <span style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
-        <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
-        <input type="number" value="${r.adjustment||0}" id="mq-room-adj-${idx}" step="0.5" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;text-align:center"/>
-        <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
+      <div class="mq-room-row" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:24px 1fr 140px 40px;gap:10px;align-items:center;margin-bottom:8px">
+          <span style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
+          <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+          <input type="number" value="${r.adjustment||0}" id="mq-room-adj-${idx}" step="0.5" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;text-align:center"/>
+          <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
+        </div>
+        <div style="padding-left:34px">
+          <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+        </div>
       </div>
     `).join('');
 
@@ -1174,6 +1179,7 @@ window.logoutMember = async function () {
             id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
             name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
             adjustment: parseFloat(document.getElementById(`mq-room-adj-${oldIdx}`)?.value) || 0,
+            description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
           };
         });
         window._mqRooms = newRooms;
@@ -1193,7 +1199,7 @@ window.logoutMember = async function () {
 
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
-    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0 });
+    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0, description: '' });
     renderRoomsList();
   };
 
@@ -1213,9 +1219,10 @@ window.logoutMember = async function () {
         id: r.id,
         name: (el(`mq-room-name-${idx}`)?.value || '').trim(),
         adjustment: parseFloat(el(`mq-room-adj-${idx}`)?.value) || 0,
+        description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
       })).filter(r => r.name); // drop any left with a blank name
 
-      if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one room type.', 'error'); return; }
+      if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
 
       window._mqRooms = rooms;
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(rooms) });

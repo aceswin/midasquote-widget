@@ -81,12 +81,12 @@
     try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
     if (!Array.isArray(roomTypes) || !roomTypes.length) {
       roomTypes = [
-        { id:'kitchen', name:'Kitchen',        adjustment:0  },
-        { id:'bathroom',name:'Bathroom',       adjustment:-5 },
-        { id:'laundry', name:'Laundry room',   adjustment:0  },
-        { id:'garage',  name:'Garage',         adjustment:0  },
-        { id:'office',  name:'Home office',    adjustment:0  },
-        { id:'other',   name:'Other',          adjustment:0  },
+        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'' },
+        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'' },
+        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'' },
+        { id:'garage',  name:'Garage',         adjustment:0,  description:'' },
+        { id:'office',  name:'Home office',    adjustment:0,  description:'' },
+        { id:'other',   name:'Other',          adjustment:0,  description:'' },
       ];
     }
     window._mqRoomTypes = roomTypes;
@@ -685,8 +685,9 @@
         <p class="mq-sec-title">Project basics</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Project type</label>
-            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
             <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8"></p>
+            <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
           </div>
           ${hasInstall?`<div class="mq-field"><label class="mq-label">Supply + install?</label>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>`:''}
@@ -1212,6 +1213,19 @@
           }
         }
       });
+    };
+    // Shows the shop owner's custom guidance note for whichever project type
+    // is selected — e.g. "For door refacing, skip the box materials below,
+    // just add square footage under Specialty Items instead."
+    window.mqShowRoomDescription=(prefix)=>{
+      const descEl = document.getElementById(`mq-${prefix}-room-desc`);
+      if (!descEl) return;
+      const roomId = gv(`mq-${prefix}-room`);
+      const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
+      const desc = room ? (room.description||'').trim() : '';
+      if (!desc) { descEl.style.display = 'none'; return; }
+      descEl.textContent = desc;
+      descEl.style.display = 'block';
     };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
@@ -1971,6 +1985,8 @@ window.mqTogDrawerConfig=(prefix)=>{
     // then get filtered here so we don't need to know the room at HTML-build time.
     mqRefreshRoomVisibility('c');
     mqRefreshRoomVisibility('b');
+    mqShowRoomDescription('c');
+    mqShowRoomDescription('b');
   }
 
   // ============================================================
