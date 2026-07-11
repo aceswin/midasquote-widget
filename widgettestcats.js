@@ -720,7 +720,7 @@
         <p class="mq-sec-title">Project basics</p>
         <div class="mq-grid2">
           <div class="mq-field"><label class="mq-label">Project type</label>
-            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshAllPickerVisibility('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqRefreshSectionVisibility('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
             <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8"></p>
             <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
           </div>
@@ -728,7 +728,7 @@
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>`:''}
         </div>
       </div>
-      <div class="mq-sec">
+      <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
         <div style="margin-bottom:1rem">
           <button type="button" onclick="mqTogMeasure('${prefix}')" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em;width:100%;text-align:left">
@@ -790,7 +790,7 @@
           </div>
         </div>
       </div>
-      ${hasDrawers?`<div class="mq-sec">
+      ${hasDrawers?`<div class="mq-sec" id="mq-${prefix}-drawers-sec">
         <p class="mq-sec-title">Drawers</p>
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
           🗄️ Choose the approximate amount of drawers your project will have.
@@ -810,7 +810,7 @@
         </div>
       </div>`:''}
       ${Object.keys(TALL_CAB).length > 0 ? `
-      <div class="mq-sec">
+      <div class="mq-sec" id="mq-${prefix}-tallcabs-sec">
         <p class="mq-sec-title">Tall cabinets</p>
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
           🏛️ Add each tall cabinet separately — pick a type, width, and quantity, then add another for a different type.
@@ -818,7 +818,7 @@
         <div id="mq-${prefix}-tallcabs"></div>
         <button class="mq-add-surface-btn" onclick="mqAddTallCab('${prefix}')">+ Add a tall cabinet</button>
       </div>` : ''}
-      ${hasTrim?`<div class="mq-sec">
+      ${hasTrim?`<div class="mq-sec" id="mq-${prefix}-trim-sec">
         <p class="mq-sec-title">Crown moulding / valance</p>
         <div style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
@@ -1292,6 +1292,52 @@
         }
       });
     };
+    // If a whole category has zero real (non-"None") options left for the
+    // current project type, hide the entire section — not just the empty
+    // picker, since e.g. a "Cabinet measurements" section with no box
+    // material available doesn't make sense to show at all.
+    window.mqRefreshSectionVisibility=(prefix)=>{
+      if (prefix !== 'c' && prefix !== 'b') return;
+      const roomId = gv(`mq-${prefix}-room`);
+      function rowHasReal(selectId) {
+        const row = document.getElementById(`mq-vprow-${selectId}`);
+        if (!row) return false;
+        let found = false;
+        row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
+          if (chip.getAttribute('data-value')==='none') return; // "None" isn't a real option
+          let rooms=[];
+          try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
+          if (!rooms.length || rooms.includes(roomId)) found = true;
+        });
+        return found;
+      }
+      const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
+      if (cabSec) cabSec.style.display = rowHasReal(`mq-${prefix}-mat`) ? '' : 'none';
+
+      const drawSec = document.getElementById(`mq-${prefix}-drawers-sec`);
+      if (drawSec) drawSec.style.display = rowHasReal(`mq-${prefix}-drawer-config`) ? '' : 'none';
+
+      const tcSec = document.getElementById(`mq-${prefix}-tallcabs-sec`);
+      if (tcSec) {
+        let anyReal = false;
+        tcSec.querySelectorAll('.mq-vpicker-row').forEach(row=>{
+          row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
+            if (chip.getAttribute('data-value')==='none') return;
+            let rooms=[];
+            try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
+            if (!rooms.length || rooms.includes(roomId)) anyReal = true;
+          });
+        });
+        tcSec.style.display = anyReal ? '' : 'none';
+      }
+
+      const trimSec = document.getElementById(`mq-${prefix}-trim-sec`);
+      if (trimSec) {
+        const crownReal = rowHasReal(`mq-${prefix}-trim-crown`);
+        const valanceReal = rowHasReal(`mq-${prefix}-trim-valance`);
+        trimSec.style.display = (crownReal || valanceReal) ? '' : 'none';
+      }
+    };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
       if (!wrap) return; // only exists on the Both tab
@@ -1418,6 +1464,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.getElementById(containerId)?.appendChild(card);
       renumberTallCabs(prefix);
       mqRefreshAllPickerVisibility(prefix);
+      mqRefreshSectionVisibility(prefix);
     }
     window.mqAddTallCab=(prefix)=>addTallCabInternal(prefix);
     window.mqRemoveTallCab=(prefix,id)=>{
@@ -2056,6 +2103,8 @@ window.mqTogDrawerConfig=(prefix)=>{
     mqShowRoomDescription('b');
     mqRefreshAllPickerVisibility('c');
     mqRefreshAllPickerVisibility('b');
+    mqRefreshSectionVisibility('c');
+    mqRefreshSectionVisibility('b');
   }
 
   // ============================================================

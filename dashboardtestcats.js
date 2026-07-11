@@ -1811,6 +1811,10 @@ window.logoutMember = async function () {
       trim_valance: { title:'📏 Valance',          emoji:'📏' },
       tall_cabinet: { title:'🏛️ Tall Cabinets',    emoji:'🏛️' },
     };
+    // Stored globally so mqToggleCategoryRoom (defined outside this closure)
+    // can bulk-sync every item in a category when its category-level
+    // checkbox changes.
+    window._mqByCategory = byCategory;
 
     // Build Products for showroom — all item names per category
     const savedProductsForShowroom = {};
@@ -1827,6 +1831,9 @@ window.logoutMember = async function () {
 
     // Load specialty items
     const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+    // Stored globally in the same {id, ids, visibleRooms} shape as byCategory
+    // items, so the bulk-sync logic can treat specialty items identically.
+    window._mqSpecItemsList = specItems.map(r => ({ id: r.id, ids: [r.id], visibleRooms: r.fields['Visible rooms'] }));
 
     const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
     function specIcon(name) { for (const [k,v] of Object.entries(icons)) { if ((name||'').toLowerCase().includes(k)) return v; } return '⭐'; }
@@ -2148,7 +2155,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     const summary = categorySummaryText(hiddenIds, rooms);
     const checkboxes = rooms.map(r => `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}')" style="width:auto"/> ${r.name}
+        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}','${r.id}',this.checked)" style="width:auto"/> ${r.name}
       </label>`).join('');
     return `
       <details style="position:relative;margin-bottom:12px" ontoggle="mqPositionRoomPanel(this)">
@@ -2157,25 +2164,60 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
         <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
-          <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Check the project types where this <strong>whole category</strong> should show. Individual items below can still override this.</div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match. Change one item afterward to make it an exception.</div>
           ${checkboxes}
         </div>
       </details>`;
   }
 
-  window.mqToggleCategoryRoom = async function(cat) {
+  window.mqToggleCategoryRoom = async function(cat, roomId, checked) {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     const rooms = window._mqRooms || defaultRoomTypes();
-    const hiddenIds = rooms.filter(r => !document.getElementById(`mq-cat-room-${cat}-${r.id}`)?.checked).map(r => r.id);
+    const allRoomIds = rooms.map(r => r.id);
+
+    // Update the category-level hidden list for this one room
     if (!window._mqCategoryRooms) window._mqCategoryRooms = {};
-    window._mqCategoryRooms[cat] = hiddenIds;
+    let hidden = window._mqCategoryRooms[cat] || [];
+    hidden = checked ? hidden.filter(id => id !== roomId) : [...new Set([...hidden, roomId])];
+    window._mqCategoryRooms[cat] = hidden;
+
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Category rooms': JSON.stringify(window._mqCategoryRooms) });
       shopRec.fields['Category rooms'] = JSON.stringify(window._mqCategoryRooms);
-      const summaryEl = document.getElementById(`mq-cat-room-summary-${cat}`);
-      if (summaryEl) summaryEl.textContent = categorySummaryText(hiddenIds, rooms);
-    } catch(e) { console.error('Failed to save category room hiding', e); }
+    } catch(e) { console.error('Failed to save category room hiding', e); return; }
+
+    const summaryEl = document.getElementById(`mq-cat-room-summary-${cat}`);
+    if (summaryEl) summaryEl.textContent = categorySummaryText(hidden, rooms);
+
+    // Bulk-sync every item in this category: take each item's current
+    // effective per-room state, flip just this one room to match the
+    // category change, and save as an explicit list. From this point on,
+    // manually changing one item's own checkbox is a real override — until
+    // the category checkbox for that same room gets toggled again.
+    const items = cat === 'specialty' ? (window._mqSpecItemsList || []) : ((window._mqByCategory || {})[cat] || []);
+    const table = cat === 'specialty' ? CONFIG.SPECIALTY_TABLE : CONFIG.LINE_ITEMS_TABLE;
+
+    await Promise.all(items.map(async (item) => {
+      let current = [];
+      try { current = item.visibleRooms ? JSON.parse(item.visibleRooms) : []; } catch(e) { current = []; }
+      const effectiveSet = new Set(current.length ? current : allRoomIds); // empty = implicit all
+      if (checked) effectiveSet.add(roomId); else effectiveSet.delete(roomId);
+      const newList = allRoomIds.filter(id => effectiveSet.has(id));
+      const finalList = newList.length === allRoomIds.length ? [] : newList; // all-checked collapses back to "visible everywhere"
+      const ids = item.ids || [item.id];
+      try {
+        await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(finalList) })));
+        item.visibleRooms = JSON.stringify(finalList);
+      } catch(e) { console.error('Failed to bulk-sync item room links', e); }
+
+      // Reflect the sync visually on that item's own checkbox/summary, if rendered
+      const key = cat === 'specialty' ? `spec_${item.id}` : `li_${cat}_${(item.baseName||'').replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
+      const cb = document.getElementById(`mq-li-room-${key}-${roomId}`);
+      if (cb) cb.checked = checked;
+      const itemSummaryEl = document.getElementById(`mq-li-room-summary-${key}`);
+      if (itemSummaryEl) itemSummaryEl.textContent = roomLinkSummaryText(finalList, rooms);
+    }));
   };
 
   window.mqDeleteSpec = async function(id) {
