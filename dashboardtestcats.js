@@ -527,7 +527,7 @@ window.logoutMember = async function () {
           <!-- MY PRODUCTS -->
           <div class="mq-page" id="mq-page-products">
             <div class="mq-page-title">My Products</div>
-            <div class="mq-page-sub">Add photos to your materials and options — these appear on your customer showroom page</div>
+            <div class="mq-page-sub">Manage everything about how each item shows up on your widget: photos and thumbnails customers see while quoting, which project types each item is available for, and which items to hide entirely. Category-level shortcuts let you show or hide a whole group at once — individual items can still override that.</div>
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
               <strong>💡 How to add a photo:</strong><br>
               <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item below and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
@@ -1850,7 +1850,7 @@ window.logoutMember = async function () {
         btn.textContent = 'Saved ✓';
         btn.style.background = '#1a1a1a';
         btn.style.borderColor = '#1a1a1a';
-        setTimeout(() => { btn.textContent = 'Save photos'; }, 2000);
+        setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
       });
       showMsg('mq-products-msg', '✓ Photos saved!');
     } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
@@ -1980,7 +1980,7 @@ window.logoutMember = async function () {
         <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
         ${categoryRoomDisclosure(cat)}
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
-        <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
+        <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save changes</button>
       </div>`;
     }
 
@@ -1991,7 +1991,7 @@ window.logoutMember = async function () {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
         ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']), 'specialty', [r.id], r.fields['Visible rooms'])).join('')}
       </div>
-      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
+      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save changes</button>
     </div>` : '';
 
     const content = el('mq-products-content');
