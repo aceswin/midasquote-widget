@@ -1193,6 +1193,21 @@ window.logoutMember = async function () {
   // Same 6 defaults the widget falls back to for any shop that hasn't
   // touched this new setting yet — Bathroom ships pre-set to -5% as a
   // working example, everything else fully editable/deletable.
+  // Plain category display names, accessible at module level (unlike
+  // CAT_DISPLAY, which is scoped inside initProductsTab and includes emoji/
+  // title formatting we don't need here).
+  const CAT_DISPLAY_NAMES = {
+    material: 'Box Materials',
+    door: 'Door Styles',
+    drawer: 'Drawer Configurations',
+    hinge: 'Door Hinges',
+    countertop: 'Countertop Materials',
+    trim_crown: 'Crown Moulding',
+    trim_valance: 'Valance',
+    tall_cabinet: 'Tall Cabinets',
+    specialty: 'Specialty Items',
+  };
+
   function defaultRoomTypes() {
     return [
       { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true },
@@ -2237,6 +2252,10 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
         <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}','${r.id}',this.checked)" style="width:auto"/> ${r.name}
       </label>`).join('');
+    const linkedWarning = LINKED_CABINET_CATS.includes(cat) ? `
+      <div style="font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:8px;line-height:1.4">
+        ⚠️ Box Materials, Door Styles, and Drawer Configurations are always used together. Unchecking a project type here does the same for all three automatically, which hides the whole Cabinet measurements section on the widget for that project type.
+      </div>` : '';
     return `
       <details style="position:relative;margin-bottom:12px" ontoggle="mqPositionRoomPanel(this)">
         <summary style="font-size:12px;font-weight:600;color:#92400e;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;width:fit-content">
@@ -2244,13 +2263,20 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
         <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
+          ${linkedWarning}
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match. Change one item afterward to make it an exception.</div>
           ${checkboxes}
         </div>
       </details>`;
   }
 
-  window.mqToggleCategoryRoom = async function(cat, roomId, checked) {
+  // Material, Door Styles, and Drawer Configurations are always used
+  // together for cabinet pricing — unchecking any one of them for a project
+  // type hides the whole Cabinet measurements section on the widget, so all
+  // three need to stay in sync rather than letting them drift apart.
+  const LINKED_CABINET_CATS = ['material', 'door', 'drawer'];
+
+  async function applyCategoryRoomChange(cat, roomId, checked) {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     const rooms = window._mqRooms || defaultRoomTypes();
@@ -2269,6 +2295,8 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
     const summaryEl = document.getElementById(`mq-cat-room-summary-${cat}`);
     if (summaryEl) summaryEl.textContent = categorySummaryText(hidden, rooms);
+    const cb = document.getElementById(`mq-cat-room-${cat}-${roomId}`);
+    if (cb) cb.checked = checked;
 
     // Bulk-sync every item in this category: take each item's current
     // effective per-room state, flip just this one room to match the
@@ -2293,11 +2321,22 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
       // Reflect the sync visually on that item's own checkbox/summary, if rendered
       const key = cat === 'specialty' ? `spec_${item.id}` : `li_${cat}_${(item.baseName||'').replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
-      const cb = document.getElementById(`mq-li-room-${key}-${roomId}`);
-      if (cb) cb.checked = checked;
+      const itemCb = document.getElementById(`mq-li-room-${key}-${roomId}`);
+      if (itemCb) itemCb.checked = checked;
       const itemSummaryEl = document.getElementById(`mq-li-room-summary-${key}`);
       if (itemSummaryEl) itemSummaryEl.textContent = roomLinkSummaryText(finalList, rooms);
     }));
+  }
+
+  window.mqToggleCategoryRoom = async function(cat, roomId, checked) {
+    await applyCategoryRoomChange(cat, roomId, checked);
+    // If this is one of the three linked cabinet categories, mirror the exact
+    // same change to the other two so they never drift out of sync.
+    if (LINKED_CABINET_CATS.includes(cat)) {
+      const others = LINKED_CABINET_CATS.filter(c => c !== cat);
+      await Promise.all(others.map(otherCat => applyCategoryRoomChange(otherCat, roomId, checked)));
+      showMsg('mq-products-msg', `✓ Also updated ${others.map(c => CAT_DISPLAY_NAMES[c]).join(' and ')} to match, since they're always used together.`);
+    }
   };
 
   window.mqDeleteSpec = async function(id) {
