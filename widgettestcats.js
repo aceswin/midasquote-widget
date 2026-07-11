@@ -105,14 +105,20 @@
     try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
     if (!Array.isArray(roomTypes) || !roomTypes.length) {
       roomTypes = [
-        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'' },
-        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'' },
-        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'' },
-        { id:'garage',  name:'Garage',         adjustment:0,  description:'' },
-        { id:'office',  name:'Home office',    adjustment:0,  description:'' },
-        { id:'other',   name:'Other',          adjustment:0,  description:'' },
+        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true },
+        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'', active:true },
+        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'', active:true },
+        { id:'garage',  name:'Garage',         adjustment:0,  description:'', active:true },
+        { id:'office',  name:'Home office',    adjustment:0,  description:'', active:true },
+        { id:'other',   name:'Other',          adjustment:0,  description:'', active:true },
+        { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+        { id:'repainting', name:'Repainting',  adjustment:0,  description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+        { id:'restaining', name:'Restaining',  adjustment:0,  description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
       ];
     }
+    // Draft project types (active:false) never show to customers, no matter
+    // what's configured for them — the shop owner is still setting it up.
+    roomTypes = roomTypes.filter(r => r.active !== false);
     window._mqRoomTypes = roomTypes;
 
     // Category-level hiding — e.g. hide the entire Door Styles category for
@@ -822,6 +828,14 @@
         <p class="mq-sec-title">Crown moulding / valance</p>
         <div style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px;background:#f9fafb;border-radius:6px;padding:8px 10px">
+          <input type="checkbox" id="mq-${prefix}-trim-manual-toggle" onchange="mqTogTrimManualFt('${prefix}')" style="width:auto;flex-shrink:0"/>
+          Don't use upper cabinet linear footage — enter it myself
+        </label>
+        <div id="mq-${prefix}-trim-manual-wrap" style="display:none;margin-bottom:10px;align-items:center;gap:8px">
+          <label style="font-size:13px;color:#374151">Linear feet</label>
+          <input type="number" id="mq-${prefix}-trim-manual-ft" value="0" min="0" step="0.5" style="width:90px"/>
+        </div>
         ${hasCrown?`<div style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
             ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
@@ -1382,6 +1396,11 @@
       if(crownWrap) crownWrap.style.display=showCrown?'block':'none';
       if(valanceWrap) valanceWrap.style.display=showValance?'block':'none';
     };
+    window.mqTogTrimManualFt=(prefix)=>{
+      const checked = document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked;
+      const wrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
+      if (wrap) wrap.style.display = checked ? 'flex' : 'none';
+    };
 
     window.mqApplyLinkedTrim=(prefix, doorKey)=>{
       const crownSelect=document.getElementById(`mq-${prefix}-trim-crown`);
@@ -1718,25 +1737,29 @@ window.mqTogDrawerConfig=(prefix)=>{
       });
 
       let trimCost = 0;
+      const useManualTrimFt = document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked;
+      const manualTrimFt = useManualTrimFt ? gn(`mq-${prefix}-trim-manual-ft`, 0) : 0;
       const crownKey = gv(`mq-${prefix}-trim-crown`);
       if (crownKey && crownKey !== 'none' && TRIM[crownKey]) {
         const trim = TRIM[crownKey];
         const returns = gn(`mq-${prefix}-trim-crown-returns`, 0);
-        const trimFt = uFt + returns + tcLinFtForTrim;
+        const trimFt = useManualTrimFt ? (manualTrimFt + returns) : (uFt + returns + tcLinFtForTrim);
         const cost = trimFt * (trim.ps + trim.pi);
         trimCost += cost;
-        const tcNote = tcLinFtForTrim > 0 ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
-        if (trimFt > 0) lines.push({label:`${trim.label} (${(uFt+returns).toFixed(0)} lin ft${tcNote})`,cost:Math.round(cost)});
+        const tcNote = (!useManualTrimFt && tcLinFtForTrim > 0) ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
+        const baseFtLabel = useManualTrimFt ? manualTrimFt : uFt;
+        if (trimFt > 0) lines.push({label:`${trim.label} (${(baseFtLabel+returns).toFixed(0)} lin ft${tcNote})`,cost:Math.round(cost)});
       }
       const valanceKey = gv(`mq-${prefix}-trim-valance`);
       if (valanceKey && valanceKey !== 'none' && TRIM[valanceKey]) {
         const trim = TRIM[valanceKey];
         const returns = gn(`mq-${prefix}-trim-valance-returns`, 0);
-        const trimFt = uFt + returns + tcLinFtForTrim;
+        const trimFt = useManualTrimFt ? (manualTrimFt + returns) : (uFt + returns + tcLinFtForTrim);
         const cost = trimFt * (trim.ps + trim.pi);
         trimCost += cost;
-        const tcNote = tcLinFtForTrim > 0 ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
-        if (trimFt > 0) lines.push({label:`${trim.label} (${(uFt+returns).toFixed(0)} lin ft${tcNote})`,cost:Math.round(cost)});
+        const tcNote = (!useManualTrimFt && tcLinFtForTrim > 0) ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
+        const baseFtLabel = useManualTrimFt ? manualTrimFt : uFt;
+        if (trimFt > 0) lines.push({label:`${trim.label} (${(baseFtLabel+returns).toFixed(0)} lin ft${tcNote})`,cost:Math.round(cost)});
       }
       lines.push(...tallCabLines);
 

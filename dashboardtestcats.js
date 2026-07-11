@@ -1017,6 +1017,77 @@ window.logoutMember = async function () {
     return created.sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
   }
 
+  // Refacing/Repainting/Restaining come with these specialty items pre-built,
+  // each tagged so they only show for their matching project type. Runs once
+  // per shop, gated by its own 'Templates seeded' flag — independent of
+  // ensureSpecialtyDefaults above, since shops that already have OTHER
+  // specialty items should still get these new templates.
+  const PROJECT_TYPE_TEMPLATES = {
+    refacing: [
+      { name:'New doors',              price:0, perFt:false, perSqFt:true  },
+      { name:'New drawer fronts',      price:0, perFt:false, perSqFt:true  },
+      { name:'Edge tape replacement',  price:0, perFt:true,  perSqFt:false },
+      { name:'Hinge replacement',      price:0, perFt:false, perSqFt:false },
+    ],
+    repainting: [
+      { name:'Door & drawer front painting', price:0, perFt:false, perSqFt:true  },
+      { name:'Edge tape painting',           price:0, perFt:true,  perSqFt:false },
+    ],
+    restaining: [
+      { name:'Door & drawer front restaining', price:0, perFt:false, perSqFt:true  },
+      { name:'Edge tape restaining',           price:0, perFt:true,  perSqFt:false },
+    ],
+  };
+
+  async function ensureProjectTypeTemplates(shopRecord) {
+    if (shopRecord.fields['Templates seeded']) return; // already done for this shop
+
+    // Make sure Refacing/Repainting/Restaining actually exist in the room
+    // list too — not just their specialty items — otherwise a shop that
+    // already customized their rooms before this feature existed would end
+    // up with specialty items tagged to project types that aren't even in
+    // their dropdown.
+    const templateRoomDefs = {
+      refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+      repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+      restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+    };
+    const currentRooms = window._mqRooms || defaultRoomTypes();
+    let roomsChanged = false;
+    Object.keys(templateRoomDefs).forEach(roomId => {
+      if (!currentRooms.find(r => r.id === roomId)) {
+        currentRooms.push(templateRoomDefs[roomId]);
+        roomsChanged = true;
+      }
+    });
+    if (roomsChanged) {
+      window._mqRooms = currentRooms;
+      try {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Room types': JSON.stringify(currentRooms) });
+        shopRecord.fields['Room types'] = JSON.stringify(currentRooms);
+        renderRoomsList();
+      } catch(e) { console.warn('Failed to add project type template rooms:', e); }
+    }
+
+    const allItems = Object.entries(PROJECT_TYPE_TEMPLATES).flatMap(([roomId, items]) =>
+      items.map(item => ({ ...item, roomId }))
+    );
+    try {
+      await Promise.all(allItems.map(item => atCreate(CONFIG.SPECIALTY_TABLE, {
+        'Shop': [shopRecord.id],
+        'Item name': item.name,
+        'Special Items': item.name,
+        'Price': item.price,
+        'Per linear foot': item.perFt,
+        'Per square foot': item.perSqFt,
+        'Active': true,
+        'Visible rooms': JSON.stringify([item.roomId]),
+      })));
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Templates seeded': true });
+      shopRecord.fields['Templates seeded'] = true;
+    } catch(e) { console.warn('Failed to seed project type templates:', e); }
+  }
+
   // ============================================================
   // POPULATE FIELDS
   // ============================================================
@@ -1124,12 +1195,15 @@ window.logoutMember = async function () {
   // working example, everything else fully editable/deletable.
   function defaultRoomTypes() {
     return [
-      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'' },
-      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'' },
-      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'' },
-      { id:'garage',  name:'Garage',         adjustment:0,  description:'' },
-      { id:'office',  name:'Home office',    adjustment:0,  description:'' },
-      { id:'other',   name:'Other',          adjustment:0,  description:'' },
+      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true },
+      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'', active:true },
+      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'', active:true },
+      { id:'garage',  name:'Garage',         adjustment:0,  description:'', active:true },
+      { id:'office',  name:'Home office',    adjustment:0,  description:'', active:true },
+      { id:'other',   name:'Other',          adjustment:0,  description:'', active:true },
+      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
     ];
   }
 
@@ -1154,7 +1228,7 @@ window.logoutMember = async function () {
     if (!container) return;
     const rooms = window._mqRooms || [];
     container.innerHTML = rooms.map((r, idx) => `
-      <div class="mq-room-row" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px">
+      <div class="mq-room-row" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
         <div style="display:grid;grid-template-columns:24px 1fr 140px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
           <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
@@ -1162,10 +1236,14 @@ window.logoutMember = async function () {
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
         </div>
         <div style="padding-left:34px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:${r.active===false?'#92400e':'#166534'};font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
+            ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
+          </label>
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical">${(r.description||'').replace(/</g,'&lt;')}</textarea>
         </div>
-      </div>
-    `).join('');
+      </div>`
+    ).join('');
 
     // Drag-and-drop reordering — same pattern already used for Specialty
     // items, adapted since rooms live in one JSON list rather than separate
@@ -1187,6 +1265,7 @@ window.logoutMember = async function () {
             name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
             adjustment: parseFloat(document.getElementById(`mq-room-adj-${oldIdx}`)?.value) || 0,
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
+            active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
           };
         });
         window._mqRooms = newRooms;
@@ -1206,7 +1285,7 @@ window.logoutMember = async function () {
 
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
-    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0, description: '' });
+    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0, description: '', active: true });
     renderRoomsList();
   };
 
@@ -1227,6 +1306,7 @@ window.logoutMember = async function () {
         name: (el(`mq-room-name-${idx}`)?.value || '').trim(),
         adjustment: parseFloat(el(`mq-room-adj-${idx}`)?.value) || 0,
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
+        active: el(`mq-room-active-${idx}`)?.checked !== false,
       })).filter(r => r.name); // drop any left with a blank name
 
       if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
@@ -3803,6 +3883,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     if (pricingRecord) populatePricing(pricingRecord);
     populateShop(shopRecord);
     populateRooms(shopRecord);
+    await ensureProjectTypeTemplates(shopRecord);
 
     const leads = await loadLeads(shopRecord.fields['Shop name']);
     window._mqLeads = sortLeadsArray(leads);
