@@ -551,7 +551,7 @@ window.logoutMember = async function () {
             <div class="mq-page-title">🔧 Templates (Admin)</div>
             <div class="mq-page-sub">Manage the master specialty items for Refacing, Repainting, and Restaining. These are what every new shop gets automatically — add real door styles, prices, and photos here so shop owners never start from a blank page.</div>
             <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#991b1b;line-height:1.6">
-              <strong>⚠️ This only affects you.</strong> Editing an item here changes the master copy only. Existing shops already have their own independent copies from whenever they were seeded or last pushed to — editing here never silently changes what a live shop owner already has.
+              <strong>⚠️ Editing here alone changes nothing live.</strong> Changes only apply to a shop once you actually click "Push" — but be aware: pushing to an item a shop already has now <strong>fully overwrites</strong> its name, price, units, project types, and photo to match the master (this is intentional while you're still setting things up, since there's nothing real to protect yet — this should get smarter once real shops exist and may have customized their own copies).
             </div>
             <div id="mq-templates-msg"></div>
             <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
@@ -2634,9 +2634,11 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
   // One item, everywhere at once. Creates it fresh for shops that don't have
   // it yet (same safety net as the bulk push — auto-adds a missing project
-  // type as a hidden draft). For shops that already have it, refreshes only
-  // price/units/photo — never touches the item's name or project-type tags,
-  // since a shop owner may have customized those deliberately.
+  // type as a hidden draft). For shops that already have it, this fully
+  // overwrites name/price/units/tags/photo to match the master. NOTE: this is
+  // a full overwrite by design right now, while there are no real shop
+  // customizations to protect — revisit this once real shops exist and may
+  // have renamed/retagged their own copies deliberately.
   window.mqPushSingleTemplateItem = async function(masterItemId) {
     showMsg('mq-templates-msg', 'Pushing this item to all shops...');
     try {
@@ -2658,9 +2660,12 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
         if (existing) {
           await atUpdate(CONFIG.SPECIALTY_TABLE, existing.id, {
+            'Item name': master.fields['Item name'],
+            'Special Items': master.fields['Item name'],
             'Price': master.fields['Price'] || 0,
             'Per linear foot': master.fields['Per linear foot'] || false,
             'Per square foot': master.fields['Per square foot'] || false,
+            'Visible rooms': master.fields['Visible rooms'] || '[]',
           });
           if (masterPhotoUrl) {
             let shopPhotos = {};
