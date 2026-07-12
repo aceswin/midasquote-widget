@@ -1116,9 +1116,9 @@ window.logoutMember = async function () {
   // page instead of being hardcoded here. Bootstraps the master shop's own
   // Room types field once from these starting values if it's never been set.
   const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'' },
-    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'' },
-    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'' },
+    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
   };
 
   async function ensureMasterTemplateRoomDefs() {
@@ -1144,7 +1144,7 @@ window.logoutMember = async function () {
       <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px">
         <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-master-room-name-${idx}" placeholder="Project type name" style="font-size:13px;font-weight:600;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
         <textarea id="mq-master-room-desc-${idx}" placeholder="Description shown to customers on the widget for this project type" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
-        <div style="display:flex;gap:8px;align-items:flex-start">
+        <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
           <div id="mq-master-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
             ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
           </div>
@@ -1156,6 +1156,24 @@ window.logoutMember = async function () {
               <input type="file" id="mq-master-room-cover-file-${idx}" accept="image/*" style="display:none"/>
             </label>
             <span id="mq-master-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+          </div>
+        </div>
+        <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 Default "How to measure your space" for this project type</label>
+          <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+              ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+            </div>
+            <div style="flex:1;min-width:0">
+              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default measuring guide image (optional)</label>
+              <input type="text" id="mq-master-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+              <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                📤 Upload
+                <input type="file" id="mq-master-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
+              </label>
+              <span id="mq-master-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -1175,6 +1193,19 @@ window.logoutMember = async function () {
           mqSaveMasterRoomDefs();
         }
       );
+      mqWireUploadButton(
+        null,
+        `mq-master-room-measure-img-file-${idx}`,
+        `mq-master-room-measure-img-status-${idx}`,
+        `mq-master-room-measure-img-${idx}`,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        (url) => {
+          const preview = document.getElementById(`mq-master-room-measure-img-preview-${idx}`);
+          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+          mqSaveMasterRoomDefs();
+        }
+      );
     });
   }
 
@@ -1186,6 +1217,8 @@ window.logoutMember = async function () {
       name: (el(`mq-master-room-name-${idx}`)?.value || r.name || '').trim(),
       description: (el(`mq-master-room-desc-${idx}`)?.value || '').trim(),
       coverImage: (el(`mq-master-room-cover-${idx}`)?.value || '').trim(),
+      measureText: (el(`mq-master-room-measure-text-${idx}`)?.value || '').trim(),
+      measureImage: (el(`mq-master-room-measure-img-${idx}`)?.value || '').trim(),
     }));
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, { 'Room types': JSON.stringify(updated) });
@@ -1367,15 +1400,15 @@ window.logoutMember = async function () {
 
   function defaultRoomTypes() {
     return [
-      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'' },
-      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'' },
-      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'' },
-      { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'' },
-      { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'' },
-      { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'' },
-      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'' },
-      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'' },
-      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'' },
+      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
     ];
   }
 
@@ -1413,7 +1446,7 @@ window.logoutMember = async function () {
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
           </label>
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
-          <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
             <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
               ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
             </div>
@@ -1425,6 +1458,24 @@ window.logoutMember = async function () {
                 <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
               </label>
               <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+            </div>
+          </div>
+          <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
+            <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+                ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+              </div>
+              <div style="flex:1;min-width:0">
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image (optional)</label>
+                <input type="text" id="mq-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                  📤 Upload
+                  <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
+                </label>
+                <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -1443,6 +1494,19 @@ window.logoutMember = async function () {
         'products',
         (url) => {
           const preview = document.getElementById(`mq-room-cover-preview-${idx}`);
+          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+          mqSaveRooms();
+        }
+      );
+      mqWireUploadButton(
+        null,
+        `mq-room-measure-img-file-${idx}`,
+        `mq-room-measure-img-status-${idx}`,
+        `mq-room-measure-img-${idx}`,
+        window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
+        'products',
+        (url) => {
+          const preview = document.getElementById(`mq-room-measure-img-preview-${idx}`);
           if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
           mqSaveRooms();
         }
@@ -1471,6 +1535,8 @@ window.logoutMember = async function () {
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
             active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
+            measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
+            measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
           };
         });
         window._mqRooms = newRooms;
@@ -1490,7 +1556,7 @@ window.logoutMember = async function () {
 
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
-    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0, description: '', active: true, coverImage: '' });
+    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
     renderRoomsList();
   };
 
@@ -1513,6 +1579,8 @@ window.logoutMember = async function () {
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
         active: el(`mq-room-active-${idx}`)?.checked !== false,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
+        measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
+        measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
       })).filter(r => r.name); // drop any left with a blank name
 
       if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
@@ -2690,7 +2758,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           vr.forEach(roomId => {
             if (!shopRooms.find(r => r.id === roomId)) {
               const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false });
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
               shopRoomsChanged = true;
               roomsAddedCount++;
             }
@@ -2813,7 +2881,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           vr.forEach(roomId => {
             if (!shopRooms.find(r => r.id === roomId)) {
               const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false });
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
               shopRoomsChanged = true;
               roomsAddedCount++;
             }

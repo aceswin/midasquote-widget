@@ -680,6 +680,20 @@
     }).join('');
   }
 
+  // The generic measuring guide every project type falls back to until a
+  // shop owner sets custom "how to measure" text for that specific project
+  // type (see mqRefreshMeasureGuide). Kept as its own function so both the
+  // initial HTML render and the per-project-type swap can reuse the exact
+  // same markup.
+  function defaultMeasureGuideHTML() {
+    return `
+      <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
+      <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
+      <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
+      <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
+      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>`;
+  }
+
   function cabinetForm(prefix, specs, data) {
     const { li, hasDynamic, shopPhotos, roomTypes } = data;
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
@@ -732,7 +746,7 @@
             <span style="background:#2563eb;color:#fff;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
             Start here — choose your project type
           </label>
-          <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqRefreshSectionVisibility('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+          <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqRefreshSectionVisibility('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
           <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
         </div>
@@ -747,13 +761,7 @@
           <button type="button" onclick="mqTogMeasure('${prefix}')" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em;width:100%;text-align:left">
             <span id="mq-${prefix}-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> 📏 How to measure your space
           </button>
-          <div id="mq-${prefix}-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">
-            <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
-            <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
-            <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
-            <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
-            <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>
-          </div>
+          <div id="mq-${prefix}-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
         </div>
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them below.</div>` : ''}
         <div class="mq-grid3">
@@ -1297,6 +1305,38 @@
         descEl.appendChild(textDiv);
       }
       descEl.style.display = 'block';
+    };
+    // Swaps the "How to measure your space" guide to match whichever project
+    // type is currently selected. Falls back to the standard generic guide
+    // whenever that project type hasn't had its own custom text set — so
+    // nothing changes for any shop/project type that's never touched this.
+    window.mqRefreshMeasureGuide=(prefix)=>{
+      const guideEl = document.getElementById(`mq-${prefix}-measure-guide`);
+      if (!guideEl) return;
+      const roomId = gv(`mq-${prefix}-room`);
+      const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
+      const customText = room ? (room.measureText||'').trim() : '';
+      const customImg  = room ? (room.measureImage||'').trim() : '';
+      if (!customText) { guideEl.innerHTML = defaultMeasureGuideHTML(); return; }
+      guideEl.innerHTML = ''; // clear before rebuilding
+      if (customImg) {
+        const img = document.createElement('img');
+        img.src = customImg;
+        img.style.cssText = 'width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:10px;display:block';
+        img.onerror = () => { img.style.display = 'none'; };
+        guideEl.appendChild(img);
+      }
+      const title = document.createElement('div');
+      title.style.cssText = 'font-weight:600;margin-bottom:8px;color:#111';
+      title.textContent = '📏 How to measure for this project';
+      guideEl.appendChild(title);
+      // textContent (not innerHTML) so the shop owner's own guide text can
+      // never be interpreted as markup, even by accident — same rule already
+      // used for the project-type description above.
+      const body = document.createElement('div');
+      body.style.cssText = 'white-space:pre-wrap';
+      body.textContent = customText;
+      guideEl.appendChild(body);
     };
     // Covers every picker at once — materials, doors, hinges, drawer configs,
     // crown, valance, tall cabinets, and countertop materials — since they
@@ -2190,6 +2230,8 @@ window.mqTogDrawerConfig=(prefix)=>{
     mqRefreshRoomVisibility('b');
     mqShowRoomDescription('c');
     mqShowRoomDescription('b');
+    mqRefreshMeasureGuide('c');
+    mqRefreshMeasureGuide('b');
     mqRefreshAllPickerVisibility('c');
     mqRefreshAllPickerVisibility('b');
     mqRefreshSectionVisibility('c');
