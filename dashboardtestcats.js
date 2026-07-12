@@ -1728,18 +1728,23 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
     const sessionBadgeByLeadId = {};
     Object.values(sessionGroups).forEach(rows => {
       if (rows.length < 2) return; // no badge needed for a solo attempt
-      const namedRow = rows.find(r => (r.fields['Customer name'] || '').trim());
+      // Order by when each estimate was actually made, so "1 of 2" / "2 of 2"
+      // means something real, regardless of how the table itself is sorted.
+      const chronological = [...rows].sort((a, b) => new Date(a.createdTime) - new Date(b.createdTime));
+      const namedRow = chronological.find(r => (r.fields['Customer name'] || '').trim());
       if (namedRow) {
         const name = namedRow.fields['Customer name'].trim();
-        const otherCount = rows.length - 1;
-        const label = `🔗 ${otherCount} additional estimate${otherCount === 1 ? '' : 's'} by ${name}`;
         // Shown on the OTHER rows, not the named row itself — no need to
-        // tell someone "additional estimates by Jane Doe" directly under
+        // tell someone "additional estimate by Jane Doe" directly under
         // Jane Doe's own already-labeled row.
-        rows.forEach(r => { if (r !== namedRow) sessionBadgeByLeadId[r.id] = label; });
+        const others = chronological.filter(r => r !== namedRow);
+        others.forEach((r, i) => {
+          sessionBadgeByLeadId[r.id] = `🔗 Additional estimate ${i + 1} of ${others.length} by ${name}`;
+        });
       } else {
-        const label = `🔗 ${rows.length} estimates by an unknown person`;
-        rows.forEach(r => { sessionBadgeByLeadId[r.id] = label; });
+        chronological.forEach((r, i) => {
+          sessionBadgeByLeadId[r.id] = `🔗 Estimate ${i + 1} of ${chronological.length} by an unknown person`;
+        });
       }
     });
 
