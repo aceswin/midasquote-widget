@@ -4636,6 +4636,72 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     }
   }
 
+  // JS-driven sticky nav — CSS position:sticky silently stops working if ANY
+  // ancestor element has overflow:hidden/auto/scroll set on it, which is very
+  // common in page builders (Webflow, etc.) this dashboard gets embedded in.
+  // This works regardless of the surrounding page's container structure,
+  // since it just measures real scroll position rather than depending on
+  // the CSS containing-block chain.
+  function mqInitStickyNav() {
+    const sidebar = document.querySelector('#midasquote-dashboard .mq-sidebar');
+    const layout  = document.querySelector('#midasquote-dashboard .mq-layout');
+    const topbar  = document.querySelector('#midasquote-dashboard .mq-topbar');
+    if (!sidebar || !layout) return;
+
+    // Holds the sidebar's normal-flow space open once it goes fixed, so the
+    // content column doesn't jump sideways when the sidebar leaves the flex flow.
+    const placeholder = document.createElement('div');
+    placeholder.style.display = 'none';
+    placeholder.style.flexShrink = '0';
+    layout.insertBefore(placeholder, sidebar);
+
+    let stuck = false;
+
+    function update() {
+      const topbarHeight = topbar ? topbar.getBoundingClientRect().height : 60;
+      const layoutRect = layout.getBoundingClientRect();
+      const shouldStick = layoutRect.top <= topbarHeight && layoutRect.bottom > topbarHeight;
+
+      if (shouldStick && !stuck) {
+        const rect = sidebar.getBoundingClientRect();
+        placeholder.style.width = rect.width + 'px';
+        placeholder.style.height = rect.height + 'px';
+        placeholder.style.display = 'block';
+        sidebar.style.position = 'fixed';
+        sidebar.style.top = topbarHeight + 'px';
+        sidebar.style.left = layoutRect.left + 'px';
+        sidebar.style.width = rect.width + 'px';
+        sidebar.style.maxHeight = `calc(100vh - ${topbarHeight}px)`;
+        sidebar.style.overflowY = 'auto';
+        sidebar.style.zIndex = '90';
+        stuck = true;
+      } else if (!shouldStick && stuck) {
+        sidebar.style.position = '';
+        sidebar.style.top = '';
+        sidebar.style.left = '';
+        sidebar.style.width = '';
+        sidebar.style.maxHeight = '';
+        sidebar.style.overflowY = '';
+        sidebar.style.zIndex = '';
+        placeholder.style.display = 'none';
+        stuck = false;
+      } else if (stuck) {
+        // Keep it aligned in case of resize/orientation change while stuck
+        sidebar.style.left = layoutRect.left + 'px';
+      }
+    }
+
+    let ticking = false;
+    function onScrollOrResize() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { update(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    update();
+  }
+
   // ============================================================
   // INIT
   // ============================================================
@@ -4691,6 +4757,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       _mqSignCustomColor = savedHeadlines.signColor || '';
     } catch(e) {}
     container.innerHTML = buildHTML(shopRecord.fields);
+    mqInitStickyNav();
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
     if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
