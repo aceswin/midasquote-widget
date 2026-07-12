@@ -2638,7 +2638,6 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
         let shopPhotos = {};
         try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-        let shopPhotosChanged = false;
 
         // Sequential, not parallel — slower, but guarantees each item's
         // delete-then-recreate fully completes before moving to the next,
@@ -2676,20 +2675,23 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
               console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
               continue;
             }
+            // Write this item's photo immediately, right here — not batched
+            // up to write once at the end of the shop's whole item loop.
+            // Batching meant that if this slow, sequential push got
+            // interrupted (browser throttling a backgrounded tab, closing
+            // the page, anything) before every single item finished, the
+            // photo write for that shop would never happen at all, even
+            // though every item itself had already been created correctly.
             const masterPhotoUrl = masterPhotos['spec_' + master.id];
             if (masterPhotoUrl) {
               shopPhotos['spec_' + created.id] = masterPhotoUrl;
-              shopPhotosChanged = true;
+              await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
+              shop.fields['Photos'] = JSON.stringify(shopPhotos);
             }
           } catch(e) {
             errorCount++;
             console.error('Failed to push item:', master.fields['Item name'], 'to', shop.fields['Shop name'], e);
           }
-        }
-
-        if (shopPhotosChanged) {
-          await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
-          shop.fields['Photos'] = JSON.stringify(shopPhotos);
         }
       }
       const roomsNote = roomsAddedCount ? `, ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
