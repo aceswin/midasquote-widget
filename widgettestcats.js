@@ -754,7 +754,7 @@
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
-        <div style="background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:2px solid #93c5fd;border-radius:12px;padding:16px 18px;margin-bottom:16px">
+        <div style="background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:2px solid #93c5fd;border-radius:12px;padding:16px 18px">
           <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#1e40af;margin-bottom:8px">
             <span style="background:#2563eb;color:#fff;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
             Start here — choose your project type
@@ -763,19 +763,23 @@
           <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
         </div>
-        <div class="mq-grid2">
-          ${hasInstall?`<div class="mq-field" id="mq-${prefix}-si-field"><label class="mq-label">Supply + install?</label>
-            <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>`:''}
-        </div>
       </div>
+      <div class="mq-sec" id="mq-${prefix}-measuring-sec">
+        <p class="mq-sec-title">Measuring</p>
+        <button type="button" onclick="mqTogMeasure('${prefix}')" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em;width:100%;text-align:left">
+          <span id="mq-${prefix}-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> 📏 How to measure your space
+        </button>
+        <div id="mq-${prefix}-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
+      </div>
+      ${hasInstall?`<div class="mq-sec" id="mq-${prefix}-si-field">
+        <p class="mq-sec-title">Supply + install</p>
+        <div style="background:linear-gradient(135deg,#f0fdf4,#f7fee7);border:2px solid #86efac;border-radius:12px;padding:16px 18px">
+          <div class="mq-field"><label class="mq-label" style="font-size:14px;font-weight:700;color:#166534">Supply + install?</label>
+            <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
+        </div>
+      </div>`:''}
       <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
-        <div style="margin-bottom:1rem">
-          <button type="button" onclick="mqTogMeasure('${prefix}')" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em;width:100%;text-align:left">
-            <span id="mq-${prefix}-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> 📏 How to measure your space
-          </button>
-          <div id="mq-${prefix}-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
-        </div>
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them below.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
@@ -1410,11 +1414,14 @@
       const cabActive = rowHasReal(`mq-${prefix}-mat`);
       const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
+      // Measuring always shows now — each project type can have its own
+      // tailored guide (set in the dashboard), so it's no longer tied to
+      // whether this project type happens to use box materials.
       // The "Cabinet details" divider only exists on the Both tab
       const cabDivider = document.getElementById(`mq-${prefix}-cabinet-divider`);
       if (cabDivider) cabDivider.style.display = cabActive ? '' : 'none';
-      // Supply+install lives inside "Project basics" alongside Project type —
-      // hide just that one field, keeping Project type/description/title visible.
+      // Supply+install is now its own section — hide it the same way, keeping
+      // Project type/Measuring visible.
       const siField = document.getElementById(`mq-${prefix}-si-field`);
       if (siField) siField.style.display = cabActive ? '' : 'none';
       // Removal only makes sense if there's a cabinet being priced at all
