@@ -1413,6 +1413,8 @@ window.logoutMember = async function () {
 
 **Not sure?** Just use your best guess — this is a ballpark estimate!
 
+**Don't feel like converting inches or mm?** Tap the 🧮 next to the field and it'll convert it for you.
+
 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop

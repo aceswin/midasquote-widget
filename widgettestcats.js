@@ -696,7 +696,8 @@
       <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
       <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
       <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
-      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5. Measured in inches or mm instead? Tap the 🧮 next to the field and it'll convert it for you.</div>`;
+      <div style="margin-bottom:6px"><strong>Don't feel like converting inches or mm?</strong> Tap the 🧮 next to the field and it'll convert it for you.</div>
+      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>`;
   }
 
   // Renders shop-owner-supplied guide text safely: escapes everything first
