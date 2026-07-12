@@ -1,7 +1,7 @@
 /*
  * MidasQuote Widget v3.3 — TEST BUILD (widgettest.js)
  * Adds visual thumbnails to specialty items so customers don't have to
- * guess what unfamiliar terms mean without leaving the widget..
+ * guess what unfamiliar terms mean without leaving the widget.
  */
 
 (function() {
@@ -294,7 +294,9 @@
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
-      #midasquote-widget .mq-spec-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
+      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
+      #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
+      #midasquote-widget .mq-spec-bottom{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
       #midasquote-widget .mq-spec-name{font-size:13px;color:#111;flex:1;cursor:pointer}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
@@ -663,12 +665,14 @@
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
-        <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
-        <div style="flex:1;min-width:0">
-          <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
-          <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
+        <div class="mq-spec-top">
+          <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
+          <div style="flex:1;min-width:0">
+            <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
+            <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
+          </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div class="mq-spec-bottom">
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
             <input type="text" inputmode="${(s.perSqFt||s.perFt)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
@@ -692,7 +696,7 @@
       <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
       <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
       <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
-      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>`;
+      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5. Measured in inches or mm instead? Tap the 🧮 next to the field and it'll convert it for you.</div>`;
   }
 
   // Renders shop-owner-supplied guide text safely: escapes everything first
