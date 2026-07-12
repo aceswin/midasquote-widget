@@ -1714,20 +1714,42 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
   function renderLeads(leads, limit) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
 
-    // Build a map of session ID → count so we can badge rows that share a session
-    const sessionCounts = {};
+    // Group leads sharing a Session ID so multi-attempt visitors get a clear
+    // label instead of a bare "N attempts" badge. If nobody in the session
+    // ever gave a name, say so plainly; if someone did (even on a different
+    // attempt within the same session), credit the other attempts to them
+    // instead of leaving them looking like anonymous noise.
+    const sessionGroups = {};
     leads.forEach(r => {
       const sid = r.fields['Session ID'];
-      if (sid) sessionCounts[sid] = (sessionCounts[sid] || 0) + 1;
+      if (!sid) return;
+      (sessionGroups[sid] = sessionGroups[sid] || []).push(r);
+    });
+    const sessionBadgeByLeadId = {};
+    Object.values(sessionGroups).forEach(rows => {
+      if (rows.length < 2) return; // no badge needed for a solo attempt
+      const namedRow = rows.find(r => (r.fields['Customer name'] || '').trim());
+      if (namedRow) {
+        const name = namedRow.fields['Customer name'].trim();
+        const otherCount = rows.length - 1;
+        const label = `🔗 ${otherCount} additional estimate${otherCount === 1 ? '' : 's'} by ${name}`;
+        // Shown on the OTHER rows, not the named row itself — no need to
+        // tell someone "additional estimates by Jane Doe" directly under
+        // Jane Doe's own already-labeled row.
+        rows.forEach(r => { if (r !== namedRow) sessionBadgeByLeadId[r.id] = label; });
+      } else {
+        const label = `🔗 ${rows.length} estimates by an unknown person`;
+        rows.forEach(r => { sessionBadgeByLeadId[r.id] = label; });
+      }
     });
 
     const rows = (limit ? leads.slice(0, limit) : leads).map(r => {
       const f = r.fields;
       const statusColors = { New: 'blue', Contacted: 'yellow', Booked: 'green', Lost: 'red' };
       const color = statusColors[f['Status']] || 'grey';
-      const sid = f['Session ID'];
-      const sessionBadge = sid && sessionCounts[sid] > 1
-        ? `<span title="Session ${sid}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">🔗 ${sessionCounts[sid]} attempts</span>`
+      const badgeText = sessionBadgeByLeadId[r.id];
+      const sessionBadge = badgeText
+        ? `<span title="Session ${f['Session ID']}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">${badgeText}</span>`
         : '';
       return `<tr>
         <td>${formatLeadDate(r.createdTime)}</td>
