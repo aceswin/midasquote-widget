@@ -775,6 +775,7 @@
         <p class="mq-sec-title">Supply + install</p>
         <div style="background:linear-gradient(135deg,#f0fdf4,#f7fee7);border:2px solid #86efac;border-radius:12px;padding:16px 18px">
           <div class="mq-field"><label class="mq-label" style="font-size:14px;font-weight:700;color:#166534">Supply + install?</label>
+            <p class="mq-hint" style="margin-bottom:8px">Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install).</p>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
         </div>
       </div>`:''}
