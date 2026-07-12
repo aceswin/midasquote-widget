@@ -2484,32 +2484,39 @@ window.mqTogDrawerConfig=(prefix)=>{
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
 
-    // ── First-visit showroom popup ──
-    // Only shows if showroom is enabled, and only once per browser per shop
-    if (shop['Show showroom'] !== 'Hide' && shop['Shop token']) {
+    // ── First-visit tips popup ──
+    // Replaces the old showroom nudge — this widget now has photos, per-project
+    // measuring guides, etc. built right in, so the popup points people at
+    // those instead of sending them off to a separate page. Shows once per
+    // browser per shop, same as before. No longer tied to the "Show showroom"
+    // setting since it's not about the showroom anymore — it's general
+    // orientation for using the widget itself.
+    if (shop['Shop token']) {
       try {
-        const storageKey = `mq_showroom_seen_${shop['Shop token']}`;
+        const storageKey = `mq_tips_seen_${shop['Shop token']}`;
         if (!localStorage.getItem(storageKey)) {
           const bc = shop['Brand colour'] || '#1a1a1a';
-          const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}`;
           const popup = document.createElement('div');
-          popup.id = 'mq-showroom-popup';
+          popup.id = 'mq-tips-popup';
           popup.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqFadeIn 0.25s ease`;
           popup.innerHTML = `
             <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25);animation:mqSlideUp 0.3s ease">
-              <div style="font-size:36px;margin-bottom:12px">🖼️</div>
+              <div style="font-size:36px;margin-bottom:12px">👋</div>
               <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">First time here?</div>
-              <div style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:1.5rem">Browse our products first to see the materials, door styles, and specialty items we offer — then come back to get your quote.</div>
-              <a href="${showroomUrl}" target="_blank" onclick="mqDismissShowroomPopup()" style="display:block;background:${bc};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;margin-bottom:10px;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">View our products →</a>
-              <button onclick="mqDismissShowroomPopup()" style="background:none;border:none;font-size:13px;color:#9ca3af;cursor:pointer;font-family:inherit;padding:4px">Skip, just get a quote</button>
+              <div style="font-size:14px;color:#6b7280;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+                <div style="margin-bottom:8px">✅ <strong>Choose your project type first</strong> — everything below adjusts to match it.</div>
+                <div style="margin-bottom:8px">🔍 <strong>Tap or hover any photo</strong> to see it up close.</div>
+                <div>📏 <strong>Check the measuring guide</strong> for help getting accurate numbers.</div>
+              </div>
+              <button onclick="mqDismissTipsPopup()" style="display:block;width:100%;background:${bc};color:#fff;border:none;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;cursor:pointer;font-family:inherit;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Got it — let's start!</button>
             </div>
             <style>
               @keyframes mqFadeIn{from{opacity:0}to{opacity:1}}
               @keyframes mqSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
             </style>`;
-          window.mqDismissShowroomPopup = function() {
+          window.mqDismissTipsPopup = function() {
             try { localStorage.setItem(storageKey, '1'); } catch(e) {}
-            const p = document.getElementById('mq-showroom-popup');
+            const p = document.getElementById('mq-tips-popup');
             if (p) { p.style.opacity='0'; p.style.transition='opacity 0.2s'; setTimeout(()=>p.remove(), 200); }
           };
           setTimeout(() => document.body.appendChild(popup), 1000);
