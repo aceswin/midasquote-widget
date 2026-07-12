@@ -93,7 +93,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-btn-danger:hover{background:#fef2f2}
       #midasquote-dashboard .mq-btn-sm{padding:5px 10px;font-size:12px}
       #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px);width:100%}
-      #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0}
+      #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0;position:sticky;top:60px;align-self:flex-start;max-height:calc(100vh - 60px);overflow-y:auto}
       #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
       #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#f9fafb}
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
@@ -153,7 +153,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
       @media (max-width: 768px) {
         #midasquote-dashboard .mq-layout{flex-direction:column}
-        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch}
+        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
         #midasquote-dashboard .mq-nav-section{display:none}
         #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
