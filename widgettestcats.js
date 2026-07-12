@@ -105,15 +105,15 @@
     try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
     if (!Array.isArray(roomTypes) || !roomTypes.length) {
       roomTypes = [
-        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true, coverImage:'' },
-        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'', active:true, coverImage:'' },
-        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'', active:true, coverImage:'' },
-        { id:'garage',  name:'Garage',         adjustment:0,  description:'', active:true, coverImage:'' },
-        { id:'office',  name:'Home office',    adjustment:0,  description:'', active:true, coverImage:'' },
-        { id:'other',   name:'Other',          adjustment:0,  description:'', active:true, coverImage:'' },
-        { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
-        { id:'repainting', name:'Repainting',  adjustment:0,  description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
-        { id:'restaining', name:'Restaining',  adjustment:0,  description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'' },
+        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'' },
+        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'' },
+        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'' },
+        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'' },
+        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'' },
+        { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'' },
+        { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'' },
+        { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'' },
       ];
     }
     // Draft project types (active:false) never show to customers, no matter
@@ -1239,15 +1239,12 @@
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
     };
     window.mqTogVanityNote=(prefix)=>{
+      // Intentionally hidden from customers — the % adjustment itself still
+      // fully applies in calcCabinet, this just stops announcing it on the
+      // widget. Kept as a no-op function (rather than removing every call
+      // site) so nothing else breaks.
       const note = document.getElementById(`mq-${prefix}-room-vanity-note`);
-      if (!note) return;
-      const roomId = gv(`mq-${prefix}-room`);
-      const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
-      const adj = room ? (parseFloat(room.adjustment)||0) : 0;
-      if (adj === 0) { note.style.display = 'none'; return; }
-      const sign = adj > 0 ? '+' : '';
-      note.textContent = `✓ Box, door, and drawer pricing adjusted ${sign}${adj}% for ${room.name}`;
-      note.style.display = 'block';
+      if (note) note.style.display = 'none';
     };
     // Shows/hides specialty items based on the currently selected room. An
     // item with an empty visibleRooms list is visible everywhere (backward
@@ -1949,15 +1946,10 @@ window.mqTogDrawerConfig=(prefix)=>{
         document.getElementById('mq-c-res-title').textContent=r.roomLabel+' cabinet estimate';
         document.getElementById('mq-c-res-sub').textContent=`${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
         const vanityNoteC = document.getElementById('mq-c-vanity-note');
-        if (vanityNoteC) {
-          if (r.hasRoomAdjustment) {
-            const sign = r.roomAdjPct > 0 ? '+' : '';
-            vanityNoteC.textContent = `✓ Pricing adjusted ${sign}${r.roomAdjPct}% for ${r.roomName}`;
-            vanityNoteC.style.display = 'block';
-          } else {
-            vanityNoteC.style.display = 'none';
-          }
-        }
+        // Intentionally hidden from customers — pricing still reflects the
+        // room adjustment (r.hasRoomAdjustment/r.roomAdjPct), this just
+        // stops announcing it in the results panel.
+        if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r);
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');document.getElementById('mq-c-result').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1994,15 +1986,10 @@ window.mqTogDrawerConfig=(prefix)=>{
         setTimeout(async()=>{
           const cab=calcCabinet('b'),ct=calcCountertop('b');
           const vanityNoteB = document.getElementById('mq-b-vanity-note');
-          if (vanityNoteB) {
-            if (cab.hasRoomAdjustment) {
-              const sign = cab.roomAdjPct > 0 ? '+' : '';
-              vanityNoteB.textContent = `✓ Pricing adjusted ${sign}${cab.roomAdjPct}% for ${cab.roomName}`;
-              vanityNoteB.style.display = 'block';
-            } else {
-              vanityNoteB.style.display = 'none';
-            }
-          }
+          // Intentionally hidden from customers — pricing still reflects the
+          // room adjustment (cab.hasRoomAdjustment/cab.roomAdjPct), this just
+          // stops announcing it in the results panel.
+          if (vanityNoteB) vanityNoteB.style.display = 'none';
           const cabRows=document.getElementById('mq-b-cab-rows');cabRows.innerHTML='';
           [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;cabRows.appendChild(d);});
           const ctRows=document.getElementById('mq-b-ct-rows');ctRows.innerHTML='';

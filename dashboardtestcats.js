@@ -1116,9 +1116,9 @@ window.logoutMember = async function () {
   // page instead of being hardcoded here. Bootstraps the master shop's own
   // Room types field once from these starting values if it's never been set.
   const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
-    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
-    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'' },
+    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'' },
+    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'' },
   };
 
   async function ensureMasterTemplateRoomDefs() {
@@ -1367,15 +1367,15 @@ window.logoutMember = async function () {
 
   function defaultRoomTypes() {
     return [
-      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true, coverImage:'' },
-      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'', active:true, coverImage:'' },
-      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'', active:true, coverImage:'' },
-      { id:'garage',  name:'Garage',         adjustment:0,  description:'', active:true, coverImage:'' },
-      { id:'office',  name:'Home office',    adjustment:0,  description:'', active:true, coverImage:'' },
-      { id:'other',   name:'Other',          adjustment:0,  description:'', active:true, coverImage:'' },
-      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
-      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
-      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'' },
+      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'' },
+      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'' },
+      { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'' },
+      { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'' },
+      { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'' },
+      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'' },
+      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'' },
+      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'' },
     ];
   }
 
