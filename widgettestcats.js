@@ -936,7 +936,7 @@
       </div>`:''}
       <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
-        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them below.</div>` : ''}
+        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
             <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear')}</div></div>
