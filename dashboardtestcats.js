@@ -2329,7 +2329,12 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
   window.mqSaveSpecField = async function(id, field, value) {
     try {
-      await atUpdate(CONFIG.SPECIALTY_TABLE, id, { [field]: value });
+      const updates = { [field]: value };
+      // 'Special Items' is the primary field shown in Airtable's own view —
+      // keep it in sync whenever the name changes, or it's left showing a
+      // stale label (like "New template item") forever after a rename.
+      if (field === 'Item name') updates['Special Items'] = value;
+      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
@@ -2640,7 +2645,15 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         // and makes any individual failure easy to isolate and log clearly.
         for (const master of masterItems) {
           try {
-            const existingMatches = shopItems.filter(i => i.fields['Template source ID'] === master.id);
+            // Match by tag first, but also fall back to an exact name match —
+            // catches orphaned rows left behind by manual Airtable edits that
+            // never got (or lost) their tracking tag, so they don't silently
+            // block a clean push forever.
+            const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
+            const existingMatches = shopItems.filter(i =>
+              i.fields['Template source ID'] === master.id ||
+              (i.fields['Item name'] || '').trim().toLowerCase() === masterName
+            );
             if (existingMatches.length) {
               await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
               replacedCount++;
@@ -2714,7 +2727,15 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       for (const shop of allShops) {
         try {
           const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-          const existingMatches = shopItems.filter(i => i.fields['Template source ID'] === master.id);
+          // Match by tag first, but also fall back to an exact name match —
+          // catches orphaned rows left behind by manual Airtable edits that
+          // never got (or lost) their tracking tag, so they don't silently
+          // block a clean push forever.
+          const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
+          const existingMatches = shopItems.filter(i =>
+            i.fields['Template source ID'] === master.id ||
+            (i.fields['Item name'] || '').trim().toLowerCase() === masterName
+          );
 
           let shopRooms = [];
           try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
