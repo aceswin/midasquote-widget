@@ -554,6 +554,12 @@ window.logoutMember = async function () {
               <strong>⚠️ Editing here alone changes nothing live.</strong> Changes only apply to a shop once you actually click "Push" — but be aware: pushing to an item a shop already has now <strong>fully overwrites</strong> its name, price, units, project types, and photo to match the master (this is intentional while you're still setting things up, since there's nothing real to protect yet — this should get smarter once real shops exist and may have customized their own copies).
             </div>
             <div id="mq-templates-msg"></div>
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🏷️ Default project type descriptions</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These are the name and description every brand-new shop gets automatically for Refacing, Repainting, and Restaining — the note customers see on the widget when they pick that project type. Editing here only affects shops seeded from now on; it doesn't retroactively change any shop's existing project types.</p>
+              <div id="mq-master-rooms-content"><div class="mq-loading">Loading...</div></div>
+              <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveMasterRoomDefs()">Save descriptions</button>
+            </div>
             <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
             <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
             <div class="mq-card" style="margin-top:1.5rem">
@@ -1105,6 +1111,62 @@ window.logoutMember = async function () {
     return masterItems;
   }
 
+  // Default project type definitions (name/description/adjustment) for
+  // Refacing/Repainting/Restaining, now editable via the admin Templates
+  // page instead of being hardcoded here. Bootstraps the master shop's own
+  // Room types field once from these starting values if it's never been set.
+  const DEFAULT_TEMPLATE_ROOM_DEFS = {
+    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+  };
+
+  async function ensureMasterTemplateRoomDefs() {
+    const masterShop = await ensureMasterTemplateShop();
+    let masterRooms = [];
+    try { masterRooms = masterShop.fields['Room types'] ? JSON.parse(masterShop.fields['Room types']) : []; } catch(e) { masterRooms = []; }
+    if (masterRooms.length) return masterRooms;
+    // Never set before — bootstrap from the starting values above
+    masterRooms = Object.values(DEFAULT_TEMPLATE_ROOM_DEFS);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, { 'Room types': JSON.stringify(masterRooms) });
+      masterShop.fields['Room types'] = JSON.stringify(masterRooms);
+    } catch(e) { console.warn('Failed to bootstrap master template room defs:', e); }
+    return masterRooms;
+  }
+
+  async function renderMasterRoomDefs() {
+    const masterRooms = await ensureMasterTemplateRoomDefs();
+    window._mqMasterRooms = masterRooms;
+    const content = document.getElementById('mq-master-rooms-content');
+    if (!content) return;
+    content.innerHTML = masterRooms.map((r, idx) => `
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px">
+        <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-master-room-name-${idx}" placeholder="Project type name" style="font-size:13px;font-weight:600;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
+        <textarea id="mq-master-room-desc-${idx}" placeholder="Description shown to customers on the widget for this project type" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+      </div>
+    `).join('');
+  }
+
+  window.mqSaveMasterRoomDefs = async function() {
+    const masterShop = await ensureMasterTemplateShop();
+    const current = window._mqMasterRooms || [];
+    const updated = current.map((r, idx) => ({
+      ...r,
+      name: (el(`mq-master-room-name-${idx}`)?.value || r.name || '').trim(),
+      description: (el(`mq-master-room-desc-${idx}`)?.value || '').trim(),
+    }));
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, { 'Room types': JSON.stringify(updated) });
+      masterShop.fields['Room types'] = JSON.stringify(updated);
+      window._mqMasterRooms = updated;
+      showMsg('mq-templates-msg', '✓ Default project type descriptions saved — this only affects shops seeded from now on.');
+    } catch(e) {
+      console.error('Failed to save master room defs:', e);
+      showMsg('mq-templates-msg', 'Error saving — please try again.', 'error');
+    }
+  };
+
   async function ensureProjectTypeTemplates(shopRecord) {
     if (shopRecord.fields['Templates seeded']) return; // already done for this shop
 
@@ -1112,17 +1174,15 @@ window.logoutMember = async function () {
     // list too — not just their specialty items — otherwise a shop that
     // already customized their rooms before this feature existed would end
     // up with specialty items tagged to project types that aren't even in
-    // their dropdown.
-    const templateRoomDefs = {
-      refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-      repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-      restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-    };
+    // their dropdown. Pulled from the editable master template room defs,
+    // not hardcoded, so editing them on the admin Templates page actually
+    // changes what new shops get.
+    const templateRoomList = await ensureMasterTemplateRoomDefs();
     const currentRooms = window._mqRooms || defaultRoomTypes();
     let roomsChanged = false;
-    Object.keys(templateRoomDefs).forEach(roomId => {
-      if (!currentRooms.find(r => r.id === roomId)) {
-        currentRooms.push(templateRoomDefs[roomId]);
+    templateRoomList.forEach(roomDef => {
+      if (!currentRooms.find(r => r.id === roomDef.id)) {
+        currentRooms.push(roomDef);
         roomsChanged = true;
       }
     });
@@ -4569,6 +4629,11 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       if (tmplContent) {
         tmplContent.innerHTML = '<div class="mq-loading">Loading templates...</div>';
         renderTemplates();
+      }
+      const masterRoomsContent = document.getElementById('mq-master-rooms-content');
+      if (masterRoomsContent) {
+        masterRoomsContent.innerHTML = '<div class="mq-loading">Loading...</div>';
+        renderMasterRoomDefs();
       }
     }
     if (page === 'pricing') {
