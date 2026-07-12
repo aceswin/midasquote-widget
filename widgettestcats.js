@@ -405,6 +405,14 @@
   // ============================================================
   let CT_MAT = {};
 
+  // Countertop installation is priced independently from cabinet installation
+  // (a shop could sub out cabinet install but do their own countertop work,
+  // or vice versa) — this is the shared check both the Both-tab countertop
+  // field and each Additional Surface's install field use.
+  function hasCountertopInstall() {
+    return Object.values(CT_MAT).some(m => (m.pi||0) > 0);
+  }
+
   function buildCTMAT(data) {
     const { li, pricing, shopPhotos } = data;
     CT_MAT = {};
@@ -927,14 +935,14 @@
         </button>
         <div id="mq-${prefix}-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
       </div>
-      ${hasInstall?`<div class="mq-sec" id="mq-${prefix}-si-field">
-        <p class="mq-sec-title">Supply + install</p>
+      <div class="mq-sec" id="mq-${prefix}-si-field">
+        <p class="mq-sec-title">${hasInstall ? 'Supply + install' : 'Supply'}</p>
         <div style="background:linear-gradient(135deg,#f0fdf4,#f7fee7);border:2px solid #86efac;border-radius:12px;padding:16px 18px">
-          <div class="mq-field"><label class="mq-label" style="font-size:14px;font-weight:700;color:#166534">Supply + install?</label>
-            <p class="mq-hint" style="margin-bottom:8px">Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install).</p>
-            <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
+          <div class="mq-field"><label class="mq-label" style="font-size:14px;font-weight:700;color:#166534">${hasInstall ? 'Supply + install?' : 'Supply'}</label>
+            <p class="mq-hint" style="margin-bottom:8px">${hasInstall ? "Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install)." : 'This shop offers supply only — installation is not included.'}</p>
+            <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')">${hasInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
         </div>
-      </div>`:''}
+      </div>
       <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
@@ -1078,6 +1086,7 @@
     </div>`;
 
   function buildWidgetHTML(shop, specs, data) {
+    const hasCtInstall = hasCountertopInstall();
     const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
     const financingOn = shop['Offers financing'] === 'Yes';
@@ -1175,8 +1184,9 @@
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
         <div class="mq-sec"><p class="mq-sec-title">Countertop options</p>
           <div class="mq-grid2">
-            <div class="mq-field"><label class="mq-label">Supply + install?</label>
-              <select id="mq-b-ct-si"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
+            <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Supply + install?' : 'Supply'}</label>
+              ${hasCtInstall ? '' : '<p class="mq-hint" style="margin-bottom:6px">This shop offers supply only — installation is not included.</p>'}
+              <select id="mq-b-ct-si">${hasCtInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
           </div>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
             <input type="checkbox" id="mq-b-use-cab" onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
@@ -2242,6 +2252,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       surfCounts[prefix]++;
       const id=`s${prefix}${surfCounts[prefix]}`;
       surfs[prefix][id]=1;
+      const hasCtInstall = hasCountertopInstall();
       const names=['Kitchen run','Island top','Bathroom vanity','Bar top','Custom surface'];
       const n=name||names[Math.min(surfCounts[prefix]-1,names.length-1)];
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
@@ -2263,8 +2274,8 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div class="mq-field"><label class="mq-label">Material</label>
             ${pickerRow(`mqsm-${id}`, ctMatItems())}
             <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
-          <div class="mq-field"><label class="mq-label">Install</label>
-            <select id="mqssi-${id}">${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>
+          <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
+            <select id="mqssi-${id}">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
         </div>
         <div class="mq-divider"></div>
         <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-end">
