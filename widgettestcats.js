@@ -694,6 +694,19 @@
       <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>`;
   }
 
+  // Renders shop-owner-supplied guide text safely: escapes everything first
+  // (so no stray HTML/script can ever run), THEN allows exactly two
+  // whitelisted, harmless transforms — **bold** and line breaks — so a shop
+  // owner can match the look of the default guide without any real markup
+  // ever reaching the page.
+  function renderSafeGuideText(raw) {
+    const esc = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let html = esc(raw || '');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+  }
+
   function cabinetForm(prefix, specs, data) {
     const { li, hasDynamic, shopPhotos, roomTypes } = data;
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
@@ -1330,12 +1343,11 @@
       title.style.cssText = 'font-weight:600;margin-bottom:8px;color:#111';
       title.textContent = '📏 How to measure for this project';
       guideEl.appendChild(title);
-      // textContent (not innerHTML) so the shop owner's own guide text can
-      // never be interpreted as markup, even by accident — same rule already
-      // used for the project-type description above.
+      // Safe renderer (escapes everything, then allows only **bold** and line
+      // breaks) so shop owners can format their guide like the default one
+      // without any real markup ever reaching the page — see renderSafeGuideText.
       const body = document.createElement('div');
-      body.style.cssText = 'white-space:pre-wrap';
-      body.textContent = customText;
+      body.innerHTML = renderSafeGuideText(customText);
       guideEl.appendChild(body);
     };
     // Covers every picker at once — materials, doors, hinges, drawer configs,

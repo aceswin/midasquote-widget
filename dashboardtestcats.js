@@ -1160,7 +1160,11 @@ window.logoutMember = async function () {
         </div>
         <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
           <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 Default "How to measure your space" for this project type</label>
-          <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+          <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+          <div style="margin-bottom:8px">
+            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-master-room-measure-text-${idx}')">↺ Use default guide</button>
+            <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold</span>
+          </div>
           <div style="display:flex;gap:8px;align-items:flex-start">
             <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
               ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
@@ -1398,6 +1402,30 @@ window.logoutMember = async function () {
     specialty: 'Specialty Items',
   };
 
+  // Same wording as the widget's hardcoded fallback guide (defaultMeasureGuideHTML
+  // in widgettestcats.js), just written in the **bold**/line-break plain-text
+  // form a shop owner can start from and edit. Used by the "Use default guide"
+  // button in both the per-shop Project Types tab and the admin Templates tab.
+  const DEFAULT_MEASURE_GUIDE_TEXT =
+`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+
+**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.
+
+**Not sure?** Just use your best guess — this is a ballpark estimate!
+
+Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.`;
+
+  // Fills a measure-guide textarea with the default text above — lets a shop
+  // owner start from (and edit) the standard guide instead of writing their
+  // own from scratch. Confirms first if the box already has something in it,
+  // so a stray click can't silently wipe out real custom text.
+  window.mqFillDefaultGuide = function(textareaId) {
+    const ta = el(textareaId);
+    if (!ta) return;
+    if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
+    ta.value = DEFAULT_MEASURE_GUIDE_TEXT;
+  };
+
   function defaultRoomTypes() {
     return [
       { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'', measureText:'', measureImage:'' },
@@ -1462,7 +1490,11 @@ window.logoutMember = async function () {
           </div>
           <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
-            <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+            <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+            <div style="margin-bottom:8px">
+              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}')">↺ Use default guide</button>
+              <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold</span>
+            </div>
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
                 ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
