@@ -1335,8 +1335,16 @@
       if (customImg) {
         const img = document.createElement('img');
         img.src = customImg;
-        img.style.cssText = 'width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:10px;display:block';
+        // height:auto + object-fit:contain (not cover) so the whole image
+        // always shows, never cropped — a fixed max-height with "cover" was
+        // cropping top/bottom on wide desktop screens even though the same
+        // image displayed fully on narrow mobile ones.
+        img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;border-radius:6px;margin-bottom:10px;display:block;cursor:zoom-in';
         img.onerror = () => { img.style.display = 'none'; };
+        // Same tap-to-zoom lightbox already used for every other photo in the
+        // widget (materials, doors, specialty items, etc.) — works identically
+        // on mobile and desktop.
+        img.onclick = () => mqPhotoLightbox(customImg, room && room.name ? `${room.name} — measuring guide` : 'Measuring guide');
         guideEl.appendChild(img);
       }
       const title = document.createElement('div');
