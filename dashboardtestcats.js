@@ -4702,6 +4702,60 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     update();
   }
 
+  // Same technique as mqInitStickyNav, applied to the topbar — CSS
+  // position:sticky was silently failing on both for the same reason.
+  function mqInitStickyTopbar() {
+    const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
+    const root = document.getElementById('midasquote-dashboard');
+    if (!topbar || !root) return;
+
+    // Holds the topbar's normal-flow space open once it goes fixed, so
+    // everything below it doesn't jump up to fill the gap.
+    const placeholder = document.createElement('div');
+    placeholder.style.display = 'none';
+    root.insertBefore(placeholder, topbar);
+
+    let stuck = false;
+
+    function update() {
+      const rootRect = root.getBoundingClientRect();
+      const rect = topbar.getBoundingClientRect();
+      const shouldStick = rootRect.top <= 0 && rootRect.bottom > rect.height;
+
+      if (shouldStick && !stuck) {
+        placeholder.style.width = rect.width + 'px';
+        placeholder.style.height = rect.height + 'px';
+        placeholder.style.display = 'block';
+        topbar.style.position = 'fixed';
+        topbar.style.top = '0px';
+        topbar.style.left = rootRect.left + 'px';
+        topbar.style.width = rect.width + 'px';
+        topbar.style.zIndex = '100';
+        stuck = true;
+      } else if (!shouldStick && stuck) {
+        topbar.style.position = '';
+        topbar.style.top = '';
+        topbar.style.left = '';
+        topbar.style.width = '';
+        topbar.style.zIndex = '';
+        placeholder.style.display = 'none';
+        stuck = false;
+      } else if (stuck) {
+        topbar.style.left = rootRect.left + 'px';
+      }
+    }
+
+    let ticking = false;
+    function onScrollOrResize() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { update(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    update();
+  }
+
   // ============================================================
   // INIT
   // ============================================================
@@ -4757,6 +4811,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       _mqSignCustomColor = savedHeadlines.signColor || '';
     } catch(e) {}
     container.innerHTML = buildHTML(shopRecord.fields);
+    mqInitStickyTopbar();
     mqInitStickyNav();
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
