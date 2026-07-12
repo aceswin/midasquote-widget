@@ -28,7 +28,7 @@
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout per attempt
       try {
-        const res = await fetch(url, { ...options, signal: controller.signal });
+        const res = await fetch(url, { ...options, signal: controller.signal, cache: 'no-store' });
         clearTimeout(timeoutId);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res;
@@ -105,15 +105,15 @@
     try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
     if (!Array.isArray(roomTypes) || !roomTypes.length) {
       roomTypes = [
-        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true },
-        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'', active:true },
-        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'', active:true },
-        { id:'garage',  name:'Garage',         adjustment:0,  description:'', active:true },
-        { id:'office',  name:'Home office',    adjustment:0,  description:'', active:true },
-        { id:'other',   name:'Other',          adjustment:0,  description:'', active:true },
-        { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-        { id:'repainting', name:'Repainting',  adjustment:0,  description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-        { id:'restaining', name:'Restaining',  adjustment:0,  description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true, coverImage:'' },
+        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'', active:true, coverImage:'' },
+        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'', active:true, coverImage:'' },
+        { id:'garage',  name:'Garage',         adjustment:0,  description:'', active:true, coverImage:'' },
+        { id:'office',  name:'Home office',    adjustment:0,  description:'', active:true, coverImage:'' },
+        { id:'other',   name:'Other',          adjustment:0,  description:'', active:true, coverImage:'' },
+        { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+        { id:'repainting', name:'Repainting',  adjustment:0,  description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+        { id:'restaining', name:'Restaining',  adjustment:0,  description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
       ];
     }
     // Draft project types (active:false) never show to customers, no matter
@@ -724,12 +724,16 @@
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
+        <div style="background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:2px solid #93c5fd;border-radius:12px;padding:16px 18px;margin-bottom:16px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#1e40af;margin-bottom:8px">
+            <span style="background:#2563eb;color:#fff;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
+            Start here — choose your project type
+          </label>
+          <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqRefreshSectionVisibility('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+          <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8;margin-top:8px"></p>
+          <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
+        </div>
         <div class="mq-grid2">
-          <div class="mq-field"><label class="mq-label">Project type</label>
-            <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqRefreshSectionVisibility('${prefix}')">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
-            <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8"></p>
-            <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
-          </div>
           ${hasInstall?`<div class="mq-field" id="mq-${prefix}-si-field"><label class="mq-label">Supply + install?</label>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select></div>`:''}
         </div>
@@ -1275,8 +1279,23 @@
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const desc = room ? (room.description||'').trim() : '';
-      if (!desc) { descEl.style.display = 'none'; return; }
-      descEl.textContent = desc;
+      const coverImg = room ? (room.coverImage||'').trim() : '';
+      if (!desc && !coverImg) { descEl.style.display = 'none'; return; }
+      descEl.innerHTML = ''; // clear previous content before rebuilding
+      if (coverImg) {
+        const img = document.createElement('img');
+        img.src = coverImg;
+        img.style.cssText = 'width:100%;max-height:160px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block';
+        img.onerror = () => { img.style.display = 'none'; };
+        descEl.appendChild(img);
+      }
+      if (desc) {
+        // textContent (not innerHTML) so the shop owner's own description
+        // text can never be interpreted as markup, even by accident.
+        const textDiv = document.createElement('div');
+        textDiv.textContent = desc;
+        descEl.appendChild(textDiv);
+      }
       descEl.style.display = 'block';
     };
     // Covers every picker at once — materials, doors, hinges, drawer configs,

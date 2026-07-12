@@ -1116,9 +1116,9 @@ window.logoutMember = async function () {
   // page instead of being hardcoded here. Bootstraps the master shop's own
   // Room types field once from these starting values if it's never been set.
   const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
   };
 
   async function ensureMasterTemplateRoomDefs() {
@@ -1143,9 +1143,39 @@ window.logoutMember = async function () {
     content.innerHTML = masterRooms.map((r, idx) => `
       <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px">
         <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-master-room-name-${idx}" placeholder="Project type name" style="font-size:13px;font-weight:600;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
-        <textarea id="mq-master-room-desc-${idx}" placeholder="Description shown to customers on the widget for this project type" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+        <textarea id="mq-master-room-desc-${idx}" placeholder="Description shown to customers on the widget for this project type" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div id="mq-master-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+            ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
+          </div>
+          <div style="flex:1;min-width:0">
+            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default cover image — new shops start with this; they can change it afterward</label>
+            <input type="text" id="mq-master-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+            <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+              📤 Upload
+              <input type="file" id="mq-master-room-cover-file-${idx}" accept="image/*" style="display:none"/>
+            </label>
+            <span id="mq-master-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+          </div>
+        </div>
       </div>
     `).join('');
+
+    masterRooms.forEach((r, idx) => {
+      mqWireUploadButton(
+        null,
+        `mq-master-room-cover-file-${idx}`,
+        `mq-master-room-cover-status-${idx}`,
+        `mq-master-room-cover-${idx}`,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        (url) => {
+          const preview = document.getElementById(`mq-master-room-cover-preview-${idx}`);
+          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+          mqSaveMasterRoomDefs();
+        }
+      );
+    });
   }
 
   window.mqSaveMasterRoomDefs = async function() {
@@ -1155,6 +1185,7 @@ window.logoutMember = async function () {
       ...r,
       name: (el(`mq-master-room-name-${idx}`)?.value || r.name || '').trim(),
       description: (el(`mq-master-room-desc-${idx}`)?.value || '').trim(),
+      coverImage: (el(`mq-master-room-cover-${idx}`)?.value || '').trim(),
     }));
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, { 'Room types': JSON.stringify(updated) });
@@ -1336,15 +1367,15 @@ window.logoutMember = async function () {
 
   function defaultRoomTypes() {
     return [
-      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true },
-      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'', active:true },
-      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'', active:true },
-      { id:'garage',  name:'Garage',         adjustment:0,  description:'', active:true },
-      { id:'office',  name:'Home office',    adjustment:0,  description:'', active:true },
-      { id:'other',   name:'Other',          adjustment:0,  description:'', active:true },
-      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
-      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true },
+      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'', active:true, coverImage:'' },
+      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'', active:true, coverImage:'' },
+      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'', active:true, coverImage:'' },
+      { id:'garage',  name:'Garage',         adjustment:0,  description:'', active:true, coverImage:'' },
+      { id:'office',  name:'Home office',    adjustment:0,  description:'', active:true, coverImage:'' },
+      { id:'other',   name:'Other',          adjustment:0,  description:'', active:true, coverImage:'' },
+      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Refacing is when you keep your existing cabinets but get new doors, drawer fronts, and edge tape. Skip the box materials below — pricing comes from the specialty items for this project type. Want new crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Repainting your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Repainting crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
+      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Restaining your existing doors, drawer fronts, and edge tape in place — no new boxes needed. Restaining crown or valance too? Use the "Don\'t use upper cabinet linear footage" option in that section to enter it manually.', active:true, coverImage:'' },
     ];
   }
 
@@ -1381,10 +1412,42 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
           </label>
-          <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+          <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+              ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
+            </div>
+            <div style="flex:1;min-width:0">
+              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
+              <input type="text" id="mq-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+              <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                📤 Upload
+                <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
+              </label>
+              <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+            </div>
+          </div>
         </div>
       </div>`
     ).join('');
+
+    // Wire each room's cover-image upload button — uploads immediately, fills
+    // the URL field, and refreshes the small preview thumbnail on success.
+    rooms.forEach((r, idx) => {
+      mqWireUploadButton(
+        null,
+        `mq-room-cover-file-${idx}`,
+        `mq-room-cover-status-${idx}`,
+        `mq-room-cover-${idx}`,
+        window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
+        'products',
+        (url) => {
+          const preview = document.getElementById(`mq-room-cover-preview-${idx}`);
+          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+          mqSaveRooms();
+        }
+      );
+    });
 
     // Drag-and-drop reordering — same pattern already used for Specialty
     // items, adapted since rooms live in one JSON list rather than separate
@@ -1407,6 +1470,7 @@ window.logoutMember = async function () {
             adjustment: parseFloat(document.getElementById(`mq-room-adj-${oldIdx}`)?.value) || 0,
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
             active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
+            coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
           };
         });
         window._mqRooms = newRooms;
@@ -1426,7 +1490,7 @@ window.logoutMember = async function () {
 
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
-    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0, description: '', active: true });
+    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0, description: '', active: true, coverImage: '' });
     renderRoomsList();
   };
 
@@ -1448,6 +1512,7 @@ window.logoutMember = async function () {
         adjustment: parseFloat(el(`mq-room-adj-${idx}`)?.value) || 0,
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
         active: el(`mq-room-active-${idx}`)?.checked !== false,
+        coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
       })).filter(r => r.name); // drop any left with a blank name
 
       if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
