@@ -2591,7 +2591,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   // later never causes duplicates or misses). Never touches or removes
   // anything a shop already has, even if you've since edited the master copy.
   window.mqPushTemplatesToAllShops = async function() {
-    if (!confirm('Push new template items to every shop? This adds anything missing, but never changes or removes items a shop already has.')) return;
+    if (!confirm('Push ALL template items to every shop? This fully replaces any matching item a shop already has — full sync, not additive. Name, price, units, tags, and photo will always exactly match the master.')) return;
     showMsg('mq-templates-msg', 'Pushing to all shops — this may take a moment...');
     try {
       const masterShop = await ensureMasterTemplateShop();
@@ -2600,18 +2600,11 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
       const masterItems = await ensureMasterTemplateItems();
       const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
-      // Source of truth for a project type's name/description when it needs
-      // to get auto-added to a shop that doesn't have it yet — whatever the
-      // admin named it in their own room list while tagging template items.
       const adminRooms = window._mqRooms || defaultRoomTypes();
-      let addedCount = 0;
-      let roomsAddedCount = 0;
+      let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
 
       for (const shop of allShops) {
         const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-        const existingSourceIds = new Set(shopItems.map(i => i.fields['Template source ID']).filter(Boolean));
-        const missing = masterItems.filter(m => !existingSourceIds.has(m.id));
-        if (!missing.length) continue;
 
         // Make sure every project type these items are tagged to actually
         // exists in this shop's room list — added as a draft (hidden) room
@@ -2621,71 +2614,75 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
         if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
         let shopRoomsChanged = false;
-
-        const neededRoomIds = new Set();
-        missing.forEach(m => {
+        masterItems.forEach(m => {
           let vr = [];
           try { vr = m.fields['Visible rooms'] ? JSON.parse(m.fields['Visible rooms']) : []; } catch(e) { vr = []; }
-          vr.forEach(id => neededRoomIds.add(id));
-        });
-        neededRoomIds.forEach(roomId => {
-          if (!shopRooms.find(r => r.id === roomId)) {
-            const adminRoomDef = adminRooms.find(r => r.id === roomId);
-            shopRooms.push({
-              id: roomId,
-              name: adminRoomDef ? adminRoomDef.name : roomId,
-              adjustment: 0,
-              description: adminRoomDef ? (adminRoomDef.description || '') : '',
-              active: false, // draft — hidden from their widget until they review and switch it on
-            });
-            shopRoomsChanged = true;
-            roomsAddedCount++;
-          }
+          vr.forEach(roomId => {
+            if (!shopRooms.find(r => r.id === roomId)) {
+              const adminRoomDef = adminRooms.find(r => r.id === roomId);
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false });
+              shopRoomsChanged = true;
+              roomsAddedCount++;
+            }
+          });
         });
         if (shopRoomsChanged) {
           await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
           shop.fields['Room types'] = JSON.stringify(shopRooms);
         }
 
-        const createdRecords = await Promise.all(missing.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
-          'Shop': [shop.id],
-          'Item name': master.fields['Item name'],
-          'Special Items': master.fields['Item name'],
-          'Price': master.fields['Price'] || 0,
-          'Per linear foot': master.fields['Per linear foot'] || false,
-          'Per square foot': master.fields['Per square foot'] || false,
-          'Active': true,
-          'Visible rooms': master.fields['Visible rooms'] || '[]',
-          'Template source ID': master.id,
-        })));
-
-        // Photos live in a separate JSON blob keyed by record ID, not on the
-        // specialty item itself — since each shop's copy gets a brand new
-        // record ID, the master's photo (keyed by the master's ID) has to be
-        // explicitly re-keyed under the new record's ID in this shop's own
-        // Photos blob, or it silently never shows up here.
         let shopPhotos = {};
         try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
         let shopPhotosChanged = false;
-        createdRecords.forEach((created, idx) => {
-          if (!created?.id) return;
-          const master = missing[idx];
-          const masterPhotoUrl = masterPhotos['spec_' + master.id];
-          if (masterPhotoUrl) {
-            shopPhotos['spec_' + created.id] = masterPhotoUrl;
-            shopPhotosChanged = true;
+
+        // Sequential, not parallel — slower, but guarantees each item's
+        // delete-then-recreate fully completes before moving to the next,
+        // and makes any individual failure easy to isolate and log clearly.
+        for (const master of masterItems) {
+          try {
+            const existingMatches = shopItems.filter(i => i.fields['Template source ID'] === master.id);
+            if (existingMatches.length) {
+              await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
+              replacedCount++;
+            } else {
+              createdCount++;
+            }
+            const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
+              'Shop': [shop.id],
+              'Item name': master.fields['Item name'],
+              'Special Items': master.fields['Item name'],
+              'Price': master.fields['Price'] || 0,
+              'Per linear foot': master.fields['Per linear foot'] || false,
+              'Per square foot': master.fields['Per square foot'] || false,
+              'Active': true,
+              'Visible rooms': master.fields['Visible rooms'] || '[]',
+              'Template source ID': master.id,
+            });
+            if (!created?.id) {
+              errorCount++;
+              console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
+              continue;
+            }
+            const masterPhotoUrl = masterPhotos['spec_' + master.id];
+            if (masterPhotoUrl) {
+              shopPhotos['spec_' + created.id] = masterPhotoUrl;
+              shopPhotosChanged = true;
+            }
+          } catch(e) {
+            errorCount++;
+            console.error('Failed to push item:', master.fields['Item name'], 'to', shop.fields['Shop name'], e);
           }
-        });
+        }
+
         if (shopPhotosChanged) {
           await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
           shop.fields['Photos'] = JSON.stringify(shopPhotos);
         }
-
-        addedCount += missing.length;
       }
-      const roomsNote = roomsAddedCount ? `, plus ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'} (hidden until reviewed)` : '';
+      const roomsNote = roomsAddedCount ? `, ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
+      const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console for details` : '';
       await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
-      showMsg('mq-templates-msg', `✓ Push complete — added ${addedCount} new item${addedCount===1?'':'s'} across ${allShops.length} shop${allShops.length===1?'':'s'}${roomsNote}.`);
+      showMsg('mq-templates-msg', `✓ Full sync complete — ${createdCount} created, ${replacedCount} fully replaced across ${allShops.length} shop${allShops.length===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
     } catch(e) {
       console.error('Push to shops failed:', e);
       showMsg('mq-templates-msg', 'Error during push — please try again.', 'error');
@@ -2712,30 +2709,13 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
       const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
       const adminRooms = window._mqRooms || defaultRoomTypes();
-      let createdCount = 0, refreshedCount = 0, roomsAddedCount = 0;
+      let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
 
       for (const shop of allShops) {
-        const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-        const existing = shopItems.find(i => i.fields['Template source ID'] === master.id);
+        try {
+          const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+          const existingMatches = shopItems.filter(i => i.fields['Template source ID'] === master.id);
 
-        if (existing) {
-          await atUpdate(CONFIG.SPECIALTY_TABLE, existing.id, {
-            'Item name': master.fields['Item name'],
-            'Special Items': master.fields['Item name'],
-            'Price': master.fields['Price'] || 0,
-            'Per linear foot': master.fields['Per linear foot'] || false,
-            'Per square foot': master.fields['Per square foot'] || false,
-            'Visible rooms': master.fields['Visible rooms'] || '[]',
-          });
-          if (masterPhotoUrl) {
-            let shopPhotos = {};
-            try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-            shopPhotos['spec_' + existing.id] = masterPhotoUrl;
-            await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
-            shop.fields['Photos'] = JSON.stringify(shopPhotos);
-          }
-          refreshedCount++;
-        } else {
           let shopRooms = [];
           try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
           if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
@@ -2755,6 +2735,13 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
             shop.fields['Room types'] = JSON.stringify(shopRooms);
           }
 
+          if (existingMatches.length) {
+            await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
+            replacedCount++;
+          } else {
+            createdCount++;
+          }
+
           const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
             'Shop': [shop.id],
             'Item name': master.fields['Item name'],
@@ -2766,19 +2753,27 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
             'Visible rooms': master.fields['Visible rooms'] || '[]',
             'Template source ID': master.id,
           });
-          if (created?.id && masterPhotoUrl) {
+          if (!created?.id) {
+            errorCount++;
+            console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
+            continue;
+          }
+          if (masterPhotoUrl) {
             let shopPhotos = {};
             try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
             shopPhotos['spec_' + created.id] = masterPhotoUrl;
             await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
             shop.fields['Photos'] = JSON.stringify(shopPhotos);
           }
-          createdCount++;
+        } catch(e) {
+          errorCount++;
+          console.error('Failed to push item to shop:', shop.fields['Shop name'], e);
         }
       }
       const roomsNote = roomsAddedCount ? `, added ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
+      const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console` : '';
       await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
-      showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" — created for ${createdCount} shop${createdCount===1?'':'s'}, refreshed for ${refreshedCount} shop${refreshedCount===1?'':'s'}${roomsNote}.`);
+      showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" — created for ${createdCount} shop${createdCount===1?'':'s'}, fully replaced for ${replacedCount} shop${replacedCount===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
     } catch(e) {
       console.error('Single item push failed:', e);
       showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
