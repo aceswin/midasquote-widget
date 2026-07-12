@@ -2624,6 +2624,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         addedCount += missing.length;
       }
       const roomsNote = roomsAddedCount ? `, plus ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'} (hidden until reviewed)` : '';
+      await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
       showMsg('mq-templates-msg', `✓ Push complete — added ${addedCount} new item${addedCount===1?'':'s'} across ${allShops.length} shop${allShops.length===1?'':'s'}${roomsNote}.`);
     } catch(e) {
       console.error('Push to shops failed:', e);
@@ -2711,6 +2712,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         }
       }
       const roomsNote = roomsAddedCount ? `, added ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
+      await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
       showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" — created for ${createdCount} shop${createdCount===1?'':'s'}, refreshed for ${refreshedCount} shop${refreshedCount===1?'':'s'}${roomsNote}.`);
     } catch(e) {
       console.error('Single item push failed:', e);
@@ -4546,11 +4548,15 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       const prodContent = document.getElementById('mq-products-content');
       if (prodContent) {
         prodContent.innerHTML = '<div class="mq-loading">Loading your products...</div>';
-        atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`)
-          .then(lineItems => {
-            window._mqLineItems = lineItems;
-            initProductsTab(window._mqShopRecord, lineItems);
-          });
+        const shopToken = window._mqShopRecord.fields['Shop token'];
+        Promise.all([
+          loadShop(shopToken), // refetch the shop record itself fresh — this is where Photos/Hidden actually live, and a push from elsewhere (like the Templates admin tool) wouldn't otherwise show up until a full page reload
+          atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`),
+        ]).then(([freshShop, lineItems]) => {
+          if (freshShop) window._mqShopRecord = freshShop;
+          window._mqLineItems = lineItems;
+          initProductsTab(window._mqShopRecord, lineItems);
+        });
       }
     }
     if (page === 'templates') {
