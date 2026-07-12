@@ -23,6 +23,10 @@
     .sr-hero-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 1rem; }
     .sr-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 44px); font-weight: 600; line-height: 1.15; margin-bottom: 1rem; }
     .sr-hero p { font-size: 15px; color: rgba(255,255,255,0.65); max-width: 480px; margin: 0 auto; line-height: 1.7; }
+    .sr-filter-bar { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 0.85rem 2rem; display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .sr-filter-chip { flex-shrink: 0; padding: 7px 16px; border-radius: 999px; border: 1.5px solid var(--gray-200); background: var(--white); color: var(--gray-600); font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+    .sr-filter-chip:hover { border-color: var(--brand); color: var(--gray-900); }
+    .sr-filter-chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
     .sr-nav { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 0 2rem; display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .sr-nav-item { padding: 1rem 1.25rem; font-size: 13px; font-weight: 500; color: var(--gray-400); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.15s; text-decoration: none; }
     .sr-nav-item:hover { color: var(--gray-900); }
@@ -54,6 +58,7 @@
     @media (max-width: 600px) {
       .sr-header { padding: 1rem; }
       .sr-hero { padding: 2.5rem 1.25rem; }
+      .sr-filter-bar { padding: 0.75rem 1.25rem; }
       .sr-content { padding: 2rem 1.25rem 4rem; }
       .sr-grid { grid-template-columns: repeat(2, 1fr); }
       .sr-spec-grid { grid-template-columns: repeat(2, 1fr); }
@@ -79,12 +84,9 @@
     <p>Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.</p>
   </div>
 
-  <nav class="sr-nav">
-    <a class="sr-nav-item active" href="#box-materials">Box Materials</a>
-    <a class="sr-nav-item" href="#door-styles">Door Styles</a>
-    <a class="sr-nav-item" href="#countertops">Countertops</a>
-    <a class="sr-nav-item" href="#specialty">Specialty Items</a>
-  </nav>
+  <div class="sr-filter-bar" id="sr-filter-bar"></div>
+
+  <nav class="sr-nav" id="sr-nav"></nav>
 
   <div class="sr-content" id="sr-content">
     <div class="sr-loading">Loading your showroom...</div>
@@ -95,35 +97,21 @@
   </div>
 
   <script>
-    const AIRTABLE_TOKEN = 'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325';
-    const BASE_ID = 'app4zrMlVLwF2xn4h';
+    // Same proxy Worker the widget and dashboard use — holds the real
+    // Airtable token server-side. This page used to call Airtable directly
+    // with a hardcoded token, which meant anyone could read it straight out
+    // of View Source on a fully public, unauthenticated page. Never again.
+    const CONFIG = { PROXY_WORKER: 'https://midasquote-airtable-proxy.jordan132001.workers.dev' };
 
-    const ALL_BOX_MATERIALS = [
-      { key:'melamine', name:'Melamine',   emoji:'🟤', desc:'Durable, easy-clean surface over engineered wood. Budget-friendly and available in dozens of colours. Great for modern kitchens.' },
-      { key:'plywood',  name:'Plywood',    emoji:'🪵', desc:'Structurally superior to particle board. More resistant to moisture and warping. A premium choice for long-lasting cabinet boxes.' },
-      { key:'mdf',      name:'MDF',        emoji:'⬜', desc:'Medium-density fibreboard offers a smooth, consistent surface — ideal for painted finishes.' },
-      { key:'solid',    name:'Solid Wood', emoji:'🌲', desc:'Real hardwood construction. Beautiful grain character, extremely durable, and a timeless choice.' },
-    ];
-
-    const ALL_DOOR_STYLES = [
-      { key:'slab',   name:'Slab',          emoji:'▭',  desc:'Clean, flat door with no frame. The defining look of modern and minimalist kitchens. Easy to clean.' },
-      { key:'shaker', name:'Shaker',         emoji:'⬜', desc:'Five-piece frame with a flat centre panel. The most popular style — timeless, works with both traditional and contemporary designs.' },
-      { key:'raised', name:'Raised Panel',   emoji:'🔲', desc:'Traditional style with a raised centre panel. Adds depth and a classic, formal look.' },
-      { key:'glass',  name:'Glass Fronts',   emoji:'🪟', desc:'Cabinet doors with glass panels. Perfect for displaying dishes or adding visual lightness.' },
-      { key:'none',   name:'No Doors',       emoji:'📦', desc:'Open shelving or frameless box only. Popular for pantry areas and modern open-concept designs.' },
-    ];
-
-    const ALL_COUNTERTOPS = [
-      { key:'lam',       name:'Laminate',                emoji:'🟫', desc:'Most affordable option. Available in hundreds of colours and patterns including realistic stone looks.' },
-      { key:'ss_econ',   name:'Solid Surface — Economy', emoji:'⬜', desc:'Non-porous, seamless surface that resists stains and bacteria. Can be repaired if scratched.' },
-      { key:'ss_mid',    name:'Solid Surface — Mid',     emoji:'⬜', desc:'Premium solid surface with better colour depth and durability. Seamless installation with integrated sinks available.' },
-      { key:'ss_prem',   name:'Solid Surface — Premium', emoji:'⬜', desc:'Top-tier solid surface with designer colour options and superior finish quality.' },
-      { key:'gran_econ', name:'Granite — Economy',       emoji:'🪨', desc:'Natural stone with unique veining and excellent heat resistance. Great value with natural variation.' },
-      { key:'gran_mid',  name:'Granite — Mid',           emoji:'🪨', desc:'More consistent patterning and colour selection. Extremely durable and adds real value to a home.' },
-      { key:'gran_prem', name:'Granite — Premium',       emoji:'🪨', desc:'Exceptional colour, movement, and rarity. Each slab is unique — a true statement surface.' },
-      { key:'quartz',    name:'Quartz',                  emoji:'💎', desc:'Engineered stone combining natural quartz with resin. Non-porous, consistent colouring, very low maintenance.' },
-      { key:'marble',    name:'Marble',                  emoji:'🤍', desc:'The ultimate luxury surface. Beautiful natural veining unique to every slab.' },
-      { key:'butcher',   name:'Butcher Block',           emoji:'🟤', desc:'Warm, natural wood surface. Ideal for kitchen islands and baking areas. Can be sanded and refinished.' },
+    // Fallback project types — only used if a shop has never customized
+    // "Room types" at all, matching the same default list the widget and
+    // dashboard fall back to.
+    const DEFAULT_ROOM_TYPES = [
+      { id:'kitchen', name:'Kitchen' }, { id:'bathroom', name:'Bathroom' },
+      { id:'laundry', name:'Laundry room' }, { id:'garage', name:'Garage' },
+      { id:'commercial', name:'Commercial' }, { id:'other', name:'Other' },
+      { id:'refacing', name:'Refacing' }, { id:'repainting', name:'Repainting' },
+      { id:'restaining', name:'Restaining' },
     ];
 
     const SPECIALTY_ICONS = {
@@ -132,27 +120,34 @@
       'pull': '📥', 'pot': '🍳', 'pantry': '🥫', 'desk': '🖥️',
       'glass': '🪟', 'light': '💡', 'crown': '👑',
     };
-
     function getIcon(name) {
       const lower = (name || '').toLowerCase();
-      for (const [k, v] of Object.entries(SPECIALTY_ICONS)) {
-        if (lower.includes(k)) return v;
-      }
+      for (const [k, v] of Object.entries(SPECIALTY_ICONS)) { if (lower.includes(k)) return v; }
       return '⭐';
     }
 
-    async function atGet(table, formula) {
-      const url = `https://api.airtable.com/v0/${BASE_ID}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
-      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` } });
-      const d = await res.json();
-      return d.records || [];
+    // Same key format the dashboard's My Products tab and the widget both
+    // use for saved photos — must match exactly or photos won't be found.
+    function photoKeyFor(cat, name) {
+      const baseName = (name||'').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
+      const norm = baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+      return `li_${cat}_${norm}`;
     }
 
-    function card(emoji, name, desc, photoUrl) {
-      const img = photoUrl
-        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox(this.src,'${name}')" onerror="this.parentElement.innerHTML='<span style=font-size:48px>${emoji}</span>'">`
-        : emoji;
-      return `<div class="sr-card"><div class="sr-card-img" style="padding:0;overflow:hidden">${img}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div><div class="sr-card-desc">${desc}</div></div></div>`;
+    function parseVisibleRooms(fieldsObj) {
+      try { return fieldsObj['Visible rooms'] ? JSON.parse(fieldsObj['Visible rooms']) : []; }
+      catch(e) { return []; }
+    }
+
+    // Same override rule used everywhere else: an item's own explicit
+    // project-type setting always wins; only an item that's never been
+    // individually configured inherits whatever the whole category is
+    // hidden for. Empty array = visible for every project type.
+    function effectiveVisibleRooms(itemExplicitRooms, category, categoryRooms, allRoomIds) {
+      if (itemExplicitRooms && itemExplicitRooms.length) return itemExplicitRooms;
+      const hiddenForCategory = categoryRooms[category] || [];
+      if (!hiddenForCategory.length) return [];
+      return allRoomIds.filter(id => !hiddenForCategory.includes(id));
     }
 
     function mqLightbox(src, label) {
@@ -174,29 +169,156 @@
     }
     window.mqLightbox = mqLightbox;
 
+    // Category display config — id (for nav/scroll anchors), plus the
+    // eyebrow/title/description shown above each section's grid.
+    const CAT_CONFIG = {
+      material:     { id:'box-materials',   eyebrow:'Cabinet construction', title:'Box Materials',        desc:'The box is the structural core of every cabinet. We offer the following materials.' },
+      door:         { id:'door-styles',     eyebrow:'Cabinet doors',        title:'Door Styles',          desc:'The door is the face of your kitchen. Choose a style that fits your aesthetic.' },
+      drawer:       { id:'drawer-configs',  eyebrow:'Cabinet drawers',      title:'Drawer Configurations',desc:'Drawer box options that affect function and durability.' },
+      countertop:   { id:'countertops',     eyebrow:'Surfaces',             title:'Countertop Materials',  desc:'We supply and install a range of countertop materials to suit every style and budget.' },
+      trim_crown:   { id:'crown-moulding',  eyebrow:'Finishing touches',    title:'Crown Moulding',        desc:'Crown moulding styles to top off your upper cabinets.' },
+      trim_valance: { id:'valance',         eyebrow:'Finishing touches',    title:'Valance',               desc:'Valance options to complete the look beneath your upper cabinets.' },
+      tall_cabinet: { id:'tall-cabinets',   eyebrow:'Extra storage',        title:'Tall Cabinets',         desc:'Pantry units, oven cabinets, and other tall storage options for your kitchen.' },
+    };
+
+    let CURRENT_FILTER = 'all';
+    let SHOWROOM_DATA = null; // cached once loaded, re-used every time the filter changes
+
+    function itemCard(name, photoKey, photos) {
+      const photoUrl = photos[photoKey];
+      const safeName = (name||'').replace(/'/g, "\\'");
+      const imgHtml = photoUrl
+        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}')" onerror="this.style.display='none'">`
+        : `<div style="width:100%;height:160px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gray-400)">📷</div>`;
+      return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div></div></div>`;
+    }
+
+    function itemVisible(visibleRooms) {
+      if (CURRENT_FILTER === 'all') return true;
+      return !visibleRooms.length || visibleRooms.includes(CURRENT_FILTER);
+    }
+
+    function renderFilterBar() {
+      const bar = document.getElementById('sr-filter-bar');
+      const { roomTypes } = SHOWROOM_DATA;
+      if (!roomTypes.length) { bar.style.display = 'none'; return; }
+      bar.style.display = 'flex';
+      const chips = [{ id: 'all', name: 'All' }, ...roomTypes];
+      bar.innerHTML = chips.map(r => `<button class="sr-filter-chip${CURRENT_FILTER===r.id?' active':''}" onclick="mqSetFilter('${r.id}')">${r.name}</button>`).join('');
+    }
+
+    window.mqSetFilter = function(id) {
+      CURRENT_FILTER = id;
+      renderFilterBar();
+      renderShowroom();
+    };
+
+    // Rebuilds the top nav from whichever sections actually rendered this
+    // time (changes as the filter changes), rather than a fixed list —
+    // otherwise a filtered-out category would leave a dead link behind.
+    function updateNav() {
+      const sections = [...document.querySelectorAll('.sr-section')];
+      const nav = document.getElementById('sr-nav');
+      if (!sections.length) { nav.innerHTML = ''; return; }
+      nav.innerHTML = sections.map((s, i) => {
+        const title = s.querySelector('.sr-section-title')?.textContent || s.id;
+        return `<a class="sr-nav-item${i===0?' active':''}" href="#${s.id}">${title}</a>`;
+      }).join('');
+      wireNav();
+    }
+
+    function wireNav() {
+      document.querySelectorAll('.sr-nav-item').forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+          const target = document.querySelector(link.getAttribute('href'));
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      const sections = [...document.querySelectorAll('.sr-section')];
+      if (!sections.length) return;
+      let current = sections[0].id;
+      sections.forEach(s => { if (window.scrollY >= s.offsetTop - 150) current = s.id; });
+      document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
+    });
+
+    function renderShowroom() {
+      const { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds } = SHOWROOM_DATA;
+      let html = '';
+      let first = true;
+
+      Object.entries(CAT_CONFIG).forEach(([cat, cfg]) => {
+        const items = categoryItems[cat] || [];
+        const visibleItems = items.filter(it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms));
+        if (!visibleItems.length) return;
+        if (!first) html += '<div class="sr-divider"></div>';
+        first = false;
+        html += `<div class="sr-section" id="${cfg.id}">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">${cfg.eyebrow}</div>
+            <div class="sr-section-title">${cfg.title}</div>
+            <div class="sr-section-desc">${cfg.desc}</div>
+          </div>
+          <div class="sr-grid">${visibleItems.map(it => itemCard(it.name, it.photoKey, photos)).join('')}</div>
+        </div>`;
+      });
+
+      const visibleSpecs = specs.filter(s => !hidden[s.photoKey] && photos[s.photoKey] && itemVisible(s.visibleRooms));
+      if (visibleSpecs.length) {
+        if (!first) html += '<div class="sr-divider"></div>';
+        html += `<div class="sr-section" id="specialty">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">Add-ons & upgrades</div>
+            <div class="sr-section-title">Specialty Items</div>
+            <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
+          </div>
+          <div class="sr-spec-grid">${visibleSpecs.map(s => {
+            const photoUrl = photos[s.photoKey];
+            const emoji = getIcon(s.name);
+            return `<div class="sr-spec-card">
+              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${s.name.replace(/'/g,"\\'")}')"/>` : `<div class="sr-spec-icon">${emoji}</div>`}
+              <div class="sr-spec-name">${s.name}</div>
+            </div>`;
+          }).join('')}</div>
+        </div>`;
+      }
+
+      if (!html) {
+        html = CURRENT_FILTER === 'all'
+          ? '<div class="sr-empty" style="padding:4rem;text-align:center">Visit your dashboard → My Products tab to set up your showroom.</div>'
+          : '<div class="sr-empty" style="padding:4rem;text-align:center">Nothing to show for this project type yet.</div>';
+      }
+      document.getElementById('sr-content').innerHTML = html;
+      updateNav();
+    }
+
     async function init() {
       const shop_token = new URLSearchParams(window.location.search).get('shop');
       if (!shop_token) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">No shop specified.</div>'; return; }
 
-      const shops = await atGet('tbl8PoF2Mu3sAdlMs', `{Shop token} = "${shop_token}"`);
-      if (!shops.length) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">Shop not found.</div>'; return; }
+      const res = await fetch(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(shop_token)}`);
+      const payload = await res.json();
+      if (payload.error || !payload.shop) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">Shop not found.</div>'; return; }
 
-      const shop = shops[0].fields;
-      let photos = {};
-      let products = {};
-      let hidden = {};
-      try { if (shop['Photos']) photos = JSON.parse(shop['Photos']); } catch(e) {}
-      try { if (shop['Products']) products = JSON.parse(shop['Products']); } catch(e) {}
-      try { if (shop['Hidden']) hidden = JSON.parse(shop['Hidden']); } catch(e) {}
-      console.log('DEBUG hidden field raw:', shop['Hidden']);
-      console.log('DEBUG hidden parsed:', hidden);
+      const shop = payload.shop.fields;
+      let photos = {};        try { photos = shop['Photos'] ? JSON.parse(shop['Photos']) : {}; } catch(e) {}
+      let hidden = {};        try { hidden = shop['Hidden'] ? JSON.parse(shop['Hidden']) : {}; } catch(e) {}
+      let categoryRooms = {}; try { categoryRooms = shop['Category rooms'] ? JSON.parse(shop['Category rooms']) : {}; } catch(e) {}
+      let roomTypes = [];
+      try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
+      if (!Array.isArray(roomTypes) || !roomTypes.length) roomTypes = DEFAULT_ROOM_TYPES;
+      roomTypes = roomTypes.filter(r => r.active !== false); // draft project types stay hidden here too
+      const allRoomIds = roomTypes.map(r => r.id);
+
       const brand = shop['Brand colour'] || '#1a1a1a';
-
-      // Apply brand
       document.documentElement.style.setProperty('--brand', brand);
       document.getElementById('sr-hero').style.background = brand;
 
-      // Header
       const logoEl = document.getElementById('sr-logo');
       logoEl.style.background = brand;
       if (shop['Logo URL']) {
@@ -209,99 +331,66 @@
       document.getElementById('sr-hero-title').textContent = `${shop['Shop name'] || 'Our'} Product Catalogue`;
       document.title = `${shop['Shop name'] || 'Products'} — Materials & Options`;
 
-      // Build showroom from saved Products (auto-saved by dashboard My Products tab)
-      // products format: { material:['name1',...], door:[...], drawer:[...], countertop:[...], ... }
-      const CAT_CONFIG = {
-        material:    { id:'box-materials', eyebrow:'Cabinet construction', title:'Box Materials',       desc:'The box is the structural core of every cabinet. We offer the following materials.' },
-        door:        { id:'door-styles',   eyebrow:'Cabinet doors',        title:'Door Styles',         desc:'The door is the face of your kitchen. Choose a style that fits your aesthetic.' },
-        drawer:      { id:'drawer-configs',eyebrow:'Cabinet drawers',      title:'Drawer Configurations',desc:'Drawer box options that affect function and durability.' },
-countertop:  { id:'countertops',   eyebrow:'Surfaces',             title:'Countertop Materials',desc:'We supply and install a range of countertop materials to suit every style and budget.' },
-        trim_crown:   { id:'crown-moulding', eyebrow:'Finishing touches', title:'Crown Moulding',  desc:'Crown moulding styles to top off your upper cabinets.' },
-        trim_valance: { id:'valance',        eyebrow:'Finishing touches', title:'Valance',         desc:'Valance options to complete the look beneath your upper cabinets.' },
-        tall_cabinet: { id:'tall-cabinets',  eyebrow:'Extra storage',     title:'Tall Cabinets',   desc:'Pantry units, oven cabinets, and other tall storage options for your kitchen.' },
+      const lineItems = (payload.lineItems || []).filter(r => r.fields);
+      const byCategory = cat => lineItems.filter(r => r.fields['Category'] === cat).map(r => r.fields);
+
+      // Materials dedupe by base name (uppers/bases share one photo/listing) —
+      // same rule the widget uses.
+      const rawMaterials = byCategory('material');
+      const matSeen = new Set();
+      const dedupedMaterials = rawMaterials.reduce((acc, m) => {
+        const baseName = (m['Name']||'').replace(/\s*—\s*(uppers|bases).*$/i, '').trim();
+        if (!matSeen.has(baseName)) { matSeen.add(baseName); acc.push({ ...m, _baseName: baseName }); }
+        return acc;
+      }, []);
+
+      // Drawer configs dedupe by base name too (some/mostly drawers variants
+      // share one listing), same rule the widget uses for its drawer picker.
+      const rawDrawers = byCategory('drawer');
+      const drawerSeen = new Set();
+      const dedupedDrawers = rawDrawers.reduce((acc, d) => {
+        const baseName = (d['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
+        if (!drawerSeen.has(baseName)) { drawerSeen.add(baseName); acc.push({ ...d, _baseName: baseName }); }
+        return acc;
+      }, []);
+
+      // Only real countertop materials — same filter the widget uses to
+      // exclude backsplash-option and cutout-option sub-records.
+      const rawCountertops = byCategory('countertop').filter(item => {
+        const desc = item['Description'] || '';
+        return desc.includes('type:material') || (!desc.includes('type:backsplash') && !desc.includes('type:cutout'));
+      });
+
+      const rawTrim = byCategory('trim');
+      const rawTallCab = byCategory('tall_cabinet').filter(item => item['Active'] !== false);
+
+      function buildEntries(records, cat, nameKey) {
+        return records.map(r => ({
+          name: r[nameKey] || r['Name'],
+          photoKey: photoKeyFor(cat, r[nameKey] || r['Name']),
+          visibleRooms: effectiveVisibleRooms(parseVisibleRooms(r), cat, categoryRooms, allRoomIds),
+        }));
+      }
+
+      const categoryItems = {
+        material:     buildEntries(dedupedMaterials, 'material', '_baseName'),
+        door:         buildEntries(byCategory('door'), 'door', 'Name'),
+        drawer:       buildEntries(dedupedDrawers, 'drawer', '_baseName'),
+        countertop:   buildEntries(rawCountertops, 'countertop', 'Name'),
+        trim_crown:   buildEntries(rawTrim.filter(t => (t['Trim type']||'crown') === 'crown'), 'trim_crown', 'Name'),
+        trim_valance: buildEntries(rawTrim.filter(t => t['Trim type'] === 'valance'), 'trim_valance', 'Name'),
+        tall_cabinet: buildEntries(rawTallCab, 'tall_cabinet', 'Name'),
       };
 
-      function itemCard(name, photoKey) {
-        const photoUrl = photos[photoKey];
-        const safeName = name.replace(/'/g, "\\'");
-        const imgHtml = photoUrl
-          ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}')" onerror="this.style.display='none'">`
-          : `<div style="width:100%;height:160px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gray-400)">📷</div>`;
-        return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div></div></div>`;
-      }
+      const specs = (payload.specialty || []).map(r => ({
+        name: r.fields['Item name'] || r.fields['Special Items'] || '',
+        photoKey: 'spec_' + r.id,
+        visibleRooms: effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty', categoryRooms, allRoomIds),
+      }));
 
-      let html = '';
-      let first = true;
-      Object.entries(CAT_CONFIG).forEach(([cat, cfg]) => {
-        const names = products[cat] || [];
-        if (!names.length) return;
-        // Only show this category if at least one item has a photo AND isn't hidden
-        const visibleItems = names.filter(name => {
-          const key = 'li_' + cat + '_' + name.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-          return !hidden[key] && photos[key];
-        });
-        if (!visibleItems.length) return;
-        if (!first) html += '<div class="sr-divider"></div>';
-        first = false;
-        html += `<div class="sr-section" id="${cfg.id}">
-          <div class="sr-section-header">
-            <div class="sr-section-eyebrow">${cfg.eyebrow}</div>
-            <div class="sr-section-title">${cfg.title}</div>
-            <div class="sr-section-desc">${cfg.desc}</div>
-          </div>
-          <div class="sr-grid">${visibleItems.map(name => {
-            const key = 'li_' + cat + '_' + name.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-            return itemCard(name, key);
-          }).join('')}</div>
-        </div>`;
-      });
-
-      // Specialty items — always from Airtable
-      const specs = await atGet('tbloaXeEM5K7TOZCD', `AND(FIND("${shop['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
-      const visibleSpecs = specs.filter(r => !hidden['spec_' + r.id] && photos['spec_' + r.id]);
-      if (visibleSpecs.length) {
-        if (!first) html += '<div class="sr-divider"></div>';
-        const specIcons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
-        html += `<div class="sr-section" id="specialty">
-          <div class="sr-section-header">
-            <div class="sr-section-eyebrow">Add-ons & upgrades</div>
-            <div class="sr-section-title">Specialty Items</div>
-            <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
-          </div>
-          <div class="sr-spec-grid">${visibleSpecs.map(r => {
-            const name = r.fields['Item name'] || '';
-            const key = 'spec_' + r.id;
-            let emoji = '⭐';
-            for (const [k,v] of Object.entries(specIcons)) { if (name.toLowerCase().includes(k)) { emoji = v; break; } }
-            const photoUrl = photos[key];
-            return `<div class="sr-spec-card">
-              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${name.replace(/'/g,"\\'")}')"/>` : `<div class="sr-spec-icon">${emoji}</div>`}
-              <div class="sr-spec-name">${name}</div>
-            </div>`;
-          }).join('')}</div>
-        </div>`;
-      }
-
-      if (!html) html = '<div class="sr-empty" style="padding:4rem;text-align:center">Visit your dashboard → My Products tab to set up your showroom.</div>';
-      document.getElementById('sr-content').innerHTML = html;
-
-      // Nav scroll
-      document.querySelectorAll('.sr-nav-item').forEach(link => {
-        link.addEventListener('click', e => {
-          e.preventDefault();
-          document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.remove('active'));
-          link.classList.add('active');
-          const target = document.querySelector(link.getAttribute('href'));
-          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      });
-
-      window.addEventListener('scroll', () => {
-        const ids = ['box-materials','door-styles','countertops','specialty'];
-        let current = ids[0];
-        ids.forEach(id => { const el = document.getElementById(id); if (el && window.scrollY >= el.offsetTop - 150) current = id; });
-        document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
-      });
+      SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes };
+      renderFilterBar();
+      renderShowroom();
     }
 
     init().catch(err => {
