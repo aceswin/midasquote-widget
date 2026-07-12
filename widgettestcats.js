@@ -1,7 +1,7 @@
 /*
  * MidasQuote Widget v3.3 — TEST BUILD (widgettest.js)
  * Adds visual thumbnails to specialty items so customers don't have to
- * guess what unfamiliar terms mean without leaving the widget.
+ * guess what unfamiliar terms mean without leaving the widget..
  */
 
 (function() {
