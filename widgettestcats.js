@@ -717,7 +717,12 @@
     const hasTrim    = (li.trimItems || []).length > 0;
     const hasCrown    = (li.trimItems || []).some(t => (t['Trim type']||'crown') === 'crown');
     const hasValance  = (li.trimItems || []).some(t => t['Trim type'] === 'valance');
-    const hasInstall = !hasDynamic || li.installItems.length > 0;
+    // Safety net: the pricing wizard auto-adds 4 default install line items
+    // at $0 the first time a shop touches item setup, and tells them to
+    // delete whichever they don't offer ("Supply-only shop? Delete all.").
+    // If a shop skips that step, those $0 stubs would otherwise still count
+    // as "has install" below — so require at least one to actually be priced.
+    const hasInstall = !hasDynamic || li.installItems.some(i => (i['Rate']||0) > 0);
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
     const drawerConfigItems = sortAndBadgeItems(drawerConfigNames.map((n,i)=>({
