@@ -671,8 +671,9 @@
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <input type="text" inputmode="${(s.perSqFt||s.perFt)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
+            ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft') : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear') : '')}
           </div>
           ${(s.perSqFt || s.perFt) ? `<span style="font-size:9px;font-weight:600;color:#6b7280">${s.perSqFt ? 'sq ft' : 'lin ft'}</span>` : ''}
         </div>
@@ -705,6 +706,151 @@
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\n/g, '<br>');
     return html;
+  }
+
+  // ============================================================
+  // MEASUREMENT CONVERSION CALCULATOR
+  // ============================================================
+  // Lets a customer measure each section of a wall/run in inches or mm,
+  // add as many sections as they need, and have the total automatically
+  // converted and dropped into whichever linear-ft or sq-ft field they
+  // opened the calculator from.
+  let _mqCalcMode = 'linear'; // 'linear' or 'sqft'
+  let _mqCalcTargetId = null;
+  let _mqCalcUnit = 'in'; // 'in' or 'mm'
+  let _mqCalcSections = []; // linear: [{val}]  ·  sqft: [{w,h}]
+
+  function mqCalcToFeet(val, unit) {
+    const n = parseFloat(val) || 0;
+    return unit === 'mm' ? n / 304.8 : n / 12;
+  }
+
+  function mqEnsureCalcModal() {
+    let modal = document.getElementById('mq-measure-calc');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'mq-measure-calc';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100000;display:none;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    modal.innerHTML = `<div id="mq-calc-card" style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;padding:1.5rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)"></div>`;
+    // Click the dark backdrop (not the card itself) to close, same pattern
+    // used by the showroom popup elsewhere in this file.
+    modal.addEventListener('click', (e) => { if (e.target === modal) mqCloseMeasureCalc(); });
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  window.mqOpenMeasureCalc = function(targetId, mode) {
+    _mqCalcMode = mode;
+    _mqCalcTargetId = targetId;
+    _mqCalcSections = mode === 'linear' ? [{ val: '' }] : [{ w: '', h: '' }];
+    mqEnsureCalcModal().style.display = 'flex';
+    mqRenderCalc();
+  };
+
+  window.mqCloseMeasureCalc = function() {
+    const modal = document.getElementById('mq-measure-calc');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.mqCalcSetUnit = function(unit) {
+    _mqCalcUnit = unit;
+    mqRenderCalc();
+  };
+
+  window.mqCalcAddSection = function() {
+    _mqCalcSections.push(_mqCalcMode === 'linear' ? { val: '' } : { w: '', h: '' });
+    mqRenderCalc();
+  };
+
+  window.mqCalcRemoveSection = function(idx) {
+    if (_mqCalcSections.length <= 1) return; // always keep at least one row
+    _mqCalcSections.splice(idx, 1);
+    mqRenderCalc();
+  };
+
+  window.mqCalcUpdateSection = function(idx, field, val) {
+    _mqCalcSections[idx][field] = val;
+    mqRenderCalcTotal();
+  };
+
+  function mqCalcComputeTotal() {
+    if (_mqCalcMode === 'linear') {
+      const totalUnits = _mqCalcSections.reduce((sum, s) => sum + (parseFloat(s.val) || 0), 0);
+      return mqCalcToFeet(totalUnits, _mqCalcUnit);
+    }
+    return _mqCalcSections.reduce((sum, s) => sum + mqCalcToFeet(s.w, _mqCalcUnit) * mqCalcToFeet(s.h, _mqCalcUnit), 0);
+  }
+
+  function mqRenderCalcTotal() {
+    const totalEl = document.getElementById('mq-calc-total');
+    if (!totalEl) return;
+    const total = mqCalcComputeTotal();
+    totalEl.textContent = _mqCalcMode === 'linear' ? `${total.toFixed(2)} linear ft` : `${total.toFixed(2)} sq ft`;
+  }
+
+  function mqRenderCalc() {
+    const card = document.getElementById('mq-calc-card');
+    if (!card) return;
+    const unitLabel = _mqCalcUnit === 'mm' ? 'mm' : 'inches';
+    const rows = _mqCalcSections.map((s, idx) => _mqCalcMode === 'linear' ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:12px;color:#6b7280;width:64px;flex-shrink:0">Section ${idx + 1}</span>
+        <input type="number" value="${s.val}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <span style="font-size:12px;color:#6b7280;width:44px">${unitLabel}</span>
+        ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
+      </div>` : `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:12px;color:#6b7280;width:64px;flex-shrink:0">Section ${idx + 1}</span>
+        <input type="number" value="${s.w}" placeholder="Width" oninput="mqCalcUpdateSection(${idx},'w',this.value)" style="flex:1;min-width:0;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <span style="font-size:11px;color:#9ca3af;flex-shrink:0">×</span>
+        <input type="number" value="${s.h}" placeholder="Height" oninput="mqCalcUpdateSection(${idx},'h',this.value)" style="flex:1;min-width:0;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <span style="font-size:12px;color:#6b7280;width:44px">${unitLabel}</span>
+        ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
+      </div>`
+    ).join('');
+
+    card.innerHTML = `
+      <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'linear' ? '📏 Measurement calculator' : '📐 Square footage calculator'}</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button type="button" onclick="mqCalcSetUnit('in')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'in' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'in' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'in' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Inches</button>
+        <button type="button" onclick="mqCalcSetUnit('mm')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'mm' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Millimeters</button>
+      </div>
+      <div id="mq-calc-rows">${rows}</div>
+      <button type="button" onclick="mqCalcAddSection()" style="width:100%;padding:8px;border-radius:6px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px">+ Add another section</button>
+      <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;margin-bottom:14px;text-align:center">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Total</div>
+        <div id="mq-calc-total" style="font-size:18px;font-weight:700;color:#166534"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="button" onclick="mqCloseMeasureCalc()" style="flex:1;padding:10px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+        <button type="button" onclick="mqCalcApply()" style="flex:1;padding:10px;border-radius:8px;border:none;background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Use this total</button>
+      </div>`;
+    mqRenderCalcTotal();
+  }
+
+  window.mqCalcApply = function() {
+    const rawTotal = mqCalcComputeTotal();
+    // Specialty item qty fields (per linear/sq ft) now keep one decimal place;
+    // everything else (uft/bft/trim) already supports full decimals.
+    const total = _mqCalcTargetId && _mqCalcTargetId.startsWith('mq-qty-')
+      ? Math.round(rawTotal * 10) / 10
+      : Math.round(rawTotal * 100) / 100;
+    const targetEl = document.getElementById(_mqCalcTargetId);
+    if (targetEl) {
+      targetEl.value = total;
+      // Fire both events — some target fields listen for 'input' (live
+      // recalculation as you type), others for 'change'. Covers either.
+      targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+      targetEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    mqCloseMeasureCalc();
+  };
+
+  // Small button that opens the calculator above, for placement right next
+  // to whichever field it should fill in.
+  function calcBtn(targetId, mode) {
+    return `<button type="button" onclick="mqOpenMeasureCalc('${targetId}','${mode}')" title="Measurement calculator" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;padding:0">🧮</button>`;
   }
 
   function cabinetForm(prefix, specs, data) {
@@ -788,8 +934,10 @@
         <p class="mq-sec-title">Cabinet measurements</p>
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them below.</div>` : ''}
         <div class="mq-grid3">
-          <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60"/></div>
-          <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')"/></div>
+          <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear')}</div></div>
+          <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear')}</div></div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
         </div>
@@ -874,6 +1022,7 @@
         <div id="mq-${prefix}-trim-manual-wrap" style="display:none;margin-bottom:10px;align-items:center;gap:8px">
           <label style="font-size:13px;color:#374151">Linear feet</label>
           <input type="number" id="mq-${prefix}-trim-manual-ft" value="0" min="0" step="0.5" style="width:90px"/>
+          ${calcBtn(`mq-${prefix}-trim-manual-ft`,'linear')}
         </div>
         ${hasCrown?`<div style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
@@ -1563,13 +1712,19 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0)mqAdjQty(prefix,i,1);else mqAdjQty(prefix,i,-specQty[prefix][i]);};
     window.mqAdjQty=(prefix,i,d)=>{
-      specQty[prefix][i]=Math.max(0,specQty[prefix][i]+d);
+      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
+      let next = Math.max(0, specQty[prefix][i] + d);
+      if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
+      specQty[prefix][i]=next;
       const el=document.getElementById(`mq-qty-${prefix}-${i}`);
       if(el) el.value=specQty[prefix][i];
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',specQty[prefix][i]>0);
     };
     window.mqSetQty=(prefix,i,val)=>{
-      const n=Math.max(0,parseInt(val,10)||0);
+      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
+      const n = allowDecimal
+        ? Math.max(0, Math.round((parseFloat(val)||0) * 10) / 10) // one decimal — e.g. linear/sq ft items
+        : Math.max(0, parseInt(val,10)||0); // whole numbers — plain quantity items
       specQty[prefix][i]=n;
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
     };
