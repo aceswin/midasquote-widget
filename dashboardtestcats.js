@@ -1487,7 +1487,7 @@ window.logoutMember = async function () {
 
 **Island cabinets:** Include island cabinets if you have one.
 
-**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall about 2 feet short of the corner — that's roughly where the corner cabinet already covers the space. Don't worry about the exact number, this is a ballpark estimate.
+**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
 
 **Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
 
@@ -1500,7 +1500,7 @@ window.logoutMember = async function () {
 
 **Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
 
-**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall about 2 feet short of the corner — that's roughly where the corner cabinet already covers the space. Don't worry about the exact number, this is a ballpark estimate.
+**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
 
 **Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
 

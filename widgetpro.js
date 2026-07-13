@@ -693,7 +693,7 @@
   // initial HTML render and the per-project-type swap can reuse the exact
   // same markup.
   function defaultMeasureGuideHTML(roomId = 'kitchen') {
-    const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall about 2 feet short of the corner — that's roughly where the corner cabinet already covers the space. Don't worry about the exact number, this is a ballpark estimate.</div>`;
+    const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.</div>`;
     if (roomId === 'kitchen') {
       return `
         <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
