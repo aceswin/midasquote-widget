@@ -282,6 +282,10 @@
       #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-sec{border-left:4px solid #bfdbfe}
       #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
+      #midasquote-widget .mq-sec-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;cursor:pointer}
+      #midasquote-widget .mq-sec-header-row .mq-sec-title{margin-bottom:0}
+      #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:11px;color:#9ca3af;flex-shrink:0;margin-left:8px}
+      #midasquote-widget .mq-collapse-arrow.open{transform:rotate(90deg)}
       #midasquote-widget .mq-sec-title{font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem}
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
@@ -1018,18 +1022,27 @@
       </div>`:''}
       ${Object.keys(TALL_CAB).length > 0 ? `
       <div class="mq-sec" id="mq-${prefix}-tallcabs-sec">
-        <p class="mq-sec-title">Tall cabinets</p>
+        <div class="mq-sec-header-row" onclick="mqToggleCollapse('${prefix}-tallcabs')">
+          <p class="mq-sec-title">Tall cabinets</p>
+          <span class="mq-collapse-arrow" id="mq-${prefix}-tallcabs-arrow">▶</span>
+        </div>
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
           🏛️ Add each tall cabinet separately — pick a type, width, and quantity, then add another for a different type.
         </div>
-        <div id="mq-${prefix}-tallcabs"></div>
-        <button class="mq-add-surface-btn" onclick="mqAddTallCab('${prefix}')">+ Add a tall cabinet</button>
+        <div id="mq-${prefix}-tallcabs-body" style="display:none">
+          <div id="mq-${prefix}-tallcabs"></div>
+          <button class="mq-add-surface-btn" onclick="mqAddTallCab('${prefix}')">+ Add a tall cabinet</button>
+        </div>
       </div>` : ''}
       ${hasTrim?`<div class="mq-sec" id="mq-${prefix}-trim-sec">
-        <p class="mq-sec-title">Crown moulding / valance</p>
+        <div class="mq-sec-header-row" onclick="mqToggleCollapse('${prefix}-trim')">
+          <p class="mq-sec-title">Crown moulding / valance</p>
+          <span class="mq-collapse-arrow" id="mq-${prefix}-trim-arrow">▶</span>
+        </div>
         <div id="mq-${prefix}-trim-auto-explainer" style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
         <div id="mq-${prefix}-trim-noauto-explainer" style="display:none;font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 This project type doesn't include cabinet measurements, so enter your crown/valance linear footage directly below.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
+        <div id="mq-${prefix}-trim-body" style="display:none">
         <label id="mq-${prefix}-trim-manual-toggle-wrap" style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px;background:#f9fafb;border-radius:6px;padding:8px 10px">
           <input type="checkbox" id="mq-${prefix}-trim-manual-toggle" onchange="mqTogTrimManualFt('${prefix}')" style="width:auto;flex-shrink:0"/>
           Don't use upper cabinet linear footage — enter it myself
@@ -1061,6 +1074,7 @@
             <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
           </div>
         </div>`:''}
+        </div>
       </div>`:''}
       <div class="mq-sec" id="mq-${prefix}-removal-sec">
         <p class="mq-sec-title">Removal</p>
@@ -1591,6 +1605,15 @@
       titleEl.appendChild(label);
       return badge;
     }
+
+    window.mqToggleCollapse = function(key) {
+      const body = document.getElementById(`mq-${key}-body`);
+      const arrow = document.getElementById(`mq-${key}-arrow`);
+      if (!body) return;
+      const opening = body.style.display === 'none';
+      body.style.display = opening ? 'block' : 'none';
+      if (arrow) arrow.classList.toggle('open', opening);
+    };
 
     window.mqRenumberSteps = function(prefix) {
       const scopeId = prefix === 'c' ? 'mq-tab-cabinets' : (prefix === 'b' ? 'mq-tab-both' : null);
