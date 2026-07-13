@@ -2278,7 +2278,8 @@ window.mqTogDrawerConfig=(prefix)=>{
             <select id="mqssi-${id}">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
         </div>
         <div class="mq-divider"></div>
-        <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')"/> Cutouts needed</label>
+        <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:auto;flex-shrink:0"/> Cutouts needed</label>
+        <div id="mqscuts-${id}" style="display:none;margin-top:8px;margin-bottom:0.75rem;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Backsplash</label>
           <select id="mqsbs-${id}" style="min-width:160px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select>
@@ -2298,8 +2299,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           </div>
           <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
           <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mqs-bsft-net-${id}">0</strong> ft</div>
-        </div>
-        <div id="mqscuts-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>`;
+        </div>`;
       document.getElementById(containerId)?.appendChild(card);
       window.mqRefreshBsOpts(`mqsm-${id}`, `mqsbs-${id}`);
       window.mqRefreshCutoutOpts(`mqsm-${id}`, `mqscuts-${id}`);
