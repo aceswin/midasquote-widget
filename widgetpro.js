@@ -194,18 +194,14 @@
   // ============================================================
   // EMAIL & LEAD
   // ============================================================
-  async function saveLead(data, lead, quoteType, low, high, lines, roomType) {
+  // Pro Quoter never creates an Airtable Leads record, and never sends a
+  // "new lead" notification — the shop owner isn't a lead, and there's no
+  // one else who needs telling. All that's left is optionally emailing a
+  // copy of the quote to whatever address they enter, including the real
+  // total (not just the customer ballpark range).
+  async function saveLead(data, lead, quoteType, low, high, lines, realTotal) {
     const { shop } = data;
-    try {
-      await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-lead`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shopToken, name: lead.name, email: lead.email, phone: lead.phone,
-          quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines,
-        }),
-      });
-    } catch(e) { console.error('Lead save failed', e); }
+    if (lead._isSkip || !lead.email) return;
 
     const lineRows = (lines||[])
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
@@ -214,43 +210,20 @@
         : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`
       ).join('');
 
-    if (!lead._isSkip) await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
+    await sendEmail(lead.email, `${quoteType} quote — ${shop['Shop name']}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2 style="color:#1a1a1a">New ${quoteType} quote lead</h2>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-          <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Customer details</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name}</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email}</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone}</td></tr>
-        </table>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-          <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Quote breakdown</td></tr>${lineRows}
-        </table>
-        <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center">
-          <div style="font-size:13px;color:#666;margin-bottom:4px">Estimated range</div>
-          <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
+        <h2 style="color:#0f2a52">${quoteType} quote</h2>
+        <div style="background:#0f2a52;border-radius:8px;padding:16px;text-align:center;margin-bottom:12px">
+          <div style="font-size:13px;color:#fbbf24;margin-bottom:4px">Your real total</div>
+          <div style="font-size:28px;font-weight:700;color:#fff">$${Math.round(realTotal||0).toLocaleString()}</div>
         </div>
+        <div style="background:#f9fafb;border-radius:8px;padding:12px;text-align:center;margin-bottom:16px;color:#666;font-size:13px">
+          Customer sees this range: $${low.toLocaleString()} – $${high.toLocaleString()}
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+          <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Full breakdown</td></tr>${lineRows}
+        </table>
       </div>`);
-
-  if (lead.email && !lead._isSkip) {
-      const customerLineRows = (lines||[]).filter(l=>l&&l.label&&!l.bold)
-        .sort((a,b)=>b.cost-a.cost)
-        .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
-      await sendEmail(lead.email, `Your quote from ${shop['Shop name']}`,
-        `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-          <h2 style="color:#1a1a1a">Your ${quoteType} quote from ${shop['Shop name']}</h2>
-          <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-            <div style="font-size:13px;color:#666;margin-bottom:4px">Your estimated range</div>
-            <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
-          </div>
-          <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-            <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What’s included</td></tr>${customerLineRows}
-          </table>
-          <p style="color:#666;font-size:13px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
-          <p style="color:#666;font-size:13px;margin-top:8px">⚠ Jobs outside our local delivery area may be subject to additional travel charges — your final quote will confirm the exact amount.</p>
-          <p style="color:#666;font-size:13px"><strong>${shop['Shop name']}</strong><br/>${shop['Phone']||''}</p>
-        </div>`);
-    }
   }
 
   async function sendEmail(to, subject, html) {
@@ -1388,15 +1361,13 @@
       <!-- LEAD MODAL -->
       <div class="mq-overlay" id="mq-lead-overlay">
         <div class="mq-modal">
-          <p class="mq-modal-title">Almost there — one quick step</p>
-          <p class="mq-modal-sub">Enter your details and we'll send you a copy of your estimate.</p>
+          <p class="mq-modal-title">Send a copy to yourself?</p>
+          <p class="mq-modal-sub">Enter your email if you'd like this quote sent to you. Totally optional.</p>
           <div class="mq-modal-fields">
-            <div class="mq-field"><label class="mq-label">Your name</label><input type="text" id="mq-lead-name" placeholder="Jane Smith"/></div>
-            <div class="mq-field"><label class="mq-label">Email address</label><input type="email" id="mq-lead-email" placeholder="jane@email.com"/></div>
-            <div class="mq-field"><label class="mq-label">Phone number <span style="color:#9ca3af;font-weight:400">(optional)</span></label><input type="tel" id="mq-lead-phone" placeholder="(555) 000-0000"/></div>
+            <div class="mq-field"><label class="mq-label">Your email <span style="color:#9ca3af;font-weight:400">(optional)</span></label><input type="email" id="mq-lead-email" placeholder="you@email.com"/></div>
           </div>
-          <button class="mq-modal-btn" onclick="mqSubmitLead()">Show my estimate →</button>
-          <button class="mq-modal-skip" onclick="mqSkipLead()">Skip for now</button>
+          <button class="mq-modal-btn" onclick="mqSubmitLead()">View estimate →</button>
+          <button class="mq-modal-skip" onclick="mqSkipLead()">Skip</button>
         </div>
       </div>
 
@@ -2043,12 +2014,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       try{
         const saved=JSON.parse(localStorage.getItem('mq_lead_info')||'null');
         if(saved){
-          const nameEl=document.getElementById('mq-lead-name');
           const emailEl=document.getElementById('mq-lead-email');
-          const phoneEl=document.getElementById('mq-lead-phone');
-          if(nameEl&&!nameEl.value) nameEl.value=saved.name||'';
           if(emailEl&&!emailEl.value) emailEl.value=saved.email||'';
-          if(phoneEl&&!phoneEl.value) phoneEl.value=saved.phone||'';
         }
       }catch(e){}
       const overlay=document.getElementById('mq-lead-overlay');
@@ -2058,15 +2025,11 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
     window.mqSkipLead=()=>{
       document.getElementById('mq-lead-overlay').classList.remove('show');
-      // Treat skip the same as submit — save whatever's in the fields (even if
-      // blank) so the shop owner sees all quote attempts, not just the ones
-      // where the customer filled in their info. Tagged so saveLead knows to
-      // skip sending emails for this one.
-      const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone'),_isSkip:true};
+      const lead={email:gv('mq-lead-email'),_isSkip:true};
       if(pendingCb){pendingCb(lead);pendingCb=null;}
     };
     window.mqSubmitLead=async()=>{
-      const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone')};
+      const lead={email:gv('mq-lead-email')};
       // Remember for next time so they don't have to re-type
       try{localStorage.setItem('mq_lead_info',JSON.stringify(lead));}catch(e){}
       document.getElementById('mq-lead-overlay').classList.remove('show');
@@ -2433,7 +2396,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');document.getElementById('mq-c-result').scrollIntoView({behavior:'smooth',block:'start'});
         document.getElementById('mq-c-calc-btn').disabled=false;
-        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel);
+        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.total);
       });
     };
 
@@ -2452,7 +2415,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');document.getElementById('mq-ct-result').scrollIntoView({behavior:'smooth',block:'start'});
           document.getElementById('mq-ct-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines);
+          if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines,r.total);
         },900);
       });
     };
@@ -2481,7 +2444,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');document.getElementById('mq-b-result').scrollIntoView({behavior:'smooth',block:'start'});
           document.getElementById('mq-b-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel);
+          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.total+ct.total);
         },1200);
       });
     };
