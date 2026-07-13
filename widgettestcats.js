@@ -1091,9 +1091,14 @@
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
-            <label class="mq-label" style="color:#1d4ed8;font-weight:700">${termHelpThumb(MQ_TERM_IMAGES.crownReturn,'What is a crown return?')}Returns to wall</label>
-            <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
+            <div style="display:flex;align-items:flex-start">
+              ${termHelpThumb(MQ_TERM_IMAGES.crownReturn,'What is a crown return?')}
+              <div style="flex:1;min-width:0">
+                <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
+                <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
+                <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
+              </div>
+            </div>
           </div>
         </div>`:''}
         ${hasValance?`<div>
@@ -1102,9 +1107,14 @@
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
-            <label class="mq-label" style="color:#1d4ed8;font-weight:700">${termHelpThumb(MQ_TERM_IMAGES.valanceReturn,'What is a valance return?')}Returns to wall</label>
-            <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-            <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
+            <div style="display:flex;align-items:flex-start">
+              ${termHelpThumb(MQ_TERM_IMAGES.valanceReturn,'What is a valance return?')}
+              <div style="flex:1;min-width:0">
+                <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
+                <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
+                <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
+              </div>
+            </div>
           </div>
         </div>`:''}
         </div>
@@ -1138,9 +1148,9 @@
     valanceReturn: 'https://aceswin.github.io/midasquote-widget/term-images/valance-return.png',
     sidesplash:    'https://aceswin.github.io/midasquote-widget/term-images/sidesplash.png',
   };
-  function termHelpThumb(imgUrl, label) {
+  function termHelpThumb(imgUrl, label, size = 48) {
     const safeLabel = label.replace(/'/g, "\\'");
-    return `<img src="${imgUrl}" alt="${label}" onclick="event.stopPropagation();mqPhotoLightbox('${imgUrl}','${safeLabel}')" onerror="this.style.display='none'" style="width:28px;height:28px;object-fit:cover;border-radius:6px;cursor:zoom-in;flex-shrink:0;border:1px solid #93c5fd;vertical-align:middle;margin-right:6px"/>`;
+    return `<img src="${imgUrl}" alt="${label}" onclick="event.stopPropagation();mqPhotoLightbox('${imgUrl}','${safeLabel}')" onerror="this.style.display='none'" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:6px;cursor:zoom-in;flex-shrink:0;border:1px solid #93c5fd;margin-right:8px"/>`;
   }
 
   const PRICE_LEGEND_HTML = `
