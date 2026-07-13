@@ -285,8 +285,8 @@
       #midasquote-widget .mq-tab-content{display:none;padding:1.5rem}
       #midasquote-widget .mq-tab-content.active{display:block}
       #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
-      #midasquote-widget .mq-sec{border-left:4px solid #bfdbfe}
-      #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
+      #midasquote-widget .mq-sec{border-left:4px solid #fde68a}
+      #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#d97706;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
       #midasquote-widget .mq-sec-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;cursor:pointer}
       #midasquote-widget .mq-sec-header-row .mq-sec-title{margin-bottom:0}
       #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:11px;color:#9ca3af;flex-shrink:0;margin-left:8px}
@@ -980,9 +980,9 @@
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
-        <div style="background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:2px solid #93c5fd;border-radius:12px;padding:16px 18px">
-          <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#1e40af;margin-bottom:8px">
-            <span style="background:#2563eb;color:#fff;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
+        <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #fcd34d;border-radius:12px;padding:16px 18px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#92400e;margin-bottom:8px">
+            <span style="background:#d97706;color:#fff;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
             Start here — choose your project type
           </label>
           <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqRefreshSectionVisibility('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
@@ -1200,6 +1200,10 @@
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
 
     return `
+      <div style="background:linear-gradient(135deg,#111,#1f1f1f);padding:16px 20px;text-align:center">
+        <div style="font-size:19px;font-weight:800;letter-spacing:0.08em;color:#fbbf24;text-transform:uppercase">⚡ Pro Quoter ⚡</div>
+        <div style="font-size:11px;color:#9ca3af;letter-spacing:0.04em;margin-top:2px">Real numbers. Every time.</div>
+      </div>
       <div class="mq-header">
         <div class="mq-logo">${logoHTML}</div>
         <div style="flex:1">
@@ -1234,7 +1238,7 @@
           <div class="mq-res-hdr">
             <div><p class="mq-res-title" id="mq-c-res-title">Cabinet estimate</p><p class="mq-res-sub" id="mq-c-res-sub">—</p><p class="mq-hint" id="mq-c-vanity-note" style="display:none;color:#1d4ed8"></p></div>
             <div><div class="mq-res-range-lbl">Customer sees this range</div><div class="mq-res-range" id="mq-c-res-range">—</div>
-              <div style="margin-top:4px;font-size:13px;font-weight:700;color:#166534">💰 Your real total: <span id="mq-c-res-real">—</span></div>
+              <div style="display:inline-block;margin-top:8px;background:linear-gradient(135deg,#111,#1f1f1f);border:1px solid #fbbf24;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;color:#fbbf24">💰 Your real total: <span id="mq-c-res-real" style="color:#fff">—</span></div>
             </div>
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
@@ -1265,7 +1269,7 @@
           <div class="mq-res-hdr">
             <div><p class="mq-res-title">Countertop estimate</p><p class="mq-res-sub" id="mq-ct-res-sub">—</p></div>
             <div><div class="mq-res-range-lbl">Customer sees this range</div><div class="mq-res-range" id="mq-ct-res-range">—</div>
-              <div style="margin-top:4px;font-size:13px;font-weight:700;color:#166534">💰 Your real total: <span id="mq-ct-res-real">—</span></div>
+              <div style="display:inline-block;margin-top:8px;background:linear-gradient(135deg,#111,#1f1f1f);border:1px solid #fbbf24;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;color:#fbbf24">💰 Your real total: <span id="mq-ct-res-real" style="color:#fff">—</span></div>
             </div>
           </div>
           <ul class="mq-line-items" id="mq-ct-line-items"></ul>
@@ -1368,7 +1372,7 @@
             <div><div class="mq-grand-label">Total project estimate</div><div class="mq-grand-sub">Before tax · Customer sees this range</div></div>
             <div class="mq-grand-val" id="mq-b-grand">—</div>
           </div>
-          <div style="text-align:right;margin-top:6px;font-size:14px;font-weight:700;color:#166534">💰 Your real total: <span id="mq-b-grand-real">—</span></div>
+          <div style="text-align:right;margin-top:8px"><span style="display:inline-block;background:linear-gradient(135deg,#111,#1f1f1f);border:1px solid #fbbf24;border-radius:8px;padding:7px 14px;font-size:14px;font-weight:700;color:#fbbf24">💰 Your real total: <span id="mq-b-grand-real" style="color:#fff">—</span></span></div>
           <div class="mq-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:12px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
