@@ -868,6 +868,20 @@
 
   // Small button that opens the calculator above, for placement right next
   // to whichever field it should fill in.
+  // Reusable header row for a collapsible section — title on the left,
+  // "Open"/"Close" + arrow on the right. `key` must be unique per section
+  // (used to build the mq-${key}-body / -arrow / -label ids mqToggleCollapse
+  // and mqRenumberSteps both key off of).
+  function collapsibleHeader(key, title) {
+    return `<div class="mq-sec-header-row" onclick="mqToggleCollapse('${key}')">
+      <p class="mq-sec-title">${title}</p>
+      <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <span id="mq-${key}-label" style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Open</span>
+        <span class="mq-collapse-arrow" id="mq-${key}-arrow">▶</span>
+      </span>
+    </div>`;
+  }
+
   function calcBtn(targetId, mode) {
     return `<button type="button" onclick="mqOpenMeasureCalc('${targetId}','${mode}')" title="Measurement calculator" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;padding:0">🧮</button>`;
   }
@@ -935,11 +949,13 @@
         </div>
       </div>
       <div class="mq-sec" id="mq-${prefix}-measuring-sec">
-        <p class="mq-sec-title">Measuring</p>
-        <button type="button" onclick="mqTogMeasure('${prefix}')" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:0.01em;width:100%;text-align:left">
-          <span id="mq-${prefix}-measure-arrow" style="display:inline-block;transition:transform 0.2s;font-size:10px">▶</span> 📏 How to measure your space
-        </button>
-        <div id="mq-${prefix}-measure-guide" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
+        ${collapsibleHeader(`${prefix}-measuring`, 'Measuring')}
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+          📏 Tips for getting accurate measurements, plus a converter for inches/mm.
+        </div>
+        <div id="mq-${prefix}-measuring-body" style="display:none">
+          <div id="mq-${prefix}-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:12px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
+        </div>
       </div>
       <div class="mq-sec" id="mq-${prefix}-si-field">
         <p class="mq-sec-title">${hasInstall ? 'Supply + install' : 'Supply'}</p>
@@ -1022,10 +1038,7 @@
       </div>`:''}
       ${Object.keys(TALL_CAB).length > 0 ? `
       <div class="mq-sec" id="mq-${prefix}-tallcabs-sec">
-        <div class="mq-sec-header-row" onclick="mqToggleCollapse('${prefix}-tallcabs')">
-          <p class="mq-sec-title">Tall cabinets</p>
-          <span class="mq-collapse-arrow" id="mq-${prefix}-tallcabs-arrow">▶</span>
-        </div>
+        ${collapsibleHeader(`${prefix}-tallcabs`, 'Tall cabinets')}
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
           🏛️ Add each tall cabinet separately — pick a type, width, and quantity, then add another for a different type.
         </div>
@@ -1035,10 +1048,7 @@
         </div>
       </div>` : ''}
       ${hasTrim?`<div class="mq-sec" id="mq-${prefix}-trim-sec">
-        <div class="mq-sec-header-row" onclick="mqToggleCollapse('${prefix}-trim')">
-          <p class="mq-sec-title">Crown moulding / valance</p>
-          <span class="mq-collapse-arrow" id="mq-${prefix}-trim-arrow">▶</span>
-        </div>
+        ${collapsibleHeader(`${prefix}-trim`, 'Crown moulding / valance')}
         <div id="mq-${prefix}-trim-auto-explainer" style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
         <div id="mq-${prefix}-trim-noauto-explainer" style="display:none;font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 This project type doesn't include cabinet measurements, so enter your crown/valance linear footage directly below.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
@@ -1083,9 +1093,14 @@
             <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
         </div>
       </div>
-      <div class="mq-sec">
-        <p class="mq-sec-title">Specialty items</p>
-        <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
+      <div class="mq-sec" id="mq-${prefix}-specialty-sec">
+        ${collapsibleHeader(`${prefix}-specialty`, 'Specialty items')}
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+          ⭐ Optional extras and upgrades — browse and add anything you'd like.
+        </div>
+        <div id="mq-${prefix}-specialty-body" style="display:none">
+          <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
+        </div>
       </div>`;
   }
 
@@ -1609,10 +1624,12 @@
     window.mqToggleCollapse = function(key) {
       const body = document.getElementById(`mq-${key}-body`);
       const arrow = document.getElementById(`mq-${key}-arrow`);
+      const label = document.getElementById(`mq-${key}-label`);
       if (!body) return;
       const opening = body.style.display === 'none';
       body.style.display = opening ? 'block' : 'none';
       if (arrow) arrow.classList.toggle('open', opening);
+      if (label) label.textContent = opening ? 'Close' : 'Open';
     };
 
     window.mqRenumberSteps = function(prefix) {
@@ -1778,14 +1795,6 @@
       mqTogTrimReturns(prefix);
     };
 
-    window.mqTogMeasure=(prefix)=>{
-  const guide=document.getElementById(`mq-${prefix}-measure-guide`);
-  const arrow=document.getElementById(`mq-${prefix}-measure-arrow`);
-  if(!guide||!arrow) return;
-  const open=guide.style.display==='none';
-  guide.style.display=open?'block':'none';
-  arrow.style.transform=open?'rotate(90deg)':'rotate(0deg)';
-};
 window.mqTogDrawerConfig=(prefix)=>{
       const tier=gv(`mq-${prefix}-drawer-tier`);
       const wrap=document.getElementById(`mq-${prefix}-drawer-config-wrap`);
