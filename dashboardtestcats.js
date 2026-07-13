@@ -5041,4 +5041,5 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
   init();
 
+
 })();
