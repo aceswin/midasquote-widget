@@ -1200,9 +1200,9 @@
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
 
     return `
-      <div style="background:linear-gradient(135deg,#111,#1f1f1f);padding:16px 20px;text-align:center">
-        <div style="font-size:19px;font-weight:800;letter-spacing:0.08em;color:#fbbf24;text-transform:uppercase">⚡ Pro Quoter ⚡</div>
-        <div style="font-size:11px;color:#9ca3af;letter-spacing:0.04em;margin-top:2px">Real numbers. Every time.</div>
+      <div style="background:linear-gradient(135deg,#0f2a52,#1e3a5f);padding:16px 20px;text-align:center">
+        <div style="font-size:19px;font-weight:800;letter-spacing:0.08em;color:#fbbf24;text-transform:uppercase">⚡ MidasQuote Pro ⚡</div>
+        <div style="font-size:11px;color:#cbd5e1;letter-spacing:0.04em;margin-top:2px">Real numbers. Every time.</div>
       </div>
       <div class="mq-header">
         <div class="mq-logo">${logoHTML}</div>
@@ -2749,7 +2749,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           popup.innerHTML = `
             <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25);animation:mqSlideUp 0.3s ease">
               <div style="font-size:36px;margin-bottom:12px">💰</div>
-              <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">This is your Pro Quoter</div>
+              <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">This is your MidasQuote Pro</div>
               <div style="font-size:14px;color:#6b7280;line-height:1.7;margin-bottom:1.5rem;text-align:left">
                 <div style="margin-bottom:8px">✅ <strong>Same quoting tool</strong>, but shows your real exact numbers right alongside the customer ballpark range.</div>
                 <div style="margin-bottom:8px">📋 <strong>Every line item</strong> shows its real price too, not just a checkmark.</div>
