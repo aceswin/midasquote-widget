@@ -308,9 +308,9 @@
       #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;align-items:center;gap:8px}
-      #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
+      #midasquote-widget .mq-spec-item.on{background:#0f2a52;border-color:#d97706}
       #midasquote-widget .mq-spec-name{font-size:13px;color:#111;flex:1;cursor:pointer}
-      #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
+      #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#fbbf24;font-weight:600}
       #midasquote-widget .mq-spec-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:48px;height:48px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9ca3af;border:1px solid #e5e7eb}
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
@@ -337,13 +337,13 @@
       #midasquote-widget .mq-tog::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
       #midasquote-widget .mq-tog.on::after{left:18px}
       #midasquote-widget .mq-sub-sec{background:#f9fafb;border-radius:8px;padding:1rem;margin-top:0.75rem;border-left:4px solid #d1d5db}
-      #midasquote-widget .mq-sub-sec.mq-sub-upper{border-left-color:#3b82f6;background:#eff6ff}
+      #midasquote-widget .mq-sub-sec.mq-sub-upper{border-left-color:#d97706;background:#fffbeb}
       #midasquote-widget .mq-sub-sec.mq-sub-base{border-left-color:#f59e0b;background:#fffbeb}
       #midasquote-widget .mq-sub-title{font-size:15px;font-weight:700;color:#111;margin:0 0 0.85rem;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.08)}
       #midasquote-widget .mq-calc-btn{width:100%;padding:13px;font-size:15px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;margin-top:0.5rem;transition:opacity 0.15s;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,0.25)}
       #midasquote-widget .mq-calc-btn:hover{opacity:0.88}
       #midasquote-widget .mq-calc-btn:disabled{opacity:0.4;cursor:not-allowed}
-      #midasquote-widget .mq-calc-btn-both{background:linear-gradient(135deg,${bc},#378ADD)}
+      #midasquote-widget .mq-calc-btn-both{background:linear-gradient(135deg,${bc},#d97706)}
       #midasquote-widget .mq-result{display:none;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem;margin-top:1rem;box-shadow:0 6px 24px rgba(0,0,0,0.12)}
       #midasquote-widget .mq-result.show{display:block}
       #midasquote-widget .mq-res-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e5e7eb}
@@ -385,7 +385,7 @@
       #midasquote-widget .mq-both-divider{display:flex;align-items:center;gap:12px;margin:1.5rem 0 1rem}
       #midasquote-widget .mq-both-divider-line{flex:1;height:1px;background:#e5e7eb}
       #midasquote-widget .mq-both-divider-label{font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;padding:4px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:20px}
-      #midasquote-widget .mq-combined-result{display:none;background:linear-gradient(135deg,#f0fdf4,#eff6ff);border:1px solid #86efac;border-radius:10px;padding:1.5rem;margin-top:1rem;box-shadow:0 6px 24px rgba(0,0,0,0.10)}
+      #midasquote-widget .mq-combined-result{display:none;background:linear-gradient(135deg,#f0fdf4,#fffbeb);border:1px solid #86efac;border-radius:10px;padding:1.5rem;margin-top:1rem;box-shadow:0 6px 24px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-combined-result.show{display:block}
       #midasquote-widget .mq-combined-title{font-size:14px;font-weight:600;color:#166534;margin-bottom:1rem}
       #midasquote-widget .mq-combined-section{margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid rgba(134,239,172,0.5)}
@@ -866,7 +866,7 @@
         <button type="button" onclick="mqCalcSetUnit('mm')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'mm' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Millimeters</button>
       </div>
       <div id="mq-calc-rows">${rows}</div>
-      <button type="button" onclick="mqCalcAddSection()" style="width:100%;padding:8px;border-radius:6px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px">+ Add another section</button>
+      <button type="button" onclick="mqCalcAddSection()" style="width:100%;padding:8px;border-radius:6px;border:1.5px dashed #d97706;background:#0f2a52;color:#fbbf24;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px">+ Add another section</button>
       <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;margin-bottom:14px;text-align:center">
         <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Total</div>
         <div id="mq-calc-total" style="font-size:18px;font-weight:700;color:#166534"></div>
@@ -1113,13 +1113,13 @@
             ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
-          <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
+          <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#0f2a52;border:1.5px solid #d97706;border-radius:8px;padding:10px 12px">
             <div style="display:flex;align-items:flex-start">
               ${termHelpThumb(MQ_TERM_IMAGES.crownReturn,'What is a crown return?')}
               <div style="flex:1;min-width:0">
-                <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
+                <label class="mq-label" style="color:#fbbf24;font-weight:700">Returns to wall</label>
                 <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-                <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
+                <div style="font-size:11px;color:#cbd5e1;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
               </div>
             </div>
           </div>
@@ -1129,13 +1129,13 @@
             ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems)}
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
-          <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
+          <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#0f2a52;border:1.5px solid #d97706;border-radius:8px;padding:10px 12px">
             <div style="display:flex;align-items:flex-start">
               ${termHelpThumb(MQ_TERM_IMAGES.valanceReturn,'What is a valance return?')}
               <div style="flex:1;min-width:0">
-                <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
+                <label class="mq-label" style="color:#fbbf24;font-weight:700">Returns to wall</label>
                 <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-                <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
+                <div style="font-size:11px;color:#cbd5e1;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
               </div>
             </div>
           </div>
@@ -1210,7 +1210,7 @@
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
         </div>
-        ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:12px;font-weight:600;color:#fff;text-decoration:none;background:${shop['Brand colour']||'#1a1a1a'};border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
+        ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:12px;font-weight:600;color:#fff;text-decoration:none;background:#0f2a52;border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
       </div>
       <div class="mq-powered-by" style="margin-top:10px;padding-top:0;border-top:none;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
       <div class="mq-tab-bar">
@@ -2725,7 +2725,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     window._mqShopData=shop;
-    injectStyles(shop['Brand colour']||'#1a1a1a');
+    // Pro Quoter deliberately ignores each shop's own brand color — this is
+    // meant to feel like its own distinct premium tool, not a re-skin of
+    // whatever the customer widget looks like for that particular shop.
+    injectStyles('#0f2a52');
     buildCTMAT(data);
     buildTRIM(data);
     buildTALLCAB(data);
@@ -2739,7 +2742,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       try {
         const storageKey = `mq_pro_intro_seen_${shop['Shop token']}`;
         if (!localStorage.getItem(storageKey)) {
-          const bc = shop['Brand colour'] || '#1a1a1a';
+          const bc = '#0f2a52';
           const popup = document.createElement('div');
           popup.id = 'mq-tips-popup';
           popup.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqFadeIn 0.25s ease`;
