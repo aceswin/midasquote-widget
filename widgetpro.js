@@ -284,9 +284,9 @@
       #midasquote-widget .mq-tab-sub{font-size:10px;opacity:0.7;line-height:1}
       #midasquote-widget .mq-tab-content{display:none;padding:1.5rem}
       #midasquote-widget .mq-tab-content.active{display:block}
-      #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
-      #midasquote-widget .mq-sec{border-left:4px solid #fde68a}
-      #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#d97706;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
+      #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #1e3a5f;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
+      #midasquote-widget .mq-sec{border-left:4px solid #d97706}
+      #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#0f2a52;color:#fbbf24;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
       #midasquote-widget .mq-sec-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;cursor:pointer}
       #midasquote-widget .mq-sec-header-row .mq-sec-title{margin-bottom:0}
       #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:11px;color:#9ca3af;flex-shrink:0;margin-left:8px}
@@ -982,7 +982,7 @@
         <p class="mq-sec-title">Project basics</p>
         <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #fcd34d;border-radius:12px;padding:16px 18px">
           <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#92400e;margin-bottom:8px">
-            <span style="background:#d97706;color:#fff;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
+            <span style="background:#0f2a52;color:#fbbf24;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
             Start here — choose your project type
           </label>
           <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqRefreshSectionVisibility('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
