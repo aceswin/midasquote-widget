@@ -898,7 +898,10 @@
   // (used to build the mq-${key}-body / -arrow / -label ids mqToggleCollapse
   // and mqRenumberSteps both key off of).
   function collapsibleHeader(key, title) {
-    return `<div class="mq-sec-header-row" onclick="mqToggleCollapse('${key}')">
+    // stopPropagation so this doesn't also trigger the surrounding section's
+    // own "click anywhere to open" handler (mqOpenIfClosed) — this header's
+    // click already fully manages toggling both directions by itself.
+    return `<div class="mq-sec-header-row" onclick="event.stopPropagation();mqToggleCollapse('${key}')">
       <p class="mq-sec-title">${title}</p>
       <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <span id="mq-${key}-label" style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Open</span>
@@ -985,8 +988,8 @@
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;line-height:1.5"></div>
         </div>
       </div>
-      <div class="mq-sec" id="mq-${prefix}-measuring-sec">
-        ${collapsibleHeader(`${prefix}-measuring`, 'Measuring')}
+      <div class="mq-sec" id="mq-${prefix}-measuring-sec" onclick="mqOpenIfClosed('${prefix}-measuring')">
+        ${collapsibleHeader(`${prefix}-measuring`, 'How to measure')}
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
           📏 Tips for getting accurate measurements, plus a converter for inches/mm.
         </div>
@@ -1074,7 +1077,7 @@
         </div>
       </div>`:''}
       ${Object.keys(TALL_CAB).length > 0 ? `
-      <div class="mq-sec" id="mq-${prefix}-tallcabs-sec">
+      <div class="mq-sec" id="mq-${prefix}-tallcabs-sec" onclick="mqOpenIfClosed('${prefix}-tallcabs')">
         ${collapsibleHeader(`${prefix}-tallcabs`, 'Tall cabinets')}
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
           🏛️ Add each tall cabinet separately — pick a type, width, and quantity, then add another for a different type.
@@ -1084,7 +1087,7 @@
           <button class="mq-add-surface-btn" onclick="mqAddTallCab('${prefix}')">+ Add a tall cabinet</button>
         </div>
       </div>` : ''}
-      ${hasTrim?`<div class="mq-sec" id="mq-${prefix}-trim-sec">
+      ${hasTrim?`<div class="mq-sec" id="mq-${prefix}-trim-sec" onclick="mqOpenIfClosed('${prefix}-trim')">
         ${collapsibleHeader(`${prefix}-trim`, 'Crown moulding / valance')}
         <div id="mq-${prefix}-trim-auto-explainer" style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
         <div id="mq-${prefix}-trim-noauto-explainer" style="display:none;font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 This project type doesn't include cabinet measurements, so enter your crown/valance linear footage directly below.</div>
@@ -1144,7 +1147,7 @@
             <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
         </div>
       </div>
-      <div class="mq-sec" id="mq-${prefix}-specialty-sec">
+      <div class="mq-sec" id="mq-${prefix}-specialty-sec" onclick="mqOpenIfClosed('${prefix}-specialty')">
         ${collapsibleHeader(`${prefix}-specialty`, 'Specialty items')}
         <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
           ⭐ Optional extras and upgrades — browse and add anything you'd like.
@@ -1747,6 +1750,18 @@
       body.style.display = opening ? 'block' : 'none';
       if (arrow) arrow.classList.toggle('open', opening);
       if (label) label.textContent = opening ? 'Close' : 'Open';
+    };
+
+    // Clicking anywhere in a closed section opens it (bigger, more forgiving
+    // tap target than just the header row) — but closing stays deliberate,
+    // only the header row itself does that, so clicking around inside an
+    // already-open section (fields, buttons, etc.) never accidentally
+    // collapses it back.
+    window.mqOpenIfClosed = function(key) {
+      const body = document.getElementById(`mq-${key}-body`);
+      if (body && body.style.display === 'none') {
+        window.mqToggleCollapse(key);
+      }
     };
 
     window.mqRenumberSteps = function(prefix) {
