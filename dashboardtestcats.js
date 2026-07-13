@@ -67,18 +67,30 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function el(id) { return document.getElementById(id); }
   function show(id) { const e = el(id); if (e) e.style.display = 'block'; }
   function hide(id) { const e = el(id); if (e) e.style.display = 'none'; }
+  // Centers an element horizontally over .mq-content specifically (not the
+  // whole viewport), so it sits between the sidebar and the right edge —
+  // shared by the toast and the floating save button so they always line up.
+  function mqCenterOverContent(node) {
+    const content = document.querySelector('#midasquote-dashboard .mq-content');
+    if (!node || !content) return;
+    const rect = content.getBoundingClientRect();
+    node.style.left = (rect.left + rect.width / 2) + 'px';
+    node.style.transform = 'translateX(-50%)';
+  }
+
   // Floating toast — guarantees the "saved!" confirmation is actually visible
   // regardless of where on a (possibly long) tab the triggering action
   // happened, whether that's a Save button, an inline checkbox toggle, or an
-  // image upload finishing. Fixed to the viewport, not any particular element.
+  // image upload finishing.
   function mqShowToast(msg, type = 'success') {
     let toast = document.getElementById('mq-toast');
     if (!toast) {
       toast = document.createElement('div');
       toast.id = 'mq-toast';
-      toast.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.18);transition:opacity 0.25s ease;opacity:0;pointer-events:none;max-width:90vw;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+      toast.style.cssText = "position:fixed;bottom:24px;z-index:99999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.18);transition:opacity 0.25s ease;opacity:0;pointer-events:none;max-width:90vw;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
       document.body.appendChild(toast);
     }
+    mqCenterOverContent(toast);
     const colors = { success: { bg:'#dcfce7', color:'#166534', border:'#86efac' }, error: { bg:'#fee2e2', color:'#991b1b', border:'#fca5a5' } };
     const c = colors[type] || colors.success;
     toast.style.background = c.bg;
@@ -104,16 +116,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // Floating "Save changes" button for Project Types — that tab can get long
   // (each project type has a description, cover image, and measure guide),
   // so scrolling all the way back down to the one Save button got tedious.
-  // Shown/hidden by mqNav based on which tab is currently active. Centered
-  // over the .mq-content area specifically (not the whole viewport), so it
-  // sits between the sidebar and the right edge, not oddly off-center.
+  // Shown/hidden by mqNav based on which tab is currently active. Sits a bit
+  // higher than the toast so the "saved!" confirmation appears directly
+  // beneath it, with a little breathing room, instead of overlapping it.
   function mqPositionFloatingSave() {
-    const btn = document.getElementById('mq-floating-save');
-    const content = document.querySelector('#midasquote-dashboard .mq-content');
-    if (!btn || !content) return;
-    const rect = content.getBoundingClientRect();
-    btn.style.left = (rect.left + rect.width / 2) + 'px';
-    btn.style.transform = 'translateX(-50%)';
+    mqCenterOverContent(document.getElementById('mq-floating-save'));
   }
 
   function mqToggleFloatingSave(show) {
@@ -128,7 +135,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       btn.id = 'mq-floating-save';
       btn.textContent = '💾 Save changes';
       btn.onclick = () => window.mqSaveRooms();
-      btn.style.cssText = "position:fixed;bottom:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:box-shadow 0.15s";
+      btn.style.cssText = "position:fixed;bottom:88px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:box-shadow 0.15s";
       btn.onmouseover = () => { btn.style.boxShadow = '0 14px 36px rgba(0,0,0,0.32)'; };
       btn.onmouseout = () => { btn.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)'; };
       document.body.appendChild(btn);
@@ -5057,5 +5064,6 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   };
 
   init();
+
 
 })();
