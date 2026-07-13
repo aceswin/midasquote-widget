@@ -1233,7 +1233,7 @@ window.logoutMember = async function () {
           <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
           <div style="margin-bottom:8px">
             <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-master-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
-            <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold</span>
+            <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon</span>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start">
             <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
@@ -1485,7 +1485,7 @@ window.logoutMember = async function () {
 
 **Island cabinets:** Include your island if it will have cabinets.
 
-**Don't feel like converting inches or mm?** Tap the calculator icon next to the field and it'll convert it for you.`;
+**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
 `**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
@@ -1496,7 +1496,7 @@ window.logoutMember = async function () {
 
 **Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
 
-**Don't feel like converting inches or mm?** Tap the calculator icon next to the field and it'll convert it for you.`;
+**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
@@ -1601,7 +1601,7 @@ window.logoutMember = async function () {
             <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
             <div style="margin-bottom:8px">
               <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
-              <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold</span>
+              <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon</span>
             </div>
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">

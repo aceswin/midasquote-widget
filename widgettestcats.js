@@ -699,6 +699,16 @@
     }).join('');
   }
 
+  // The exact same blue calculator icon as the real button, sized for
+  // sitting inline within guide text. Used directly in the built-in
+  // defaults below, and available as a [calc] token in shop-owner-written
+  // guide text (see renderSafeGuideText) since plain text/emoji can never
+  // reliably render in the right color — it depends entirely on the
+  // reader's device/font, which is exactly the confusion this avoids.
+  function mqCalcIconInlineHTML() {
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;vertical-align:-6px;margin:0 2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg></span>`;
+  }
+
   // The generic measuring guide every project type falls back to until a
   // shop owner sets custom "how to measure" text for that specific project
   // type (see mqRefreshMeasureGuide). Kept as its own function so both the
@@ -711,7 +721,7 @@
         <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
         <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit.</div>
         <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Include your island if it will have cabinets.</div>
-        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the calculator icon next to the field and it'll convert it for you.</div>`;
+        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the ${mqCalcIconInlineHTML()} next to the field and it'll convert it for you.</div>`;
     }
     return `
       <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
@@ -719,19 +729,21 @@
       <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit.</div>
       <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
       <div style="margin-bottom:6px"><strong>Tip:</strong> measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>
-      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the calculator icon next to the field and it'll convert it for you.</div>`;
+      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the ${mqCalcIconInlineHTML()} next to the field and it'll convert it for you.</div>`;
   }
 
   // Renders shop-owner-supplied guide text safely: escapes everything first
-  // (so no stray HTML/script can ever run), THEN allows exactly two
-  // whitelisted, harmless transforms — **bold** and line breaks — so a shop
-  // owner can match the look of the default guide without any real markup
-  // ever reaching the page.
+  // (so no stray HTML/script can ever run), THEN allows exactly three
+  // whitelisted, harmless transforms — **bold**, line breaks, and a [calc]
+  // token that expands to the real blue calculator icon — so a shop owner
+  // can match the look of the default guide without any real markup ever
+  // reaching the page.
   function renderSafeGuideText(raw) {
     const esc = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     let html = esc(raw || '');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\n/g, '<br>');
+    html = html.replace(/\[calc\]/g, mqCalcIconInlineHTML());
     return html;
   }
 
