@@ -67,13 +67,38 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function el(id) { return document.getElementById(id); }
   function show(id) { const e = el(id); if (e) e.style.display = 'block'; }
   function hide(id) { const e = el(id); if (e) e.style.display = 'none'; }
+  // Floating toast — guarantees the "saved!" confirmation is actually visible
+  // regardless of where on a (possibly long) tab the triggering action
+  // happened, whether that's a Save button, an inline checkbox toggle, or an
+  // image upload finishing. Fixed to the viewport, not any particular element.
+  function mqShowToast(msg, type = 'success') {
+    let toast = document.getElementById('mq-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'mq-toast';
+      toast.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.18);transition:opacity 0.25s ease;opacity:0;pointer-events:none;max-width:90vw;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+      document.body.appendChild(toast);
+    }
+    const colors = { success: { bg:'#dcfce7', color:'#166534', border:'#86efac' }, error: { bg:'#fee2e2', color:'#991b1b', border:'#fca5a5' } };
+    const c = colors[type] || colors.success;
+    toast.style.background = c.bg;
+    toast.style.color = c.color;
+    toast.style.border = `1px solid ${c.border}`;
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    clearTimeout(toast._mqHideTimer);
+    toast._mqHideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+  }
+
   function showMsg(id, msg, type = 'success') {
     const e = el(id);
-    if (!e) return;
-    e.textContent = msg;
-    e.className = `mq-msg mq-msg-${type}`;
-    e.style.display = 'block';
-    setTimeout(() => { e.style.display = 'none'; }, 3000);
+    if (e) {
+      e.textContent = msg;
+      e.className = `mq-msg mq-msg-${type}`;
+      e.style.display = 'block';
+      setTimeout(() => { e.style.display = 'none'; }, 3000);
+    }
+    mqShowToast(msg, type);
   }
 
   function injectStyles() {
