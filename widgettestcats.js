@@ -691,7 +691,7 @@
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
             <input type="text" inputmode="${(s.perSqFt||s.perFt)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:13px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
-            ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft') : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear') : '')}
+            ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
           ${(s.perSqFt || s.perFt) ? `<span style="font-size:9px;font-weight:600;color:#6b7280">${s.perSqFt ? 'sq ft' : 'lin ft'}</span>` : ''}
         </div>
@@ -746,6 +746,7 @@
   let _mqCalcTargetId = null;
   let _mqCalcUnit = 'in'; // 'in' or 'mm'
   let _mqCalcSections = []; // linear: [{val}]  ·  sqft: [{w,h}]
+  let _mqCalcFieldLabel = ''; // shown in the modal so it's clear which field this fills in
 
   function mqCalcToFeet(val, unit) {
     const n = parseFloat(val) || 0;
@@ -766,9 +767,10 @@
     return modal;
   }
 
-  window.mqOpenMeasureCalc = function(targetId, mode) {
+  window.mqOpenMeasureCalc = function(targetId, mode, fieldLabel) {
     _mqCalcMode = mode;
     _mqCalcTargetId = targetId;
+    _mqCalcFieldLabel = fieldLabel || '';
     _mqCalcSections = mode === 'linear' ? [{ val: '' }] : [{ w: '', h: '' }];
     mqEnsureCalcModal().style.display = 'flex';
     mqRenderCalc();
@@ -837,7 +839,7 @@
     ).join('');
 
     card.innerHTML = `
-      <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'linear' ? '📏 Measurement calculator' : '📐 Square footage calculator'}</div>
+      <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'linear' ? '📏 Measurement calculator' : '📐 Square footage calculator'}${_mqCalcFieldLabel ? ` <span style="font-weight:600;color:#2563eb">(${_mqCalcFieldLabel})</span>` : ''}</div>
       <div style="font-size:12px;color:#6b7280;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button type="button" onclick="mqCalcSetUnit('in')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'in' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'in' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'in' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Inches</button>
@@ -890,7 +892,7 @@
     </div>`;
   }
 
-  function calcBtn(targetId, mode) {
+  function calcBtn(targetId, mode, fieldLabel) {
     const icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/>
       <rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/>
@@ -902,7 +904,8 @@
       <rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/>
       <rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/>
     </svg>`;
-    return `<button type="button" onclick="mqOpenMeasureCalc('${targetId}','${mode}')" title="Measurement calculator" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;width:32px;height:32px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;padding:0">${icon}</button>`;
+    const safeLabel = (fieldLabel||'').replace(/'/g,"\\'");
+    return `<button type="button" onclick="mqOpenMeasureCalc('${targetId}','${mode}','${safeLabel}')" title="Measurement calculator" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;width:32px;height:32px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;padding:0">${icon}</button>`;
   }
 
   function cabinetForm(prefix, specs, data) {
@@ -989,9 +992,9 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear')}</div></div>
+            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div></div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear')}</div></div>
+            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div></div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
         </div>
@@ -1083,7 +1086,7 @@
         <div id="mq-${prefix}-trim-manual-wrap" style="display:none;margin-bottom:10px;align-items:center;gap:8px">
           <label style="font-size:13px;color:#374151">Linear feet</label>
           <input type="number" id="mq-${prefix}-trim-manual-ft" value="0" min="0" step="0.5" style="width:90px"/>
-          ${calcBtn(`mq-${prefix}-trim-manual-ft`,'linear')}
+          ${calcBtn(`mq-${prefix}-trim-manual-ft`,'linear','Crown & valance')}
         </div>
         ${hasCrown?`<div style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
