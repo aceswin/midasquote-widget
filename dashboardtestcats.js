@@ -210,7 +210,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
       #midasquote-dashboard .mq-msg-success{background:#dcfce7;color:#166534;border:1px solid #86efac}
       #midasquote-dashboard .mq-msg-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
-      #midasquote-dashboard .mq-room-row.mq-room-open{border-color:#93c5fd;background:#f8fbff;box-shadow:0 2px 10px rgba(37,99,235,0.10)}
+      #midasquote-dashboard .mq-room-row.mq-room-open{border-color:#93c5fd!important;background:#f8fbff!important;box-shadow:0 2px 10px rgba(37,99,235,0.10)}
       #midasquote-dashboard .mq-loading{text-align:center;padding:3rem;color:#6b7280;font-size:14px}
       #midasquote-dashboard .mq-divider{height:1px;background:#e5e7eb;margin:1.5rem 0}
       #midasquote-dashboard .mq-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
@@ -2976,7 +2976,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
               'Price': master.fields['Price'] || 0,
               'Per linear foot': master.fields['Per linear foot'] || false,
               'Per square foot': master.fields['Per square foot'] || false,
-              'Active': true,
+              'Active': false,
               'Visible rooms': master.fields['Visible rooms'] || '[]',
               'Template source ID': master.id,
             });
@@ -3082,7 +3082,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
             'Price': master.fields['Price'] || 0,
             'Per linear foot': master.fields['Per linear foot'] || false,
             'Per square foot': master.fields['Per square foot'] || false,
-            'Active': true,
+            'Active': false,
             'Visible rooms': master.fields['Visible rooms'] || '[]',
             'Template source ID': master.id,
           });
