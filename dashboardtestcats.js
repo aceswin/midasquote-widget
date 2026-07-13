@@ -101,6 +101,26 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     mqShowToast(msg, type);
   }
 
+  // Floating "Save changes" button for Project Types — that tab can get long
+  // (each project type has a description, cover image, and measure guide),
+  // so scrolling all the way back down to the one Save button got tedious.
+  // Shown/hidden by mqNav based on which tab is currently active.
+  function mqToggleFloatingSave(show) {
+    let btn = document.getElementById('mq-floating-save');
+    if (!show) { if (btn) btn.style.display = 'none'; return; }
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'mq-floating-save';
+      btn.textContent = '💾 Save changes';
+      btn.onclick = () => window.mqSaveRooms();
+      btn.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:opacity 0.15s,transform 0.15s";
+      btn.onmouseover = () => { btn.style.transform = 'translateY(-2px)'; };
+      btn.onmouseout = () => { btn.style.transform = 'translateY(0)'; };
+      document.body.appendChild(btn);
+    }
+    btn.style.display = 'block';
+  }
+
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
@@ -4909,6 +4929,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
+    mqToggleFloatingSave(page === 'rooms');
     if (page === 'marketing' || page === 'embed') {
       const socialEl = document.getElementById('mq-mk-social');
       if (socialEl && !socialEl.dataset.loaded && window._mqShopRecord) {
