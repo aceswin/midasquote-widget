@@ -280,6 +280,8 @@
       #midasquote-widget .mq-tab-content{display:none;padding:1.5rem}
       #midasquote-widget .mq-tab-content.active{display:block}
       #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
+      #midasquote-widget .mq-sec{border-left:4px solid #bfdbfe}
+      #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
       #midasquote-widget .mq-sec-title{font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem}
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
@@ -1425,6 +1427,8 @@
       document.querySelectorAll('.mq-tab').forEach(t=>t.classList.remove('active'));
       document.getElementById('mq-tab-'+id).classList.add('active');
       el.classList.add('active');
+      if (id === 'cabinets') mqRenumberSteps('c');
+      else if (id === 'both') mqRenumberSteps('b');
     };
 
     window.mqTogDiff=(prefix)=>{
@@ -1566,6 +1570,45 @@
     // current project type, hide the entire section — not just the empty
     // picker, since e.g. a "Cabinet measurements" section with no box
     // material available doesn't make sense to show at all.
+    // Gives the "Start here" feel a life beyond just the entrance — every
+    // section after it gets a small matching numbered badge next to its
+    // title, renumbered live as sections show/hide per project type (e.g.
+    // Refacing skips box materials, some shops have no drawers configured,
+    // etc.) so there are never gaps or a "step 4" appearing out of nowhere.
+    function mqEnsureStepBadge(titleEl) {
+      let badge = titleEl.querySelector('.mq-step-badge');
+      if (badge) return badge;
+      const text = titleEl.textContent;
+      titleEl.innerHTML = '';
+      titleEl.style.display = 'flex';
+      titleEl.style.alignItems = 'center';
+      titleEl.style.gap = '8px';
+      badge = document.createElement('span');
+      badge.className = 'mq-step-badge';
+      titleEl.appendChild(badge);
+      const label = document.createElement('span');
+      label.textContent = text;
+      titleEl.appendChild(label);
+      return badge;
+    }
+
+    window.mqRenumberSteps = function(prefix) {
+      const scopeId = prefix === 'c' ? 'mq-tab-cabinets' : (prefix === 'b' ? 'mq-tab-both' : null);
+      const scope = scopeId && document.getElementById(scopeId);
+      if (!scope) return;
+      const sections = [...scope.querySelectorAll('.mq-sec')];
+      let stepNum = 2; // "1" stays reserved for Project basics' own big badge
+      let skippedFirst = false;
+      sections.forEach(sec => {
+        if (sec.offsetParent === null) return; // hidden for this project type — skip, don't consume a number
+        if (!skippedFirst) { skippedFirst = true; return; } // first visible section = Project basics
+        const titleEl = sec.querySelector('.mq-sec-title');
+        if (!titleEl) return;
+        mqEnsureStepBadge(titleEl).textContent = stepNum;
+        stepNum++;
+      });
+    };
+
     window.mqRefreshSectionVisibility=(prefix)=>{
       if (prefix !== 'c' && prefix !== 'b') return;
       const roomId = gv(`mq-${prefix}-room`);
@@ -1647,6 +1690,7 @@
         const ctSec = document.getElementById('mq-b-countertop-details-sec');
         if (ctSec) ctSec.style.display = rowHasReal('mq-b-ct-mat-cab') ? '' : 'none';
       }
+      mqRenumberSteps(prefix);
     };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
