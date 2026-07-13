@@ -266,7 +266,7 @@
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
-      #midasquote-widget{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:20px auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.10)}
+      #midasquote-widget{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:20px auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.28),0 10px 24px rgba(0,0,0,0.24),0 30px 70px rgba(0,0,0,0.35)}
       @media (max-width:600px){
         #midasquote-widget{margin:0 0.5rem 2rem}
       }
@@ -980,7 +980,7 @@
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
-        <div style="background:linear-gradient(135deg,#f59e0b,#d97706);border:2px solid #0f2a52;border-radius:12px;padding:16px 18px">
+        <div style="background:linear-gradient(135deg,#d97706,#b45309);border:2px solid #0f2a52;border-radius:12px;padding:16px 18px">
           <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#0f2a52;margin-bottom:8px">
             <span style="background:#0f2a52;color:#fbbf24;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
             Start here — choose your project type
