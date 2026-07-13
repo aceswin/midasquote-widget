@@ -1060,6 +1060,10 @@
         <div id="mq-${prefix}-trim-auto-explainer" style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
         <div id="mq-${prefix}-trim-noauto-explainer" style="display:none;font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 This project type doesn't include cabinet measurements, so enter your crown/valance linear footage directly below.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
+        <label id="mq-${prefix}-trim-use-cab-wrap" style="display:none;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer">
+          <input type="checkbox" id="mq-${prefix}-trim-use-cab" checked onchange="mqTogTrimUseCab('${prefix}')" style="margin-top:2px;flex-shrink:0;width:auto"/>
+          <span style="font-size:13px;font-weight:500;line-height:1.4">Use my upper cabinet measurements</span>
+        </label>
         <div id="mq-${prefix}-trim-body" style="display:none">
         <label id="mq-${prefix}-trim-manual-toggle-wrap" style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px;background:#f9fafb;border-radius:6px;padding:8px 10px">
           <input type="checkbox" id="mq-${prefix}-trim-manual-toggle" onchange="mqTogTrimManualFt('${prefix}')" style="width:auto;flex-shrink:0"/>
@@ -1716,16 +1720,20 @@
       // upper cabinet footage" checkbox doesn't make sense to show (there's
       // nothing to opt out of) — hide it and default straight to manual entry.
       const toggleWrap = document.getElementById(`mq-${prefix}-trim-manual-toggle-wrap`);
+      const useCabWrap = document.getElementById(`mq-${prefix}-trim-use-cab-wrap`);
       const autoExplainer = document.getElementById(`mq-${prefix}-trim-auto-explainer`);
       const noAutoExplainer = document.getElementById(`mq-${prefix}-trim-noauto-explainer`);
       const manualWrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
       const manualToggleCb = document.getElementById(`mq-${prefix}-trim-manual-toggle`);
+      const useCabCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
       if (toggleWrap) toggleWrap.style.display = cabActive ? 'flex' : 'none';
+      if (useCabWrap) useCabWrap.style.display = cabActive ? 'flex' : 'none';
       if (autoExplainer) autoExplainer.style.display = cabActive ? 'block' : 'none';
       if (noAutoExplainer) noAutoExplainer.style.display = cabActive ? 'none' : 'block';
       if (!cabActive) {
         if (manualWrap) manualWrap.style.display = 'flex';
         if (manualToggleCb) manualToggleCb.checked = true; // keeps it consistent even though it's hidden
+        if (useCabCb) useCabCb.checked = false;
       } else if (manualToggleCb && !manualToggleCb.checked && manualWrap) {
         manualWrap.style.display = 'none';
       }
@@ -1769,6 +1777,27 @@
       const checked = document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked;
       const wrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
       if (wrap) wrap.style.display = checked ? 'flex' : 'none';
+      // Keep the "Use my upper cabinet measurements" checkbox (shown before
+      // the section unfolds) in sync — they're two views of the same choice.
+      const useCabCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
+      if (useCabCb) useCabCb.checked = !checked;
+    };
+
+    // Checking "Use my upper cabinet measurements" (shown before the section
+    // unfolds, same idea as the countertop's "Use my base cabinet
+    // measurements") both switches to auto mode and unfolds the section —
+    // unchecking it switches to manual mode without re-collapsing, since by
+    // then the customer is likely mid-way through picking a style.
+    window.mqTogTrimUseCab=(prefix)=>{
+      const useCabCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
+      const manualCb = document.getElementById(`mq-${prefix}-trim-manual-toggle`);
+      if (!useCabCb) return;
+      if (manualCb) manualCb.checked = !useCabCb.checked;
+      mqTogTrimManualFt(prefix);
+      if (useCabCb.checked) {
+        const body = document.getElementById(`mq-${prefix}-trim-body`);
+        if (body && body.style.display === 'none') mqToggleCollapse(`${prefix}-trim`);
+      }
     };
 
     window.mqApplyLinkedTrim=(prefix, doorKey)=>{
