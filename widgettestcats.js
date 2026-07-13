@@ -1566,13 +1566,37 @@
     // Shows the shop owner's custom guidance note for whichever project type
     // is selected — e.g. "For door refacing, skip the box materials below,
     // just add square footage under Specialty Items instead."
-    window.mqShowRoomDescription=(prefix)=>{
+    // Per-room fallback images — used whenever a shop's own room data has this
+  // field blank (not just when the whole Room types array is empty), so
+  // clearing a single field on an already-customized shop still falls back
+  // sensibly instead of just showing nothing. Only the 6 project types with
+  // real default assets are covered; anything else (Refacing/Repainting/
+  // Restaining, or a shop's own custom-named project type) has no fallback
+  // and simply shows blank, same as before.
+  const MQ_DEFAULT_COVER_IMAGES = {
+    kitchen: 'https://aceswin.github.io/midasquote-widget/cover-images/kitchen.png',
+    bathroom: 'https://aceswin.github.io/midasquote-widget/cover-images/bathroom.png',
+    laundry: 'https://aceswin.github.io/midasquote-widget/cover-images/laundry.png',
+    garage: 'https://aceswin.github.io/midasquote-widget/cover-images/garage.png',
+    commercial: 'https://aceswin.github.io/midasquote-widget/cover-images/commercial.png',
+    other: 'https://aceswin.github.io/midasquote-widget/cover-images/other.png',
+  };
+  const MQ_DEFAULT_MEASURE_IMAGES = {
+    kitchen: 'https://aceswin.github.io/midasquote-widget/measure-guides/kitchen.png',
+    bathroom: 'https://aceswin.github.io/midasquote-widget/measure-guides/bathroom.png',
+    laundry: 'https://aceswin.github.io/midasquote-widget/measure-guides/laundry.png',
+    garage: 'https://aceswin.github.io/midasquote-widget/measure-guides/garage.png',
+    commercial: 'https://aceswin.github.io/midasquote-widget/measure-guides/commercial.png',
+    other: 'https://aceswin.github.io/midasquote-widget/measure-guides/other.png',
+  };
+
+  window.mqShowRoomDescription=(prefix)=>{
       const descEl = document.getElementById(`mq-${prefix}-room-desc`);
       if (!descEl) return;
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const desc = room ? (room.description||'').trim() : '';
-      const coverImg = room ? (room.coverImage||'').trim() : '';
+      const coverImg = room ? ((room.coverImage||'').trim() || MQ_DEFAULT_COVER_IMAGES[room.id] || '') : '';
       if (!desc && !coverImg) { descEl.style.display = 'none'; return; }
       descEl.innerHTML = ''; // clear previous content before rebuilding
       if (coverImg) {
@@ -1595,14 +1619,16 @@
     // type is currently selected. Falls back to the standard generic guide
     // whenever that project type hasn't had its own custom text set — so
     // nothing changes for any shop/project type that's never touched this.
+    // Image and text fall back independently of each other, so a shop that's
+    // set one but not the other still gets the default for whichever one
+    // they haven't touched.
     window.mqRefreshMeasureGuide=(prefix)=>{
       const guideEl = document.getElementById(`mq-${prefix}-measure-guide`);
       if (!guideEl) return;
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const customText = room ? (room.measureText||'').trim() : '';
-      const customImg  = room ? (room.measureImage||'').trim() : '';
-      if (!customText) { guideEl.innerHTML = defaultMeasureGuideHTML(roomId); return; }
+      const customImg  = room ? ((room.measureImage||'').trim() || (room && MQ_DEFAULT_MEASURE_IMAGES[room.id]) || '') : '';
       guideEl.innerHTML = ''; // clear before rebuilding
       if (customImg) {
         const img = document.createElement('img');
@@ -1618,6 +1644,12 @@
         // on mobile and desktop.
         img.onclick = () => mqPhotoLightbox(customImg, room && room.name ? `${room.name} — measuring guide` : 'Measuring guide');
         guideEl.appendChild(img);
+      }
+      if (!customText) {
+        const defaultBody = document.createElement('div');
+        defaultBody.innerHTML = defaultMeasureGuideHTML(roomId);
+        guideEl.appendChild(defaultBody);
+        return;
       }
       const title = document.createElement('div');
       title.style.cssText = 'font-weight:600;margin-bottom:8px;color:#111';
