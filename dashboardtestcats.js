@@ -1476,18 +1476,35 @@ window.logoutMember = async function () {
   // in widgettestcats.js), just written in the **bold**/line-break plain-text
   // form a shop owner can start from and edit. Used by the "Use default guide"
   // button in both the per-shop Project Types tab and the admin Templates tab.
-  // Kitchen gets its own wording (island cabinets called out specifically);
-  // every other project type without its own custom text uses the general one.
+  // Kitchen gets its own wording (island + corner cabinets called out
+  // specifically); Bathroom skips the corner-cabinets note (not common
+  // enough there to be worth the extra line); everything else uses the
+  // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
 `**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
 
 **Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
 
-**Island cabinets:** Include your island if it will have cabinets.
+**Island cabinets:** Include island cabinets if you have one.
+
+**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall about 2 feet short of the corner — that's roughly where the corner cabinet already covers the space. Don't worry about the exact number, this is a ballpark estimate.
 
 **Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
+`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+
+**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+
+**Not sure?** Just use your best guess — this is a ballpark estimate!
+
+**Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
+
+**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall about 2 feet short of the corner — that's roughly where the corner cabinet already covers the space. Don't worry about the exact number, this is a ballpark estimate.
+
+**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
+
+  const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
 `**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
 
 **Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
@@ -1506,7 +1523,9 @@ window.logoutMember = async function () {
     const ta = el(textareaId);
     if (!ta) return;
     if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
-    ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
+    ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
+      : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
+      : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
   };
 
   const MQ_DEFAULT_MEASURE_IMAGE_BASE = 'https://aceswin.github.io/midasquote-widget/measure-guides/';

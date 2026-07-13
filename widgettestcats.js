@@ -715,12 +715,14 @@
   // initial HTML render and the per-project-type swap can reuse the exact
   // same markup.
   function defaultMeasureGuideHTML(roomId = 'kitchen') {
+    const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall about 2 feet short of the corner — that's roughly where the corner cabinet already covers the space. Don't worry about the exact number, this is a ballpark estimate.</div>`;
     if (roomId === 'kitchen') {
       return `
         <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
         <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
         <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit.</div>
-        <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Include your island if it will have cabinets.</div>
+        <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Include island cabinets if you have one.</div>
+        ${cornerSection}
         <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the ${mqCalcIconInlineHTML()} next to the field and it'll convert it for you.</div>`;
     }
     return `
@@ -729,6 +731,7 @@
       <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit.</div>
       <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
       <div style="margin-bottom:6px"><strong>Tip:</strong> measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>
+      ${roomId !== 'bathroom' ? cornerSection : ''}
       <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the ${mqCalcIconInlineHTML()} next to the field and it'll convert it for you.</div>`;
   }
 
