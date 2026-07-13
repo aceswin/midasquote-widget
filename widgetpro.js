@@ -2466,9 +2466,9 @@ window.mqTogDrawerConfig=(prefix)=>{
           // stops announcing it in the results panel.
           if (vanityNoteB) vanityNoteB.style.display = 'none';
           const cabRows=document.getElementById('mq-b-cab-rows');cabRows.innerHTML='';
-          [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;cabRows.appendChild(d);});
+          [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span><span style="float:right;font-weight:600;color:#166534">${fmt(l.cost)}</span>`;cabRows.appendChild(d);});
           const ctRows=document.getElementById('mq-b-ct-rows');ctRows.innerHTML='';
-          [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
+          [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span><span style="float:right;font-weight:600;color:#166534">${fmt(l.cost)}</span>`;ctRows.appendChild(d);});
           if(!ctRows.children.length){const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">None selected</span>`;ctRows.appendChild(d);}
           const tl=cab.low+ct.low,th=cab.high+ct.high;
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
