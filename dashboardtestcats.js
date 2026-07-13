@@ -210,6 +210,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
       #midasquote-dashboard .mq-msg-success{background:#dcfce7;color:#166534;border:1px solid #86efac}
       #midasquote-dashboard .mq-msg-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+      #midasquote-dashboard .mq-room-row.mq-room-open{border-color:#93c5fd;background:#f8fbff;box-shadow:0 2px 10px rgba(37,99,235,0.10)}
       #midasquote-dashboard .mq-loading{text-align:center;padding:3rem;color:#6b7280;font-size:14px}
       #midasquote-dashboard .mq-divider{height:1px;background:#e5e7eb;margin:1.5rem 0}
       #midasquote-dashboard .mq-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
@@ -1231,7 +1232,7 @@ window.logoutMember = async function () {
           <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 Default "How to measure your space" for this project type</label>
           <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
           <div style="margin-bottom:8px">
-            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-master-room-measure-text-${idx}')">↺ Use default guide</button>
+            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-master-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
             <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold</span>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start">
@@ -1475,26 +1476,37 @@ window.logoutMember = async function () {
   // in widgettestcats.js), just written in the **bold**/line-break plain-text
   // form a shop owner can start from and edit. Used by the "Use default guide"
   // button in both the per-shop Project Types tab and the admin Templates tab.
-  const DEFAULT_MEASURE_GUIDE_TEXT =
+  // Kitchen gets its own wording (island cabinets called out specifically);
+  // every other project type without its own custom text uses the general one.
+  const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
 `**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
 
-**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.
+**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+
+**Island cabinets:** Include your island if it will have cabinets.
+
+**Don't feel like converting inches or mm?** Tap the 🧮 next to the field and it'll convert it for you.`;
+
+  const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
+`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+
+**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
 
 **Not sure?** Just use your best guess — this is a ballpark estimate!
 
-**Don't feel like converting inches or mm?** Tap the 🧮 next to the field and it'll convert it for you.
+**Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
 
-Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.`;
+**Don't feel like converting inches or mm?** Tap the 🧮 next to the field and it'll convert it for you.`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
   // own from scratch. Confirms first if the box already has something in it,
   // so a stray click can't silently wipe out real custom text.
-  window.mqFillDefaultGuide = function(textareaId) {
+  window.mqFillDefaultGuide = function(textareaId, roomId) {
     const ta = el(textareaId);
     if (!ta) return;
     if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
-    ta.value = DEFAULT_MEASURE_GUIDE_TEXT;
+    ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
   };
 
   function defaultRoomTypes() {
@@ -1541,6 +1553,7 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
     const opening = body.style.display === 'none';
     body.style.display = opening ? 'block' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+    body.closest('.mq-room-row')?.classList.toggle('mq-room-open', opening);
     if (opening) _mqExpandedRoomIds.add(room.id); else _mqExpandedRoomIds.delete(room.id);
   };
 
@@ -1551,7 +1564,7 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
     container.innerHTML = rooms.map((r, idx) => {
       const isOpen = _mqExpandedRoomIds.has(r.id);
       return `
-      <div class="mq-room-row" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
+      <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
         <div style="display:grid;grid-template-columns:24px 1fr 140px 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
           <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
@@ -1585,7 +1598,7 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
             <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
             <div style="margin-bottom:8px">
-              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}')">↺ Use default guide</button>
+              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
               <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold</span>
             </div>
             <div style="display:flex;gap:8px;align-items:flex-start">

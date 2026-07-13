@@ -704,14 +704,22 @@
   // type (see mqRefreshMeasureGuide). Kept as its own function so both the
   // initial HTML render and the per-project-type swap can reuse the exact
   // same markup.
-  function defaultMeasureGuideHTML() {
+  function defaultMeasureGuideHTML(roomId = 'kitchen') {
+    if (roomId === 'kitchen') {
+      return `
+        <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
+        <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
+        <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit.</div>
+        <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Include your island if it will have cabinets.</div>
+        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the 🧮 next to the field and it'll convert it for you.</div>`;
+    }
     return `
       <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
       <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
-      <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit. Include your island if it will have cabinets.</div>
+      <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit.</div>
       <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
-      <div style="margin-bottom:6px"><strong>Don't feel like converting inches or mm?</strong> Tap the 🧮 next to the field and it'll convert it for you.</div>
-      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>`;
+      <div style="margin-bottom:6px"><strong>Tip:</strong> measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>
+      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the 🧮 next to the field and it'll convert it for you.</div>`;
   }
 
   // Renders shop-owner-supplied guide text safely: escapes everything first
@@ -1537,7 +1545,7 @@
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const customText = room ? (room.measureText||'').trim() : '';
       const customImg  = room ? (room.measureImage||'').trim() : '';
-      if (!customText) { guideEl.innerHTML = defaultMeasureGuideHTML(); return; }
+      if (!customText) { guideEl.innerHTML = defaultMeasureGuideHTML(roomId); return; }
       guideEl.innerHTML = ''; // clear before rebuilding
       if (customImg) {
         const img = document.createElement('img');
