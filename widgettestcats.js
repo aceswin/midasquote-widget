@@ -711,7 +711,7 @@
         <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.</div>
         <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit.</div>
         <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Include your island if it will have cabinets.</div>
-        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the 🧮 next to the field and it'll convert it for you.</div>`;
+        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the calculator icon next to the field and it'll convert it for you.</div>`;
     }
     return `
       <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
@@ -719,7 +719,7 @@
       <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same thing — measure the total wall length where your base cabinets will sit.</div>
       <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
       <div style="margin-bottom:6px"><strong>Tip:</strong> measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.</div>
-      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the 🧮 next to the field and it'll convert it for you.</div>`;
+      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:11px">💡 <strong>Don't feel like converting inches or mm?</strong> Tap the calculator icon next to the field and it'll convert it for you.</div>`;
   }
 
   // Renders shop-owner-supplied guide text safely: escapes everything first
@@ -891,7 +891,18 @@
   }
 
   function calcBtn(targetId, mode) {
-    return `<button type="button" onclick="mqOpenMeasureCalc('${targetId}','${mode}')" title="Measurement calculator" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;padding:0">🧮</button>`;
+    const icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/>
+      <rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/>
+      <rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/>
+      <rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/>
+      <rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/>
+      <rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/>
+      <rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/>
+      <rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/>
+      <rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/>
+    </svg>`;
+    return `<button type="button" onclick="mqOpenMeasureCalc('${targetId}','${mode}')" title="Measurement calculator" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;width:32px;height:32px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;margin-left:6px;padding:0">${icon}</button>`;
   }
 
   function cabinetForm(prefix, specs, data) {
@@ -1080,7 +1091,7 @@
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
-            <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
+            <label class="mq-label" style="color:#1d4ed8;font-weight:700">${termHelpThumb(MQ_TERM_IMAGES.crownReturn,'What is a crown return?')}Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
             <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
           </div>
@@ -1091,7 +1102,7 @@
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
-            <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
+            <label class="mq-label" style="color:#1d4ed8;font-weight:700">${termHelpThumb(MQ_TERM_IMAGES.valanceReturn,'What is a valance return?')}Returns to wall</label>
             <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
             <div style="font-size:11px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
           </div>
@@ -1117,6 +1128,20 @@
   }
 
   const TRAVEL_NOTE = '🚗 This estimate is based on local delivery. Jobs outside our local area may be subject to additional travel charges — your final quote will confirm the exact amount.';
+
+  // Reference images for trade terms most customers won't recognize
+  // ("return", "side splash") — shared across every shop since these look
+  // the same regardless of who's doing the quote, so no per-shop upload
+  // system needed, just one fixed set.
+  const MQ_TERM_IMAGES = {
+    crownReturn:   'https://aceswin.github.io/midasquote-widget/term-images/crown-return.png',
+    valanceReturn: 'https://aceswin.github.io/midasquote-widget/term-images/valance-return.png',
+    sidesplash:    'https://aceswin.github.io/midasquote-widget/term-images/sidesplash.png',
+  };
+  function termHelpThumb(imgUrl, label) {
+    const safeLabel = label.replace(/'/g, "\\'");
+    return `<img src="${imgUrl}" alt="${label}" onclick="event.stopPropagation();mqPhotoLightbox('${imgUrl}','${safeLabel}')" onerror="this.style.display='none'" style="width:28px;height:28px;object-fit:cover;border-radius:6px;cursor:zoom-in;flex-shrink:0;border:1px solid #93c5fd;vertical-align:middle;margin-right:6px"/>`;
+  }
 
   const PRICE_LEGEND_HTML = `
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#4b5563;line-height:1.6">
@@ -1269,7 +1294,7 @@
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                <label style="font-size:13px;color:#374151;min-width:170px"><strong>Side splashes</strong> (Quantity)</label>
+                <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?')}<strong>Side splashes</strong> (Quantity)</label>
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
@@ -2400,7 +2425,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mqs-bsft-block-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
           <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <label style="font-size:13px;color:#374151;min-width:170px"><strong>Side splashes</strong> (Quantity)</label>
+            <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?')}<strong>Side splashes</strong> (Quantity)</label>
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">

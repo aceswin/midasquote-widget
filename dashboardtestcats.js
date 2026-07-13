@@ -1485,7 +1485,7 @@ window.logoutMember = async function () {
 
 **Island cabinets:** Include your island if it will have cabinets.
 
-**Don't feel like converting inches or mm?** Tap the 🧮 next to the field and it'll convert it for you.`;
+**Don't feel like converting inches or mm?** Tap the calculator icon next to the field and it'll convert it for you.`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
 `**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
@@ -1496,7 +1496,7 @@ window.logoutMember = async function () {
 
 **Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
 
-**Don't feel like converting inches or mm?** Tap the 🧮 next to the field and it'll convert it for you.`;
+**Don't feel like converting inches or mm?** Tap the calculator icon next to the field and it'll convert it for you.`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
