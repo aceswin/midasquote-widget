@@ -2,7 +2,7 @@
  * MidasQuote Widget v3.3 — TEST BUILD (widgettest.js)
  * Adds visual thumbnails to specialty items so customers don't have to
  * guess what unfamiliar terms mean without leaving the widget.
- */ 
+ */
 
 (function() {
 
@@ -1590,13 +1590,33 @@
     other: 'https://aceswin.github.io/midasquote-widget/measure-guides/other.png',
   };
 
+  // Matches a room to one of the 6 default-image keys above. Tries the id
+  // first (the normal, fast path for anything using the standard ids), but
+  // falls back to matching on the room's NAME too — since a room can end up
+  // with a mismatched id (renamed from something else, or added as a custom
+  // row that got an auto-generated room_<timestamp> id) while still clearly
+  // being "Garage" or "Commercial" by name.
+  function mqDefaultImageKey(room) {
+    if (!room) return null;
+    const id = (room.id||'').toLowerCase();
+    if (MQ_DEFAULT_COVER_IMAGES[id]) return id;
+    const name = (room.name||'').toLowerCase();
+    if (name.includes('kitchen')) return 'kitchen';
+    if (name.includes('bathroom')) return 'bathroom';
+    if (name.includes('laundry')) return 'laundry';
+    if (name.includes('garage')) return 'garage';
+    if (name.includes('commercial')) return 'commercial';
+    if (name.includes('other')) return 'other';
+    return null;
+  }
+
   window.mqShowRoomDescription=(prefix)=>{
       const descEl = document.getElementById(`mq-${prefix}-room-desc`);
       if (!descEl) return;
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const desc = room ? (room.description||'').trim() : '';
-      const coverImg = room ? ((room.coverImage||'').trim() || MQ_DEFAULT_COVER_IMAGES[room.id] || '') : '';
+      const coverImg = room ? ((room.coverImage||'').trim() || MQ_DEFAULT_COVER_IMAGES[mqDefaultImageKey(room)] || '') : '';
       if (!desc && !coverImg) { descEl.style.display = 'none'; return; }
       descEl.innerHTML = ''; // clear previous content before rebuilding
       if (coverImg) {
@@ -1628,7 +1648,7 @@
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const customText = room ? (room.measureText||'').trim() : '';
-      const customImg  = room ? ((room.measureImage||'').trim() || (room && MQ_DEFAULT_MEASURE_IMAGES[room.id]) || '') : '';
+      const customImg  = room ? ((room.measureImage||'').trim() || MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || '') : '';
       guideEl.innerHTML = ''; // clear before rebuilding
       if (customImg) {
         const img = document.createElement('img');
