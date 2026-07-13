@@ -1527,19 +1527,41 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
     window._mqCategoryRooms = categoryRooms;
   }
 
+  // Tracks which project types are currently expanded, keyed by the room's
+  // stable id (not array index, since index shifts on reorder/delete) — so
+  // expand/collapse state survives re-renders (e.g. every time you save).
+  let _mqExpandedRoomIds = new Set();
+
+  window.mqToggleRoomBody = function(idx) {
+    const room = (window._mqRooms || [])[idx];
+    if (!room) return;
+    const body = el(`mq-room-body-${idx}`);
+    const arrow = el(`mq-room-arrow-${idx}`);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+    if (opening) _mqExpandedRoomIds.add(room.id); else _mqExpandedRoomIds.delete(room.id);
+  };
+
   function renderRoomsList() {
     const container = el('mq-rooms-list');
     if (!container) return;
     const rooms = window._mqRooms || [];
-    container.innerHTML = rooms.map((r, idx) => `
+    container.innerHTML = rooms.map((r, idx) => {
+      const isOpen = _mqExpandedRoomIds.has(r.id);
+      return `
       <div class="mq-room-row" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
-        <div style="display:grid;grid-template-columns:24px 1fr 140px 40px;gap:10px;align-items:center;margin-bottom:8px">
-          <span style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
+        <div style="display:grid;grid-template-columns:24px 1fr 140px 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
+          <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
           <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
           <input type="number" value="${r.adjustment||0}" id="mq-room-adj-${idx}" step="0.5" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;text-align:center"/>
+          <button type="button" onclick="mqToggleRoomBody(${idx})" title="Show more" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;padding:4px">
+            <span id="mq-room-arrow-${idx}" style="display:inline-block;transition:transform 0.2s;font-size:12px;transform:rotate(${isOpen?'90':'0'}deg)">▶</span>
+          </button>
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
         </div>
-        <div style="padding-left:34px">
+        <div id="mq-room-body-${idx}" style="padding-left:34px;display:${isOpen?'block':'none'}">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:${r.active===false?'#92400e':'#166534'};font-weight:600;margin-bottom:8px;cursor:pointer">
             <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
@@ -1582,8 +1604,8 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
             </div>
           </div>
         </div>
-      </div>`
-    ).join('');
+      </div>`;
+    }).join('');
 
     // Wire each room's cover-image upload button — uploads immediately, fills
     // the URL field, and refreshes the small preview thumbnail on success.
@@ -1619,15 +1641,23 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
     // Drag-and-drop reordering — same pattern already used for Specialty
     // items, adapted since rooms live in one JSON list rather than separate
     // Airtable records, so reordering just means rebuilding that array.
+    // draggable only turns on while the mouse is actually down on the ⠿
+    // handle — leaving the whole row draggable all the time made selecting
+    // text anywhere in it (like the measuring guide box) prone to being
+    // mistaken for a row-drag instead of a text selection.
     let dragging = null;
     container.querySelectorAll('.mq-room-row').forEach(row => {
-      row.draggable = true;
+      row.draggable = false;
+      const handle = row.querySelector('.mq-room-drag-handle');
+      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
+      row.addEventListener('mouseup', () => { row.draggable = false; });
       row.addEventListener('dragstart', () => {
         dragging = row;
         setTimeout(() => row.style.opacity = '0.4', 0);
       });
       row.addEventListener('dragend', () => {
         row.style.opacity = '1';
+        row.draggable = false;
         dragging = null;
         const newRooms = [...container.querySelectorAll('.mq-room-row')].map(r => {
           const oldIdx = r.dataset.idx;
@@ -1659,7 +1689,9 @@ Tip: measure in feet, not inches. If your wall is 12 feet and 6 inches wide, ent
 
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
-    window._mqRooms.push({ id: 'room_' + Date.now(), name: '', adjustment: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
+    const newId = 'room_' + Date.now();
+    window._mqRooms.push({ id: newId, name: '', adjustment: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
+    _mqExpandedRoomIds.add(newId);
     renderRoomsList();
   };
 
