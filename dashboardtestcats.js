@@ -104,21 +104,38 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // Floating "Save changes" button for Project Types — that tab can get long
   // (each project type has a description, cover image, and measure guide),
   // so scrolling all the way back down to the one Save button got tedious.
-  // Shown/hidden by mqNav based on which tab is currently active.
+  // Shown/hidden by mqNav based on which tab is currently active. Centered
+  // over the .mq-content area specifically (not the whole viewport), so it
+  // sits between the sidebar and the right edge, not oddly off-center.
+  function mqPositionFloatingSave() {
+    const btn = document.getElementById('mq-floating-save');
+    const content = document.querySelector('#midasquote-dashboard .mq-content');
+    if (!btn || !content) return;
+    const rect = content.getBoundingClientRect();
+    btn.style.left = (rect.left + rect.width / 2) + 'px';
+    btn.style.transform = 'translateX(-50%)';
+  }
+
   function mqToggleFloatingSave(show) {
     let btn = document.getElementById('mq-floating-save');
-    if (!show) { if (btn) btn.style.display = 'none'; return; }
+    if (!show) {
+      if (btn) btn.style.display = 'none';
+      window.removeEventListener('resize', mqPositionFloatingSave);
+      return;
+    }
     if (!btn) {
       btn = document.createElement('button');
       btn.id = 'mq-floating-save';
       btn.textContent = '💾 Save changes';
       btn.onclick = () => window.mqSaveRooms();
-      btn.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:opacity 0.15s,transform 0.15s";
-      btn.onmouseover = () => { btn.style.transform = 'translateY(-2px)'; };
-      btn.onmouseout = () => { btn.style.transform = 'translateY(0)'; };
+      btn.style.cssText = "position:fixed;bottom:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:box-shadow 0.15s";
+      btn.onmouseover = () => { btn.style.boxShadow = '0 14px 36px rgba(0,0,0,0.32)'; };
+      btn.onmouseout = () => { btn.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)'; };
       document.body.appendChild(btn);
     }
     btn.style.display = 'block';
+    mqPositionFloatingSave();
+    window.addEventListener('resize', mqPositionFloatingSave);
   }
 
   function injectStyles() {
@@ -5040,6 +5057,5 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   };
 
   init();
-
 
 })();
