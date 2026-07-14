@@ -267,6 +267,12 @@
         #midasquote-widget .mq-label{font-size:15px}
         #midasquote-widget .mq-hint{font-size:15px}
         #midasquote-widget .mq-sec-title{font-size:14px}
+        /* The measuring guide image is a wide landscape infographic — on a
+           narrow phone, the box's own 16px side padding eats into already
+           limited width. Bleeding the image past just that padding (not the
+           whole page) gives it noticeably more room without a full custom
+           per-viewport reflow. */
+        #midasquote-widget .mq-measure-guide-img{width:calc(100% + 32px)!important;max-width:calc(100% + 32px)!important;margin-left:-16px!important;margin-right:-16px!important}
       }
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
@@ -1684,17 +1690,22 @@
       if (customImg) {
         const img = document.createElement('img');
         img.src = customImg;
+        img.className = 'mq-measure-guide-img';
         // height:auto + object-fit:contain (not cover) so the whole image
         // always shows, never cropped — a fixed max-height with "cover" was
         // cropping top/bottom on wide desktop screens even though the same
         // image displayed fully on narrow mobile ones.
-        img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;border-radius:6px;margin-bottom:10px;display:block;cursor:zoom-in';
+        img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;border-radius:6px;margin-bottom:4px;display:block;cursor:zoom-in';
         img.onerror = () => { img.style.display = 'none'; };
         // Same tap-to-zoom lightbox already used for every other photo in the
         // widget (materials, doors, specialty items, etc.) — works identically
         // on mobile and desktop.
         img.onclick = () => mqPhotoLightbox(customImg, room && room.name ? `${room.name} — measuring guide` : 'Measuring guide');
         guideEl.appendChild(img);
+        const caption = document.createElement('div');
+        caption.textContent = '🔍 Tap to enlarge';
+        caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-bottom:10px';
+        guideEl.appendChild(caption);
       }
       if (!customText) {
         const defaultBody = document.createElement('div');
