@@ -1168,7 +1168,10 @@
   };
   function termHelpThumb(imgUrl, label, size = 48) {
     const safeLabel = label.replace(/'/g, "\\'");
-    return `<img src="${imgUrl}" alt="${label}" onclick="event.stopPropagation();mqPhotoLightbox('${imgUrl}','${safeLabel}')" onerror="this.style.display='none'" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:6px;cursor:zoom-in;flex-shrink:0;border:1px solid #93c5fd;margin-right:8px"/>`;
+    return `<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-right:8px">
+      <img src="${imgUrl}" alt="${label}" onclick="event.stopPropagation();mqPhotoLightbox('${imgUrl}','${safeLabel}')" onerror="this.parentElement.style.display='none'" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:6px;cursor:zoom-in;border:1px solid #93c5fd"/>
+      <span style="font-size:9px;font-weight:800;color:#1d4ed8;margin-top:3px;white-space:nowrap">Click to view</span>
+    </div>`;
   }
 
   const PRICE_LEGEND_HTML = `
