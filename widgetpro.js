@@ -1333,7 +1333,7 @@
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',48,false)}<strong>Side splashes</strong> (Quantity)</label>
+                ${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',36,false)}<label style="font-size:13px;color:#374151"><strong>Side splashes</strong> (Quantity)</label>
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#4b5563;margin-bottom:8px;line-height:1.5">
@@ -2648,7 +2648,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mqs-bsft-block-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
           <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',48,false)}<strong>Side splashes</strong> (Quantity)</label>
+            ${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',36,false)}<label style="font-size:13px;color:#374151"><strong>Side splashes</strong> (Quantity)</label>
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#4b5563;margin-bottom:8px;line-height:1.5">
