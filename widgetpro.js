@@ -702,7 +702,9 @@
   // initial HTML render and the per-project-type swap can reuse the exact
   // same markup.
   function defaultMeasureGuideHTML(roomId = 'kitchen') {
-    const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.</div>`;
+    const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+      <img src="https://aceswin.github.io/midasquote-widget/measure-guides/corner-cabinets.png" alt="How to measure corner cabinets" onclick="mqPhotoLightbox('https://aceswin.github.io/midasquote-widget/measure-guides/corner-cabinets.png','How to measure corner cabinets')" onerror="this.style.display='none'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>
+    </div>`;
     if (roomId === 'kitchen') {
       return `
         <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
@@ -723,17 +725,19 @@
   }
 
   // Renders shop-owner-supplied guide text safely: escapes everything first
-  // (so no stray HTML/script can ever run), THEN allows exactly three
-  // whitelisted, harmless transforms — **bold**, line breaks, and a [calc]
-  // token that expands to the real blue calculator icon — so a shop owner
-  // can match the look of the default guide without any real markup ever
-  // reaching the page.
+  // (so no stray HTML/script can ever run), THEN allows exactly four
+  // whitelisted, harmless transforms — **bold**, line breaks, a [calc]
+  // token that expands to the real blue calculator icon, and a
+  // [corner-img] token that expands to the standard corner-cabinets
+  // measuring photo — so a shop owner can match the look of the default
+  // guide without any real markup ever reaching the page.
   function renderSafeGuideText(raw) {
     const esc = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     let html = esc(raw || '');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\n/g, '<br>');
     html = html.replace(/\[calc\]/g, mqCalcIconInlineHTML());
+    html = html.replace(/\[corner-img\]/g, '<img src="https://aceswin.github.io/midasquote-widget/measure-guides/corner-cabinets.png" alt="How to measure corner cabinets" onclick="mqPhotoLightbox(\'https://aceswin.github.io/midasquote-widget/measure-guides/corner-cabinets.png\',\'How to measure corner cabinets\')" onerror="this.style.display=\'none\'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>');
     return html;
   }
 
