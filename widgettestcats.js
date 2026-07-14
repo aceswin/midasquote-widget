@@ -1251,6 +1251,7 @@
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
+          <div style="text-align:center;margin-top:10px"><button type="button" onclick="mqStartNewEstimate()" style="background:none;border:none;color:#9ca3af;font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px">🔄 Start a new estimate</button></div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -1279,6 +1280,7 @@
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
+          <div style="text-align:center;margin-top:10px"><button type="button" onclick="mqStartNewEstimate()" style="background:none;border:none;color:#9ca3af;font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px">🔄 Start a new estimate</button></div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -1379,6 +1381,7 @@
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
+          <div style="text-align:center;margin-top:10px"><button type="button" onclick="mqStartNewEstimate()" style="background:none;border:none;color:#9ca3af;font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px">🔄 Start a new estimate</button></div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -2805,6 +2808,24 @@ window.mqTogDrawerConfig=(prefix)=>{
   // ============================================================
   // INIT
   // ============================================================
+  // Rebuilds the widget from scratch using the already-loaded shop data — no
+  // network refetch needed. Reuses the exact same render sequence as the
+  // initial page load, so it's guaranteed to reset everything (every input,
+  // the guided step flow, results panels) rather than risk missing some
+  // field if this tried to reset values one at a time by hand.
+  window.mqStartNewEstimate = function() {
+    const data = window._mqFullData;
+    const container = document.getElementById('midasquote-widget');
+    if (!data || !container) return;
+    const { shop, specs } = data;
+    buildCTMAT(data);
+    buildTRIM(data);
+    buildTALLCAB(data);
+    container.innerHTML = buildWidgetHTML(shop, specs, data);
+    wireWidget(data);
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   async function init() {
     const container=document.getElementById('midasquote-widget');
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
@@ -2849,6 +2870,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     window._mqShopData=shop;
+    window._mqFullData=data; // cached so mqStartNewEstimate can rebuild without refetching
     injectStyles(shop['Brand colour']||'#1a1a1a');
     buildCTMAT(data);
     buildTRIM(data);
