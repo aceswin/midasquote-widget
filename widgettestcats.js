@@ -1006,8 +1006,8 @@
       </div>
       <div class="mq-sec" id="mq-${prefix}-si-field">
         <p class="mq-sec-title">${hasInstall ? 'Supply + install' : 'Supply'}</p>
-        <div style="background:linear-gradient(135deg,#f0fdf4,#f7fee7);border:2px solid #86efac;border-radius:12px;padding:16px 18px">
-          <div class="mq-field"><label class="mq-label" style="font-size:14px;font-weight:700;color:#166534">${hasInstall ? 'Supply + install?' : 'Supply'}</label>
+        <div style="background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:2px solid #93c5fd;border-radius:12px;padding:16px 18px">
+          <div class="mq-field"><label class="mq-label" style="font-size:14px;font-weight:700;color:#1e40af">${hasInstall ? 'Supply + install?' : 'Supply'}</label>
             <p class="mq-hint" style="margin-bottom:8px">${hasInstall ? "Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install)." : 'This shop offers supply only — installation is not included.'}</p>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')">${hasInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
         </div>
