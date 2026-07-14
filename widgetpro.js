@@ -746,12 +746,13 @@
   // opened the calculator from.
   let _mqCalcMode = 'linear'; // 'linear' or 'sqft'
   let _mqCalcTargetId = null;
-  let _mqCalcUnit = 'in'; // 'in' or 'mm'
+  let _mqCalcUnit = 'ft'; // 'ft', 'in', or 'mm'
   let _mqCalcSections = []; // linear: [{val}]  ·  sqft: [{w,h}]
   let _mqCalcFieldLabel = ''; // shown in the modal so it's clear which field this fills in
 
   function mqCalcToFeet(val, unit) {
     const n = parseFloat(val) || 0;
+    if (unit === 'ft') return n;
     return unit === 'mm' ? n / 304.8 : n / 12;
   }
 
@@ -822,7 +823,7 @@
   function mqRenderCalc() {
     const card = document.getElementById('mq-calc-card');
     if (!card) return;
-    const unitLabel = _mqCalcUnit === 'mm' ? 'mm' : 'inches';
+    const unitLabel = _mqCalcUnit === 'mm' ? 'mm' : (_mqCalcUnit === 'ft' ? 'feet' : 'inches');
     const rows = _mqCalcSections.map((s, idx) => _mqCalcMode === 'linear' ? `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="font-size:12px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
@@ -844,6 +845,7 @@
       <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'linear' ? '📏 Measurement calculator' : '📐 Square footage calculator'}${_mqCalcFieldLabel ? ` <span style="font-weight:600;color:#2563eb">(${_mqCalcFieldLabel})</span>` : ''}</div>
       <div style="font-size:12px;color:#4b5563;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button type="button" onclick="mqCalcSetUnit('ft')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'ft' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'ft' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'ft' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Feet</button>
         <button type="button" onclick="mqCalcSetUnit('in')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'in' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'in' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'in' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Inches</button>
         <button type="button" onclick="mqCalcSetUnit('mm')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'mm' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Millimeters</button>
       </div>
@@ -997,9 +999,13 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="10" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div></div>
+            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="font-size:12px;color:#2563eb;font-weight:700;margin-top:4px">👉 Not sure? Tap the calculator to measure</div>
+          </div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="10" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div></div>
+            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="font-size:12px;color:#2563eb;font-weight:700;margin-top:4px">👉 Not sure? Tap the calculator to measure</div>
+          </div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
         </div>
