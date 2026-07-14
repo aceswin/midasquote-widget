@@ -264,6 +264,13 @@
       #midasquote-widget .mq-sec-header-row .mq-sec-title{margin-bottom:0}
       #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:11px;color:#9ca3af;flex-shrink:0;margin-left:8px}
       #midasquote-widget .mq-collapse-arrow.open{transform:rotate(90deg)}
+      #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px #fbbf24,0 4px 14px rgba(0,0,0,0.10);opacity:1}
+      #midasquote-widget .mq-sec.mq-step-done{opacity:0.6}
+      #midasquote-widget .mq-sec.mq-step-upcoming{opacity:0.45}
+      #midasquote-widget .mq-step-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px dashed #e5e7eb}
+      #midasquote-widget .mq-step-continue-btn{background:#0f2a52;color:#fbbf24;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+      #midasquote-widget .mq-step-back-btn{background:none;border:none;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:9px 4px}
+      #midasquote-widget .mq-step-done-badge{color:#16a34a;font-size:12px;font-weight:700}
       #midasquote-widget .mq-sec-title{font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem}
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
@@ -961,7 +968,7 @@
             <span style="background:#0f2a52;color:#fbbf24;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
             Start here — choose your project type
           </label>
-          <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqRefreshSectionVisibility('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+          <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
           <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#0f2a52;font-weight:600;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border:1px solid #0f2a52;border-radius:6px;font-size:12px;color:#1f2937;line-height:1.5"></div>
         </div>
@@ -1509,8 +1516,8 @@
       document.querySelectorAll('.mq-tab').forEach(t=>t.classList.remove('active'));
       document.getElementById('mq-tab-'+id).classList.add('active');
       el.classList.add('active');
-      if (id === 'cabinets') mqRenumberSteps('c');
-      else if (id === 'both') mqRenumberSteps('b');
+      if (id === 'cabinets') { mqRenumberSteps('c'); window.mqUpdateStepFocus('c'); }
+      else if (id === 'both') { mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
     };
 
     window.mqTogDiff=(prefix)=>{
@@ -1749,22 +1756,115 @@
       }
     };
 
-    window.mqRenumberSteps = function(prefix) {
+    // Shared by numbering, step-focus, and anything else that needs "every
+    // currently-visible .mq-sec in this tab, in order" — one place to keep
+    // that logic consistent.
+    function mqGetVisibleSections(prefix) {
       const scopeId = prefix === 'c' ? 'mq-tab-cabinets' : (prefix === 'b' ? 'mq-tab-both' : null);
       const scope = scopeId && document.getElementById(scopeId);
-      if (!scope) return;
-      const sections = [...scope.querySelectorAll('.mq-sec')];
+      if (!scope) return [];
+      return [...scope.querySelectorAll('.mq-sec')].filter(sec => sec.offsetParent !== null);
+    }
+
+    window.mqRenumberSteps = function(prefix) {
+      const sections = mqGetVisibleSections(prefix);
       let stepNum = 2; // "1" stays reserved for Project basics' own big badge
-      let skippedFirst = false;
-      sections.forEach(sec => {
-        if (sec.offsetParent === null) return; // hidden for this project type — skip, don't consume a number
-        if (!skippedFirst) { skippedFirst = true; return; } // first visible section = Project basics
+      sections.forEach((sec, i) => {
+        if (i === 0) return; // first visible section = Project basics
         const titleEl = sec.querySelector('.mq-sec-title');
         if (!titleEl) return;
         mqEnsureStepBadge(titleEl).textContent = stepNum;
         stepNum++;
       });
     };
+
+    // ── Guided step focus ──
+    // Every numbered section gets one of three looks: the CURRENT step is
+    // fully lit up with a Continue/Back footer; DONE steps stay visible
+    // (not hidden — someone might want to scroll back and double check
+    // something) but dimmed with a small checkmark; UPCOMING steps are
+    // dimmed too. Nothing is actually locked — a confident user can click
+    // straight into an upcoming section and it just becomes the new current
+    // step. Changing project type restarts the flow at step 1, since
+    // section visibility itself may have changed.
+    let _mqStepIndex = { c: 0, b: 0 };
+
+    function mqEnsureStepFooter(sec, prefix, index, total) {
+      const current = _mqStepIndex[prefix] || 0;
+      let footer = sec.querySelector('.mq-step-footer');
+      if (!footer) {
+        footer = document.createElement('div');
+        footer.className = 'mq-step-footer';
+        sec.appendChild(footer);
+      }
+      if (index === current) {
+        footer.style.display = 'flex';
+        footer.innerHTML = `
+          ${index > 0 ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>` : '<span></span>'}
+          <button type="button" class="mq-step-continue-btn" onclick="event.stopPropagation();mqStepContinue('${prefix}')">${index < total - 1 ? 'Continue →' : 'Done ✓'}</button>`;
+      } else if (index < current) {
+        footer.style.display = 'flex';
+        footer.innerHTML = `<span></span><span class="mq-step-done-badge">✓ Done</span>`;
+      } else {
+        footer.style.display = 'none';
+        footer.innerHTML = '';
+      }
+    }
+
+    window.mqUpdateStepFocus = function(prefix) {
+      const sections = mqGetVisibleSections(prefix);
+      const current = _mqStepIndex[prefix] || 0;
+      sections.forEach((sec, i) => {
+        sec.classList.remove('mq-step-current', 'mq-step-done', 'mq-step-upcoming');
+        sec.classList.add(i < current ? 'mq-step-done' : i === current ? 'mq-step-current' : 'mq-step-upcoming');
+        mqEnsureStepFooter(sec, prefix, i, sections.length);
+      });
+      // If the current step is a collapsible section that's still closed,
+      // open it automatically — no point being "the focused step" if its
+      // content is hidden.
+      const cur = sections[current];
+      if (cur) {
+        const body = cur.querySelector('[id$="-body"]');
+        if (body && body.style.display === 'none') {
+          const key = body.id.replace(/^mq-/, '').replace(/-body$/, '');
+          window.mqToggleCollapse(key);
+        }
+      }
+    };
+
+    window.mqStepContinue = function(prefix) {
+      const sections = mqGetVisibleSections(prefix);
+      _mqStepIndex[prefix] = Math.min((_mqStepIndex[prefix] || 0) + 1, sections.length - 1);
+      window.mqUpdateStepFocus(prefix);
+      const next = sections[_mqStepIndex[prefix]];
+      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.mqStepBack = function(prefix) {
+      _mqStepIndex[prefix] = Math.max((_mqStepIndex[prefix] || 0) - 1, 0);
+      window.mqUpdateStepFocus(prefix);
+      const sections = mqGetVisibleSections(prefix);
+      const cur = sections[_mqStepIndex[prefix]];
+      if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    // Clicking directly into an upcoming (not-yet-current) section jumps
+    // the flow straight to it — nothing here is actually gated, this just
+    // keeps the visual state honest for anyone who skips ahead on purpose.
+    document.addEventListener('click', (e) => {
+      const sec = e.target.closest('#midasquote-widget .mq-sec');
+      if (!sec) return;
+      const tab = sec.closest('.mq-tab-content');
+      if (!tab) return;
+      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : null);
+      if (!prefix) return;
+      const sections = mqGetVisibleSections(prefix);
+      const idx = sections.indexOf(sec);
+      if (idx > (_mqStepIndex[prefix] || 0)) {
+        _mqStepIndex[prefix] = idx;
+        window.mqUpdateStepFocus(prefix);
+      }
+    });
 
     window.mqRefreshSectionVisibility=(prefix)=>{
       if (prefix !== 'c' && prefix !== 'b') return;
@@ -1852,6 +1952,16 @@
         if (ctSec) ctSec.style.display = rowHasReal('mq-b-ct-mat-cab') ? '' : 'none';
       }
       mqRenumberSteps(prefix);
+      window.mqUpdateStepFocus(prefix);
+    };
+
+    // Only an actual project type change restarts the guided flow at step 1
+    // — mqRefreshSectionVisibility itself gets called from other places too
+    // (like adding a tall cabinet card), which should refresh what's showing
+    // without yanking someone back to the beginning of the flow.
+    window.mqOnProjectTypeChange = function(prefix) {
+      _mqStepIndex[prefix] = 0;
+      mqRefreshSectionVisibility(prefix);
     };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
