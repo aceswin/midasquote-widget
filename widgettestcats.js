@@ -269,9 +269,9 @@
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
       #midasquote-widget .mq-logo img{width:100%;height:100%;object-fit:cover}
       #midasquote-widget .mq-shop-name{font-size:14px;font-weight:600;color:#111}
-      #midasquote-widget .mq-shop-sub{font-size:12px;color:#6b7280}
+      #midasquote-widget .mq-shop-sub{font-size:12px;color:#4b5563}
       #midasquote-widget .mq-tab-bar{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;gap:8px}
-      #midasquote-widget .mq-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.10)}
+      #midasquote-widget .mq-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-size:13px;font-weight:500;color:#4b5563;cursor:pointer;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-tab.active{background:${bc};color:#fff;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget .mq-tab-icon{font-size:18px;flex-shrink:0}
       #midasquote-widget .mq-tab-label{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
@@ -284,7 +284,7 @@
       #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
       #midasquote-widget .mq-sec-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;cursor:pointer}
       #midasquote-widget .mq-sec-header-row .mq-sec-title{margin-bottom:0}
-      #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:11px;color:#9ca3af;flex-shrink:0;margin-left:8px}
+      #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:11px;color:#6b7280;flex-shrink:0;margin-left:8px}
       #midasquote-widget .mq-collapse-arrow.open{transform:rotate(90deg)}
       #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px #93c5fd,0 4px 14px rgba(0,0,0,0.10);opacity:1}
       #midasquote-widget .mq-sec.mq-step-done{filter:brightness(0.8);transition:filter 0.2s}
@@ -292,19 +292,19 @@
       #midasquote-widget .mq-sec.mq-step-current{transition:box-shadow 0.2s}
       #midasquote-widget .mq-step-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px dashed #e5e7eb}
       #midasquote-widget .mq-step-continue-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
-      #midasquote-widget .mq-step-back-btn{background:none;border:none;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:9px 4px}
+      #midasquote-widget .mq-step-back-btn{background:none;border:none;color:#4b5563;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:9px 4px}
       #midasquote-widget .mq-step-done-badge{color:#16a34a;font-size:12px;font-weight:700}
-      #midasquote-widget .mq-sec-title{font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem}
+      #midasquote-widget .mq-sec-title{font-size:13px;font-weight:800;color:#1f2937;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem}
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-field{flex-direction:column;gap:5px;min-width:0}
-      #midasquote-widget .mq-label{font-size:13px;color:#6b7280}
-      #midasquote-widget .mq-hint{font-size:11px;color:#9ca3af;margin-top:2px;line-height:1.4}
+      #midasquote-widget .mq-label{font-size:14px;color:#374151}
+      #midasquote-widget .mq-hint{font-size:13px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
-      #midasquote-widget select,#midasquote-widget input{font-size:15px;font-family:inherit;width:100%}
+      #midasquote-widget select,#midasquote-widget input{font-size:16px;font-family:inherit;width:100%}
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
@@ -315,12 +315,12 @@
       #midasquote-widget .mq-spec-name{font-size:13px;color:#111;flex:1;cursor:pointer}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
-      #midasquote-widget .mq-spec-thumb-placeholder{width:48px;height:48px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9ca3af;border:1px solid #e5e7eb}
+      #midasquote-widget .mq-spec-thumb-placeholder{width:48px;height:48px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
       #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
-      #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#9ca3af}
+      #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
       #midasquote-widget .mq-vpicker-select-btn{margin-top:5px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s}
@@ -352,17 +352,17 @@
       #midasquote-widget .mq-result.show{display:block}
       #midasquote-widget .mq-res-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e5e7eb}
       #midasquote-widget .mq-res-title{font-size:15px;font-weight:600;color:#111;margin-bottom:3px}
-      #midasquote-widget .mq-res-sub{font-size:13px;color:#6b7280}
+      #midasquote-widget .mq-res-sub{font-size:13px;color:#4b5563}
       #midasquote-widget .mq-res-range{font-size:22px;font-weight:700;color:${bc};text-align:right}
-      #midasquote-widget .mq-res-range-lbl{font-size:12px;color:#6b7280;text-align:right}
+      #midasquote-widget .mq-res-range-lbl{font-size:12px;color:#4b5563;text-align:right}
       #midasquote-widget .mq-line-items{list-style:none;padding:0;margin:0 0 1rem}
       #midasquote-widget .mq-line-items li{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #f3f4f6}
       #midasquote-widget .mq-line-items li:last-child{border-bottom:none}
-      #midasquote-widget .mq-li-lbl{color:#6b7280}
-      #midasquote-widget .mq-disclaimer{font-size:12px;color:#6b7280;background:#f9fafb;border-radius:6px;padding:10px 12px;margin-top:1rem;line-height:1.5}
+      #midasquote-widget .mq-li-lbl{color:#4b5563}
+      #midasquote-widget .mq-disclaimer{font-size:12px;color:#4b5563;background:#f9fafb;border-radius:6px;padding:10px 12px;margin-top:1rem;line-height:1.5}
       #midasquote-widget .mq-travel-note{font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 12px;margin-top:8px;line-height:1.5}
-      #midasquote-widget .mq-powered-by{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:11px;color:#9ca3af;letter-spacing:0.01em}
-      #midasquote-widget .mq-powered-by a{color:#9ca3af;text-decoration:none;font-weight:500;transition:color 0.15s}
+      #midasquote-widget .mq-powered-by{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:11px;color:#6b7280;letter-spacing:0.01em}
+      #midasquote-widget .mq-powered-by a{color:#6b7280;text-decoration:none;font-weight:500;transition:color 0.15s}
       #midasquote-widget .mq-powered-by a:hover{color:#1a1a1a}
       #midasquote-widget .mq-powered-by svg{opacity:0.45}
       #midasquote-widget .mq-financing-note{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px}
@@ -373,34 +373,34 @@
       #midasquote-widget .mq-overlay.show{display:flex}
       #midasquote-widget .mq-modal{background:#f8faff;border-radius:12px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.18);position:relative;margin:auto}
       #midasquote-widget .mq-modal-title{font-size:16px;font-weight:600;color:#111;margin-bottom:4px}
-      #midasquote-widget .mq-modal-sub{font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.5}
+      #midasquote-widget .mq-modal-sub{font-size:13px;color:#4b5563;margin-bottom:1.25rem;line-height:1.5}
       #midasquote-widget .mq-modal-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
       #midasquote-widget .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
-      #midasquote-widget .mq-modal-skip{width:100%;padding:8px;font-size:13px;color:#6b7280;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
+      #midasquote-widget .mq-modal-skip{width:100%;padding:8px;font-size:13px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
       #midasquote-widget .mq-surface-card{border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:10px}
       #midasquote-widget .mq-surface-header{display:flex;align-items:center;gap:8px;margin-bottom:1rem}
       #midasquote-widget .mq-surface-num{width:24px;height:24px;border-radius:50%;background:${bc};color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-      #midasquote-widget .mq-remove-btn{font-size:12px;color:#6b7280;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:inherit}
-      #midasquote-widget .mq-add-surface-btn{width:100%;padding:10px;font-size:13px;border:1px dashed #d1d5db;border-radius:8px;background:none;color:#6b7280;cursor:pointer;margin-top:4px;font-family:inherit}
+      #midasquote-widget .mq-remove-btn{font-size:12px;color:#4b5563;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:inherit}
+      #midasquote-widget .mq-add-surface-btn{width:100%;padding:10px;font-size:13px;border:1px dashed #d1d5db;border-radius:8px;background:none;color:#4b5563;cursor:pointer;margin-top:4px;font-family:inherit}
       #midasquote-widget .mq-divider{height:1px;background:#e5e7eb;margin:1rem 0}
       #midasquote-widget .mq-check-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer;padding:5px 0}
-      #midasquote-widget .mq-loading{display:none;text-align:center;padding:2rem;color:#6b7280;font-size:14px}
+      #midasquote-widget .mq-loading{display:none;text-align:center;padding:2rem;color:#4b5563;font-size:14px}
       #midasquote-widget .mq-loading.show{display:block}
       #midasquote-widget .mq-both-divider{display:flex;align-items:center;gap:12px;margin:1.5rem 0 1rem}
       #midasquote-widget .mq-both-divider-line{flex:1;height:1px;background:#e5e7eb}
-      #midasquote-widget .mq-both-divider-label{font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;padding:4px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:20px}
+      #midasquote-widget .mq-both-divider-label{font-size:12px;font-weight:600;color:#4b5563;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;padding:4px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:20px}
       #midasquote-widget .mq-combined-result{display:none;background:linear-gradient(135deg,#f0fdf4,#eff6ff);border:1px solid #86efac;border-radius:10px;padding:1.5rem;margin-top:1rem;box-shadow:0 6px 24px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-combined-result.show{display:block}
       #midasquote-widget .mq-combined-title{font-size:14px;font-weight:600;color:#166534;margin-bottom:1rem}
       #midasquote-widget .mq-combined-section{margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid rgba(134,239,172,0.5)}
       #midasquote-widget .mq-combined-section:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
-      #midasquote-widget .mq-combined-section-title{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+      #midasquote-widget .mq-combined-section-title{font-size:11px;font-weight:600;color:#4b5563;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
       #midasquote-widget .mq-combined-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
-      #midasquote-widget .mq-combined-row .mq-clbl{color:#6b7280}
+      #midasquote-widget .mq-combined-row .mq-clbl{color:#4b5563}
       #midasquote-widget .mq-combined-subtotal{display:none}
       #midasquote-widget .mq-grand-total{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;background:#fff;border-radius:8px;margin-top:1rem;border:1px solid #86efac;box-shadow:0 4px 16px rgba(134,239,172,0.35)}
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
-      #midasquote-widget .mq-grand-sub{font-size:12px;color:#6b7280;margin-top:2px}
+      #midasquote-widget .mq-grand-sub{font-size:12px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
       .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
@@ -678,7 +678,7 @@
   };
 
   function specHTML(specs, prefix) {
-    if (!specs.length) return '<p style="font-size:13px;color:#6b7280">No specialty items configured yet.</p>';
+    if (!specs.length) return '<p style="font-size:13px;color:#4b5563">No specialty items configured yet.</p>';
     return specs.map((s,i)=>{
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
@@ -692,7 +692,7 @@
           <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
-            <div style="font-size:11px;color:#9ca3af;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
           </div>
         </div>
         <div class="mq-spec-bottom">
@@ -702,7 +702,7 @@
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
-          ${(s.perSqFt || s.perFt) ? `<span style="font-size:9px;font-weight:600;color:#6b7280">${s.perSqFt ? 'sq ft' : 'lin ft'}</span>` : ''}
+          ${(s.perSqFt || s.perFt) ? `<span style="font-size:9px;font-weight:600;color:#4b5563">${s.perSqFt ? 'sq ft' : 'lin ft'}</span>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -847,24 +847,24 @@
     const unitLabel = _mqCalcUnit === 'mm' ? 'mm' : 'inches';
     const rows = _mqCalcSections.map((s, idx) => _mqCalcMode === 'linear' ? `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:12px;color:#6b7280;width:64px;flex-shrink:0">Section ${idx + 1}</span>
+        <span style="font-size:12px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
         <input type="number" value="${s.val}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
-        <span style="font-size:12px;color:#6b7280;width:44px">${unitLabel}</span>
+        <span style="font-size:12px;color:#4b5563;width:44px">${unitLabel}</span>
         ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
       </div>` : `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:12px;color:#6b7280;width:64px;flex-shrink:0">Section ${idx + 1}</span>
+        <span style="font-size:12px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
         <input type="number" value="${s.w}" placeholder="Width" oninput="mqCalcUpdateSection(${idx},'w',this.value)" style="flex:1;min-width:0;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
-        <span style="font-size:11px;color:#9ca3af;flex-shrink:0">×</span>
+        <span style="font-size:11px;color:#6b7280;flex-shrink:0">×</span>
         <input type="number" value="${s.h}" placeholder="Height" oninput="mqCalcUpdateSection(${idx},'h',this.value)" style="flex:1;min-width:0;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
-        <span style="font-size:12px;color:#6b7280;width:44px">${unitLabel}</span>
+        <span style="font-size:12px;color:#4b5563;width:44px">${unitLabel}</span>
         ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
       </div>`
     ).join('');
 
     card.innerHTML = `
       <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'linear' ? '📏 Measurement calculator' : '📐 Square footage calculator'}${_mqCalcFieldLabel ? ` <span style="font-weight:600;color:#2563eb">(${_mqCalcFieldLabel})</span>` : ''}</div>
-      <div style="font-size:12px;color:#6b7280;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
+      <div style="font-size:12px;color:#4b5563;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button type="button" onclick="mqCalcSetUnit('in')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'in' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'in' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'in' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Inches</button>
         <button type="button" onclick="mqCalcSetUnit('mm')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'mm' ? '#fff' : '#374151'};font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Millimeters</button>
@@ -872,7 +872,7 @@
       <div id="mq-calc-rows">${rows}</div>
       <button type="button" onclick="mqCalcAddSection()" style="width:100%;padding:8px;border-radius:6px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px">+ Add another section</button>
       <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;margin-bottom:14px;text-align:center">
-        <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Total</div>
+        <div style="font-size:11px;color:#4b5563;margin-bottom:2px">Total</div>
         <div id="mq-calc-total" style="font-size:18px;font-weight:700;color:#166534"></div>
       </div>
       <div style="display:flex;gap:8px">
@@ -913,7 +913,7 @@
     return `<div class="mq-sec-header-row" onclick="event.stopPropagation();mqToggleCollapse('${key}')">
       <p class="mq-sec-title">${title}</p>
       <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-        <span id="mq-${key}-label" style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Open</span>
+        <span id="mq-${key}-label" style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Open</span>
         <span class="mq-collapse-arrow" id="mq-${key}-arrow">▶</span>
       </span>
     </div>`;
@@ -999,7 +999,7 @@
       </div>
       <div class="mq-sec" id="mq-${prefix}-measuring-sec" onclick="mqOpenIfClosed('${prefix}-measuring')">
         ${collapsibleHeader(`${prefix}-measuring`, 'How to measure')}
-        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+        <div style="font-size:12px;color:#4b5563;margin-bottom:10px;line-height:1.5">
           📏 Tips for getting accurate measurements, plus a converter for inches/mm.
         </div>
         <div id="mq-${prefix}-measuring-body" style="display:none">
@@ -1068,7 +1068,7 @@
       </div>
       ${hasDrawers?`<div class="mq-sec" id="mq-${prefix}-drawers-sec">
         <p class="mq-sec-title">Drawers</p>
-        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+        <div style="font-size:12px;color:#4b5563;margin-bottom:10px;line-height:1.5">
           🗄️ Choose the approximate amount of drawers your project will have.
         </div>
         <div class="mq-field">
@@ -1088,7 +1088,7 @@
       ${Object.keys(TALL_CAB).length > 0 ? `
       <div class="mq-sec" id="mq-${prefix}-tallcabs-sec" onclick="mqOpenIfClosed('${prefix}-tallcabs')">
         ${collapsibleHeader(`${prefix}-tallcabs`, 'Tall cabinets')}
-        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+        <div style="font-size:12px;color:#4b5563;margin-bottom:10px;line-height:1.5">
           🏛️ Add each tall cabinet separately — pick a type, width, and quantity, then add another for a different type.
         </div>
         <div id="mq-${prefix}-tallcabs-body" style="display:none">
@@ -1098,8 +1098,8 @@
       </div>` : ''}
       ${hasTrim?`<div class="mq-sec" id="mq-${prefix}-trim-sec" onclick="mqOpenIfClosed('${prefix}-trim')">
         ${collapsibleHeader(`${prefix}-trim`, 'Crown moulding / valance')}
-        <div id="mq-${prefix}-trim-auto-explainer" style="font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
-        <div id="mq-${prefix}-trim-noauto-explainer" style="display:none;font-size:11px;color:#6b7280;margin-bottom:10px;line-height:1.5">📐 This project type doesn't include cabinet measurements, so enter your crown/valance linear footage directly below.</div>
+        <div id="mq-${prefix}-trim-auto-explainer" style="font-size:11px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Crown and valance footage is calculated automatically from your upper cabinet measurements above — just pick the style.</div>
+        <div id="mq-${prefix}-trim-noauto-explainer" style="display:none;font-size:11px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 This project type doesn't include cabinet measurements, so enter your crown/valance linear footage directly below.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:12px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
         <label id="mq-${prefix}-trim-use-cab-wrap" style="display:none;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer">
           <input type="checkbox" id="mq-${prefix}-trim-use-cab" onchange="mqTogTrimUseCab('${prefix}')" style="margin-top:2px;flex-shrink:0;width:auto"/>
@@ -1158,7 +1158,7 @@
       </div>
       <div class="mq-sec" id="mq-${prefix}-specialty-sec" onclick="mqOpenIfClosed('${prefix}-specialty')">
         ${collapsibleHeader(`${prefix}-specialty`, 'Specialty items')}
-        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">
+        <div style="font-size:12px;color:#4b5563;margin-bottom:10px;line-height:1.5">
           ⭐ Optional extras and upgrades — browse and add anything you'd like.
         </div>
         <div id="mq-${prefix}-specialty-body" style="display:none">
@@ -1251,7 +1251,6 @@
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
-          <div style="text-align:center;margin-top:10px"><button type="button" onclick="mqStartNewEstimate()" style="background:none;border:none;color:#9ca3af;font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px">🔄 Start a new estimate</button></div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -1280,7 +1279,6 @@
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
-          <div style="text-align:center;margin-top:10px"><button type="button" onclick="mqStartNewEstimate()" style="background:none;border:none;color:#9ca3af;font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px">🔄 Start a new estimate</button></div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -1300,7 +1298,7 @@
           </div>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
             <input type="checkbox" id="mq-b-use-cab" onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
-            <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#9ca3af">(assumes standard depth counter)</span></span>
+            <span style="font-size:13px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#6b7280">(assumes standard depth counter)</span></span>
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
@@ -1309,7 +1307,7 @@
             <div style="background:#f9fafb;border-radius:6px;padding:10px 12px;margin-bottom:0.75rem">
             <div id="mq-b-cab-dw-wrap">
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
-                  <input type="checkbox" id="mq-b-cab-dw" onchange="mqRefreshBsFt('b')" style="width:auto;flex-shrink:0"/> Add extra space for a dishwasher <span style="color:#9ca3af;font-weight:400">(+24")</span>
+                  <input type="checkbox" id="mq-b-cab-dw" onchange="mqRefreshBsFt('b')" style="width:auto;flex-shrink:0"/> Add extra space for a dishwasher <span style="color:#6b7280;font-weight:400">(+24")</span>
                 </label>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
@@ -1339,14 +1337,14 @@
                 <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?')}<strong>Side splashes</strong> (Quantity)</label>
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
-              <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
+              <div style="font-size:11px;color:#4b5563;margin-bottom:8px;line-height:1.5">
                 A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
                 <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" step="0.1" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
-              <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
+              <div style="font-size:12px;color:#4b5563;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
               <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
           </div>
@@ -1381,7 +1379,6 @@
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           ${financingHTML}
-          <div style="text-align:center;margin-top:10px"><button type="button" onclick="mqStartNewEstimate()" style="background:none;border:none;color:#9ca3af;font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px">🔄 Start a new estimate</button></div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -1394,7 +1391,7 @@
           <div class="mq-modal-fields">
             <div class="mq-field"><label class="mq-label">Your name</label><input type="text" id="mq-lead-name" placeholder="Jane Smith"/></div>
             <div class="mq-field"><label class="mq-label">Email address</label><input type="email" id="mq-lead-email" placeholder="jane@email.com"/></div>
-            <div class="mq-field"><label class="mq-label">Phone number <span style="color:#9ca3af;font-weight:400">(optional)</span></label><input type="tel" id="mq-lead-phone" placeholder="(555) 000-0000"/></div>
+            <div class="mq-field"><label class="mq-label">Phone number <span style="color:#6b7280;font-weight:400">(optional)</span></label><input type="tel" id="mq-lead-phone" placeholder="(555) 000-0000"/></div>
           </div>
           <button class="mq-modal-btn" onclick="mqSubmitLead()">Show my estimate →</button>
           <button class="mq-modal-skip" onclick="mqSkipLead()">Skip for now</button>
@@ -1517,7 +1514,7 @@
     }
     function cutoutRowsHtml(m, idPrefix) {
       return cutoutOptionsFor(m).map((o,i)=>
-        `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:13px;color:#6b7280;min-width:110px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label><input type="number" id="${idPrefix}-${i}" value="0" min="0" max="10" style="width:55px"/></div>`
+        `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:13px;color:#4b5563;min-width:110px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label><input type="number" id="${idPrefix}-${i}" value="0" min="0" max="10" style="width:55px"/></div>`
       ).join('');
     }
 
@@ -2560,7 +2557,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');document.getElementById('mq-c-result').scrollIntoView({behavior:'smooth',block:'start'});
+        document.getElementById('mq-c-result').classList.add('show');document.getElementById('mq-c-result').scrollIntoView({behavior:'smooth',block:'start'});window.mqShowStartOverPanel();
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel);
       });
@@ -2579,7 +2576,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');document.getElementById('mq-ct-result').scrollIntoView({behavior:'smooth',block:'start'});
+          document.getElementById('mq-ct-result').classList.add('show');document.getElementById('mq-ct-result').scrollIntoView({behavior:'smooth',block:'start'});window.mqShowStartOverPanel();
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines);
         },900);
@@ -2606,7 +2603,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const tl=cab.low+ct.low,th=cab.high+ct.high;
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');document.getElementById('mq-b-result').scrollIntoView({behavior:'smooth',block:'start'});
+          document.getElementById('mq-b-result').classList.add('show');document.getElementById('mq-b-result').scrollIntoView({behavior:'smooth',block:'start'});window.mqShowStartOverPanel();
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel);
         },1200);
@@ -2633,7 +2630,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div class="mq-field"><label class="mq-label">Width (inches)</label><input type="number" id="mqsw-${id}" placeholder="e.g. 120" oninput="mqCalcSurfDims('${id}')"/></div>
           <div class="mq-field"><label class="mq-label">Depth (inches)</label><input type="number" id="mqsd-${id}" placeholder="${ctDepth}" value="${ctDepth}" oninput="mqCalcSurfDims('${id}')"/></div>
           <div class="mq-field"><label class="mq-label" style="color:#16a34a">Auto-calculated</label>
-            <div style="font-size:13px;color:#6b7280;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
+            <div style="font-size:13px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
         </div>
         <div class="mq-grid2" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">Material</label>
@@ -2655,14 +2652,14 @@ window.mqTogDrawerConfig=(prefix)=>{
             <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?')}<strong>Side splashes</strong> (Quantity)</label>
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
-          <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.5">
+          <div style="font-size:11px;color:#4b5563;margin-bottom:8px;line-height:1.5">
             A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:13px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
             <input type="number" id="mqs-bs-subtract-${id}" value="0" min="0" step="0.1" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
-          <div style="font-size:12px;color:#6b7280;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
+          <div style="font-size:12px;color:#4b5563;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
           <div style="font-size:13px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mqs-bsft-net-${id}">0</strong> ft</div>
         </div>`;
       document.getElementById(containerId)?.appendChild(card);
@@ -2693,7 +2690,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const linFt=Math.round(w/12*10)/10;
         el.textContent=`${sqft} sqft · ${linFt} lin ft`;
         el.style.color='#16a34a';
-      } else if(el){el.textContent='Enter width & depth';el.style.color='#6b7280';}
+      } else if(el){el.textContent='Enter width & depth';el.style.color='#4b5563';}
       window.mqRefreshSurfBsFt(id);
     };
     window.mqTogCabCuts=(prefix)=>{
@@ -2813,6 +2810,29 @@ window.mqTogDrawerConfig=(prefix)=>{
   // initial page load, so it's guaranteed to reset everything (every input,
   // the guided step flow, results panels) rather than risk missing some
   // field if this tried to reset values one at a time by hand.
+  // Standalone panel below the widget (not inside it, so it survives
+  // mqStartNewEstimate's full rebuild) — deliberately much more visible than
+  // a small footer link: dark card, clearly separated, matching the same
+  // "darkened" visual language used for done/upcoming steps.
+  function mqEnsureStartOverPanel() {
+    let panel = document.getElementById('mq-start-over-panel');
+    if (panel) return panel;
+    const container = document.getElementById('midasquote-widget');
+    if (!container) return null;
+    panel = document.createElement('div');
+    panel.id = 'mq-start-over-panel';
+    panel.style.cssText = 'display:none;max-width:900px;margin:0 auto 24px;background:#111827;border-radius:12px;padding:24px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.25)';
+    panel.innerHTML = `
+      <div style="color:#e5e7eb;font-size:16px;margin-bottom:14px">Want to look at a different project?</div>
+      <button type="button" onclick="mqStartNewEstimate()" style="background:#2563eb;color:#fff;border:none;border-radius:10px;padding:14px 30px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">🔄 Start a New Estimate</button>`;
+    container.insertAdjacentElement('afterend', panel);
+    return panel;
+  }
+  window.mqShowStartOverPanel = function() {
+    const panel = mqEnsureStartOverPanel();
+    if (panel) panel.style.display = 'block';
+  };
+
   window.mqStartNewEstimate = function() {
     const data = window._mqFullData;
     const container = document.getElementById('midasquote-widget');
@@ -2823,6 +2843,8 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
+    const panel = document.getElementById('mq-start-over-panel');
+    if (panel) panel.style.display = 'none';
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -2831,7 +2853,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
     container.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;gap:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
       <div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#1a1a1a;border-radius:50%;animation:mqSpin 0.7s linear infinite;"></div>
-      <div style="font-size:14px;color:#6b7280;letter-spacing:0.01em;">Loading estimator…</div>
+      <div style="font-size:14px;color:#4b5563;letter-spacing:0.01em;">Loading estimator…</div>
       <style>@keyframes mqSpin{to{transform:rotate(360deg)}}</style>
     </div>`;
     let data;
@@ -2839,7 +2861,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       data = await loadShopData(shopToken);
     } catch (err) {
       console.error('MidasQuote: failed to load shop data', err);
-      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#6b7280;font-size:14px;line-height:1.6">
+      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
         <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
         <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Having trouble loading your estimate</div>
         <div style="margin-bottom:1rem">This is usually just a slow or dropped connection. Please try again.</div>
@@ -2849,7 +2871,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       return;
     }
     if(!data) {
-      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#6b7280;font-size:14px;line-height:1.6">
+      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
         <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
         <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Estimator unavailable</div>
         <div>This quote tool isn't configured correctly. Please contact the site owner.</div>
@@ -2861,7 +2883,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // ── Subscription gate ──
     const activeStatuses = ['Active', 'Trial'];
     if (shop['Status'] && !activeStatuses.includes(shop['Status'])) {
-      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#6b7280;font-size:14px;line-height:1.6">
+      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
         <div style="font-size:2rem;margin-bottom:0.75rem">🔒</div>
         <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Estimator unavailable</div>
         <div>This quoting tool is temporarily offline. Please contact the shop directly for a quote.</div>
@@ -2897,7 +2919,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25);animation:mqSlideUp 0.3s ease">
               <div style="font-size:36px;margin-bottom:12px">👋</div>
               <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">First time here?</div>
-              <div style="font-size:14px;color:#6b7280;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+              <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
                 <div style="margin-bottom:8px">✅ <strong>Choose your project type first</strong> — everything below adjusts to match it.</div>
                 <div style="margin-bottom:8px">🔍 <strong>Tap or hover any photo</strong> to see it up close.</div>
                 <div style="margin-bottom:8px">📏 <strong>Check the measuring guide</strong> for help getting accurate numbers.</div>
