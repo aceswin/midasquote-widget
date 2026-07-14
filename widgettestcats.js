@@ -287,8 +287,9 @@
       #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:11px;color:#9ca3af;flex-shrink:0;margin-left:8px}
       #midasquote-widget .mq-collapse-arrow.open{transform:rotate(90deg)}
       #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px #93c5fd,0 4px 14px rgba(0,0,0,0.10);opacity:1}
-      #midasquote-widget .mq-sec.mq-step-done{opacity:0.6}
-      #midasquote-widget .mq-sec.mq-step-upcoming{opacity:0.45}
+      #midasquote-widget .mq-sec.mq-step-done{filter:brightness(0.8);transition:filter 0.2s}
+      #midasquote-widget .mq-sec.mq-step-upcoming{filter:brightness(0.55);transition:filter 0.2s}
+      #midasquote-widget .mq-sec.mq-step-current{transition:box-shadow 0.2s}
       #midasquote-widget .mq-step-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px dashed #e5e7eb}
       #midasquote-widget .mq-step-continue-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
       #midasquote-widget .mq-step-back-btn{background:none;border:none;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:9px 4px}
