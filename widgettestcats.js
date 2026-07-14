@@ -325,6 +325,7 @@
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
       #midasquote-widget .mq-vpicker-select-btn{margin-top:5px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-select-btn{background:${bc};border-color:${bc};color:#fff}
+      #midasquote-widget .mq-vpicker-chip.mq-suggested{box-shadow:0 0 0 2px #bbf7d0}
       #midasquote-widget .mq-vpicker-thumb{cursor:zoom-in}
       #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
@@ -1864,9 +1865,11 @@
       if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
-    // Clicking directly into an upcoming (not-yet-current) section jumps
-    // the flow straight to it — nothing here is actually gated, this just
-    // keeps the visual state honest for anyone who skips ahead on purpose.
+    // Clicking directly into any other section (ahead or already-done)
+    // jumps the flow straight to it — nothing here is actually gated, this
+    // just keeps the visual state honest for anyone navigating on their own,
+    // in either direction (e.g. jumping back from Specialty Items to Doors
+    // by tapping that section directly, same as scrolling up would).
     document.addEventListener('click', (e) => {
       const sec = e.target.closest('#midasquote-widget .mq-sec');
       if (!sec) return;
@@ -1876,7 +1879,7 @@
       if (!prefix) return;
       const sections = mqGetVisibleSections(prefix);
       const idx = sections.indexOf(sec);
-      if (idx > (_mqStepIndex[prefix] || 0)) {
+      if (idx !== -1 && idx !== (_mqStepIndex[prefix] || 0)) {
         _mqStepIndex[prefix] = idx;
         window.mqUpdateStepFocus(prefix);
       }
@@ -2031,6 +2034,17 @@
       }
     };
 
+    // Highlights whichever crown/valance chip matches the current door
+    // selection with the same green used in the suggestion note — a light
+    // ring, not a hard border, so it layers cleanly whether or not that
+    // chip also happens to be the one actually selected.
+    function mqMarkSuggestedChip(selectId, matchKey) {
+      document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => c.classList.remove('mq-suggested'));
+      if (!matchKey) return;
+      const chip = document.querySelector(`[data-vpicker-for="${selectId}"][data-value="${matchKey}"]`);
+      if (chip) chip.classList.add('mq-suggested');
+    }
+
     window.mqApplyLinkedTrim=(prefix, doorKey)=>{
       const crownSelect=document.getElementById(`mq-${prefix}-trim-crown`);
       const valanceSelect=document.getElementById(`mq-${prefix}-trim-valance`);
@@ -2042,6 +2056,8 @@
         if(crownSelect) crownSelect.value='none';
         if(valanceSelect) valanceSelect.value='none';
         if(note) note.style.display='none';
+        mqMarkSuggestedChip(`mq-${prefix}-trim-crown`, null);
+        mqMarkSuggestedChip(`mq-${prefix}-trim-valance`, null);
         mqTogTrimReturns(prefix);
         return;
       }
@@ -2051,6 +2067,8 @@
 
       const crownMatchKey=Object.keys(TRIM).find(k=>TRIM[k].type==='crown' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
       const valanceMatchKey=Object.keys(TRIM).find(k=>TRIM[k].type==='valance' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
+      mqMarkSuggestedChip(`mq-${prefix}-trim-crown`, crownMatchKey);
+      mqMarkSuggestedChip(`mq-${prefix}-trim-valance`, valanceMatchKey);
 
       // Don't auto-select — just show a suggestion note so the customer stays in control
       if(note){
