@@ -1188,11 +1188,11 @@
     valanceReturn: 'https://aceswin.github.io/midasquote-widget/term-images/valance-return.png',
     sidesplash:    'https://aceswin.github.io/midasquote-widget/term-images/sidesplash.png',
   };
-  function termHelpThumb(imgUrl, label, size = 48) {
+  function termHelpThumb(imgUrl, label, size = 48, showCaption = true) {
     const safeLabel = label.replace(/'/g, "\\'");
     return `<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-right:8px">
       <img src="${imgUrl}" alt="${label}" onclick="event.stopPropagation();mqPhotoLightbox('${imgUrl}','${safeLabel}')" onerror="this.parentElement.style.display='none'" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:6px;cursor:zoom-in;border:1px solid #93c5fd"/>
-      <span style="font-size:9px;font-weight:800;color:#1d4ed8;margin-top:3px;white-space:nowrap">Click to view</span>
+      ${showCaption ? '<span style="font-size:9px;font-weight:800;color:#1d4ed8;margin-top:3px;white-space:nowrap">Click to view</span>' : ''}
     </div>`;
   }
 
@@ -1347,7 +1347,7 @@
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?')}<strong>Side splashes</strong> (Quantity)</label>
+                <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',48,false)}<strong>Side splashes</strong> (Quantity)</label>
                 <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
               </div>
               <div style="font-size:11px;color:#4b5563;margin-bottom:8px;line-height:1.5">
@@ -1647,8 +1647,11 @@
       if (coverImg) {
         const img = document.createElement('img');
         img.src = coverImg;
-        img.style.cssText = 'width:100%;max-height:160px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block';
+        img.style.cssText = 'width:100%;max-height:160px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;cursor:zoom-in';
         img.onerror = () => { img.style.display = 'none'; };
+        // Same tap-to-zoom lightbox as every other photo in the widget — a
+        // lot of people instinctively try to click project type photos too.
+        img.onclick = () => mqPhotoLightbox(coverImg, room && room.name ? room.name : 'Project photo');
         descEl.appendChild(img);
       }
       if (desc) {
@@ -2662,7 +2665,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mqs-bsft-block-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
           <div style="font-size:13px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?')}<strong>Side splashes</strong> (Quantity)</label>
+            <label style="font-size:13px;color:#374151;min-width:170px">${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',48,false)}<strong>Side splashes</strong> (Quantity)</label>
             <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
           </div>
           <div style="font-size:11px;color:#4b5563;margin-bottom:8px;line-height:1.5">
