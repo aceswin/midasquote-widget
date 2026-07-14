@@ -264,6 +264,9 @@
       #midasquote-widget{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:20px auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.10)}
       @media (max-width:600px){
         #midasquote-widget{margin:0 0.5rem 2rem}
+        #midasquote-widget .mq-label{font-size:15px}
+        #midasquote-widget .mq-hint{font-size:15px}
+        #midasquote-widget .mq-sec-title{font-size:14px}
       }
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
@@ -2864,6 +2867,43 @@ window.mqTogDrawerConfig=(prefix)=>{
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // Mobile-only minimum text size — a lot of hint/label text throughout
+  // this file is set with inline styles (not shared CSS classes), which a
+  // normal media query can never override no matter what it says, since
+  // inline styles always win over stylesheet rules regardless of
+  // specificity. This scans for inline font sizes smaller than the mobile
+  // floor and bumps just those, only on narrow screens — desktop sizes stay
+  // exactly as authored. Runs once at load, then keeps re-scanning
+  // automatically as new content gets added (tall cabinet cards, added
+  // surfaces, a full "Start new estimate" rebuild, popups, etc.) via a
+  // MutationObserver, so nothing new slips through unbumped.
+  const MQ_MOBILE_FONT_FLOOR = 15;
+  function mqBumpMobileFontSizes(root) {
+    if (!root || window.innerWidth > 600) return;
+    const walk = (node) => {
+      if (!node || node.nodeType !== 1) return;
+      if (node.style && node.style.fontSize) {
+        const px = parseFloat(node.style.fontSize);
+        if (!isNaN(px) && px < MQ_MOBILE_FONT_FLOOR) node.style.fontSize = MQ_MOBILE_FONT_FLOOR + 'px';
+      }
+      for (let i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]);
+    };
+    walk(root);
+  }
+  function mqInitMobileFontFix() {
+    mqBumpMobileFontSizes(document.body);
+    const observer = new MutationObserver((mutations) => {
+      if (window.innerWidth > 600) return;
+      mutations.forEach(m => m.addedNodes.forEach(node => mqBumpMobileFontSizes(node)));
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => mqBumpMobileFontSizes(document.body), 200);
+    });
+  }
+
   async function init() {
     const container=document.getElementById('midasquote-widget');
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
@@ -2959,5 +2999,6 @@ window.mqTogDrawerConfig=(prefix)=>{
   }
 
   init();
+  mqInitMobileFontFix();
 
 })();
