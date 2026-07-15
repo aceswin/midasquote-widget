@@ -434,12 +434,7 @@ window.logoutMember = async function () {
             <div class="mq-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
-                💡 The adjustment % applies to box, door, and drawer pricing only — never hinges or installation, since hardware and labor don't shrink just because a project type is smaller or bigger. Leave one at 0% for no adjustment.
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 140px 40px;gap:10px;margin-bottom:8px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">
-                <div>Project name</div>
-                <div>Adjustment %</div>
-                <div></div>
+                💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
               </div>
               <div id="mq-rooms-list"></div>
               <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()" style="margin-top:8px;margin-bottom:1.25rem">+ Add room</button>
