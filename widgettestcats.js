@@ -180,6 +180,14 @@
           perSqFt:r.fields['Per square foot']||false,
           photoUrl: shopPhotos['spec_' + r.id] || '',
           visibleRooms, // empty array = visible for every room (backward compatible default)
+          // Per-item supply/install choice — lets a shop offer some items
+          // (e.g. refacing doors) supply-only even while installing
+          // everything else. If not offered, offersInstallChoice is false
+          // and installMode is purely a label for what the flat price above
+          // already represents — it never changes the price.
+          offersInstallChoice: r.fields['Offers install choice']||false,
+          installPrice: r.fields['Install price']||0,
+          installMode: r.fields['Install mode']||'supply',
         };
       }));
 
@@ -695,6 +703,17 @@
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
+      // Items offering a choice get a small select (defaulting to match the
+      // project's overall Supply + Install setting — see
+      // mqSyncSpecialtyModesToGlobal). Items that don't just show a plain
+      // label for whichever mode their one flat price already represents —
+      // never an interactive control, since there's nothing to choose.
+      const installModeHtml = s.offersInstallChoice
+        ? `<select id="mq-spec-mode-${prefix}-${i}" onchange="mqSpecModeTouched('${prefix}',${i})" style="font-size:11px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;margin-top:4px;width:100%">
+            <option value="supply">Supply only</option>
+            <option value="install">Supplied &amp; Installed</option>
+          </select>`
+        : `<div style="font-size:11px;color:#6b7280;margin-top:2px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`;
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
         <div class="mq-spec-top">
@@ -702,6 +721,7 @@
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
             <div style="font-size:12px;color:#6b7280;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
+            ${installModeHtml}
           </div>
         </div>
         <div class="mq-spec-bottom">
@@ -2450,10 +2470,18 @@ window.mqTogDrawerConfig=(prefix)=>{
       let specTotal=0;
       specs.forEach((s,i)=>{
         if(!specQty[prefix][i]) return;
-        const cost=s.perFt?s.price*specQty[prefix][i]:s.price*specQty[prefix][i];
+        let unitPrice = s.price;
+        let modeLabel = '';
+        if (s.offersInstallChoice) {
+          const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+          const mode = modeSel ? modeSel.value : 'supply';
+          if (mode === 'install') { unitPrice = s.installPrice; modeLabel = ' — Supplied & Installed'; }
+          else { modeLabel = ' — Supply only'; }
+        }
+        const cost=unitPrice*specQty[prefix][i];
         specTotal+=cost;
         const qtyLabel=s.perSqFt?`${specQty[prefix][i]} sqft`:(s.perFt?`${specQty[prefix][i]} ft`:(specQty[prefix][i]>1?`× ${specQty[prefix][i]}`:''));
-        lines.push({label:qtyLabel?`${s.label} (${qtyLabel})`:s.label,cost:Math.round(cost)});
+        lines.push({label:qtyLabel?`${s.label} (${qtyLabel})${modeLabel}`:`${s.label}${modeLabel}`,cost:Math.round(cost)});
       });
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
@@ -2813,10 +2841,28 @@ window.mqTogDrawerConfig=(prefix)=>{
       // Only the "both" tab has a separate countertop supply/install field to
       // sync into — default it to match the cabinet choice so people don't
       // accidentally leave it mismatched. They can still change it after.
-      if (prefix !== 'b') return;
-      const cabSi = document.getElementById('mq-b-si');
-      const ctSi  = document.getElementById('mq-b-ct-si');
-      if (cabSi && ctSi) ctSi.value = cabSi.value;
+      if (prefix === 'b') {
+        const cabSi = document.getElementById('mq-b-si');
+        const ctSi  = document.getElementById('mq-b-ct-si');
+        if (cabSi && ctSi) ctSi.value = cabSi.value;
+      }
+      window.mqSyncSpecialtyModesToGlobal(prefix);
+    };
+
+    // Any specialty item offering its own supply/install choice defaults to
+    // match the project's overall choice — but once a customer manually
+    // touches one item's dropdown, it's marked "touched" and won't get
+    // silently overwritten if they later change the project-wide setting.
+    window.mqSyncSpecialtyModesToGlobal = function(prefix) {
+      const globalSi = gv(`mq-${prefix}-si`) || 'supply';
+      document.querySelectorAll(`[id^="mq-spec-mode-${prefix}-"]`).forEach(sel => {
+        if (sel.dataset.touched === 'true') return; // respect a manual override
+        sel.value = globalSi;
+      });
+    };
+    window.mqSpecModeTouched = function(prefix, i) {
+      const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+      if (sel) sel.dataset.touched = 'true';
     };
 
     addSurfaceInternal('ct','Kitchen run');
