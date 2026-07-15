@@ -1410,9 +1410,6 @@ window.logoutMember = async function () {
         'Price': master.fields['Price'] || 0,
         'Per linear foot': master.fields['Per linear foot'] || false,
         'Per square foot': master.fields['Per square foot'] || false,
-        'Offers install choice': master.fields['Offers install choice'] || false,
-        'Install price': master.fields['Install price'] || 0,
-        'Install mode': master.fields['Install mode'] || 'supply',
         'Active': true,
         'Visible rooms': master.fields['Visible rooms'] || '[]',
         'Template source ID': master.id,
@@ -2067,7 +2064,7 @@ window.logoutMember = async function () {
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Project types</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -2081,8 +2078,6 @@ window.logoutMember = async function () {
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)"/></td>
-              <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item"/></td>
-              <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
               <td style="font-size:12px;color:#6b7280">${roomLinkSummaryText(visibleRooms, rooms)}</td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
@@ -2797,43 +2792,6 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     } catch(e) { console.error('Failed to save specialty unit field', e); }
   };
 
-  // Builds whichever content belongs in the "Installed price / Mode" column
-  // for a given specialty item — an editable installed price if the shop
-  // is offering the customer a choice, or a plain "which mode is this
-  // item's one flat price" label if not.
-  function mqSpecInstallColHTML(r) {
-    const offersChoice = !!r.fields['Offers install choice'];
-    if (offersChoice) {
-      return `<input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="Installed $" style="width:90px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>`;
-    }
-    const mode = r.fields['Install mode'] || 'supply';
-    return `<select id="mq-spec-mode-${r.id}" onchange="mqSaveSpecField('${r.id}','Install mode',this.value)" style="font-size:12px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px">
-      <option value="supply" ${mode!=='installed'?'selected':''}>Supply only</option>
-      <option value="installed" ${mode==='installed'?'selected':''}>Supplied &amp; Installed</option>
-    </select>`;
-  }
-
-  // Flips whether this item offers the customer a supply/install choice,
-  // and swaps that column between an installed-price input and a plain
-  // mode label accordingly. Reads whatever's currently in the DOM rather
-  // than a fresh fetch, so a shop owner flipping this back and forth
-  // doesn't lose whatever they'd already typed.
-  window.mqToggleSpecInstallChoice = async function(id) {
-    const chk = el(`mq-spec-offerchoice-${id}`);
-    const col = el(`mq-spec-installcol-${id}`);
-    if (!chk || !col) return;
-    const offersChoice = chk.checked;
-    try { await atUpdate(CONFIG.SPECIALTY_TABLE, id, { 'Offers install choice': offersChoice }); } catch(e) { console.error('Failed to save install choice toggle', e); }
-    const existingPriceInput = document.getElementById(`mq-spec-installprice-${id}`);
-    const existingModeSelect = document.getElementById(`mq-spec-mode-${id}`);
-    col.innerHTML = mqSpecInstallColHTML({ id, fields: {
-      'Offers install choice': offersChoice,
-      'Install price': existingPriceInput ? existingPriceInput.value : '',
-      'Install mode': existingModeSelect ? existingModeSelect.value : 'supply',
-    }});
-  };
-
-
   // Reads whatever room checkboxes are currently checked for this item,
   // and saves the list. If every configured room is checked, saves an empty
   // list instead — meaning "visible everywhere," which also automatically
@@ -2970,10 +2928,6 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:auto"/> lin ft</label>
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:auto"/> sq ft</label>
       </div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:auto"/> Offer supply/install choice</label>
-      </div>
-      <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
       ${photoHtml}
       <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item</button>
       <button class="mq-btn mq-btn-danger mq-btn-sm" style="width:100%" onclick="mqDeleteTemplateItem('${r.id}')">Delete template item</button>
@@ -3149,9 +3103,6 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
               'Price': master.fields['Price'] || 0,
               'Per linear foot': master.fields['Per linear foot'] || false,
               'Per square foot': master.fields['Per square foot'] || false,
-              'Offers install choice': master.fields['Offers install choice'] || false,
-              'Install price': master.fields['Install price'] || 0,
-              'Install mode': master.fields['Install mode'] || 'supply',
               'Active': false,
               'Visible rooms': master.fields['Visible rooms'] || '[]',
               'Template source ID': master.id,
@@ -3258,9 +3209,6 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
             'Price': master.fields['Price'] || 0,
             'Per linear foot': master.fields['Per linear foot'] || false,
             'Per square foot': master.fields['Per square foot'] || false,
-            'Offers install choice': master.fields['Offers install choice'] || false,
-            'Install price': master.fields['Install price'] || 0,
-            'Install mode': master.fields['Install mode'] || 'supply',
             'Active': false,
             'Visible rooms': master.fields['Visible rooms'] || '[]',
             'Template source ID': master.id,
