@@ -67,13 +67,82 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function el(id) { return document.getElementById(id); }
   function show(id) { const e = el(id); if (e) e.style.display = 'block'; }
   function hide(id) { const e = el(id); if (e) e.style.display = 'none'; }
+  // Centers an element horizontally over .mq-content specifically (not the
+  // whole viewport), so it sits between the sidebar and the right edge —
+  // shared by the toast and the floating save button so they always line up.
+  function mqCenterOverContent(node) {
+    const content = document.querySelector('#midasquote-dashboard .mq-content');
+    if (!node || !content) return;
+    const rect = content.getBoundingClientRect();
+    node.style.left = (rect.left + rect.width / 2) + 'px';
+    node.style.transform = 'translateX(-50%)';
+  }
+
+  // Floating toast — guarantees the "saved!" confirmation is actually visible
+  // regardless of where on a (possibly long) tab the triggering action
+  // happened, whether that's a Save button, an inline checkbox toggle, or an
+  // image upload finishing.
+  function mqShowToast(msg, type = 'success') {
+    let toast = document.getElementById('mq-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'mq-toast';
+      toast.style.cssText = "position:fixed;bottom:88px;z-index:99999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.18);transition:opacity 0.25s ease;opacity:0;pointer-events:none;max-width:90vw;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+      document.body.appendChild(toast);
+    }
+    mqCenterOverContent(toast);
+    const colors = { success: { bg:'#dcfce7', color:'#166534', border:'#86efac' }, error: { bg:'#fee2e2', color:'#991b1b', border:'#fca5a5' } };
+    const c = colors[type] || colors.success;
+    toast.style.background = c.bg;
+    toast.style.color = c.color;
+    toast.style.border = `1px solid ${c.border}`;
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    clearTimeout(toast._mqHideTimer);
+    toast._mqHideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+  }
+
   function showMsg(id, msg, type = 'success') {
     const e = el(id);
-    if (!e) return;
-    e.textContent = msg;
-    e.className = `mq-msg mq-msg-${type}`;
-    e.style.display = 'block';
-    setTimeout(() => { e.style.display = 'none'; }, 3000);
+    if (e) {
+      e.textContent = msg;
+      e.className = `mq-msg mq-msg-${type}`;
+      e.style.display = 'block';
+      setTimeout(() => { e.style.display = 'none'; }, 3000);
+    }
+    mqShowToast(msg, type);
+  }
+
+  // Floating "Save changes" button for Project Types — that tab can get long
+  // (each project type has a description, cover image, and measure guide),
+  // so scrolling all the way back down to the one Save button got tedious.
+  // Shown/hidden by mqNav based on which tab is currently active. Sits a bit
+  // higher than the toast so the "saved!" confirmation appears directly
+  // beneath it, with a little breathing room, instead of overlapping it.
+  function mqPositionFloatingSave() {
+    mqCenterOverContent(document.getElementById('mq-floating-save'));
+  }
+
+  function mqToggleFloatingSave(show) {
+    let btn = document.getElementById('mq-floating-save');
+    if (!show) {
+      if (btn) btn.style.display = 'none';
+      window.removeEventListener('resize', mqPositionFloatingSave);
+      return;
+    }
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'mq-floating-save';
+      btn.textContent = '💾 Save changes';
+      btn.onclick = () => window.mqSaveRooms();
+      btn.style.cssText = "position:fixed;bottom:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:box-shadow 0.15s";
+      btn.onmouseover = () => { btn.style.boxShadow = '0 14px 36px rgba(0,0,0,0.32)'; };
+      btn.onmouseout = () => { btn.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)'; };
+      document.body.appendChild(btn);
+    }
+    btn.style.display = 'block';
+    mqPositionFloatingSave();
+    window.addEventListener('resize', mqPositionFloatingSave);
   }
 
   function injectStyles() {
@@ -93,7 +162,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-btn-danger:hover{background:#fef2f2}
       #midasquote-dashboard .mq-btn-sm{padding:5px 10px;font-size:12px}
       #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px);width:100%}
-      #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0}
+      #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0;position:sticky;top:60px;align-self:flex-start;max-height:calc(100vh - 60px);overflow-y:auto}
       #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
       #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#f9fafb}
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
@@ -141,6 +210,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
       #midasquote-dashboard .mq-msg-success{background:#dcfce7;color:#166534;border:1px solid #86efac}
       #midasquote-dashboard .mq-msg-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+      #midasquote-dashboard .mq-room-row.mq-room-open{border-color:#93c5fd!important;background:#f8fbff!important;box-shadow:0 2px 10px rgba(37,99,235,0.10)}
       #midasquote-dashboard .mq-loading{text-align:center;padding:3rem;color:#6b7280;font-size:14px}
       #midasquote-dashboard .mq-divider{height:1px;background:#e5e7eb;margin:1.5rem 0}
       #midasquote-dashboard .mq-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
@@ -153,7 +223,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
       @media (max-width: 768px) {
         #midasquote-dashboard .mq-layout{flex-direction:column}
-        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch}
+        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
         #midasquote-dashboard .mq-nav-section{display:none}
         #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
@@ -211,10 +281,12 @@ window.logoutMember = async function () {
           <div class="mq-nav-section">Setup</div>
           <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
+          <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
+          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
         </div>
 
@@ -355,6 +427,21 @@ window.logoutMember = async function () {
             </div>
           </div>
 
+          <!-- ROOM TYPES -->
+          <div class="mq-page" id="mq-page-rooms">
+            <div class="mq-page-title">Project types</div>
+            <div class="mq-page-sub">Set up the project types your widget offers — rooms, service tiers, or anything else — and adjust pricing up or down for each one. Great for things like "Kitchen Reno — Premium" vs. "Luxury," or a bathroom vanity running smaller than a kitchen cabinet at the same length.</div>
+            <div class="mq-card">
+              <div id="mq-rooms-msg"></div>
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
+                💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
+              </div>
+              <div id="mq-rooms-list"></div>
+              <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()" style="margin-top:8px;margin-bottom:1.25rem">+ Add room</button>
+              <button class="mq-btn mq-btn-primary" onclick="mqSaveRooms()">Save room types</button>
+            </div>
+          </div>
+
           <!-- PRICING -->
           <div class="mq-page" id="mq-page-pricing">
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
@@ -375,7 +462,7 @@ window.logoutMember = async function () {
             </div>
             <div id="mq-spec-msg"></div>
             <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot, check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items, leave it unchecked and enter the flat price.
+              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
               <br><br>
               🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
             </div>
@@ -389,124 +476,134 @@ window.logoutMember = async function () {
             <div class="mq-page-title">Embed code</div>
             <div class="mq-page-sub">Pick what you want, then copy one combined block of code to paste into your website.</div>
 
-            <!-- Combined builder card -->
-            <div class="mq-card" style="border:2px solid #1a1a1a">
-              <div class="mq-card-title" style="font-size:15px">🧩 Build your embed code</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Check the pieces you want — the combined code updates automatically. Paste it all in one go.</p>
-
-              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem">
-                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                  <input type="checkbox" id="mq-embed-chk-header" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                  <div>
-                    <div style="font-size:13px;font-weight:600;color:#111">🎯 Quote page header</div>
-                    <div style="font-size:11px;color:#6b7280;margin-top:2px">Big headline + subtitle above your widget</div>
-                  </div>
-                </label>
-                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                  <input type="checkbox" id="mq-embed-chk-trust" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                  <div>
-                    <div style="font-size:13px;font-weight:600;color:#111">✅ Trust bar</div>
-                    <div style="font-size:11px;color:#6b7280;margin-top:2px">"No commitment required · Results sent to inbox" row</div>
-                  </div>
-                </label>
-                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                  <input type="checkbox" id="mq-embed-chk-widget" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                  <div>
-                    <div style="font-size:13px;font-weight:600;color:#111">📋 Widget embed code</div>
-                    <div style="font-size:11px;color:#6b7280;margin-top:2px">The quote widget itself — required for it to appear</div>
-                  </div>
-                </label>
+            <!-- ============================================================
+                 SECTION 1: Code for websites — the embed-code builder plus
+                 platform install instructions, all folded up together.
+            ============================================================= -->
+            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:14px">
+              <div onclick="mqToggleEmbedSection('websites')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🌐 Code for websites</div>
+                <span id="mq-embed-websites-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
               </div>
+              <div id="mq-embed-websites-body" style="display:none;padding:0 1.25rem 1.25rem">
 
-              <!-- Live preview -->
-              <div id="mq-embed-preview-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:1.25rem;transform:scale(0.75);transform-origin:top left;width:133%;margin-right:-33%">
-                <div id="mq-embed-preview-header"></div>
-                <div id="mq-embed-preview-trust"></div>
-                <div style="background:#fff;border:1.5px dashed #d1d5db;border-radius:10px;padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af" id="mq-embed-preview-widget">📋 Widget appears here</div>
+                <!-- Combined builder card -->
+                <div class="mq-card" style="border:2px solid #1a1a1a">
+                  <div class="mq-card-title" style="font-size:15px">🧩 Build your embed code</div>
+                  <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Check the pieces you want — the combined code updates automatically. Paste it all in one go.</p>
+
+                  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem">
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                      <input type="checkbox" id="mq-embed-chk-header" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                      <div>
+                        <div style="font-size:13px;font-weight:600;color:#111">🎯 Quote page header</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px">Big headline + subtitle above your widget</div>
+                      </div>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                      <input type="checkbox" id="mq-embed-chk-trust" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                      <div>
+                        <div style="font-size:13px;font-weight:600;color:#111">✅ Trust bar</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px">"No commitment required · Results sent to inbox" row</div>
+                      </div>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                      <input type="checkbox" id="mq-embed-chk-widget" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                      <div>
+                        <div style="font-size:13px;font-weight:600;color:#111">📋 Widget embed code</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px">The quote widget itself — required for it to appear</div>
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- Live preview -->
+                  <div id="mq-embed-preview-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:1.25rem;transform:scale(0.75);transform-origin:top left;width:133%;margin-right:-33%">
+                    <div id="mq-embed-preview-header"></div>
+                    <div id="mq-embed-preview-trust"></div>
+                    <div style="background:#fff;border:1.5px dashed #d1d5db;border-radius:10px;padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af" id="mq-embed-preview-widget">📋 Widget appears here</div>
+                  </div>
+
+                  <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-combined-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
+                  <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
+                </div>
+
+                <div class="mq-card">
+                  <div class="mq-card-title">💡 Installation help</div>
+                  <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
+                    <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
+                    <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
+                    <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
+                    <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
+                    <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
+                  </div>
+                </div>
+
               </div>
-
-              <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-combined-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
-              <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title">💡 Installation help</div>
-              <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
-                <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
-                <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
-                <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
-                <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
-                <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
+            <!-- ============================================================
+                 SECTION 2: Direct link — the plain quote-tool link (no
+                 website needed) plus its own homescreen instructions.
+            ============================================================= -->
+            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:14px">
+              <div onclick="mqToggleEmbedSection('direct')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">📱 Direct link</div>
+                <span id="mq-embed-direct-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
+              </div>
+              <div id="mq-embed-direct-body" style="display:none;padding:0 1.25rem 1.25rem">
+
+                <div class="mq-card">
+                  <div class="mq-card-title">📱 Direct quote link</div>
+                  <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed. Or use it for walk-in customers, right on the spot.</p>
+                  <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
+                </div>
+
+                <div class="mq-card">
+                  <div class="mq-card-title">📱 Add MidasQuote shortcut to your homescreen</div>
+                  <p class="mq-hint" style="margin-bottom:12px">
+                    Keep your quote tool one tap away — great for quoting walk-in customers on the spot, without digging through browser tabs or bookmarks.
+                  </p>
+                  ${mqAddToHomescreenInstructionsHTML()}
+                </div>
+
               </div>
             </div>
-            <div class="mq-card">
-              <div class="mq-card-title">📱 Direct quote link</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed.</p>
-              <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
+
+            <!-- ============================================================
+                 SECTION 3: MidasQuote Pro — the real-numbers version, for
+                 the shop owner (or anyone they trust, like a regular
+                 contractor) rather than customers.
+            ============================================================= -->
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleEmbedSection('pro')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">⚡ MidasQuote Pro</div>
+                <span id="mq-embed-pro-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
+              </div>
+              <div id="mq-embed-pro-body" style="display:none;padding:0 1.25rem 1.25rem">
+
+                <div class="mq-card">
+                  <div class="mq-card-title">⚡ Your MidasQuote Pro link</div>
+                  <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This one's just for you — or anyone you want to bring in, like a contractor you always work with. It shows the exact real numbers behind every quote, right alongside the same ballpark range your customers see. Not for sharing with customers.</p>
+                  <div class="mq-embed-box">https://widget.midasquote.com/pro.html?shop=${token}<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/pro.html?shop=${token}',this)">Copy</button></div>
+                </div>
+
+                <div class="mq-card">
+                  <div class="mq-card-title">📱 Add MidasQuote Pro shortcut to your homescreen</div>
+                  <p class="mq-hint" style="margin-bottom:12px">
+                    Keep it one tap away for quoting on the go, walking a jobsite, or sitting across the table from a customer.
+                  </p>
+                  ${mqAddToHomescreenInstructionsHTML()}
+                </div>
+
+              </div>
             </div>
 
-
-
-<!-- ADD TO HOMESCREEN — drop this into the Embed tab, right after your existing
-     direct-link / "Preview widget" section, so it sits alongside the link
-     they'd actually be adding to their homescreen. -->
-
-<div class="mq-card">
-              <div class="mq-card-title">📱 Add Midas Quote shortcut to your homescreen</div>
-  <p class="mq-hint" style="margin-bottom:12px">
-    Keep your quote tool one tap away — great for quoting walk-in customers on the spot, without digging through browser tabs or bookmarks.
-  </p>
-
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🍎 iPhone / iPad (Safari)</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Open your direct link in Safari</li>
-        <li>Tap the <strong>Share</strong> icon (square with an arrow)</li>
-        <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
-        <li>Tap <strong>Add</strong> — done!</li>
-      </ol>
-    </div>
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🤖 Android</div>
-      <p style="font-size:11.5px;color:#6b7280;margin-bottom:8px;line-height:1.5">Steps vary a bit by phone brand — Samsung phones especially use a different browser by default.</p>
-      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">In Chrome:</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0 0 10px">
-        <li>Open your direct link in Chrome</li>
-        <li>Tap the <strong>⋮</strong> menu (top right)</li>
-        <li>Tap <strong>Add to Home screen</strong> — not "Add to Favorites" (that's a bookmark, not a homescreen icon)</li>
-        <li>Confirm — done!</li>
-      </ol>
-      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">On Samsung phones (Samsung Internet browser):</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Tap the menu icon (bottom right)</li>
-        <li>Tap <strong>Add page to</strong> → <strong>Home screen</strong></li>
-      </ol>
-      <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Don't see the icon right away? Check your app drawer too — some phones add it there first.</p>
-    </div>
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">💻 Desktop (Chrome)</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Open your direct link in Chrome</li>
-        <li>Click the <strong>⋮</strong> menu (top right)</li>
-        <li>Go to <strong>Cast, save, and share</strong></li>
-        <li>Click <strong>Install as app</strong></li>
-        <li>Confirm — it now opens like a regular app</li>
-      </ol>
-    </div>
-
-  </div>
-</div></div>
-           
-      
+          </div>
 
           <!-- MY PRODUCTS -->
           <div class="mq-page" id="mq-page-products">
             <div class="mq-page-title">My Products</div>
-            <div class="mq-page-sub">Add photos to your materials and options — these appear on your customer showroom page</div>
+            <div class="mq-page-sub">Manage everything about how each item shows up on your widget: photos and thumbnails customers see while quoting, which project types each item is available for, and which items to hide entirely. Category-level shortcuts let you show or hide a whole group at once — individual items can still override that.</div>
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
               <strong>💡 How to add a photo:</strong><br>
               <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item below and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
@@ -521,6 +618,29 @@ window.logoutMember = async function () {
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show View our products link"</strong> is turned on in your Shop Info tab, this link is automatically included in your widget — no extra setup needed.</div>
               <div class="mq-embed-box"><span id="mq-showroom-link-text"></span><button class="mq-copy-btn" id="mq-showroom-copy-btn">Copy</button></div>
               <button class="mq-btn" style="margin-top:10px" id="mq-showroom-open-btn">Open showroom ↗</button>
+            </div>
+          </div>
+
+          <!-- TEMPLATES (ADMIN ONLY) -->
+          <div class="mq-page" id="mq-page-templates">
+            <div class="mq-page-title">🔧 Templates (Admin)</div>
+            <div class="mq-page-sub">Manage the master specialty items for Refacing, Repainting, and Restaining. These are what every new shop gets automatically — add real door styles, prices, and photos here so shop owners never start from a blank page.</div>
+            <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#991b1b;line-height:1.6">
+              <strong>⚠️ Editing here alone changes nothing live.</strong> Changes only apply to a shop once you actually click "Push" — but be aware: pushing to an item a shop already has now <strong>fully overwrites</strong> its name, price, units, project types, and photo to match the master (this is intentional while you're still setting things up, since there's nothing real to protect yet — this should get smarter once real shops exist and may have customized their own copies).
+            </div>
+            <div id="mq-templates-msg"></div>
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🏷️ Default project type descriptions</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These are the name and description every brand-new shop gets automatically for Refacing, Repainting, and Restaining — the note customers see on the widget when they pick that project type. Editing here only affects shops seeded from now on; it doesn't retroactively change any shop's existing project types.</p>
+              <div id="mq-master-rooms-content"><div class="mq-loading">Loading...</div></div>
+              <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveMasterRoomDefs()">Save descriptions</button>
+            </div>
+            <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
+            <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
+            <div class="mq-card" style="margin-top:1.5rem">
+              <div class="mq-card-title">📤 Push to all shops</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Adds any template items a shop doesn't already have yet. Never touches or removes anything a shop already received from a previous push, even if you've since edited it here.</p>
+              <button class="mq-btn mq-btn-primary" onclick="mqPushTemplatesToAllShops()">Push new template items to all shops</button>
             </div>
           </div>
 
@@ -892,6 +1012,68 @@ window.logoutMember = async function () {
     }
   };
 
+  // Shared "Add to Home Screen" instructions — identical for both the Direct
+  // Link and MidasQuote Pro sections, since the steps themselves don't
+  // depend on which link is being added, just kept as one function so the
+  // two sections can't drift out of sync with each other.
+  function mqAddToHomescreenInstructionsHTML() {
+    return `
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🍎 iPhone / iPad (Safari)</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Open your direct link in Safari</li>
+        <li>Tap the <strong>Share</strong> icon (square with an arrow)</li>
+        <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+        <li>Tap <strong>Add</strong> — done!</li>
+      </ol>
+    </div>
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🤖 Android</div>
+      <p style="font-size:11.5px;color:#6b7280;margin-bottom:8px;line-height:1.5">Steps vary a bit by phone brand — Samsung phones especially use a different browser by default.</p>
+      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">In Chrome:</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0 0 10px">
+        <li>Open your direct link in Chrome</li>
+        <li>Tap the <strong>⋮</strong> menu (top right)</li>
+        <li>Tap <strong>Add to Home screen</strong> — not "Add to Favorites" (that's a bookmark, not a homescreen icon)</li>
+        <li>Confirm — done!</li>
+      </ol>
+      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">On Samsung phones (Samsung Internet browser):</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Tap the menu icon (bottom right)</li>
+        <li>Tap <strong>Add page to</strong> → <strong>Home screen</strong></li>
+      </ol>
+      <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Don't see the icon right away? Check your app drawer too — some phones add it there first.</p>
+    </div>
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">💻 Desktop (Chrome)</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Open your direct link in Chrome</li>
+        <li>Click the <strong>⋮</strong> menu (top right)</li>
+        <li>Go to <strong>Cast, save, and share</strong></li>
+        <li>Click <strong>Install as app</strong></li>
+        <li>Confirm — it now opens like a regular app</li>
+      </ol>
+    </div>
+
+  </div>`;
+  }
+
+  // Collapsible sections on the Embed page ("Code for websites" / "Direct
+  // link" / "MidasQuote Pro") — same idea as the widget's own collapsible
+  // sections, just a small self-contained version for this one page.
+  window.mqToggleEmbedSection = function(key) {
+    const body = document.getElementById(`mq-embed-${key}-body`);
+    const arrow = document.getElementById(`mq-embed-${key}-arrow`);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+  };
+
   // ============================================================
   // IMAGE UPLOAD — permanent hosting via Cloudflare R2 (replaces fragile pasted links)
   // ============================================================
@@ -996,6 +1178,250 @@ window.logoutMember = async function () {
     return created.sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
   }
 
+  // Refacing/Repainting/Restaining come with these specialty items pre-built,
+  // each tagged so they only show for their matching project type. Runs once
+  // per shop, gated by its own 'Templates seeded' flag — independent of
+  // ensureSpecialtyDefaults above, since shops that already have OTHER
+  // specialty items should still get these new templates.
+  const PROJECT_TYPE_TEMPLATES = {
+    refacing: [
+      { name:'New doors',              price:0, perFt:false, perSqFt:true  },
+      { name:'New drawer fronts',      price:0, perFt:false, perSqFt:true  },
+      { name:'Edge tape replacement',  price:0, perFt:true,  perSqFt:false },
+      { name:'Hinge replacement',      price:0, perFt:false, perSqFt:false },
+    ],
+    repainting: [
+      { name:'Door & drawer front painting', price:0, perFt:false, perSqFt:true  },
+      { name:'Edge tape painting',           price:0, perFt:true,  perSqFt:false },
+    ],
+    restaining: [
+      { name:'Door & drawer front restaining', price:0, perFt:false, perSqFt:true  },
+      { name:'Edge tape restaining',           price:0, perFt:true,  perSqFt:false },
+    ],
+  };
+
+  // Name of the special reserved shop record that holds the master template
+  // specialty items. Never shown to real customers — just an anchor for
+  // linked-record storage, same shape as any other shop.
+  const MASTER_TEMPLATE_SHOP_NAME = 'MASTER_TEMPLATE';
+
+  async function ensureMasterTemplateShop() {
+    if (window._mqMasterTemplateShop) return window._mqMasterTemplateShop;
+    const existing = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} = "${MASTER_TEMPLATE_SHOP_NAME}"`);
+    if (existing.length) { window._mqMasterTemplateShop = existing[0]; return existing[0]; }
+    // No Status set — this reserved record never goes through the normal
+    // active/trial/cancelled lifecycle, so there's no valid value that fits.
+    const created = await atCreate(CONFIG.SHOPS_TABLE, { 'Shop name': MASTER_TEMPLATE_SHOP_NAME });
+    if (!created?.id) {
+      console.error('Failed to create master template shop:', created);
+      throw new Error('Could not create the master template shop record — check the browser console for the exact Airtable error.');
+    }
+    window._mqMasterTemplateShop = created;
+    return created;
+  }
+
+  // Ensures the master template shop actually has its starter items —
+  // decoupled from ensureProjectTypeTemplates (which only runs for a shop
+  // that's never been seeded) so this self-heals every time the admin visits
+  // the Templates tab, even if the admin's own shop was seeded long before
+  // this feature existed.
+  async function ensureMasterTemplateItems() {
+    const masterShop = await ensureMasterTemplateShop();
+    let masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+    if (masterItems.length) return masterItems;
+    const bootstrapItems = Object.entries(PROJECT_TYPE_TEMPLATES).flatMap(([roomId, items]) =>
+      items.map(item => ({ ...item, roomId }))
+    );
+    const results = await Promise.all(bootstrapItems.map(item => atCreate(CONFIG.SPECIALTY_TABLE, {
+      'Shop': [masterShop.id],
+      'Item name': item.name,
+      'Special Items': item.name,
+      'Price': item.price,
+      'Per linear foot': item.perFt,
+      'Per square foot': item.perSqFt,
+      'Active': true,
+      'Visible rooms': JSON.stringify([item.roomId]),
+    })));
+    const failed = results.filter(r => !r?.id);
+    if (failed.length) console.error('Some master template items failed to create:', failed);
+    masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
+    return masterItems;
+  }
+
+  // Default project type definitions (name/description/adjustment) for
+  // Refacing/Repainting/Restaining, now editable via the admin Templates
+  // page instead of being hardcoded here. Bootstraps the master shop's own
+  // Room types field once from these starting values if it's never been set.
+  const DEFAULT_TEMPLATE_ROOM_DEFS = {
+    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
+  };
+
+  async function ensureMasterTemplateRoomDefs() {
+    const masterShop = await ensureMasterTemplateShop();
+    let masterRooms = [];
+    try { masterRooms = masterShop.fields['Room types'] ? JSON.parse(masterShop.fields['Room types']) : []; } catch(e) { masterRooms = []; }
+    if (masterRooms.length) return masterRooms;
+    // Never set before — bootstrap from the starting values above
+    masterRooms = Object.values(DEFAULT_TEMPLATE_ROOM_DEFS);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, { 'Room types': JSON.stringify(masterRooms) });
+      masterShop.fields['Room types'] = JSON.stringify(masterRooms);
+    } catch(e) { console.warn('Failed to bootstrap master template room defs:', e); }
+    return masterRooms;
+  }
+
+  async function renderMasterRoomDefs() {
+    const masterRooms = await ensureMasterTemplateRoomDefs();
+    window._mqMasterRooms = masterRooms;
+    const content = document.getElementById('mq-master-rooms-content');
+    if (!content) return;
+    content.innerHTML = masterRooms.map((r, idx) => `
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px">
+        <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-master-room-name-${idx}" placeholder="Project type name" style="font-size:13px;font-weight:600;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
+        <textarea id="mq-master-room-desc-${idx}" placeholder="Description shown to customers on the widget for this project type" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+        <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
+          <div id="mq-master-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+            ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
+          </div>
+          <div style="flex:1;min-width:0">
+            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default cover image — new shops start with this; they can change it afterward</label>
+            <input type="text" id="mq-master-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+            <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+              📤 Upload
+              <input type="file" id="mq-master-room-cover-file-${idx}" accept="image/*" style="display:none"/>
+            </label>
+            <span id="mq-master-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+          </div>
+        </div>
+        <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 Default "How to measure your space" for this project type</label>
+          <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+          <div style="margin-bottom:8px">
+            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-master-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
+            <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+              ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+            </div>
+            <div style="flex:1;min-width:0">
+              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default measuring guide image (optional)</label>
+              <input type="text" id="mq-master-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+              <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                📤 Upload
+                <input type="file" id="mq-master-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
+              </label>
+              <span id="mq-master-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    masterRooms.forEach((r, idx) => {
+      mqWireUploadButton(
+        null,
+        `mq-master-room-cover-file-${idx}`,
+        `mq-master-room-cover-status-${idx}`,
+        `mq-master-room-cover-${idx}`,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        (url) => {
+          const preview = document.getElementById(`mq-master-room-cover-preview-${idx}`);
+          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+          mqSaveMasterRoomDefs();
+        }
+      );
+      mqWireUploadButton(
+        null,
+        `mq-master-room-measure-img-file-${idx}`,
+        `mq-master-room-measure-img-status-${idx}`,
+        `mq-master-room-measure-img-${idx}`,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        (url) => {
+          const preview = document.getElementById(`mq-master-room-measure-img-preview-${idx}`);
+          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+          mqSaveMasterRoomDefs();
+        }
+      );
+    });
+  }
+
+  window.mqSaveMasterRoomDefs = async function() {
+    const masterShop = await ensureMasterTemplateShop();
+    const current = window._mqMasterRooms || [];
+    const updated = current.map((r, idx) => ({
+      ...r,
+      name: (el(`mq-master-room-name-${idx}`)?.value || r.name || '').trim(),
+      description: (el(`mq-master-room-desc-${idx}`)?.value || '').trim(),
+      coverImage: (el(`mq-master-room-cover-${idx}`)?.value || '').trim(),
+      measureText: (el(`mq-master-room-measure-text-${idx}`)?.value || '').trim(),
+      measureImage: (el(`mq-master-room-measure-img-${idx}`)?.value || '').trim(),
+    }));
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, { 'Room types': JSON.stringify(updated) });
+      masterShop.fields['Room types'] = JSON.stringify(updated);
+      window._mqMasterRooms = updated;
+      showMsg('mq-templates-msg', '✓ Default project type descriptions saved — this only affects shops seeded from now on.');
+    } catch(e) {
+      console.error('Failed to save master room defs:', e);
+      showMsg('mq-templates-msg', 'Error saving — please try again.', 'error');
+    }
+  };
+
+  async function ensureProjectTypeTemplates(shopRecord) {
+    if (shopRecord.fields['Templates seeded']) return; // already done for this shop
+
+    // Make sure Refacing/Repainting/Restaining actually exist in the room
+    // list too — not just their specialty items — otherwise a shop that
+    // already customized their rooms before this feature existed would end
+    // up with specialty items tagged to project types that aren't even in
+    // their dropdown. Pulled from the editable master template room defs,
+    // not hardcoded, so editing them on the admin Templates page actually
+    // changes what new shops get.
+    const templateRoomList = await ensureMasterTemplateRoomDefs();
+    const currentRooms = window._mqRooms || defaultRoomTypes();
+    let roomsChanged = false;
+    templateRoomList.forEach(roomDef => {
+      if (!currentRooms.find(r => r.id === roomDef.id)) {
+        currentRooms.push(roomDef);
+        roomsChanged = true;
+      }
+    });
+    if (roomsChanged) {
+      window._mqRooms = currentRooms;
+      try {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Room types': JSON.stringify(currentRooms) });
+        shopRecord.fields['Room types'] = JSON.stringify(currentRooms);
+        renderRoomsList();
+      } catch(e) { console.warn('Failed to add project type template rooms:', e); }
+    }
+
+    const masterItems = await ensureMasterTemplateItems();
+
+    try {
+      await Promise.all(masterItems.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
+        'Shop': [shopRecord.id],
+        'Item name': master.fields['Item name'],
+        'Special Items': master.fields['Item name'],
+        'Price': master.fields['Price'] || 0,
+        'Per linear foot': master.fields['Per linear foot'] || false,
+        'Per square foot': master.fields['Per square foot'] || false,
+        'Offers install choice': master.fields['Offers install choice'] || false,
+        'Install price': master.fields['Install price'] || 0,
+        'Install mode': master.fields['Install mode'] || 'supply',
+        'Active': true,
+        'Visible rooms': master.fields['Visible rooms'] || '[]',
+        'Template source ID': master.id,
+      })));
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Templates seeded': true });
+      shopRecord.fields['Templates seeded'] = true;
+    } catch(e) { console.warn('Failed to seed project type templates:', e); }
+  }
+
   // ============================================================
   // POPULATE FIELDS
   // ============================================================
@@ -1095,6 +1521,358 @@ window.logoutMember = async function () {
     if (swatch) swatch.addEventListener('change', shopAutoSave);
   }
 
+  // ============================================================
+  // ROOM TYPES
+  // ============================================================
+  // Same 6 defaults the widget falls back to for any shop that hasn't
+  // touched this new setting yet — Bathroom ships pre-set to -5% as a
+  // working example, everything else fully editable/deletable.
+  // Plain category display names, accessible at module level (unlike
+  // CAT_DISPLAY, which is scoped inside initProductsTab and includes emoji/
+  // title formatting we don't need here).
+  const CAT_DISPLAY_NAMES = {
+    material: 'Box Materials',
+    door: 'Door Styles',
+    drawer: 'Drawer Configurations',
+    hinge: 'Door Hinges',
+    countertop: 'Countertop Materials',
+    trim_crown: 'Crown Moulding',
+    trim_valance: 'Valance',
+    tall_cabinet: 'Tall Cabinets',
+    specialty: 'Specialty Items',
+  };
+
+  // Same wording as the widget's hardcoded fallback guide (defaultMeasureGuideHTML
+  // in widgettestcats.js), just written in the **bold**/line-break plain-text
+  // form a shop owner can start from and edit. Used by the "Use default guide"
+  // button in both the per-shop Project Types tab and the admin Templates tab.
+  // Kitchen gets its own wording (island + corner cabinets called out
+  // specifically); Bathroom skips the corner-cabinets note (not common
+  // enough there to be worth the extra line); everything else uses the
+  // general version, which includes it.
+  const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
+`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+
+**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+
+**Island cabinets:** Include island cabinets if you have one.
+
+**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+[corner-img]
+
+**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
+
+  const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
+`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+
+**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+
+**Not sure?** Just use your best guess — this is a ballpark estimate!
+
+**Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
+
+**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+[corner-img]
+
+**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
+
+  const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
+`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+
+**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+
+**Not sure?** Just use your best guess — this is a ballpark estimate!
+
+**Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
+
+**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.`;
+
+  // Fills a measure-guide textarea with the default text above — lets a shop
+  // owner start from (and edit) the standard guide instead of writing their
+  // own from scratch. Confirms first if the box already has something in it,
+  // so a stray click can't silently wipe out real custom text.
+  window.mqFillDefaultGuide = function(textareaId, roomId) {
+    const ta = el(textareaId);
+    if (!ta) return;
+    if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
+    ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
+      : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
+      : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
+  };
+
+  const MQ_DEFAULT_MEASURE_IMAGE_BASE = 'https://aceswin.github.io/midasquote-widget/measure-guides/';
+  const MQ_DEFAULT_COVER_IMAGE_BASE = 'https://aceswin.github.io/midasquote-widget/cover-images/';
+
+  function defaultRoomTypes() {
+    return [
+      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'kitchen.png' },
+      { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'bathroom.png' },
+      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'laundry.png' },
+      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'garage.png' },
+      { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'commercial.png' },
+      { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'other.png' },
+      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    ];
+  }
+
+  function populateRooms(shop) {
+    const f = shop.fields;
+    let rooms = [];
+    try { rooms = f['Room types'] ? JSON.parse(f['Room types']) : []; } catch(e) { rooms = []; }
+    if (!Array.isArray(rooms) || !rooms.length) rooms = defaultRoomTypes();
+    window._mqRooms = rooms;
+    renderRoomsList();
+
+    // Category-level hiding: which project types each WHOLE category is
+    // hidden for (e.g. hide all Door Styles for "Door refacing"). Individual
+    // item settings still override this — see categoryRoomDisclosure below.
+    let categoryRooms = {};
+    try { categoryRooms = f['Category rooms'] ? JSON.parse(f['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
+    window._mqCategoryRooms = categoryRooms;
+  }
+
+  // Tracks which project types are currently expanded, keyed by the room's
+  // stable id (not array index, since index shifts on reorder/delete) — so
+  // expand/collapse state survives re-renders (e.g. every time you save).
+  let _mqExpandedRoomIds = new Set();
+
+  window.mqToggleRoomBody = function(idx) {
+    const room = (window._mqRooms || [])[idx];
+    if (!room) return;
+    const body = el(`mq-room-body-${idx}`);
+    const arrow = el(`mq-room-arrow-${idx}`);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+    body.closest('.mq-room-row')?.classList.toggle('mq-room-open', opening);
+    if (opening) _mqExpandedRoomIds.add(room.id); else _mqExpandedRoomIds.delete(room.id);
+  };
+
+  // One checkbox+percent row for a project type's price adjustments. The
+  // checkbox is just a friendly on/off — checked means "value !== 0", and
+  // unchecking zeroes it out (same convention as "0 = no adjustment"
+  // everywhere else in this app, just given a clearer on/off affordance
+  // here since a shop owner can now stack up to three of these at once).
+  function mqRoomAdjRow(kind, idx, value, label, hint) {
+    const inputId = `mq-room-adj-${kind}-${idx}`;
+    const chkId = `mq-room-adj-${kind}-chk-${idx}`;
+    const checked = parseFloat(value) !== 0;
+    return `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:auto;flex-shrink:0"/>
+        <label for="${inputId}" style="font-size:12px;color:#374151;flex:1;min-width:0">${label} <span style="color:#9ca3af">— ${hint}</span></label>
+        <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center;flex-shrink:0"/>
+        <span style="font-size:12px;color:#6b7280;flex-shrink:0">%</span>
+      </div>`;
+  }
+  window.mqToggleRoomAdjInput = function(idx, kind) {
+    const chk = el(`mq-room-adj-${kind}-chk-${idx}`);
+    const inp = el(`mq-room-adj-${kind}-${idx}`);
+    if (!chk || !inp) return;
+    if (!chk.checked) { inp.value = 0; }
+    else if (parseFloat(inp.value) === 0) { inp.value = 0; inp.focus(); }
+    mqSaveRooms();
+  };
+
+  function renderRoomsList() {
+    const container = el('mq-rooms-list');
+    if (!container) return;
+    const rooms = window._mqRooms || [];
+    container.innerHTML = rooms.map((r, idx) => {
+      const isOpen = _mqExpandedRoomIds.has(r.id);
+      return `
+      <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
+        <div style="display:grid;grid-template-columns:24px 1fr 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
+          <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
+          <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+          <button type="button" onclick="mqToggleRoomBody(${idx})" title="Show more" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;padding:4px">
+            <span id="mq-room-arrow-${idx}" style="display:inline-block;transition:transform 0.2s;font-size:12px;transform:rotate(${isOpen?'90':'0'}deg)">▶</span>
+          </button>
+          <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
+        </div>
+        <div id="mq-room-body-${idx}" style="padding-left:34px;display:${isOpen?'block':'none'}">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:${r.active===false?'#92400e':'#166534'};font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
+            ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
+          </label>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
+            ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
+            ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. renovations run higher since customers are living in the house')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
+          </div>
+          <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+          <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
+            <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+              ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
+            </div>
+            <div style="flex:1;min-width:0">
+              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
+              <input type="text" id="mq-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+              <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                📤 Upload
+                <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
+              </label>
+              <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+            </div>
+          </div>
+          <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
+            <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+            <div style="margin-bottom:8px">
+              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
+              <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+                ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+              </div>
+              <div style="flex:1;min-width:0">
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image (optional)</label>
+                <input type="text" id="mq-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                  📤 Upload
+                  <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
+                </label>
+                <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Wire each room's cover-image upload button — uploads immediately, fills
+    // the URL field, and refreshes the small preview thumbnail on success.
+    rooms.forEach((r, idx) => {
+      mqWireUploadButton(
+        null,
+        `mq-room-cover-file-${idx}`,
+        `mq-room-cover-status-${idx}`,
+        `mq-room-cover-${idx}`,
+        window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
+        'products',
+        (url) => {
+          const preview = document.getElementById(`mq-room-cover-preview-${idx}`);
+          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+          mqSaveRooms();
+        }
+      );
+      mqWireUploadButton(
+        null,
+        `mq-room-measure-img-file-${idx}`,
+        `mq-room-measure-img-status-${idx}`,
+        `mq-room-measure-img-${idx}`,
+        window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
+        'products',
+        (url) => {
+          const preview = document.getElementById(`mq-room-measure-img-preview-${idx}`);
+          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+          mqSaveRooms();
+        }
+      );
+    });
+
+    // Drag-and-drop reordering — same pattern already used for Specialty
+    // items, adapted since rooms live in one JSON list rather than separate
+    // Airtable records, so reordering just means rebuilding that array.
+    // draggable only turns on while the mouse is actually down on the ⠿
+    // handle — leaving the whole row draggable all the time made selecting
+    // text anywhere in it (like the measuring guide box) prone to being
+    // mistaken for a row-drag instead of a text selection.
+    let dragging = null;
+    container.querySelectorAll('.mq-room-row').forEach(row => {
+      row.draggable = false;
+      const handle = row.querySelector('.mq-room-drag-handle');
+      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
+      row.addEventListener('mouseup', () => { row.draggable = false; });
+      row.addEventListener('dragstart', () => {
+        dragging = row;
+        setTimeout(() => row.style.opacity = '0.4', 0);
+      });
+      row.addEventListener('dragend', () => {
+        row.style.opacity = '1';
+        row.draggable = false;
+        dragging = null;
+        const newRooms = [...container.querySelectorAll('.mq-room-row')].map(r => {
+          const oldIdx = r.dataset.idx;
+          return {
+            id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
+            name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
+            materialAdjPct: parseFloat(document.getElementById(`mq-room-adj-mat-${oldIdx}`)?.value) || 0,
+            upperMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-upper-mat-${oldIdx}`)?.value) || 0,
+            installAdjPct: parseFloat(document.getElementById(`mq-room-adj-install-${oldIdx}`)?.value) || 0,
+            totalAdjPct: parseFloat(document.getElementById(`mq-room-adj-total-${oldIdx}`)?.value) || 0,
+            description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
+            active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
+            coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
+            measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
+            measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
+          };
+        });
+        window._mqRooms = newRooms;
+        renderRoomsList();
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        const after = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+        if (e.clientY < after) {
+          container.insertBefore(dragging, row);
+        } else {
+          container.insertBefore(dragging, row.nextSibling);
+        }
+      });
+    });
+  }
+
+  window.mqAddRoom = function() {
+    if (!window._mqRooms) window._mqRooms = [];
+    const newId = 'room_' + Date.now();
+    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
+    _mqExpandedRoomIds.add(newId);
+    renderRoomsList();
+  };
+
+  window.mqRemoveRoom = function(idx) {
+    if (!window._mqRooms) return;
+    window._mqRooms.splice(idx, 1);
+    renderRoomsList();
+  };
+
+  window.mqSaveRooms = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    try {
+      // Read current DOM values so any in-progress edits get captured, not
+      // just whatever was there when the list was last rendered.
+      const rooms = (window._mqRooms || []).map((r, idx) => ({
+        id: r.id,
+        name: (el(`mq-room-name-${idx}`)?.value || '').trim(),
+        materialAdjPct: parseFloat(el(`mq-room-adj-mat-${idx}`)?.value) || 0,
+        upperMaterialAdjPct: parseFloat(el(`mq-room-adj-upper-mat-${idx}`)?.value) || 0,
+        installAdjPct: parseFloat(el(`mq-room-adj-install-${idx}`)?.value) || 0,
+        totalAdjPct: parseFloat(el(`mq-room-adj-total-${idx}`)?.value) || 0,
+        description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
+        active: el(`mq-room-active-${idx}`)?.checked !== false,
+        coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
+        measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
+        measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
+      })).filter(r => r.name); // drop any left with a blank name
+
+      if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
+
+      window._mqRooms = rooms;
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(rooms) });
+      shopRec.fields['Room types'] = JSON.stringify(rooms);
+      renderRoomsList();
+      showMsg('mq-rooms-msg', '✓ Project types saved!');
+    } catch(e) { showMsg('mq-rooms-msg', 'Error saving — please try again.', 'error'); }
+  };
+
   function populatePricing(pricing) {
     if (!pricing) return;
     const f = pricing.fields;
@@ -1182,20 +1960,47 @@ window.logoutMember = async function () {
   function renderLeads(leads, limit) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
 
-    // Build a map of session ID → count so we can badge rows that share a session
-    const sessionCounts = {};
+    // Group leads sharing a Session ID so multi-attempt visitors get a clear
+    // label instead of a bare "N attempts" badge. If nobody in the session
+    // ever gave a name, say so plainly; if someone did (even on a different
+    // attempt within the same session), credit the other attempts to them
+    // instead of leaving them looking like anonymous noise.
+    const sessionGroups = {};
     leads.forEach(r => {
       const sid = r.fields['Session ID'];
-      if (sid) sessionCounts[sid] = (sessionCounts[sid] || 0) + 1;
+      if (!sid) return;
+      (sessionGroups[sid] = sessionGroups[sid] || []).push(r);
+    });
+    const sessionBadgeByLeadId = {};
+    Object.values(sessionGroups).forEach(rows => {
+      if (rows.length < 2) return; // no badge needed for a solo attempt
+      // Order by when each estimate was actually made, so "1 of 2" / "2 of 2"
+      // means something real, regardless of how the table itself is sorted.
+      const chronological = [...rows].sort((a, b) => new Date(a.createdTime) - new Date(b.createdTime));
+      const namedRow = chronological.find(r => (r.fields['Customer name'] || '').trim());
+      if (namedRow) {
+        const name = namedRow.fields['Customer name'].trim();
+        // Shown on the OTHER rows, not the named row itself — no need to
+        // tell someone "additional estimate by Jane Doe" directly under
+        // Jane Doe's own already-labeled row.
+        const others = chronological.filter(r => r !== namedRow);
+        others.forEach((r, i) => {
+          sessionBadgeByLeadId[r.id] = `🔗 Additional estimate ${i + 1} of ${others.length} by ${name}`;
+        });
+      } else {
+        chronological.forEach((r, i) => {
+          sessionBadgeByLeadId[r.id] = `🔗 Estimate ${i + 1} of ${chronological.length} by an unknown person`;
+        });
+      }
     });
 
     const rows = (limit ? leads.slice(0, limit) : leads).map(r => {
       const f = r.fields;
       const statusColors = { New: 'blue', Contacted: 'yellow', Booked: 'green', Lost: 'red' };
       const color = statusColors[f['Status']] || 'grey';
-      const sid = f['Session ID'];
-      const sessionBadge = sid && sessionCounts[sid] > 1
-        ? `<span title="Session ${sid}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">🔗 ${sessionCounts[sid]} attempts</span>`
+      const badgeText = sessionBadgeByLeadId[r.id];
+      const sessionBadge = badgeText
+        ? `<span title="Session ${f['Session ID']}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">${badgeText}</span>`
         : '';
       return `<tr>
         <td>${formatLeadDate(r.createdTime)}</td>
@@ -1218,7 +2023,7 @@ window.logoutMember = async function () {
       </tr>`;
     }).join('');
     const th = (field, label) => `<th onclick="mqSortLeads('${field}')" style="cursor:pointer;user-select:none;white-space:nowrap">${label}${sortArrow(field)}</th>`;
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Room')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
@@ -1243,20 +2048,46 @@ window.logoutMember = async function () {
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
       return;
     }
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
     container.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
+          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All project types</option>
+            ${roomOptions}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
+          <input type="text" id="mq-spec-tab-filter-search" oninput="mqFilterSpecTable()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+        </div>
+      </div>
+      <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
-          ${specs.map(r => `
-            <tr data-id="${r.id}" style="cursor:grab">
+          ${specs.map(r => {
+            let visibleRooms = [];
+            try { visibleRooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { visibleRooms = []; }
+            const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
+            const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
+            return `
+            <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" style="cursor:grab">
               <td style="color:#9ca3af;font-size:16px;padding:8px 12px">⠿</td>
               <td><input type="text" value="${r.fields['Item name'] || ''}" id="mq-spec-name-${r.id}" style="border:none;background:none;font-size:13px;width:160px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/></td>
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
-              <td><input type="checkbox" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecField('${r.id}','Per linear foot',this.checked)"/></td>
+              <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
+              <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)"/></td>
+              <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item"/></td>
+              <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
+              <td style="font-size:12px;color:#6b7280">${roomLinkSummaryText(visibleRooms, rooms)}</td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
-            </tr>`).join('')}
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>
       </div>`;
@@ -1585,17 +2416,85 @@ window.logoutMember = async function () {
     });
   };
 
+  // Same pure view filter, for the Specialty Items tab's table specifically.
+  window.mqFilterSpecTable = function() {
+    const roomFilter = el('mq-spec-tab-filter-room')?.value || '';
+    const searchFilter = (el('mq-spec-tab-filter-search')?.value || '').toLowerCase().trim();
+    const tbody = document.getElementById('mq-spec-tbody');
+    if (!tbody) return;
+    let visibleCount = 0;
+    tbody.querySelectorAll('tr').forEach(row => {
+      let rooms = [];
+      try { rooms = JSON.parse(row.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
+      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const name = row.getAttribute('data-name') || '';
+      const searchMatch = !searchFilter || name.includes(searchFilter);
+      const show = roomMatch && searchMatch;
+      row.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('mq-spec-tab-filter-empty');
+    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+  };
+
+  // Pure view filter — doesn't touch any saved data, just shows/hides cards
+  // already on screen, so a long specialty items list stays manageable.
+  window.mqFilterSpecialtyCards = function() {
+    const roomFilter = el('mq-spec-filter-room')?.value || '';
+    const searchFilter = (el('mq-spec-filter-search')?.value || '').toLowerCase().trim();
+    const grid = document.getElementById('mq-spec-cards-grid');
+    if (!grid) return;
+    let visibleCount = 0;
+    grid.querySelectorAll('.mq-spec-card-wrap').forEach(wrap => {
+      let rooms = [];
+      try { rooms = JSON.parse(wrap.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
+      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const name = wrap.getAttribute('data-name') || '';
+      const searchMatch = !searchFilter || name.includes(searchFilter);
+      const show = roomMatch && searchMatch;
+      wrap.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('mq-spec-filter-empty');
+    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+  };
+
+  // Same pure view filter, for the Templates admin page.
+  window.mqFilterTemplateCards = function() {
+    const roomFilter = el('mq-tmpl-filter-room')?.value || '';
+    const searchFilter = (el('mq-tmpl-filter-search')?.value || '').toLowerCase().trim();
+    const grid = document.getElementById('mq-tmpl-cards-grid');
+    if (!grid) return;
+    let visibleCount = 0;
+    grid.querySelectorAll('.mq-tmpl-card-wrap').forEach(wrap => {
+      let rooms = [];
+      try { rooms = JSON.parse(wrap.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
+      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const name = wrap.getAttribute('data-name') || '';
+      const searchMatch = !searchFilter || name.includes(searchFilter);
+      const show = roomMatch && searchMatch;
+      wrap.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('mq-tmpl-filter-empty');
+    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+  };
+
   window.mqSaveProducts = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
+    // Scoped to this tab's own container specifically — otherwise, if the
+    // Templates admin tab has also been visited this session, its leftover
+    // inputs (same id pattern) could get swept up into the wrong shop's save.
+    const scope = document.getElementById('mq-products-content') || document;
     const photos = {};
     const hidden = {};
-    document.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
+    scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
       if (input.value.trim()) photos[key] = input.value.trim();
     });
-    document.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
+    scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
       const key = cb.id.replace('mq-hidden-', '');
       if (cb.checked) hidden[key] = true;
     });
@@ -1606,14 +2505,48 @@ window.logoutMember = async function () {
       });
       shopRec.fields['Photos']  = JSON.stringify(photos);
       shopRec.fields['Hidden']  = JSON.stringify(hidden);
-      document.querySelectorAll('.mq-products-save-btn').forEach(btn => {
+      scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
         btn.textContent = 'Saved ✓';
         btn.style.background = '#1a1a1a';
         btn.style.borderColor = '#1a1a1a';
-        setTimeout(() => { btn.textContent = 'Save photos'; }, 2000);
+        setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
       });
       showMsg('mq-products-msg', '✓ Photos saved!');
     } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  // Same pattern as mqSaveProducts, but scoped to the Templates tab and
+  // saving to the master template shop record instead of the admin's own shop.
+  window.mqSaveTemplatePhotos = async function() {
+    const masterShop = window._mqMasterTemplateShop;
+    if (!masterShop) return;
+    const scope = document.getElementById('mq-templates-content') || document;
+    const photos = {};
+    const hidden = {};
+    scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
+      if (input.tagName !== 'INPUT') return;
+      const key = input.id.replace('mq-photo-', '');
+      if (input.value.trim()) photos[key] = input.value.trim();
+    });
+    scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
+      const key = cb.id.replace('mq-hidden-', '');
+      if (cb.checked) hidden[key] = true;
+    });
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, {
+        'Photos': JSON.stringify(photos),
+        'Hidden': JSON.stringify(hidden),
+      });
+      masterShop.fields['Photos'] = JSON.stringify(photos);
+      masterShop.fields['Hidden'] = JSON.stringify(hidden);
+      scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
+        btn.textContent = 'Saved ✓';
+        btn.style.background = '#1a1a1a';
+        btn.style.borderColor = '#1a1a1a';
+        setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
+      });
+      showMsg('mq-templates-msg', '✓ Template photos saved!');
+    } catch(e) { showMsg('mq-templates-msg', 'Error saving — please try again.', 'error'); }
   };
 
   async function initProductsTab(shopRecord, lineItemsData) {
@@ -1643,8 +2576,16 @@ window.logoutMember = async function () {
       const ITEM_EXCLUDE = /backsplash|cutout|cooktop/i;
       const baseName = (r.fields['Name'] || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
       if (ITEM_EXCLUDE.test(baseName)) return;
-      if (!byCategory[cat].find(x => x.baseName === baseName)) {
-        byCategory[cat].push({ id: r.id, baseName, fullName: r.fields['Name'] || baseName });
+      // Materials and drawers span 2 underlying records each (uppers/bases,
+      // some/mostly) merged into one card — track every id so room-visibility
+      // changes get applied to all of them together, keeping them in sync.
+      let existing = byCategory[cat].find(x => x.baseName === baseName);
+      if (!existing) {
+        existing = { id: r.id, ids: [r.id], baseName, fullName: r.fields['Name'] || baseName, visibleRooms: r.fields['Visible rooms'] };
+        byCategory[cat].push(existing);
+      } else {
+        existing.ids.push(r.id);
+        if (!existing.visibleRooms && r.fields['Visible rooms']) existing.visibleRooms = r.fields['Visible rooms'];
       }
     });
 
@@ -1658,6 +2599,10 @@ window.logoutMember = async function () {
       trim_valance: { title:'📏 Valance',          emoji:'📏' },
       tall_cabinet: { title:'🏛️ Tall Cabinets',    emoji:'🏛️' },
     };
+    // Stored globally so mqToggleCategoryRoom (defined outside this closure)
+    // can bulk-sync every item in a category when its category-level
+    // checkbox changes.
+    window._mqByCategory = byCategory;
 
     // Build Products for showroom — all item names per category
     const savedProductsForShowroom = {};
@@ -1674,6 +2619,9 @@ window.logoutMember = async function () {
 
     // Load specialty items
     const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+    // Stored globally in the same {id, ids, visibleRooms} shape as byCategory
+    // items, so the bulk-sync logic can treat specialty items identically.
+    window._mqSpecItemsList = specItems.map(r => ({ id: r.id, ids: [r.id], visibleRooms: r.fields['Visible rooms'] }));
 
     const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
     function specIcon(name) { for (const [k,v] of Object.entries(icons)) { if ((name||'').toLowerCase().includes(k)) return v; } return '⭐'; }
@@ -1681,32 +2629,8 @@ window.logoutMember = async function () {
     let savedHidden = {};
     try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
 
-    function photoCard(key, name, emoji, cat) {
-      const savedUrl = savedPhotos[key] || '';
-      const isHidden = savedHidden[key] || false;
-      const preview = savedUrl
-        ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
-        : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
-      return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
-        <div id="mq-photo-preview-${key}">${preview}</div>
-        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
-          <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
-            onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
-          Hide from showroom
-        </label>
-        <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
-          📤 Upload a photo
-          <input type="file" id="mq-upload-file-${key}" accept="image/*" style="display:none"/>
-        </label>
-        <div id="mq-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
-        <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
-          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
-          oninput="mqMarkProductsDirty()"/>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>
-      </div>`;
+    function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
+      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden);
     }
 
     function catSection(cat) {
@@ -1716,23 +2640,46 @@ window.logoutMember = async function () {
       const cards = items.map(item => {
         const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
         const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
-        return photoCard(key, item.baseName, lib.emoji || disp.emoji, cat);
+        return photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
       }).join('');
       return `<div class="mq-card">
         <div class="mq-card-title">${disp.title}</div>
         <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
+        ${categoryRoomDisclosure(cat)}
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
-        <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
+        <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save changes</button>
       </div>`;
     }
 
+    const specRoomOptions = (window._mqRooms || defaultRoomTypes()).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
     const specSection = specItems.length ? `<div class="mq-card">
       <div class="mq-card-title">⭐ Specialty Items</div>
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-        ${specItems.map(r => photoCard('spec_' + r.id, r.fields['Item name'] || '', specIcon(r.fields['Item name']), 'specialty')).join('')}
+      ${categoryRoomDisclosure('specialty')}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;background:#f9fafb;border-radius:8px">
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
+          <select id="mq-spec-filter-room" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All project types</option>
+            ${specRoomOptions}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
+          <input type="text" id="mq-spec-filter-search" oninput="mqFilterSpecialtyCards()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+        </div>
       </div>
-      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save photos</button>
+      <div id="mq-spec-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px" id="mq-spec-cards-grid">
+        ${specItems.map(r => {
+          const itemName = r.fields['Item name'] || '';
+          const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
+          return `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
+            ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save changes</button>
     </div>` : '';
 
     const content = el('mq-products-content');
@@ -1824,8 +2771,670 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
   window.mqSaveSpecField = async function(id, field, value) {
     try {
-      await atUpdate(CONFIG.SPECIALTY_TABLE, id, { [field]: value });
+      const updates = { [field]: value };
+      // 'Special Items' is the primary field shown in Airtable's own view —
+      // keep it in sync whenever the name changes, or it's left showing a
+      // stale label (like "New template item") forever after a rename.
+      if (field === 'Item name') updates['Special Items'] = value;
+      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty field', e); }
+  };
+
+  // Per lin ft and Per sq ft are mutually exclusive — checking one unchecks
+  // the other, both in the UI and in what gets saved, so an item never ends
+  // up with both pricing units on at once.
+  window.mqSaveSpecUnit = async function(id, field, checked) {
+    const otherField = field === 'Per linear foot' ? 'Per square foot' : 'Per linear foot';
+    const otherId = field === 'Per linear foot' ? `mq-spec-persqft-${id}` : `mq-spec-perft-${id}`;
+    try {
+      const updates = { [field]: checked };
+      if (checked) {
+        updates[otherField] = false;
+        const otherCheckbox = document.getElementById(otherId);
+        if (otherCheckbox) otherCheckbox.checked = false;
+      }
+      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
+    } catch(e) { console.error('Failed to save specialty unit field', e); }
+  };
+
+  // Builds whichever content belongs in the "Installed price / Mode" column
+  // for a given specialty item — an editable installed price if the shop
+  // is offering the customer a choice, or a plain "which mode is this
+  // item's one flat price" label if not.
+  function mqSpecInstallColHTML(r) {
+    const offersChoice = !!r.fields['Offers install choice'];
+    if (offersChoice) {
+      return `<input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="Installed $" style="width:90px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>`;
+    }
+    const mode = r.fields['Install mode'] || 'supply';
+    return `<select id="mq-spec-mode-${r.id}" onchange="mqSaveSpecField('${r.id}','Install mode',this.value)" style="font-size:12px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px">
+      <option value="supply" ${mode!=='installed'?'selected':''}>Supply only</option>
+      <option value="installed" ${mode==='installed'?'selected':''}>Supplied &amp; Installed</option>
+    </select>`;
+  }
+
+  // Flips whether this item offers the customer a supply/install choice,
+  // and swaps that column between an installed-price input and a plain
+  // mode label accordingly. Reads whatever's currently in the DOM rather
+  // than a fresh fetch, so a shop owner flipping this back and forth
+  // doesn't lose whatever they'd already typed.
+  window.mqToggleSpecInstallChoice = async function(id) {
+    const chk = el(`mq-spec-offerchoice-${id}`);
+    const col = el(`mq-spec-installcol-${id}`);
+    if (!chk || !col) return;
+    const offersChoice = chk.checked;
+    try { await atUpdate(CONFIG.SPECIALTY_TABLE, id, { 'Offers install choice': offersChoice }); } catch(e) { console.error('Failed to save install choice toggle', e); }
+    const existingPriceInput = document.getElementById(`mq-spec-installprice-${id}`);
+    const existingModeSelect = document.getElementById(`mq-spec-mode-${id}`);
+    col.innerHTML = mqSpecInstallColHTML({ id, fields: {
+      'Offers install choice': offersChoice,
+      'Install price': existingPriceInput ? existingPriceInput.value : '',
+      'Install mode': existingModeSelect ? existingModeSelect.value : 'supply',
+    }});
+  };
+
+
+  // Reads whatever room checkboxes are currently checked for this item,
+  // and saves the list. If every configured room is checked, saves an empty
+  // list instead — meaning "visible everywhere," which also automatically
+  // includes any room added later, rather than needing to be re-checked.
+  // Flips the room checkbox panel to open upward instead of downward when
+  // there isn't enough room below in the viewport — same fix pattern used
+  // for the widget's photo hover preview, which had the identical problem.
+  window.mqPositionRoomPanel = function(detailsEl) {
+    // Clean up any previous outside-click listener first, regardless of
+    // whether we're opening or closing, to avoid stacking duplicates.
+    if (detailsEl._mqCloseHandler) {
+      document.removeEventListener('click', detailsEl._mqCloseHandler);
+      detailsEl._mqCloseHandler = null;
+    }
+    if (!detailsEl.open) return;
+
+    const panel = detailsEl.querySelector('.mq-room-panel');
+    if (!panel) return;
+    // Reset to default (below) first so the measurement below is accurate
+    panel.style.top = '100%';
+    panel.style.bottom = 'auto';
+    panel.style.marginTop = '6px';
+    panel.style.marginBottom = '0';
+    const rect = panel.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < 0) {
+      panel.style.top = 'auto';
+      panel.style.bottom = '100%';
+      panel.style.marginTop = '0';
+      panel.style.marginBottom = '6px';
+    }
+
+    // Close on any click outside this details element. Deferred by one tick
+    // so the same click that opened it doesn't immediately close it again.
+    const closeHandler = (e) => {
+      if (!detailsEl.contains(e.target)) {
+        detailsEl.open = false;
+        document.removeEventListener('click', closeHandler);
+        detailsEl._mqCloseHandler = null;
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 0);
+    detailsEl._mqCloseHandler = closeHandler;
+  };
+
+  window.mqToggleSpecRoom = async function(itemId) {
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const checkedIds = rooms
+      .filter(r => document.getElementById(`mq-spec-room-${itemId}-${r.id}`)?.checked)
+      .map(r => r.id);
+    const allChecked = checkedIds.length === rooms.length;
+    const toSave = allChecked ? [] : checkedIds;
+    try {
+      await atUpdate(CONFIG.SPECIALTY_TABLE, itemId, { 'Visible rooms': JSON.stringify(toSave) });
+      const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+    } catch(e) { console.error('Failed to save room links', e); }
+  };
+
+  function roomLinkSummaryText(visibleRooms, rooms) {
+    if (!visibleRooms || !visibleRooms.length) return 'All project types';
+    const names = visibleRooms.map(id => rooms.find(r => r.id === id)?.name).filter(Boolean);
+    return names.length ? names.join(', ') : 'All project types';
+  }
+
+  function roomLinkDisclosure(itemId, visibleRoomsJson) {
+    const rooms = window._mqRooms || defaultRoomTypes();
+    let visibleRooms = [];
+    try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
+    const summary = roomLinkSummaryText(visibleRooms, rooms);
+    const checkboxes = rooms.map(r => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
+        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:auto"/> ${r.name}
+      </label>`).join('');
+    return `
+      <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
+        <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
+          <span id="mq-spec-room-summary-${itemId}">${summary}</span>
+          <span style="font-size:15px;line-height:1">▾</span>
+        </summary>
+        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+          ${checkboxes}
+        </div>
+      </details>`;
+  }
+
+  // Same pattern as roomLinkDisclosure, but for My Products items — these
+  // can span 2 underlying Airtable records per card (materials: uppers/bases;
+  // drawers: some/mostly), so this saves to every id in that item's group at
+  // once, keeping them consistent.
+  // Module-level so both initProductsTab (My Products) and renderTemplates
+  // (admin Templates tab) can share it, instead of it being locked inside one
+  // function's closure over a specific shop's savedPhotos/savedHidden.
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden) {
+    const savedUrl = savedPhotos[key] || '';
+    const isHidden = savedHidden[key] || false;
+    const preview = savedUrl
+      ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
+      : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
+    const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat)}</div>` : '';
+    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
+      <div id="mq-photo-preview-${key}">${preview}</div>
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
+      ${roomLinkHtml}
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
+        <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
+          onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
+        Hide from showroom
+      </label>
+      <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+        📤 Upload a photo
+        <input type="file" id="mq-upload-file-${key}" accept="image/*" style="display:none"/>
+      </label>
+      <div id="mq-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+      <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
+      <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
+        style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
+        oninput="mqMarkProductsDirty()"/>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>
+    </div>`;
+  }
+
+  // Template cards need editable name/price/unit fields too (regular My
+  // Products items get that from the separate Specialty Items tab table —
+  // templates don't have an equivalent, so it lives right on the card here).
+  function templateItemCard(r, savedPhotos, savedHidden) {
+    const itemName = r.fields['Item name'] || '';
+    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden);
+    return `<div style="display:flex;flex-direction:column;gap:6px">
+      <input type="text" value="${itemName.replace(/"/g,'&quot;')}" id="mq-spec-name-${r.id}" placeholder="Item name" style="font-size:13px;font-weight:600;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input type="number" value="${r.fields['Price']||''}" id="mq-spec-price-${r.id}" placeholder="Price" style="font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:70px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:auto"/> lin ft</label>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:auto"/> sq ft</label>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:auto"/> Offer supply/install choice</label>
+      </div>
+      <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
+      ${photoHtml}
+      <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item</button>
+      <button class="mq-btn mq-btn-danger mq-btn-sm" style="width:100%" onclick="mqDeleteTemplateItem('${r.id}')">Delete template item</button>
+    </div>`;
+  }
+
+  async function renderTemplates() {
+    const masterShop = await ensureMasterTemplateShop();
+    const items = await ensureMasterTemplateItems();
+    window._mqTemplateItems = items;
+
+    let savedPhotos = {};
+    let savedHidden = {};
+    try { if (masterShop.fields['Photos']) savedPhotos = JSON.parse(masterShop.fields['Photos']); } catch(e) {}
+    try { if (masterShop.fields['Hidden']) savedHidden = JSON.parse(masterShop.fields['Hidden']); } catch(e) {}
+
+    const content = document.getElementById('mq-templates-content');
+    if (!content) return;
+    if (!items.length) {
+      content.innerHTML = '<div class="mq-empty">No template items yet. Click "+ Add template item" below to add your first one.</div>';
+      return;
+    }
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    content.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
+          <select id="mq-tmpl-filter-room" onchange="mqFilterTemplateCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All project types</option>
+            ${roomOptions}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
+          <input type="text" id="mq-tmpl-filter-search" oninput="mqFilterTemplateCards()" placeholder="e.g. shaker door" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+        </div>
+      </div>
+      <div id="mq-tmpl-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No template items match that filter.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px" id="mq-tmpl-cards-grid">
+        ${items.map(r => {
+          const itemName = r.fields['Item name'] || '';
+          const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
+          return `<div class="mq-tmpl-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
+            ${templateItemCard(r, savedPhotos, savedHidden)}
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveTemplatePhotos()">Save changes</button>
+    `;
+
+    // Wire up upload buttons for every template card just rendered — this
+    // step was missing entirely before, so the file picker existed visually
+    // but selecting a file did nothing at all.
+    content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
+      const key = fileInput.id.replace('mq-upload-file-', '');
+      mqWireUploadButton(
+        null,
+        'mq-upload-file-' + key,
+        'mq-upload-status-' + key,
+        'mq-photo-' + key,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
+      );
+    });
+  }
+
+  window.mqAddTemplateItem = async function() {
+    try {
+      const masterShop = await ensureMasterTemplateShop();
+      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
+        'Shop': [masterShop.id],
+        'Item name': 'New template item',
+        'Special Items': 'New template item',
+        'Price': 0,
+        'Active': true,
+      });
+      if (!created?.id) {
+        console.error('Failed to create template item:', created);
+        showMsg('mq-templates-msg', 'Error adding item — check the browser console for details.', 'error');
+        return;
+      }
+      await renderTemplates();
+      showMsg('mq-templates-msg', '✓ Template item added — edit the name, price, and project types above.');
+    } catch(e) {
+      console.error('Failed to create template item:', e);
+      showMsg('mq-templates-msg', 'Error adding item.', 'error');
+    }
+  };
+
+  window.mqDeleteTemplateItem = async function(id) {
+    if (!confirm('Delete this template item? This only affects future shops — existing shops keep their own copy.')) return;
+    try {
+      await atDelete(CONFIG.SPECIALTY_TABLE, id);
+      await renderTemplates();
+      showMsg('mq-templates-msg', '✓ Template item deleted.');
+    } catch(e) { showMsg('mq-templates-msg', 'Error deleting item.', 'error'); }
+  };
+
+  // Additive only, per your call: adds template items a shop doesn't already
+  // have (matched by Template source ID, not name — so renaming a template
+  // later never causes duplicates or misses). Never touches or removes
+  // anything a shop already has, even if you've since edited the master copy.
+  window.mqPushTemplatesToAllShops = async function() {
+    if (!confirm('Push ALL template items to every shop? This fully replaces any matching item a shop already has — full sync, not additive. Name, price, units, tags, and photo will always exactly match the master.')) return;
+    showMsg('mq-templates-msg', 'Pushing to all shops — this may take a moment...');
+    try {
+      const masterShop = await ensureMasterTemplateShop();
+      let masterPhotos = {};
+      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+
+      const masterItems = await ensureMasterTemplateItems();
+      const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
+      const adminRooms = window._mqRooms || defaultRoomTypes();
+      let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
+
+      for (const shop of allShops) {
+        const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+
+        // Make sure every project type these items are tagged to actually
+        // exists in this shop's room list — added as a draft (hidden) room
+        // if it's missing, so it never silently shows up on their live
+        // widget without them reviewing and switching it on themselves.
+        let shopRooms = [];
+        try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
+        if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
+        let shopRoomsChanged = false;
+        masterItems.forEach(m => {
+          let vr = [];
+          try { vr = m.fields['Visible rooms'] ? JSON.parse(m.fields['Visible rooms']) : []; } catch(e) { vr = []; }
+          vr.forEach(roomId => {
+            if (!shopRooms.find(r => r.id === roomId)) {
+              const adminRoomDef = adminRooms.find(r => r.id === roomId);
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
+              shopRoomsChanged = true;
+              roomsAddedCount++;
+            }
+          });
+        });
+        if (shopRoomsChanged) {
+          await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
+          shop.fields['Room types'] = JSON.stringify(shopRooms);
+        }
+
+        let shopPhotos = {};
+        try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
+
+        // Sequential, not parallel — slower, but guarantees each item's
+        // delete-then-recreate fully completes before moving to the next,
+        // and makes any individual failure easy to isolate and log clearly.
+        for (const master of masterItems) {
+          try {
+            // Match by tag first, but also fall back to an exact name match —
+            // catches orphaned rows left behind by manual Airtable edits that
+            // never got (or lost) their tracking tag, so they don't silently
+            // block a clean push forever.
+            const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
+            const existingMatches = shopItems.filter(i =>
+              i.fields['Template source ID'] === master.id ||
+              (i.fields['Item name'] || '').trim().toLowerCase() === masterName
+            );
+            if (existingMatches.length) {
+              await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
+              replacedCount++;
+            } else {
+              createdCount++;
+            }
+            const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
+              'Shop': [shop.id],
+              'Item name': master.fields['Item name'],
+              'Special Items': master.fields['Item name'],
+              'Price': master.fields['Price'] || 0,
+              'Per linear foot': master.fields['Per linear foot'] || false,
+              'Per square foot': master.fields['Per square foot'] || false,
+              'Offers install choice': master.fields['Offers install choice'] || false,
+              'Install price': master.fields['Install price'] || 0,
+              'Install mode': master.fields['Install mode'] || 'supply',
+              'Active': false,
+              'Visible rooms': master.fields['Visible rooms'] || '[]',
+              'Template source ID': master.id,
+            });
+            if (!created?.id) {
+              errorCount++;
+              console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
+              continue;
+            }
+            // Write this item's photo immediately, right here — not batched
+            // up to write once at the end of the shop's whole item loop.
+            // Batching meant that if this slow, sequential push got
+            // interrupted (browser throttling a backgrounded tab, closing
+            // the page, anything) before every single item finished, the
+            // photo write for that shop would never happen at all, even
+            // though every item itself had already been created correctly.
+            const masterPhotoUrl = masterPhotos['spec_' + master.id];
+            if (masterPhotoUrl) {
+              shopPhotos['spec_' + created.id] = masterPhotoUrl;
+              await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
+              shop.fields['Photos'] = JSON.stringify(shopPhotos);
+            }
+          } catch(e) {
+            errorCount++;
+            console.error('Failed to push item:', master.fields['Item name'], 'to', shop.fields['Shop name'], e);
+          }
+        }
+      }
+      const roomsNote = roomsAddedCount ? `, ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
+      const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console for details` : '';
+      await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
+      showMsg('mq-templates-msg', `✓ Full sync complete — ${createdCount} created, ${replacedCount} fully replaced across ${allShops.length} shop${allShops.length===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
+    } catch(e) {
+      console.error('Push to shops failed:', e);
+      showMsg('mq-templates-msg', 'Error during push — please try again.', 'error');
+    }
+  };
+
+  // One item, everywhere at once. Creates it fresh for shops that don't have
+  // it yet (same safety net as the bulk push — auto-adds a missing project
+  // type as a hidden draft). For shops that already have it, this fully
+  // overwrites name/price/units/tags/photo to match the master. NOTE: this is
+  // a full overwrite by design right now, while there are no real shop
+  // customizations to protect — revisit this once real shops exist and may
+  // have renamed/retagged their own copies deliberately.
+  window.mqPushSingleTemplateItem = async function(masterItemId) {
+    showMsg('mq-templates-msg', 'Pushing this item to all shops...');
+    try {
+      const master = (window._mqTemplateItems || []).find(m => m.id === masterItemId);
+      if (!master) { showMsg('mq-templates-msg', 'Could not find that template item — try refreshing the page.', 'error'); return; }
+
+      const masterShop = await ensureMasterTemplateShop();
+      let masterPhotos = {};
+      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+      const masterPhotoUrl = masterPhotos['spec_' + master.id];
+
+      const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
+      const adminRooms = window._mqRooms || defaultRoomTypes();
+      let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
+
+      for (const shop of allShops) {
+        try {
+          const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+          // Match by tag first, but also fall back to an exact name match —
+          // catches orphaned rows left behind by manual Airtable edits that
+          // never got (or lost) their tracking tag, so they don't silently
+          // block a clean push forever.
+          const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
+          const existingMatches = shopItems.filter(i =>
+            i.fields['Template source ID'] === master.id ||
+            (i.fields['Item name'] || '').trim().toLowerCase() === masterName
+          );
+
+          let shopRooms = [];
+          try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
+          if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
+          let shopRoomsChanged = false;
+          let vr = [];
+          try { vr = master.fields['Visible rooms'] ? JSON.parse(master.fields['Visible rooms']) : []; } catch(e) { vr = []; }
+          vr.forEach(roomId => {
+            if (!shopRooms.find(r => r.id === roomId)) {
+              const adminRoomDef = adminRooms.find(r => r.id === roomId);
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
+              shopRoomsChanged = true;
+              roomsAddedCount++;
+            }
+          });
+          if (shopRoomsChanged) {
+            await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
+            shop.fields['Room types'] = JSON.stringify(shopRooms);
+          }
+
+          if (existingMatches.length) {
+            await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
+            replacedCount++;
+          } else {
+            createdCount++;
+          }
+
+          const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
+            'Shop': [shop.id],
+            'Item name': master.fields['Item name'],
+            'Special Items': master.fields['Item name'],
+            'Price': master.fields['Price'] || 0,
+            'Per linear foot': master.fields['Per linear foot'] || false,
+            'Per square foot': master.fields['Per square foot'] || false,
+            'Offers install choice': master.fields['Offers install choice'] || false,
+            'Install price': master.fields['Install price'] || 0,
+            'Install mode': master.fields['Install mode'] || 'supply',
+            'Active': false,
+            'Visible rooms': master.fields['Visible rooms'] || '[]',
+            'Template source ID': master.id,
+          });
+          if (!created?.id) {
+            errorCount++;
+            console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
+            continue;
+          }
+          if (masterPhotoUrl) {
+            let shopPhotos = {};
+            try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
+            shopPhotos['spec_' + created.id] = masterPhotoUrl;
+            await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
+            shop.fields['Photos'] = JSON.stringify(shopPhotos);
+          }
+        } catch(e) {
+          errorCount++;
+          console.error('Failed to push item to shop:', shop.fields['Shop name'], e);
+        }
+      }
+      const roomsNote = roomsAddedCount ? `, added ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
+      const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console` : '';
+      await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
+      showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" — created for ${createdCount} shop${createdCount===1?'':'s'}, fully replaced for ${replacedCount} shop${replacedCount===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
+    } catch(e) {
+      console.error('Single item push failed:', e);
+      showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
+    }
+  };
+
+  function lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat) {
+    const rooms = window._mqRooms || defaultRoomTypes();
+    let visibleRooms = [];
+    try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
+    const summary = roomLinkSummaryText(visibleRooms, rooms);
+    const idsAttr = (ids||[]).join(',');
+    const checkboxes = rooms.map(r => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:auto"/> ${r.name}
+      </label>`).join('');
+    return `
+      <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
+        <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
+          <span id="mq-li-room-summary-${key}">${summary}</span>
+          <span style="font-size:15px;line-height:1">▾</span>
+        </summary>
+        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+          ${checkboxes}
+        </div>
+      </details>`;
+  }
+
+  window.mqToggleLineItemRoom = async function(key, idsCsv, cat) {
+    const ids = (idsCsv||'').split(',').filter(Boolean);
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const checkedIds = rooms
+      .filter(r => document.getElementById(`mq-li-room-${key}-${r.id}`)?.checked)
+      .map(r => r.id);
+    const allChecked = checkedIds.length === rooms.length;
+    const toSave = allChecked ? [] : checkedIds;
+    const table = cat === 'specialty' ? CONFIG.SPECIALTY_TABLE : CONFIG.LINE_ITEMS_TABLE;
+    try {
+      await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(toSave) })));
+      const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+    } catch(e) { console.error('Failed to save line item room links', e); }
+  };
+
+  // Category-level hiding — e.g. hide the entire Door Styles category for
+  // "Door refacing" in one click, instead of unchecking every door one by
+  // one. Individual items can still override this (handled widget-side):
+  // if an item has its own explicit project-type setting, that wins outright
+  // regardless of what the category says.
+  function categorySummaryText(hiddenIds, rooms) {
+    if (!hiddenIds || !hiddenIds.length) return 'Visible for all project types';
+    const names = hiddenIds.map(id => rooms.find(r=>r.id===id)?.name).filter(Boolean);
+    return names.length ? `Hidden for: ${names.join(', ')}` : 'Visible for all project types';
+  }
+
+  function categoryRoomDisclosure(cat) {
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const categoryRooms = window._mqCategoryRooms || {};
+    const hiddenIds = categoryRooms[cat] || [];
+    const summary = categorySummaryText(hiddenIds, rooms);
+    const checkboxes = rooms.map(r => `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
+        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}','${r.id}',this.checked)" style="width:auto"/> ${r.name}
+      </label>`).join('');
+    const linkedWarning = LINKED_CABINET_CATS.includes(cat) ? `
+      <div style="font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:8px;line-height:1.4">
+        ⚠️ Box Materials, Door Styles, and Drawer Configurations are always used together. Unchecking a project type here does the same for all three automatically, which hides the whole Cabinet measurements section on the widget for that project type.
+      </div>` : '';
+    return `
+      <details style="position:relative;margin-bottom:12px" ontoggle="mqPositionRoomPanel(this)">
+        <summary style="font-size:12px;font-weight:600;color:#92400e;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;width:fit-content">
+          🗂️ <span id="mq-cat-room-summary-${cat}">${summary}</span>
+          <span style="font-size:15px;line-height:1">▾</span>
+        </summary>
+        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
+          ${linkedWarning}
+          <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match. Change one item afterward to make it an exception.</div>
+          ${checkboxes}
+        </div>
+      </details>`;
+  }
+
+  // Material, Door Styles, and Drawer Configurations are always used
+  // together for cabinet pricing — unchecking any one of them for a project
+  // type hides the whole Cabinet measurements section on the widget, so all
+  // three need to stay in sync rather than letting them drift apart.
+  const LINKED_CABINET_CATS = ['material', 'door', 'drawer'];
+
+  async function applyCategoryRoomChange(cat, roomId, checked) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const allRoomIds = rooms.map(r => r.id);
+
+    // Update the category-level hidden list for this one room
+    if (!window._mqCategoryRooms) window._mqCategoryRooms = {};
+    let hidden = window._mqCategoryRooms[cat] || [];
+    hidden = checked ? hidden.filter(id => id !== roomId) : [...new Set([...hidden, roomId])];
+    window._mqCategoryRooms[cat] = hidden;
+
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Category rooms': JSON.stringify(window._mqCategoryRooms) });
+      shopRec.fields['Category rooms'] = JSON.stringify(window._mqCategoryRooms);
+    } catch(e) { console.error('Failed to save category room hiding', e); return; }
+
+    const summaryEl = document.getElementById(`mq-cat-room-summary-${cat}`);
+    if (summaryEl) summaryEl.textContent = categorySummaryText(hidden, rooms);
+    const cb = document.getElementById(`mq-cat-room-${cat}-${roomId}`);
+    if (cb) cb.checked = checked;
+
+    // Bulk-sync every item in this category: take each item's current
+    // effective per-room state, flip just this one room to match the
+    // category change, and save as an explicit list. From this point on,
+    // manually changing one item's own checkbox is a real override — until
+    // the category checkbox for that same room gets toggled again.
+    const items = cat === 'specialty' ? (window._mqSpecItemsList || []) : ((window._mqByCategory || {})[cat] || []);
+    const table = cat === 'specialty' ? CONFIG.SPECIALTY_TABLE : CONFIG.LINE_ITEMS_TABLE;
+
+    await Promise.all(items.map(async (item) => {
+      let current = [];
+      try { current = item.visibleRooms ? JSON.parse(item.visibleRooms) : []; } catch(e) { current = []; }
+      const effectiveSet = new Set(current.length ? current : allRoomIds); // empty = implicit all
+      if (checked) effectiveSet.add(roomId); else effectiveSet.delete(roomId);
+      const newList = allRoomIds.filter(id => effectiveSet.has(id));
+      const finalList = newList.length === allRoomIds.length ? [] : newList; // all-checked collapses back to "visible everywhere"
+      const ids = item.ids || [item.id];
+      try {
+        await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(finalList) })));
+        item.visibleRooms = JSON.stringify(finalList);
+      } catch(e) { console.error('Failed to bulk-sync item room links', e); }
+
+      // Reflect the sync visually on that item's own checkbox/summary, if rendered
+      const key = cat === 'specialty' ? `spec_${item.id}` : `li_${cat}_${(item.baseName||'').replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
+      const itemCb = document.getElementById(`mq-li-room-${key}-${roomId}`);
+      if (itemCb) itemCb.checked = checked;
+      const itemSummaryEl = document.getElementById(`mq-li-room-summary-${key}`);
+      if (itemSummaryEl) itemSummaryEl.textContent = roomLinkSummaryText(finalList, rooms);
+    }));
+  }
+
+  window.mqToggleCategoryRoom = async function(cat, roomId, checked) {
+    await applyCategoryRoomChange(cat, roomId, checked);
+    // If this is one of the three linked cabinet categories, mirror the exact
+    // same change to the other two so they never drift out of sync.
+    if (LINKED_CABINET_CATS.includes(cat)) {
+      const others = LINKED_CABINET_CATS.filter(c => c !== cat);
+      await Promise.all(others.map(otherCat => applyCategoryRoomChange(otherCat, roomId, checked)));
+      showMsg('mq-products-msg', `✓ Also updated ${others.map(c => CAT_DISPLAY_NAMES[c]).join(' and ')} to match, since they're always used together.`);
+    }
   };
 
   window.mqDeleteSpec = async function(id) {
@@ -1957,21 +3566,30 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
 
     const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
 
-    const heroHeaderHTML = `<div style="text-align:center;padding:2rem 1rem 1.5rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    // Google Fonts import — included in both blocks independently (harmless
+    // if both end up on the page together; browsers dedupe identical
+    // stylesheet URLs, so this is safe either way).
+    const fontLinks = `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">`;
+
+    const heroHeaderHTML = `${fontLinks}
+<div style="text-align:center;padding:2rem 1rem 1.5rem;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
   <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b8763a;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;gap:10px">
     <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
     Instant Pricing
     <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
   </div>
-  <h2 style="font-size:28px;font-weight:600;color:#1a1a1a;line-height:1.2;margin:0 0 0.75rem">Get your cabinet estimate<br/>in under 2 minutes</h2>
-  <p style="font-size:14px;color:#6b7280;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
+  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 2 minutes</h2>
+  <p style="font-size:14px;color:#5c5650;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
 </div>`;
 
-    const trustBarHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin:30px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">✅</span><span>No commitment required</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">📧</span><span>Results sent to your inbox</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">🔒</span><span>We never sell your info</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151"><span style="font-size:15px">⚡</span><span>Instant ballpark estimate</span></div>
+    const trustBarHTML = `${fontLinks}
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#faf8f5;border:1px solid rgba(61,56,48,0.12);border-radius:10px;margin:30px 0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">✅</span><span>No commitment required</span></div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">📧</span><span>Results sent to your inbox</span></div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">🔒</span><span>We never sell your info</span></div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">⚡</span><span>Instant ballpark estimate</span></div>
 </div>`;
 
     const escapeHtml = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -3340,6 +4958,126 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     }
   }
 
+  // JS-driven sticky nav — CSS position:sticky silently stops working if ANY
+  // ancestor element has overflow:hidden/auto/scroll set on it, which is very
+  // common in page builders (Webflow, etc.) this dashboard gets embedded in.
+  // This works regardless of the surrounding page's container structure,
+  // since it just measures real scroll position rather than depending on
+  // the CSS containing-block chain.
+  function mqInitStickyNav() {
+    const sidebar = document.querySelector('#midasquote-dashboard .mq-sidebar');
+    const layout  = document.querySelector('#midasquote-dashboard .mq-layout');
+    const topbar  = document.querySelector('#midasquote-dashboard .mq-topbar');
+    if (!sidebar || !layout) return;
+
+    // Holds the sidebar's normal-flow space open once it goes fixed, so the
+    // content column doesn't jump sideways when the sidebar leaves the flex flow.
+    const placeholder = document.createElement('div');
+    placeholder.style.display = 'none';
+    placeholder.style.flexShrink = '0';
+    layout.insertBefore(placeholder, sidebar);
+
+    let stuck = false;
+
+    function update() {
+      const topbarHeight = topbar ? topbar.getBoundingClientRect().height : 60;
+      const layoutRect = layout.getBoundingClientRect();
+      const shouldStick = layoutRect.top <= topbarHeight && layoutRect.bottom > topbarHeight;
+
+      if (shouldStick && !stuck) {
+        const rect = sidebar.getBoundingClientRect();
+        placeholder.style.width = rect.width + 'px';
+        placeholder.style.height = rect.height + 'px';
+        placeholder.style.display = 'block';
+        sidebar.style.position = 'fixed';
+        sidebar.style.top = topbarHeight + 'px';
+        sidebar.style.left = layoutRect.left + 'px';
+        sidebar.style.width = rect.width + 'px';
+        sidebar.style.maxHeight = `calc(100vh - ${topbarHeight}px)`;
+        sidebar.style.overflowY = 'auto';
+        sidebar.style.zIndex = '90';
+        stuck = true;
+      } else if (!shouldStick && stuck) {
+        sidebar.style.position = '';
+        sidebar.style.top = '';
+        sidebar.style.left = '';
+        sidebar.style.width = '';
+        sidebar.style.maxHeight = '';
+        sidebar.style.overflowY = '';
+        sidebar.style.zIndex = '';
+        placeholder.style.display = 'none';
+        stuck = false;
+      } else if (stuck) {
+        // Keep it aligned in case of resize/orientation change while stuck
+        sidebar.style.left = layoutRect.left + 'px';
+      }
+    }
+
+    let ticking = false;
+    function onScrollOrResize() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { update(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    update();
+  }
+
+  // Same technique as mqInitStickyNav, applied to the topbar — CSS
+  // position:sticky was silently failing on both for the same reason.
+  function mqInitStickyTopbar() {
+    const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
+    const root = document.getElementById('midasquote-dashboard');
+    if (!topbar || !root) return;
+
+    // Holds the topbar's normal-flow space open once it goes fixed, so
+    // everything below it doesn't jump up to fill the gap.
+    const placeholder = document.createElement('div');
+    placeholder.style.display = 'none';
+    root.insertBefore(placeholder, topbar);
+
+    let stuck = false;
+
+    function update() {
+      const rootRect = root.getBoundingClientRect();
+      const rect = topbar.getBoundingClientRect();
+      const shouldStick = rootRect.top <= 0 && rootRect.bottom > rect.height;
+
+      if (shouldStick && !stuck) {
+        placeholder.style.width = rect.width + 'px';
+        placeholder.style.height = rect.height + 'px';
+        placeholder.style.display = 'block';
+        topbar.style.position = 'fixed';
+        topbar.style.top = '0px';
+        topbar.style.left = rootRect.left + 'px';
+        topbar.style.width = rect.width + 'px';
+        topbar.style.zIndex = '100';
+        stuck = true;
+      } else if (!shouldStick && stuck) {
+        topbar.style.position = '';
+        topbar.style.top = '';
+        topbar.style.left = '';
+        topbar.style.width = '';
+        topbar.style.zIndex = '';
+        placeholder.style.display = 'none';
+        stuck = false;
+      } else if (stuck) {
+        topbar.style.left = rootRect.left + 'px';
+      }
+    }
+
+    let ticking = false;
+    function onScrollOrResize() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { update(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    update();
+  }
+
   // ============================================================
   // INIT
   // ============================================================
@@ -3395,6 +5133,8 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       _mqSignCustomColor = savedHeadlines.signColor || '';
     } catch(e) {}
     container.innerHTML = buildHTML(shopRecord.fields);
+    mqInitStickyTopbar();
+    mqInitStickyNav();
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
     if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
@@ -3410,6 +5150,16 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     window._mqPricingRecord = pricingRecord;
     if (pricingRecord) populatePricing(pricingRecord);
     populateShop(shopRecord);
+    populateRooms(shopRecord);
+    await ensureProjectTypeTemplates(shopRecord);
+
+    // Admin Templates tab only ever shows up for the Maple & Stone demo shop.
+    // NOTE: adjust this exact name if your demo shop's actual 'Shop name'
+    // field is spelled/punctuated differently in Airtable.
+    if (shopRecord.fields['Shop name'] === 'Maple & Stone Cabinetry') {
+      const navTemplates = el('mq-nav-templates');
+      if (navTemplates) navTemplates.style.display = 'flex';
+    }
 
     const leads = await loadLeads(shopRecord.fields['Shop name']);
     window._mqLeads = sortLeadsArray(leads);
@@ -3429,6 +5179,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
+    mqToggleFloatingSave(page === 'rooms');
     if (page === 'marketing' || page === 'embed') {
       const socialEl = document.getElementById('mq-mk-social');
       if (socialEl && !socialEl.dataset.loaded && window._mqShopRecord) {
@@ -3501,11 +5252,27 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       const prodContent = document.getElementById('mq-products-content');
       if (prodContent) {
         prodContent.innerHTML = '<div class="mq-loading">Loading your products...</div>';
-        atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`)
-          .then(lineItems => {
-            window._mqLineItems = lineItems;
-            initProductsTab(window._mqShopRecord, lineItems);
-          });
+        const shopToken = window._mqShopRecord.fields['Shop token'];
+        Promise.all([
+          loadShop(shopToken), // refetch the shop record itself fresh — this is where Photos/Hidden actually live, and a push from elsewhere (like the Templates admin tool) wouldn't otherwise show up until a full page reload
+          atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`),
+        ]).then(([freshShop, lineItems]) => {
+          if (freshShop) window._mqShopRecord = freshShop;
+          window._mqLineItems = lineItems;
+          initProductsTab(window._mqShopRecord, lineItems);
+        });
+      }
+    }
+    if (page === 'templates') {
+      const tmplContent = document.getElementById('mq-templates-content');
+      if (tmplContent) {
+        tmplContent.innerHTML = '<div class="mq-loading">Loading templates...</div>';
+        renderTemplates();
+      }
+      const masterRoomsContent = document.getElementById('mq-master-rooms-content');
+      if (masterRoomsContent) {
+        masterRoomsContent.innerHTML = '<div class="mq-loading">Loading...</div>';
+        renderMasterRoomDefs();
       }
     }
     if (page === 'pricing') {
