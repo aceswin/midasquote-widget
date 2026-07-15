@@ -1703,6 +1703,7 @@ window.logoutMember = async function () {
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
+            ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. renovations run higher since customers are living in the house')}
             ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
           </div>
@@ -1805,6 +1806,7 @@ window.logoutMember = async function () {
             id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
             name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
             materialAdjPct: parseFloat(document.getElementById(`mq-room-adj-mat-${oldIdx}`)?.value) || 0,
+            upperMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-upper-mat-${oldIdx}`)?.value) || 0,
             installAdjPct: parseFloat(document.getElementById(`mq-room-adj-install-${oldIdx}`)?.value) || 0,
             totalAdjPct: parseFloat(document.getElementById(`mq-room-adj-total-${oldIdx}`)?.value) || 0,
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
@@ -1832,7 +1834,7 @@ window.logoutMember = async function () {
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
     const newId = 'room_' + Date.now();
-    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
+    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
     _mqExpandedRoomIds.add(newId);
     renderRoomsList();
   };
@@ -1853,6 +1855,7 @@ window.logoutMember = async function () {
         id: r.id,
         name: (el(`mq-room-name-${idx}`)?.value || '').trim(),
         materialAdjPct: parseFloat(el(`mq-room-adj-mat-${idx}`)?.value) || 0,
+        upperMaterialAdjPct: parseFloat(el(`mq-room-adj-upper-mat-${idx}`)?.value) || 0,
         installAdjPct: parseFloat(el(`mq-room-adj-install-${idx}`)?.value) || 0,
         totalAdjPct: parseFloat(el(`mq-room-adj-total-${idx}`)?.value) || 0,
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),

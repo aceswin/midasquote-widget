@@ -2338,11 +2338,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       const roomId = gv(`mq-${prefix}-room`);
       const roomObj = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const materialAdjPct = roomObj ? (parseFloat(roomObj.materialAdjPct !== undefined ? roomObj.materialAdjPct : roomObj.adjustment) || 0) : 0;
+      const upperMaterialAdjPct = roomObj ? (parseFloat(roomObj.upperMaterialAdjPct)||0) : 0;
       const installAdjPct  = roomObj ? (parseFloat(roomObj.installAdjPct)||0) : 0;
       const totalAdjPct    = roomObj ? (parseFloat(roomObj.totalAdjPct)||0) : 0;
       const hasRoomAdjustment = materialAdjPct !== 0;
       const roomAdjPct = materialAdjPct; // kept for anything still reading the old name
       const vanityMult = (100 + materialAdjPct) / 100;
+      const upperVanityMult = (100 + upperMaterialAdjPct) / 100;
       const installMult = (100 + installAdjPct) / 100;
 
       const uInstall = (si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0) * installMult;
@@ -2355,8 +2357,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       // Material/door/hinge only — no install baked in, so it can show as its
       // own line item for the shop. Height multiplier still applies to the
       // whole upper-cabinet box (material + install together), same as before.
-      const uMatDoorHinge = uMat.rateU + uDoorRate + uHingeRate;
-      const bMatDoorHinge = (bMat.rateB + bDoorRate + drawerRate) * vanityMult + bHingeRate;
+      const uMatDoorHinge = uMat.rateU * upperVanityMult + uDoorRate + uHingeRate;
+      const bMatDoorHinge = bMat.rateB * vanityMult + bDoorRate + drawerRate + bHingeRate;
       const uPft  = (uMatDoorHinge + uInstall) * hMult;
       const bPft  = bMatDoorHinge + bInstall;
       const uCost = uFt*uPft, bCost=bFt*bPft;
