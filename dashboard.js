@@ -2812,8 +2812,9 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
       <select id="mq-spec-mode-${r.id}" onchange="mqSaveSpecField('${r.id}','Install mode',this.value)" style="font-size:12px;padding:5px 8px;border:1px solid #d1d5db;border-radius:4px;width:170px">
-      <option value="supply" ${mode!=='installed'?'selected':''}>Supply only</option>
+      <option value="supply" ${mode!=='installed'&&mode!=='na'?'selected':''}>Supply only</option>
       <option value="installed" ${mode==='installed'?'selected':''}>Supplied &amp; Installed</option>
+      <option value="na" ${mode==='na'?'selected':''}>N/A — show no label</option>
     </select>`;
   }
 
