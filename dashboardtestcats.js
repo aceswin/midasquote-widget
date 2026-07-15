@@ -462,7 +462,7 @@ window.logoutMember = async function () {
             </div>
             <div id="mq-spec-msg"></div>
             <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
+              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot, check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items, leave it unchecked and enter the flat price.
               <br><br>
               🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
             </div>
