@@ -2,7 +2,7 @@
  * MidasQuote Dashboard v1.0
  * Shop owner backend panel
  * Loads based on Memberstack member's shopToken
- * This is a test and my backup 5
+ * This is a test
  */
 
 (function () {
@@ -434,12 +434,7 @@ window.logoutMember = async function () {
             <div class="mq-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
-                💡 The adjustment % applies to box, door, and drawer pricing only — never hinges or installation, since hardware and labor don't shrink just because a project type is smaller or bigger. Leave one at 0% for no adjustment.
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 140px 40px;gap:10px;margin-bottom:8px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">
-                <div>Project name</div>
-                <div>Adjustment %</div>
-                <div></div>
+                💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
               </div>
               <div id="mq-rooms-list"></div>
               <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()" style="margin-top:8px;margin-bottom:1.25rem">+ Add room</button>
@@ -467,7 +462,7 @@ window.logoutMember = async function () {
             </div>
             <div id="mq-spec-msg"></div>
             <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot, check the <strong>Per lin ft</strong> box and enter your per-foot rate. For flat-rate items, leave it unchecked and enter the flat price.
+              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
               <br><br>
               🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
             </div>
@@ -481,119 +476,129 @@ window.logoutMember = async function () {
             <div class="mq-page-title">Embed code</div>
             <div class="mq-page-sub">Pick what you want, then copy one combined block of code to paste into your website.</div>
 
-            <!-- Combined builder card -->
-            <div class="mq-card" style="border:2px solid #1a1a1a">
-              <div class="mq-card-title" style="font-size:15px">🧩 Build your embed code</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Check the pieces you want — the combined code updates automatically. Paste it all in one go.</p>
-
-              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem">
-                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                  <input type="checkbox" id="mq-embed-chk-header" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                  <div>
-                    <div style="font-size:13px;font-weight:600;color:#111">🎯 Quote page header</div>
-                    <div style="font-size:11px;color:#6b7280;margin-top:2px">Big headline + subtitle above your widget</div>
-                  </div>
-                </label>
-                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                  <input type="checkbox" id="mq-embed-chk-trust" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                  <div>
-                    <div style="font-size:13px;font-weight:600;color:#111">✅ Trust bar</div>
-                    <div style="font-size:11px;color:#6b7280;margin-top:2px">"No commitment required · Results sent to inbox" row</div>
-                  </div>
-                </label>
-                <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                  <input type="checkbox" id="mq-embed-chk-widget" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                  <div>
-                    <div style="font-size:13px;font-weight:600;color:#111">📋 Widget embed code</div>
-                    <div style="font-size:11px;color:#6b7280;margin-top:2px">The quote widget itself — required for it to appear</div>
-                  </div>
-                </label>
+            <!-- ============================================================
+                 SECTION 1: Code for websites — the embed-code builder plus
+                 platform install instructions, all folded up together.
+            ============================================================= -->
+            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:14px">
+              <div onclick="mqToggleEmbedSection('websites')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🌐 Code for websites</div>
+                <span id="mq-embed-websites-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
               </div>
+              <div id="mq-embed-websites-body" style="display:none;padding:0 1.25rem 1.25rem">
 
-              <!-- Live preview -->
-              <div id="mq-embed-preview-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:1.25rem;transform:scale(0.75);transform-origin:top left;width:133%;margin-right:-33%">
-                <div id="mq-embed-preview-header"></div>
-                <div id="mq-embed-preview-trust"></div>
-                <div style="background:#fff;border:1.5px dashed #d1d5db;border-radius:10px;padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af" id="mq-embed-preview-widget">📋 Widget appears here</div>
+                <!-- Combined builder card -->
+                <div class="mq-card" style="border:2px solid #1a1a1a">
+                  <div class="mq-card-title" style="font-size:15px">🧩 Build your embed code</div>
+                  <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Check the pieces you want — the combined code updates automatically. Paste it all in one go.</p>
+
+                  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem">
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                      <input type="checkbox" id="mq-embed-chk-header" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                      <div>
+                        <div style="font-size:13px;font-weight:600;color:#111">🎯 Quote page header</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px">Big headline + subtitle above your widget</div>
+                      </div>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                      <input type="checkbox" id="mq-embed-chk-trust" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                      <div>
+                        <div style="font-size:13px;font-weight:600;color:#111">✅ Trust bar</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px">"No commitment required · Results sent to inbox" row</div>
+                      </div>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
+                      <input type="checkbox" id="mq-embed-chk-widget" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
+                      <div>
+                        <div style="font-size:13px;font-weight:600;color:#111">📋 Widget embed code</div>
+                        <div style="font-size:11px;color:#6b7280;margin-top:2px">The quote widget itself — required for it to appear</div>
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- Live preview -->
+                  <div id="mq-embed-preview-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:1.25rem;transform:scale(0.75);transform-origin:top left;width:133%;margin-right:-33%">
+                    <div id="mq-embed-preview-header"></div>
+                    <div id="mq-embed-preview-trust"></div>
+                    <div style="background:#fff;border:1.5px dashed #d1d5db;border-radius:10px;padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af" id="mq-embed-preview-widget">📋 Widget appears here</div>
+                  </div>
+
+                  <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-combined-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
+                  <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
+                </div>
+
+                <div class="mq-card">
+                  <div class="mq-card-title">💡 Installation help</div>
+                  <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
+                    <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
+                    <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
+                    <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
+                    <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
+                    <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
+                  </div>
+                </div>
+
               </div>
-
-              <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-combined-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
-              <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title">💡 Installation help</div>
-              <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
-                <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
-                <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
-                <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
-                <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
-                <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
+            <!-- ============================================================
+                 SECTION 2: Direct link — the plain quote-tool link (no
+                 website needed) plus its own homescreen instructions.
+            ============================================================= -->
+            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:14px">
+              <div onclick="mqToggleEmbedSection('direct')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">📱 Direct link</div>
+                <span id="mq-embed-direct-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
+              </div>
+              <div id="mq-embed-direct-body" style="display:none;padding:0 1.25rem 1.25rem">
+
+                <div class="mq-card">
+                  <div class="mq-card-title">📱 Direct quote link</div>
+                  <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed. Or use it for walk-in customers, right on the spot.</p>
+                  <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
+                </div>
+
+                <div class="mq-card">
+                  <div class="mq-card-title">📱 Add MidasQuote shortcut to your homescreen</div>
+                  <p class="mq-hint" style="margin-bottom:12px">
+                    Keep your quote tool one tap away — great for quoting walk-in customers on the spot, without digging through browser tabs or bookmarks.
+                  </p>
+                  ${mqAddToHomescreenInstructionsHTML()}
+                </div>
+
               </div>
             </div>
-            <div class="mq-card">
-              <div class="mq-card-title">📱 Direct quote link</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed.</p>
-              <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
+
+            <!-- ============================================================
+                 SECTION 3: MidasQuote Pro — the real-numbers version, for
+                 the shop owner (or anyone they trust, like a regular
+                 contractor) rather than customers.
+            ============================================================= -->
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleEmbedSection('pro')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">⚡ MidasQuote Pro</div>
+                <span id="mq-embed-pro-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
+              </div>
+              <div id="mq-embed-pro-body" style="display:none;padding:0 1.25rem 1.25rem">
+
+                <div class="mq-card">
+                  <div class="mq-card-title">⚡ Your MidasQuote Pro link</div>
+                  <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This one's just for you — or anyone you want to bring in, like a contractor you always work with. It shows the exact real numbers behind every quote, right alongside the same ballpark range your customers see. Not for sharing with customers.</p>
+                  <div class="mq-embed-box">https://widget.midasquote.com/pro.html?shop=${token}<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/pro.html?shop=${token}',this)">Copy</button></div>
+                </div>
+
+                <div class="mq-card">
+                  <div class="mq-card-title">📱 Add MidasQuote Pro shortcut to your homescreen</div>
+                  <p class="mq-hint" style="margin-bottom:12px">
+                    Keep it one tap away for quoting on the go, walking a jobsite, or sitting across the table from a customer.
+                  </p>
+                  ${mqAddToHomescreenInstructionsHTML()}
+                </div>
+
+              </div>
             </div>
 
-
-
-<!-- ADD TO HOMESCREEN — drop this into the Embed tab, right after your existing
-     direct-link / "Preview widget" section, so it sits alongside the link
-     they'd actually be adding to their homescreen. -->
-
-<div class="mq-card">
-              <div class="mq-card-title">📱 Add Midas Quote shortcut to your homescreen</div>
-  <p class="mq-hint" style="margin-bottom:12px">
-    Keep your quote tool one tap away — great for quoting walk-in customers on the spot, without digging through browser tabs or bookmarks.
-  </p>
-
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🍎 iPhone / iPad (Safari)</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Open your direct link in Safari</li>
-        <li>Tap the <strong>Share</strong> icon (square with an arrow)</li>
-        <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
-        <li>Tap <strong>Add</strong> — done!</li>
-      </ol>
-    </div>
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🤖 Android</div>
-      <p style="font-size:11.5px;color:#6b7280;margin-bottom:8px;line-height:1.5">Steps vary a bit by phone brand — Samsung phones especially use a different browser by default.</p>
-      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">In Chrome:</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0 0 10px">
-        <li>Open your direct link in Chrome</li>
-        <li>Tap the <strong>⋮</strong> menu (top right)</li>
-        <li>Tap <strong>Add to Home screen</strong> — not "Add to Favorites" (that's a bookmark, not a homescreen icon)</li>
-        <li>Confirm — done!</li>
-      </ol>
-      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">On Samsung phones (Samsung Internet browser):</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Tap the menu icon (bottom right)</li>
-        <li>Tap <strong>Add page to</strong> → <strong>Home screen</strong></li>
-      </ol>
-      <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Don't see the icon right away? Check your app drawer too — some phones add it there first.</p>
-    </div>
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">💻 Desktop (Chrome)</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Open your direct link in Chrome</li>
-        <li>Click the <strong>⋮</strong> menu (top right)</li>
-        <li>Go to <strong>Cast, save, and share</strong></li>
-        <li>Click <strong>Install as app</strong></li>
-        <li>Confirm — it now opens like a regular app</li>
-      </ol>
-    </div>
-
-  </div>
-</div></div>
-           
-      
+          </div>
 
           <!-- MY PRODUCTS -->
           <div class="mq-page" id="mq-page-products">
@@ -1007,6 +1012,68 @@ window.logoutMember = async function () {
     }
   };
 
+  // Shared "Add to Home Screen" instructions — identical for both the Direct
+  // Link and MidasQuote Pro sections, since the steps themselves don't
+  // depend on which link is being added, just kept as one function so the
+  // two sections can't drift out of sync with each other.
+  function mqAddToHomescreenInstructionsHTML() {
+    return `
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🍎 iPhone / iPad (Safari)</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Open your direct link in Safari</li>
+        <li>Tap the <strong>Share</strong> icon (square with an arrow)</li>
+        <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+        <li>Tap <strong>Add</strong> — done!</li>
+      </ol>
+    </div>
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🤖 Android</div>
+      <p style="font-size:11.5px;color:#6b7280;margin-bottom:8px;line-height:1.5">Steps vary a bit by phone brand — Samsung phones especially use a different browser by default.</p>
+      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">In Chrome:</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0 0 10px">
+        <li>Open your direct link in Chrome</li>
+        <li>Tap the <strong>⋮</strong> menu (top right)</li>
+        <li>Tap <strong>Add to Home screen</strong> — not "Add to Favorites" (that's a bookmark, not a homescreen icon)</li>
+        <li>Confirm — done!</li>
+      </ol>
+      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">On Samsung phones (Samsung Internet browser):</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Tap the menu icon (bottom right)</li>
+        <li>Tap <strong>Add page to</strong> → <strong>Home screen</strong></li>
+      </ol>
+      <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Don't see the icon right away? Check your app drawer too — some phones add it there first.</p>
+    </div>
+
+    <div style="background:#f9fafb;border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">💻 Desktop (Chrome)</div>
+      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
+        <li>Open your direct link in Chrome</li>
+        <li>Click the <strong>⋮</strong> menu (top right)</li>
+        <li>Go to <strong>Cast, save, and share</strong></li>
+        <li>Click <strong>Install as app</strong></li>
+        <li>Confirm — it now opens like a regular app</li>
+      </ol>
+    </div>
+
+  </div>`;
+  }
+
+  // Collapsible sections on the Embed page ("Code for websites" / "Direct
+  // link" / "MidasQuote Pro") — same idea as the widget's own collapsible
+  // sections, just a small self-contained version for this one page.
+  window.mqToggleEmbedSection = function(key) {
+    const body = document.getElementById(`mq-embed-${key}-body`);
+    const arrow = document.getElementById(`mq-embed-${key}-arrow`);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+  };
+
   // ============================================================
   // IMAGE UPLOAD — permanent hosting via Cloudflare R2 (replaces fragile pasted links)
   // ============================================================
@@ -1186,9 +1253,9 @@ window.logoutMember = async function () {
   // page instead of being hardcoded here. Bootstraps the master shop's own
   // Room types field once from these starting values if it's never been set.
   const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
-    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
-    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
   };
 
   async function ensureMasterTemplateRoomDefs() {
@@ -1343,6 +1410,9 @@ window.logoutMember = async function () {
         'Price': master.fields['Price'] || 0,
         'Per linear foot': master.fields['Per linear foot'] || false,
         'Per square foot': master.fields['Per square foot'] || false,
+        'Offers install choice': master.fields['Offers install choice'] || false,
+        'Install price': master.fields['Install price'] || 0,
+        'Install mode': master.fields['Install mode'] || 'supply',
         'Active': true,
         'Visible rooms': master.fields['Visible rooms'] || '[]',
         'Template source ID': master.id,
@@ -1535,15 +1605,15 @@ window.logoutMember = async function () {
 
   function defaultRoomTypes() {
     return [
-      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'kitchen.png' },
-      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'bathroom.png' },
-      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'laundry.png' },
-      { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'garage.png' },
-      { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'commercial.png' },
-      { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'other.png' },
-      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
-      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
-      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'kitchen.png' },
+      { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'bathroom.png' },
+      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'laundry.png' },
+      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'garage.png' },
+      { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'commercial.png' },
+      { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'other.png' },
+      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
     ];
   }
 
@@ -1581,6 +1651,32 @@ window.logoutMember = async function () {
     if (opening) _mqExpandedRoomIds.add(room.id); else _mqExpandedRoomIds.delete(room.id);
   };
 
+  // One checkbox+percent row for a project type's price adjustments. The
+  // checkbox is just a friendly on/off — checked means "value !== 0", and
+  // unchecking zeroes it out (same convention as "0 = no adjustment"
+  // everywhere else in this app, just given a clearer on/off affordance
+  // here since a shop owner can now stack up to three of these at once).
+  function mqRoomAdjRow(kind, idx, value, label, hint) {
+    const inputId = `mq-room-adj-${kind}-${idx}`;
+    const chkId = `mq-room-adj-${kind}-chk-${idx}`;
+    const checked = parseFloat(value) !== 0;
+    return `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:auto;flex-shrink:0"/>
+        <label for="${inputId}" style="font-size:12px;color:#374151;flex:1;min-width:0">${label} <span style="color:#9ca3af">— ${hint}</span></label>
+        <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center;flex-shrink:0"/>
+        <span style="font-size:12px;color:#6b7280;flex-shrink:0">%</span>
+      </div>`;
+  }
+  window.mqToggleRoomAdjInput = function(idx, kind) {
+    const chk = el(`mq-room-adj-${kind}-chk-${idx}`);
+    const inp = el(`mq-room-adj-${kind}-${idx}`);
+    if (!chk || !inp) return;
+    if (!chk.checked) { inp.value = 0; }
+    else if (parseFloat(inp.value) === 0) { inp.value = 0; inp.focus(); }
+    mqSaveRooms();
+  };
+
   function renderRoomsList() {
     const container = el('mq-rooms-list');
     if (!container) return;
@@ -1589,10 +1685,9 @@ window.logoutMember = async function () {
       const isOpen = _mqExpandedRoomIds.has(r.id);
       return `
       <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
-        <div style="display:grid;grid-template-columns:24px 1fr 140px 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:24px 1fr 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
           <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
-          <input type="number" value="${r.adjustment||0}" id="mq-room-adj-${idx}" step="0.5" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;text-align:center"/>
           <button type="button" onclick="mqToggleRoomBody(${idx})" title="Show more" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;padding:4px">
             <span id="mq-room-arrow-${idx}" style="display:inline-block;transition:transform 0.2s;font-size:12px;transform:rotate(${isOpen?'90':'0'}deg)">▶</span>
           </button>
@@ -1603,6 +1698,13 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
           </label>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
+            ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
+            ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. renovations run higher since customers are living in the house')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
+          </div>
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
             <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
@@ -1701,7 +1803,10 @@ window.logoutMember = async function () {
           return {
             id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
             name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
-            adjustment: parseFloat(document.getElementById(`mq-room-adj-${oldIdx}`)?.value) || 0,
+            materialAdjPct: parseFloat(document.getElementById(`mq-room-adj-mat-${oldIdx}`)?.value) || 0,
+            upperMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-upper-mat-${oldIdx}`)?.value) || 0,
+            installAdjPct: parseFloat(document.getElementById(`mq-room-adj-install-${oldIdx}`)?.value) || 0,
+            totalAdjPct: parseFloat(document.getElementById(`mq-room-adj-total-${oldIdx}`)?.value) || 0,
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
             active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
@@ -1727,7 +1832,7 @@ window.logoutMember = async function () {
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
     const newId = 'room_' + Date.now();
-    window._mqRooms.push({ id: newId, name: '', adjustment: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
+    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
     _mqExpandedRoomIds.add(newId);
     renderRoomsList();
   };
@@ -1747,7 +1852,10 @@ window.logoutMember = async function () {
       const rooms = (window._mqRooms || []).map((r, idx) => ({
         id: r.id,
         name: (el(`mq-room-name-${idx}`)?.value || '').trim(),
-        adjustment: parseFloat(el(`mq-room-adj-${idx}`)?.value) || 0,
+        materialAdjPct: parseFloat(el(`mq-room-adj-mat-${idx}`)?.value) || 0,
+        upperMaterialAdjPct: parseFloat(el(`mq-room-adj-upper-mat-${idx}`)?.value) || 0,
+        installAdjPct: parseFloat(el(`mq-room-adj-install-${idx}`)?.value) || 0,
+        totalAdjPct: parseFloat(el(`mq-room-adj-total-${idx}`)?.value) || 0,
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
         active: el(`mq-room-active-${idx}`)?.checked !== false,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
@@ -1959,7 +2067,7 @@ window.logoutMember = async function () {
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Project types</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -1973,6 +2081,8 @@ window.logoutMember = async function () {
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)"/></td>
+              <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item"/></td>
+              <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
               <td style="font-size:12px;color:#6b7280">${roomLinkSummaryText(visibleRooms, rooms)}</td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
@@ -2687,6 +2797,43 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
     } catch(e) { console.error('Failed to save specialty unit field', e); }
   };
 
+  // Builds whichever content belongs in the "Installed price / Mode" column
+  // for a given specialty item — an editable installed price if the shop
+  // is offering the customer a choice, or a plain "which mode is this
+  // item's one flat price" label if not.
+  function mqSpecInstallColHTML(r) {
+    const offersChoice = !!r.fields['Offers install choice'];
+    if (offersChoice) {
+      return `<input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="Installed $" style="width:90px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>`;
+    }
+    const mode = r.fields['Install mode'] || 'supply';
+    return `<select id="mq-spec-mode-${r.id}" onchange="mqSaveSpecField('${r.id}','Install mode',this.value)" style="font-size:12px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px">
+      <option value="supply" ${mode!=='installed'?'selected':''}>Supply only</option>
+      <option value="installed" ${mode==='installed'?'selected':''}>Supplied &amp; Installed</option>
+    </select>`;
+  }
+
+  // Flips whether this item offers the customer a supply/install choice,
+  // and swaps that column between an installed-price input and a plain
+  // mode label accordingly. Reads whatever's currently in the DOM rather
+  // than a fresh fetch, so a shop owner flipping this back and forth
+  // doesn't lose whatever they'd already typed.
+  window.mqToggleSpecInstallChoice = async function(id) {
+    const chk = el(`mq-spec-offerchoice-${id}`);
+    const col = el(`mq-spec-installcol-${id}`);
+    if (!chk || !col) return;
+    const offersChoice = chk.checked;
+    try { await atUpdate(CONFIG.SPECIALTY_TABLE, id, { 'Offers install choice': offersChoice }); } catch(e) { console.error('Failed to save install choice toggle', e); }
+    const existingPriceInput = document.getElementById(`mq-spec-installprice-${id}`);
+    const existingModeSelect = document.getElementById(`mq-spec-mode-${id}`);
+    col.innerHTML = mqSpecInstallColHTML({ id, fields: {
+      'Offers install choice': offersChoice,
+      'Install price': existingPriceInput ? existingPriceInput.value : '',
+      'Install mode': existingModeSelect ? existingModeSelect.value : 'supply',
+    }});
+  };
+
+
   // Reads whatever room checkboxes are currently checked for this item,
   // and saves the list. If every configured room is checked, saves an empty
   // list instead — meaning "visible everywhere," which also automatically
@@ -2823,6 +2970,10 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:auto"/> lin ft</label>
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:auto"/> sq ft</label>
       </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:auto"/> Offer supply/install choice</label>
+      </div>
+      <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
       ${photoHtml}
       <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item</button>
       <button class="mq-btn mq-btn-danger mq-btn-sm" style="width:100%" onclick="mqDeleteTemplateItem('${r.id}')">Delete template item</button>
@@ -2957,7 +3108,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           vr.forEach(roomId => {
             if (!shopRooms.find(r => r.id === roomId)) {
               const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
               shopRoomsChanged = true;
               roomsAddedCount++;
             }
@@ -2998,6 +3149,9 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
               'Price': master.fields['Price'] || 0,
               'Per linear foot': master.fields['Per linear foot'] || false,
               'Per square foot': master.fields['Per square foot'] || false,
+              'Offers install choice': master.fields['Offers install choice'] || false,
+              'Install price': master.fields['Install price'] || 0,
+              'Install mode': master.fields['Install mode'] || 'supply',
               'Active': false,
               'Visible rooms': master.fields['Visible rooms'] || '[]',
               'Template source ID': master.id,
@@ -3080,7 +3234,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           vr.forEach(roomId => {
             if (!shopRooms.find(r => r.id === roomId)) {
               const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
               shopRoomsChanged = true;
               roomsAddedCount++;
             }
@@ -3104,6 +3258,9 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
             'Price': master.fields['Price'] || 0,
             'Per linear foot': master.fields['Per linear foot'] || false,
             'Per square foot': master.fields['Per square foot'] || false,
+            'Offers install choice': master.fields['Offers install choice'] || false,
+            'Install price': master.fields['Install price'] || 0,
+            'Install mode': master.fields['Install mode'] || 'supply',
             'Active': false,
             'Visible rooms': master.fields['Visible rooms'] || '[]',
             'Template source ID': master.id,
