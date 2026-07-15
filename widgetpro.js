@@ -1164,7 +1164,7 @@
         </div>
       </div>
       <div class="mq-sec" id="mq-${prefix}-specialty-sec" onclick="mqOpenIfClosed('${prefix}-specialty')">
-        ${collapsibleHeader(`${prefix}-specialty`, 'Specialty items')}
+        ${collapsibleHeader(`${prefix}-specialty`, 'Add-Ons & Upgrades')}
         <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
           ⭐ Optional extras and upgrades — browse and add anything you'd like.
         </div>
