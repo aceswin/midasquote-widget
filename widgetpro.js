@@ -2303,24 +2303,31 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bHingeRate= bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
 
       // Cabinets in some rooms (like bathroom vanities) run smaller than
-      // kitchen cabinets at the same linear footage — each room can now have
-      // its own price adjustment %, configured per shop (Bathroom ships with
-      // -5% as a working example). Applies to box/door/drawer cost only,
-      // never uppers (a room's upper cabinets, if any, aren't inherently
-      // smaller), never hinges/install (hardware and labor don't scale with
-      // room type).
+      // kitchen cabinets at the same linear footage — and now a project type
+      // can carry up to three independent price adjustments: materials/box
+      // cost, installation cost, and a final ballpark-wide adjustment. Lets a
+      // shop do things like "Bathroom vanities run -5% on materials",
+      // "Renovations run +10% on install since customers are living in the
+      // house", or "Luxury package runs +15% on the whole ballpark" — any
+      // combination, per project type. Falls back to the older single
+      // "adjustment" field for any shop that hasn't touched this yet, so
+      // nothing already saved silently stops working.
       const roomId = gv(`mq-${prefix}-room`);
       const roomObj = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
-      const roomAdjPct = roomObj ? (parseFloat(roomObj.adjustment)||0) : 0;
-      const hasRoomAdjustment = roomAdjPct !== 0;
-      const vanityMult = (100 + roomAdjPct) / 100;
+      const materialAdjPct = roomObj ? (parseFloat(roomObj.materialAdjPct !== undefined ? roomObj.materialAdjPct : roomObj.adjustment) || 0) : 0;
+      const installAdjPct  = roomObj ? (parseFloat(roomObj.installAdjPct)||0) : 0;
+      const totalAdjPct    = roomObj ? (parseFloat(roomObj.totalAdjPct)||0) : 0;
+      const hasRoomAdjustment = materialAdjPct !== 0;
+      const roomAdjPct = materialAdjPct; // kept for anything still reading the old name
+      const vanityMult = (100 + materialAdjPct) / 100;
+      const installMult = (100 + installAdjPct) / 100;
 
-      const uInstall = si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0;
-      const bInstall = si==='install'?(
+      const uInstall = (si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0) * installMult;
+      const bInstall = (si==='install'?(
         drawerTier==='some'   ? installBSome   :
         drawerTier==='mostly' ? installBMostly :
         (bDoorKey==='none'?installBNoDoors:installBWithDoors)
-      ):0;
+      ):0) * installMult;
 
       // Material/door/hinge only — no install baked in, so it can show as its
       // own line item for the shop. Height multiplier still applies to the
@@ -2377,7 +2384,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const matUpcharge = Math.max(0, tcMatRates.rateB - blMatRates.rateB) * tcLinFt * 2;
         tcUnitPrice += matUpcharge;
         // Install: base install rate × tcLinFt × 2 if supply + install — door-aware, same as regular bases
-        if (si === 'install') tcUnitPrice += (doorKey==='none'?installBNoDoors:installBWithDoors) * tcLinFt * 2;
+        if (si === 'install') tcUnitPrice += (doorKey==='none'?installBNoDoors:installBWithDoors) * tcLinFt * 2 * installMult;
         // Hinge upcharge — only applies if doors are actually being added (no doors = no hinges needed)
         const hingeKey = diffOn[prefix] ? gv(`mq-${prefix}-b-hinge`) : gv(`mq-${prefix}-hinge`);
         const tcHingeRate = (hingeKey && doorKey && doorKey !== 'none') ? (hinge[hingeKey]?.rate || 0) : 0;
@@ -2429,12 +2436,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
       const sub=uCost+bCost+specTotal+tallCabTotal+remCost+trimCost;
-      lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
+      const totalMult = (100 + totalAdjPct) / 100;
+      const total = sub * totalMult;
+      lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
 
-      const total=sub;
       const low=Math.round(total*(window._mqRangeLow||0.9)/100)*100, high=Math.round(total*(window._mqRangeHigh||1.15)/100)*100;
       const roomLabel = roomObj ? roomObj.name : 'Cabinet';
-      return {lines,sub:Math.round(sub),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel};
+      return {lines,sub:Math.round(total),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel};
     }
 
     function calcCountertop(prefix) {

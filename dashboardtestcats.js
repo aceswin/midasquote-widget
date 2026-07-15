@@ -1258,9 +1258,9 @@ window.logoutMember = async function () {
   // page instead of being hardcoded here. Bootstraps the master shop's own
   // Room types field once from these starting values if it's never been set.
   const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    adjustment:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
-    repainting: { id:'repainting', name:'Repainting',  adjustment:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
-    restaining: { id:'restaining', name:'Restaining',  adjustment:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
+    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
   };
 
   async function ensureMasterTemplateRoomDefs() {
@@ -1607,15 +1607,15 @@ window.logoutMember = async function () {
 
   function defaultRoomTypes() {
     return [
-      { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'kitchen.png' },
-      { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'bathroom.png' },
-      { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'laundry.png' },
-      { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'garage.png' },
-      { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'commercial.png' },
-      { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'other.png' },
-      { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
-      { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
-      { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'kitchen.png' },
+      { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'bathroom.png' },
+      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'laundry.png' },
+      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'garage.png' },
+      { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'commercial.png' },
+      { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'other.png' },
+      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'', measureText:'', measureImage:'' },
+      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'', measureText:'', measureImage:'' },
     ];
   }
 
@@ -1653,6 +1653,32 @@ window.logoutMember = async function () {
     if (opening) _mqExpandedRoomIds.add(room.id); else _mqExpandedRoomIds.delete(room.id);
   };
 
+  // One checkbox+percent row for a project type's price adjustments. The
+  // checkbox is just a friendly on/off — checked means "value !== 0", and
+  // unchecking zeroes it out (same convention as "0 = no adjustment"
+  // everywhere else in this app, just given a clearer on/off affordance
+  // here since a shop owner can now stack up to three of these at once).
+  function mqRoomAdjRow(kind, idx, value, label, hint) {
+    const inputId = `mq-room-adj-${kind}-${idx}`;
+    const chkId = `mq-room-adj-${kind}-chk-${idx}`;
+    const checked = parseFloat(value) !== 0;
+    return `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:auto;flex-shrink:0"/>
+        <label for="${inputId}" style="font-size:12px;color:#374151;flex:1;min-width:0">${label} <span style="color:#9ca3af">— ${hint}</span></label>
+        <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center;flex-shrink:0"/>
+        <span style="font-size:12px;color:#6b7280;flex-shrink:0">%</span>
+      </div>`;
+  }
+  window.mqToggleRoomAdjInput = function(idx, kind) {
+    const chk = el(`mq-room-adj-${kind}-chk-${idx}`);
+    const inp = el(`mq-room-adj-${kind}-${idx}`);
+    if (!chk || !inp) return;
+    if (!chk.checked) { inp.value = 0; }
+    else if (parseFloat(inp.value) === 0) { inp.value = 0; inp.focus(); }
+    mqSaveRooms();
+  };
+
   function renderRoomsList() {
     const container = el('mq-rooms-list');
     if (!container) return;
@@ -1661,10 +1687,9 @@ window.logoutMember = async function () {
       const isOpen = _mqExpandedRoomIds.has(r.id);
       return `
       <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
-        <div style="display:grid;grid-template-columns:24px 1fr 140px 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:24px 1fr 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
           <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
-          <input type="number" value="${r.adjustment||0}" id="mq-room-adj-${idx}" step="0.5" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;text-align:center"/>
           <button type="button" onclick="mqToggleRoomBody(${idx})" title="Show more" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;padding:4px">
             <span id="mq-room-arrow-${idx}" style="display:inline-block;transition:transform 0.2s;font-size:12px;transform:rotate(${isOpen?'90':'0'}deg)">▶</span>
           </button>
@@ -1675,6 +1700,12 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
           </label>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
+            ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Materials/cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets')}
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. renovations run higher since customers are living in the house')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
+          </div>
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
             <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
@@ -1773,7 +1804,9 @@ window.logoutMember = async function () {
           return {
             id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
             name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
-            adjustment: parseFloat(document.getElementById(`mq-room-adj-${oldIdx}`)?.value) || 0,
+            materialAdjPct: parseFloat(document.getElementById(`mq-room-adj-mat-${oldIdx}`)?.value) || 0,
+            installAdjPct: parseFloat(document.getElementById(`mq-room-adj-install-${oldIdx}`)?.value) || 0,
+            totalAdjPct: parseFloat(document.getElementById(`mq-room-adj-total-${oldIdx}`)?.value) || 0,
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
             active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
@@ -1799,7 +1832,7 @@ window.logoutMember = async function () {
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
     const newId = 'room_' + Date.now();
-    window._mqRooms.push({ id: newId, name: '', adjustment: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
+    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, coverImage: '', measureText: '', measureImage: '' });
     _mqExpandedRoomIds.add(newId);
     renderRoomsList();
   };
@@ -1819,7 +1852,9 @@ window.logoutMember = async function () {
       const rooms = (window._mqRooms || []).map((r, idx) => ({
         id: r.id,
         name: (el(`mq-room-name-${idx}`)?.value || '').trim(),
-        adjustment: parseFloat(el(`mq-room-adj-${idx}`)?.value) || 0,
+        materialAdjPct: parseFloat(el(`mq-room-adj-mat-${idx}`)?.value) || 0,
+        installAdjPct: parseFloat(el(`mq-room-adj-install-${idx}`)?.value) || 0,
+        totalAdjPct: parseFloat(el(`mq-room-adj-total-${idx}`)?.value) || 0,
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
         active: el(`mq-room-active-${idx}`)?.checked !== false,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
@@ -3029,7 +3064,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           vr.forEach(roomId => {
             if (!shopRooms.find(r => r.id === roomId)) {
               const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
               shopRoomsChanged = true;
               roomsAddedCount++;
             }
@@ -3152,7 +3187,7 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
           vr.forEach(roomId => {
             if (!shopRooms.find(r => r.id === roomId)) {
               const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, adjustment: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
+              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
               shopRoomsChanged = true;
               roomsAddedCount++;
             }
