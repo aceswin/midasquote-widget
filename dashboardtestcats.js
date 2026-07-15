@@ -1410,6 +1410,9 @@ window.logoutMember = async function () {
         'Price': master.fields['Price'] || 0,
         'Per linear foot': master.fields['Per linear foot'] || false,
         'Per square foot': master.fields['Per square foot'] || false,
+        'Offers install choice': master.fields['Offers install choice'] || false,
+        'Install price': master.fields['Install price'] || 0,
+        'Install mode': master.fields['Install mode'] || 'supply',
         'Active': true,
         'Visible rooms': master.fields['Visible rooms'] || '[]',
         'Template source ID': master.id,
@@ -2967,6 +2970,10 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:auto"/> lin ft</label>
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:auto"/> sq ft</label>
       </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:auto"/> Offer supply/install choice</label>
+      </div>
+      <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
       ${photoHtml}
       <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item</button>
       <button class="mq-btn mq-btn-danger mq-btn-sm" style="width:100%" onclick="mqDeleteTemplateItem('${r.id}')">Delete template item</button>
@@ -3142,6 +3149,9 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
               'Price': master.fields['Price'] || 0,
               'Per linear foot': master.fields['Per linear foot'] || false,
               'Per square foot': master.fields['Per square foot'] || false,
+              'Offers install choice': master.fields['Offers install choice'] || false,
+              'Install price': master.fields['Install price'] || 0,
+              'Install mode': master.fields['Install mode'] || 'supply',
               'Active': false,
               'Visible rooms': master.fields['Visible rooms'] || '[]',
               'Template source ID': master.id,
@@ -3248,6 +3258,9 @@ shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
             'Price': master.fields['Price'] || 0,
             'Per linear foot': master.fields['Per linear foot'] || false,
             'Per square foot': master.fields['Per square foot'] || false,
+            'Offers install choice': master.fields['Offers install choice'] || false,
+            'Install price': master.fields['Install price'] || 0,
+            'Install mode': master.fields['Install mode'] || 'supply',
             'Active': false,
             'Visible rooms': master.fields['Visible rooms'] || '[]',
             'Template source ID': master.id,
