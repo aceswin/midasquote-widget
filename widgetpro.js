@@ -980,7 +980,7 @@
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
-        <div style="background:linear-gradient(135deg,#d97706,#b45309);border:2px solid #0f2a52;border-radius:12px;padding:16px 18px">
+        <div style="background:#F0E9DA;border:2px solid #0f2a52;border-radius:12px;padding:16px 18px">
           <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#0f2a52;margin-bottom:8px">
             <span style="background:#0f2a52;color:#fbbf24;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
             Start here — choose your project type
