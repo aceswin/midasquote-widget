@@ -2185,11 +2185,23 @@ window.mqTogDrawerConfig=(prefix)=>{
       const el=document.getElementById(`mq-tc-qty-${id}`);
       if(el) el.textContent=tallCabs[prefix][id];
     };
+    // Picking "None" zeroes the quantity out, same as before. Picking (or
+    // switching to a different) real type auto-bumps quantity to 1 if it's
+    // still sitting at 0 — every other picker in the widget "just works"
+    // the moment you pick something, so tall cabinets shouldn't be the one
+    // place someone has to remember a second step to also set a quantity.
+    // Doesn't touch the quantity if they're switching between two real
+    // types and already had some quantity set — only fills in the gap.
     window.mqTogTallCabNone=(prefix,id)=>{
-      if (gv(`mq-tc-type-${id}`) !== 'none') return;
-      tallCabs[prefix][id]=0;
+      const type = gv(`mq-tc-type-${id}`);
       const el=document.getElementById(`mq-tc-qty-${id}`);
-      if(el) el.textContent=0;
+      if (type === 'none') {
+        tallCabs[prefix][id]=0;
+        if(el) el.textContent=0;
+      } else if (!tallCabs[prefix][id]) {
+        tallCabs[prefix][id]=1;
+        if(el) el.textContent=1;
+      }
     };
 
     window.mqShowLead=cb=>{
