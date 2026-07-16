@@ -1338,7 +1338,7 @@
         ${cabinetForm('b', specs, data)}
         <div id="mq-b-countertop-details-sec">
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
-        <div class="mq-sec"><p class="mq-sec-title">Countertop options</p>
+        <div class="mq-sec" id="mq-b-ct-options-sec"><p class="mq-sec-title">Countertop options</p>
           <div class="mq-grid2">
             <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Supply + install?' : 'Supply'}</label>
               ${hasCtInstall ? '' : '<p class="mq-hint" style="margin-bottom:6px">This shop offers supply only — installation is not included.</p>'}
@@ -2058,6 +2058,33 @@
           surfContainer.innerHTML = '';
           surfContainer.dataset.autoAdded = 'false';
         }
+
+        // With no cabinets, there's no cabinet-level Supply/Install setting
+        // left to ask about at all — each surface already asks the question
+        // itself. Hide the whole Countertop Options section rather than
+        // just the "use my measurements" checkbox within it.
+        const ctOptionsSec = document.getElementById('mq-b-ct-options-sec');
+        if (ctOptionsSec) ctOptionsSec.style.display = cabActive ? '' : 'none';
+
+        // "Same as project" on each surface's own Install dropdown only
+        // means something when Countertop Options is actually visible to
+        // set that project-level value — with it hidden, strip that choice
+        // out entirely so nothing points at an invisible, unreachable
+        // setting. Restored automatically if cabinets come back.
+        document.querySelectorAll('[id^="mqssi-"]').forEach(sel => {
+          const inheritOpt = sel.querySelector('option[value="inherit"]');
+          if (!cabActive) {
+            if (inheritOpt) {
+              if (sel.value === 'inherit') sel.value = 'supply';
+              inheritOpt.remove();
+            }
+          } else if (cabActive && !inheritOpt && sel.closest('#mq-b-ct-surfaces')) {
+            const opt = document.createElement('option');
+            opt.value = 'inherit';
+            opt.textContent = 'Same as project';
+            sel.insertBefore(opt, sel.firstChild);
+          }
+        });
       }
       mqRenumberSteps(prefix);
       window.mqUpdateStepFocus(prefix);
