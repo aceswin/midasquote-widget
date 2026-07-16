@@ -329,7 +329,7 @@
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
-      #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.35;color:#111;flex:1;cursor:pointer}
+      #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;cursor:pointer;display:block}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:48px;height:48px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
@@ -723,7 +723,7 @@
           <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
-            <div style="font-size:12px;line-height:1.3;color:#6b7280;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
+            <div style="font-size:11px;line-height:1;color:#9ca3af;margin-top:3px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
             ${installModeHtml}
           </div>
         </div>
