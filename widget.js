@@ -1344,7 +1344,7 @@
               ${hasCtInstall ? '' : '<p class="mq-hint" style="margin-bottom:6px">This shop offers supply only — installation is not included.</p>'}
               <select id="mq-b-ct-si">${hasCtInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
           </div>
-          <label style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
+          <label id="mq-b-use-cab-wrap" style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
             <input type="checkbox" id="mq-b-use-cab" onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
             <span style="font-size:14px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#6b7280">(assumes standard depth counter)</span></span>
           </label>
@@ -2025,6 +2025,19 @@
       if (prefix === 'b') {
         const ctSec = document.getElementById('mq-b-countertop-details-sec');
         if (ctSec) ctSec.style.display = rowHasReal('mq-b-ct-mat-cab') ? '' : 'none';
+
+        // Same idea as the crown/valance "use my upper cabinet measurements"
+        // toggle above — if there are no base cabinets to pull footage from
+        // at all, offering a checkbox to "use" them doesn't make sense.
+        // Hide it and default straight to the countertop's own manual/
+        // independent surface entry instead.
+        const useCabWrapCt = document.getElementById('mq-b-use-cab-wrap');
+        const useCabCbCt = document.getElementById('mq-b-use-cab');
+        if (useCabWrapCt) useCabWrapCt.style.display = cabActive ? 'flex' : 'none';
+        if (!cabActive && useCabCbCt && useCabCbCt.checked) {
+          useCabCbCt.checked = false;
+          window.mqTogUseCab('b');
+        }
       }
       mqRenumberSteps(prefix);
       window.mqUpdateStepFocus(prefix);
