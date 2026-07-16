@@ -336,6 +336,8 @@
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
+      #midasquote-widget .mq-spec-mode-btn{flex:1;padding:6px 8px;border:1.5px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-spec-mode-btn.selected{border-color:${bc};background:${bc}0d;color:${bc}}
       #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
@@ -703,16 +705,17 @@
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
-      // Items offering a choice get a small select (defaulting to match the
-      // project's overall Supply + Install setting — see
-      // mqSyncSpecialtyModesToGlobal). Items that don't just show a plain
-      // label for whichever mode their one flat price already represents —
-      // never an interactive control, since there's nothing to choose.
+      // Items offering a choice get two visible toggle buttons — not a
+      // dropdown, since hiding the second option behind a click defeats the
+      // whole point of making sure people notice there's a choice at all.
+      // A hidden select still holds the actual value underneath, so the calc
+      // logic and mqSyncSpecialtyModesToGlobal don't need to change at all.
       const installModeHtml = s.offersInstallChoice
-        ? `<select id="mq-spec-mode-${prefix}-${i}" onchange="mqSpecModeTouched('${prefix}',${i})" style="font-size:11px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;margin-top:4px;width:100%">
-            <option value="supply">Supply only</option>
-            <option value="install">Supplied &amp; Installed</option>
-          </select>`
+        ? `<div style="display:flex;gap:6px;margin-top:6px">
+            <button type="button" id="mq-spec-btn-supply-${prefix}-${i}" class="mq-spec-mode-btn selected" onclick="mqSetSpecMode('${prefix}',${i},'supply')">Supply only</button>
+            <button type="button" id="mq-spec-btn-install-${prefix}-${i}" class="mq-spec-mode-btn" onclick="mqSetSpecMode('${prefix}',${i},'install')">Supplied &amp; Installed</button>
+          </div>
+          <select id="mq-spec-mode-${prefix}-${i}" style="display:none"><option value="supply" selected>Supply only</option><option value="install">Supplied &amp; Installed</option></select>`
         : (s.installMode === 'na' ? '' : `<div style="font-size:11px;color:#6b7280;margin-top:2px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`);
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
@@ -2870,11 +2873,25 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.querySelectorAll(`[id^="mq-spec-mode-${prefix}-"]`).forEach(sel => {
         if (sel.dataset.touched === 'true') return; // respect a manual override
         sel.value = globalSi;
+        const i = sel.id.slice(`mq-spec-mode-${prefix}-`.length);
+        mqRefreshSpecModeButtons(prefix, i);
       });
     };
-    window.mqSpecModeTouched = function(prefix, i) {
+    // Refreshes which of the two toggle buttons looks "selected" to match
+    // whatever the hidden select currently holds — used both right after a
+    // manual click and whenever the project-wide default syncs in.
+    function mqRefreshSpecModeButtons(prefix, i) {
       const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
-      if (sel) sel.dataset.touched = 'true';
+      const mode = sel ? sel.value : 'supply';
+      const supplyBtn = document.getElementById(`mq-spec-btn-supply-${prefix}-${i}`);
+      const installBtn = document.getElementById(`mq-spec-btn-install-${prefix}-${i}`);
+      if (supplyBtn) supplyBtn.classList.toggle('selected', mode !== 'install');
+      if (installBtn) installBtn.classList.toggle('selected', mode === 'install');
+    }
+    window.mqSetSpecMode = function(prefix, i, mode) {
+      const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+      if (sel) { sel.value = mode; sel.dataset.touched = 'true'; }
+      mqRefreshSpecModeButtons(prefix, i);
     };
 
     addSurfaceInternal('ct','Kitchen run');
