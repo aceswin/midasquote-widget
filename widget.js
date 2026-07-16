@@ -329,7 +329,7 @@
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
-      #midasquote-widget .mq-spec-name{font-size:14px;color:#111;flex:1;cursor:pointer}
+      #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.35;color:#111;flex:1;cursor:pointer}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:48px;height:48px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
@@ -337,7 +337,7 @@
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
       #midasquote-widget .mq-spec-mode-btn{flex:1;padding:4px 6px;border:1.5px solid #e5e7eb;border-radius:5px;background:#f9fafb;color:#9ca3af;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
-      #midasquote-widget .mq-spec-mode-btn.selected{border-color:${bc};background:${bc};color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+      #midasquote-widget .mq-spec-mode-btn.selected{border-color:${bc};background:${bc};filter:brightness(1.3);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
       #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
@@ -723,7 +723,7 @@
           <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
-            <div style="font-size:12px;color:#6b7280;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
+            <div style="font-size:12px;line-height:1.3;color:#6b7280;margin-top:1px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
             ${installModeHtml}
           </div>
         </div>
