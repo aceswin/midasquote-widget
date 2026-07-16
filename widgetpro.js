@@ -2016,7 +2016,16 @@
         }
         if (surfTitle) surfTitle.textContent = cabActive ? 'Additional surfaces' : 'Surfaces';
         if (!cabActive && surfContainer && !surfContainer.children.length) {
+          // Only fires when there's truly nothing there yet — marked so we
+          // know to clean it back up if a project type WITH cabinets gets
+          // picked afterward, rather than leaving a stray auto-added card
+          // behind once "Use my base cabinet measurements" is back and
+          // this section should go back to being genuinely empty/optional.
           addSurfaceInternal('b', 'Kitchen run');
+          surfContainer.dataset.autoAdded = 'true';
+        } else if (cabActive && surfContainer && surfContainer.dataset.autoAdded === 'true') {
+          surfContainer.innerHTML = '';
+          surfContainer.dataset.autoAdded = 'false';
         }
       }
       mqRenumberSteps(prefix);
