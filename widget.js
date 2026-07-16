@@ -327,7 +327,7 @@
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
-      #midasquote-widget .mq-spec-bottom{display:flex;align-items:center;gap:8px}
+      #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
       #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;cursor:pointer;display:block}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
@@ -336,8 +336,10 @@
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
-      #midasquote-widget .mq-spec-mode-btn{flex:1;padding:4px 6px;border:1.5px solid #e5e7eb;border-radius:5px;background:#f9fafb;color:#9ca3af;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
-      #midasquote-widget .mq-spec-mode-btn.selected{border-color:${bc};background:${bc};filter:brightness(1.3);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+      #midasquote-widget .mq-spec-mode-select{cursor:pointer}
+      #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
+      @keyframes mqShakeChoice{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+      #midasquote-widget .mq-spec-mode-select.mq-needs-choice{animation:mqShakeChoice 0.4s ease;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
       #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
@@ -705,17 +707,19 @@
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
-      // Items offering a choice get two visible toggle buttons — not a
-      // dropdown, since hiding the second option behind a click defeats the
-      // whole point of making sure people notice there's a choice at all.
-      // A hidden select still holds the actual value underneath, so the calc
-      // logic and mqSyncSpecialtyModesToGlobal don't need to change at all.
+      // Items offering a choice get a dropdown that starts on a
+      // non-selectable "Choose one" placeholder — not defaulted to match
+      // the project's overall setting, since the whole point here is
+      // forcing an actual decision rather than letting people miss that
+      // there was a choice at all. Trying to add quantity before choosing
+      // shakes and highlights the dropdown instead of silently doing
+      // nothing — see mqSpecModeChosen.
       const installModeHtml = s.offersInstallChoice
-        ? `<div style="display:flex;gap:4px;margin-top:4px">
-            <button type="button" id="mq-spec-btn-supply-${prefix}-${i}" class="mq-spec-mode-btn selected" onclick="mqSetSpecMode('${prefix}',${i},'supply')">Supply only</button>
-            <button type="button" id="mq-spec-btn-install-${prefix}-${i}" class="mq-spec-mode-btn" onclick="mqSetSpecMode('${prefix}',${i},'install')">Supplied &amp; Installed</button>
-          </div>
-          <select id="mq-spec-mode-${prefix}-${i}" style="display:none"><option value="supply" selected>Supply only</option><option value="install">Supplied &amp; Installed</option></select>`
+        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;margin-top:4px;width:100%;background:#fff;color:#111;font-weight:600">
+            <option value="" selected disabled>Choose one</option>
+            <option value="supply">Supply only</option>
+            <option value="install">Supplied &amp; Installed</option>
+          </select>`
         : (s.installMode === 'na' ? '' : `<div style="font-size:11px;color:#6b7280;margin-top:2px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`);
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
@@ -723,7 +727,6 @@
           <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
-            <div style="font-size:11px;line-height:1;color:#9ca3af;margin-top:3px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
             ${installModeHtml}
           </div>
         </div>
@@ -734,7 +737,7 @@
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
-          ${(s.perSqFt || s.perFt) ? `<span style="font-size:9px;font-weight:600;color:#4b5563">${s.perSqFt ? 'sq ft' : 'lin ft'}</span>` : ''}
+          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</span>
         </div>
       </div>`;
     }).join('');
@@ -2140,8 +2143,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(wrap) wrap.style.display=tier==='none'?'none':'block';
     };
 
-    window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0)mqAdjQty(prefix,i,1);else mqAdjQty(prefix,i,-specQty[prefix][i]);};
+    window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-specQty[prefix][i]);};
     window.mqAdjQty=(prefix,i,d)=>{
+      if (d > 0 && !mqSpecModeChosen(prefix,i)) return;
       const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
       let next = Math.max(0, specQty[prefix][i] + d);
       if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
@@ -2155,6 +2159,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       const n = allowDecimal
         ? Math.max(0, Math.round((parseFloat(val)||0) * 10) / 10) // one decimal — e.g. linear/sq ft items
         : Math.max(0, parseInt(val,10)||0); // whole numbers — plain quantity items
+      if (n > 0 && !mqSpecModeChosen(prefix,i)) {
+        const el=document.getElementById(`mq-qty-${prefix}-${i}`);
+        if(el) el.value = 0;
+        return;
+      }
       specQty[prefix][i]=n;
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
     };
@@ -2861,38 +2870,28 @@ window.mqTogDrawerConfig=(prefix)=>{
         const ctSi  = document.getElementById('mq-b-ct-si');
         if (cabSi && ctSi) ctSi.value = cabSi.value;
       }
-      window.mqSyncSpecialtyModesToGlobal(prefix);
     };
 
-    // Any specialty item offering its own supply/install choice defaults to
-    // match the project's overall choice — but once a customer manually
-    // touches one item's dropdown, it's marked "touched" and won't get
-    // silently overwritten if they later change the project-wide setting.
-    window.mqSyncSpecialtyModesToGlobal = function(prefix) {
-      const globalSi = gv(`mq-${prefix}-si`) || 'supply';
-      document.querySelectorAll(`[id^="mq-spec-mode-${prefix}-"]`).forEach(sel => {
-        if (sel.dataset.touched === 'true') return; // respect a manual override
-        sel.value = globalSi;
-        const i = sel.id.slice(`mq-spec-mode-${prefix}-`.length);
-        mqRefreshSpecModeButtons(prefix, i);
-      });
-    };
-    // Refreshes which of the two toggle buttons looks "selected" to match
-    // whatever the hidden select currently holds — used both right after a
-    // manual click and whenever the project-wide default syncs in.
-    function mqRefreshSpecModeButtons(prefix, i) {
+    // Items offering a supply/install choice always start on the
+    // unselectable "Choose one" placeholder — deliberately never
+    // auto-defaulted to the project's overall setting, since the whole
+    // point is making sure the choice actually gets made. Trying to add
+    // quantity before choosing shakes and highlights the dropdown instead
+    // of silently letting it through with an assumed answer.
+    function mqSpecModeChosen(prefix, i) {
+      const s = specs[i];
+      if (!s || !s.offersInstallChoice) return true; // nothing to choose for this item
       const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
-      const mode = sel ? sel.value : 'supply';
-      const supplyBtn = document.getElementById(`mq-spec-btn-supply-${prefix}-${i}`);
-      const installBtn = document.getElementById(`mq-spec-btn-install-${prefix}-${i}`);
-      if (supplyBtn) supplyBtn.classList.toggle('selected', mode !== 'install');
-      if (installBtn) installBtn.classList.toggle('selected', mode === 'install');
+      if (sel && sel.value) return true;
+      if (sel) {
+        sel.classList.remove('mq-needs-choice');
+        void sel.offsetWidth; // restart the animation if it's already mid-shake
+        sel.classList.add('mq-needs-choice');
+        sel.focus();
+        setTimeout(() => sel.classList.remove('mq-needs-choice'), 700);
+      }
+      return false;
     }
-    window.mqSetSpecMode = function(prefix, i, mode) {
-      const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
-      if (sel) { sel.value = mode; sel.dataset.touched = 'true'; }
-      mqRefreshSpecModeButtons(prefix, i);
-    };
 
     addSurfaceInternal('ct','Kitchen run');
     // Auto-add one starting tall cabinet card per tab so the photo picker is

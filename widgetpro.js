@@ -300,7 +300,7 @@
       #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
-      #midasquote-widget .mq-spec-bottom{display:flex;align-items:center;gap:8px}
+      #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#0f2a52;border-color:#d97706}
       #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;cursor:pointer;display:block}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#fbbf24;font-weight:600}
@@ -309,8 +309,10 @@
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
-      #midasquote-widget .mq-spec-mode-btn{flex:1;padding:4px 6px;border:1.5px solid #e5e7eb;border-radius:5px;background:#f9fafb;color:#9ca3af;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
-      #midasquote-widget .mq-spec-mode-btn.selected{border-color:${bc};background:${bc};filter:brightness(1.3);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+      #midasquote-widget .mq-spec-mode-select{cursor:pointer}
+      #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
+      @keyframes mqShakeChoice{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+      #midasquote-widget .mq-spec-mode-select.mq-needs-choice{animation:mqShakeChoice 0.4s ease;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
       #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
@@ -2115,8 +2117,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(wrap) wrap.style.display=tier==='none'?'none':'block';
     };
 
-    window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0)mqAdjQty(prefix,i,1);else mqAdjQty(prefix,i,-specQty[prefix][i]);};
+    window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-specQty[prefix][i]);};
     window.mqAdjQty=(prefix,i,d)=>{
+      if (d > 0 && !mqSpecModeChosen(prefix,i)) return;
       const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
       let next = Math.max(0, specQty[prefix][i] + d);
       if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
@@ -2130,6 +2133,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       const n = allowDecimal
         ? Math.max(0, Math.round((parseFloat(val)||0) * 10) / 10) // one decimal — e.g. linear/sq ft items
         : Math.max(0, parseInt(val,10)||0); // whole numbers — plain quantity items
+      if (n > 0 && !mqSpecModeChosen(prefix,i)) {
+        const el=document.getElementById(`mq-qty-${prefix}-${i}`);
+        if(el) el.value = 0;
+        return;
+      }
       specQty[prefix][i]=n;
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
     };
@@ -2834,31 +2842,22 @@ window.mqTogDrawerConfig=(prefix)=>{
         const ctSi  = document.getElementById('mq-b-ct-si');
         if (cabSi && ctSi) ctSi.value = cabSi.value;
       }
-      window.mqSyncSpecialtyModesToGlobal(prefix);
     };
 
-    window.mqSyncSpecialtyModesToGlobal = function(prefix) {
-      const globalSi = gv(`mq-${prefix}-si`) || 'supply';
-      document.querySelectorAll(`[id^="mq-spec-mode-${prefix}-"]`).forEach(sel => {
-        if (sel.dataset.touched === 'true') return;
-        sel.value = globalSi;
-        const i = sel.id.slice(`mq-spec-mode-${prefix}-`.length);
-        mqRefreshSpecModeButtons(prefix, i);
-      });
-    };
-    function mqRefreshSpecModeButtons(prefix, i) {
+    function mqSpecModeChosen(prefix, i) {
+      const s = specs[i];
+      if (!s || !s.offersInstallChoice) return true;
       const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
-      const mode = sel ? sel.value : 'supply';
-      const supplyBtn = document.getElementById(`mq-spec-btn-supply-${prefix}-${i}`);
-      const installBtn = document.getElementById(`mq-spec-btn-install-${prefix}-${i}`);
-      if (supplyBtn) supplyBtn.classList.toggle('selected', mode !== 'install');
-      if (installBtn) installBtn.classList.toggle('selected', mode === 'install');
+      if (sel && sel.value) return true;
+      if (sel) {
+        sel.classList.remove('mq-needs-choice');
+        void sel.offsetWidth;
+        sel.classList.add('mq-needs-choice');
+        sel.focus();
+        setTimeout(() => sel.classList.remove('mq-needs-choice'), 700);
+      }
+      return false;
     }
-    window.mqSetSpecMode = function(prefix, i, mode) {
-      const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
-      if (sel) { sel.value = mode; sel.dataset.touched = 'true'; }
-      mqRefreshSpecModeButtons(prefix, i);
-    };
 
     addSurfaceInternal('ct','Kitchen run');
     // Auto-add one starting tall cabinet card per tab so the photo picker is
