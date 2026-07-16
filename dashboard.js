@@ -2123,7 +2123,7 @@ window.logoutMember = async function () {
             const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
             return `
             <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" style="cursor:grab">
-              <td style="color:#9ca3af;font-size:16px;padding:8px 12px">⠿</td>
+              <td class="mq-spec-drag-handle" style="color:#9ca3af;font-size:16px;padding:8px 12px;cursor:grab">⠿</td>
               <td><input type="text" value="${r.fields['Item name'] || ''}" id="mq-spec-name-${r.id}" style="border:none;background:none;font-size:13px;width:160px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/></td>
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
@@ -2142,14 +2142,23 @@ window.logoutMember = async function () {
     const tbody = document.getElementById('mq-spec-tbody');
     let dragging = null;
 
+    // Same fix as Project Types rows: draggable only turns on while the
+    // mouse is actually down on the ⠿ handle — leaving the whole row
+    // draggable all the time made selecting text anywhere in it (like the
+    // item name) prone to being grabbed as a row-drag instead of a normal
+    // text selection.
     tbody.querySelectorAll('tr').forEach(row => {
-      row.draggable = true;
+      row.draggable = false;
+      const handle = row.querySelector('.mq-spec-drag-handle');
+      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
+      row.addEventListener('mouseup', () => { row.draggable = false; });
       row.addEventListener('dragstart', () => {
         dragging = row;
         setTimeout(() => row.style.opacity = '0.4', 0);
       });
       row.addEventListener('dragend', async () => {
         row.style.opacity = '1';
+        row.draggable = false;
         dragging = null;
         const rows = [...tbody.querySelectorAll('tr')];
         for (let i = 0; i < rows.length; i++) {
