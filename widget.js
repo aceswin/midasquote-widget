@@ -188,6 +188,7 @@
           offersInstallChoice: r.fields['Offers install choice']||false,
           installPrice: r.fields['Install price']||0,
           installMode: r.fields['Install mode']||'supply',
+          description: r.fields['Description']||'',
         };
       }));
 
@@ -727,6 +728,7 @@
           <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
+            ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
             ${installModeHtml}
           </div>
         </div>
