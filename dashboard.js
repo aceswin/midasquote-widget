@@ -1528,13 +1528,20 @@ window.logoutMember = async function () {
     window.mqCheckConsultFields();
     const toggle = el('mq-showroom-toggle');
     if (toggle) {
-      const isOn = f['Show showroom'] !== false;
+      // Matches the widget's own check (shop['Show showroom'] !== 'Hide') —
+      // this used to check for the boolean `false` instead, which could
+      // never match the string actually being saved, making the toggle show
+      // the wrong state on every reload regardless of what was set.
+      const isOn = f['Show showroom'] !== 'Hide';
       toggle.classList.toggle('on', isOn);
     }
     const financingToggle = el('mq-financing-toggle');
     const financingLinkWrap = el('mq-financing-link-wrap');
     if (financingToggle) {
-      const isOn = f['Offers financing'] === true;
+      // Matches the widget's own check (shop['Offers financing'] === 'Yes')
+      // — same issue as showroom above, this was checking for a boolean
+      // `true` that was never actually what got saved.
+      const isOn = f['Offers financing'] === 'Yes';
       financingToggle.classList.toggle('on', isOn);
       if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
     }
@@ -2181,18 +2188,6 @@ window.logoutMember = async function () {
     }
   };
 
-  window.mqToggleShowroom = function() {
-    const toggle = el('mq-showroom-toggle');
-    if (!toggle) return;
-    toggle.classList.toggle('on');
-    const isOn = toggle.classList.contains('on');
-    const shopRec = window._mqShopRecord;
-    if (shopRec) {
-      atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Show showroom': isOn });
-      shopRec.fields['Show showroom'] = isOn;
-    }
-  };
-
   window.mqSaveShop = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -2761,7 +2756,7 @@ window.logoutMember = async function () {
     toggle.classList.toggle('on', !isOn);
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Show showroom': !isOn ? 'Show' : 'Hide' });
-      shopRec.fields['Show showroom'] = !isOn;
+      shopRec.fields['Show showroom'] = !isOn ? 'Show' : 'Hide';
       showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
   };
@@ -2777,8 +2772,7 @@ window.logoutMember = async function () {
     if (linkWrap) linkWrap.style.display = !isOn ? 'block' : 'none';
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Offers financing': !isOn ? 'Yes' : 'No' });
-shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
-      shopRec.fields['Offers financing'] = !isOn;
+      shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       showMsg('mq-shop-msg', !isOn ? '✓ Financing note will show on your widget.' : '✓ Financing note hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); if (linkWrap) linkWrap.style.display = isOn ? 'block' : 'none'; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
