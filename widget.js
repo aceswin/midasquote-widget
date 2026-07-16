@@ -336,8 +336,8 @@
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
-      #midasquote-widget .mq-spec-mode-btn{flex:1;padding:6px 8px;border:1.5px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
-      #midasquote-widget .mq-spec-mode-btn.selected{border-color:${bc};background:${bc}0d;color:${bc}}
+      #midasquote-widget .mq-spec-mode-btn{flex:1;padding:4px 6px;border:1.5px solid #e5e7eb;border-radius:5px;background:#f9fafb;color:#9ca3af;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-spec-mode-btn.selected{border-color:${bc};background:${bc};color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
       #midasquote-widget .mq-vpicker-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:48px;height:48px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
@@ -711,7 +711,7 @@
       // A hidden select still holds the actual value underneath, so the calc
       // logic and mqSyncSpecialtyModesToGlobal don't need to change at all.
       const installModeHtml = s.offersInstallChoice
-        ? `<div style="display:flex;gap:6px;margin-top:6px">
+        ? `<div style="display:flex;gap:4px;margin-top:4px">
             <button type="button" id="mq-spec-btn-supply-${prefix}-${i}" class="mq-spec-mode-btn selected" onclick="mqSetSpecMode('${prefix}',${i},'supply')">Supply only</button>
             <button type="button" id="mq-spec-btn-install-${prefix}-${i}" class="mq-spec-mode-btn" onclick="mqSetSpecMode('${prefix}',${i},'install')">Supplied &amp; Installed</button>
           </div>
