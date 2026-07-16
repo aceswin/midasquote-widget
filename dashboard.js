@@ -1418,21 +1418,45 @@ window.logoutMember = async function () {
 
     const masterItems = await ensureMasterTemplateItems();
 
+    // Master items can have their own reference photos (uploaded on the
+    // Templates page) — those need to carry over to this shop's copies too,
+    // not just the text/price/settings. Computed locally as one combined
+    // write at the end rather than per-item, since these all run in
+    // parallel — writing the shop's Photos field concurrently per-item
+    // would risk one write clobbering another's.
+    const masterShop = await ensureMasterTemplateShop();
+    let masterPhotos = {};
+    try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+    const shopPhotos = {};
+    try { Object.assign(shopPhotos, shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}); } catch(e) {}
+    let photosChanged = false;
+
     try {
-      await Promise.all(masterItems.map(master => atCreate(CONFIG.SPECIALTY_TABLE, {
-        'Shop': [shopRecord.id],
-        'Item name': master.fields['Item name'],
-        'Special Items': master.fields['Item name'],
-        'Price': master.fields['Price'] || 0,
-        'Per linear foot': master.fields['Per linear foot'] || false,
-        'Per square foot': master.fields['Per square foot'] || false,
-        'Offers install choice': master.fields['Offers install choice'] || false,
-        'Install price': master.fields['Install price'] || 0,
-        'Install mode': master.fields['Install mode'] || 'supply',
-        'Active': true,
-        'Visible rooms': master.fields['Visible rooms'] || '[]',
-        'Template source ID': master.id,
-      })));
+      await Promise.all(masterItems.map(async master => {
+        const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
+          'Shop': [shopRecord.id],
+          'Item name': master.fields['Item name'],
+          'Special Items': master.fields['Item name'],
+          'Price': master.fields['Price'] || 0,
+          'Per linear foot': master.fields['Per linear foot'] || false,
+          'Per square foot': master.fields['Per square foot'] || false,
+          'Offers install choice': master.fields['Offers install choice'] || false,
+          'Install price': master.fields['Install price'] || 0,
+          'Install mode': master.fields['Install mode'] || 'supply',
+          'Active': true,
+          'Visible rooms': master.fields['Visible rooms'] || '[]',
+          'Template source ID': master.id,
+        });
+        if (created?.id) {
+          const photoUrl = masterPhotos['spec_' + master.id];
+          if (photoUrl) { shopPhotos['spec_' + created.id] = photoUrl; photosChanged = true; }
+        }
+        return created;
+      }));
+      if (photosChanged) {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Photos': JSON.stringify(shopPhotos) });
+        shopRecord.fields['Photos'] = JSON.stringify(shopPhotos);
+      }
       await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Templates seeded': true });
       shopRecord.fields['Templates seeded'] = true;
     } catch(e) { console.warn('Failed to seed project type templates:', e); }
