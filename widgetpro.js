@@ -1372,7 +1372,7 @@
             </div>
           </div>
         </div>
-        <div class="mq-sec"><p class="mq-sec-title">Additional surfaces</p>
+        <div class="mq-sec"><p class="mq-sec-title" id="mq-b-ct-surfaces-title">Additional surfaces</p>
           <div id="mq-b-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
         </div>
@@ -2007,10 +2007,16 @@
         // independent surface entry instead.
         const useCabWrapCt = document.getElementById('mq-b-use-cab-wrap');
         const useCabCbCt = document.getElementById('mq-b-use-cab');
+        const surfTitle = document.getElementById('mq-b-ct-surfaces-title');
+        const surfContainer = document.getElementById('mq-b-ct-surfaces');
         if (useCabWrapCt) useCabWrapCt.style.display = cabActive ? 'flex' : 'none';
         if (!cabActive && useCabCbCt && useCabCbCt.checked) {
           useCabCbCt.checked = false;
           window.mqTogUseCab('b');
+        }
+        if (surfTitle) surfTitle.textContent = cabActive ? 'Additional surfaces' : 'Surfaces';
+        if (!cabActive && surfContainer && !surfContainer.children.length) {
+          addSurfaceInternal('b', 'Kitchen run');
         }
       }
       mqRenumberSteps(prefix);
