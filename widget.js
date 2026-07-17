@@ -333,6 +333,9 @@
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
       #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;cursor:pointer;display:block}
       #midasquote-widget .mq-spec-category-heading{color:${bc}}
+      #midasquote-widget .mq-spec-category-group{border:1.5px solid #e5e7eb;border-radius:12px;padding:12px 14px 14px;background:#fafafa;box-shadow:0 3px 10px rgba(0,0,0,0.05)}
+      #midasquote-widget .mq-spec-category-heading{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+      #midasquote-widget .mq-spec-category-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:48px;height:48px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
@@ -772,7 +775,10 @@
     return order.map((cat, gi) => {
       const label = cat === '__other__' ? 'Other' : cat;
       const cardsHtml = groups[cat].map(i => buildCard(specs[i], i)).join('');
-      return `<div class="mq-spec-category-heading" style="grid-column:1/-1;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin:${gi===0?'0':'22px'} 0 10px;${gi===0?'':'padding-top:16px;border-top:1px solid #e5e7eb'}">${label}</div>${cardsHtml}`;
+      return `<div class="mq-spec-category-group" style="grid-column:1/-1;margin:${gi===0?'0':'14px'} 0 0">
+        <div class="mq-spec-category-heading">${label}</div>
+        <div class="mq-spec-category-items">${cardsHtml}</div>
+      </div>`;
     }).join('');
   }
 
@@ -1655,23 +1661,16 @@
           }
         }
       });
-      // If every item under a category heading just got filtered out above,
-      // hide the heading too — otherwise you'd see an empty, orphaned
-      // category label with nothing underneath it for this project type.
+      // If every item in a whole category capsule just got filtered out
+      // above, hide the whole capsule (heading included) — otherwise you'd
+      // see an empty, orphaned category box with nothing inside it for this
+      // project type.
       const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
-      const grid = specBody && specBody.querySelector('.mq-spec-grid');
-      if (grid) {
-        let currentHeading = null, groupHasVisible = false;
-        [...grid.children].forEach(child => {
-          if (child.classList.contains('mq-spec-category-heading')) {
-            if (currentHeading) currentHeading.style.display = groupHasVisible ? '' : 'none';
-            currentHeading = child;
-            groupHasVisible = false;
-          } else if (child.style.display !== 'none') {
-            groupHasVisible = true;
-          }
+      if (specBody) {
+        specBody.querySelectorAll('.mq-spec-category-group').forEach(group => {
+          const anyVisible = [...group.querySelectorAll('.mq-spec-item')].some(item => item.style.display !== 'none');
+          group.style.display = anyVisible ? '' : 'none';
         });
-        if (currentHeading) currentHeading.style.display = groupHasVisible ? '' : 'none';
       }
     };
     // Shows the shop owner's custom guidance note for whichever project type
