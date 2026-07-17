@@ -273,7 +273,7 @@
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
       #midasquote-widget{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:20px auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.10)}
       @media (max-width:600px){
-        #midasquote-widget{margin:0 0.2rem 2rem}
+        #midasquote-widget{margin:0 0.07rem 2rem}
         #midasquote-widget .mq-label{font-size:15px}
         #midasquote-widget .mq-hint{font-size:15px}
         #midasquote-widget .mq-sec-title{font-size:14px}
