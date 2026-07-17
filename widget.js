@@ -374,6 +374,8 @@
       #midasquote-widget .mq-calc-btn{width:100%;padding:13px;font-size:15px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;margin-top:0.5rem;transition:opacity 0.15s;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,0.25)}
       #midasquote-widget .mq-calc-btn:hover{opacity:0.88}
       #midasquote-widget .mq-calc-btn:disabled{opacity:0.4;cursor:not-allowed}
+      @keyframes mqCalcPulse{0%,100%{box-shadow:0 6px 20px rgba(0,0,0,0.25)}50%{box-shadow:0 0 0 7px ${bc}66,0 6px 20px rgba(0,0,0,0.25)}}
+      #midasquote-widget .mq-calc-btn.mq-calc-btn-pulse{animation:mqCalcPulse 0.8s ease 2}
       #midasquote-widget .mq-calc-btn-both{background:linear-gradient(135deg,${bc},#378ADD)}
       #midasquote-widget .mq-result{display:none;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem;margin-top:1rem;box-shadow:0 6px 24px rgba(0,0,0,0.12)}
       #midasquote-widget .mq-result.show{display:block}
@@ -1955,10 +1957,29 @@
       }
     };
 
+    // Highlights whichever Calculate button belongs to this tab — used when
+    // someone clicks "Done" on the last guided step, since there's nothing
+    // left in the step flow itself to scroll to at that point. Scrolling to
+    // and pulsing the real button keeps the person in control of actually
+    // triggering the estimate (which, on the Both tab, also kicks off the
+    // lead-capture step) rather than firing it for them automatically.
+    function mqHighlightCalcButton(prefix) {
+      const btnId = prefix === 'c' ? 'mq-c-calc-btn' : (prefix === 'ct' ? 'mq-ct-calc-btn' : 'mq-b-calc-btn');
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      btn.classList.remove('mq-calc-btn-pulse');
+      void btn.offsetWidth; // restart the animation if it's already mid-pulse
+      btn.classList.add('mq-calc-btn-pulse');
+      setTimeout(() => btn.classList.remove('mq-calc-btn-pulse'), 1600);
+    }
+
     window.mqStepContinue = function(prefix) {
       const sections = mqGetVisibleSections(prefix);
+      const wasLast = (_mqStepIndex[prefix] || 0) >= sections.length - 1;
       _mqStepIndex[prefix] = Math.min((_mqStepIndex[prefix] || 0) + 1, sections.length - 1);
       window.mqUpdateStepFocus(prefix);
+      if (wasLast) { mqHighlightCalcButton(prefix); return; }
       const next = sections[_mqStepIndex[prefix]];
       if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
