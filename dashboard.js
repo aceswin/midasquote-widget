@@ -2982,18 +2982,26 @@ window.logoutMember = async function () {
 
     const panel = detailsEl.querySelector('.mq-room-panel');
     if (!panel) return;
-    // Reset to default (below) first so the measurement below is accurate
-    panel.style.top = '100%';
+    const summary = detailsEl.querySelector('summary') || detailsEl;
+    const anchorRect = summary.getBoundingClientRect();
+
+    // position:fixed, placed via the anchor's actual on-screen position —
+    // not position:absolute — so this can never get invisibly clipped by a
+    // scrolling ancestor (like the specialty items table's horizontal
+    // scroll wrapper). Recomputed fresh every time it opens.
+    panel.style.position = 'fixed';
+    panel.style.left = Math.round(anchorRect.left) + 'px';
+    panel.style.top = Math.round(anchorRect.bottom + 6) + 'px';
     panel.style.bottom = 'auto';
-    panel.style.marginTop = '6px';
-    panel.style.marginBottom = '0';
-    const rect = panel.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    if (spaceBelow < 0) {
+    panel.style.margin = '0';
+
+    const panelRect = panel.getBoundingClientRect();
+    if (panelRect.bottom > window.innerHeight) {
       panel.style.top = 'auto';
-      panel.style.bottom = '100%';
-      panel.style.marginTop = '0';
-      panel.style.marginBottom = '6px';
+      panel.style.bottom = Math.round(window.innerHeight - anchorRect.top + 6) + 'px';
+    }
+    if (panelRect.right > window.innerWidth) {
+      panel.style.left = Math.round(window.innerWidth - panelRect.width - 10) + 'px';
     }
 
     // Close on any click outside this details element. Deferred by one tick
@@ -3044,7 +3052,7 @@ window.logoutMember = async function () {
           <span id="mq-spec-room-summary-${itemId}">${summary}</span>
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
-        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
           ${checkboxes}
         </div>
       </details>`;
@@ -3445,7 +3453,7 @@ window.logoutMember = async function () {
           <span id="mq-li-room-summary-${key}">${summary}</span>
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
-        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
           ${checkboxes}
         </div>
       </details>`;
@@ -3497,7 +3505,7 @@ window.logoutMember = async function () {
           🗂️ <span id="mq-cat-room-summary-${cat}">${summary}</span>
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
-        <div class="mq-room-panel" style="position:absolute;top:100%;margin-top:6px;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
+        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
           ${linkedWarning}
           <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match. Change one item afterward to make it an exception.</div>
           ${checkboxes}
