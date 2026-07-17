@@ -113,19 +113,19 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     mqShowToast(msg, type);
   }
 
-  // Floating "Save changes" button for Project Types — that tab can get long
-  // (each project type has a description, cover image, and measure guide),
-  // so scrolling all the way back down to the one Save button got tedious.
-  // Shown/hidden by mqNav based on which tab is currently active. Sits a bit
-  // higher than the toast so the "saved!" confirmation appears directly
-  // beneath it, with a little breathing room, instead of overlapping it.
+  // Floating "Save changes" button — originally built just for Project
+  // Types (that tab got long enough that scrolling back down to one Save
+  // button got tedious), now shared across every tab that has a save
+  // action at all. mqNav looks up which action belongs to the tab being
+  // switched to and passes it in; tabs with no save action (Leads,
+  // Marketing Kit, Billing, etc.) just get it hidden entirely.
   function mqPositionFloatingSave() {
     mqCenterOverContent(document.getElementById('mq-floating-save'));
   }
 
-  function mqToggleFloatingSave(show) {
+  function mqToggleFloatingSave(action) {
     let btn = document.getElementById('mq-floating-save');
-    if (!show) {
+    if (!action) {
       if (btn) btn.style.display = 'none';
       window.removeEventListener('resize', mqPositionFloatingSave);
       return;
@@ -133,17 +133,29 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!btn) {
       btn = document.createElement('button');
       btn.id = 'mq-floating-save';
-      btn.textContent = '💾 Save changes';
-      btn.onclick = () => window.mqSaveRooms();
       btn.style.cssText = "position:fixed;bottom:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:box-shadow 0.15s";
       btn.onmouseover = () => { btn.style.boxShadow = '0 14px 36px rgba(0,0,0,0.32)'; };
       btn.onmouseout = () => { btn.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)'; };
       document.body.appendChild(btn);
     }
+    btn.textContent = action.label;
+    btn.onclick = action.fn;
     btn.style.display = 'block';
     mqPositionFloatingSave();
     window.addEventListener('resize', mqPositionFloatingSave);
   }
+
+  // One save action per tab that actually has one. Tabs not listed here
+  // (Dashboard, Leads, Embed code, Marketing Kit, Billing) either have
+  // nothing to save or autosave invisibly per field, so they get no
+  // floating button at all.
+  const MQ_PAGE_SAVE_ACTIONS = {
+    shop:      { label: '💾 Save changes',  fn: () => window.mqSaveShop() },
+    rooms:     { label: '💾 Save changes',  fn: () => window.mqSaveRooms() },
+    specialty: { label: '💾 Save all',      fn: () => window.mqSaveAllSpecItems() },
+    products:  { label: '💾 Save changes',  fn: () => window.mqSaveProducts() },
+    templates: { label: '💾 Save all changes', fn: () => { window.mqSaveMasterRoomDefs(); window.mqSaveTemplatePhotos(); } },
+  };
 
   function injectStyles() {
     const s = document.createElement('style');
@@ -423,7 +435,6 @@ window.logoutMember = async function () {
                 </div>
                 <div class="mq-toggle on" id="mq-showroom-toggle" onclick="mqToggleShowroom()"></div>
               </div>
-              <button class="mq-btn mq-btn-primary" onclick="mqSaveShop()">Save shop info</button>
             </div>
           </div>
 
@@ -438,7 +449,6 @@ window.logoutMember = async function () {
               </div>
               <div id="mq-rooms-list"></div>
               <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()" style="margin-top:8px;margin-bottom:1.25rem">+ Add room</button>
-              <button class="mq-btn mq-btn-primary" onclick="mqSaveRooms()">Save room types</button>
             </div>
           </div>
 
@@ -458,7 +468,6 @@ window.logoutMember = async function () {
                 <div class="mq-page-sub">Add-ons that appear as options in your widget. Include the full cost in your price — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
-              <button class="mq-btn mq-btn-sm" onclick="mqSaveAllSpecItems()" style="margin-left:6px">💾 Save all</button>
             </div>
             <div id="mq-spec-msg"></div>
             <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
@@ -635,7 +644,6 @@ window.logoutMember = async function () {
               <div class="mq-card-title">🏷️ Default project type descriptions</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These are the name and description every brand-new shop gets automatically for Refacing, Repainting, and Restaining — the note customers see on the widget when they pick that project type. Editing here only affects shops seeded from now on; it doesn't retroactively change any shop's existing project types.</p>
               <div id="mq-master-rooms-content"><div class="mq-loading">Loading...</div></div>
-              <button class="mq-btn mq-btn-primary" style="margin-top:1rem;width:100%" onclick="mqSaveMasterRoomDefs()">Save descriptions</button>
             </div>
             <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
             <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
@@ -2105,6 +2113,7 @@ window.logoutMember = async function () {
     </select>`;
   }
   window.mqSpecCategoryChanged = function(id, sel) {
+    const row = sel.closest('tr');
     if (sel.value === '__new__') {
       const name = (prompt('New category name:') || '').trim();
       if (name) {
@@ -2114,8 +2123,10 @@ window.logoutMember = async function () {
         opt.selected = true;
         sel.insertBefore(opt, sel.lastElementChild);
         mqSaveSpecField(id, 'Category', name);
+        if (row) row.setAttribute('data-category', name);
         // Make the new category immediately pickable everywhere else on the
-        // page too, without needing a reload.
+        // page too, without needing a reload — every other item's own
+        // dropdown, plus the "Filter by category" dropdown.
         document.querySelectorAll('select[id^="mq-spec-cat-"]').forEach(otherSel => {
           if (otherSel === sel) return;
           if ([...otherSel.options].some(o => o.value === name)) return;
@@ -2124,11 +2135,19 @@ window.logoutMember = async function () {
           newOpt.textContent = name;
           otherSel.insertBefore(newOpt, otherSel.lastElementChild);
         });
+        const filterSel = document.getElementById('mq-spec-tab-filter-category');
+        if (filterSel && ![...filterSel.options].some(o => o.value === name)) {
+          const filterOpt = document.createElement('option');
+          filterOpt.value = name;
+          filterOpt.textContent = name;
+          filterSel.appendChild(filterOpt);
+        }
       } else {
         sel.value = ''; // cancelled — back to no category
       }
     } else {
       mqSaveSpecField(id, 'Category', sel.value);
+      if (row) row.setAttribute('data-category', sel.value);
     }
   };
 
@@ -2151,6 +2170,13 @@ window.logoutMember = async function () {
           </select>
         </div>
         <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by category</label>
+          <select id="mq-spec-tab-filter-category" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All categories</option>
+            ${[...new Set(specs.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
           <input type="text" id="mq-spec-tab-filter-search" oninput="mqFilterSpecTable()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
         </div>
@@ -2165,8 +2191,9 @@ window.logoutMember = async function () {
             try { visibleRooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { visibleRooms = []; }
             const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
             const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
+            const catAttr = (r.fields['Category'] || '').replace(/"/g,'&quot;');
             return `
-            <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" style="cursor:grab">
+            <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" data-category="${catAttr}" style="cursor:grab">
               <td class="mq-spec-drag-handle" style="color:#9ca3af;font-size:16px;padding:8px 12px;cursor:grab">⠿</td>
               <td>
                 <input type="text" value="${r.fields['Item name'] || ''}" id="mq-spec-name-${r.id}" style="border:none;background:none;font-size:13px;width:160px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
@@ -2511,6 +2538,7 @@ window.logoutMember = async function () {
   // Same pure view filter, for the Specialty Items tab's table specifically.
   window.mqFilterSpecTable = function() {
     const roomFilter = el('mq-spec-tab-filter-room')?.value || '';
+    const categoryFilter = el('mq-spec-tab-filter-category')?.value || '';
     const searchFilter = (el('mq-spec-tab-filter-search')?.value || '').toLowerCase().trim();
     const tbody = document.getElementById('mq-spec-tbody');
     if (!tbody) return;
@@ -2519,9 +2547,11 @@ window.logoutMember = async function () {
       let rooms = [];
       try { rooms = JSON.parse(row.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
       const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const category = row.getAttribute('data-category') || '';
+      const categoryMatch = !categoryFilter || category === categoryFilter;
       const name = row.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
-      const show = roomMatch && searchMatch;
+      const show = roomMatch && categoryMatch && searchMatch;
       row.style.display = show ? '' : 'none';
       if (show) visibleCount++;
     });
@@ -2739,7 +2769,7 @@ window.logoutMember = async function () {
         <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
         ${categoryRoomDisclosure(cat)}
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
-        <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save changes</button>
+        
       </div>`;
     }
 
@@ -2771,7 +2801,7 @@ window.logoutMember = async function () {
           </div>`;
         }).join('')}
       </div>
-      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveProducts()">Save changes</button>
+      
     </div>` : '';
 
     const content = el('mq-products-content');
@@ -3119,7 +3149,7 @@ window.logoutMember = async function () {
           </div>`;
         }).join('')}
       </div>
-      <button class="mq-btn mq-btn-primary mq-products-save-btn" style="margin-top:1rem;width:100%" onclick="mqSaveTemplatePhotos()">Save changes</button>
+      
     `;
 
     // Wire up upload buttons for every template card just rendered — this
@@ -5280,7 +5310,7 @@ window.logoutMember = async function () {
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
-    mqToggleFloatingSave(page === 'rooms');
+    mqToggleFloatingSave(MQ_PAGE_SAVE_ACTIONS[page] || null);
     if (page === 'marketing' || page === 'embed') {
       const socialEl = document.getElementById('mq-mk-social');
       if (socialEl && !socialEl.dataset.loaded && window._mqShopRecord) {
