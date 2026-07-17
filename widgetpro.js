@@ -246,10 +246,13 @@
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
       #midasquote-widget{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:20px auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.28),0 10px 24px rgba(0,0,0,0.24),0 30px 70px rgba(0,0,0,0.35)}
       @media (max-width:600px){
-        #midasquote-widget{margin:0 0.5rem 2rem}
+        #midasquote-widget{margin:0 0.2rem 2rem}
         #midasquote-widget .mq-label{font-size:15px}
         #midasquote-widget .mq-hint{font-size:15px}
         #midasquote-widget .mq-sec-title{font-size:14px}
+        #midasquote-widget .mq-header{padding:0.85rem 0.6rem;gap:8px}
+        #midasquote-widget .mq-tab-bar{padding:8px 0.5rem;gap:5px}
+        #midasquote-widget .mq-tab{padding:9px 6px;font-size:12.5px}
         /* The measuring guide image is a wide landscape infographic — on a
            narrow phone, the box's own 16px side padding eats into already
            limited width. Bleeding the image past just that padding (not the
@@ -1202,7 +1205,7 @@
         </div>
       </div>
       <div class="mq-sec" id="mq-${prefix}-specialty-sec" onclick="mqOpenIfClosed('${prefix}-specialty')">
-        ${collapsibleHeader(`${prefix}-specialty`, 'Add-Ons & Upgrades')}
+        ${collapsibleHeader(`${prefix}-specialty`, 'Details & Selections')}
         <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
           ⭐ Optional extras and upgrades — browse and add anything you'd like.
         </div>
