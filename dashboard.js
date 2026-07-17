@@ -2090,6 +2090,48 @@ window.logoutMember = async function () {
     set('mq-stat-contacts', withContact);
   }
 
+  // A real dropdown of every category already in use — one click to reuse
+  // one, no retyping, plus a "+ Add new category" option for when a
+  // genuinely new one is needed. Shared between the per-shop table and the
+  // Templates cards; each just passes in whichever list of categories is
+  // relevant to its own set of items.
+  function mqCategoryPickerHTML(r, allCategories, wide) {
+    const current = (r.fields['Category']||'').trim();
+    const options = allCategories.map(c => `<option value="${c.replace(/"/g,'&quot;')}" ${c===current?'selected':''}>${c}</option>`).join('');
+    return `<select id="mq-spec-cat-${r.id}" onchange="mqSpecCategoryChanged('${r.id}', this)" style="font-size:${wide?'11px':'12px'};padding:${wide?'5px 8px':'4px 6px'};border:1px solid ${wide?'#e5e7eb':'#d1d5db'};border-radius:${wide?'6px':'5px'};${wide?'width:100%':'max-width:130px'};color:#374151">
+      <option value="" ${!current?'selected':''}>${wide?'No category':'(No category)'}</option>
+      ${options}
+      <option value="__new__">+ Add new category…</option>
+    </select>`;
+  }
+  window.mqSpecCategoryChanged = function(id, sel) {
+    if (sel.value === '__new__') {
+      const name = (prompt('New category name:') || '').trim();
+      if (name) {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        opt.selected = true;
+        sel.insertBefore(opt, sel.lastElementChild);
+        mqSaveSpecField(id, 'Category', name);
+        // Make the new category immediately pickable everywhere else on the
+        // page too, without needing a reload.
+        document.querySelectorAll('select[id^="mq-spec-cat-"]').forEach(otherSel => {
+          if (otherSel === sel) return;
+          if ([...otherSel.options].some(o => o.value === name)) return;
+          const newOpt = document.createElement('option');
+          newOpt.value = name;
+          newOpt.textContent = name;
+          otherSel.insertBefore(newOpt, otherSel.lastElementChild);
+        });
+      } else {
+        sel.value = ''; // cancelled — back to no category
+      }
+    } else {
+      mqSaveSpecField(id, 'Category', sel.value);
+    }
+  };
+
   function renderSpecialty(specs, shopRecord) {
     const container = el('mq-spec-list');
     if (!container) return;
@@ -2114,9 +2156,6 @@ window.logoutMember = async function () {
         </div>
       </div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
-      <datalist id="mq-spec-category-list">
-        ${[...new Set(specs.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}"></option>`).join('')}
-      </datalist>
       <div class="mq-table-wrap">
       <table class="mq-table" id="mq-spec-table">
         <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Active</th><th></th></tr></thead>
@@ -2133,7 +2172,7 @@ window.logoutMember = async function () {
                 <input type="text" value="${r.fields['Item name'] || ''}" id="mq-spec-name-${r.id}" style="border:none;background:none;font-size:13px;width:160px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
                 <input type="text" value="${(r.fields['Description']||'').replace(/"/g,'&quot;')}" id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:160px;margin-top:2px;font-style:italic" onblur="mqSaveSpecField('${r.id}','Description',this.value)"/>
               </td>
-              <td><input type="text" list="mq-spec-category-list" value="${(r.fields['Category']||'').replace(/"/g,'&quot;')}" id="mq-spec-cat-${r.id}" placeholder="e.g. Storage" style="width:110px;font-size:13px" onblur="mqSaveSpecField('${r.id}','Category',this.value)"/></td>
+              <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)"/></td>
@@ -3015,12 +3054,13 @@ window.logoutMember = async function () {
   // Template cards need editable name/price/unit fields too (regular My
   // Products items get that from the separate Specialty Items tab table —
   // templates don't have an equivalent, so it lives right on the card here).
-  function templateItemCard(r, savedPhotos, savedHidden) {
+  function templateItemCard(r, savedPhotos, savedHidden, allItems) {
     const itemName = r.fields['Item name'] || '';
     const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden);
+    const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
     return `<div style="display:flex;flex-direction:column;gap:6px">
       <input type="text" value="${itemName.replace(/"/g,'&quot;')}" id="mq-spec-name-${r.id}" placeholder="Item name" style="font-size:13px;font-weight:600;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
-      <input type="text" value="${(r.fields['Category']||'').replace(/"/g,'&quot;')}" id="mq-spec-cat-${r.id}" placeholder="Category (optional, e.g. Storage)" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;color:#374151" onblur="mqSaveSpecField('${r.id}','Category',this.value)"/>
+      ${mqCategoryPickerHTML(r, categoryList, true)}
       <input type="text" value="${(r.fields['Description']||'').replace(/"/g,'&quot;')}" id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;color:#6b7280" onblur="mqSaveSpecField('${r.id}','Description',this.value)"/>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <input type="number" value="${r.fields['Price']||''}" id="mq-spec-price-${r.id}" placeholder="Price" style="font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:70px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
@@ -3075,7 +3115,7 @@ window.logoutMember = async function () {
           const itemName = r.fields['Item name'] || '';
           const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
           return `<div class="mq-tmpl-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
-            ${templateItemCard(r, savedPhotos, savedHidden)}
+            ${templateItemCard(r, savedPhotos, savedHidden, items)}
           </div>`;
         }).join('')}
       </div>
