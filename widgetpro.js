@@ -2096,8 +2096,78 @@
     // — mqRefreshSectionVisibility itself gets called from other places too
     // (like adding a tall cabinet card), which should refresh what's showing
     // without yanking someone back to the beginning of the flow.
+    function mqResetPicker(selectId) {
+      const firstChip = document.querySelector(`[data-vpicker-for="${selectId}"]`);
+      if (!firstChip) return;
+      const btn = firstChip.querySelector('.mq-vpicker-select-btn');
+      if (btn) window.mqPickVisual(selectId, btn);
+    }
+
+    function mqResetCabinetForm(prefix) {
+      const siSel = document.getElementById(`mq-${prefix}-si`);
+      if (siSel) siSel.selectedIndex = 0;
+
+      const uftEl = document.getElementById(`mq-${prefix}-uft`);
+      if (uftEl) uftEl.value = 0;
+      const bftEl = document.getElementById(`mq-${prefix}-bft`);
+      if (bftEl) bftEl.value = 0;
+      const htEl = document.getElementById(`mq-${prefix}-ht`);
+      if (htEl) htEl.selectedIndex = 0;
+
+      mqResetPicker(`mq-${prefix}-mat`);
+      mqResetPicker(`mq-${prefix}-door`);
+      mqResetPicker(`mq-${prefix}-hinge`);
+      mqResetPicker(`mq-${prefix}-u-door`);
+
+      const drawerTierEl = document.getElementById(`mq-${prefix}-drawer-tier`);
+      if (drawerTierEl) drawerTierEl.selectedIndex = 0;
+      mqResetPicker(`mq-${prefix}-drawer-config`);
+      window.mqTogDrawerConfig(prefix);
+
+      const tcContainer = document.getElementById(`mq-${prefix}-tallcabs`);
+      if (tcContainer) tcContainer.innerHTML = '';
+      renumberTallCabs(prefix);
+
+      const useCabTrimCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
+      if (useCabTrimCb) useCabTrimCb.checked = false;
+      mqResetPicker(`mq-${prefix}-trim-crown`);
+      mqResetPicker(`mq-${prefix}-trim-valance`);
+      const crownReturns = document.getElementById(`mq-${prefix}-trim-crown-returns`);
+      if (crownReturns) crownReturns.value = 0;
+      const valanceReturns = document.getElementById(`mq-${prefix}-trim-valance-returns`);
+      if (valanceReturns) valanceReturns.value = 0;
+      window.mqTogTrimReturns(prefix);
+
+      const removalEl = document.getElementById(`mq-${prefix}-removal`);
+      if (removalEl) removalEl.selectedIndex = 0;
+
+      if (prefix === 'b') {
+        const useCabCt = document.getElementById('mq-b-use-cab');
+        if (useCabCt) useCabCt.checked = false;
+        window.mqTogUseCab('b');
+        const ctSurfaces = document.getElementById('mq-b-ct-surfaces');
+        if (ctSurfaces) { ctSurfaces.innerHTML = ''; ctSurfaces.dataset.autoAdded = 'false'; }
+        const ctSi = document.getElementById('mq-b-ct-si');
+        if (ctSi) ctSi.selectedIndex = 0;
+      }
+
+      window.mqRefreshAllPickerVisibility(prefix);
+      window.mqRefreshBsFt(prefix);
+    }
+
     window.mqOnProjectTypeChange = function(prefix) {
       _mqStepIndex[prefix] = 0;
+      mqResetCabinetForm(prefix);
+      if (specQty[prefix]) {
+        Object.keys(specQty[prefix]).forEach(i => {
+          specQty[prefix][i] = 0;
+          const qtyInput = document.getElementById(`mq-qty-${prefix}-${i}`);
+          if (qtyInput) qtyInput.value = 0;
+          document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.remove('on');
+          const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+          if (modeSel) modeSel.selectedIndex = 0;
+        });
+      }
       mqRefreshSectionVisibility(prefix);
     };
     window.mqTogDwOption=(prefix)=>{
