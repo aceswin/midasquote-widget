@@ -189,6 +189,7 @@
           installPrice: r.fields['Install price']||0,
           installMode: r.fields['Install mode']||'supply',
           description: r.fields['Description']||'',
+          category: r.fields['Category']||'',
         };
       }));
 
@@ -701,7 +702,8 @@
 
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
-    return specs.map((s,i)=>{
+
+    const buildCard = (s,i) => {
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
         ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
@@ -742,6 +744,34 @@
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</span>
         </div>
       </div>`;
+    };
+
+    // No shop has assigned any categories yet — keep the exact same flat
+    // layout it's always had, nothing changes for anyone who hasn't
+    // adopted this.
+    const hasAnyCategory = specs.some(s => (s.category||'').trim());
+    if (!hasAnyCategory) return specs.map((s,i)=>buildCard(s,i)).join('');
+
+    // Group by category, preserving first-seen order. Anything without a
+    // category gets swept into a trailing "Other" group instead of showing
+    // up unlabeled above the organized ones — every visible section always
+    // has a heading once categories are in use at all.
+    const groups = {};
+    const order = [];
+    specs.forEach((s,i) => {
+      const cat = (s.category||'').trim() || '__other__';
+      if (!groups[cat]) { groups[cat] = []; order.push(cat); }
+      groups[cat].push(i);
+    });
+    if (groups['__other__']) {
+      order.splice(order.indexOf('__other__'), 1);
+      order.push('__other__');
+    }
+
+    return order.map((cat, gi) => {
+      const label = cat === '__other__' ? 'Other' : cat;
+      const cardsHtml = groups[cat].map(i => buildCard(specs[i], i)).join('');
+      return `<div class="mq-spec-category-heading" style="grid-column:1/-1;font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin:${gi===0?'0':'12px'} 0 2px">${label}</div>${cardsHtml}`;
     }).join('');
   }
 
@@ -1624,6 +1654,24 @@
           }
         }
       });
+      // If every item under a category heading just got filtered out above,
+      // hide the heading too — otherwise you'd see an empty, orphaned
+      // category label with nothing underneath it for this project type.
+      const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
+      const grid = specBody && specBody.querySelector('.mq-spec-grid');
+      if (grid) {
+        let currentHeading = null, groupHasVisible = false;
+        [...grid.children].forEach(child => {
+          if (child.classList.contains('mq-spec-category-heading')) {
+            if (currentHeading) currentHeading.style.display = groupHasVisible ? '' : 'none';
+            currentHeading = child;
+            groupHasVisible = false;
+          } else if (child.style.display !== 'none') {
+            groupHasVisible = true;
+          }
+        });
+        if (currentHeading) currentHeading.style.display = groupHasVisible ? '' : 'none';
+      }
     };
     // Shows the shop owner's custom guidance note for whichever project type
     // is selected — e.g. "For door refacing, skip the box materials below,

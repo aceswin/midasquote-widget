@@ -189,6 +189,7 @@
           installPrice: r.fields['Install price']||0,
           installMode: r.fields['Install mode']||'supply',
           description: r.fields['Description']||'',
+          category: r.fields['Category']||'',
         };
       }));
 
@@ -674,7 +675,8 @@
 
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
-    return specs.map((s,i)=>{
+
+    const buildCard = (s,i) => {
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
         ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
@@ -682,11 +684,11 @@
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
       const installModeHtml = s.offersInstallChoice
-        ? `<div style="display:flex;gap:4px;margin-top:4px">
-            <button type="button" id="mq-spec-btn-supply-${prefix}-${i}" class="mq-spec-mode-btn selected" onclick="mqSetSpecMode('${prefix}',${i},'supply')">Supply only</button>
-            <button type="button" id="mq-spec-btn-install-${prefix}-${i}" class="mq-spec-mode-btn" onclick="mqSetSpecMode('${prefix}',${i},'install')">Supplied &amp; Installed</button>
-          </div>
-          <select id="mq-spec-mode-${prefix}-${i}" style="display:none"><option value="supply" selected>Supply only</option><option value="install">Supplied &amp; Installed</option></select>`
+        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;margin-top:4px;width:100%;background:#fff;color:#111;font-weight:600">
+            <option value="" selected disabled>Choose one</option>
+            <option value="supply">Supply only</option>
+            <option value="install">Supplied &amp; Installed</option>
+          </select>`
         : (s.installMode === 'na' ? '' : `<div style="font-size:11px;color:#6b7280;margin-top:2px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`);
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
@@ -695,7 +697,6 @@
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
-            <div style="font-size:11px;line-height:1;color:#9ca3af;margin-top:3px">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</div>
             ${installModeHtml}
           </div>
         </div>
@@ -706,9 +707,30 @@
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
-          ${(s.perSqFt || s.perFt) ? `<span style="font-size:9px;font-weight:600;color:#4b5563">${s.perSqFt ? 'sq ft' : 'lin ft'}</span>` : ''}
+          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</span>
         </div>
       </div>`;
+    };
+
+    const hasAnyCategory = specs.some(s => (s.category||'').trim());
+    if (!hasAnyCategory) return specs.map((s,i)=>buildCard(s,i)).join('');
+
+    const groups = {};
+    const order = [];
+    specs.forEach((s,i) => {
+      const cat = (s.category||'').trim() || '__other__';
+      if (!groups[cat]) { groups[cat] = []; order.push(cat); }
+      groups[cat].push(i);
+    });
+    if (groups['__other__']) {
+      order.splice(order.indexOf('__other__'), 1);
+      order.push('__other__');
+    }
+
+    return order.map((cat, gi) => {
+      const label = cat === '__other__' ? 'Other' : cat;
+      const cardsHtml = groups[cat].map(i => buildCard(specs[i], i)).join('');
+      return `<div class="mq-spec-category-heading" style="grid-column:1/-1;font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin:${gi===0?'0':'12px'} 0 2px">${label}</div>${cardsHtml}`;
     }).join('');
   }
 
@@ -1598,6 +1620,21 @@
           }
         }
       });
+      const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
+      const grid = specBody && specBody.querySelector('.mq-spec-grid');
+      if (grid) {
+        let currentHeading = null, groupHasVisible = false;
+        [...grid.children].forEach(child => {
+          if (child.classList.contains('mq-spec-category-heading')) {
+            if (currentHeading) currentHeading.style.display = groupHasVisible ? '' : 'none';
+            currentHeading = child;
+            groupHasVisible = false;
+          } else if (child.style.display !== 'none') {
+            groupHasVisible = true;
+          }
+        });
+        if (currentHeading) currentHeading.style.display = groupHasVisible ? '' : 'none';
+      }
     };
     // Shows the shop owner's custom guidance note for whichever project type
     // is selected — e.g. "For door refacing, skip the box materials below,
