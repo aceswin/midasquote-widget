@@ -332,6 +332,7 @@
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
       #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;cursor:pointer;display:block}
+      #midasquote-widget .mq-spec-category-heading{color:${bc}}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:48px;height:48px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
@@ -771,7 +772,7 @@
     return order.map((cat, gi) => {
       const label = cat === '__other__' ? 'Other' : cat;
       const cardsHtml = groups[cat].map(i => buildCard(specs[i], i)).join('');
-      return `<div class="mq-spec-category-heading" style="grid-column:1/-1;font-size:12px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin:${gi===0?'0':'12px'} 0 2px">${label}</div>${cardsHtml}`;
+      return `<div class="mq-spec-category-heading" style="grid-column:1/-1;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin:${gi===0?'0':'22px'} 0 10px;${gi===0?'':'padding-top:16px;border-top:1px solid #e5e7eb'}">${label}</div>${cardsHtml}`;
     }).join('');
   }
 
