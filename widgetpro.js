@@ -3243,10 +3243,17 @@ window.mqTogDrawerConfig=(prefix)=>{
     // one-tap Install button INSTEAD of instructions, if the browser has
     // signaled it's available (via the standard beforeinstallprompt event) —
     // otherwise they fall back to steps too.
-    let _mqDeferredInstallPrompt = null;
+    // pro.html captures this event as early as physically possible — before
+    // this script even starts loading — since it can fire before an async
+    // script tag finishes downloading, and missing that window means
+    // missing the event entirely for the whole page load. This listener
+    // here is just a fallback for the rarer case where it fires after this
+    // script has already loaded. Either way, window._mqDeferredInstallPrompt
+    // is the single source of truth, checked fresh wherever it's needed.
+    if (typeof window._mqDeferredInstallPrompt === 'undefined') window._mqDeferredInstallPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
-      _mqDeferredInstallPrompt = e;
+      window._mqDeferredInstallPrompt = e;
     });
 
     const homeBtn = document.createElement('button');
@@ -3319,7 +3326,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       // Android/Desktop: if the browser has actually offered a real install
       // prompt, use that instead of manual steps — a genuine one-tap install.
-      if ((which === 'android' || which === 'desktop') && _mqDeferredInstallPrompt) {
+      if ((which === 'android' || which === 'desktop') && window._mqDeferredInstallPrompt) {
         modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:380px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
           <div style="font-size:36px;margin-bottom:12px">📲</div>
           <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:1.5rem">Your browser can install this directly.</div>
@@ -3341,10 +3348,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqTriggerRealInstall = async function() {
-      if (!_mqDeferredInstallPrompt) return;
-      _mqDeferredInstallPrompt.prompt();
-      await _mqDeferredInstallPrompt.userChoice;
-      _mqDeferredInstallPrompt = null;
+      if (!window._mqDeferredInstallPrompt) return;
+      window._mqDeferredInstallPrompt.prompt();
+      await window._mqDeferredInstallPrompt.userChoice;
+      window._mqDeferredInstallPrompt = null;
       window.mqCloseHomeScreenModal();
     };
   }

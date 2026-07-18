@@ -16,6 +16,19 @@
 <body>
   <div id="midasquote-widget"></div>
   <script>
+    // Capture this as the very first thing that runs — before the manifest
+    // even gets set up, before widgetpro.js starts loading. The service
+    // worker persists across page loads once registered, so Chrome can
+    // decide this page qualifies and fire this event immediately on load,
+    // well before an async script tag has finished downloading and
+    // attached its own listener. Missing this window means missing the
+    // event entirely for that whole page load — it only ever fires once.
+    window._mqDeferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      window._mqDeferredInstallPrompt = e;
+    });
+
     // Reads ?shop=... from this page's own URL and passes it straight
     // through to the widget script — same shop token every shop already
     // has in their regular widget embed code, so one central page works
