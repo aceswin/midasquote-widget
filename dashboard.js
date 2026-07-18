@@ -571,7 +571,12 @@ window.logoutMember = async function () {
                 <div class="mq-card">
                   <div class="mq-card-title">📱 Direct quote link</div>
                   <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed. Or use it for walk-in customers, right on the spot.</p>
-                  <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button></div>
+                  <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop
+                    <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
+                      <button onclick="window.open('https://widget.midasquote.com/?shop=${token}&mode=shop','_blank')" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">Open ↗</button>
+                      <button class="mq-copy-btn" style="position:static" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="mq-card">
@@ -600,7 +605,12 @@ window.logoutMember = async function () {
                 <div class="mq-card">
                   <div class="mq-card-title">⚡ Your MidasQuote Pro link</div>
                   <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This one's just for you — or anyone you want to bring in, like a contractor you always work with. It shows the exact real numbers behind every quote, right alongside the same ballpark range your customers see. Not for sharing with customers.</p>
-                  <div class="mq-embed-box">https://widget.midasquote.com/pro.html?shop=${token}<button class="mq-copy-btn" onclick="mqCopyText('https://widget.midasquote.com/pro.html?shop=${token}',this)">Copy</button></div>
+                  <div class="mq-embed-box">https://widget.midasquote.com/pro.html?shop=${token}
+                    <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
+                      <button onclick="window.open('https://widget.midasquote.com/pro.html?shop=${token}','_blank')" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">Open ↗</button>
+                      <button class="mq-copy-btn" style="position:static" onclick="mqCopyText('https://widget.midasquote.com/pro.html?shop=${token}',this)">Copy</button>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="mq-card">
