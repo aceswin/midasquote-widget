@@ -3631,17 +3631,35 @@ window.logoutMember = async function () {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     try {
-      await atCreate(CONFIG.SPECIALTY_TABLE, {
+      const existing = await loadSpecialty(shopRec.fields['Shop name']);
+      // Strictly lower than the current lowest Sort order — not just 0 —
+      // so a brand new item always lands unambiguously first, even if
+      // other items also happen to be sitting at 0 already.
+      const minSort = existing.length ? Math.min(0, ...existing.map(r => r.fields['Sort order'] || 0)) : 0;
+      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
         'Item name': 'New item',
         'Shop': [shopRec.id],
         'Price': 0,
         'Active': true,
         'Per linear foot': false,
-        'Sort order': 0,
+        'Sort order': minSort - 1,
       });
       const specs = await loadSpecialty(shopRec.fields['Shop name']);
       renderSpecialty(specs, shopRec);
-      showMsg('mq-spec-msg', '✓ Item added — edit the name and price above.');
+      showMsg('mq-spec-msg', '✓ Item added at the top — edit the name and price below.');
+      // Scroll to it and focus the name field so it's impossible to miss,
+      // rather than landing somewhere off-screen with no visible sign
+      // anything happened.
+      if (created?.id) {
+        setTimeout(() => {
+          const nameInput = document.getElementById('mq-spec-name-' + created.id);
+          if (nameInput) {
+            nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            nameInput.focus();
+            nameInput.select();
+          }
+        }, 50);
+      }
     } catch(e) { showMsg('mq-spec-msg', 'Error adding item.', 'error'); }
   };
 
