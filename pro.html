@@ -20,6 +20,40 @@
     // has in their regular widget embed code, so one central page works
     // for every shop automatically. Nothing to hand-edit per shop.
     const shopToken = new URLSearchParams(window.location.search).get('shop');
+
+    // A real "Install" prompt (Android/Desktop Chrome) needs a manifest —
+    // but a single static manifest.json can't encode each shop's own token
+    // in its start_url, and every shop needs THEIR OWN token preserved when
+    // relaunching from the home screen icon later. So instead of a static
+    // file, this builds the manifest in memory, with this shop's token
+    // baked into start_url, and points the page at that instead — same
+    // page, same script, just personalized per shop at load time.
+    if (shopToken) {
+      const manifest = {
+        name: 'MidasQuote Pro',
+        short_name: 'MidasQuote Pro',
+        start_url: `pro.html?shop=${encodeURIComponent(shopToken)}`,
+        display: 'standalone',
+        background_color: '#0f2a52',
+        theme_color: '#0f2a52',
+        icons: [
+          { src: 'icons/favicon.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+        ]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = URL.createObjectURL(manifestBlob);
+      document.head.appendChild(manifestLink);
+    }
+
+    // A service worker is the other piece Chrome needs before it'll treat
+    // this as a real installable app rather than just a bookmarked page.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
     if (!shopToken) {
       document.getElementById('midasquote-widget').innerHTML =
         '<div style="padding:3rem 1.5rem;text-align:center;color:#6b7280;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif">No shop specified. Make sure your link includes <code>?shop=your-shop-token</code>.</div>';
