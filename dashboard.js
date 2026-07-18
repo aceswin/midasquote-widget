@@ -2844,7 +2844,6 @@ window.logoutMember = async function () {
       </div>
       <div id="mq-cat-body-specialty" style="display:none;padding:0 1.25rem 1.25rem">
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
-      ${categoryRoomDisclosure('specialty')}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;background:#f9fafb;border-radius:8px">
         <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
