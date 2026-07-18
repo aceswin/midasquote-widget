@@ -2039,9 +2039,13 @@
       const cabActive = rowHasReal(`mq-${prefix}-mat`);
       const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
-      // Measuring always shows now — each project type can have its own
-      // tailored guide (set in the dashboard), so it's no longer tied to
-      // whether this project type happens to use box materials.
+      // Measuring shows for most project types — each one can have its own
+      // tailored guide (set in the dashboard) — but a shop owner can flag a
+      // specific project type (e.g. a flat-rate-only "Odd jobs" type) to
+      // skip it entirely, since there's nothing to measure at all there.
+      const roomObjForMeasuring = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
+      const measuringSec = document.getElementById(`mq-${prefix}-measuring-sec`);
+      if (measuringSec) measuringSec.style.display = (roomObjForMeasuring && roomObjForMeasuring.hideMeasureGuide) ? 'none' : '';
       // The "Cabinet details" divider only exists on the Both tab
       const cabDivider = document.getElementById(`mq-${prefix}-cabinet-divider`);
       if (cabDivider) cabDivider.style.display = cabActive ? '' : 'none';

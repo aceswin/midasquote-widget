@@ -1764,6 +1764,10 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-proonly-${idx}" ${r.proOnly?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
             ⚡ Only show in MidasQuote Pro <span style="font-weight:400;color:#9ca3af">(hidden from the customer-facing widget entirely)</span>
           </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
+            📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
+          </label>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
@@ -1876,6 +1880,7 @@ window.logoutMember = async function () {
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
             active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
             proOnly: document.getElementById(`mq-room-proonly-${oldIdx}`)?.checked === true,
+            hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
@@ -1956,6 +1961,7 @@ window.logoutMember = async function () {
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
         active: el(`mq-room-active-${idx}`)?.checked !== false,
         proOnly: el(`mq-room-proonly-${idx}`)?.checked === true,
+        hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
