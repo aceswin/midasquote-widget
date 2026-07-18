@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
   <meta name="apple-mobile-web-app-title" content="MidasQuote Pro"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
   <style>
     body { margin: 0; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   </style>
@@ -29,16 +30,17 @@
     // baked into start_url, and points the page at that instead — same
     // page, same script, just personalized per shop at load time.
     if (shopToken) {
+      const origin = window.location.origin;
       const manifest = {
         name: 'MidasQuote Pro',
         short_name: 'MidasQuote Pro',
-        start_url: `pro.html?shop=${encodeURIComponent(shopToken)}`,
+        start_url: `${origin}/pro.html?shop=${encodeURIComponent(shopToken)}`,
         display: 'standalone',
         background_color: '#0f2a52',
         theme_color: '#0f2a52',
         icons: [
-          { src: 'icons/favicon.png', sizes: '512x512', type: 'image/png' },
-          { src: 'icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+          { src: `${origin}/icons/favicon.png`, sizes: '512x512', type: 'image/png' },
+          { src: `${origin}/icons/apple-touch-icon.png`, sizes: '180x180', type: 'image/png' }
         ]
       };
       const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
