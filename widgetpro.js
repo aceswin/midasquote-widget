@@ -835,6 +835,10 @@
   }
 
   window.mqOpenMeasureCalc = function(targetId, mode, fieldLabel) {
+    const specMatch = targetId.match(/^mq-qty-([a-z]+)-(\d+)$/);
+    if (specMatch && window.mqSpecModeChosen && !window.mqSpecModeChosen(specMatch[1], parseInt(specMatch[2], 10))) {
+      return;
+    }
     _mqCalcMode = mode;
     _mqCalcTargetId = targetId;
     _mqCalcFieldLabel = fieldLabel || '';
@@ -3020,7 +3024,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
     };
 
-    function mqSpecModeChosen(prefix, i) {
+    window.mqSpecModeChosen = function(prefix, i) {
       const s = specs[i];
       if (!s || !s.offersInstallChoice) return true;
       const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);

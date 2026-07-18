@@ -882,6 +882,16 @@
   }
 
   window.mqOpenMeasureCalc = function(targetId, mode, fieldLabel) {
+    // If this is a specialty item's quantity field, and that item needs a
+    // supply/install choice that hasn't been made yet, don't open the
+    // calculator at all — shake the dropdown instead, same as trying to
+    // type a number directly. Otherwise someone could spend a minute
+    // entering all their measurements only to find out afterward they
+    // still needed to make a choice first.
+    const specMatch = targetId.match(/^mq-qty-([a-z]+)-(\d+)$/);
+    if (specMatch && window.mqSpecModeChosen && !window.mqSpecModeChosen(specMatch[1], parseInt(specMatch[2], 10))) {
+      return;
+    }
     _mqCalcMode = mode;
     _mqCalcTargetId = targetId;
     _mqCalcFieldLabel = fieldLabel || '';
@@ -3109,7 +3119,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // point is making sure the choice actually gets made. Trying to add
     // quantity before choosing shakes and highlights the dropdown instead
     // of silently letting it through with an assumed answer.
-    function mqSpecModeChosen(prefix, i) {
+    window.mqSpecModeChosen = function(prefix, i) {
       const s = specs[i];
       if (!s || !s.offersInstallChoice) return true; // nothing to choose for this item
       const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
