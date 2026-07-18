@@ -157,6 +157,132 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     templates: { label: '💾 Save all changes', fn: () => { window.mqSaveMasterRoomDefs(); window.mqSaveTemplatePhotos(); } },
   };
 
+  // Per-tab help content shown in the "Need help?" modal. Written as plain
+  // paragraphs/lists for now — designed so a video embed or screenshot can
+  // just be dropped in above or below the text later without needing to
+  // restructure anything.
+  const MQ_HELP_CONTENT = {
+    overview: {
+      title: 'Dashboard',
+      body: `
+        <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
+        <p>If you're just getting started, head to <strong>Shop info</strong> first, then <strong>Project types</strong>, then <strong>Pricing</strong> — that's the order that makes the rest of the dashboard make sense.</p>
+      `
+    },
+    leads: {
+      title: 'Leads',
+      body: `
+        <p>Every quote a customer runs through your widget shows up here automatically — their contact info (if they gave it), the project type, and the estimate they saw.</p>
+        <p><strong>Statuses</strong> (New / Contacted / Booked / Lost) are just for your own tracking — customers never see these. Use the dropdown at the top to filter the list down to one status at a time.</p>
+        <p>A customer can run the widget multiple times without giving their name — you'll still see those as separate quote attempts, just grouped together and numbered ("Estimate 1 of 2", etc.) so you can tell they're the same visitor.</p>
+      `
+    },
+    shop: {
+      title: 'Shop info',
+      body: `
+        <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
+        <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
+        <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
+        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen, with your financing link shown alongside it.</p>
+        <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
+        <p>Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
+      `
+    },
+    rooms: {
+      title: 'Project types',
+      body: `
+        <p>Each project type (Kitchen, Bathroom, Refacing, or anything custom you add) is its own self-contained setup: its own description, cover photo, "how to measure" guide, and pricing behavior.</p>
+        <p><strong>Price adjustments</strong> — four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
+        <p><strong>Live on widget / Draft</strong> — uncheck this while you're still setting a project type up, so customers don't see it half-finished.</p>
+        <p><strong>Only show in MidasQuote Pro</strong> — hides this project type from the customer-facing widget completely, while still showing it in your own MidasQuote Pro link. Good for anything you only ever quote yourself.</p>
+        <p><strong>Hide "How to measure" section</strong> — for a project type that's entirely flat-rate items with nothing to actually measure (like a general "Odd jobs" type), this removes that whole section from the widget for that type only.</p>
+        <p>Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
+      `
+    },
+    pricing: {
+      title: 'Pricing',
+      body: `
+        <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
+        <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
+        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
+      `
+    },
+    specialty: {
+      title: 'Specialty items',
+      body: `
+        <p>Anything that isn't a standard cabinet box, door, or countertop — pullouts, lazy susans, custom range hoods, refacing-specific items, or anything unique to your shop.</p>
+        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this.</p>
+        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item, with its own installed price. Leave it unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
+        <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
+        <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
+      `
+    },
+    embed: {
+      title: 'Embed code',
+      body: `
+        <p>Three ways to actually get the widget in front of people, each in its own collapsible section:</p>
+        <p><strong>Code for websites</strong> — the embed code to paste into your own website (Wix, Squarespace, WordPress, Webflow, etc.).</p>
+        <p><strong>Direct link</strong> — a plain link that opens your quote tool directly, no website needed. Good for social media, your Google Business Profile, or texting straight to a walk-in customer.</p>
+        <p><strong>MidasQuote Pro</strong> — a separate link just for you (or someone you trust, like a regular contractor). It shows the real exact numbers behind every quote alongside the same ballpark customers see. Not for sharing with customers.</p>
+        <p>Both links have "Add to Home Screen" instructions so they open like a real app on your phone — Android and Desktop Chrome even get a genuine one-tap "Install" button once you've used the page a bit.</p>
+      `
+    },
+    products: {
+      title: 'My Products',
+      body: `
+        <p>Add real photos for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon.</p>
+        <p>Every category starts collapsed — click any category's header to open just that one. With a lot of items configured, this keeps the page manageable.</p>
+        <p>You can also control which project types each item shows up for right from here — the same setting as on the Specialty Items tab, just accessible from both places.</p>
+      `
+    },
+    templates: {
+      title: 'Templates (Admin)',
+      body: `
+        <p>This tab only shows up for the admin account — it controls the <em>defaults</em> every brand new shop starts with, not any one specific shop's live data.</p>
+        <p>Editing a project type's description, image, or measuring guide here only affects <strong>shops created from now on</strong> — it never retroactively changes a shop that already exists.</p>
+        <p><strong>Push to all shops</strong> — pushes specialty item changes out to shops that already exist. Use this deliberately; it's the one action here that does touch live shops.</p>
+      `
+    },
+    billing: {
+      title: 'Billing',
+      body: `
+        <p>Your subscription and payment details for MidasQuote itself.</p>
+      `
+    },
+    marketing: {
+      title: 'Marketing Kit',
+      body: `
+        <p>Ready-made assets to help you promote your quote tool — share these however makes sense for your shop.</p>
+      `
+    },
+  };
+
+  window.mqShowHelp = function(pageId) {
+    const content = MQ_HELP_CONTENT[pageId];
+    if (!content) return;
+    let modal = document.getElementById('mq-help-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-help-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100000;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      modal.addEventListener('click', (e) => { if (e.target === modal) window.mqCloseHelpModal(); });
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div style="font-size:18px;font-weight:800;color:#111">❓ ${content.title}</div>
+          <button onclick="mqCloseHelpModal()" style="background:none;border:none;font-size:22px;color:#9ca3af;cursor:pointer;line-height:1;padding:0 4px">×</button>
+        </div>
+        <div style="font-size:14px;color:#374151;line-height:1.7">${content.body}</div>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqCloseHelpModal = function() {
+    const modal = document.getElementById('mq-help-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
@@ -181,7 +307,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
       #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
-      #midasquote-dashboard .mq-page{display:none}
+      #midasquote-dashboard .mq-page{display:none;position:relative}
+      #midasquote-dashboard .mq-help-btn{position:absolute;top:0;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
+      #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
+      #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
       #midasquote-dashboard .mq-page.active{display:block}
       #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
       #midasquote-dashboard .mq-page-sub{font-size:13px;color:#6b7280;margin-bottom:2rem}
@@ -306,6 +435,7 @@ window.logoutMember = async function () {
 
           <!-- OVERVIEW -->
           <div class="mq-page active" id="mq-page-overview">
+            <button class="mq-help-btn" onclick="mqShowHelp('overview')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Welcome back 👋</div>
             <div class="mq-page-sub">Here's what's happening with your widget</div>
             <div class="mq-stat-grid" id="mq-stats">
@@ -328,6 +458,7 @@ window.logoutMember = async function () {
 
           <!-- LEADS -->
           <div class="mq-page" id="mq-page-leads">
+            <button class="mq-help-btn" onclick="mqShowHelp('leads')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Leads</div>
@@ -352,6 +483,7 @@ window.logoutMember = async function () {
 
           <!-- SHOP INFO -->
           <div class="mq-page" id="mq-page-shop">
+            <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Shop info</div>
             <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
             <div class="mq-card">
@@ -440,6 +572,7 @@ window.logoutMember = async function () {
 
           <!-- ROOM TYPES -->
           <div class="mq-page" id="mq-page-rooms">
+            <button class="mq-help-btn" onclick="mqShowHelp('rooms')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Project types</div>
             <div class="mq-page-sub">Set up the project types your widget offers — rooms, service tiers, or anything else — and adjust pricing up or down for each one. Great for things like "Kitchen Reno — Premium" vs. "Luxury," or a bathroom vanity running smaller than a kitchen cabinet at the same length.</div>
             <div class="mq-card">
@@ -459,6 +592,7 @@ window.logoutMember = async function () {
 
           <!-- PRICING -->
           <div class="mq-page" id="mq-page-pricing">
+            <button class="mq-help-btn" onclick="mqShowHelp('pricing')"><span class="mq-help-badge">?</span> Need help?</button>
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
               🔧 <strong>Handles & knobs:</strong> Do not include hardware costs in your pricing here. If you supply handles or knobs, add them as a specialty items instead.
             </div>
@@ -467,6 +601,7 @@ window.logoutMember = async function () {
 
           <!-- SPECIALTY ITEMS -->
           <div class="mq-page" id="mq-page-specialty">
+            <button class="mq-help-btn" onclick="mqShowHelp('specialty')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
@@ -489,6 +624,7 @@ window.logoutMember = async function () {
 
           <!-- EMBED CODE -->
           <div class="mq-page" id="mq-page-embed">
+            <button class="mq-help-btn" onclick="mqShowHelp('embed')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Embed code</div>
             <div class="mq-page-sub">Pick what you want, then copy one combined block of code to paste into your website.</div>
 
@@ -628,6 +764,7 @@ window.logoutMember = async function () {
 
           <!-- MY PRODUCTS -->
           <div class="mq-page" id="mq-page-products">
+            <button class="mq-help-btn" onclick="mqShowHelp('products')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">My Products</div>
             <div class="mq-page-sub">Manage everything about how each item shows up on your widget: photos and thumbnails customers see while quoting, which project types each item is available for, and which items to hide entirely. Category-level shortcuts let you show or hide a whole group at once — individual items can still override that.</div>
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
@@ -649,6 +786,7 @@ window.logoutMember = async function () {
 
           <!-- TEMPLATES (ADMIN ONLY) -->
           <div class="mq-page" id="mq-page-templates">
+            <button class="mq-help-btn" onclick="mqShowHelp('templates')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">🔧 Templates (Admin)</div>
             <div class="mq-page-sub">Manage the master specialty items for Refacing, Repainting, and Restaining. These are what every new shop gets automatically — add real door styles, prices, and photos here so shop owners never start from a blank page.</div>
             <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#991b1b;line-height:1.6">
@@ -671,6 +809,7 @@ window.logoutMember = async function () {
 
           <!-- BILLING -->
           <div class="mq-page" id="mq-page-billing">
+            <button class="mq-help-btn" onclick="mqShowHelp('billing')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Billing</div>
             <div class="mq-page-sub">Manage your subscription, payment method, and invoices</div>
 
@@ -709,6 +848,7 @@ window.logoutMember = async function () {
 
           <!-- MARKETING KIT -->
           <div class="mq-page" id="mq-page-marketing">
+            <button class="mq-help-btn" onclick="mqShowHelp('marketing')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Marketing Kit</div>
             <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
 
