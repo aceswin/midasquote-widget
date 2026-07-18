@@ -448,7 +448,12 @@ window.logoutMember = async function () {
                 💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
               </div>
               <div id="mq-rooms-list"></div>
-              <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()" style="margin-top:8px;margin-bottom:1.25rem">+ Add room</button>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
+                <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()">+ Add room</button>
+                <select id="mq-restore-room-select" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
+                  <option value="">↩ Restore a default type…</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -1889,7 +1894,37 @@ window.logoutMember = async function () {
         }
       });
     });
+
+    mqRefreshRestoreDropdown();
   }
+
+  // Keeps the "Restore a default type" dropdown showing only the standard
+  // project types (Kitchen, Bathroom, Refacing, etc.) that are currently
+  // missing from this shop's own list — so a shop owner who accidentally
+  // deleted one can bring it straight back with its original description,
+  // cover image, and measuring guide intact, without needing to recreate
+  // any of that by hand.
+  function mqRefreshRestoreDropdown() {
+    const sel = document.getElementById('mq-restore-room-select');
+    if (!sel) return;
+    const currentIds = new Set((window._mqRooms || []).map(r => r.id));
+    const missing = defaultRoomTypes().filter(r => !currentIds.has(r.id));
+    sel.innerHTML = `<option value="">↩ Restore a default type…</option>` +
+      missing.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    sel.style.display = missing.length ? 'inline-block' : 'none';
+  }
+
+  window.mqRestoreDefaultRoom = function(roomId) {
+    if (!roomId) return;
+    const defaults = defaultRoomTypes();
+    const roomDef = defaults.find(r => r.id === roomId);
+    if (!roomDef) return;
+    if (!window._mqRooms) window._mqRooms = [];
+    window._mqRooms.push({ ...roomDef });
+    _mqExpandedRoomIds.add(roomId);
+    renderRoomsList();
+    showMsg('mq-rooms-msg', `✓ "${roomDef.name}" restored with its default description, image, and measuring guide.`);
+  };
 
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
