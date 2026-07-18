@@ -2805,18 +2805,38 @@ window.logoutMember = async function () {
         const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
         return photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
       }).join('');
-      return `<div class="mq-card">
-        <div class="mq-card-title">${disp.title}</div>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
-        ${categoryRoomDisclosure(cat)}
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
-        
+      return `<div class="mq-card" style="padding:0;overflow:hidden">
+        <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+          <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
+          <span id="mq-cat-arrow-${cat}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
+        </div>
+        <div id="mq-cat-body-${cat}" style="display:none;padding:0 1.25rem 1.25rem">
+          <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
+          ${categoryRoomDisclosure(cat)}
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
+        </div>
       </div>`;
     }
+    // Starts every category closed by default — with a lot of items across
+    // several categories, having them all open at once made this tab feel
+    // overwhelming. Click any category's header to open or close just that
+    // one.
+    window.mqToggleProductCategory = function(cat) {
+      const body = document.getElementById(`mq-cat-body-${cat}`);
+      const arrow = document.getElementById(`mq-cat-arrow-${cat}`);
+      if (!body) return;
+      const opening = body.style.display === 'none';
+      body.style.display = opening ? 'block' : 'none';
+      if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+    };
 
     const specRoomOptions = (window._mqRooms || defaultRoomTypes()).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    const specSection = specItems.length ? `<div class="mq-card">
-      <div class="mq-card-title">⭐ Specialty Items</div>
+    const specSection = specItems.length ? `<div class="mq-card" style="padding:0;overflow:hidden">
+      <div onclick="mqToggleProductCategory('specialty')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+        <div class="mq-card-title" style="margin:0">⭐ Specialty Items <span style="font-size:12px;font-weight:400;color:#9ca3af">(${specItems.length})</span></div>
+        <span id="mq-cat-arrow-specialty" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
+      </div>
+      <div id="mq-cat-body-specialty" style="display:none;padding:0 1.25rem 1.25rem">
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
       ${categoryRoomDisclosure('specialty')}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;background:#f9fafb;border-radius:8px">
@@ -2842,7 +2862,7 @@ window.logoutMember = async function () {
           </div>`;
         }).join('')}
       </div>
-      
+      </div>
     </div>` : '';
 
     const content = el('mq-products-content');
