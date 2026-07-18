@@ -39,8 +39,8 @@
         background_color: '#0f2a52',
         theme_color: '#0f2a52',
         icons: [
-          { src: `${origin}/icons/favicon.png`, sizes: '512x512', type: 'image/png' },
-          { src: `${origin}/icons/apple-touch-icon.png`, sizes: '180x180', type: 'image/png' }
+          { src: `${origin}/icons/favicon.png`, sizes: 'any', type: 'image/png' },
+          { src: `${origin}/icons/apple-touch-icon.png`, sizes: 'any', type: 'image/png' }
         ]
       };
       const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
