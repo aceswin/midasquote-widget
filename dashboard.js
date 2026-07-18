@@ -183,7 +183,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
         <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
-        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen, with your financing link shown alongside it.</p>
+        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific.</p>
         <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
         <p>Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
       `
@@ -222,7 +222,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Three ways to actually get the widget in front of people, each in its own collapsible section:</p>
         <p><strong>Code for websites</strong> — the embed code to paste into your own website (Wix, Squarespace, WordPress, Webflow, etc.).</p>
-        <p><strong>Direct link</strong> — a plain link that opens your quote tool directly, no website needed. Good for social media, your Google Business Profile, or texting straight to a walk-in customer.</p>
+        <p><strong>Direct link</strong> — a plain link that opens your quote tool directly, no website needed.</p>
         <p><strong>MidasQuote Pro</strong> — a separate link just for you (or someone you trust, like a regular contractor). It shows the real exact numbers behind every quote alongside the same ballpark customers see. Not for sharing with customers.</p>
         <p>Both links have "Add to Home Screen" instructions so they open like a real app on your phone — Android and Desktop Chrome even get a genuine one-tap "Install" button once you've used the page a bit.</p>
       `
@@ -308,7 +308,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
       #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
       #midasquote-dashboard .mq-page{display:none;position:relative}
-      #midasquote-dashboard .mq-help-btn{position:absolute;top:0;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
+      #midasquote-dashboard .mq-help-btn{position:absolute;top:-40px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
       #midasquote-dashboard .mq-page.active{display:block}
@@ -369,6 +369,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
+        #midasquote-dashboard .mq-help-btn{top:-20px}
         #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
