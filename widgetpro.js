@@ -1020,7 +1020,12 @@
     // glance which options cost more — "None" (where it exists) always stays
     // pinned first with no badge, since it's not really a "priced" choice.
     const mItems = li.materials.length > 0
-      ? sortAndBadgeItems(li.materials.map((m,i)=>({value:`dyn_${i}`, label:m._baseName||m['Name'], photoUrl:m.photoUrl, icon:'🪵', price:m.rateB||0, visibleRooms:m.visibleRooms||[]})))
+      ? sortAndBadgeItems(li.materials.map((m,i)=>{
+          const baseName = m._baseName || m['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim();
+          const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
+          const priceRate = bItem ? (bItem['Rate']||0) : (m['Rate']||0);
+          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[]};
+        }))
       : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
     const dItems = sortAndBadgeItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
       li.doorStyles.length > 0
