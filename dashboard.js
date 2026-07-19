@@ -284,6 +284,41 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (modal) modal.style.display = 'none';
   };
 
+  // Shown exactly once per shop, ever — the moment a brand new shop owner
+  // first loads their dashboard. Tracked on the shop record itself in
+  // Airtable (not localStorage), so it correctly stays dismissed even if
+  // they log in from a different device or browser later.
+  window.mqShowWelcomeModal = function() {
+    let modal = document.getElementById('mq-welcome-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-welcome-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:40px;margin-bottom:12px">👋</div>
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+          Every tab has a <strong style="color:#2563eb">❓ Need help?</strong> button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
+          <br><br>
+          Take your time exploring — there's no rush, and almost everything here autosaves as you go.
+        </div>
+        <button onclick="mqCloseWelcomeModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, let's go!</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqCloseWelcomeModal = function() {
+    const modal = document.getElementById('mq-welcome-modal');
+    if (modal) modal.style.display = 'none';
+    const shopRecord = window._mqShopRecord;
+    if (shopRecord && !shopRecord.fields['Welcome popup seen']) {
+      shopRecord.fields['Welcome popup seen'] = true;
+      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Welcome popup seen': true }).catch(()=>{});
+    }
+  };
+
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
@@ -5519,6 +5554,10 @@ window.logoutMember = async function () {
     }
 
     window._mqShopRecord = shopRecord;
+
+    if (!shopRecord.fields['Welcome popup seen']) {
+      window.mqShowWelcomeModal();
+    }
 
     // Save Stripe customer ID to Airtable if we have it and it's not stored yet
     if (memberStripeCustomerId && !shopRecord.fields['Stripe customer ID']) {
