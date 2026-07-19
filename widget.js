@@ -169,7 +169,11 @@
     const hasDynamic = li.materials.length > 0;
 
     const specRecords = payload.specialty || [];
+    // Items flagged "Pro only" never appear here at all — same idea as a
+    // Pro-only project type, just at the individual item level. They still
+    // show up in MidasQuote Pro, for every project type they're tagged to.
     const specs = assignBadges(specRecords
+      .filter(r => !r.fields['Pro only'])
       .map(r=>{
         const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty');
         return {

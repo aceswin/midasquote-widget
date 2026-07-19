@@ -1617,6 +1617,7 @@ window.logoutMember = async function () {
           'Install mode': master.fields['Install mode'] || 'supply',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
+          'Pro only': master.fields['Pro only'] || false,
           'Active': true,
           'Visible rooms': master.fields['Visible rooms'] || '[]',
           'Template source ID': master.id,
@@ -2390,7 +2391,7 @@ window.logoutMember = async function () {
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -2414,6 +2415,7 @@ window.logoutMember = async function () {
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item"/></td>
               <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
+              <td><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" title="Hide this item from the customer-facing widget entirely — still shows in MidasQuote Pro, for every project type it's tagged to"/></td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
               <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
             </tr>`;
@@ -3334,6 +3336,7 @@ window.logoutMember = async function () {
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:auto"/> Offer supply/install choice</label>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" style="width:auto"/> ⚡ Pro only</label>
       </div>
       <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
       ${photoHtml}
@@ -3516,6 +3519,7 @@ window.logoutMember = async function () {
               'Install mode': master.fields['Install mode'] || 'supply',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
+          'Pro only': master.fields['Pro only'] || false,
               'Active': false,
               'Visible rooms': master.fields['Visible rooms'] || '[]',
               'Template source ID': master.id,
@@ -3627,6 +3631,7 @@ window.logoutMember = async function () {
             'Install mode': master.fields['Install mode'] || 'supply',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
+          'Pro only': master.fields['Pro only'] || false,
             'Active': false,
             'Visible rooms': master.fields['Visible rooms'] || '[]',
             'Template source ID': master.id,
