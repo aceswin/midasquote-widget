@@ -1524,9 +1524,9 @@ window.mqphGoToWizard = function() {
     // Prompt for name inline — small name modal
     const catMeta = {
       material:{ icon:'🪵', label:'Box material',      ph:'e.g. Painted MDF' },
-      door:    { icon:'🚪', label:'Door style',         ph:'e.g. Maple shaker — painted' },
+      door:    { icon:'🚪', label:'Door style',         ph:'e.g. Maple shaker' },
       hinge:   { icon:'🔧', label:'Door hinge',         ph:'e.g. Concealed soft-close' },
-      drawer:  { icon:'🗄️', label:'Drawer configuration', ph:'e.g. Birch — soft-close undermount' },
+      drawer:  { icon:'🗄️', label:'Drawer configuration', ph:'e.g. Birch — soft-close' },
     };
     const meta = catMeta[cat] || { icon:'➕', label:'Item', ph:'Enter name' };
 
