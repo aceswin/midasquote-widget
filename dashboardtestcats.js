@@ -1001,7 +1001,7 @@ window.logoutMember = async function () {
             </div>
 
 
-            <div class="mq-card">
+            <div class="mq-card" id="mq-pd-outer-card">
               <div class="mq-card-title">🎨 Custom Poster & Sign Designer</div>
               <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Pick a style, add your own project photo, and download a print-ready poster or yard sign — pick "Landscape" below for a yard sign.</p>
 
@@ -1200,7 +1200,7 @@ window.logoutMember = async function () {
                 </div>
               </div>
 
-              <div style="position:fixed;top:90px;right:30px;width:230px;z-index:50;text-align:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)" id="mq-pd-sticky-preview">
+              <div style="display:none;position:fixed;top:90px;right:30px;width:230px;z-index:50;text-align:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)" id="mq-pd-sticky-preview">
                 <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:206px;height:auto;border-radius:10px;display:block;margin:0 auto 10px;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
                 <button class="mq-btn mq-btn-primary" id="mq-pd-download-btn" style="width:100%;display:block;margin:0 auto">⬇️ Download (PNG)</button>
               </div>
@@ -5682,8 +5682,9 @@ window.logoutMember = async function () {
 
         window.mqPdSetOrientation = (orient) => {
           pdOrientation = orient;
-          if (orient === 'portrait') { pdCanvas.width = 1080; pdCanvas.height = 1620; pdCanvas.style.width = '220px'; }
-          else { pdCanvas.width = 1620; pdCanvas.height = 1080; pdCanvas.style.width = '320px'; }
+          if (orient === 'portrait') { pdCanvas.width = 1080; pdCanvas.height = 1620; }
+          else { pdCanvas.width = 1620; pdCanvas.height = 1080; }
+          pdCanvas.style.width = '100%'; // always fits the fixed preview panel's own width, regardless of orientation
           drawPosterDesigner();
         };
 
@@ -5786,6 +5787,20 @@ window.logoutMember = async function () {
         }
 
         drawPosterDesigner();
+
+        // Only show the floating preview while this specific section is
+        // actually scrolled into view — not the whole time someone's
+        // anywhere on the Marketing Kit page.
+        const pdOuterCard = document.getElementById('mq-pd-outer-card');
+        const pdStickyPreview = document.getElementById('mq-pd-sticky-preview');
+        if (pdOuterCard && pdStickyPreview && 'IntersectionObserver' in window) {
+          const pdObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              pdStickyPreview.style.display = entry.isIntersecting ? 'block' : 'none';
+            });
+          }, { threshold: 0.05 });
+          pdObserver.observe(pdOuterCard);
+        }
       }
   }
 
