@@ -1179,6 +1179,27 @@ window.logoutMember = async function () {
                   <input type="range" id="mq-pd-text-offset" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
                 </div>
               </div>
+
+              <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
+                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">QR code &amp; quote button <span style="font-weight:400;text-transform:none;color:#9ca3af">(both optional)</span></div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:10px;cursor:pointer">
+                  <input type="checkbox" id="mq-pd-qr-enabled" onchange="mqPdQrToggled()" style="width:auto"/> Add a QR code onto the photo
+                </label>
+                <div id="mq-pd-qr-controls-wrap" style="display:none;margin-bottom:12px">
+                  <div class="mq-grid2">
+                    <div class="mq-field">
+                      <label class="mq-label">QR code size</label>
+                      <input type="range" id="mq-pd-qr-size" min="50" max="220" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                    </div>
+                    <div class="mq-field">
+                      <label class="mq-label">QR code position (up/down)</label>
+                      <input type="range" id="mq-pd-qr-position" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                    </div>
+                  </div>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                  <input type="checkbox" id="mq-pd-btn-enabled" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:auto"/> Add a "Get a Free Quote" button
+                </label>
               </div>
 
               <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:220px;height:auto;border-radius:10px;display:block;margin:0 auto 1rem;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
@@ -5573,6 +5594,69 @@ window.logoutMember = async function () {
           };
         }
 
+        // Reads the shared QR-code/quote-button settings once per draw.
+        function pdGetQrButtonSettings() {
+          return {
+            qrEnabled: el('mq-pd-qr-enabled')?.checked || false,
+            qrSizeMult: (parseInt(el('mq-pd-qr-size')?.value,10)||100)/100,
+            qrOffsetPct: (parseInt(el('mq-pd-qr-position')?.value,10)||0)/100,
+            btnEnabled: el('mq-pd-btn-enabled')?.checked || false
+          };
+        }
+
+        // Draws a QR code centered at (cx, cy) — a white rounded card with a
+        // subtle shadow, same look as the existing yard sign's QR code.
+        // Silently does nothing if there's no quote link yet or the QR
+        // library hasn't loaded, same fallback used elsewhere.
+        function pdDrawQrCode(cx, cy, size) {
+          if (!signLink || !window.mqQrGen) return;
+          try {
+            const qr = window.mqQrGen(0, 'M');
+            qr.addData(signLink);
+            qr.make();
+            const count = qr.getModuleCount();
+            const cardPad = size * 0.09;
+            const x = cx - size/2, y = cy - size/2;
+            const cell = size / count;
+
+            pdCtx.save();
+            pdCtx.shadowColor = 'rgba(0,0,0,0.35)';
+            pdCtx.shadowBlur = 22;
+            pdCtx.shadowOffsetY = 6;
+            pdCtx.fillStyle = '#ffffff';
+            pdCtx.beginPath();
+            pdCtx.roundRect(x - cardPad, y - cardPad, size + cardPad*2, size + cardPad*2, 16);
+            pdCtx.fill();
+            pdCtx.restore();
+
+            pdCtx.fillStyle = '#1a1a1a';
+            for (let row = 0; row < count; row++) {
+              for (let col = 0; col < count; col++) {
+                if (qr.isDark(row, col)) pdCtx.fillRect(x + col*cell, y + row*cell, cell+0.5, cell+0.5);
+              }
+            }
+          } catch(e) {}
+        }
+
+        // Draws a rounded "Get a Free Quote" pill button centered at (cx, cy).
+        function pdDrawGetQuoteButton(cx, cy, color) {
+          const w = 340, h = 84;
+          pdCtx.save();
+          pdCtx.shadowColor = 'rgba(0,0,0,0.3)';
+          pdCtx.shadowBlur = 16;
+          pdCtx.shadowOffsetY = 4;
+          pdCtx.fillStyle = color;
+          pdCtx.beginPath();
+          pdCtx.roundRect(cx - w/2, cy - h/2, w, h, h/2);
+          pdCtx.fill();
+          pdCtx.restore();
+          pdCtx.fillStyle = pdMutedTextColorFor(color) === '#5b5b5b' ? '#1a1a1a' : '#ffffff';
+          pdCtx.font = '700 34px -apple-system, sans-serif';
+          pdCtx.textAlign = 'center'; pdCtx.textBaseline = 'middle';
+          pdCtx.fillText('Get a Free Quote', cx, cy + 2);
+          pdCtx.textBaseline = 'alphabetic';
+        }
+
         function pdShade(hex, percent) {
           try {
             hex = hex.replace('#','');
@@ -5754,6 +5838,18 @@ window.logoutMember = async function () {
               tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?42:36) * tc.lineMult; });
             }
           }
+
+          // Optional QR code + "Get a Free Quote" button, centered in the
+          // photo area — both independently toggleable, off by default.
+          const qb = pdGetQrButtonSettings();
+          const photoCx = isPortrait ? W/2 : W*0.28 + (W*0.75)/2;
+          const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
+          if (qb.qrEnabled) {
+            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90, shapeColor);
+          }
         }
 
         function drawDiamondArrow() {
@@ -5879,6 +5975,16 @@ window.logoutMember = async function () {
               tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?42:36) * tc.lineMult; });
             }
           }
+
+          const qb = pdGetQrButtonSettings();
+          const photoCx = isPortrait ? W/2 : W*0.30 + (W*0.75)/2;
+          const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
+          if (qb.qrEnabled) {
+            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90, shapeColor);
+          }
         }
 
         function drawOrnateDivider() {
@@ -5966,6 +6072,15 @@ window.logoutMember = async function () {
               pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?38:32) * tc.lineMult; });
             }
           }
+
+          const qb = pdGetQrButtonSettings();
+          const photoCx = photoX + photoW/2, photoCy = photoY + photoH/2;
+          if (qb.qrEnabled) {
+            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 240 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(photoCx, photoY + photoH - 90, shapeColor);
+          }
         }
 
         function drawCircularBadge() {
@@ -6036,6 +6151,14 @@ window.logoutMember = async function () {
             pdCtx.font = tagFont; pdCtx.fillStyle = '#e0e0e0';
             pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 32 * tc.lineMult; });
           }
+
+          const qb = pdGetQrButtonSettings();
+          if (qb.qrEnabled) {
+            pdDrawQrCode(cx, ty + 130 + qb.qrOffsetPct * H, 220 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(cx, H - 90, shapeColor);
+          }
         }
 
         function drawBoldModern() {
@@ -6096,8 +6219,17 @@ window.logoutMember = async function () {
               pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?36:32) * tc.lineMult; });
             }
           }
-        }
 
+          const qb = pdGetQrButtonSettings();
+          const photoCx = isPortrait ? W/2 : splitAt + (W-splitAt)/2;
+          const photoCy = isPortrait ? splitAt + (H-splitAt)/2 : H/2;
+          if (qb.qrEnabled) {
+            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 250 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(photoCx, H - 90, shapeColor);
+          }
+        }
 
         function drawPosterDesigner() {
           if (pdTemplate === 'diamond-arrow') drawDiamondArrow();
@@ -6152,6 +6284,13 @@ window.logoutMember = async function () {
           pdOrientation = orient;
           if (orient === 'portrait') { pdCanvas.width = 1080; pdCanvas.height = 1620; pdCanvas.style.width = '220px'; }
           else { pdCanvas.width = 1620; pdCanvas.height = 1080; pdCanvas.style.width = '320px'; }
+          drawPosterDesigner();
+        };
+
+        window.mqPdQrToggled = () => {
+          const wrap = el('mq-pd-qr-controls-wrap');
+          const enabled = el('mq-pd-qr-enabled')?.checked;
+          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
           drawPosterDesigner();
         };
 
