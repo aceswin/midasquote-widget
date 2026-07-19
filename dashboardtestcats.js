@@ -1112,6 +1112,8 @@ window.logoutMember = async function () {
                 <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-logo-input').click()">📤 Upload logo</button>
                 <input type="file" id="mq-pd-logo-input" accept="image/*" style="display:none"/>
                 <p style="font-size:11px;color:#9ca3af;margin-top:4px">This is separate from your Shop Info logo — upload whatever image you want to appear here specifically.</p>
+                <label class="mq-label" style="margin-top:10px;display:block">Logo size</label>
+                <input type="range" id="mq-pd-logo-size" min="50" max="250" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
               </div>
 
               <div class="mq-field" style="margin-bottom:12px">
@@ -1135,6 +1137,13 @@ window.logoutMember = async function () {
                     <span id="mq-pd-bg-color2-wrap" style="display:none">
                       <input type="color" id="mq-pd-bg-color2" value="#f0f0f0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
                     </span>
+                  </div>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;margin-top:8px;cursor:pointer">
+                    <input type="checkbox" id="mq-pd-bg-image-enabled" onchange="mqPdBgImageToggled()" style="width:auto"/> Use an image instead (texture, pattern, anything)
+                  </label>
+                  <div id="mq-pd-bg-image-upload-wrap" style="display:none;margin-top:6px">
+                    <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-bg-image-input').click()">📤 Upload background image</button>
+                    <input type="file" id="mq-pd-bg-image-input" accept="image/*" style="display:none"/>
                   </div>
                 </div>
                 <div class="mq-field">
@@ -5579,6 +5588,7 @@ window.logoutMember = async function () {
         let pdTemplate = 'curved-split';
         let pdPhotoImage = null;
         let pdOwnLogoImage = null; // uploaded specifically here, not shop info's logo
+        let pdBgImage = null; // optional uploaded background texture/image
         const pdShopName = shopRecord.fields['Shop name'] || 'Your Shop';
 
         function pdWrapText(text, font, maxWidth) {
@@ -5654,6 +5664,27 @@ window.logoutMember = async function () {
         }
 
         // Draws a rounded "Get a Free Quote" pill button centered at (cx, cy).
+        // Fills the whole canvas background — an uploaded image if the shop
+        // turned that on, otherwise whatever solid colour or gradient the
+        // colour pickers are set to. Centralized here since several
+        // templates need the exact same background-fill behavior.
+        function pdFillBackground(W, H, bgColor, bgColor2, bgGradient) {
+          const useImage = el('mq-pd-bg-image-enabled')?.checked && pdBgImage;
+          if (useImage) {
+            pdDrawPhotoInRect(pdBgImage, 0, 0, W, H);
+            return;
+          }
+          if (bgGradient) {
+            const isPortrait = pdOrientation === 'portrait';
+            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
+            g.addColorStop(0, bgColor); g.addColorStop(1, bgColor2);
+            pdCtx.fillStyle = g;
+          } else {
+            pdCtx.fillStyle = bgColor;
+          }
+          pdCtx.fillRect(0, 0, W, H);
+        }
+
         function pdDrawGetQuoteButton(cx, cy, color) {
           const w = 340, h = 84;
           pdCtx.save();
@@ -5731,15 +5762,7 @@ window.logoutMember = async function () {
           const bandHalf = isPortrait ? H*0.014 : W*0.010;
           const tc = pdGetTextControls();
 
-          if (bgGradient) {
-            const bgGrad = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
-            bgGrad.addColorStop(0, bgColor);
-            bgGrad.addColorStop(1, bgColor2);
-            pdCtx.fillStyle = bgGrad;
-          } else {
-            pdCtx.fillStyle = bgColor;
-          }
-          pdCtx.fillRect(0, 0, W, H);
+          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
 
           // Photo zone, clipped to the curve
           pdCtx.save();
@@ -5813,8 +5836,9 @@ window.logoutMember = async function () {
           // Text / logo panel
           pdCtx.textAlign = 'center';
           if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = isPortrait ? W*0.55 : W*0.30;
-            const maxLogoH = isPortrait ? H*0.30 : H*0.5;
+            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
+            const maxLogoW = (isPortrait ? W*0.55 : W*0.30) * logoSizeMult;
+            const maxLogoH = (isPortrait ? H*0.30 : H*0.5) * logoSizeMult;
             const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
             let lw = maxLogoW, lh = lw / logoRatio;
             if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
@@ -5882,15 +5906,7 @@ window.logoutMember = async function () {
           const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
           const tc = pdGetTextControls();
 
-          if (bgGradient) {
-            const bgGrad = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
-            bgGrad.addColorStop(0, bgColor);
-            bgGrad.addColorStop(1, bgColor2);
-            pdCtx.fillStyle = bgGrad;
-          } else {
-            pdCtx.fillStyle = bgColor;
-          }
-          pdCtx.fillRect(0, 0, W, H);
+          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
 
           // Photo zone, clipped to an angular arrow-point boundary instead
           // of a curve.
@@ -5953,8 +5969,9 @@ window.logoutMember = async function () {
           // Text / logo panel
           pdCtx.textAlign = 'center';
           if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = isPortrait ? W*0.55 : W*0.30;
-            const maxLogoH = isPortrait ? H*0.30 : H*0.5;
+            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
+            const maxLogoW = (isPortrait ? W*0.55 : W*0.30) * logoSizeMult;
+            const maxLogoH = (isPortrait ? H*0.30 : H*0.5) * logoSizeMult;
             const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
             let lw = maxLogoW, lh = lw / logoRatio;
             if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
@@ -6015,12 +6032,7 @@ window.logoutMember = async function () {
           const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
           const tc = pdGetTextControls();
 
-          if (bgGradient) {
-            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
-            g.addColorStop(0, bgColor); g.addColorStop(1, bgColor2);
-            pdCtx.fillStyle = g;
-          } else pdCtx.fillStyle = bgColor;
-          pdCtx.fillRect(0, 0, W, H);
+          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
 
           // Photo sits in a simple rounded panel, not a curve/angle — this
           // template's character comes from the ornate line-and-diamond
@@ -6057,7 +6069,8 @@ window.logoutMember = async function () {
           }
 
           if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = isPortrait ? W*0.55 : W*0.34, maxLogoH = isPortrait ? H*0.32 : H*0.5;
+            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
+            const maxLogoW = (isPortrait ? W*0.55 : W*0.34) * logoSizeMult, maxLogoH = (isPortrait ? H*0.32 : H*0.5) * logoSizeMult;
             const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
             let lw = maxLogoW, lh = lw/ratio;
             if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
@@ -6210,7 +6223,8 @@ window.logoutMember = async function () {
           const mutedColor = textColor === '#ffffff' ? '#d0d0d0' : '#555555';
 
           if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = isPortrait ? W*0.55 : splitAt*0.75, maxLogoH = isPortrait ? splitAt*0.6 : H*0.5;
+            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
+            const maxLogoW = (isPortrait ? W*0.55 : splitAt*0.75) * logoSizeMult, maxLogoH = (isPortrait ? splitAt*0.6 : H*0.5) * logoSizeMult;
             const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
             let lw = maxLogoW, lh = lw/ratio;
             if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
@@ -6358,6 +6372,28 @@ window.logoutMember = async function () {
             reader.readAsDataURL(file);
           };
         }
+
+        const pdBgImageInput = el('mq-pd-bg-image-input');
+        if (pdBgImageInput) {
+          pdBgImageInput.onchange = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const img = new Image();
+              img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
+              img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          };
+        }
+
+        window.mqPdBgImageToggled = () => {
+          const wrap = el('mq-pd-bg-image-upload-wrap');
+          const enabled = el('mq-pd-bg-image-enabled')?.checked;
+          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
+          drawPosterDesigner();
+        };
 
         const pdDownloadBtn = el('mq-pd-download-btn');
         if (pdDownloadBtn) {
