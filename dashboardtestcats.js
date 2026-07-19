@@ -413,9 +413,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
-        #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:150px!important;width:auto!important;padding:8px!important;height:auto!important}
-        #midasquote-dashboard #mq-pd-sticky-preview canvas{width:130px!important;height:auto!important;margin-bottom:6px!important}
-        #midasquote-dashboard #mq-pd-sticky-preview button{font-size:11px!important;padding:6px!important;width:100%!important}
+        #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
+        #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
+        #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
         #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
@@ -1201,7 +1201,7 @@ window.logoutMember = async function () {
               </div>
 
               <div style="display:none;position:fixed;top:90px;right:30px;max-width:480px;z-index:50;text-align:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)" id="mq-pd-sticky-preview">
-                <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:auto;height:300px;border-radius:10px;display:block;margin:0 auto 10px;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
+                <canvas id="mq-pd-canvas" width="1080" height="1620" onclick="mqPdOpenZoom()" style="width:auto;height:300px;border-radius:10px;display:block;margin:0 auto 10px;box-shadow:0 6px 24px rgba(0,0,0,0.18);cursor:zoom-in" title="Tap to zoom"></canvas>
                 <button class="mq-btn mq-btn-primary" id="mq-pd-download-btn" style="width:100%;display:block;margin:0 auto">⬇️ Download (PNG)</button>
               </div>
 
@@ -5760,6 +5760,22 @@ window.logoutMember = async function () {
             reader.readAsDataURL(file);
           };
         }
+
+        // Tap-to-zoom — converts the current canvas to an image and shows it
+        // full-screen, since a canvas itself can't be pinch-zoomed the way a
+        // real <img> can. Tap anywhere to close.
+        window.mqPdOpenZoom = () => {
+          let overlay = document.getElementById('mq-pd-zoom-overlay');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'mq-pd-zoom-overlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
+            overlay.onclick = () => { overlay.style.display = 'none'; };
+            document.body.appendChild(overlay);
+          }
+          overlay.innerHTML = `<img src="${pdCanvas.toDataURL('image/png')}" style="max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.4)"/>`;
+          overlay.style.display = 'flex';
+        };
 
         window.mqPdToggleColorSection = () => {
           const body = el('mq-pd-color-section-body');
