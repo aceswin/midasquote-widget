@@ -946,6 +946,11 @@
       targetEl.dispatchEvent(new Event('change', { bubbles: true }));
     }
     mqCloseMeasureCalc();
+    if (targetEl) {
+      setTimeout(() => {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
   };
 
   // Small button that opens the calculator above, for placement right next
@@ -1853,6 +1858,13 @@
     // Shared by numbering, step-focus, and anything else that needs "every
     // currently-visible .mq-sec in this tab, in order" — one place to keep
     // that logic consistent.
+    function mqScrollWithOffset(el, offsetPx) {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const top = rect.top + window.pageYOffset - (offsetPx || 80);
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+
     function mqGetVisibleSections(prefix) {
       const scopeId = prefix === 'c' ? 'mq-tab-cabinets' : (prefix === 'b' ? 'mq-tab-both' : null);
       const scope = scopeId && document.getElementById(scopeId);
@@ -1944,7 +1956,7 @@
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
       const next = sections[_mqStepIndex[prefix]];
-      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (next) mqScrollWithOffset(next);
     };
 
     window.mqStepBack = function(prefix) {
@@ -1952,7 +1964,7 @@
       window.mqUpdateStepFocus(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
-      if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (cur) mqScrollWithOffset(cur);
     };
 
     // Clicking directly into any other section (ahead or already-done)
@@ -2799,7 +2811,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');document.getElementById('mq-c-result').scrollIntoView({behavior:'smooth',block:'start'});window.mqShowStartOverPanel();
+        document.getElementById('mq-c-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-c-result'));window.mqShowStartOverPanel();
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.total);
       });
@@ -2818,7 +2830,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');document.getElementById('mq-ct-result').scrollIntoView({behavior:'smooth',block:'start'});window.mqShowStartOverPanel();
+          document.getElementById('mq-ct-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-ct-result'));window.mqShowStartOverPanel();
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines,r.total);
         },900);
@@ -2847,7 +2859,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const realTotalEl = document.getElementById('mq-b-grand-real');
           if (realTotalEl) realTotalEl.textContent = fmt(cab.total + ct.total);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');document.getElementById('mq-b-result').scrollIntoView({behavior:'smooth',block:'start'});window.mqShowStartOverPanel();
+          document.getElementById('mq-b-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-b-result'));window.mqShowStartOverPanel();
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.total+ct.total);
         },1200);
@@ -3105,7 +3117,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     wireWidget(data);
     const panel = document.getElementById('mq-start-over-panel');
     if (panel) panel.style.display = 'none';
-    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    mqScrollWithOffset(container);
   };
 
   // Mobile-only minimum text size — a lot of hint/label text throughout
