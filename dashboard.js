@@ -2357,6 +2357,11 @@ window.logoutMember = async function () {
       mqSaveSpecField(id, 'Category', sel.value);
       if (row) row.setAttribute('data-category', sel.value);
     }
+    // Whether it's a brand new category or a change to an existing one,
+    // re-check this row against whatever filter is currently active — an
+    // item moved out of the category being filtered on should disappear
+    // right away, not linger until the page gets refreshed.
+    if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
   };
 
   function renderSpecialty(specs, shopRecord) {
@@ -3252,6 +3257,13 @@ window.logoutMember = async function () {
       await atUpdate(CONFIG.SPECIALTY_TABLE, itemId, { 'Visible rooms': JSON.stringify(toSave) });
       const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
       if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+      // Keep the row's own filterable data in sync and immediately re-apply
+      // whatever filter is currently active — an item that no longer
+      // matches the project type being filtered on should disappear right
+      // away, not linger until the page gets refreshed.
+      const row = document.querySelector(`#mq-spec-tbody tr[data-id="${itemId}"]`);
+      if (row) row.setAttribute('data-rooms', JSON.stringify(toSave));
+      if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
     } catch(e) { console.error('Failed to save room links', e); }
   };
 
