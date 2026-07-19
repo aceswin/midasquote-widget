@@ -1160,17 +1160,17 @@ window.logoutMember = async function () {
                 <div class="mq-grid2" style="margin-bottom:8px">
                   <div class="mq-field">
                     <label class="mq-label">"Another project by" size</label>
-                    <input type="range" id="mq-pd-size-pre" min="60" max="160" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                    <input type="range" id="mq-pd-size-pre" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
                   </div>
                   <div class="mq-field">
                     <label class="mq-label">Shop name size</label>
-                    <input type="range" id="mq-pd-size-name" min="60" max="160" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                    <input type="range" id="mq-pd-size-name" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
                   </div>
                 </div>
                 <div class="mq-grid2" style="margin-bottom:8px">
                   <div class="mq-field">
                     <label class="mq-label">Tagline size</label>
-                    <input type="range" id="mq-pd-size-tag" min="60" max="160" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                    <input type="range" id="mq-pd-size-tag" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
                   </div>
                   <div class="mq-field">
                     <label class="mq-label">Space between lines</label>
