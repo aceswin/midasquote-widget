@@ -602,7 +602,7 @@ window.logoutMember = async function () {
           <!-- PRICING -->
           <div class="mq-page" id="mq-page-pricing">
             <button class="mq-help-btn" onclick="mqShowHelp('pricing')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:16px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
               🔧 <strong>Handles & knobs:</strong> Do not include hardware costs in your pricing here. If you supply handles or knobs, add them as a specialty items instead.
             </div>
             <div id="mq-pricing-helper-v2"></div>
