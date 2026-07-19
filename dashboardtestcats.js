@@ -1060,6 +1060,10 @@ window.logoutMember = async function () {
                     <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(120deg,#fff 45%,#1a3a6b 55%)"></div>
                     <div style="font-size:10.5px;margin-top:4px;font-weight:600">Curved Split</div>
                   </div>
+                  <div class="mq-pd-template-thumb" data-template="diamond-arrow" onclick="mqPdSelectTemplate('diamond-arrow',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(100deg,#111 45%,#c9a24b 47%,#8a6d2b 49%,#333 52%)"></div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Diamond Arrow</div>
+                  </div>
                 </div>
               </div>
 
@@ -1079,16 +1083,39 @@ window.logoutMember = async function () {
                 </div>
                 <div class="mq-field">
                   <label class="mq-label">Text or your logo?</label>
-                  <select id="mq-pd-text-mode" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()">
+                  <select id="mq-pd-text-mode" onchange="mqPdTextModeChanged()">
                     <option value="text">Text (shop name + tagline)</option>
-                    <option value="logo">My uploaded logo</option>
+                    <option value="logo">My own logo image</option>
                   </select>
                 </div>
+              </div>
+
+              <div class="mq-field" id="mq-pd-logo-upload-wrap" style="display:none;margin-bottom:12px">
+                <label class="mq-label">Logo image</label>
+                <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-logo-input').click()">📤 Upload logo</button>
+                <input type="file" id="mq-pd-logo-input" accept="image/*" style="display:none"/>
+                <p style="font-size:11px;color:#9ca3af;margin-top:4px">This is separate from your Shop Info logo — upload whatever image you want to appear here specifically.</p>
               </div>
 
               <div class="mq-field" style="margin-bottom:12px">
                 <label class="mq-label">Tagline</label>
                 <input type="text" id="mq-pd-tagline" value="Custom Kitchens & Millwork" maxlength="60" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
+              </div>
+
+              <div class="mq-grid2">
+                <div class="mq-field">
+                  <label class="mq-label">Shape colour</label>
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <input type="color" id="mq-pd-shape-color" value="#1a3a6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                    <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
+                      <input type="checkbox" id="mq-pd-shape-gradient" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:auto"/> Gradient
+                    </label>
+                  </div>
+                </div>
+                <div class="mq-field">
+                  <label class="mq-label">Accent line colour</label>
+                  <input type="color" id="mq-pd-accent-color" value="#c9a24b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                </div>
               </div>
 
               <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:220px;height:auto;border-radius:10px;display:block;margin:0 auto 1rem;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
@@ -5453,17 +5480,8 @@ window.logoutMember = async function () {
         let pdOrientation = 'portrait';
         let pdTemplate = 'curved-split';
         let pdPhotoImage = null;
-        let pdLogoImage = null;
+        let pdOwnLogoImage = null; // uploaded specifically here, not shop info's logo
         const pdShopName = shopRecord.fields['Shop name'] || 'Your Shop';
-        const pdBrandColor = shopRecord.fields['Brand colour'] || '#1a3a6b';
-        const pdLogoUrl = shopRecord.fields['Logo URL'] || '';
-
-        if (pdLogoUrl) {
-          const li = new Image();
-          li.crossOrigin = 'anonymous';
-          li.onload = () => { pdLogoImage = li; if (el('mq-pd-text-mode')?.value === 'logo') drawPosterDesigner(); };
-          li.src = pdLogoUrl;
-        }
 
         function pdWrapText(text, font, maxWidth) {
           pdCtx.font = font;
@@ -5477,6 +5495,16 @@ window.logoutMember = async function () {
           });
           if (line) lines.push(line);
           return lines;
+        }
+
+        function pdShade(hex, percent) {
+          try {
+            hex = hex.replace('#','');
+            let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+            const amt = Math.round(2.55 * percent);
+            r = Math.max(0, Math.min(255, r + amt)); g = Math.max(0, Math.min(255, g + amt)); b = Math.max(0, Math.min(255, b + amt));
+            return `rgb(${r},${g},${b})`;
+          } catch(e) { return hex; }
         }
 
         function pdDrawPhotoInRect(img, x, y, w, h) {
@@ -5505,87 +5533,120 @@ window.logoutMember = async function () {
           const isPortrait = pdOrientation === 'portrait';
           const textMode = el('mq-pd-text-mode')?.value || 'text';
           const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const bandHalf = isPortrait ? H*0.014 : W*0.010;
 
           pdCtx.fillStyle = '#ffffff';
           pdCtx.fillRect(0, 0, W, H);
 
-          // The curved divider — one filled/clipped shape covering the photo
-          // portion, with a smooth S-curve for its inner edge instead of a
-          // straight line, matching the reference design.
+          // Photo zone, clipped to the curve
           pdCtx.save();
           pdCtx.beginPath();
           if (isPortrait) {
-            const splitY = H * 0.42;
+            const splitY = H * 0.46;
             pdCtx.moveTo(0, splitY);
             pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07, W*0.65, splitY + H*0.07, W, splitY);
-            pdCtx.lineTo(W, H);
-            pdCtx.lineTo(0, H);
-            pdCtx.closePath();
+            pdCtx.lineTo(W, H); pdCtx.lineTo(0, H); pdCtx.closePath();
           } else {
             const splitX = W * 0.42;
             pdCtx.moveTo(splitX, 0);
             pdCtx.bezierCurveTo(splitX - W*0.06, H*0.35, splitX + W*0.06, H*0.65, splitX, H);
-            pdCtx.lineTo(W, H);
-            pdCtx.lineTo(W, 0);
-            pdCtx.closePath();
+            pdCtx.lineTo(W, H); pdCtx.lineTo(W, 0); pdCtx.closePath();
           }
           pdCtx.clip();
-          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.30, W, H*0.70);
-          else pdDrawPhotoInRect(pdPhotoImage, W*0.30, 0, W*0.70, H);
+          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.32, W, H*0.74);
+          else pdDrawPhotoInRect(pdPhotoImage, W*0.28, 0, W*0.75, H);
           pdCtx.restore();
 
-          // Thin gold accent line along the curve itself
+          // The customizable colored "shape" — a filled curved ribbon
+          // sitting right along the boundary between the text panel and the
+          // photo, solid or gradient depending on the controls above.
           pdCtx.save();
-          pdCtx.strokeStyle = '#c9a24b';
-          pdCtx.lineWidth = 8;
           pdCtx.beginPath();
           if (isPortrait) {
-            const splitY = H * 0.42;
-            pdCtx.moveTo(0, splitY);
-            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07, W*0.65, splitY + H*0.07, W, splitY);
+            const splitY = H * 0.46;
+            pdCtx.moveTo(0, splitY - bandHalf);
+            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07 - bandHalf, W*0.65, splitY + H*0.07 - bandHalf, W, splitY - bandHalf);
+            pdCtx.lineTo(W, splitY + bandHalf);
+            pdCtx.bezierCurveTo(W*0.65, splitY + H*0.07 + bandHalf, W*0.35, splitY - H*0.07 + bandHalf, 0, splitY + bandHalf);
+            pdCtx.closePath();
           } else {
             const splitX = W * 0.42;
-            pdCtx.moveTo(splitX, 0);
-            pdCtx.bezierCurveTo(splitX - W*0.06, H*0.35, splitX + W*0.06, H*0.65, splitX, H);
+            pdCtx.moveTo(splitX - bandHalf, 0);
+            pdCtx.bezierCurveTo(splitX - W*0.06 - bandHalf, H*0.35, splitX + W*0.06 - bandHalf, H*0.65, splitX - bandHalf, H);
+            pdCtx.lineTo(splitX + bandHalf, H);
+            pdCtx.bezierCurveTo(splitX + W*0.06 + bandHalf, H*0.65, splitX - W*0.06 + bandHalf, H*0.35, splitX + bandHalf, 0);
+            pdCtx.closePath();
+          }
+          if (useGradient) {
+            const grad = isPortrait
+              ? pdCtx.createLinearGradient(0, H*0.35, 0, H*0.58)
+              : pdCtx.createLinearGradient(W*0.30, 0, W*0.54, 0);
+            grad.addColorStop(0, shapeColor);
+            grad.addColorStop(1, pdShade(shapeColor, -30));
+            pdCtx.fillStyle = grad;
+          } else {
+            pdCtx.fillStyle = shapeColor;
+          }
+          pdCtx.fill();
+          pdCtx.restore();
+
+          // Thin accent line right along the outer edge of that ribbon
+          pdCtx.save();
+          pdCtx.strokeStyle = accentColor;
+          pdCtx.lineWidth = 5;
+          pdCtx.beginPath();
+          if (isPortrait) {
+            const splitY = H * 0.46;
+            pdCtx.moveTo(0, splitY - bandHalf);
+            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07 - bandHalf, W*0.65, splitY + H*0.07 - bandHalf, W, splitY - bandHalf);
+          } else {
+            const splitX = W * 0.42;
+            pdCtx.moveTo(splitX - bandHalf, 0);
+            pdCtx.bezierCurveTo(splitX - W*0.06 - bandHalf, H*0.35, splitX + W*0.06 - bandHalf, H*0.65, splitX - bandHalf, H);
           }
           pdCtx.stroke();
           pdCtx.restore();
 
-          // Solid brand-colour band along the outer edge
-          pdCtx.fillStyle = pdBrandColor;
-          if (isPortrait) pdCtx.fillRect(0, 0, W, H*0.045);
-          else pdCtx.fillRect(0, 0, W*0.03, H);
-
           // Text / logo panel
           pdCtx.textAlign = 'center';
-          if (textMode === 'logo' && pdLogoImage) {
+          if (textMode === 'logo' && pdOwnLogoImage) {
             const maxLogoW = isPortrait ? W*0.55 : W*0.30;
-            const maxLogoH = isPortrait ? H*0.28 : H*0.5;
-            const logoRatio = pdLogoImage.width / pdLogoImage.height;
+            const maxLogoH = isPortrait ? H*0.30 : H*0.5;
+            const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
             let lw = maxLogoW, lh = lw / logoRatio;
             if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
             const lx = isPortrait ? (W - lw)/2 : (W*0.42 - lw)/2 - W*0.02;
-            const ly = isPortrait ? (H*0.42 - lh)/2 + H*0.02 : (H - lh)/2;
-            pdCtx.drawImage(pdLogoImage, lx, ly, lw, lh);
+            const ly = isPortrait ? (H*0.46 - lh)/2 + H*0.02 : (H - lh)/2;
+            pdCtx.drawImage(pdOwnLogoImage, lx, ly, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = '#9ca3af';
+            pdCtx.font = '500 32px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.21, isPortrait ? H*0.24 : H*0.5);
           } else {
-            const preFont = `500 ${isPortrait?40:36}px Georgia, serif`;
+            const preFont = `500 ${isPortrait?38:34}px Georgia, serif`;
             const nameFont = `800 ${isPortrait?76:64}px -apple-system, sans-serif`;
             const tagFont = `500 ${isPortrait?32:28}px -apple-system, sans-serif`;
             const centerX = isPortrait ? W/2 : W*0.21;
-            let cy = isPortrait ? H*0.14 : H*0.30;
+            let cy = isPortrait ? H*0.12 : H*0.26;
 
             pdCtx.font = preFont;
             pdCtx.fillStyle = '#6b6b6b';
             pdCtx.fillText('Another project by', centerX, cy);
-            cy += isPortrait ? 70 : 60;
+            // Deliberately generous gap here — this was the "too congested"
+            // spot, sitting right between the small intro line and the big
+            // shop name below it.
+            cy += isPortrait ? 130 : 110;
 
             pdCtx.font = nameFont;
-            pdCtx.fillStyle = pdBrandColor;
+            pdCtx.fillStyle = shapeColor;
             const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.36);
             nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += isPortrait?86:72; });
 
             if (tagline) {
-              cy += isPortrait ? 20 : 10;
+              cy += isPortrait ? 34 : 24;
               pdCtx.font = tagFont;
               pdCtx.fillStyle = '#4b4b4b';
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.34);
@@ -5594,8 +5655,125 @@ window.logoutMember = async function () {
           }
         }
 
+        function drawDiamondArrow() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+
+          // Solid near-black panel — this template's whole look hinges on
+          // that dark backdrop, so unlike Curved Split it isn't part of what
+          // the colour pickers control.
+          pdCtx.fillStyle = '#111111';
+          pdCtx.fillRect(0, 0, W, H);
+
+          // Photo zone, clipped to an angular arrow-point boundary instead
+          // of a curve.
+          pdCtx.save();
+          pdCtx.beginPath();
+          if (isPortrait) {
+            const splitY = H * 0.46, pointDepth = H * 0.05;
+            pdCtx.moveTo(0, splitY + pointDepth);
+            pdCtx.lineTo(W*0.5, splitY - pointDepth);
+            pdCtx.lineTo(W, splitY + pointDepth);
+            pdCtx.lineTo(W, H); pdCtx.lineTo(0, H); pdCtx.closePath();
+          } else {
+            const splitX = W * 0.44, pointDepth = W * 0.05;
+            pdCtx.moveTo(splitX + pointDepth, 0);
+            pdCtx.lineTo(splitX - pointDepth, H*0.5);
+            pdCtx.lineTo(splitX + pointDepth, H);
+            pdCtx.lineTo(W, H); pdCtx.lineTo(W, 0); pdCtx.closePath();
+          }
+          pdCtx.clip();
+          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.32, W, H*0.74);
+          else pdDrawPhotoInRect(pdPhotoImage, W*0.30, 0, W*0.75, H);
+          pdCtx.restore();
+
+          // Coloured accent stripe right along the point, plus a second
+          // thinner line for depth — the customizable "shape" element here.
+          pdCtx.save();
+          pdCtx.beginPath();
+          if (isPortrait) {
+            const splitY = H * 0.46, pointDepth = H * 0.05, stripeW = H*0.012;
+            pdCtx.moveTo(0, splitY + pointDepth - stripeW);
+            pdCtx.lineTo(W*0.5, splitY - pointDepth - stripeW);
+            pdCtx.lineTo(W, splitY + pointDepth - stripeW);
+            pdCtx.lineTo(W, splitY + pointDepth + stripeW);
+            pdCtx.lineTo(W*0.5, splitY - pointDepth + stripeW);
+            pdCtx.lineTo(0, splitY + pointDepth + stripeW);
+            pdCtx.closePath();
+          } else {
+            const splitX = W * 0.44, pointDepth = W * 0.05, stripeW = W*0.009;
+            pdCtx.moveTo(splitX + pointDepth - stripeW, 0);
+            pdCtx.lineTo(splitX - pointDepth - stripeW, H*0.5);
+            pdCtx.lineTo(splitX + pointDepth - stripeW, H);
+            pdCtx.lineTo(splitX + pointDepth + stripeW, H);
+            pdCtx.lineTo(splitX - pointDepth + stripeW, H*0.5);
+            pdCtx.lineTo(splitX + pointDepth + stripeW, 0);
+            pdCtx.closePath();
+          }
+          if (useGradient) {
+            const grad = isPortrait
+              ? pdCtx.createLinearGradient(0, H*0.35, 0, H*0.58)
+              : pdCtx.createLinearGradient(W*0.34, 0, W*0.56, 0);
+            grad.addColorStop(0, accentColor);
+            grad.addColorStop(1, pdShade(accentColor, -35));
+            pdCtx.fillStyle = grad;
+          } else {
+            pdCtx.fillStyle = accentColor;
+          }
+          pdCtx.fill();
+          pdCtx.restore();
+
+          // Text / logo panel
+          pdCtx.textAlign = 'center';
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const maxLogoW = isPortrait ? W*0.55 : W*0.30;
+            const maxLogoH = isPortrait ? H*0.30 : H*0.5;
+            const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw / logoRatio;
+            if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
+            const lx = isPortrait ? (W - lw)/2 : (W*0.44 - lw)/2;
+            const ly = isPortrait ? (H*0.46 - lh)/2 : (H - lh)/2;
+            pdCtx.drawImage(pdOwnLogoImage, lx, ly, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = '#6b6b6b';
+            pdCtx.font = '500 32px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.22, isPortrait ? H*0.24 : H*0.5);
+          } else {
+            const preFont = `italic 500 ${isPortrait?38:34}px Georgia, serif`;
+            const nameFont = `800 ${isPortrait?72:60}px -apple-system, sans-serif`;
+            const tagFont = `500 ${isPortrait?32:28}px -apple-system, sans-serif`;
+            const centerX = isPortrait ? W/2 : W*0.22;
+            let cy = isPortrait ? H*0.12 : H*0.26;
+
+            pdCtx.font = preFont;
+            pdCtx.fillStyle = '#e5e7eb';
+            pdCtx.fillText('Another project by', centerX, cy);
+            cy += isPortrait ? 130 : 110;
+
+            pdCtx.font = nameFont;
+            pdCtx.fillStyle = shapeColor;
+            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.38);
+            nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += isPortrait?82:68; });
+
+            if (tagline) {
+              cy += isPortrait ? 34 : 24;
+              pdCtx.font = tagFont;
+              pdCtx.fillStyle = '#e5e7eb';
+              const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.36);
+              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += isPortrait?42:36; });
+            }
+          }
+        }
+
         function drawPosterDesigner() {
-          if (pdTemplate === 'curved-split') drawCurvedSplit();
+          if (pdTemplate === 'diamond-arrow') drawDiamondArrow();
+          else drawCurvedSplit();
         }
         window._mqRedrawPosterDesigner = drawPosterDesigner;
 
@@ -5613,6 +5791,13 @@ window.logoutMember = async function () {
           drawPosterDesigner();
         };
 
+        window.mqPdTextModeChanged = () => {
+          const mode = el('mq-pd-text-mode')?.value;
+          const wrap = el('mq-pd-logo-upload-wrap');
+          if (wrap) wrap.style.display = mode === 'logo' ? 'block' : 'none';
+          drawPosterDesigner();
+        };
+
         const pdPhotoInput = el('mq-pd-photo-input');
         if (pdPhotoInput) {
           pdPhotoInput.onchange = (e) => {
@@ -5622,6 +5807,21 @@ window.logoutMember = async function () {
             reader.onload = (ev) => {
               const img = new Image();
               img.onload = () => { pdPhotoImage = img; drawPosterDesigner(); };
+              img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          };
+        }
+
+        const pdLogoInput = el('mq-pd-logo-input');
+        if (pdLogoInput) {
+          pdLogoInput.onchange = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const img = new Image();
+              img.onload = () => { pdOwnLogoImage = img; drawPosterDesigner(); };
               img.src = ev.target.result;
             };
             reader.readAsDataURL(file);
