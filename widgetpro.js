@@ -1126,7 +1126,7 @@
       ${hasDrawers?`<div class="mq-sec" id="mq-${prefix}-drawers-sec">
         <p class="mq-sec-title">Drawers</p>
         <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
-          🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, about 8 or 9 out of 10 base cabinets are full stacked drawer banks with no door at all. <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
+          🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 3 out of 5 or more base cabinets are full stacked drawer banks with no door at all. <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
         </div>
         <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
           <div style="flex:1;min-width:130px;text-align:center">
