@@ -1540,7 +1540,7 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-mini-content').innerHTML = `
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">What do you call this ${meta.label.toLowerCase()}? Use a descriptive name — it'll appear in your widget dropdown.</p>
       <input class="mqph-name-input" type="text" id="mqph-mini-name-inp" placeholder="${meta.ph}" onkeydown="if(event.key==='Enter')mqphMiniNameNext('${cat}')"/>
-      ${cat === 'door' ? `<p style="font-size:12px;color:#9ca3af;margin-top:-0.5rem;line-height:1.5">Tip: include the finish in the name — each door+finish combo is its own item (e.g. "Maple shaker — stained & lacquered")</p>` : ''}
+      ${cat === 'door' ? `<p style="font-size:12px;color:#9ca3af;margin-top:-0.5rem;line-height:1.5">Tip: Be descriptive but keep it simple. (e.g. "Maple shaker", "Painted MDF shaker", "Melamine Slabs" OR "Red Oak raised panel")</p>` : ''}
     `;
 
     const nextBtn = document.getElementById('mqph-mini-next');
