@@ -1064,6 +1064,24 @@ window.logoutMember = async function () {
                     <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(100deg,#111 45%,#c9a24b 47%,#8a6d2b 49%,#333 52%)"></div>
                     <div style="font-size:10.5px;margin-top:4px;font-weight:600">Diamond Arrow</div>
                   </div>
+                  <div class="mq-pd-template-thumb" data-template="ornate-divider" onclick="mqPdSelectTemplate('ornate-divider',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:50%/20%;background:linear-gradient(#fff 45%,#8a5a3a 47%)"></div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Ornate Divider</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="circular-badge" onclick="mqPdSelectTemplate('circular-badge',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:#3a3a3a;position:relative">
+                      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:2px solid #c9a24b"></div>
+                    </div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Circular Badge</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="bold-modern" onclick="mqPdSelectTemplate('bold-modern',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#1a3a6b 45%,#666 47%)"></div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Bold Modern</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="rustic-wood" onclick="mqPdSelectTemplate('rustic-wood',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#f0e6d6 45%,#7a5230 47%)"></div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Rustic Wood</div>
+                  </div>
                 </div>
               </div>
 
@@ -1104,6 +1122,15 @@ window.logoutMember = async function () {
 
               <div class="mq-grid2">
                 <div class="mq-field">
+                  <label class="mq-label">Background colour</label>
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <input type="color" id="mq-pd-bg-color" value="#ffffff" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                    <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
+                      <input type="checkbox" id="mq-pd-bg-gradient" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:auto"/> Gradient
+                    </label>
+                  </div>
+                </div>
+                <div class="mq-field">
                   <label class="mq-label">Shape colour</label>
                   <div style="display:flex;gap:8px;align-items:center">
                     <input type="color" id="mq-pd-shape-color" value="#1a3a6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
@@ -1112,10 +1139,10 @@ window.logoutMember = async function () {
                     </label>
                   </div>
                 </div>
-                <div class="mq-field">
-                  <label class="mq-label">Accent line colour</label>
-                  <input type="color" id="mq-pd-accent-color" value="#c9a24b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                </div>
+              </div>
+              <div class="mq-field" style="margin-bottom:12px">
+                <label class="mq-label">Accent line colour</label>
+                <input type="color" id="mq-pd-accent-color" value="#c9a24b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
               </div>
 
               <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:220px;height:auto;border-radius:10px;display:block;margin:0 auto 1rem;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
@@ -5507,6 +5534,19 @@ window.logoutMember = async function () {
           } catch(e) { return hex; }
         }
 
+        // Picks a readable dark or light grey for secondary text based on
+        // how light or dark the chosen background actually is — since a
+        // hardcoded grey tuned for white would disappear on a dark
+        // background someone picks, and vice versa.
+        function pdMutedTextColorFor(hex) {
+          try {
+            hex = hex.replace('#','');
+            const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.55 ? '#5b5b5b' : '#d4d4d4';
+          } catch(e) { return '#6b6b6b'; }
+        }
+
         function pdDrawPhotoInRect(img, x, y, w, h) {
           if (!img) {
             pdCtx.fillStyle = '#e5e7eb';
@@ -5536,9 +5576,18 @@ window.logoutMember = async function () {
           const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
           const useGradient = el('mq-pd-shape-gradient')?.checked || false;
           const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const bgColor = el('mq-pd-bg-color')?.value || '#ffffff';
+          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
           const bandHalf = isPortrait ? H*0.014 : W*0.010;
 
-          pdCtx.fillStyle = '#ffffff';
+          if (bgGradient) {
+            const bgGrad = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
+            bgGrad.addColorStop(0, bgColor);
+            bgGrad.addColorStop(1, pdShade(bgColor, -25));
+            pdCtx.fillStyle = bgGrad;
+          } else {
+            pdCtx.fillStyle = bgColor;
+          }
           pdCtx.fillRect(0, 0, W, H);
 
           // Photo zone, clipped to the curve
@@ -5633,7 +5682,7 @@ window.logoutMember = async function () {
             let cy = isPortrait ? H*0.12 : H*0.26;
 
             pdCtx.font = preFont;
-            pdCtx.fillStyle = '#6b6b6b';
+            pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
             pdCtx.fillText('Another project by', centerX, cy);
             // Deliberately generous gap here — this was the "too congested"
             // spot, sitting right between the small intro line and the big
@@ -5648,7 +5697,7 @@ window.logoutMember = async function () {
             if (tagline) {
               cy += isPortrait ? 34 : 24;
               pdCtx.font = tagFont;
-              pdCtx.fillStyle = '#4b4b4b';
+              pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.34);
               tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += isPortrait?42:36; });
             }
@@ -5664,11 +5713,17 @@ window.logoutMember = async function () {
           const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
           const useGradient = el('mq-pd-shape-gradient')?.checked || false;
           const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const bgColor = el('mq-pd-bg-color')?.value || '#111111';
+          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
 
-          // Solid near-black panel — this template's whole look hinges on
-          // that dark backdrop, so unlike Curved Split it isn't part of what
-          // the colour pickers control.
-          pdCtx.fillStyle = '#111111';
+          if (bgGradient) {
+            const bgGrad = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
+            bgGrad.addColorStop(0, bgColor);
+            bgGrad.addColorStop(1, pdShade(bgColor, -25));
+            pdCtx.fillStyle = bgGrad;
+          } else {
+            pdCtx.fillStyle = bgColor;
+          }
           pdCtx.fillRect(0, 0, W, H);
 
           // Photo zone, clipped to an angular arrow-point boundary instead
@@ -5752,7 +5807,7 @@ window.logoutMember = async function () {
             let cy = isPortrait ? H*0.12 : H*0.26;
 
             pdCtx.font = preFont;
-            pdCtx.fillStyle = '#e5e7eb';
+            pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
             pdCtx.fillText('Another project by', centerX, cy);
             cy += isPortrait ? 130 : 110;
 
@@ -5764,15 +5819,298 @@ window.logoutMember = async function () {
             if (tagline) {
               cy += isPortrait ? 34 : 24;
               pdCtx.font = tagFont;
-              pdCtx.fillStyle = '#e5e7eb';
+              pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.36);
               tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += isPortrait?42:36; });
             }
           }
         }
 
+        function drawOrnateDivider() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#8a5a3a';
+          const accentColor = el('mq-pd-accent-color')?.value || '#8a5a3a';
+          const bgColor = el('mq-pd-bg-color')?.value || '#ffffff';
+          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
+
+          if (bgGradient) {
+            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
+            g.addColorStop(0, bgColor); g.addColorStop(1, pdShade(bgColor, -20));
+            pdCtx.fillStyle = g;
+          } else pdCtx.fillStyle = bgColor;
+          pdCtx.fillRect(0, 0, W, H);
+
+          // Photo sits in a simple rounded panel, not a curve/angle — this
+          // template's character comes from the ornate line-and-diamond
+          // dividers around the text instead of the shape boundary itself.
+          const photoY = isPortrait ? H*0.50 : 0;
+          const photoX = isPortrait ? 0 : W*0.48;
+          const photoW = isPortrait ? W : W*0.52;
+          const photoH = isPortrait ? H*0.50 : H;
+          pdCtx.save();
+          pdCtx.beginPath();
+          pdCtx.roundRect(photoX, photoY, photoW, photoH, isPortrait ? [40,40,0,0] : [40,0,0,40]);
+          pdCtx.clip();
+          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
+          pdCtx.restore();
+
+          pdCtx.textAlign = 'center';
+          const centerX = isPortrait ? W/2 : W*0.24;
+          const textTop = isPortrait ? H*0.10 : H*0.14;
+          const dividerW = isPortrait ? W*0.28 : W*0.16;
+
+          function ornateDivider(y) {
+            pdCtx.strokeStyle = accentColor;
+            pdCtx.lineWidth = 3;
+            pdCtx.beginPath();
+            pdCtx.moveTo(centerX - dividerW, y); pdCtx.lineTo(centerX - 14, y);
+            pdCtx.moveTo(centerX + 14, y); pdCtx.lineTo(centerX + dividerW, y);
+            pdCtx.stroke();
+            pdCtx.save();
+            pdCtx.translate(centerX, y);
+            pdCtx.rotate(Math.PI/4);
+            pdCtx.fillStyle = accentColor;
+            pdCtx.fillRect(-7, -7, 14, 14);
+            pdCtx.restore();
+          }
+
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const maxLogoW = isPortrait ? W*0.55 : W*0.34, maxLogoH = isPortrait ? H*0.32 : H*0.5;
+            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw/ratio;
+            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
+            pdCtx.drawImage(pdOwnLogoImage, centerX - lw/2, textTop, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = '#9ca3af';
+            pdCtx.font = '500 30px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', centerX, textTop + 40);
+          } else {
+            const preFont = `500 ${isPortrait?34:30}px -apple-system, sans-serif`;
+            const nameFont = `700 ${isPortrait?66:54}px Georgia, serif`;
+            const tagFont = `500 ${isPortrait?28:24}px -apple-system, sans-serif`;
+            let cy = textTop;
+
+            ornateDivider(cy); cy += isPortrait ? 60 : 50;
+            pdCtx.font = preFont; pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
+            pdCtx.fillText('Another project by', centerX, cy); cy += isPortrait ? 90 : 76;
+
+            pdCtx.font = nameFont; pdCtx.fillStyle = shapeColor;
+            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.36);
+            nameLines.forEach(l => { pdCtx.fillText(l, centerX, cy); cy += isPortrait?74:62; });
+            cy += isPortrait ? 20 : 14;
+            ornateDivider(cy); cy += isPortrait ? 50 : 42;
+
+            if (tagline) {
+              pdCtx.font = tagFont; pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += isPortrait?38:32; });
+            }
+          }
+        }
+
+        function drawCircularBadge() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#c9a24b';
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const bgColor = el('mq-pd-bg-color')?.value || '#1a1a1a';
+
+          // Photo fills the whole canvas here, darkened for legibility —
+          // the badge and text sit right on top of it.
+          pdDrawPhotoInRect(pdPhotoImage, 0, 0, W, H);
+          pdCtx.fillStyle = bgColor.startsWith('#') ? bgColor.replace('#','#') : bgColor;
+          pdCtx.globalAlpha = 0.55;
+          pdCtx.fillStyle = bgColor;
+          pdCtx.fillRect(0, 0, W, H);
+          pdCtx.globalAlpha = 1;
+
+          const cx = W/2, cy = H*0.42, r = Math.min(W,H) * 0.20;
+          pdCtx.save();
+          pdCtx.beginPath();
+          pdCtx.arc(cx, cy, r, 0, Math.PI*2);
+          pdCtx.clip();
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            pdDrawPhotoInRect(pdOwnLogoImage, cx-r, cy-r, r*2, r*2);
+          } else {
+            pdCtx.fillStyle = '#1a1a1a';
+            pdCtx.fillRect(cx-r, cy-r, r*2, r*2);
+            pdCtx.fillStyle = shapeColor;
+            pdCtx.font = `800 ${r*0.9}px -apple-system, sans-serif`;
+            pdCtx.textAlign = 'center'; pdCtx.textBaseline = 'middle';
+            const initials = (pdShopName.match(/\b\w/g) || ['D']).slice(0,2).join('').toUpperCase();
+            pdCtx.fillText(initials, cx, cy + r*0.08);
+            pdCtx.textBaseline = 'alphabetic';
+          }
+          pdCtx.restore();
+
+          pdCtx.save();
+          pdCtx.beginPath();
+          pdCtx.arc(cx, cy, r, 0, Math.PI*2);
+          pdCtx.lineWidth = 6;
+          if (useGradient) {
+            const g = pdCtx.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
+            g.addColorStop(0, shapeColor); g.addColorStop(1, pdShade(shapeColor, -30));
+            pdCtx.strokeStyle = g;
+          } else pdCtx.strokeStyle = shapeColor;
+          pdCtx.stroke();
+          pdCtx.restore();
+
+          pdCtx.textAlign = 'center';
+          const preFont = `500 30px -apple-system, sans-serif`;
+          const nameFont = `800 52px -apple-system, sans-serif`;
+          const tagFont = `500 24px -apple-system, sans-serif`;
+          let ty = cy + r + 70;
+          pdCtx.font = preFont; pdCtx.fillStyle = '#f0f0f0';
+          pdCtx.fillText('Another project by', cx, ty); ty += 58;
+          pdCtx.font = nameFont; pdCtx.fillStyle = '#ffffff';
+          pdWrapText(pdShopName, nameFont, W*0.85).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 58; });
+          if (tagline) {
+            ty += 14;
+            pdCtx.font = tagFont; pdCtx.fillStyle = '#e0e0e0';
+            pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 32; });
+          }
+        }
+
+        function drawBoldModern() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const accentColor = el('mq-pd-accent-color')?.value || '#ffffff';
+
+          // A hard, flat rectangular split — no curve or angle at all. This
+          // template's identity is bold, uncluttered geometry instead.
+          const splitAt = isPortrait ? H*0.44 : W*0.40;
+          if (useGradient) {
+            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,splitAt) : pdCtx.createLinearGradient(0,0,splitAt,0);
+            g.addColorStop(0, shapeColor); g.addColorStop(1, pdShade(shapeColor, -35));
+            pdCtx.fillStyle = g;
+          } else pdCtx.fillStyle = shapeColor;
+          if (isPortrait) pdCtx.fillRect(0, 0, W, splitAt); else pdCtx.fillRect(0, 0, splitAt, H);
+
+          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, splitAt, W, H - splitAt);
+          else pdDrawPhotoInRect(pdPhotoImage, splitAt, 0, W - splitAt, H);
+
+          pdCtx.fillStyle = accentColor;
+          if (isPortrait) pdCtx.fillRect(0, splitAt - 4, W, 8); else pdCtx.fillRect(splitAt - 4, 0, 8, H);
+
+          pdCtx.textAlign = 'center';
+          const centerX = isPortrait ? W/2 : W*0.20;
+          const textColor = pdMutedTextColorFor(shapeColor) === '#5b5b5b' ? '#1a1a1a' : '#ffffff';
+          const mutedColor = textColor === '#ffffff' ? '#d0d0d0' : '#555555';
+
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const maxLogoW = isPortrait ? W*0.55 : splitAt*0.75, maxLogoH = isPortrait ? splitAt*0.6 : H*0.5;
+            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw/ratio;
+            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
+            pdCtx.drawImage(pdOwnLogoImage, centerX-lw/2, (isPortrait?splitAt:H)/2 - lh/2, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = mutedColor;
+            pdCtx.font = '500 28px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', centerX, isPortrait ? splitAt/2 : H/2);
+          } else {
+            const preFont = `700 ${isPortrait?32:28}px -apple-system, sans-serif`;
+            const nameFont = `900 ${isPortrait?70:56}px -apple-system, sans-serif`;
+            const tagFont = `500 ${isPortrait?28:24}px -apple-system, sans-serif`;
+            let cy = isPortrait ? splitAt*0.26 : H*0.30;
+            pdCtx.font = preFont; pdCtx.fillStyle = mutedColor;
+            pdCtx.fillText('ANOTHER PROJECT BY', centerX, cy); cy += isPortrait?66:56;
+            pdCtx.font = nameFont; pdCtx.fillStyle = textColor;
+            pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : splitAt*0.85).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += isPortrait?76:64; });
+            if (tagline) {
+              cy += isPortrait ? 20 : 14;
+              pdCtx.font = tagFont; pdCtx.fillStyle = mutedColor;
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += isPortrait?36:32; });
+            }
+          }
+        }
+
+        function drawRusticWood() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#6b4226';
+          const bgColor = el('mq-pd-bg-color')?.value || '#f4ecdd';
+          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
+
+          if (bgGradient) {
+            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
+            g.addColorStop(0, bgColor); g.addColorStop(1, pdShade(bgColor, -12));
+            pdCtx.fillStyle = g;
+          } else pdCtx.fillStyle = bgColor;
+          pdCtx.fillRect(0, 0, W, H);
+
+          // Simulated wood-grain border — subtle horizontal streaks in the
+          // shape colour along the frame, no image asset needed.
+          const borderW = isPortrait ? H*0.045 : W*0.03;
+          pdCtx.save();
+          pdCtx.fillStyle = shapeColor;
+          if (isPortrait) { pdCtx.fillRect(0,0,W,borderW); pdCtx.fillRect(0,H-borderW,W,borderW); }
+          else { pdCtx.fillRect(0,0,borderW,H); pdCtx.fillRect(W-borderW,0,borderW,H); }
+          pdCtx.globalAlpha = 0.25;
+          pdCtx.strokeStyle = '#000';
+          pdCtx.lineWidth = 2;
+          for (let i=0; i<8; i++) {
+            pdCtx.beginPath();
+            if (isPortrait) { const y = (borderW/8)*i+4; pdCtx.moveTo(0,y); pdCtx.lineTo(W,y); }
+            else { const x = (borderW/8)*i+4; pdCtx.moveTo(x,0); pdCtx.lineTo(x,H); }
+            pdCtx.stroke();
+          }
+          pdCtx.restore();
+
+          const photoY = isPortrait ? H*0.48 : 0;
+          const photoX = isPortrait ? borderW : W*0.46;
+          const photoW = isPortrait ? W - borderW*2 : W*0.54 - borderW;
+          const photoH = isPortrait ? H*0.48 - borderW : H;
+          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
+
+          pdCtx.textAlign = 'center';
+          const centerX = isPortrait ? W/2 : W*0.24;
+          let cy = isPortrait ? H*0.14 : H*0.28;
+          const preFont = `italic 500 ${isPortrait?32:28}px Georgia, serif`;
+          const nameFont = `700 ${isPortrait?64:52}px Georgia, serif`;
+          const tagFont = `500 ${isPortrait?26:24}px -apple-system, sans-serif`;
+
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const maxLogoW = isPortrait ? W*0.55 : W*0.36, maxLogoH = isPortrait ? H*0.30 : H*0.5;
+            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw/ratio;
+            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
+            pdCtx.drawImage(pdOwnLogoImage, centerX-lw/2, cy, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = '#9a9a9a';
+            pdCtx.font = '500 28px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', centerX, cy + 40);
+          } else {
+            pdCtx.font = preFont; pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
+            pdCtx.fillText('Another project by', centerX, cy); cy += isPortrait?68:58;
+            pdCtx.font = nameFont; pdCtx.fillStyle = shapeColor;
+            pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.38).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += isPortrait?70:58; });
+            if (tagline) {
+              cy += isPortrait ? 22 : 16;
+              pdCtx.font = tagFont; pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.34).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += isPortrait?34:30; });
+            }
+          }
+        }
+
         function drawPosterDesigner() {
           if (pdTemplate === 'diamond-arrow') drawDiamondArrow();
+          else if (pdTemplate === 'ornate-divider') drawOrnateDivider();
+          else if (pdTemplate === 'circular-badge') drawCircularBadge();
+          else if (pdTemplate === 'bold-modern') drawBoldModern();
+          else if (pdTemplate === 'rustic-wood') drawRusticWood();
           else drawCurvedSplit();
         }
         window._mqRedrawPosterDesigner = drawPosterDesigner;
@@ -5781,6 +6119,24 @@ window.logoutMember = async function () {
           pdTemplate = tpl;
           document.querySelectorAll('.mq-pd-template-thumb').forEach(t => t.style.border = '2px solid #e5e7eb');
           if (thumbEl) thumbEl.style.border = '2px solid #1a1a1a';
+          // A sensible starting background per style — still fully editable
+          // afterward, this just saves someone from starting on a white
+          // background for a template designed to look best dark, or vice versa.
+          const bgInput = el('mq-pd-bg-color');
+          const shapeInput = el('mq-pd-shape-color');
+          const accentInput = el('mq-pd-accent-color');
+          if (bgInput) {
+            if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput.value = '#111111';
+            else if (tpl === 'rustic-wood') bgInput.value = '#f4ecdd';
+            else bgInput.value = '#ffffff';
+          }
+          if (shapeInput && accentInput) {
+            if (tpl === 'diamond-arrow') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
+            else if (tpl === 'ornate-divider' || tpl === 'rustic-wood') { shapeInput.value = '#6b4226'; accentInput.value = '#8a5a3a'; }
+            else if (tpl === 'circular-badge') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
+            else if (tpl === 'bold-modern') { shapeInput.value = '#1a3a6b'; accentInput.value = '#ffffff'; }
+            else { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
+          }
           drawPosterDesigner();
         };
 
