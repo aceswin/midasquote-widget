@@ -1078,10 +1078,6 @@ window.logoutMember = async function () {
                     <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#1a3a6b 45%,#666 47%)"></div>
                     <div style="font-size:10.5px;margin-top:4px;font-weight:600">Bold Modern</div>
                   </div>
-                  <div class="mq-pd-template-thumb" data-template="rustic-wood" onclick="mqPdSelectTemplate('rustic-wood',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#f0e6d6 45%,#7a5230 47%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Rustic Wood</div>
-                  </div>
                 </div>
               </div>
 
@@ -5914,7 +5910,7 @@ window.logoutMember = async function () {
           const photoH = isPortrait ? H*0.50 : H;
           pdCtx.save();
           pdCtx.beginPath();
-          pdCtx.roundRect(photoX, photoY, photoW, photoH, isPortrait ? [40,40,0,0] : [40,0,0,40]);
+          pdCtx.rect(photoX, photoY, photoW, photoH);
           pdCtx.clip();
           pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
           pdCtx.restore();
@@ -6056,7 +6052,7 @@ window.logoutMember = async function () {
 
           // A hard, flat rectangular split — no curve or angle at all. This
           // template's identity is bold, uncluttered geometry instead.
-          const splitAt = isPortrait ? H*0.44 : W*0.40;
+          const splitAt = isPortrait ? H*0.58 : W*0.46;
           if (useGradient) {
             const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,splitAt) : pdCtx.createLinearGradient(0,0,splitAt,0);
             g.addColorStop(0, shapeColor); g.addColorStop(1, shapeColor2);
@@ -6102,85 +6098,12 @@ window.logoutMember = async function () {
           }
         }
 
-        function drawRusticWood() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#6b4226';
-          const bgColor = el('mq-pd-bg-color')?.value || '#f4ecdd';
-          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -12);
-          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
-          const tc = pdGetTextControls();
-
-          if (bgGradient) {
-            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
-            g.addColorStop(0, bgColor); g.addColorStop(1, bgColor2);
-            pdCtx.fillStyle = g;
-          } else pdCtx.fillStyle = bgColor;
-          pdCtx.fillRect(0, 0, W, H);
-
-          // Simulated wood-grain border — subtle horizontal streaks in the
-          // shape colour along the frame, no image asset needed.
-          const borderW = isPortrait ? H*0.045 : W*0.03;
-          pdCtx.save();
-          pdCtx.fillStyle = shapeColor;
-          if (isPortrait) { pdCtx.fillRect(0,0,W,borderW); pdCtx.fillRect(0,H-borderW,W,borderW); }
-          else { pdCtx.fillRect(0,0,borderW,H); pdCtx.fillRect(W-borderW,0,borderW,H); }
-          pdCtx.globalAlpha = 0.25;
-          pdCtx.strokeStyle = '#000';
-          pdCtx.lineWidth = 2;
-          for (let i=0; i<8; i++) {
-            pdCtx.beginPath();
-            if (isPortrait) { const y = (borderW/8)*i+4; pdCtx.moveTo(0,y); pdCtx.lineTo(W,y); }
-            else { const x = (borderW/8)*i+4; pdCtx.moveTo(x,0); pdCtx.lineTo(x,H); }
-            pdCtx.stroke();
-          }
-          pdCtx.restore();
-
-          const photoY = isPortrait ? H*0.48 : 0;
-          const photoX = isPortrait ? borderW : W*0.46;
-          const photoW = isPortrait ? W - borderW*2 : W*0.54 - borderW;
-          const photoH = isPortrait ? H*0.48 - borderW : H;
-          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
-
-          pdCtx.textAlign = 'center';
-          const centerX = isPortrait ? W/2 : W*0.24;
-          let cy = (isPortrait ? H*0.14 : H*0.28) + tc.offsetPct * H;
-          const preFont = `italic 500 ${Math.round((isPortrait?32:28)*tc.preMult)}px Georgia, serif`;
-          const nameFont = `700 ${Math.round((isPortrait?64:52)*tc.nameMult)}px Georgia, serif`;
-          const tagFont = `500 ${Math.round((isPortrait?26:24)*tc.tagMult)}px -apple-system, sans-serif`;
-
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = isPortrait ? W*0.55 : W*0.36, maxLogoH = isPortrait ? H*0.30 : H*0.5;
-            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw/ratio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
-            pdCtx.drawImage(pdOwnLogoImage, centerX-lw/2, cy, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = '#9a9a9a';
-            pdCtx.font = '500 28px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', centerX, cy + 40);
-          } else {
-            pdCtx.font = preFont; pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
-            pdCtx.fillText('Another project by', centerX, cy); cy += (isPortrait?68:58) * tc.lineMult;
-            pdCtx.font = nameFont; pdCtx.fillStyle = shapeColor;
-            pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.38).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?70:58) * tc.lineMult; });
-            if (tagline) {
-              cy += (isPortrait ? 22 : 16) * tc.lineMult;
-              pdCtx.font = tagFont; pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.34).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?34:30) * tc.lineMult; });
-            }
-          }
-        }
 
         function drawPosterDesigner() {
           if (pdTemplate === 'diamond-arrow') drawDiamondArrow();
           else if (pdTemplate === 'ornate-divider') drawOrnateDivider();
           else if (pdTemplate === 'circular-badge') drawCircularBadge();
           else if (pdTemplate === 'bold-modern') drawBoldModern();
-          else if (pdTemplate === 'rustic-wood') drawRusticWood();
           else drawCurvedSplit();
         }
         window._mqRedrawPosterDesigner = drawPosterDesigner;
@@ -6199,7 +6122,6 @@ window.logoutMember = async function () {
           const accentInput = el('mq-pd-accent-color');
           if (bgInput) {
             if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput.value = '#111111';
-            else if (tpl === 'rustic-wood') bgInput.value = '#f4ecdd';
             else bgInput.value = '#ffffff';
           }
           // A second colour for whichever gradient checkbox someone turns
@@ -6207,19 +6129,18 @@ window.logoutMember = async function () {
           // for this specific style, not just a random pairing.
           if (bgInput2) {
             if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput2.value = '#2b2b2b';
-            else if (tpl === 'rustic-wood') bgInput2.value = '#e3d3b8';
             else bgInput2.value = '#f0f0f0';
           }
           if (shapeInput && accentInput) {
             if (tpl === 'diamond-arrow') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'ornate-divider' || tpl === 'rustic-wood') { shapeInput.value = '#6b4226'; accentInput.value = '#8a5a3a'; }
+            else if (tpl === 'ornate-divider') { shapeInput.value = '#6b4226'; accentInput.value = '#8a5a3a'; }
             else if (tpl === 'circular-badge') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
             else if (tpl === 'bold-modern') { shapeInput.value = '#1a3a6b'; accentInput.value = '#ffffff'; }
             else { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
           }
           if (shapeInput2) {
             if (tpl === 'diamond-arrow') shapeInput2.value = '#8a6d2b';
-            else if (tpl === 'ornate-divider' || tpl === 'rustic-wood') shapeInput2.value = '#3d2814';
+            else if (tpl === 'ornate-divider') shapeInput2.value = '#3d2814';
             else if (tpl === 'circular-badge') shapeInput2.value = '#8a6d2b';
             else if (tpl === 'bold-modern') shapeInput2.value = '#378ADD';
             else shapeInput2.value = '#378ADD';
