@@ -1081,6 +1081,9 @@ window.logoutMember = async function () {
                 </div>
               </div>
 
+              <div style="display:flex;gap:24px;flex-wrap:wrap-reverse;align-items:flex-start">
+              <div style="flex:1;min-width:280px">
+
               <div class="mq-field" style="margin-bottom:12px">
                 <label class="mq-label">Orientation</label>
                 <div style="display:flex;gap:8px">
@@ -1208,9 +1211,14 @@ window.logoutMember = async function () {
                 </div>
               </div>
 
-              <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:220px;height:auto;border-radius:10px;display:block;margin:0 auto 1rem;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
+              </div>
 
-              <button class="mq-btn mq-btn-primary" id="mq-pd-download-btn" style="width:100%;max-width:280px;display:block;margin:0 auto">⬇️ Download (PNG)</button>
+              <div style="flex:0 0 260px;position:sticky;top:16px;text-align:center">
+                <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:220px;height:auto;border-radius:10px;display:block;margin:0 auto 1rem;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
+                <button class="mq-btn mq-btn-primary" id="mq-pd-download-btn" style="width:100%;max-width:280px;display:block;margin:0 auto">⬇️ Download (PNG)</button>
+              </div>
+
+              </div>
             </div>
 
             <div class="mq-card">
