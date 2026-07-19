@@ -340,6 +340,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard #mq-spec-table td:first-child{border-left:1px solid #e5e7eb;border-radius:8px 0 0 8px}
       #midasquote-dashboard #mq-spec-table td:last-child{border-right:1px solid #e5e7eb;border-radius:0 8px 8px 0}
       #midasquote-dashboard #mq-spec-table thead th{border-bottom:2px solid var(--border)}
+      #midasquote-dashboard #mq-spec-table-wrap{padding-left:14px}
       #midasquote-dashboard .mq-table tr:last-child td{border-bottom:none}
       #midasquote-dashboard .mq-table tr:hover td{background:#f9fafb}
       #midasquote-dashboard .mq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
@@ -2387,7 +2388,7 @@ window.logoutMember = async function () {
         </div>
       </div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
-      <div class="mq-table-wrap">
+      <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
         <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Active</th><th></th></tr></thead>
         <tbody id="mq-spec-tbody">
