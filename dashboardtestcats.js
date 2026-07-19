@@ -413,9 +413,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
-        #midasquote-dashboard #mq-pd-sticky-preview{top:auto;bottom:14px;right:14px;width:110px;padding:8px}
-        #midasquote-dashboard #mq-pd-sticky-preview canvas{width:94px!important;margin-bottom:6px!important}
-        #midasquote-dashboard #mq-pd-sticky-preview button{font-size:11px;padding:6px}
+        #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:150px!important;width:auto!important;padding:8px!important;height:auto!important}
+        #midasquote-dashboard #mq-pd-sticky-preview canvas{width:130px!important;height:auto!important;margin-bottom:6px!important}
+        #midasquote-dashboard #mq-pd-sticky-preview button{font-size:11px!important;padding:6px!important;width:100%!important}
         #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
@@ -1200,8 +1200,8 @@ window.logoutMember = async function () {
                 </div>
               </div>
 
-              <div style="display:none;position:fixed;top:90px;right:30px;width:230px;z-index:50;text-align:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)" id="mq-pd-sticky-preview">
-                <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:206px;height:auto;border-radius:10px;display:block;margin:0 auto 10px;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
+              <div style="display:none;position:fixed;top:90px;right:30px;max-width:480px;z-index:50;text-align:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)" id="mq-pd-sticky-preview">
+                <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:auto;height:300px;border-radius:10px;display:block;margin:0 auto 10px;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
                 <button class="mq-btn mq-btn-primary" id="mq-pd-download-btn" style="width:100%;display:block;margin:0 auto">⬇️ Download (PNG)</button>
               </div>
 
@@ -5684,7 +5684,8 @@ window.logoutMember = async function () {
           pdOrientation = orient;
           if (orient === 'portrait') { pdCanvas.width = 1080; pdCanvas.height = 1620; }
           else { pdCanvas.width = 1620; pdCanvas.height = 1080; }
-          pdCanvas.style.width = '100%'; // always fits the fixed preview panel's own width, regardless of orientation
+          pdCanvas.style.width = 'auto';
+          pdCanvas.style.height = '300px'; // fixed height so landscape ends up wider, not shorter, matching portrait's actual visual size
           drawPosterDesigner();
         };
 
