@@ -1198,8 +1198,14 @@ window.logoutMember = async function () {
                   </div>
                 </div>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-                  <input type="checkbox" id="mq-pd-btn-enabled" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:auto"/> Add a "Get a Free Quote" button
+                  <input type="checkbox" id="mq-pd-btn-enabled" onchange="mqPdBtnToggled()" style="width:auto"/> Add a "Get a Free Quote" button
                 </label>
+                <div id="mq-pd-btn-controls-wrap" style="display:none;margin-top:10px">
+                  <div class="mq-field">
+                    <label class="mq-label">Button position (up/down)</label>
+                    <input type="range" id="mq-pd-btn-position" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                  </div>
+                </div>
               </div>
 
               <canvas id="mq-pd-canvas" width="1080" height="1620" style="width:220px;height:auto;border-radius:10px;display:block;margin:0 auto 1rem;box-shadow:0 6px 24px rgba(0,0,0,0.18)"></canvas>
@@ -5600,7 +5606,8 @@ window.logoutMember = async function () {
             qrEnabled: el('mq-pd-qr-enabled')?.checked || false,
             qrSizeMult: (parseInt(el('mq-pd-qr-size')?.value,10)||100)/100,
             qrOffsetPct: (parseInt(el('mq-pd-qr-position')?.value,10)||0)/100,
-            btnEnabled: el('mq-pd-btn-enabled')?.checked || false
+            btnEnabled: el('mq-pd-btn-enabled')?.checked || false,
+            btnOffsetPct: (parseInt(el('mq-pd-btn-position')?.value,10)||0)/100
           };
         }
 
@@ -5848,7 +5855,7 @@ window.logoutMember = async function () {
             pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
           }
           if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90, shapeColor);
+            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90 + qb.btnOffsetPct * H, shapeColor);
           }
         }
 
@@ -5983,7 +5990,7 @@ window.logoutMember = async function () {
             pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
           }
           if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90, shapeColor);
+            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90 + qb.btnOffsetPct * H, shapeColor);
           }
         }
 
@@ -6079,7 +6086,7 @@ window.logoutMember = async function () {
             pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 240 * qb.qrSizeMult);
           }
           if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, photoY + photoH - 90, shapeColor);
+            pdDrawGetQuoteButton(photoCx, photoY + photoH - 90 + qb.btnOffsetPct * H, shapeColor);
           }
         }
 
@@ -6157,7 +6164,7 @@ window.logoutMember = async function () {
             pdDrawQrCode(cx, ty + 130 + qb.qrOffsetPct * H, 220 * qb.qrSizeMult);
           }
           if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(cx, H - 90, shapeColor);
+            pdDrawGetQuoteButton(cx, H - 90 + qb.btnOffsetPct * H, shapeColor);
           }
         }
 
@@ -6227,7 +6234,7 @@ window.logoutMember = async function () {
             pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 250 * qb.qrSizeMult);
           }
           if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, H - 90, shapeColor);
+            pdDrawGetQuoteButton(photoCx, H - 90 + qb.btnOffsetPct * H, shapeColor);
           }
         }
 
@@ -6284,6 +6291,13 @@ window.logoutMember = async function () {
           pdOrientation = orient;
           if (orient === 'portrait') { pdCanvas.width = 1080; pdCanvas.height = 1620; pdCanvas.style.width = '220px'; }
           else { pdCanvas.width = 1620; pdCanvas.height = 1080; pdCanvas.style.width = '320px'; }
+          drawPosterDesigner();
+        };
+
+        window.mqPdBtnToggled = () => {
+          const wrap = el('mq-pd-btn-controls-wrap');
+          const enabled = el('mq-pd-btn-enabled')?.checked;
+          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
           drawPosterDesigner();
         };
 
