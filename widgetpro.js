@@ -1126,7 +1126,17 @@
       ${hasDrawers?`<div class="mq-sec" id="mq-${prefix}-drawers-sec">
         <p class="mq-sec-title">Drawers</p>
         <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
-          🗄️ Choose the approximate amount of drawers your project will have.
+          🗄️ This isn't about whether you have any drawers at all — almost every kitchen has at least one. It's about how your <strong>base cabinets</strong> (not sink or corner cabinets) are actually built. <strong>Mostly drawers</strong> means about 8 or 9 out of 10 of them are full stacked drawer banks with no door. <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:130px;text-align:center">
+            <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:160px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto" onerror="this.style.display='none'"/>
+            <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this (stacked drawers, no door) → pick <strong>Mostly drawers</strong></div>
+          </div>
+          <div style="flex:1;min-width:130px;text-align:center">
+            <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:160px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto" onerror="this.style.display='none'"/>
+            <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this (door + one top drawer) → pick <strong>Some drawers</strong></div>
+          </div>
         </div>
         <div class="mq-field">
           <label class="mq-label">Drawer amount</label>
