@@ -1126,42 +1126,71 @@ window.logoutMember = async function () {
                 <input type="text" id="mq-pd-badge-text" placeholder="e.g. DR" maxlength="4" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
               </div>
 
-              <div class="mq-grid2">
-                <div class="mq-field">
-                  <label class="mq-label">Background colour</label>
-                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                    <input type="color" id="mq-pd-bg-color" value="#ffffff" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                    <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
-                      <input type="checkbox" id="mq-pd-bg-gradient" onchange="mqPdToggleGradientColor2('mq-pd-bg-color2-wrap',this.checked)" style="width:auto"/> Gradient
-                    </label>
-                    <span id="mq-pd-bg-color2-wrap" style="display:none">
-                      <input type="color" id="mq-pd-bg-color2" value="#f0f0f0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                    </span>
+              <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+                <div onclick="mqPdToggleColorSection()" style="display:flex;align-items:center;justify-content:space-between;padding:14px;cursor:pointer;background:#f9fafb">
+                  <div style="font-size:13px;font-weight:700;color:#374151">🎨 Colours &amp; Text Style</div>
+                  <span id="mq-pd-color-section-arrow" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+                </div>
+                <div id="mq-pd-color-section-body" style="padding:14px">
+                  <div class="mq-grid2">
+                    <div class="mq-field">
+                      <label class="mq-label">Background colour</label>
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <input type="color" id="mq-pd-bg-color" value="#ffffff" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
+                          <input type="checkbox" id="mq-pd-bg-gradient" onchange="mqPdToggleGradientColor2('mq-pd-bg-color2-wrap',this.checked)" style="width:auto"/> Gradient
+                        </label>
+                        <span id="mq-pd-bg-color2-wrap" style="display:none">
+                          <input type="color" id="mq-pd-bg-color2" value="#f0f0f0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                        </span>
+                      </div>
+                      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;margin-top:8px;cursor:pointer">
+                        <input type="checkbox" id="mq-pd-bg-image-enabled" onchange="mqPdBgImageToggled()" style="width:auto"/> Use an image instead
+                      </label>
+                      <div id="mq-pd-bg-image-upload-wrap" style="display:none;margin-top:6px">
+                        <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-bg-image-input').click()">📤 Upload background image</button>
+                        <input type="file" id="mq-pd-bg-image-input" accept="image/*" style="display:none"/>
+                      </div>
+                    </div>
+                    <div class="mq-field">
+                      <label class="mq-label">Shape colour</label>
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <input type="color" id="mq-pd-shape-color" value="#1a3a6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
+                          <input type="checkbox" id="mq-pd-shape-gradient" onchange="mqPdToggleGradientColor2('mq-pd-shape-color2-wrap',this.checked)" style="width:auto"/> Gradient
+                        </label>
+                        <span id="mq-pd-shape-color2-wrap" style="display:none">
+                          <input type="color" id="mq-pd-shape-color2" value="#378ADD" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;margin-top:8px;cursor:pointer">
-                    <input type="checkbox" id="mq-pd-bg-image-enabled" onchange="mqPdBgImageToggled()" style="width:auto"/> Use an image instead (texture, pattern, anything)
-                  </label>
-                  <div id="mq-pd-bg-image-upload-wrap" style="display:none;margin-top:6px">
-                    <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-bg-image-input').click()">📤 Upload background image</button>
-                    <input type="file" id="mq-pd-bg-image-input" accept="image/*" style="display:none"/>
+
+                  <div class="mq-field" style="margin-top:12px">
+                    <label class="mq-label">Accent line colour</label>
+                    <input type="color" id="mq-pd-accent-color" value="#c9a24b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                  </div>
+
+                  <div style="border-top:1px solid #e5e7eb;margin:14px 0 0;padding-top:14px">
+                    <div class="mq-field" style="margin-bottom:12px">
+                      <label class="mq-label">"Another project by" text</label>
+                      <input type="text" id="mq-pd-pre-text" value="Another project by" maxlength="40" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
+                    </div>
+                    <div class="mq-grid2">
+                      <div class="mq-field">
+                        <label class="mq-label">"Another project by" colour</label>
+                        <input type="color" id="mq-pd-pre-color" value="#6b6b6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                      </div>
+                      <div class="mq-field">
+                        <label class="mq-label">Tagline colour</label>
+                        <input type="color" id="mq-pd-tag-color" value="#4b4b4b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                      </div>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:10px;cursor:pointer">
+                      <input type="checkbox" id="mq-pd-text-shadow" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:auto"/> Add drop shadow to all text
+                    </label>
                   </div>
                 </div>
-                <div class="mq-field">
-                  <label class="mq-label">Shape colour</label>
-                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                    <input type="color" id="mq-pd-shape-color" value="#1a3a6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                    <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
-                      <input type="checkbox" id="mq-pd-shape-gradient" onchange="mqPdToggleGradientColor2('mq-pd-shape-color2-wrap',this.checked)" style="width:auto"/> Gradient
-                    </label>
-                    <span id="mq-pd-shape-color2-wrap" style="display:none">
-                      <input type="color" id="mq-pd-shape-color2" value="#378ADD" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Accent line colour</label>
-                <input type="color" id="mq-pd-accent-color" value="#c9a24b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
               </div>
 
               <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
@@ -5608,13 +5637,35 @@ window.logoutMember = async function () {
         // Reads the shared text size/spacing/position controls once per
         // draw — same five values used by every template, so a slider
         // dragged here consistently affects whichever style is selected.
+        // Turns on a soft drop shadow for whatever text gets drawn next —
+        // called right before a template's text-drawing section, and
+        // cleared right after, so it never accidentally applies to the
+        // photo, QR code, or button too.
+        function pdSetTextShadow() {
+          if (el('mq-pd-text-shadow')?.checked) {
+            pdCtx.shadowColor = 'rgba(0,0,0,0.45)';
+            pdCtx.shadowBlur = 8;
+            pdCtx.shadowOffsetX = 2;
+            pdCtx.shadowOffsetY = 3;
+          }
+        }
+        function pdClearShadow() {
+          pdCtx.shadowColor = 'transparent';
+          pdCtx.shadowBlur = 0;
+          pdCtx.shadowOffsetX = 0;
+          pdCtx.shadowOffsetY = 0;
+        }
+
         function pdGetTextControls() {
           return {
             preMult: (parseInt(el('mq-pd-size-pre')?.value,10)||100)/100,
             nameMult: (parseInt(el('mq-pd-size-name')?.value,10)||100)/100,
             tagMult: (parseInt(el('mq-pd-size-tag')?.value,10)||100)/100,
             lineMult: (parseInt(el('mq-pd-line-spacing')?.value,10)||100)/100,
-            offsetPct: (parseInt(el('mq-pd-text-offset')?.value,10)||0)/100
+            offsetPct: (parseInt(el('mq-pd-text-offset')?.value,10)||0)/100,
+            preText: el('mq-pd-pre-text')?.value || 'Another project by',
+            preColor: el('mq-pd-pre-color')?.value || '#6b6b6b',
+            tagColor: el('mq-pd-tag-color')?.value || '#4b4b4b'
           };
         }
 
@@ -5850,6 +5901,7 @@ window.logoutMember = async function () {
             pdCtx.font = '500 32px -apple-system, sans-serif';
             pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.21, isPortrait ? H*0.24 : H*0.5);
           } else {
+            pdSetTextShadow();
             const preFont = `500 ${Math.round((isPortrait?38:34)*tc.preMult)}px Georgia, serif`;
             const nameFont = `800 ${Math.round((isPortrait?76:64)*tc.nameMult)}px -apple-system, sans-serif`;
             const tagFont = `500 ${Math.round((isPortrait?32:28)*tc.tagMult)}px -apple-system, sans-serif`;
@@ -5857,8 +5909,8 @@ window.logoutMember = async function () {
             let cy = (isPortrait ? H*0.12 : H*0.26) + tc.offsetPct * H;
 
             pdCtx.font = preFont;
-            pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
-            pdCtx.fillText('Another project by', centerX, cy);
+            pdCtx.fillStyle = tc.preColor;
+            pdCtx.fillText(tc.preText, centerX, cy);
             // Deliberately generous gap here — this was the "too congested"
             // spot, sitting right between the small intro line and the big
             // shop name below it.
@@ -5872,7 +5924,7 @@ window.logoutMember = async function () {
             if (tagline) {
               cy += (isPortrait ? 34 : 24) * tc.lineMult;
               pdCtx.font = tagFont;
-              pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
+              pdCtx.fillStyle = tc.tagColor;
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.34);
               tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?42:36) * tc.lineMult; });
             }
@@ -5880,6 +5932,7 @@ window.logoutMember = async function () {
 
           // Optional QR code + "Get a Free Quote" button, centered in the
           // photo area — both independently toggleable, off by default.
+          pdClearShadow();
           const qb = pdGetQrButtonSettings();
           const photoCx = isPortrait ? W/2 : W*0.28 + (W*0.75)/2;
           const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
@@ -5983,6 +6036,7 @@ window.logoutMember = async function () {
             pdCtx.font = '500 32px -apple-system, sans-serif';
             pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.22, isPortrait ? H*0.24 : H*0.5);
           } else {
+            pdSetTextShadow();
             const preFont = `italic 500 ${Math.round((isPortrait?38:34)*tc.preMult)}px Georgia, serif`;
             const nameFont = `800 ${Math.round((isPortrait?72:60)*tc.nameMult)}px -apple-system, sans-serif`;
             const tagFont = `500 ${Math.round((isPortrait?32:28)*tc.tagMult)}px -apple-system, sans-serif`;
@@ -5990,8 +6044,8 @@ window.logoutMember = async function () {
             let cy = (isPortrait ? H*0.12 : H*0.26) + tc.offsetPct * H;
 
             pdCtx.font = preFont;
-            pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
-            pdCtx.fillText('Another project by', centerX, cy);
+            pdCtx.fillStyle = tc.preColor;
+            pdCtx.fillText(tc.preText, centerX, cy);
             cy += (isPortrait ? 130 : 110) * tc.lineMult;
 
             pdCtx.font = nameFont;
@@ -6002,12 +6056,13 @@ window.logoutMember = async function () {
             if (tagline) {
               cy += (isPortrait ? 34 : 24) * tc.lineMult;
               pdCtx.font = tagFont;
-              pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
+              pdCtx.fillStyle = tc.tagColor;
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.36);
               tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?42:36) * tc.lineMult; });
             }
           }
 
+          pdClearShadow();
           const qb = pdGetQrButtonSettings();
           const photoCx = isPortrait ? W/2 : W*0.30 + (W*0.75)/2;
           const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
@@ -6080,14 +6135,15 @@ window.logoutMember = async function () {
             pdCtx.font = '500 30px -apple-system, sans-serif';
             pdCtx.fillText('Upload a logo above', centerX, textTop + 40);
           } else {
+            pdSetTextShadow();
             const preFont = `500 ${Math.round((isPortrait?34:30)*tc.preMult)}px -apple-system, sans-serif`;
             const nameFont = `700 ${Math.round((isPortrait?66:54)*tc.nameMult)}px Georgia, serif`;
             const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
             let cy = textTop + tc.offsetPct * H;
 
             ornateDivider(cy); cy += (isPortrait ? 60 : 50) * tc.lineMult;
-            pdCtx.font = preFont; pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
-            pdCtx.fillText('Another project by', centerX, cy); cy += (isPortrait ? 90 : 76) * tc.lineMult;
+            pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
+            pdCtx.fillText(tc.preText, centerX, cy); cy += (isPortrait ? 90 : 76) * tc.lineMult;
 
             pdCtx.font = nameFont; pdCtx.fillStyle = shapeColor;
             const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.36);
@@ -6096,11 +6152,12 @@ window.logoutMember = async function () {
             ornateDivider(cy); cy += (isPortrait ? 50 : 42) * tc.lineMult;
 
             if (tagline) {
-              pdCtx.font = tagFont; pdCtx.fillStyle = pdMutedTextColorFor(bgColor);
+              pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
               pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?38:32) * tc.lineMult; });
             }
           }
 
+          pdClearShadow();
           const qb = pdGetQrButtonSettings();
           const photoCx = photoX + photoW/2, photoCy = photoY + photoH/2;
           if (qb.qrEnabled) {
@@ -6166,20 +6223,22 @@ window.logoutMember = async function () {
           pdCtx.restore();
 
           pdCtx.textAlign = 'center';
+          pdSetTextShadow();
           const preFont = `500 ${Math.round(30*tc.preMult)}px -apple-system, sans-serif`;
           const nameFont = `800 ${Math.round(52*tc.nameMult)}px -apple-system, sans-serif`;
           const tagFont = `500 ${Math.round(24*tc.tagMult)}px -apple-system, sans-serif`;
           let ty = cy + r + 70 + tc.offsetPct * H;
-          pdCtx.font = preFont; pdCtx.fillStyle = '#f0f0f0';
-          pdCtx.fillText('Another project by', cx, ty); ty += 58 * tc.lineMult;
+          pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
+          pdCtx.fillText(tc.preText, cx, ty); ty += 58 * tc.lineMult;
           pdCtx.font = nameFont; pdCtx.fillStyle = '#ffffff';
           pdWrapText(pdShopName, nameFont, W*0.85).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 58 * tc.lineMult; });
           if (tagline) {
             ty += 14 * tc.lineMult;
-            pdCtx.font = tagFont; pdCtx.fillStyle = '#e0e0e0';
+            pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
             pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 32 * tc.lineMult; });
           }
 
+          pdClearShadow();
           const qb = pdGetQrButtonSettings();
           if (qb.qrEnabled) {
             pdDrawQrCode(cx, ty + 130 + qb.qrOffsetPct * H, 220 * qb.qrSizeMult);
@@ -6198,7 +6257,7 @@ window.logoutMember = async function () {
           const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
           const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -35);
           const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const accentColor = el('mq-pd-accent-color')?.value || '#ffffff';
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
           const tc = pdGetTextControls();
 
           // A hard, flat rectangular split — no curve or angle at all. This
@@ -6215,7 +6274,7 @@ window.logoutMember = async function () {
           else pdDrawPhotoInRect(pdPhotoImage, splitAt, 0, W - splitAt, H);
 
           pdCtx.fillStyle = accentColor;
-          if (isPortrait) pdCtx.fillRect(0, splitAt - 4, W, 8); else pdCtx.fillRect(splitAt - 4, 0, 8, H);
+          if (isPortrait) pdCtx.fillRect(0, splitAt - 3, W, 6); else pdCtx.fillRect(splitAt - 3, 0, 6, H);
 
           pdCtx.textAlign = 'center';
           const centerX = isPortrait ? W/2 : W*0.20;
@@ -6234,21 +6293,23 @@ window.logoutMember = async function () {
             pdCtx.font = '500 28px -apple-system, sans-serif';
             pdCtx.fillText('Upload a logo above', centerX, isPortrait ? splitAt/2 : H/2);
           } else {
+            pdSetTextShadow();
             const preFont = `700 ${Math.round((isPortrait?32:28)*tc.preMult)}px -apple-system, sans-serif`;
             const nameFont = `900 ${Math.round((isPortrait?70:56)*tc.nameMult)}px -apple-system, sans-serif`;
             const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
             let cy = (isPortrait ? splitAt*0.26 : H*0.30) + tc.offsetPct * H;
-            pdCtx.font = preFont; pdCtx.fillStyle = mutedColor;
-            pdCtx.fillText('ANOTHER PROJECT BY', centerX, cy); cy += (isPortrait?66:56) * tc.lineMult;
+            pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
+            pdCtx.fillText(tc.preText.toUpperCase(), centerX, cy); cy += (isPortrait?66:56) * tc.lineMult;
             pdCtx.font = nameFont; pdCtx.fillStyle = textColor;
             pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : splitAt*0.85).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?76:64) * tc.lineMult; });
             if (tagline) {
               cy += (isPortrait ? 20 : 14) * tc.lineMult;
-              pdCtx.font = tagFont; pdCtx.fillStyle = mutedColor;
+              pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
               pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?36:32) * tc.lineMult; });
             }
           }
 
+          pdClearShadow();
           const qb = pdGetQrButtonSettings();
           const photoCx = isPortrait ? W/2 : splitAt + (W-splitAt)/2;
           const photoCy = isPortrait ? splitAt + (H-splitAt)/2 : H/2;
@@ -6296,7 +6357,7 @@ window.logoutMember = async function () {
             if (tpl === 'diamond-arrow') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
             else if (tpl === 'ornate-divider') { shapeInput.value = '#6b4226'; accentInput.value = '#8a5a3a'; }
             else if (tpl === 'circular-badge') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'bold-modern') { shapeInput.value = '#1a3a6b'; accentInput.value = '#ffffff'; }
+            else if (tpl === 'bold-modern') { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
             else { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
           }
           if (shapeInput2) {
@@ -6305,6 +6366,16 @@ window.logoutMember = async function () {
             else if (tpl === 'circular-badge') shapeInput2.value = '#8a6d2b';
             else if (tpl === 'bold-modern') shapeInput2.value = '#378ADD';
             else shapeInput2.value = '#378ADD';
+          }
+          // Same idea for the pre-line/tagline text colours — sensible
+          // per-style defaults for readability, still fully editable.
+          const preColorInput = el('mq-pd-pre-color');
+          const tagColorInput = el('mq-pd-tag-color');
+          if (preColorInput && tagColorInput) {
+            if (tpl === 'diamond-arrow') { preColorInput.value = '#e5e7eb'; tagColorInput.value = '#e5e7eb'; }
+            else if (tpl === 'circular-badge') { preColorInput.value = '#f0f0f0'; tagColorInput.value = '#e0e0e0'; }
+            else if (tpl === 'bold-modern') { preColorInput.value = '#d0d0d0'; tagColorInput.value = '#d0d0d0'; }
+            else { preColorInput.value = '#6b6b6b'; tagColorInput.value = '#4b4b4b'; }
           }
           drawPosterDesigner();
         };
@@ -6387,6 +6458,15 @@ window.logoutMember = async function () {
             reader.readAsDataURL(file);
           };
         }
+
+        window.mqPdToggleColorSection = () => {
+          const body = el('mq-pd-color-section-body');
+          const arrow = el('mq-pd-color-section-arrow');
+          if (!body) return;
+          const opening = body.style.display === 'none';
+          body.style.display = opening ? 'block' : 'none';
+          if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+        };
 
         window.mqPdBgImageToggled = () => {
           const wrap = el('mq-pd-bg-image-upload-wrap');
