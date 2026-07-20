@@ -931,6 +931,16 @@ window.logoutMember = async function () {
             <div class="mq-page-title">Marketing Kit</div>
             <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
 
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
+              <label class="mq-label" style="display:block;margin-bottom:6px">Link to use across everything below</label>
+              <div style="display:flex;gap:8px">
+                <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1"/>
+                <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
+              </div>
+              <span class="mq-hint">Paste the link to your quote page — if you leave this blank, everything below uses your raw widget link instead</span>
+              <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link is automatically used across every marketing item on this page — posts, graphics, QR codes, and everything else.</div>
+            </div>
+
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div onclick="mqToggleMkSection('social')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
                 <div class="mq-card-title" style="margin:0">📱 Social media posts</div>
@@ -938,15 +948,6 @@ window.logoutMember = async function () {
               </div>
               <div id="mq-mk-body-social" style="display:none;padding:0 1.25rem 1.25rem">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
-                <label class="mq-label" style="display:block;margin-bottom:6px">Link to use in these posts</label>
-                <div style="display:flex;gap:8px">
-                  <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1"/>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
-                </div>
-                <span class="mq-hint">Paste the link to your quote page — if you leave this blank, the posts below use your raw widget link instead</span>
-                <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link will automatically be used across all marketing items on this page — posts, graphics, QR codes, and everything else.</div>
-              </div>
               <div id="mq-mk-social"></div>
               </div>
             </div>
@@ -1243,7 +1244,7 @@ window.logoutMember = async function () {
                   </label>
                   <button class="mq-btn mq-btn-sm" id="mq-mk-qr-bg-remove" style="flex-shrink:0">✕</button>
                 </div>
-                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link from "Social media posts" above — set it there if you haven't already</span>
+                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link set at the top of this page — set it there if you haven't already</span>
                 <div id="mq-mk-qr-overlay-row" style="display:none;width:100%;max-width:280px;align-items:center;gap:10px">
                   <span style="font-size:11px;color:#6b7280;white-space:nowrap">Darkness</span>
                   <input type="range" id="mq-mk-qr-overlay-slider" min="0" max="90" value="62" style="flex:1"/>
@@ -4817,7 +4818,7 @@ window.logoutMember = async function () {
         if (!qrLink) {
           drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
             ['No link added yet'],
-            'Set your quote page link in "Social media posts" above');
+            'Set your quote page link at the top of this page');
           y = qrY + qrSize + cardPad + gapQrToSubtext;
         } else if (qrLibState !== 'ready') {
           drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
@@ -5006,7 +5007,7 @@ window.logoutMember = async function () {
       if (qrDownloadBtn) {
         qrDownloadBtn.onclick = () => {
           if (!qrLink) {
-            alert('Please add a link in the "Social media posts" section above first.');
+            alert('Please add a link at the top of this page first.');
             return;
           }
           const link = document.createElement('a');
