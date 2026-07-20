@@ -413,6 +413,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
+        #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
+        #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
+        #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
         #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
@@ -473,6 +476,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
+          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
         </div>
 
         <div class="mq-content">
@@ -891,29 +895,69 @@ window.logoutMember = async function () {
             </div>
           </div>
 
+          <!-- SUPPORT -->
+          <div class="mq-page" id="mq-page-support">
+            <div class="mq-page-title">Support</div>
+            <div class="mq-page-sub">Have a question or an idea? Send it straight to us — your shop info is included automatically.</div>
+            <div class="mq-card" style="max-width:520px">
+              <div class="mq-field" style="margin-bottom:1rem">
+                <label class="mq-label">Your email <span style="color:#dc2626">*</span></label>
+                <div style="display:flex;gap:8px">
+                  <input type="email" id="mq-support-email" placeholder="you@example.com" required style="flex:1"/>
+                  <button type="button" class="mq-btn mq-btn-sm" id="mq-support-use-shop-email" onclick="mqUseShopInfoEmail()" style="flex-shrink:0;white-space:nowrap">Use my Shop Info email</button>
+                </div>
+                <span class="mq-hint">So we know where to send our reply</span>
+              </div>
+              <div class="mq-field" style="margin-bottom:1rem">
+                <label class="mq-label">Topic</label>
+                <select id="mq-support-topic">
+                  <option value="Question">Just a question</option>
+                  <option value="Support">Support — something's not working right</option>
+                  <option value="Suggestion">Suggestion — an idea for MidasQuote</option>
+                </select>
+              </div>
+              <div class="mq-field" style="margin-bottom:1rem">
+                <label class="mq-label">Message</label>
+                <textarea id="mq-support-message" rows="6" placeholder="Tell us what's going on..."></textarea>
+              </div>
+              <button class="mq-btn mq-btn-primary" id="mq-support-submit-btn" onclick="mqSubmitSupport()">Send</button>
+              <div id="mq-support-status" style="font-size:13px;margin-top:10px"></div>
+            </div>
+          </div>
+
           <!-- MARKETING KIT -->
           <div class="mq-page" id="mq-page-marketing">
             <button class="mq-help-btn" onclick="mqShowHelp('marketing')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Marketing Kit</div>
             <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
 
-            <div class="mq-card">
-              <div class="mq-card-title">📱 Social media posts</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
-                <label class="mq-label" style="display:block;margin-bottom:6px">Link to use in these posts</label>
-                <div style="display:flex;gap:8px">
-                  <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1"/>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
-                </div>
-                <span class="mq-hint">Paste the link to your quote page — if you leave this blank, the posts below use your raw widget link instead</span>
-                <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link will automatically be used across all marketing items on this page — posts, graphics, QR codes, and everything else.</div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
+              <label class="mq-label" style="display:block;margin-bottom:6px">Link to use across everything below</label>
+              <div style="display:flex;gap:8px">
+                <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1"/>
+                <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
               </div>
-              <div id="mq-mk-social"></div>
+              <span class="mq-hint">Paste the link to your quote page — if you leave this blank, everything below uses your raw widget link instead</span>
+              <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link is automatically used across every marketing item on this page — posts, graphics, QR codes, and everything else.</div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title">🖼️ Social graphic — ready to post</div>
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('social')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">📱 Social media posts</div>
+                <span id="mq-mk-arrow-social" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-social" style="display:none;padding:0 1.25rem 1.25rem">
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
+              <div id="mq-mk-social"></div>
+              </div>
+            </div>
+
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('graphic')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🖼️ Social graphic — ready to post</div>
+                <span id="mq-mk-arrow-graphic" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-graphic" style="display:none;padding:0 1.25rem 1.25rem">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A square Instagram/Facebook-ready graphic with your shop name, brand colour, and quote link already on it. Download and post — no design needed.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
@@ -936,22 +980,247 @@ window.logoutMember = async function () {
                 </div>
                 <button class="mq-btn mq-btn-primary" id="mq-mk-download-btn" style="width:100%;max-width:280px">⬇️ Download graphic (PNG)</button>
               </div>
+              </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title">🏷️ Headline options for your website</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Use one of these above your embedded widget.</p>
-              <div id="mq-mk-headlines"></div>
+            <div class="mq-card" id="mq-pd-outer-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('poster')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🎨 Custom Poster & Sign Designer</div>
+                <span id="mq-mk-arrow-poster" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-poster" style="display:none;padding:0 1.25rem 1.25rem">
+              <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Pick a style, add your own project photo, and download a print-ready poster or yard sign — pick "Landscape" below for a yard sign.</p>
+
+              <div class="mq-field" style="margin-bottom:12px">
+                <label class="mq-label">Style</label>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <div class="mq-pd-template-thumb selected" data-template="curved-split" onclick="mqPdSelectTemplate('curved-split',this)" style="cursor:pointer;border:2px solid #1a1a1a;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(120deg,#fff 45%,#1a3a6b 55%)"></div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Curved Split</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="diamond-arrow" onclick="mqPdSelectTemplate('diamond-arrow',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(100deg,#111 45%,#c9a24b 47%,#8a6d2b 49%,#333 52%)"></div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Diamond Arrow</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="ornate-divider" onclick="mqPdSelectTemplate('ornate-divider',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:50%/20%;background:linear-gradient(#fff 45%,#8a5a3a 47%)"></div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Ornate Divider</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="circular-badge" onclick="mqPdSelectTemplate('circular-badge',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:#3a3a3a;position:relative">
+                      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:2px solid #c9a24b"></div>
+                    </div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Circular Badge</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="bold-modern" onclick="mqPdSelectTemplate('bold-modern',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#1a3a6b 45%,#666 47%)"></div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Bold Modern</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mq-field" style="margin-bottom:12px">
+                <label class="mq-label">Orientation</label>
+                <div style="display:flex;gap:8px">
+                  <button class="mq-btn mq-btn-sm" id="mq-pd-orient-portrait" onclick="mqPdSetOrientation('portrait')">📱 Portrait — poster</button>
+                  <button class="mq-btn mq-btn-sm" id="mq-pd-orient-landscape" onclick="mqPdSetOrientation('landscape')">🖥️ Landscape — yard sign</button>
+                </div>
+              </div>
+
+              <div class="mq-grid2">
+                <div class="mq-field">
+                  <label class="mq-label">Project photo</label>
+                  <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-photo-input').click()">📤 Upload photo</button>
+                  <input type="file" id="mq-pd-photo-input" accept="image/*" style="display:none"/>
+                </div>
+                <div class="mq-field">
+                  <label class="mq-label">Text or your logo?</label>
+                  <select id="mq-pd-text-mode" onchange="mqPdTextModeChanged()">
+                    <option value="text">Text (shop name + tagline)</option>
+                    <option value="logo">My own logo image</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mq-field" id="mq-pd-logo-upload-wrap" style="display:none;margin-bottom:12px">
+                <label class="mq-label">Logo image</label>
+                <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-logo-input').click()">📤 Upload logo</button>
+                <input type="file" id="mq-pd-logo-input" accept="image/*" style="display:none"/>
+                <p style="font-size:11px;color:#9ca3af;margin-top:4px">This is separate from your Shop Info logo — upload whatever image you want to appear here specifically.</p>
+                <label class="mq-label" style="margin-top:10px;display:block">Logo size</label>
+                <input type="range" id="mq-pd-logo-size" min="50" max="250" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+              </div>
+
+              <div class="mq-field" style="margin-bottom:12px">
+                <label class="mq-label">Tagline</label>
+                <input type="text" id="mq-pd-tagline" value="Custom Kitchens & Millwork" maxlength="60" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
+              </div>
+
+              <div class="mq-field" style="margin-bottom:12px">
+                <label class="mq-label">Badge text <span style="font-weight:400;color:#9ca3af;text-transform:none">(Circular Badge style only — independent of your shop name)</span></label>
+                <input type="text" id="mq-pd-badge-text" placeholder="e.g. DR" maxlength="4" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
+              </div>
+
+              <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+                <div onclick="mqPdToggleColorSection()" style="display:flex;align-items:center;justify-content:space-between;padding:14px;cursor:pointer;background:#f9fafb">
+                  <div style="font-size:13px;font-weight:700;color:#374151">🎨 Colours &amp; Text Style</div>
+                  <span id="mq-pd-color-section-arrow" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+                </div>
+                <div id="mq-pd-color-section-body" style="padding:14px">
+                  <div class="mq-grid2">
+                    <div class="mq-field">
+                      <label class="mq-label">Background colour</label>
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <input type="color" id="mq-pd-bg-color" value="#ffffff" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
+                          <input type="checkbox" id="mq-pd-bg-gradient" onchange="mqPdToggleGradientColor2('mq-pd-bg-color2-wrap',this.checked)" style="width:auto"/> Gradient
+                        </label>
+                        <span id="mq-pd-bg-color2-wrap" style="display:none">
+                          <input type="color" id="mq-pd-bg-color2" value="#f0f0f0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                        </span>
+                      </div>
+                      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;margin-top:8px;cursor:pointer">
+                        <input type="checkbox" id="mq-pd-bg-image-enabled" onchange="mqPdBgImageToggled()" style="width:auto"/> Use an image instead
+                      </label>
+                      <div id="mq-pd-bg-image-upload-wrap" style="display:none;margin-top:6px">
+                        <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-bg-image-input').click()">📤 Upload background image</button>
+                        <input type="file" id="mq-pd-bg-image-input" accept="image/*" style="display:none"/>
+                        <div style="margin-top:8px">
+                          <button class="mq-btn mq-btn-sm" onclick="mqPdLoadTextureLibrary()">🧱 Or choose from our texture library</button>
+                          <div id="mq-pd-texture-grid" style="display:none;margin-top:8px;max-height:180px;overflow-y:auto;grid-template-columns:repeat(4,1fr);gap:6px"></div>
+                        </div>
+                        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
+                          <label class="mq-label" style="display:block;margin-bottom:6px">Overlay <span style="font-weight:400;color:#9ca3af;text-transform:none">(darken/tint the image so your text stays readable)</span></label>
+                          <div style="display:flex;gap:8px;align-items:center">
+                            <input type="color" id="mq-pd-bg-overlay-color" value="#000000" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                            <input type="range" id="mq-pd-bg-overlay-opacity" min="0" max="90" value="0" oninput="mqPdOverlayOpacityChanged()" style="flex:1"/>
+                            <span id="mq-pd-bg-overlay-opacity-val" style="font-size:11px;color:#6b7280;width:32px;text-align:right">0%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="mq-field">
+                      <label class="mq-label">Shape colour</label>
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <input type="color" id="mq-pd-shape-color" value="#1a3a6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
+                          <input type="checkbox" id="mq-pd-shape-gradient" onchange="mqPdToggleGradientColor2('mq-pd-shape-color2-wrap',this.checked)" style="width:auto"/> Gradient
+                        </label>
+                        <span id="mq-pd-shape-color2-wrap" style="display:none">
+                          <input type="color" id="mq-pd-shape-color2" value="#378ADD" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mq-field" style="margin-top:12px">
+                    <label class="mq-label">Accent line colour</label>
+                    <input type="color" id="mq-pd-accent-color" value="#c9a24b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                  </div>
+
+                  <div style="border-top:1px solid #e5e7eb;margin:14px 0 0;padding-top:14px">
+                    <div class="mq-field" style="margin-bottom:12px">
+                      <label class="mq-label">"Another project by" text</label>
+                      <input type="text" id="mq-pd-pre-text" value="Another project by" maxlength="40" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
+                    </div>
+                    <div class="mq-grid2">
+                      <div class="mq-field">
+                        <label class="mq-label">"Another project by" colour</label>
+                        <input type="color" id="mq-pd-pre-color" value="#6b6b6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                      </div>
+                      <div class="mq-field">
+                        <label class="mq-label">Tagline colour</label>
+                        <input type="color" id="mq-pd-tag-color" value="#4b4b4b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                      </div>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:10px;cursor:pointer">
+                      <input type="checkbox" id="mq-pd-text-shadow" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:auto"/> Add drop shadow to all text
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
+                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Text size &amp; layout</div>
+                <div class="mq-grid2" style="margin-bottom:8px">
+                  <div class="mq-field">
+                    <label class="mq-label">"Another project by" size</label>
+                    <input type="range" id="mq-pd-size-pre" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                  </div>
+                  <div class="mq-field">
+                    <label class="mq-label">Shop name size</label>
+                    <input type="range" id="mq-pd-size-name" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                  </div>
+                </div>
+                <div class="mq-grid2" style="margin-bottom:8px">
+                  <div class="mq-field">
+                    <label class="mq-label">Tagline size</label>
+                    <input type="range" id="mq-pd-size-tag" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                  </div>
+                  <div class="mq-field">
+                    <label class="mq-label">Space between lines</label>
+                    <input type="range" id="mq-pd-line-spacing" min="60" max="180" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                  </div>
+                </div>
+                <div class="mq-field">
+                  <label class="mq-label">Move whole text block up / down</label>
+                  <input type="range" id="mq-pd-text-offset" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                </div>
+              </div>
+
+              <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
+                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">QR code &amp; quote button <span style="font-weight:400;text-transform:none;color:#9ca3af">(both optional)</span></div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:10px;cursor:pointer">
+                  <input type="checkbox" id="mq-pd-qr-enabled" onchange="mqPdQrToggled()" style="width:auto"/> Add a QR code onto the photo
+                </label>
+                <div id="mq-pd-qr-controls-wrap" style="display:none;margin-bottom:12px">
+                  <div class="mq-grid2">
+                    <div class="mq-field">
+                      <label class="mq-label">QR code size</label>
+                      <input type="range" id="mq-pd-qr-size" min="50" max="220" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                    </div>
+                    <div class="mq-field">
+                      <label class="mq-label">QR code position (up/down)</label>
+                      <input type="range" id="mq-pd-qr-position" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                    </div>
+                  </div>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                  <input type="checkbox" id="mq-pd-btn-enabled" onchange="mqPdBtnToggled()" style="width:auto"/> Add a "Get a Free Quote" button
+                </label>
+                <div id="mq-pd-btn-controls-wrap" style="display:none;margin-top:10px">
+                  <div class="mq-field">
+                    <label class="mq-label">Button position (up/down)</label>
+                    <input type="range" id="mq-pd-btn-position" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
+                  </div>
+                </div>
+              </div>
+              </div>
+
+              <div style="display:none;position:fixed;top:90px;right:30px;max-width:480px;z-index:50;text-align:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)" id="mq-pd-sticky-preview">
+                <canvas id="mq-pd-canvas" width="1080" height="1620" onclick="mqPdOpenZoom()" style="width:auto;height:300px;border-radius:10px;display:block;margin:0 auto 10px;box-shadow:0 6px 24px rgba(0,0,0,0.18);cursor:zoom-in" title="Tap to zoom"></canvas>
+                <button class="mq-btn mq-btn-primary" id="mq-pd-download-btn" style="width:100%;display:block;margin:0 auto">⬇️ Download (PNG)</button>
+              </div>
+
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title">💬 Direct message template</div>
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('dm')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">💬 Direct message template</div>
+                <span id="mq-mk-arrow-dm" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-dm" style="display:none;padding:0 1.25rem 1.25rem">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Send this to past customers or leads who might have a future project.</p>
               <div id="mq-mk-dm"></div>
+              </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title">🖨️ Printable QR poster</div>
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('qrposter')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🖨️ Printable QR poster</div>
+                <span id="mq-mk-arrow-qrposter" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-qrposter" style="display:none;padding:0 1.25rem 1.25rem">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A print-ready poster with a QR code linking straight to your quote page — perfect for a sandwich board, front desk, or restroom poster. Walk-in customers just scan and go.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-qr-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
@@ -987,7 +1256,7 @@ window.logoutMember = async function () {
                   </label>
                   <button class="mq-btn mq-btn-sm" id="mq-mk-qr-bg-remove" style="flex-shrink:0">✕</button>
                 </div>
-                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link from "Social media posts" above — set it there if you haven't already</span>
+                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link set at the top of this page — set it there if you haven't already</span>
                 <div id="mq-mk-qr-overlay-row" style="display:none;width:100%;max-width:280px;align-items:center;gap:10px">
                   <span style="font-size:11px;color:#6b7280;white-space:nowrap">Darkness</span>
                   <input type="range" id="mq-mk-qr-overlay-slider" min="0" max="90" value="62" style="flex:1"/>
@@ -995,62 +1264,16 @@ window.logoutMember = async function () {
                 </div>
                 <button class="mq-btn mq-btn-primary" id="mq-mk-qr-download-btn" style="width:100%;max-width:280px">⬇️ Download poster (PNG)</button>
               </div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title">🏗️ Job site / yard sign</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">A sandwich-board or yard sign with "Another project by..." and a QR code — works great printed for a job site lawn, fence, or sandwich board.</p>
-              <div style="display:flex;gap:8px;justify-content:center;margin-bottom:1.25rem">
-                <button class="mq-btn mq-btn-sm" id="mq-mk-sign-orient-portrait" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a">📱 Portrait (sandwich board)</button>
-                <button class="mq-btn mq-btn-sm" id="mq-mk-sign-orient-landscape">🖥️ Landscape (yard sign)</button>
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-sign-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
-                <div style="width:100%;max-width:280px">
-                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Eyebrow text (above shop name)</label>
-                  <input type="text" id="mq-mk-sign-headline" placeholder="Another project by" maxlength="40" style="font-size:13px"/>
-                </div>
-                <div style="width:100%;max-width:280px">
-                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Shop name font</label>
-                  <select id="mq-mk-sign-font" style="font-size:13px;width:100%">
-                    <option value="-apple-system, sans-serif">Default (System)</option>
-                    <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica — Clean & Modern</option>
-                    <option value="Georgia, serif">Georgia — Warm & Premium</option>
-                    <option value="'Trebuchet MS', sans-serif">Trebuchet — Friendly & Bold</option>
-                    <option value="'Times New Roman', serif">Times New Roman — Classic</option>
-                    <option value="Impact, 'Arial Narrow', sans-serif">Impact — Strong & Punchy</option>
-                  </select>
-                </div>
-                <div style="width:100%;max-width:280px;align-items:center;gap:10px;display:flex">
-                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Letter spacing</span>
-                  <input type="range" id="mq-mk-sign-letter-spacing" min="0" max="20" value="0" style="flex:1"/>
-                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-sign-letter-spacing-val">0px</span>
-                </div>
-                <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
-                  <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Band colour</label>
-                  <input type="color" id="mq-mk-sign-color" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-sign-color-reset" style="flex-shrink:0">Use brand colour</button>
-                </div>
-                <div style="display:flex;gap:8px;width:100%;max-width:280px">
-                  <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
-                    📷 Add background photo
-                    <input type="file" id="mq-mk-sign-bg-photo" accept="image/*" style="display:none"/>
-                  </label>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-sign-bg-remove" style="flex-shrink:0">✕</button>
-                </div>
-                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link from "Social media posts" above — set it there if you haven't already</span>
-                <div id="mq-mk-sign-overlay-row" style="display:none;width:100%;max-width:280px;align-items:center;gap:10px">
-                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Darkness</span>
-                  <input type="range" id="mq-mk-sign-overlay-slider" min="0" max="90" value="62" style="flex:1"/>
-                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-sign-overlay-val">62%</span>
-                </div>
-                <button class="mq-btn mq-btn-primary" id="mq-mk-sign-download-btn" style="width:100%;max-width:280px">⬇️ Download sign (PNG)</button>
-                <button class="mq-btn mq-btn-sm" id="mq-mk-qr-only-download-btn" style="width:100%;max-width:280px">⬇️ Download just the QR code</button>
               </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title">📍 Where to post</div>
+
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('whereto')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">📍 Where to post</div>
+                <span id="mq-mk-arrow-whereto" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-whereto" style="display:none;padding:0 1.25rem 1.25rem">
               <div style="font-size:13px;color:#374151;line-height:2">
                 ✓ Your website homepage or a dedicated "Get a Quote" page<br>
                 ✓ Pin a post to the top of your Facebook Business Page<br>
@@ -1060,16 +1283,22 @@ window.logoutMember = async function () {
                 ✓ Email signature<br>
                 ✓ A QR code sign for walk-in customers to scan in-store
               </div>
+              </div>
             </div>
 
-            <div class="mq-card" style="border-color:#86efac;background:#f0fdf4">
-              <div class="mq-card-title">✅ Pre-launch checklist</div>
+            <div class="mq-card" style="border-color:#86efac;background:#f0fdf4;padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('checklist')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">✅ Pre-launch checklist</div>
+                <span id="mq-mk-arrow-checklist" style="font-size:13px;color:#166534;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-checklist" style="display:none;padding:0 1.25rem 1.25rem">
               <div style="font-size:13px;color:#166534;line-height:2">
                 ☐ Widget is embedded and tested on your site<br>
                 ☐ Link works on both desktop and mobile<br>
                 ☐ You've tried the quote flow yourself at least once<br>
                 ☐ Your shop info (name, phone, logo) looks correct in the widget<br>
                 ☐ You know new leads land in your Leads tab
+              </div>
               </div>
             </div>
           </div>
@@ -1133,6 +1362,70 @@ window.logoutMember = async function () {
       else window.location.href = '/?ms-logout=true';
     };
     tryLogout();
+  };
+
+  window.mqUseShopInfoEmail = function() {
+    const emailEl = document.getElementById('mq-support-email');
+    const shopEmail = window._mqShopRecord?.fields['Lead notify email'];
+    if (!emailEl) return;
+    if (shopEmail) {
+      emailEl.value = shopEmail;
+    } else {
+      const statusEl = document.getElementById('mq-support-status');
+      if (statusEl) { statusEl.textContent = "No email found in Shop Info yet — you'll need to type one in."; statusEl.style.color = '#dc2626'; }
+    }
+  };
+
+  window.mqSubmitSupport = async function() {
+    const emailEl = document.getElementById('mq-support-email');
+    const topicEl = document.getElementById('mq-support-topic');
+    const messageEl = document.getElementById('mq-support-message');
+    const statusEl = document.getElementById('mq-support-status');
+    const btn = document.getElementById('mq-support-submit-btn');
+    const email = (emailEl?.value || '').trim();
+    const topic = topicEl?.value || 'Support';
+    const message = (messageEl?.value || '').trim();
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailValid) {
+      if (statusEl) { statusEl.textContent = 'Please enter a valid email so we know where to reply.'; statusEl.style.color = '#dc2626'; }
+      emailEl?.focus();
+      return;
+    }
+    if (!message) {
+      if (statusEl) { statusEl.textContent = 'Please enter a message first.'; statusEl.style.color = '#dc2626'; }
+      return;
+    }
+    const shopRecord = window._mqShopRecord;
+    const shopName = shopRecord?.fields['Shop name'] || 'Unknown shop';
+    const shopToken = shopRecord?.fields['Shop token'] || 'unknown-token';
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+    if (statusEl) statusEl.textContent = '';
+    try {
+      const html = `
+        <p><strong>Topic:</strong> ${topic}</p>
+        <p><strong>From:</strong> ${email}</p>
+        <p><strong>Shop name:</strong> ${shopName}</p>
+        <p><strong>Shop token:</strong> ${shopToken}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message.replace(/</g,'&lt;').replace(/\n/g, '<br>')}</p>
+      `;
+      await fetch(CONFIG.EMAIL_WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'support@midasquote.com',
+          replyTo: email, // so hitting "Reply" in your own inbox goes straight to them, not back to support@
+          subject: `[${topic}] ${shopName}`,
+          html
+        })
+      });
+      if (statusEl) { statusEl.textContent = "✓ Sent! We'll get back to you soon."; statusEl.style.color = '#166534'; }
+      if (messageEl) messageEl.value = '';
+    } catch(e) {
+      if (statusEl) { statusEl.textContent = 'Something went wrong sending that — please try again.'; statusEl.style.color = '#dc2626'; }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+    }
   };
 
   window.mqNav = function(page, el) {
@@ -3974,6 +4267,24 @@ window.logoutMember = async function () {
     }, 800);
   }
 
+  // Shared collapsible toggle for every card on the Marketing Kit page —
+  // it was getting cluttered with everything always open at once, so each
+  // section now starts closed and opens on its own when clicked.
+  window.mqToggleMkSection = function(key) {
+    const body = document.getElementById(`mq-mk-body-${key}`);
+    const arrow = document.getElementById(`mq-mk-arrow-${key}`);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+    // Collapsing/expanding a section doesn't scroll the page, so the
+    // Poster Designer's floating preview needs its own explicit re-check
+    // here too — it can't rely on the scroll-based observer alone.
+    if (typeof window._mqPdUpdateStickyVisibility === 'function') {
+      window._mqPdUpdateStickyVisibility();
+    }
+  };
+
   function initMarketingKit(shopRecord) {
     const shopName = shopRecord.fields['Shop name'] || 'our shop';
     const token = shopRecord.fields['Shop token'] || '';
@@ -3992,14 +4303,6 @@ window.logoutMember = async function () {
 
     const quoteLink = _mqCustomPostLink || defaultQuoteLink;
     const socialPosts = buildSocialPosts(quoteLink);
-
-    const headlines = [
-      'Get a free quote online in minutes',
-      'Know your price before you even call',
-      'Get your cabinet estimate in under 2 minutes',
-      'No phone calls. No waiting. Just your price.',
-      'See what your project costs — right now',
-    ];
 
     const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
 
@@ -4066,18 +4369,6 @@ window.logoutMember = async function () {
         }
         setTimeout(() => { postLinkApplyBtn.textContent = 'Apply'; }, 1800);
       };
-    }
-
-    const headlinesEl = el('mq-mk-headlines');
-    if (headlinesEl) {
-      headlinesEl.innerHTML = headlines.map((h, i) => `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6">
-          <span style="font-size:13px;color:#111">${escapeHtml(h)}</span>
-          <button class="mq-btn mq-btn-sm" data-copy-idx="${i}">Copy</button>
-        </div>`).join('');
-      headlinesEl.querySelectorAll('button[data-copy-idx]').forEach(btn => {
-        btn.onclick = () => mqCopyText(headlines[parseInt(btn.dataset.copyIdx, 10)], btn);
-      });
     }
 
     const dmEl = el('mq-mk-dm');
@@ -4539,7 +4830,7 @@ window.logoutMember = async function () {
         if (!qrLink) {
           drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
             ['No link added yet'],
-            'Set your quote page link in "Social media posts" above');
+            'Set your quote page link at the top of this page');
           y = qrY + qrSize + cardPad + gapQrToSubtext;
         } else if (qrLibState !== 'ready') {
           drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
@@ -4728,7 +5019,7 @@ window.logoutMember = async function () {
       if (qrDownloadBtn) {
         qrDownloadBtn.onclick = () => {
           if (!qrLink) {
-            alert('Please add a link in the "Social media posts" section above first.');
+            alert('Please add a link at the top of this page first.');
             return;
           }
           const link = document.createElement('a');
@@ -4739,660 +5030,1017 @@ window.logoutMember = async function () {
       }
     }
 
-    // ── YARD SIGN / SANDWICH BOARD ──
-    const signCanvas = el('mq-mk-sign-canvas');
-    if (signCanvas && signCanvas.getContext) {
-      const signCtx = signCanvas.getContext('2d');
-      const brandColor2 = shopRecord.fields['Brand colour'] || '#1a1a1a';
-      let signBgImage = _mqSignBgImage;
-      let signOverlayOpacity = _mqSignOverlayOpacity;
-      let signLink = _mqCustomPostLink || defaultQuoteLink;
-      let signOrientation = 'portrait'; // 'portrait' | 'landscape'
-      let signHeadline = _mqSignHeadline || 'Another project by';
-      let signCustomColor = _mqSignCustomColor || '';
-      let signFontFamily = '-apple-system, sans-serif';
-      let signLetterSpacing = 0;
+    // signLink is used by both the QR poster above and the Poster Designer
+    // below — declared here, outside any one feature's own block, so it's
+    // never at risk of going undeclared if one of those features' own
+    // canvas doesn't exist on the page.
+    let signLink = _mqCustomPostLink || defaultQuoteLink;
 
-      function shadeColor(hex, percent) {
-        try {
-          hex = hex.replace('#','');
-          let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-          const amt = Math.round(2.55 * percent);
-          r = Math.max(0, Math.min(255, r + amt));
-          g = Math.max(0, Math.min(255, g + amt));
-          b = Math.max(0, Math.min(255, b + amt));
-          return `rgb(${r},${g},${b})`;
-        } catch(e) { return hex; }
-      }
+      // ── Custom Poster & Sign Designer ──────────────────────────────────
+      // Deliberately its own self-contained canvas system rather than
+      // reusing the QR poster's helper functions, since those are scoped to
+      // that canvas's own context. First template: "Curved Split" — a
+      // smooth S-curve dividing a text/logo panel from a photo panel, in
+      // both portrait (poster) and landscape (yard sign) orientations.
+      // More template styles get added onto this same pattern later.
+      const pdCanvas = el('mq-pd-canvas');
+      if (pdCanvas) {
+        const pdCtx = pdCanvas.getContext('2d');
+        let pdOrientation = 'portrait';
+        let pdTemplate = 'curved-split';
+        let pdPhotoImage = null;
+        let pdOwnLogoImage = null; // uploaded specifically here, not shop info's logo
+        let pdBgImage = null; // optional uploaded background texture/image
+        const pdShopName = shopRecord.fields['Shop name'] || 'Your Shop';
 
-      // Picks black or white text automatically based on background brightness — guarantees readability on any colour
-      function getTextColor(hex) {
-        try {
-          hex = hex.replace('#','');
-          const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-          const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-          return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
-        } catch(e) { return '#ffffff'; }
-      }
+        function pdWrapText(text, font, maxWidth) {
+          pdCtx.font = font;
+          const words = text.split(' ');
+          const lines = [];
+          let line = '';
+          words.forEach(word => {
+            const test = line ? line + ' ' + word : word;
+            if (pdCtx.measureText(test).width > maxWidth && line) { lines.push(line); line = word; }
+            else line = test;
+          });
+          if (line) lines.push(line);
+          return lines;
+        }
 
-      function signShadowText(text, x, y, font, fillColor, align) {
-        signCtx.font = font;
-        signCtx.textAlign = align || 'center';
-        signCtx.textBaseline = 'alphabetic';
-        signCtx.fillStyle = 'rgba(0,0,0,0.5)';
-        signCtx.fillText(text, x + 2, y + 3);
-        signCtx.fillStyle = fillColor;
-        signCtx.fillText(text, x, y);
-      }
-
-      function wrapTextSign(text, font, maxWidth) {
-        signCtx.font = font;
-        const words = text.split(' ');
-        const lines = [];
-        let line = '';
-        words.forEach(word => {
-          const test = line ? line + ' ' + word : word;
-          if (signCtx.measureText(test).width > maxWidth && line) {
-            lines.push(line);
-            line = word;
-          } else {
-            line = test;
+        // Reads the shared text size/spacing/position controls once per
+        // draw — same five values used by every template, so a slider
+        // dragged here consistently affects whichever style is selected.
+        // Turns on a soft drop shadow for whatever text gets drawn next —
+        // called right before a template's text-drawing section, and
+        // cleared right after, so it never accidentally applies to the
+        // photo, QR code, or button too.
+        function pdSetTextShadow() {
+          if (el('mq-pd-text-shadow')?.checked) {
+            pdCtx.shadowColor = 'rgba(0,0,0,0.45)';
+            pdCtx.shadowBlur = 8;
+            pdCtx.shadowOffsetX = 2;
+            pdCtx.shadowOffsetY = 3;
           }
-        });
-        if (line) lines.push(line);
-        return lines;
-      }
-
-      function drawQrInto(qrX, qrY, qrSize, cardPad) {
-        if (!signLink) {
-          signCtx.fillStyle = '#ffffff';
-          signCtx.beginPath();
-          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
-          signCtx.fill();
-          signCtx.fillStyle = '#6b7280';
-          signCtx.font = '600 26px -apple-system, sans-serif';
-          signCtx.textAlign = 'center';
-          signCtx.textBaseline = 'middle';
-          const msgLines = wrapTextSign('No link added yet', '600 26px -apple-system, sans-serif', qrSize - 50);
-          let my = qrY + qrSize/2 - ((msgLines.length-1)*32)/2;
-          msgLines.forEach(line => { signCtx.fillText(line, qrX + qrSize/2, my); my += 32; });
-          signCtx.textBaseline = 'alphabetic';
-          return;
         }
-        if (!window.mqQrGen) {
-          signCtx.fillStyle = '#ffffff';
-          signCtx.beginPath();
-          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
-          signCtx.fill();
-          signCtx.fillStyle = '#6b7280';
-          signCtx.font = '600 26px -apple-system, sans-serif';
-          signCtx.textAlign = 'center';
-          signCtx.textBaseline = 'middle';
-          signCtx.fillText('QR unavailable', qrX + qrSize/2, qrY + qrSize/2);
-          signCtx.textBaseline = 'alphabetic';
-          return;
-        }
-        try {
-          const qr = window.mqQrGen(0, 'M');
-          qr.addData(signLink);
-          qr.make();
-          const count = qr.getModuleCount();
-          const cell = qrSize / count;
-
-          signCtx.save();
-          signCtx.shadowColor = 'rgba(0,0,0,0.35)';
-          signCtx.shadowBlur = 22;
-          signCtx.shadowOffsetY = 8;
-          signCtx.fillStyle = '#ffffff';
-          signCtx.beginPath();
-          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
-          signCtx.fill();
-          signCtx.restore();
-
-          signCtx.strokeStyle = signCustomColor || brandColor2;
-          signCtx.lineWidth = 4;
-          signCtx.beginPath();
-          signCtx.roundRect(qrX - cardPad + 8, qrY - cardPad + 8, qrSize + cardPad*2 - 16, qrSize + cardPad*2 - 16, 16);
-          signCtx.stroke();
-
-          signCtx.fillStyle = '#1a1a1a';
-          for (let row = 0; row < count; row++) {
-            for (let col = 0; col < count; col++) {
-              if (qr.isDark(row, col)) {
-                signCtx.fillRect(qrX + col*cell, qrY + row*cell, cell+0.5, cell+0.5);
-              }
-            }
-          }
-        } catch(e) {
-          signCtx.fillStyle = '#ffffff';
-          signCtx.beginPath();
-          signCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 22);
-          signCtx.fill();
-          signCtx.fillStyle = '#6b7280';
-          signCtx.font = '600 26px -apple-system, sans-serif';
-          signCtx.textAlign = 'center';
-          signCtx.textBaseline = 'middle';
-          signCtx.fillText('QR error', qrX + qrSize/2, qrY + qrSize/2);
-          signCtx.textBaseline = 'alphabetic';
-        }
-      }
-
-      function drawBackground(W, H) {
-        if (signBgImage) {
-          const imgRatio = signBgImage.width / signBgImage.height;
-          const canvasRatio = W / H;
-          let dw, dh, dx, dy;
-          if (imgRatio > canvasRatio) {
-            dh = H; dw = H * imgRatio; dx = (W - dw) / 2; dy = 0;
-          } else {
-            dw = W; dh = W / imgRatio; dx = 0; dy = (H - dh) / 2;
-          }
-          signCtx.drawImage(signBgImage, dx, dy, dw, dh);
-          signCtx.fillStyle = `rgba(10,10,10,${signOverlayOpacity})`;
-          signCtx.fillRect(0,0,W,H);
-        } else {
-          const grad = signCtx.createLinearGradient(0, 0, W, H);
-          grad.addColorStop(0, '#262422');
-          grad.addColorStop(1, '#15130f');
-          signCtx.fillStyle = grad;
-          signCtx.fillRect(0,0,W,H);
-        }
-      }
-
-      function drawSignLandscape() {
-        const W = 1620, H = 1080;
-        signCanvas.width = W; signCanvas.height = H;
-        signCtx.clearRect(0,0,W,H);
-
-        const padL = 90, padTB = 90;
-        const bandW = W * 0.52;
-        const signColor = signCustomColor || brandColor2;
-        const textColor = getTextColor(signColor);
-        const textColorMuted = textColor === '#ffffff' ? 'rgba(255,255,255,0.78)' : 'rgba(26,26,26,0.7)';
-        const textColorSoft = textColor === '#ffffff' ? 'rgba(255,255,255,0.95)' : 'rgba(26,26,26,0.85)';
-
-        // ── LEFT: Solid brand-colour band — always legible, never fights a photo ──
-        const bandGrad = signCtx.createLinearGradient(0, 0, bandW, 0);
-        bandGrad.addColorStop(0, shadeColor(signColor, -18));
-        bandGrad.addColorStop(1, signColor);
-        signCtx.fillStyle = bandGrad;
-        signCtx.fillRect(0, 0, bandW, H);
-
-        signCtx.textAlign = 'left';
-        signCtx.textBaseline = 'alphabetic';
-        signCtx.fillStyle = textColorMuted;
-        signCtx.font = `700 38px ${signFontFamily}`;
-        signCtx.fillText(signHeadline.toUpperCase(), padL, padTB + 10);
-
-        let nameFontSize = 90;
-        let nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
-        let nameLines = wrapTextSign(shopName, nameFont, bandW - padL - 40);
-        while (nameLines.length > 3 && nameFontSize > 56) {
-          nameFontSize -= 8;
-          nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
-          nameLines = wrapTextSign(shopName, nameFont, bandW - padL - 40);
-        }
-        signCtx.fillStyle = textColor;
-        signCtx.font = nameFont;
-        signCtx.save();
-        signCtx.shadowColor = 'rgba(0,0,0,0.7)';
-        signCtx.shadowBlur = 20;
-        signCtx.shadowOffsetY = 5;
-        let y = padTB + 120;
-        nameLines.forEach(line => {
-          signCtx.letterSpacing = signLetterSpacing + 'px';
-          signCtx.fillText(line, padL, y);
-          signCtx.letterSpacing = '0px';
-          y += nameFontSize * 1.1;
-        });
-        signCtx.restore();
-
-        // Fill the remaining space with bigger, vertically centered trust bullets
-        const ctaHForCalc = 104;
-        const ctaYForCalc = H - padTB - ctaHForCalc;
-        const bulletsAreaTop = y + 30;
-        const bulletsAreaBottom = ctaYForCalc - 80;
-        const bullets = ['No phone calls', 'Instant ballpark price', 'No obligation'];
-        const bulletLineHeight = 78;
-        const bulletsBlockHeight = bullets.length * bulletLineHeight;
-        let by = bulletsAreaTop + (bulletsAreaBottom - bulletsAreaTop - bulletsBlockHeight) / 2 + bulletLineHeight * 0.7;
-        signCtx.font = '600 42px -apple-system, sans-serif';
-        bullets.forEach(b => {
-          signCtx.fillStyle = textColor;
-          signCtx.beginPath();
-          signCtx.arc(padL + 11, by - 14, 10, 0, Math.PI*2);
-          signCtx.fill();
-          signCtx.fillStyle = textColorSoft;
-          signCtx.fillText(b, padL + 40, by);
-          by += bulletLineHeight;
-        });
-
-        const ctaH = 104, ctaW = 360;
-        const ctaY = H - padTB - ctaH;
-        signCtx.save();
-        signCtx.shadowColor = 'rgba(0,0,0,0.3)';
-        signCtx.shadowBlur = 18;
-        signCtx.shadowOffsetY = 6;
-        signCtx.fillStyle = '#ffffff';
-        signCtx.beginPath();
-        signCtx.roundRect(padL, ctaY, ctaW, ctaH, 18);
-        signCtx.fill();
-        signCtx.restore();
-        signCtx.fillStyle = '#1a1a1a';
-        signCtx.font = '700 40px -apple-system, sans-serif';
-        signCtx.textAlign = 'center';
-        signCtx.textBaseline = 'middle';
-        signCtx.fillText('Get a quote \u2192', padL + ctaW/2, ctaY + ctaH/2 + 2);
-        signCtx.textBaseline = 'alphabetic';
-
-        // ── RIGHT: photo area ──
-        const photoX = bandW;
-        const photoW = W - bandW;
-        if (signBgImage) {
-          const imgRatio = signBgImage.width / signBgImage.height;
-          const areaRatio = photoW / H;
-          let dw, dh, dx, dy;
-          if (imgRatio > areaRatio) {
-            dh = H; dw = H * imgRatio; dx = photoX - (dw - photoW) / 2; dy = 0;
-          } else {
-            dw = photoW; dh = photoW / imgRatio; dx = photoX; dy = (H - dh) / 2;
-          }
-          signCtx.save();
-          signCtx.beginPath();
-          signCtx.rect(photoX, 0, photoW, H);
-          signCtx.clip();
-          signCtx.drawImage(signBgImage, dx, dy, dw, dh);
-          signCtx.fillStyle = `rgba(10,10,10,${signOverlayOpacity * 0.5})`;
-          signCtx.fillRect(photoX, 0, photoW, H);
-          signCtx.restore();
-        } else {
-          const grad = signCtx.createLinearGradient(photoX, 0, W, 0);
-          grad.addColorStop(0, '#262422');
-          grad.addColorStop(1, '#15130f');
-          signCtx.fillStyle = grad;
-          signCtx.fillRect(photoX, 0, photoW, H);
+        function pdClearShadow() {
+          pdCtx.shadowColor = 'transparent';
+          pdCtx.shadowBlur = 0;
+          pdCtx.shadowOffsetX = 0;
+          pdCtx.shadowOffsetY = 0;
         }
 
-        const qrSize = 420;
-        const qrX = photoX + (photoW - qrSize) / 2;
-        const qrY = H/2 - qrSize/2;
-        const cardPad = 30;
-        drawQrInto(qrX, qrY, qrSize, cardPad);
-
-        // "Scan me" on a solid dark pill so it's always legible
-        const scanY = qrY + qrSize + cardPad + 56;
-        signCtx.font = '600 28px -apple-system, sans-serif';
-        const scanText = 'Scan me';
-        const scanTextW = signCtx.measureText(scanText).width;
-        const pillW = scanTextW + 56;
-        const pillH = 52;
-        signCtx.save();
-        signCtx.shadowColor = 'rgba(0,0,0,0.3)';
-        signCtx.shadowBlur = 14;
-        signCtx.shadowOffsetY = 4;
-        signCtx.fillStyle = 'rgba(20,18,15,0.88)';
-        signCtx.beginPath();
-        signCtx.roundRect(qrX + qrSize/2 - pillW/2, scanY - pillH/2, pillW, pillH, pillH/2);
-        signCtx.fill();
-        signCtx.restore();
-        signCtx.fillStyle = '#ffffff';
-        signCtx.textAlign = 'center';
-        signCtx.textBaseline = 'middle';
-        signCtx.fillText(scanText, qrX + qrSize/2, scanY + 2);
-        signCtx.textBaseline = 'alphabetic';
-      }
-
-
-      function drawSignPortrait() {
-        const W = 1080, H = 1620;
-        signCanvas.width = W; signCanvas.height = H;
-        signCtx.clearRect(0,0,W,H);
-
-        const pad = 80;
-        const signColor = signCustomColor || brandColor2;
-        const textColor = getTextColor(signColor);
-        const textColorMuted = textColor === '#ffffff' ? 'rgba(255,255,255,0.78)' : 'rgba(26,26,26,0.7)';
-
-        // ── TOP: Solid brand-colour band — guaranteed legible no matter what photo is chosen ──
-        const bandH = 560;
-        const bandGrad = signCtx.createLinearGradient(0, 0, 0, bandH);
-        bandGrad.addColorStop(0, signColor);
-        bandGrad.addColorStop(1, shadeColor(signColor, -18));
-        signCtx.fillStyle = bandGrad;
-        signCtx.fillRect(0, 0, W, bandH);
-
-        signCtx.textAlign = 'center';
-        signCtx.textBaseline = 'alphabetic';
-
-        // Small eyebrow — stays near top with letter spacing for polish
-        signCtx.fillStyle = textColorMuted;
-        signCtx.font = `700 38px ${signFontFamily}`;
-        signCtx.letterSpacing = '3px';
-        signCtx.fillText(signHeadline.toUpperCase(), W/2, 110);
-        signCtx.letterSpacing = '0px';
-
-        // HERO: shop name — centered in band below eyebrow, with font choice + letter spacing
-        let nameFontSize = 104;
-        let nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
-        let nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
-        while (nameLines.length > 2 && nameFontSize > 64) {
-          nameFontSize -= 8;
-          nameFont = `800 ${nameFontSize}px ${signFontFamily}`;
-          nameLines = wrapTextSign(shopName, nameFont, W - pad*2);
-        }
-        const nameLineHeight = nameFontSize * 1.1;
-        const nameBlockH = nameLines.length * nameLineHeight;
-        // Center name block in the space below eyebrow (140px) and bottom of band
-        let ny = 160 + (bandH - 160 - nameBlockH) / 2 + nameFontSize * 0.75;
-        signCtx.fillStyle = textColor;
-        signCtx.font = nameFont;
-        signCtx.save();
-        signCtx.shadowColor = 'rgba(0,0,0,0.7)';
-        signCtx.shadowBlur = 20;
-        signCtx.shadowOffsetY = 5;
-        nameLines.forEach(line => {
-          signCtx.letterSpacing = signLetterSpacing + 'px';
-          signCtx.fillText(line, W/2, ny);
-          signCtx.letterSpacing = '0px';
-          ny += nameLineHeight;
-        });
-        signCtx.restore();
-
-        // ── BOTTOM: photo fills the rest, lighter overlay is fine since no text sits directly on it ──
-        const photoY = bandH;
-        const photoH = H - bandH;
-        if (signBgImage) {
-          const imgRatio = signBgImage.width / signBgImage.height;
-          const areaRatio = W / photoH;
-          let dw, dh, dx, dy;
-          if (imgRatio > areaRatio) {
-            dh = photoH; dw = photoH * imgRatio; dx = (W - dw) / 2; dy = photoY;
-          } else {
-            dw = W; dh = W / imgRatio; dx = 0; dy = photoY - (dh - photoH) / 2;
-          }
-          signCtx.save();
-          signCtx.beginPath();
-          signCtx.rect(0, photoY, W, photoH);
-          signCtx.clip();
-          signCtx.drawImage(signBgImage, dx, dy, dw, dh);
-          signCtx.fillStyle = `rgba(10,10,10,${signOverlayOpacity * 0.6})`;
-          signCtx.fillRect(0, photoY, W, photoH);
-          signCtx.restore();
-        } else {
-          const grad = signCtx.createLinearGradient(0, photoY, 0, H);
-          grad.addColorStop(0, '#262422');
-          grad.addColorStop(1, '#15130f');
-          signCtx.fillStyle = grad;
-          signCtx.fillRect(0, photoY, W, photoH);
-        }
-
-        // QR card — centered in the space between the band and the CTA button
-        const qrSize = 460;
-        const cardPad = 32;
-        const scanLabelH = 70; // reserved space for the "Scan me" pill below the card
-        const ctaH = 108;
-        const ctaTopGap = 50; // gap between scan label and CTA button
-        const availTop = bandH + 50;
-        const availBottom = H - pad - ctaH - ctaTopGap;
-        const availHeight = availBottom - availTop;
-        const qrBlockHeight = qrSize + cardPad*2 + scanLabelH;
-        const qrX = (W - qrSize) / 2;
-        const qrY = availTop + (availHeight - qrBlockHeight) / 2 + cardPad;
-
-        drawQrInto(qrX, qrY, qrSize, cardPad);
-
-        // "Scan me" on a solid dark pill so it's always legible over the photo
-        const scanY = qrY + qrSize + cardPad + 44;
-        signCtx.font = '600 28px -apple-system, sans-serif';
-        const scanText = 'Scan me';
-        const scanTextW = signCtx.measureText(scanText).width;
-        const pillW = scanTextW + 56;
-        const pillH = 52;
-        signCtx.save();
-        signCtx.shadowColor = 'rgba(0,0,0,0.3)';
-        signCtx.shadowBlur = 14;
-        signCtx.shadowOffsetY = 4;
-        signCtx.fillStyle = 'rgba(20,18,15,0.88)';
-        signCtx.beginPath();
-        signCtx.roundRect(W/2 - pillW/2, scanY - pillH/2 - 6, pillW, pillH, pillH/2);
-        signCtx.fill();
-        signCtx.restore();
-        signCtx.fillStyle = '#ffffff';
-        signCtx.textAlign = 'center';
-        signCtx.textBaseline = 'middle';
-        signCtx.fillText(scanText, W/2, scanY - 6 + 2);
-        signCtx.textBaseline = 'alphabetic';
-
-        // CTA pill near the bottom
-        const ctaW = 400;
-        const ctaY = H - pad - ctaH;
-        const ctaX = (W - ctaW) / 2;
-        signCtx.save();
-        signCtx.shadowColor = 'rgba(0,0,0,0.45)';
-        signCtx.shadowBlur = 24;
-        signCtx.shadowOffsetY = 8;
-        signCtx.fillStyle = '#ffffff';
-        signCtx.beginPath();
-        signCtx.roundRect(ctaX, ctaY, ctaW, ctaH, 20);
-        signCtx.fill();
-        signCtx.restore();
-        signCtx.fillStyle = '#1a1a1a';
-        signCtx.font = '700 44px -apple-system, sans-serif';
-        signCtx.textAlign = 'center';
-        signCtx.textBaseline = 'middle';
-        signCtx.fillText('Get a quote \u2192', W/2, ctaY + ctaH/2 + 2);
-        signCtx.textBaseline = 'alphabetic';
-      }
-
-      function drawSign() {
-        // Sync the displayed canvas size to match orientation aspect ratio
-        const displayEl = signCanvas;
-        if (signOrientation === 'landscape') {
-          displayEl.style.width = '280px';
-          displayEl.style.height = '187px';
-          drawSignLandscape();
-        } else {
-          displayEl.style.width = '200px';
-          displayEl.style.height = '300px';
-          drawSignPortrait();
-        }
-      }
-
-      window._mqRedrawSign = () => { signLink = _mqCustomPostLink || defaultQuoteLink; drawSign(); };
-
-      drawSign();
-      loadQrLib().then(() => { drawSign(); });
-
-      const signHeadlineInput = el('mq-mk-sign-headline');
-      if (signHeadlineInput) {
-        signHeadlineInput.value = _mqSignHeadline || '';
-        signHeadlineInput.oninput = () => {
-          const val = signHeadlineInput.value.trim();
-          _mqSignHeadline = val;
-          signHeadline = val || 'Another project by';
-          drawSign();
-          saveHeadlinesDebounced(shopRecord);
-        };
-      }
-
-      const signFontSelect = el('mq-mk-sign-font');
-      if (signFontSelect) {
-        signFontSelect.onchange = () => {
-          signFontFamily = signFontSelect.value;
-          drawSign();
-        };
-      }
-
-      const signLetterSpacingSlider = el('mq-mk-sign-letter-spacing');
-      const signLetterSpacingVal = el('mq-mk-sign-letter-spacing-val');
-      if (signLetterSpacingSlider) {
-        signLetterSpacingSlider.oninput = () => {
-          signLetterSpacing = parseInt(signLetterSpacingSlider.value, 10);
-          if (signLetterSpacingVal) signLetterSpacingVal.textContent = signLetterSpacing + 'px';
-          drawSign();
-        };
-      }
-
-      const signColorInput = el('mq-mk-sign-color');
-      const signColorResetBtn = el('mq-mk-sign-color-reset');
-      if (signColorInput) {
-        signColorInput.value = signCustomColor || brandColor2;
-        signColorInput.oninput = () => {
-          signCustomColor = signColorInput.value;
-          _mqSignCustomColor = signCustomColor;
-          drawSign();
-          saveHeadlinesDebounced(shopRecord);
-        };
-      }
-      if (signColorResetBtn) {
-        signColorResetBtn.onclick = () => {
-          signCustomColor = '';
-          _mqSignCustomColor = '';
-          if (signColorInput) signColorInput.value = brandColor2;
-          drawSign();
-          saveHeadlinesDebounced(shopRecord);
-        };
-      }
-
-      const orientPortraitBtn = el('mq-mk-sign-orient-portrait');
-      const orientLandscapeBtn = el('mq-mk-sign-orient-landscape');
-      function setOrientButtons() {
-        if (orientPortraitBtn) {
-          orientPortraitBtn.style.background = signOrientation === 'portrait' ? '#1a1a1a' : '';
-          orientPortraitBtn.style.color = signOrientation === 'portrait' ? '#fff' : '';
-          orientPortraitBtn.style.borderColor = signOrientation === 'portrait' ? '#1a1a1a' : '';
-        }
-        if (orientLandscapeBtn) {
-          orientLandscapeBtn.style.background = signOrientation === 'landscape' ? '#1a1a1a' : '';
-          orientLandscapeBtn.style.color = signOrientation === 'landscape' ? '#fff' : '';
-          orientLandscapeBtn.style.borderColor = signOrientation === 'landscape' ? '#1a1a1a' : '';
-        }
-      }
-      if (orientPortraitBtn) {
-        orientPortraitBtn.onclick = () => { signOrientation = 'portrait'; setOrientButtons(); drawSign(); };
-      }
-      if (orientLandscapeBtn) {
-        orientLandscapeBtn.onclick = () => { signOrientation = 'landscape'; setOrientButtons(); drawSign(); };
-      }
-
-      const signBgPhotoInput = el('mq-mk-sign-bg-photo');
-      const signOverlayRow = el('mq-mk-sign-overlay-row');
-      const signOverlaySlider = el('mq-mk-sign-overlay-slider');
-      const signOverlayVal = el('mq-mk-sign-overlay-val');
-      const signDownloadBtn = el('mq-mk-sign-download-btn');
-      const signBgRemoveBtn = el('mq-mk-sign-bg-remove');
-
-      if (signBgImage && signOverlayRow) {
-        signOverlayRow.style.display = 'flex';
-        if (signOverlaySlider) signOverlaySlider.value = Math.round(signOverlayOpacity * 100);
-        if (signOverlayVal) signOverlayVal.textContent = Math.round(signOverlayOpacity * 100) + '%';
-      }
-
-      if (signBgPhotoInput) {
-        signBgPhotoInput.onchange = (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-              signBgImage = img;
-              _mqSignBgImage = img;
-              drawSign();
-              if (signOverlayRow) signOverlayRow.style.display = 'flex';
-            };
-            img.src = ev.target.result;
+        function pdGetTextControls() {
+          return {
+            preMult: (parseInt(el('mq-pd-size-pre')?.value,10)||100)/100,
+            nameMult: (parseInt(el('mq-pd-size-name')?.value,10)||100)/100,
+            tagMult: (parseInt(el('mq-pd-size-tag')?.value,10)||100)/100,
+            lineMult: (parseInt(el('mq-pd-line-spacing')?.value,10)||100)/100,
+            offsetPct: (parseInt(el('mq-pd-text-offset')?.value,10)||0)/100,
+            preText: el('mq-pd-pre-text')?.value || 'Another project by',
+            preColor: el('mq-pd-pre-color')?.value || '#6b6b6b',
+            tagColor: el('mq-pd-tag-color')?.value || '#4b4b4b'
           };
-          reader.readAsDataURL(file);
-        };
-      }
+        }
 
-      if (signOverlaySlider) {
-        signOverlaySlider.oninput = () => {
-          signOverlayOpacity = parseInt(signOverlaySlider.value, 10) / 100;
-          _mqSignOverlayOpacity = signOverlayOpacity;
-          if (signOverlayVal) signOverlayVal.textContent = signOverlaySlider.value + '%';
-          drawSign();
-        };
-      }
+        // Reads the shared QR-code/quote-button settings once per draw.
+        function pdGetQrButtonSettings() {
+          return {
+            qrEnabled: el('mq-pd-qr-enabled')?.checked || false,
+            qrSizeMult: (parseInt(el('mq-pd-qr-size')?.value,10)||100)/100,
+            qrOffsetPct: (parseInt(el('mq-pd-qr-position')?.value,10)||0)/100,
+            btnEnabled: el('mq-pd-btn-enabled')?.checked || false,
+            btnOffsetPct: (parseInt(el('mq-pd-btn-position')?.value,10)||0)/100
+          };
+        }
 
-      if (signBgRemoveBtn) {
-        signBgRemoveBtn.onclick = () => {
-          signBgImage = null;
-          _mqSignBgImage = null;
-          if (signBgPhotoInput) signBgPhotoInput.value = '';
-          if (signOverlayRow) signOverlayRow.style.display = 'none';
-          drawSign();
-        };
-      }
-
-      if (signDownloadBtn) {
-        signDownloadBtn.onclick = () => {
-          if (!signLink) {
-            alert('Please add a link in the "Social media posts" section above first.');
-            return;
-          }
-          const link = document.createElement('a');
-          link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'job-site') + '-' + signOrientation + '-sign.png';
-          link.href = signCanvas.toDataURL('image/png');
-          link.click();
-        };
-      }
-
-      const qrOnlyDownloadBtn = el('mq-mk-qr-only-download-btn');
-      if (qrOnlyDownloadBtn) {
-        qrOnlyDownloadBtn.onclick = () => {
-          if (!signLink) {
-            alert('Please add a link in the "Social media posts" section above first.');
-            return;
-          }
-          if (!window.mqQrGen) {
-            alert('QR code is still loading — please try again in a moment.');
-            return;
-          }
+        // Draws a QR code centered at (cx, cy) — a white rounded card with a
+        // subtle shadow, same look as the existing yard sign's QR code.
+        // Silently does nothing if there's no quote link yet or the QR
+        // library hasn't loaded, same fallback used elsewhere.
+        function pdDrawQrCode(cx, cy, size) {
+          if (!signLink || !window.mqQrGen) return;
           try {
-            const size = 800;
-            const cardPad = 40;
-            const qrCanvasOnly = document.createElement('canvas');
-            qrCanvasOnly.width = size + cardPad*2;
-            qrCanvasOnly.height = size + cardPad*2;
-            const octx = qrCanvasOnly.getContext('2d');
-
-            // White background with rounded corners and a thin brand-colour ring
-            octx.fillStyle = '#ffffff';
-            octx.beginPath();
-            octx.roundRect(0, 0, qrCanvasOnly.width, qrCanvasOnly.height, 28);
-            octx.fill();
-            octx.strokeStyle = brandColor2;
-            octx.lineWidth = 5;
-            octx.beginPath();
-            octx.roundRect(10, 10, qrCanvasOnly.width - 20, qrCanvasOnly.height - 20, 22);
-            octx.stroke();
-
             const qr = window.mqQrGen(0, 'M');
             qr.addData(signLink);
             qr.make();
             const count = qr.getModuleCount();
+            const cardPad = size * 0.09;
+            const x = cx - size/2, y = cy - size/2;
             const cell = size / count;
-            octx.fillStyle = '#1a1a1a';
+
+            pdCtx.save();
+            pdCtx.shadowColor = 'rgba(0,0,0,0.35)';
+            pdCtx.shadowBlur = 22;
+            pdCtx.shadowOffsetY = 6;
+            pdCtx.fillStyle = '#ffffff';
+            pdCtx.beginPath();
+            pdCtx.roundRect(x - cardPad, y - cardPad, size + cardPad*2, size + cardPad*2, 16);
+            pdCtx.fill();
+            pdCtx.restore();
+
+            pdCtx.fillStyle = '#1a1a1a';
             for (let row = 0; row < count; row++) {
               for (let col = 0; col < count; col++) {
-                if (qr.isDark(row, col)) {
-                  octx.fillRect(cardPad + col*cell, cardPad + row*cell, cell+0.5, cell+0.5);
-                }
+                if (qr.isDark(row, col)) pdCtx.fillRect(x + col*cell, y + row*cell, cell+0.5, cell+0.5);
               }
             }
+          } catch(e) {}
+        }
 
-            const link = document.createElement('a');
-            link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'quote') + '-qr-code.png';
-            link.href = qrCanvasOnly.toDataURL('image/png');
-            link.click();
+        // Draws a rounded "Get a Free Quote" pill button centered at (cx, cy).
+        // Fills the whole canvas background — an uploaded image if the shop
+        // turned that on, otherwise whatever solid colour or gradient the
+        // colour pickers are set to. Centralized here since several
+        // templates need the exact same background-fill behavior.
+        function pdFillBackground(W, H, bgColor, bgColor2, bgGradient) {
+          const useImage = el('mq-pd-bg-image-enabled')?.checked && pdBgImage;
+          if (useImage) {
+            pdDrawPhotoInRect(pdBgImage, 0, 0, W, H);
+            // Optional colour overlay so text stays readable on busy
+            // textures/photos — any colour, not just black or white.
+            const overlayOpacity = (parseInt(el('mq-pd-bg-overlay-opacity')?.value,10)||0)/100;
+            if (overlayOpacity > 0) {
+              const overlayColor = el('mq-pd-bg-overlay-color')?.value || '#000000';
+              const hex = overlayColor.replace('#','');
+              const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+              pdCtx.fillStyle = `rgba(${r},${g},${b},${overlayOpacity})`;
+              pdCtx.fillRect(0, 0, W, H);
+            }
+            return;
+          }
+          if (bgGradient) {
+            const isPortrait = pdOrientation === 'portrait';
+            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
+            g.addColorStop(0, bgColor); g.addColorStop(1, bgColor2);
+            pdCtx.fillStyle = g;
+          } else {
+            pdCtx.fillStyle = bgColor;
+          }
+          pdCtx.fillRect(0, 0, W, H);
+        }
+
+        function pdDrawGetQuoteButton(cx, cy, color) {
+          const w = 340, h = 84;
+          pdCtx.save();
+          pdCtx.shadowColor = 'rgba(0,0,0,0.3)';
+          pdCtx.shadowBlur = 16;
+          pdCtx.shadowOffsetY = 4;
+          pdCtx.fillStyle = color;
+          pdCtx.beginPath();
+          pdCtx.roundRect(cx - w/2, cy - h/2, w, h, h/2);
+          pdCtx.fill();
+          pdCtx.restore();
+          pdCtx.fillStyle = pdMutedTextColorFor(color) === '#5b5b5b' ? '#1a1a1a' : '#ffffff';
+          pdCtx.font = '700 34px -apple-system, sans-serif';
+          pdCtx.textAlign = 'center'; pdCtx.textBaseline = 'middle';
+          pdCtx.fillText('Get a Free Quote', cx, cy + 2);
+          pdCtx.textBaseline = 'alphabetic';
+        }
+
+        function pdShade(hex, percent) {
+          try {
+            hex = hex.replace('#','');
+            let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+            const amt = Math.round(2.55 * percent);
+            r = Math.max(0, Math.min(255, r + amt)); g = Math.max(0, Math.min(255, g + amt)); b = Math.max(0, Math.min(255, b + amt));
+            return `rgb(${r},${g},${b})`;
+          } catch(e) { return hex; }
+        }
+
+        // Picks a readable dark or light grey for secondary text based on
+        // how light or dark the chosen background actually is — since a
+        // hardcoded grey tuned for white would disappear on a dark
+        // background someone picks, and vice versa.
+        function pdMutedTextColorFor(hex) {
+          try {
+            hex = hex.replace('#','');
+            const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.55 ? '#5b5b5b' : '#d4d4d4';
+          } catch(e) { return '#6b6b6b'; }
+        }
+
+        function pdDrawPhotoInRect(img, x, y, w, h) {
+          if (!img) {
+            pdCtx.fillStyle = '#e5e7eb';
+            pdCtx.fillRect(x, y, w, h);
+            pdCtx.fillStyle = '#9ca3af';
+            pdCtx.font = '500 32px -apple-system, sans-serif';
+            pdCtx.textAlign = 'center';
+            pdCtx.textBaseline = 'middle';
+            pdCtx.fillText('Upload a photo above', x + w/2, y + h/2);
+            pdCtx.textBaseline = 'alphabetic';
+            return;
+          }
+          const imgRatio = img.width / img.height;
+          const areaRatio = w / h;
+          let dw, dh, dx, dy;
+          if (imgRatio > areaRatio) { dh = h; dw = h * imgRatio; dx = x - (dw - w)/2; dy = y; }
+          else { dw = w; dh = w / imgRatio; dx = x; dy = y - (dh - h)/2; }
+          pdCtx.drawImage(img, dx, dy, dw, dh);
+        }
+
+        function drawCurvedSplit() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
+          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -30);
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const bgColor = el('mq-pd-bg-color')?.value || '#ffffff';
+          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -25);
+          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
+          const bandHalf = isPortrait ? H*0.014 : W*0.010;
+          const tc = pdGetTextControls();
+
+          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
+
+          // Photo zone, clipped to the curve
+          pdCtx.save();
+          pdCtx.beginPath();
+          if (isPortrait) {
+            const splitY = H * 0.46;
+            pdCtx.moveTo(0, splitY);
+            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07, W*0.65, splitY + H*0.07, W, splitY);
+            pdCtx.lineTo(W, H); pdCtx.lineTo(0, H); pdCtx.closePath();
+          } else {
+            const splitX = W * 0.42;
+            pdCtx.moveTo(splitX, 0);
+            pdCtx.bezierCurveTo(splitX - W*0.06, H*0.35, splitX + W*0.06, H*0.65, splitX, H);
+            pdCtx.lineTo(W, H); pdCtx.lineTo(W, 0); pdCtx.closePath();
+          }
+          pdCtx.clip();
+          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.32, W, H*0.74);
+          else pdDrawPhotoInRect(pdPhotoImage, W*0.28, 0, W*0.75, H);
+          pdCtx.restore();
+
+          // The customizable colored "shape" — a filled curved ribbon
+          // sitting right along the boundary between the text panel and the
+          // photo, solid or gradient depending on the controls above.
+          pdCtx.save();
+          pdCtx.beginPath();
+          if (isPortrait) {
+            const splitY = H * 0.46;
+            pdCtx.moveTo(0, splitY - bandHalf);
+            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07 - bandHalf, W*0.65, splitY + H*0.07 - bandHalf, W, splitY - bandHalf);
+            pdCtx.lineTo(W, splitY + bandHalf);
+            pdCtx.bezierCurveTo(W*0.65, splitY + H*0.07 + bandHalf, W*0.35, splitY - H*0.07 + bandHalf, 0, splitY + bandHalf);
+            pdCtx.closePath();
+          } else {
+            const splitX = W * 0.42;
+            pdCtx.moveTo(splitX - bandHalf, 0);
+            pdCtx.bezierCurveTo(splitX - W*0.06 - bandHalf, H*0.35, splitX + W*0.06 - bandHalf, H*0.65, splitX - bandHalf, H);
+            pdCtx.lineTo(splitX + bandHalf, H);
+            pdCtx.bezierCurveTo(splitX + W*0.06 + bandHalf, H*0.65, splitX - W*0.06 + bandHalf, H*0.35, splitX + bandHalf, 0);
+            pdCtx.closePath();
+          }
+          if (useGradient) {
+            const grad = isPortrait
+              ? pdCtx.createLinearGradient(0, H*0.35, 0, H*0.58)
+              : pdCtx.createLinearGradient(W*0.30, 0, W*0.54, 0);
+            grad.addColorStop(0, shapeColor);
+            grad.addColorStop(1, shapeColor2);
+            pdCtx.fillStyle = grad;
+          } else {
+            pdCtx.fillStyle = shapeColor;
+          }
+          pdCtx.fill();
+          pdCtx.restore();
+
+          // Thin accent line right along the outer edge of that ribbon
+          pdCtx.save();
+          pdCtx.strokeStyle = accentColor;
+          pdCtx.lineWidth = 5;
+          pdCtx.beginPath();
+          if (isPortrait) {
+            const splitY = H * 0.46;
+            pdCtx.moveTo(0, splitY - bandHalf);
+            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07 - bandHalf, W*0.65, splitY + H*0.07 - bandHalf, W, splitY - bandHalf);
+          } else {
+            const splitX = W * 0.42;
+            pdCtx.moveTo(splitX - bandHalf, 0);
+            pdCtx.bezierCurveTo(splitX - W*0.06 - bandHalf, H*0.35, splitX + W*0.06 - bandHalf, H*0.65, splitX - bandHalf, H);
+          }
+          pdCtx.stroke();
+          pdCtx.restore();
+
+          // Text / logo panel
+          pdCtx.textAlign = 'center';
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
+            const maxLogoW = (isPortrait ? W*0.55 : W*0.30) * logoSizeMult;
+            const maxLogoH = (isPortrait ? H*0.30 : H*0.5) * logoSizeMult;
+            const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw / logoRatio;
+            if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
+            const lx = isPortrait ? (W - lw)/2 : (W*0.42 - lw)/2 - W*0.02;
+            const ly = isPortrait ? (H*0.46 - lh)/2 + H*0.02 : (H - lh)/2;
+            pdCtx.drawImage(pdOwnLogoImage, lx, ly, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = '#9ca3af';
+            pdCtx.font = '500 32px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.21, isPortrait ? H*0.24 : H*0.5);
+          } else {
+            pdSetTextShadow();
+            const preFont = `500 ${Math.round((isPortrait?38:34)*tc.preMult)}px Georgia, serif`;
+            const nameFont = `800 ${Math.round((isPortrait?76:64)*tc.nameMult)}px -apple-system, sans-serif`;
+            const tagFont = `500 ${Math.round((isPortrait?32:28)*tc.tagMult)}px -apple-system, sans-serif`;
+            const centerX = isPortrait ? W/2 : W*0.21;
+            let cy = (isPortrait ? H*0.12 : H*0.26) + tc.offsetPct * H;
+
+            pdCtx.font = preFont;
+            pdCtx.fillStyle = tc.preColor;
+            pdCtx.fillText(tc.preText, centerX, cy);
+            // Deliberately generous gap here — this was the "too congested"
+            // spot, sitting right between the small intro line and the big
+            // shop name below it.
+            cy += (isPortrait ? 130 : 110) * tc.lineMult;
+
+            pdCtx.font = nameFont;
+            pdCtx.fillStyle = shapeColor;
+            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.36);
+            nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?86:72) * tc.lineMult; });
+
+            if (tagline) {
+              cy += (isPortrait ? 34 : 24) * tc.lineMult;
+              pdCtx.font = tagFont;
+              pdCtx.fillStyle = tc.tagColor;
+              const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.34);
+              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?58:50) * tc.lineMult; });
+            }
+          }
+
+          // Optional QR code + "Get a Free Quote" button, centered in the
+          // photo area — both independently toggleable, off by default.
+          pdClearShadow();
+          const qb = pdGetQrButtonSettings();
+          const photoCx = isPortrait ? W/2 : W*0.28 + (W*0.75)/2;
+          const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
+          if (qb.qrEnabled) {
+            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90 + qb.btnOffsetPct * H, shapeColor);
+          }
+        }
+
+        function drawDiamondArrow() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const accentColor2 = el('mq-pd-shape-color2')?.value || pdShade(accentColor, -35);
+          const bgColor = el('mq-pd-bg-color')?.value || '#111111';
+          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -25);
+          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
+          const tc = pdGetTextControls();
+
+          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
+
+          // Photo zone, clipped to an angular arrow-point boundary instead
+          // of a curve.
+          pdCtx.save();
+          pdCtx.beginPath();
+          if (isPortrait) {
+            const splitY = H * 0.46, pointDepth = H * 0.05;
+            pdCtx.moveTo(0, splitY + pointDepth);
+            pdCtx.lineTo(W*0.5, splitY - pointDepth);
+            pdCtx.lineTo(W, splitY + pointDepth);
+            pdCtx.lineTo(W, H); pdCtx.lineTo(0, H); pdCtx.closePath();
+          } else {
+            const splitX = W * 0.44, pointDepth = W * 0.05;
+            pdCtx.moveTo(splitX + pointDepth, 0);
+            pdCtx.lineTo(splitX - pointDepth, H*0.5);
+            pdCtx.lineTo(splitX + pointDepth, H);
+            pdCtx.lineTo(W, H); pdCtx.lineTo(W, 0); pdCtx.closePath();
+          }
+          pdCtx.clip();
+          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.32, W, H*0.74);
+          else pdDrawPhotoInRect(pdPhotoImage, W*0.30, 0, W*0.75, H);
+          pdCtx.restore();
+
+          // Coloured accent stripe right along the point, plus a second
+          // thinner line for depth — the customizable "shape" element here.
+          pdCtx.save();
+          pdCtx.beginPath();
+          if (isPortrait) {
+            const splitY = H * 0.46, pointDepth = H * 0.05, stripeW = H*0.012;
+            pdCtx.moveTo(0, splitY + pointDepth - stripeW);
+            pdCtx.lineTo(W*0.5, splitY - pointDepth - stripeW);
+            pdCtx.lineTo(W, splitY + pointDepth - stripeW);
+            pdCtx.lineTo(W, splitY + pointDepth + stripeW);
+            pdCtx.lineTo(W*0.5, splitY - pointDepth + stripeW);
+            pdCtx.lineTo(0, splitY + pointDepth + stripeW);
+            pdCtx.closePath();
+          } else {
+            const splitX = W * 0.44, pointDepth = W * 0.05, stripeW = W*0.009;
+            pdCtx.moveTo(splitX + pointDepth - stripeW, 0);
+            pdCtx.lineTo(splitX - pointDepth - stripeW, H*0.5);
+            pdCtx.lineTo(splitX + pointDepth - stripeW, H);
+            pdCtx.lineTo(splitX + pointDepth + stripeW, H);
+            pdCtx.lineTo(splitX - pointDepth + stripeW, H*0.5);
+            pdCtx.lineTo(splitX + pointDepth + stripeW, 0);
+            pdCtx.closePath();
+          }
+          if (useGradient) {
+            const grad = isPortrait
+              ? pdCtx.createLinearGradient(0, H*0.35, 0, H*0.58)
+              : pdCtx.createLinearGradient(W*0.34, 0, W*0.56, 0);
+            grad.addColorStop(0, accentColor);
+            grad.addColorStop(1, accentColor2);
+            pdCtx.fillStyle = grad;
+          } else {
+            pdCtx.fillStyle = accentColor;
+          }
+          pdCtx.fill();
+          pdCtx.restore();
+
+          // Text / logo panel
+          pdCtx.textAlign = 'center';
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
+            const maxLogoW = (isPortrait ? W*0.55 : W*0.30) * logoSizeMult;
+            const maxLogoH = (isPortrait ? H*0.30 : H*0.5) * logoSizeMult;
+            const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw / logoRatio;
+            if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
+            const lx = isPortrait ? (W - lw)/2 : (W*0.44 - lw)/2;
+            const ly = isPortrait ? (H*0.46 - lh)/2 : (H - lh)/2;
+            pdCtx.drawImage(pdOwnLogoImage, lx, ly, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = '#6b6b6b';
+            pdCtx.font = '500 32px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.22, isPortrait ? H*0.24 : H*0.5);
+          } else {
+            pdSetTextShadow();
+            const preFont = `italic 500 ${Math.round((isPortrait?38:34)*tc.preMult)}px Georgia, serif`;
+            const nameFont = `800 ${Math.round((isPortrait?72:60)*tc.nameMult)}px -apple-system, sans-serif`;
+            const tagFont = `500 ${Math.round((isPortrait?32:28)*tc.tagMult)}px -apple-system, sans-serif`;
+            const centerX = isPortrait ? W/2 : W*0.22;
+            let cy = (isPortrait ? H*0.12 : H*0.26) + tc.offsetPct * H;
+
+            pdCtx.font = preFont;
+            pdCtx.fillStyle = tc.preColor;
+            pdCtx.fillText(tc.preText, centerX, cy);
+            cy += (isPortrait ? 130 : 110) * tc.lineMult;
+
+            pdCtx.font = nameFont;
+            pdCtx.fillStyle = shapeColor;
+            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.38);
+            nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?82:68) * tc.lineMult; });
+
+            if (tagline) {
+              cy += (isPortrait ? 34 : 24) * tc.lineMult;
+              pdCtx.font = tagFont;
+              pdCtx.fillStyle = tc.tagColor;
+              const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.36);
+              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?58:50) * tc.lineMult; });
+            }
+          }
+
+          pdClearShadow();
+          const qb = pdGetQrButtonSettings();
+          const photoCx = isPortrait ? W/2 : W*0.30 + (W*0.75)/2;
+          const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
+          if (qb.qrEnabled) {
+            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90 + qb.btnOffsetPct * H, shapeColor);
+          }
+        }
+
+        function drawOrnateDivider() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#8a5a3a';
+          const accentColor = el('mq-pd-accent-color')?.value || '#8a5a3a';
+          const bgColor = el('mq-pd-bg-color')?.value || '#ffffff';
+          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -20);
+          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
+          const tc = pdGetTextControls();
+
+          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
+
+          // Photo sits in a simple rounded panel, not a curve/angle — this
+          // template's character comes from the ornate line-and-diamond
+          // dividers around the text instead of the shape boundary itself.
+          const photoY = isPortrait ? H*0.50 : 0;
+          const photoX = isPortrait ? 0 : W*0.48;
+          const photoW = isPortrait ? W : W*0.52;
+          const photoH = isPortrait ? H*0.50 : H;
+          pdCtx.save();
+          pdCtx.beginPath();
+          pdCtx.rect(photoX, photoY, photoW, photoH);
+          pdCtx.clip();
+          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
+          pdCtx.restore();
+
+          pdCtx.textAlign = 'center';
+          const centerX = isPortrait ? W/2 : W*0.24;
+          const textTop = isPortrait ? H*0.10 : H*0.14;
+          const dividerW = isPortrait ? W*0.28 : W*0.16;
+
+          function ornateDivider(y) {
+            pdCtx.strokeStyle = accentColor;
+            pdCtx.lineWidth = 3;
+            pdCtx.beginPath();
+            pdCtx.moveTo(centerX - dividerW, y); pdCtx.lineTo(centerX - 14, y);
+            pdCtx.moveTo(centerX + 14, y); pdCtx.lineTo(centerX + dividerW, y);
+            pdCtx.stroke();
+            pdCtx.save();
+            pdCtx.translate(centerX, y);
+            pdCtx.rotate(Math.PI/4);
+            pdCtx.fillStyle = accentColor;
+            pdCtx.fillRect(-7, -7, 14, 14);
+            pdCtx.restore();
+          }
+
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
+            const maxLogoW = (isPortrait ? W*0.55 : W*0.34) * logoSizeMult, maxLogoH = (isPortrait ? H*0.32 : H*0.5) * logoSizeMult;
+            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw/ratio;
+            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
+            pdCtx.drawImage(pdOwnLogoImage, centerX - lw/2, textTop, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = '#9ca3af';
+            pdCtx.font = '500 30px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', centerX, textTop + 40);
+          } else {
+            pdSetTextShadow();
+            const preFont = `500 ${Math.round((isPortrait?34:30)*tc.preMult)}px -apple-system, sans-serif`;
+            const nameFont = `700 ${Math.round((isPortrait?66:54)*tc.nameMult)}px Georgia, serif`;
+            const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
+            let cy = textTop + tc.offsetPct * H;
+
+            ornateDivider(cy); cy += (isPortrait ? 60 : 50) * tc.lineMult;
+            pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
+            pdCtx.fillText(tc.preText, centerX, cy); cy += (isPortrait ? 90 : 76) * tc.lineMult;
+
+            pdCtx.font = nameFont; pdCtx.fillStyle = shapeColor;
+            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.36);
+            nameLines.forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?74:62) * tc.lineMult; });
+            cy += (isPortrait ? 20 : 14) * tc.lineMult;
+            ornateDivider(cy); cy += (isPortrait ? 50 : 42) * tc.lineMult;
+
+            if (tagline) {
+              pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?54:46) * tc.lineMult; });
+            }
+          }
+
+          pdClearShadow();
+          const qb = pdGetQrButtonSettings();
+          const photoCx = photoX + photoW/2, photoCy = photoY + photoH/2;
+          if (qb.qrEnabled) {
+            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 240 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(photoCx, photoY + photoH - 90 + qb.btnOffsetPct * H, shapeColor);
+          }
+        }
+
+        function drawCircularBadge() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const badgeText = (el('mq-pd-badge-text')?.value || '').trim();
+          const shapeColor = el('mq-pd-shape-color')?.value || '#c9a24b';
+          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -30);
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const bgColor = el('mq-pd-bg-color')?.value || '#1a1a1a';
+          const tc = pdGetTextControls();
+
+          // Photo fills the whole canvas here, darkened for legibility —
+          // the badge and text sit right on top of it.
+          pdDrawPhotoInRect(pdPhotoImage, 0, 0, W, H);
+          pdCtx.globalAlpha = 0.55;
+          pdCtx.fillStyle = bgColor;
+          pdCtx.fillRect(0, 0, W, H);
+          pdCtx.globalAlpha = 1;
+
+          const cx = W/2, cy = H*0.42, r = Math.min(W,H) * 0.20;
+          pdCtx.save();
+          pdCtx.beginPath();
+          pdCtx.arc(cx, cy, r, 0, Math.PI*2);
+          pdCtx.clip();
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            pdDrawPhotoInRect(pdOwnLogoImage, cx-r, cy-r, r*2, r*2);
+          } else {
+            pdCtx.fillStyle = '#1a1a1a';
+            pdCtx.fillRect(cx-r, cy-r, r*2, r*2);
+            pdCtx.fillStyle = shapeColor;
+            // Badge text is independent of the shop name — type anything
+            // (initials, a symbol, whatever) via the "Badge text" field
+            // above, or leave it blank to fall back to auto-initials.
+            const displayText = badgeText || (pdShopName.match(/\b\w/g) || ['D']).slice(0,2).join('').toUpperCase();
+            pdCtx.font = `800 ${Math.round(r*0.9*tc.nameMult)}px -apple-system, sans-serif`;
+            pdCtx.textAlign = 'center'; pdCtx.textBaseline = 'middle';
+            pdCtx.fillText(displayText, cx, cy + r*0.08);
+            pdCtx.textBaseline = 'alphabetic';
+          }
+          pdCtx.restore();
+
+          pdCtx.save();
+          pdCtx.beginPath();
+          pdCtx.arc(cx, cy, r, 0, Math.PI*2);
+          pdCtx.lineWidth = 6;
+          if (useGradient) {
+            const g = pdCtx.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
+            g.addColorStop(0, shapeColor); g.addColorStop(1, shapeColor2);
+            pdCtx.strokeStyle = g;
+          } else pdCtx.strokeStyle = shapeColor;
+          pdCtx.stroke();
+          pdCtx.restore();
+
+          pdCtx.textAlign = 'center';
+          pdSetTextShadow();
+          const preFont = `500 ${Math.round(30*tc.preMult)}px -apple-system, sans-serif`;
+          const nameFont = `800 ${Math.round(52*tc.nameMult)}px -apple-system, sans-serif`;
+          const tagFont = `500 ${Math.round(24*tc.tagMult)}px -apple-system, sans-serif`;
+          let ty = cy + r + 70 + tc.offsetPct * H;
+          pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
+          pdCtx.fillText(tc.preText, cx, ty); ty += 58 * tc.lineMult;
+          pdCtx.font = nameFont; pdCtx.fillStyle = '#ffffff';
+          pdWrapText(pdShopName, nameFont, W*0.85).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 58 * tc.lineMult; });
+          if (tagline) {
+            ty += 14 * tc.lineMult;
+            pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
+            pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 46 * tc.lineMult; });
+          }
+
+          pdClearShadow();
+          const qb = pdGetQrButtonSettings();
+          if (qb.qrEnabled) {
+            pdDrawQrCode(cx, ty + 130 + qb.qrOffsetPct * H, 220 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(cx, H - 90 + qb.btnOffsetPct * H, shapeColor);
+          }
+        }
+
+        function drawBoldModern() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
+          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -35);
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const tc = pdGetTextControls();
+
+          // A hard, flat rectangular split — no curve or angle at all. This
+          // template's identity is bold, uncluttered geometry instead.
+          const splitAt = isPortrait ? H*0.58 : W*0.46;
+          if (useGradient) {
+            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,splitAt) : pdCtx.createLinearGradient(0,0,splitAt,0);
+            g.addColorStop(0, shapeColor); g.addColorStop(1, shapeColor2);
+            pdCtx.fillStyle = g;
+          } else pdCtx.fillStyle = shapeColor;
+          if (isPortrait) pdCtx.fillRect(0, 0, W, splitAt); else pdCtx.fillRect(0, 0, splitAt, H);
+
+          // Clip the photo to its own half of the canvas before drawing —
+          // pdDrawPhotoInRect deliberately overflows to "cover" its target
+          // box (same idea as CSS background-size:cover), which every other
+          // template already contains with its own clip path. This was the
+          // one template drawing the photo with no clip at all, so that
+          // intentional overflow was free to bleed straight into the
+          // colour panel next to it.
+          pdCtx.save();
+          pdCtx.beginPath();
+          if (isPortrait) pdCtx.rect(0, splitAt, W, H - splitAt);
+          else pdCtx.rect(splitAt, 0, W - splitAt, H);
+          pdCtx.clip();
+          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, splitAt, W, H - splitAt);
+          else pdDrawPhotoInRect(pdPhotoImage, splitAt, 0, W - splitAt, H);
+          pdCtx.restore();
+
+          pdCtx.fillStyle = accentColor;
+          if (isPortrait) pdCtx.fillRect(0, splitAt - 3, W, 6); else pdCtx.fillRect(splitAt - 3, 0, 6, H);
+
+          pdCtx.textAlign = 'center';
+          const centerX = isPortrait ? W/2 : W*0.20;
+          const textColor = pdMutedTextColorFor(shapeColor) === '#5b5b5b' ? '#1a1a1a' : '#ffffff';
+          const mutedColor = textColor === '#ffffff' ? '#d0d0d0' : '#555555';
+
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
+            const maxLogoW = (isPortrait ? W*0.55 : splitAt*0.75) * logoSizeMult, maxLogoH = (isPortrait ? splitAt*0.6 : H*0.5) * logoSizeMult;
+            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw/ratio;
+            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
+            pdCtx.drawImage(pdOwnLogoImage, centerX-lw/2, (isPortrait?splitAt:H)/2 - lh/2, lw, lh);
+          } else if (textMode === 'logo') {
+            pdCtx.fillStyle = mutedColor;
+            pdCtx.font = '500 28px -apple-system, sans-serif';
+            pdCtx.fillText('Upload a logo above', centerX, isPortrait ? splitAt/2 : H/2);
+          } else {
+            pdSetTextShadow();
+            const preFont = `700 ${Math.round((isPortrait?32:28)*tc.preMult)}px -apple-system, sans-serif`;
+            const nameFont = `900 ${Math.round((isPortrait?70:56)*tc.nameMult)}px -apple-system, sans-serif`;
+            const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
+            let cy = (isPortrait ? splitAt*0.26 : H*0.30) + tc.offsetPct * H;
+            pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
+            pdCtx.fillText(tc.preText.toUpperCase(), centerX, cy); cy += (isPortrait?66:56) * tc.lineMult;
+            pdCtx.font = nameFont; pdCtx.fillStyle = textColor;
+            pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : splitAt*0.85).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?76:64) * tc.lineMult; });
+            if (tagline) {
+              cy += (isPortrait ? 20 : 14) * tc.lineMult;
+              pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?50:44) * tc.lineMult; });
+            }
+          }
+
+          pdClearShadow();
+          const qb = pdGetQrButtonSettings();
+          const photoCx = isPortrait ? W/2 : splitAt + (W-splitAt)/2;
+          const photoCy = isPortrait ? splitAt + (H-splitAt)/2 : H/2;
+          if (qb.qrEnabled) {
+            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 250 * qb.qrSizeMult);
+          }
+          if (qb.btnEnabled) {
+            pdDrawGetQuoteButton(photoCx, H - 90 + qb.btnOffsetPct * H, shapeColor);
+          }
+        }
+
+        function drawPosterDesigner() {
+          if (pdTemplate === 'diamond-arrow') drawDiamondArrow();
+          else if (pdTemplate === 'ornate-divider') drawOrnateDivider();
+          else if (pdTemplate === 'circular-badge') drawCircularBadge();
+          else if (pdTemplate === 'bold-modern') drawBoldModern();
+          else drawCurvedSplit();
+        }
+        window._mqRedrawPosterDesigner = drawPosterDesigner;
+
+        window.mqPdSelectTemplate = (tpl, thumbEl) => {
+          pdTemplate = tpl;
+          document.querySelectorAll('.mq-pd-template-thumb').forEach(t => t.style.border = '2px solid #e5e7eb');
+          if (thumbEl) thumbEl.style.border = '2px solid #1a1a1a';
+          // A sensible starting background per style — still fully editable
+          // afterward, this just saves someone from starting on a white
+          // background for a template designed to look best dark, or vice versa.
+          const bgInput = el('mq-pd-bg-color');
+          const bgInput2 = el('mq-pd-bg-color2');
+          const shapeInput = el('mq-pd-shape-color');
+          const shapeInput2 = el('mq-pd-shape-color2');
+          const accentInput = el('mq-pd-accent-color');
+          if (bgInput) {
+            if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput.value = '#111111';
+            else bgInput.value = '#ffffff';
+          }
+          // A second colour for whichever gradient checkbox someone turns
+          // on — chosen to actually look like a deliberate two-tone blend
+          // for this specific style, not just a random pairing.
+          if (bgInput2) {
+            if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput2.value = '#2b2b2b';
+            else bgInput2.value = '#f0f0f0';
+          }
+          if (shapeInput && accentInput) {
+            if (tpl === 'diamond-arrow') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
+            else if (tpl === 'ornate-divider') { shapeInput.value = '#6b4226'; accentInput.value = '#8a5a3a'; }
+            else if (tpl === 'circular-badge') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
+            else if (tpl === 'bold-modern') { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
+            else { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
+          }
+          if (shapeInput2) {
+            if (tpl === 'diamond-arrow') shapeInput2.value = '#8a6d2b';
+            else if (tpl === 'ornate-divider') shapeInput2.value = '#3d2814';
+            else if (tpl === 'circular-badge') shapeInput2.value = '#8a6d2b';
+            else if (tpl === 'bold-modern') shapeInput2.value = '#378ADD';
+            else shapeInput2.value = '#378ADD';
+          }
+          // Same idea for the pre-line/tagline text colours — sensible
+          // per-style defaults for readability, still fully editable.
+          const preColorInput = el('mq-pd-pre-color');
+          const tagColorInput = el('mq-pd-tag-color');
+          if (preColorInput && tagColorInput) {
+            if (tpl === 'diamond-arrow') { preColorInput.value = '#e5e7eb'; tagColorInput.value = '#e5e7eb'; }
+            else if (tpl === 'circular-badge') { preColorInput.value = '#f0f0f0'; tagColorInput.value = '#e0e0e0'; }
+            else if (tpl === 'bold-modern') { preColorInput.value = '#d0d0d0'; tagColorInput.value = '#d0d0d0'; }
+            else { preColorInput.value = '#6b6b6b'; tagColorInput.value = '#4b4b4b'; }
+          }
+          drawPosterDesigner();
+        };
+
+        window.mqPdSetOrientation = (orient) => {
+          pdOrientation = orient;
+          if (orient === 'portrait') { pdCanvas.width = 1080; pdCanvas.height = 1620; }
+          else { pdCanvas.width = 1620; pdCanvas.height = 1080; }
+          pdCanvas.style.width = 'auto';
+          pdCanvas.style.height = '300px'; // fixed height so landscape ends up wider, not shorter, matching portrait's actual visual size
+          drawPosterDesigner();
+        };
+
+        window.mqPdBtnToggled = () => {
+          const wrap = el('mq-pd-btn-controls-wrap');
+          const enabled = el('mq-pd-btn-enabled')?.checked;
+          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
+          drawPosterDesigner();
+        };
+
+        window.mqPdQrToggled = () => {
+          const wrap = el('mq-pd-qr-controls-wrap');
+          const enabled = el('mq-pd-qr-enabled')?.checked;
+          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
+          drawPosterDesigner();
+        };
+
+        window.mqPdToggleGradientColor2 = (wrapId, show) => {
+          const wrap = document.getElementById(wrapId);
+          if (wrap) wrap.style.display = show ? 'inline-block' : 'none';
+          drawPosterDesigner();
+        };
+
+        window.mqPdTextModeChanged = () => {
+          const mode = el('mq-pd-text-mode')?.value;
+          const wrap = el('mq-pd-logo-upload-wrap');
+          if (wrap) wrap.style.display = mode === 'logo' ? 'block' : 'none';
+          drawPosterDesigner();
+        };
+
+        const pdPhotoInput = el('mq-pd-photo-input');
+        if (pdPhotoInput) {
+          pdPhotoInput.onchange = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const img = new Image();
+              img.onload = () => { pdPhotoImage = img; drawPosterDesigner(); };
+              img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          };
+        }
+
+        const pdLogoInput = el('mq-pd-logo-input');
+        if (pdLogoInput) {
+          pdLogoInput.onchange = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const img = new Image();
+              img.onload = () => { pdOwnLogoImage = img; drawPosterDesigner(); };
+              img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          };
+        }
+
+        const pdBgImageInput = el('mq-pd-bg-image-input');
+        if (pdBgImageInput) {
+          pdBgImageInput.onchange = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const img = new Image();
+              img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
+              img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          };
+        }
+
+        // Tap-to-zoom — converts the current canvas to an image and shows it
+        // full-screen, since a canvas itself can't be pinch-zoomed the way a
+        // real <img> can. Tap anywhere to close.
+        window.mqPdOpenZoom = () => {
+          let overlay = document.getElementById('mq-pd-zoom-overlay');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'mq-pd-zoom-overlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
+            overlay.onclick = () => { overlay.style.display = 'none'; };
+            document.body.appendChild(overlay);
+          }
+          overlay.innerHTML = `<img src="${pdCanvas.toDataURL('image/png')}" style="max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.4)"/>`;
+          overlay.style.display = 'flex';
+        };
+
+        window.mqPdToggleColorSection = () => {
+          const body = el('mq-pd-color-section-body');
+          const arrow = el('mq-pd-color-section-arrow');
+          if (!body) return;
+          const opening = body.style.display === 'none';
+          body.style.display = opening ? 'block' : 'none';
+          if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+        };
+
+        // Pulls a live directory listing from the GitHub repo's textures
+        // folder via GitHub's API — no filenames hardcoded anywhere, so
+        // whatever gets added or removed from that folder just works, no
+        // code changes needed on our end. Cached per page load so flipping
+        // the picker open and closed doesn't keep re-fetching.
+        let _pdTextureCache = null;
+        window.mqPdLoadTextureLibrary = async () => {
+          const grid = el('mq-pd-texture-grid');
+          if (!grid) return;
+          const showing = grid.style.display === 'grid';
+          if (showing) { grid.style.display = 'none'; return; }
+          grid.style.display = 'grid';
+          if (_pdTextureCache) {
+            renderTextureGrid(_pdTextureCache);
+            return;
+          }
+          grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#9ca3af;padding:6px">Loading textures…</div>';
+          try {
+            const res = await fetch('https://api.github.com/repos/aceswin/midasquote-widget/contents/textures');
+            if (!res.ok) throw new Error('Could not load texture list');
+            const files = await res.json();
+            const images = (Array.isArray(files) ? files : [])
+              .filter(f => f.type === 'file' && /\.(png|jpe?g|webp|gif)$/i.test(f.name))
+              .map(f => ({ name: f.name, url: `https://widget.midasquote.com/textures/${encodeURIComponent(f.name)}` }));
+            _pdTextureCache = images;
+            renderTextureGrid(images);
           } catch(e) {
-            alert('Something went wrong generating the QR code. Please try again.');
+            grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#dc2626;padding:6px">Couldn\'t load the texture library — try again in a moment.</div>';
+          }
+          function renderTextureGrid(images) {
+            if (!images.length) {
+              grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#9ca3af;padding:6px">No textures found yet.</div>';
+              return;
+            }
+            grid.innerHTML = images.map(img => `
+              <div onclick="mqPdSelectTexture('${img.url.replace(/'/g,"\\'")}')" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:6px;overflow:hidden;aspect-ratio:1;background:#f3f4f6" title="${img.name.replace(/"/g,'&quot;')}">
+                <img src="${img.url}" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"/>
+              </div>
+            `).join('');
           }
         };
+
+        window.mqPdSelectTexture = (url) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
+          img.onerror = () => { alert("Couldn't load that texture — try a different one."); };
+          img.src = url;
+        };
+
+        window.mqPdOverlayOpacityChanged = () => {
+          const val = el('mq-pd-bg-overlay-opacity')?.value || 0;
+          const label = el('mq-pd-bg-overlay-opacity-val');
+          if (label) label.textContent = val + '%';
+          drawPosterDesigner();
+        };
+
+        window.mqPdBgImageToggled = () => {
+          const wrap = el('mq-pd-bg-image-upload-wrap');
+          const enabled = el('mq-pd-bg-image-enabled')?.checked;
+          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
+          drawPosterDesigner();
+        };
+
+        const pdDownloadBtn = el('mq-pd-download-btn');
+        if (pdDownloadBtn) {
+          pdDownloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.download = (pdShopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'poster') + '-' + pdTemplate + '-' + pdOrientation + '.png';
+            link.href = pdCanvas.toDataURL('image/png');
+            link.click();
+          };
+        }
+
+        drawPosterDesigner();
+
+        // Only show the floating preview while this specific section is
+        // BOTH scrolled into view AND actually expanded — not just
+        // scrolled past while collapsed, and not the whole time someone's
+        // anywhere on the Marketing Kit page.
+        const pdOuterCard = document.getElementById('mq-pd-outer-card');
+        const pdStickyPreview = document.getElementById('mq-pd-sticky-preview');
+        let pdSectionInView = false;
+        window._mqPdUpdateStickyVisibility = () => {
+          if (!pdStickyPreview) return;
+          const body = document.getElementById('mq-mk-body-poster');
+          const isOpen = body && body.style.display !== 'none';
+          pdStickyPreview.style.display = (pdSectionInView && isOpen) ? 'block' : 'none';
+        };
+        if (pdOuterCard && pdStickyPreview && 'IntersectionObserver' in window) {
+          const pdObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              pdSectionInView = entry.isIntersecting;
+              window._mqPdUpdateStickyVisibility();
+            });
+          }, { threshold: 0.05 });
+          pdObserver.observe(pdOuterCard);
+        }
       }
-    }
   }
 
   // JS-driven sticky nav — CSS position:sticky silently stops working if ANY
