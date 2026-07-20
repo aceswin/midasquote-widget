@@ -476,7 +476,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
-          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">🆘</span> Support</div>
+          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
         </div>
 
         <div class="mq-content">
@@ -901,8 +901,17 @@ window.logoutMember = async function () {
             <div class="mq-page-sub">Have a question or an idea? Send it straight to us — your shop info is included automatically.</div>
             <div class="mq-card" style="max-width:520px">
               <div class="mq-field" style="margin-bottom:1rem">
+                <label class="mq-label">Your email <span style="color:#dc2626">*</span></label>
+                <div style="display:flex;gap:8px">
+                  <input type="email" id="mq-support-email" placeholder="you@example.com" required style="flex:1"/>
+                  <button type="button" class="mq-btn mq-btn-sm" id="mq-support-use-shop-email" onclick="mqUseShopInfoEmail()" style="flex-shrink:0;white-space:nowrap">Use my Shop Info email</button>
+                </div>
+                <span class="mq-hint">So we know where to send our reply</span>
+              </div>
+              <div class="mq-field" style="margin-bottom:1rem">
                 <label class="mq-label">Topic</label>
                 <select id="mq-support-topic">
+                  <option value="Question">Just a question</option>
                   <option value="Support">Support — something's not working right</option>
                   <option value="Suggestion">Suggestion — an idea for MidasQuote</option>
                 </select>
@@ -1342,13 +1351,33 @@ window.logoutMember = async function () {
     tryLogout();
   };
 
+  window.mqUseShopInfoEmail = function() {
+    const emailEl = document.getElementById('mq-support-email');
+    const shopEmail = window._mqShopRecord?.fields['Lead notify email'];
+    if (!emailEl) return;
+    if (shopEmail) {
+      emailEl.value = shopEmail;
+    } else {
+      const statusEl = document.getElementById('mq-support-status');
+      if (statusEl) { statusEl.textContent = "No email found in Shop Info yet — you'll need to type one in."; statusEl.style.color = '#dc2626'; }
+    }
+  };
+
   window.mqSubmitSupport = async function() {
+    const emailEl = document.getElementById('mq-support-email');
     const topicEl = document.getElementById('mq-support-topic');
     const messageEl = document.getElementById('mq-support-message');
     const statusEl = document.getElementById('mq-support-status');
     const btn = document.getElementById('mq-support-submit-btn');
+    const email = (emailEl?.value || '').trim();
     const topic = topicEl?.value || 'Support';
     const message = (messageEl?.value || '').trim();
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailValid) {
+      if (statusEl) { statusEl.textContent = 'Please enter a valid email so we know where to reply.'; statusEl.style.color = '#dc2626'; }
+      emailEl?.focus();
+      return;
+    }
     if (!message) {
       if (statusEl) { statusEl.textContent = 'Please enter a message first.'; statusEl.style.color = '#dc2626'; }
       return;
@@ -1361,6 +1390,7 @@ window.logoutMember = async function () {
     try {
       const html = `
         <p><strong>Topic:</strong> ${topic}</p>
+        <p><strong>From:</strong> ${email}</p>
         <p><strong>Shop name:</strong> ${shopName}</p>
         <p><strong>Shop token:</strong> ${shopToken}</p>
         <p><strong>Message:</strong></p>
@@ -1371,6 +1401,7 @@ window.logoutMember = async function () {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: 'support@midasquote.com',
+          replyTo: email, // so hitting "Reply" in your own inbox goes straight to them, not back to support@
           subject: `[${topic}] ${shopName}`,
           html
         })
