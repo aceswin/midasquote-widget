@@ -1089,6 +1089,14 @@ window.logoutMember = async function () {
                           <button class="mq-btn mq-btn-sm" onclick="mqPdLoadTextureLibrary()">🧱 Or choose from our texture library</button>
                           <div id="mq-pd-texture-grid" style="display:none;margin-top:8px;max-height:180px;overflow-y:auto;grid-template-columns:repeat(4,1fr);gap:6px"></div>
                         </div>
+                        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
+                          <label class="mq-label" style="display:block;margin-bottom:6px">Overlay <span style="font-weight:400;color:#9ca3af;text-transform:none">(darken/tint the image so your text stays readable)</span></label>
+                          <div style="display:flex;gap:8px;align-items:center">
+                            <input type="color" id="mq-pd-bg-overlay-color" value="#000000" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                            <input type="range" id="mq-pd-bg-overlay-opacity" min="0" max="90" value="0" oninput="mqPdOverlayOpacityChanged()" style="flex:1"/>
+                            <span id="mq-pd-bg-overlay-opacity-val" style="font-size:11px;color:#6b7280;width:32px;text-align:right">0%</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div class="mq-field">
@@ -5148,6 +5156,16 @@ window.logoutMember = async function () {
           const useImage = el('mq-pd-bg-image-enabled')?.checked && pdBgImage;
           if (useImage) {
             pdDrawPhotoInRect(pdBgImage, 0, 0, W, H);
+            // Optional colour overlay so text stays readable on busy
+            // textures/photos — any colour, not just black or white.
+            const overlayOpacity = (parseInt(el('mq-pd-bg-overlay-opacity')?.value,10)||0)/100;
+            if (overlayOpacity > 0) {
+              const overlayColor = el('mq-pd-bg-overlay-color')?.value || '#000000';
+              const hex = overlayColor.replace('#','');
+              const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+              pdCtx.fillStyle = `rgba(${r},${g},${b},${overlayOpacity})`;
+              pdCtx.fillRect(0, 0, W, H);
+            }
             return;
           }
           if (bgGradient) {
@@ -5972,6 +5990,13 @@ window.logoutMember = async function () {
           img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
           img.onerror = () => { alert("Couldn't load that texture — try a different one."); };
           img.src = url;
+        };
+
+        window.mqPdOverlayOpacityChanged = () => {
+          const val = el('mq-pd-bg-overlay-opacity')?.value || 0;
+          const label = el('mq-pd-bg-overlay-opacity-val');
+          if (label) label.textContent = val + '%';
+          drawPosterDesigner();
         };
 
         window.mqPdBgImageToggled = () => {
