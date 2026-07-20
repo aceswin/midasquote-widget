@@ -1085,6 +1085,10 @@ window.logoutMember = async function () {
                       <div id="mq-pd-bg-image-upload-wrap" style="display:none;margin-top:6px">
                         <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-bg-image-input').click()">📤 Upload background image</button>
                         <input type="file" id="mq-pd-bg-image-input" accept="image/*" style="display:none"/>
+                        <div style="margin-top:8px">
+                          <button class="mq-btn mq-btn-sm" onclick="mqPdLoadTextureLibrary()">🧱 Or choose from our texture library</button>
+                          <div id="mq-pd-texture-grid" style="display:none;margin-top:8px;max-height:180px;overflow-y:auto;grid-template-columns:repeat(4,1fr);gap:6px"></div>
+                        </div>
                       </div>
                     </div>
                     <div class="mq-field">
@@ -5918,6 +5922,56 @@ window.logoutMember = async function () {
           const opening = body.style.display === 'none';
           body.style.display = opening ? 'block' : 'none';
           if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+        };
+
+        // Pulls a live directory listing from the GitHub repo's textures
+        // folder via GitHub's API — no filenames hardcoded anywhere, so
+        // whatever gets added or removed from that folder just works, no
+        // code changes needed on our end. Cached per page load so flipping
+        // the picker open and closed doesn't keep re-fetching.
+        let _pdTextureCache = null;
+        window.mqPdLoadTextureLibrary = async () => {
+          const grid = el('mq-pd-texture-grid');
+          if (!grid) return;
+          const showing = grid.style.display === 'grid';
+          if (showing) { grid.style.display = 'none'; return; }
+          grid.style.display = 'grid';
+          if (_pdTextureCache) {
+            renderTextureGrid(_pdTextureCache);
+            return;
+          }
+          grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#9ca3af;padding:6px">Loading textures…</div>';
+          try {
+            const res = await fetch('https://api.github.com/repos/aceswin/midasquote-widget/contents/textures');
+            if (!res.ok) throw new Error('Could not load texture list');
+            const files = await res.json();
+            const images = (Array.isArray(files) ? files : [])
+              .filter(f => f.type === 'file' && /\.(png|jpe?g|webp|gif)$/i.test(f.name))
+              .map(f => ({ name: f.name, url: `https://widget.midasquote.com/textures/${encodeURIComponent(f.name)}` }));
+            _pdTextureCache = images;
+            renderTextureGrid(images);
+          } catch(e) {
+            grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#dc2626;padding:6px">Couldn\'t load the texture library — try again in a moment.</div>';
+          }
+          function renderTextureGrid(images) {
+            if (!images.length) {
+              grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#9ca3af;padding:6px">No textures found yet.</div>';
+              return;
+            }
+            grid.innerHTML = images.map(img => `
+              <div onclick="mqPdSelectTexture('${img.url.replace(/'/g,"\\'")}')" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:6px;overflow:hidden;aspect-ratio:1;background:#f3f4f6" title="${img.name.replace(/"/g,'&quot;')}">
+                <img src="${img.url}" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"/>
+              </div>
+            `).join('');
+          }
+        };
+
+        window.mqPdSelectTexture = (url) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
+          img.onerror = () => { alert("Couldn't load that texture — try a different one."); };
+          img.src = url;
         };
 
         window.mqPdBgImageToggled = () => {
