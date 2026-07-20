@@ -476,6 +476,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
+          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">🆘</span> Support</div>
         </div>
 
         <div class="mq-content">
@@ -891,6 +892,27 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Your leads and pricing data will be available for 30 days after cancellation.</p>
               <button class="mq-btn mq-btn-danger" onclick="mqOpenBillingPortal()">Cancel subscription</button>
+            </div>
+          </div>
+
+          <!-- SUPPORT -->
+          <div class="mq-page" id="mq-page-support">
+            <div class="mq-page-title">Support</div>
+            <div class="mq-page-sub">Have a question or an idea? Send it straight to us — your shop info is included automatically.</div>
+            <div class="mq-card" style="max-width:520px">
+              <div class="mq-field" style="margin-bottom:1rem">
+                <label class="mq-label">Topic</label>
+                <select id="mq-support-topic">
+                  <option value="Support">Support — something's not working right</option>
+                  <option value="Suggestion">Suggestion — an idea for MidasQuote</option>
+                </select>
+              </div>
+              <div class="mq-field" style="margin-bottom:1rem">
+                <label class="mq-label">Message</label>
+                <textarea id="mq-support-message" rows="6" placeholder="Tell us what's going on..."></textarea>
+              </div>
+              <button class="mq-btn mq-btn-primary" id="mq-support-submit-btn" onclick="mqSubmitSupport()">Send</button>
+              <div id="mq-support-status" style="font-size:13px;margin-top:10px"></div>
             </div>
           </div>
 
@@ -1318,6 +1340,48 @@ window.logoutMember = async function () {
       else window.location.href = '/?ms-logout=true';
     };
     tryLogout();
+  };
+
+  window.mqSubmitSupport = async function() {
+    const topicEl = document.getElementById('mq-support-topic');
+    const messageEl = document.getElementById('mq-support-message');
+    const statusEl = document.getElementById('mq-support-status');
+    const btn = document.getElementById('mq-support-submit-btn');
+    const topic = topicEl?.value || 'Support';
+    const message = (messageEl?.value || '').trim();
+    if (!message) {
+      if (statusEl) { statusEl.textContent = 'Please enter a message first.'; statusEl.style.color = '#dc2626'; }
+      return;
+    }
+    const shopRecord = window._mqShopRecord;
+    const shopName = shopRecord?.fields['Shop name'] || 'Unknown shop';
+    const shopToken = shopRecord?.fields['Shop token'] || 'unknown-token';
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+    if (statusEl) statusEl.textContent = '';
+    try {
+      const html = `
+        <p><strong>Topic:</strong> ${topic}</p>
+        <p><strong>Shop name:</strong> ${shopName}</p>
+        <p><strong>Shop token:</strong> ${shopToken}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message.replace(/</g,'&lt;').replace(/\n/g, '<br>')}</p>
+      `;
+      await fetch(CONFIG.EMAIL_WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'support@midasquote.com',
+          subject: `[${topic}] ${shopName}`,
+          html
+        })
+      });
+      if (statusEl) { statusEl.textContent = "✓ Sent! We'll get back to you soon."; statusEl.style.color = '#166534'; }
+      if (messageEl) messageEl.value = '';
+    } catch(e) {
+      if (statusEl) { statusEl.textContent = 'Something went wrong sending that — please try again.'; statusEl.style.color = '#dc2626'; }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+    }
   };
 
   window.mqNav = function(page, el) {
@@ -5595,8 +5659,21 @@ window.logoutMember = async function () {
           } else pdCtx.fillStyle = shapeColor;
           if (isPortrait) pdCtx.fillRect(0, 0, W, splitAt); else pdCtx.fillRect(0, 0, splitAt, H);
 
+          // Clip the photo to its own half of the canvas before drawing —
+          // pdDrawPhotoInRect deliberately overflows to "cover" its target
+          // box (same idea as CSS background-size:cover), which every other
+          // template already contains with its own clip path. This was the
+          // one template drawing the photo with no clip at all, so that
+          // intentional overflow was free to bleed straight into the
+          // colour panel next to it.
+          pdCtx.save();
+          pdCtx.beginPath();
+          if (isPortrait) pdCtx.rect(0, splitAt, W, H - splitAt);
+          else pdCtx.rect(splitAt, 0, W - splitAt, H);
+          pdCtx.clip();
           if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, splitAt, W, H - splitAt);
           else pdDrawPhotoInRect(pdPhotoImage, splitAt, 0, W - splitAt, H);
+          pdCtx.restore();
 
           pdCtx.fillStyle = accentColor;
           if (isPortrait) pdCtx.fillRect(0, splitAt - 3, W, 6); else pdCtx.fillRect(splitAt - 3, 0, 6, H);
