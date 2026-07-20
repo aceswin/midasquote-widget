@@ -5096,7 +5096,7 @@ window.logoutMember = async function () {
             tagMult: (parseInt(el('mq-pd-size-tag')?.value,10)||100)/100,
             lineMult: (parseInt(el('mq-pd-line-spacing')?.value,10)||100)/100,
             offsetPct: (parseInt(el('mq-pd-text-offset')?.value,10)||0)/100,
-            preText: el('mq-pd-pre-text')?.value || 'Another project by',
+            preText: el('mq-pd-pre-text')?.value ?? '',
             preColor: el('mq-pd-pre-color')?.value || '#6b6b6b',
             tagColor: el('mq-pd-tag-color')?.value || '#4b4b4b'
           };
