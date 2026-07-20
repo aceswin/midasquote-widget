@@ -5351,7 +5351,7 @@ window.logoutMember = async function () {
               pdCtx.font = tagFont;
               pdCtx.fillStyle = tc.tagColor;
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.34);
-              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?42:36) * tc.lineMult; });
+              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?48:42) * tc.lineMult; });
             }
           }
 
@@ -5483,7 +5483,7 @@ window.logoutMember = async function () {
               pdCtx.font = tagFont;
               pdCtx.fillStyle = tc.tagColor;
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.36);
-              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?42:36) * tc.lineMult; });
+              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?48:42) * tc.lineMult; });
             }
           }
 
@@ -5578,7 +5578,7 @@ window.logoutMember = async function () {
 
             if (tagline) {
               pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?38:32) * tc.lineMult; });
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?44:38) * tc.lineMult; });
             }
           }
 
@@ -5660,7 +5660,7 @@ window.logoutMember = async function () {
           if (tagline) {
             ty += 14 * tc.lineMult;
             pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-            pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 32 * tc.lineMult; });
+            pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 38 * tc.lineMult; });
           }
 
           pdClearShadow();
@@ -5743,7 +5743,7 @@ window.logoutMember = async function () {
             if (tagline) {
               cy += (isPortrait ? 20 : 14) * tc.lineMult;
               pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?36:32) * tc.lineMult; });
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?42:38) * tc.lineMult; });
             }
           }
 
