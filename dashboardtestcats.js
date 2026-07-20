@@ -2,7 +2,7 @@
  * MidasQuote Dashboard v1.0
  * Shop owner backend panel
  * Loads based on Memberstack member's shopToken
- * This is a test g
+ * This is a test
  */
 
 (function () {
@@ -4169,6 +4169,12 @@ window.logoutMember = async function () {
     const opening = body.style.display === 'none';
     body.style.display = opening ? 'block' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+    // Collapsing/expanding a section doesn't scroll the page, so the
+    // Poster Designer's floating preview needs its own explicit re-check
+    // here too — it can't rely on the scroll-based observer alone.
+    if (typeof window._mqPdUpdateStickyVisibility === 'function') {
+      window._mqPdUpdateStickyVisibility();
+    }
   };
 
   function initMarketingKit(shopRecord) {
@@ -5825,14 +5831,23 @@ window.logoutMember = async function () {
         drawPosterDesigner();
 
         // Only show the floating preview while this specific section is
-        // actually scrolled into view — not the whole time someone's
+        // BOTH scrolled into view AND actually expanded — not just
+        // scrolled past while collapsed, and not the whole time someone's
         // anywhere on the Marketing Kit page.
         const pdOuterCard = document.getElementById('mq-pd-outer-card');
         const pdStickyPreview = document.getElementById('mq-pd-sticky-preview');
+        let pdSectionInView = false;
+        window._mqPdUpdateStickyVisibility = () => {
+          if (!pdStickyPreview) return;
+          const body = document.getElementById('mq-mk-body-poster');
+          const isOpen = body && body.style.display !== 'none';
+          pdStickyPreview.style.display = (pdSectionInView && isOpen) ? 'block' : 'none';
+        };
         if (pdOuterCard && pdStickyPreview && 'IntersectionObserver' in window) {
           const pdObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-              pdStickyPreview.style.display = entry.isIntersecting ? 'block' : 'none';
+              pdSectionInView = entry.isIntersecting;
+              window._mqPdUpdateStickyVisibility();
             });
           }, { threshold: 0.05 });
           pdObserver.observe(pdOuterCard);
