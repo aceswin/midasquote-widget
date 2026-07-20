@@ -951,81 +951,6 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('headlines')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🏷️ Headline options for your website</div>
-                <span id="mq-mk-arrow-headlines" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-headlines" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Use one of these above your embedded widget.</p>
-              <div id="mq-mk-headlines"></div>
-              </div>
-            </div>
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('dm')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">💬 Direct message template</div>
-                <span id="mq-mk-arrow-dm" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-dm" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Send this to past customers or leads who might have a future project.</p>
-              <div id="mq-mk-dm"></div>
-              </div>
-            </div>
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('qrposter')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖨️ Printable QR poster</div>
-                <span id="mq-mk-arrow-qrposter" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-qrposter" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A print-ready poster with a QR code linking straight to your quote page — perfect for a sandwich board, front desk, or restroom poster. Walk-in customers just scan and go.</p>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-qr-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
-                <div style="width:100%;max-width:280px">
-                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
-                  <input type="text" id="mq-mk-qr-headline" placeholder="Scan for an instant price" maxlength="60" style="font-size:13px"/>
-                </div>
-                <div style="width:100%;max-width:280px">
-                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline font</label>
-                  <select id="mq-mk-qr-font" style="font-size:13px;width:100%">
-                    <option value="-apple-system, sans-serif">Default (System)</option>
-                    <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica — Clean & Modern</option>
-                    <option value="Georgia, serif">Georgia — Warm & Premium</option>
-                    <option value="'Trebuchet MS', sans-serif">Trebuchet — Friendly & Bold</option>
-                    <option value="'Times New Roman', serif">Times New Roman — Classic</option>
-                    <option value="Impact, 'Arial Narrow', sans-serif">Impact — Strong & Punchy</option>
-                  </select>
-                </div>
-                <div style="width:100%;max-width:280px;align-items:center;gap:10px;display:flex">
-                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Letter spacing</span>
-                  <input type="range" id="mq-mk-qr-letter-spacing" min="0" max="20" value="0" style="flex:1"/>
-                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-qr-letter-spacing-val">0px</span>
-                </div>
-                <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
-                  <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Background colour</label>
-                  <input type="color" id="mq-mk-qr-color" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-qr-color-reset" style="flex-shrink:0">Reset</button>
-                </div>
-                <div style="display:flex;gap:8px;width:100%;max-width:280px">
-                  <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
-                    📷 Add background photo
-                    <input type="file" id="mq-mk-qr-bg-photo" accept="image/*" style="display:none"/>
-                  </label>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-qr-bg-remove" style="flex-shrink:0">✕</button>
-                </div>
-                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link from "Social media posts" above — set it there if you haven't already</span>
-                <div id="mq-mk-qr-overlay-row" style="display:none;width:100%;max-width:280px;align-items:center;gap:10px">
-                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Darkness</span>
-                  <input type="range" id="mq-mk-qr-overlay-slider" min="0" max="90" value="62" style="flex:1"/>
-                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-qr-overlay-val">62%</span>
-                </div>
-                <button class="mq-btn mq-btn-primary" id="mq-mk-qr-download-btn" style="width:100%;max-width:280px">⬇️ Download poster (PNG)</button>
-              </div>
-              </div>
-            </div>
-
-
             <div class="mq-card" id="mq-pd-outer-card" style="padding:0;overflow:hidden">
               <div onclick="mqToggleMkSection('poster')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
                 <div class="mq-card-title" style="margin:0">🎨 Custom Poster & Sign Designer</div>
@@ -1061,8 +986,6 @@ window.logoutMember = async function () {
                   </div>
                 </div>
               </div>
-
-              <div>
 
               <div class="mq-field" style="margin-bottom:12px">
                 <label class="mq-label">Orientation</label>
@@ -1236,6 +1159,70 @@ window.logoutMember = async function () {
               </div>
 
             </div>
+
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('dm')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">💬 Direct message template</div>
+                <span id="mq-mk-arrow-dm" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-dm" style="display:none;padding:0 1.25rem 1.25rem">
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Send this to past customers or leads who might have a future project.</p>
+              <div id="mq-mk-dm"></div>
+              </div>
+            </div>
+
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('qrposter')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🖨️ Printable QR poster</div>
+                <span id="mq-mk-arrow-qrposter" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-qrposter" style="display:none;padding:0 1.25rem 1.25rem">
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A print-ready poster with a QR code linking straight to your quote page — perfect for a sandwich board, front desk, or restroom poster. Walk-in customers just scan and go.</p>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+                <canvas id="mq-mk-qr-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
+                <div style="width:100%;max-width:280px">
+                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
+                  <input type="text" id="mq-mk-qr-headline" placeholder="Scan for an instant price" maxlength="60" style="font-size:13px"/>
+                </div>
+                <div style="width:100%;max-width:280px">
+                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline font</label>
+                  <select id="mq-mk-qr-font" style="font-size:13px;width:100%">
+                    <option value="-apple-system, sans-serif">Default (System)</option>
+                    <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica — Clean & Modern</option>
+                    <option value="Georgia, serif">Georgia — Warm & Premium</option>
+                    <option value="'Trebuchet MS', sans-serif">Trebuchet — Friendly & Bold</option>
+                    <option value="'Times New Roman', serif">Times New Roman — Classic</option>
+                    <option value="Impact, 'Arial Narrow', sans-serif">Impact — Strong & Punchy</option>
+                  </select>
+                </div>
+                <div style="width:100%;max-width:280px;align-items:center;gap:10px;display:flex">
+                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Letter spacing</span>
+                  <input type="range" id="mq-mk-qr-letter-spacing" min="0" max="20" value="0" style="flex:1"/>
+                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-qr-letter-spacing-val">0px</span>
+                </div>
+                <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
+                  <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Background colour</label>
+                  <input type="color" id="mq-mk-qr-color" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                  <button class="mq-btn mq-btn-sm" id="mq-mk-qr-color-reset" style="flex-shrink:0">Reset</button>
+                </div>
+                <div style="display:flex;gap:8px;width:100%;max-width:280px">
+                  <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
+                    📷 Add background photo
+                    <input type="file" id="mq-mk-qr-bg-photo" accept="image/*" style="display:none"/>
+                  </label>
+                  <button class="mq-btn mq-btn-sm" id="mq-mk-qr-bg-remove" style="flex-shrink:0">✕</button>
+                </div>
+                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link from "Social media posts" above — set it there if you haven't already</span>
+                <div id="mq-mk-qr-overlay-row" style="display:none;width:100%;max-width:280px;align-items:center;gap:10px">
+                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Darkness</span>
+                  <input type="range" id="mq-mk-qr-overlay-slider" min="0" max="90" value="62" style="flex:1"/>
+                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-qr-overlay-val">62%</span>
+                </div>
+                <button class="mq-btn mq-btn-primary" id="mq-mk-qr-download-btn" style="width:100%;max-width:280px">⬇️ Download poster (PNG)</button>
+              </div>
+              </div>
+            </div>
+
 
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div onclick="mqToggleMkSection('whereto')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
@@ -4203,14 +4190,6 @@ window.logoutMember = async function () {
     const quoteLink = _mqCustomPostLink || defaultQuoteLink;
     const socialPosts = buildSocialPosts(quoteLink);
 
-    const headlines = [
-      'Get a free quote online in minutes',
-      'Know your price before you even call',
-      'Get your cabinet estimate in under 2 minutes',
-      'No phone calls. No waiting. Just your price.',
-      'See what your project costs — right now',
-    ];
-
     const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
 
     // Google Fonts import — included in both blocks independently (harmless
@@ -4276,18 +4255,6 @@ window.logoutMember = async function () {
         }
         setTimeout(() => { postLinkApplyBtn.textContent = 'Apply'; }, 1800);
       };
-    }
-
-    const headlinesEl = el('mq-mk-headlines');
-    if (headlinesEl) {
-      headlinesEl.innerHTML = headlines.map((h, i) => `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6">
-          <span style="font-size:13px;color:#111">${escapeHtml(h)}</span>
-          <button class="mq-btn mq-btn-sm" data-copy-idx="${i}">Copy</button>
-        </div>`).join('');
-      headlinesEl.querySelectorAll('button[data-copy-idx]').forEach(btn => {
-        btn.onclick = () => mqCopyText(headlines[parseInt(btn.dataset.copyIdx, 10)], btn);
-      });
     }
 
     const dmEl = el('mq-mk-dm');
@@ -6207,7 +6174,6 @@ window.logoutMember = async function () {
       }
     }
   };
-
 
   init();
 
