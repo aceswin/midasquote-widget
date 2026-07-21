@@ -1884,6 +1884,11 @@
       const top = rect.top + window.pageYOffset - (offsetPx || 80);
       window.scrollTo({ top, behavior: 'smooth' });
     }
+    // Exposed globally so mqStartNewEstimate — a sibling function declared
+    // outside wireWidget's scope — can actually reach this instead of
+    // throwing a ReferenceError when the "Start a New Estimate" button
+    // tries to call it.
+    window.mqScrollWithOffset = mqScrollWithOffset;
 
     function mqGetVisibleSections(prefix) {
       const scopeId = prefix === 'c' ? 'mq-tab-cabinets' : (prefix === 'b' ? 'mq-tab-both' : null);
@@ -3141,7 +3146,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     wireWidget(data);
     const panel = document.getElementById('mq-start-over-panel');
     if (panel) panel.style.display = 'none';
-    mqScrollWithOffset(container);
+    window.mqScrollWithOffset(container);
   };
 
   // Mobile-only minimum text size — a lot of hint/label text throughout
