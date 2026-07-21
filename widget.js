@@ -1031,8 +1031,12 @@
   function collapsibleHeader(key, title) {
     // stopPropagation so this doesn't also trigger the surrounding section's
     // own "click anywhere to open" handler (mqOpenIfClosed) — this header's
-    // click already fully manages toggling both directions by itself.
-    return `<div class="mq-sec-header-row" onclick="event.stopPropagation();mqToggleCollapse('${key}')">
+    // click already fully manages toggling both directions by itself. Since
+    // that also blocks the step-focus "jump to this section" listener from
+    // ever seeing the click, it's called explicitly here too, so clicking
+    // the header clears the grey/upcoming state exactly like clicking
+    // anywhere else in the section already does.
+    return `<div class="mq-sec-header-row" onclick="event.stopPropagation();mqToggleCollapse('${key}');mqJumpToSectionIfNeeded(event.currentTarget.closest('.mq-sec'))">
       <p class="mq-sec-title">${title}</p>
       <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <span id="mq-${key}-label" style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Open</span>
@@ -2070,9 +2074,7 @@
     // just keeps the visual state honest for anyone navigating on their own,
     // in either direction (e.g. jumping back from Specialty Items to Doors
     // by tapping that section directly, same as scrolling up would).
-    document.addEventListener('click', (e) => {
-      const sec = e.target.closest('#midasquote-widget .mq-sec');
-      if (!sec) return;
+    window.mqJumpToSectionIfNeeded = function(sec) {
       const tab = sec.closest('.mq-tab-content');
       if (!tab) return;
       const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : null);
@@ -2083,6 +2085,12 @@
         _mqStepIndex[prefix] = idx;
         window.mqUpdateStepFocus(prefix);
       }
+    }
+
+    document.addEventListener('click', (e) => {
+      const sec = e.target.closest('#midasquote-widget .mq-sec');
+      if (!sec) return;
+      mqJumpToSectionIfNeeded(sec);
     });
 
     window.mqRefreshSectionVisibility=(prefix)=>{
