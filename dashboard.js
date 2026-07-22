@@ -2430,6 +2430,9 @@ window.logoutMember = async function () {
 
   window.mqRemoveRoom = function(idx) {
     if (!window._mqRooms) return;
+    const room = window._mqRooms[idx];
+    const name = (room && room.name) ? room.name : 'this project type';
+    if (!confirm(`Are you sure you want to delete "${name}"? This won't take effect until you click Save.`)) return;
     window._mqRooms.splice(idx, 1);
     renderRoomsList();
   };
