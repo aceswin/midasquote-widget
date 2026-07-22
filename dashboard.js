@@ -182,6 +182,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
         <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
+        <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
         <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific.</p>
         <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
@@ -318,6 +319,41 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (shopRecord && !shopRecord.fields['Welcome popup seen']) {
       shopRecord.fields['Welcome popup seen'] = true;
       atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Welcome popup seen': true }).catch(()=>{});
+    }
+  };
+
+  // Shown exactly once per shop, the first time they land on the Specialty
+  // Items tab — explains why there are already items sitting there waiting
+  // for them. Same dismiss-once-on-the-shop-record pattern as the main
+  // welcome modal, so it stays dismissed across devices/browsers too.
+  window.mqShowSpecialtyTipsModal = function() {
+    let modal = document.getElementById('mq-specialty-tips-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-specialty-tips-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:40px;margin-bottom:12px">⭐</div>
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+          You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to pre-populate items for shops that offer refacing, restaining, or repainting services.
+          <br><br>
+          Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info.
+        </div>
+        <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqCloseSpecialtyTipsModal = function() {
+    const modal = document.getElementById('mq-specialty-tips-modal');
+    if (modal) modal.style.display = 'none';
+    const shopRecord = window._mqShopRecord;
+    if (shopRecord && !shopRecord.fields['Specialty tips popup seen']) {
+      shopRecord.fields['Specialty tips popup seen'] = true;
+      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Specialty tips popup seen': true }).catch(()=>{});
     }
   };
 
@@ -6349,6 +6385,9 @@ window.logoutMember = async function () {
         loadSpecialty(window._mqShopRecord.fields['Shop name']).then(specs => {
           renderSpecialty(specs, window._mqShopRecord);
         });
+      }
+      if (window._mqShopRecord && !window._mqShopRecord.fields['Specialty tips popup seen']) {
+        window.mqShowSpecialtyTipsModal();
       }
     }
     if (page === 'products') {
