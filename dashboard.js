@@ -2,7 +2,7 @@
  * MidasQuote Dashboard v1.0
  * Shop owner backend panel
  * Loads based on Memberstack member's shopToken
- * This is a testd
+ * This is a test
  */
 
 (function () {
@@ -2213,41 +2213,37 @@ window.logoutMember = async function () {
   // enough there to be worth the extra line); everything else uses the
   // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section — got **3 separate runs of upper cabinets**? That's 3 sections. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
 
-**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+**Upper cabinets:** A section for every wall run where uppers will go.
 
-**Island cabinets:** Include island cabinets if you have one.
+**Base cabinets:** Same idea — a section for every run of base cabinets.
+
+**Island cabinets:** Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.
 
 **Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
-[corner-img]
-
-[tip]**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.[/tip]`;
+[corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
 
-**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+**Upper cabinets:** A section for every wall run where uppers will go.
+
+**Base cabinets:** Same idea — a section for every run of base cabinets.
 
 **Not sure?** Just use your best guess — this is a ballpark estimate!
-
-**Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
 
 **Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
-[corner-img]
-
-[tip]**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.[/tip]`;
+[corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
-`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
 
-**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+**Upper cabinets:** A section for every wall run where uppers will go.
 
-**Not sure?** Just use your best guess — this is a ballpark estimate!
+**Base cabinets:** Same idea — a section for every run of base cabinets.
 
-**Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
-
-[tip]**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.[/tip]`;
+**Not sure?** Just use your best guess — this is a ballpark estimate!`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
@@ -6508,5 +6504,7 @@ window.logoutMember = async function () {
   };
 
   init();
+
+
 
 })();
