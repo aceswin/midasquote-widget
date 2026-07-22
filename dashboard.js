@@ -379,6 +379,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           You can remove any item from any project type here — just uncheck it under that item's project types.
           <br><br>
           One thing to know: <strong>Box Materials, Door Styles, and Drawer Configurations are connected.</strong> Remove one of these from a project type, and all three come out together — they always work as a set for cabinet pricing, so there's no way to keep just one.
+          <br><br>
+          Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info on this tab.
         </div>
         <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
