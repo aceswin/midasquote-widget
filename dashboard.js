@@ -553,13 +553,13 @@ window.logoutMember = async function () {
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field">
                   <label class="mq-label">Quote range — low (% below estimate)</label>
-                  <input type="number" id="mq-shop-range-low" placeholder="10" min="0" max="50"/>
-                  <span class="mq-hint">Default 10 — quote shows up to 10% below your estimate</span>
+                  <input type="number" id="mq-shop-range-low" placeholder="5" min="0" max="50"/>
+                  <span class="mq-hint">Default 5 — quote shows up to 5% below your estimate</span>
                 </div>
                 <div class="mq-field">
                   <label class="mq-label">Quote range — high (% above estimate)</label>
-                  <input type="number" id="mq-shop-range-high" placeholder="15" min="0" max="50"/>
-                  <span class="mq-hint">Default 15 — quote shows up to 15% above your estimate</span>
+                  <input type="number" id="mq-shop-range-high" placeholder="20" min="0" max="50"/>
+                  <span class="mq-hint">Default 20 — quote shows up to 20% above your estimate</span>
                 </div>
               </div>
               <div class="mq-field" style="margin-bottom:1rem">
@@ -1997,8 +1997,8 @@ window.logoutMember = async function () {
         }
       }
     }
-    set('mq-shop-range-low',  f['Quote range low']  || '10');
-    set('mq-shop-range-high', f['Quote range high'] || '15');
+    set('mq-shop-range-low',  f['Quote range low']  || '5');
+    set('mq-shop-range-high', f['Quote range high'] || '20');
     set('mq-shop-logo', f['Logo URL']);
     mqRefreshLogoPreview();
     mqWireUploadButton(
@@ -2830,8 +2830,8 @@ window.logoutMember = async function () {
         'Website':           gv('mq-shop-website'),
         'Lead notify email': gv('mq-shop-email'),
         'Brand colour':      gv('mq-shop-color'),
-        'Quote range low':   gn('mq-shop-range-low',  10),
-        'Quote range high':  gn('mq-shop-range-high', 15),
+        'Quote range low':   gn('mq-shop-range-low',  5),
+        'Quote range high':  gn('mq-shop-range-high', 20),
         'Logo URL':          gv('mq-shop-logo'),
         'Disclaimer text':   gv('mq-shop-disclaimer'),
         'Consultation link': gv('mq-shop-consult-link'),

@@ -91,8 +91,8 @@
 
     const shopRecord = payload.shop;
     const shop = shopRecord.fields;
-    window._mqRangeLow  = (100 - (parseFloat(shop['Quote range low'])  || 10)) / 100;
-    window._mqRangeHigh = (100 + (parseFloat(shop['Quote range high']) || 15)) / 100;
+    window._mqRangeLow  = (100 - (parseFloat(shop['Quote range low'])  || 5)) / 100;
+    window._mqRangeHigh = (100 + (parseFloat(shop['Quote range high']) || 20)) / 100;
     shop._recordId = shopRecord.id;
 
     // Parse the shop's saved product photos (same JSON field the dashboard's
@@ -2704,7 +2704,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
 
-      const low=Math.round(total*(window._mqRangeLow||0.9)/100)*100, high=Math.round(total*(window._mqRangeHigh||1.15)/100)*100;
+      const low=Math.round(total*(window._mqRangeLow||0.95)/100)*100, high=Math.round(total*(window._mqRangeHigh||1.20)/100)*100;
       const roomLabel = roomObj ? roomObj.name : 'Cabinet';
       return {lines,sub:Math.round(total),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel};
     }
@@ -2807,7 +2807,7 @@ window.mqTogDrawerConfig=(prefix)=>{
 
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
       const total=sub;
-      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.9)/100)*100,high:Math.round(total*(window._mqRangeHigh||1.15)/100)*100};
+      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/100)*100,high:Math.round(total*(window._mqRangeHigh||1.20)/100)*100};
     }
 
     function renderResult(rangeEl,listEl,result){
