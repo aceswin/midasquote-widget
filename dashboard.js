@@ -6337,6 +6337,15 @@ window.logoutMember = async function () {
         });
       }
     }
+    if (page === 'specialty') {
+      const specList = document.getElementById('mq-spec-list');
+      if (specList && window._mqShopRecord) {
+        specList.innerHTML = '<div class="mq-loading">Refreshing specialty items...</div>';
+        loadSpecialty(window._mqShopRecord.fields['Shop name']).then(specs => {
+          renderSpecialty(specs, window._mqShopRecord);
+        });
+      }
+    }
     if (page === 'products') {
       const prodContent = document.getElementById('mq-products-content');
       if (prodContent) {
