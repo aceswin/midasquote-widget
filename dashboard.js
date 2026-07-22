@@ -2,7 +2,7 @@
  * MidasQuote Dashboard v1.0
  * Shop owner backend panel
  * Loads based on Memberstack member's shopToken
- * This is a test
+ * This is a testd
  */
 
 (function () {
