@@ -210,10 +210,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     specialty: {
       title: 'Specialty items',
       body: `
-        <p>Anything that isn't a standard cabinet box, door, or countertop — pullouts, lazy susans, custom range hoods, refacing-specific items, or anything unique to your shop.</p>
+        <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
+        <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
         <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this.</p>
         <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item, with its own installed price. Leave it unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
+        <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
       `
     },
@@ -654,7 +656,7 @@ window.logoutMember = async function () {
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
-                <div class="mq-page-sub">Add-ons that appear as options in your widget. Include the full cost in your price — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
+                <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
             </div>
