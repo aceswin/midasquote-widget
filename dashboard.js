@@ -357,6 +357,43 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     }
   };
 
+  // Shown exactly once per shop, the first time they land on the My
+  // Products tab — explains that items can be removed per project type,
+  // and specifically warns about Box Materials/Door Styles/Drawer
+  // Configurations being linked (same three categories as
+  // LINKED_CABINET_CATS below). Same dismiss-once-on-the-shop-record
+  // pattern as the other first-visit popups.
+  window.mqShowProductsTipsModal = function() {
+    let modal = document.getElementById('mq-products-tips-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-products-tips-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:40px;margin-bottom:12px">📦</div>
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+          You can remove any item from any project type here — just uncheck it under that item's project types.
+          <br><br>
+          One thing to know: <strong>Box Materials, Door Styles, and Drawer Configurations are connected.</strong> Remove one of these from a project type, and all three come out together — they always work as a set for cabinet pricing, so there's no way to keep just one.
+        </div>
+        <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqCloseProductsTipsModal = function() {
+    const modal = document.getElementById('mq-products-tips-modal');
+    if (modal) modal.style.display = 'none';
+    const shopRecord = window._mqShopRecord;
+    if (shopRecord && !shopRecord.fields['Products tips popup seen']) {
+      shopRecord.fields['Products tips popup seen'] = true;
+      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Products tips popup seen': true }).catch(()=>{});
+    }
+  };
+
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
@@ -1953,6 +1990,40 @@ window.logoutMember = async function () {
         shopRecord.fields['Room types'] = JSON.stringify(currentRooms);
         renderRoomsList();
       } catch(e) { console.warn('Failed to add project type template rooms:', e); }
+    }
+
+    // Refacing/Repainting/Restaining aren't priced through the cabinet/door
+    // pricing wizard — that reverse-engineers everything into linear feet,
+    // which doesn't fit these three (doors are normally priced per square
+    // foot as Specialty Items instead — see the Specialty Items help text).
+    // So by default, hide Box Materials, Door Styles, Drawer Configurations,
+    // Crown, Valance, and Tall Cabinets from these three project types. A
+    // shop owner can always turn any of them back on for a given project
+    // type from the My Products tab if they want to use the wizard for it
+    // after all.
+    // Door hinges deliberately isn't in this list — it doesn't need to be.
+    // The whole "Cabinet measurements" section (where hinges live) already
+    // hides itself on the widget whenever Box Materials has no visible
+    // options for a room (see mqRefreshSectionVisibility's `cabActive`
+    // check), so hiding Box Materials here hides hinges along with it for
+    // free.
+    const NON_WIZARD_ROOM_IDS = ['refacing', 'repainting', 'restaining'];
+    const NON_WIZARD_HIDDEN_CATS = ['material', 'door', 'drawer', 'trim_crown', 'trim_valance', 'tall_cabinet'];
+    const categoryRooms = window._mqCategoryRooms || {};
+    let categoryRoomsChanged = false;
+    NON_WIZARD_HIDDEN_CATS.forEach(cat => {
+      const hidden = new Set(categoryRooms[cat] || []);
+      NON_WIZARD_ROOM_IDS.forEach(roomId => {
+        if (!hidden.has(roomId)) { hidden.add(roomId); categoryRoomsChanged = true; }
+      });
+      categoryRooms[cat] = [...hidden];
+    });
+    if (categoryRoomsChanged) {
+      window._mqCategoryRooms = categoryRooms;
+      try {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Category rooms': JSON.stringify(categoryRooms) });
+        shopRecord.fields['Category rooms'] = JSON.stringify(categoryRooms);
+      } catch(e) { console.warn('Failed to seed default hidden categories for Refacing/Repainting/Restaining:', e); }
     }
 
     const masterItems = await ensureMasterTemplateItems();
@@ -6402,6 +6473,9 @@ window.logoutMember = async function () {
           if (freshShop) window._mqShopRecord = freshShop;
           window._mqLineItems = lineItems;
           initProductsTab(window._mqShopRecord, lineItems);
+          if (window._mqShopRecord && !window._mqShopRecord.fields['Products tips popup seen']) {
+            window.mqShowProductsTipsModal();
+          }
         });
       }
     }
