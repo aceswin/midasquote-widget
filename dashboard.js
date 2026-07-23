@@ -2043,6 +2043,17 @@ window.logoutMember = async function () {
     try { Object.assign(shopPhotos, shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}); } catch(e) {}
     let photosChanged = false;
 
+    // These items (New doors, Edge tape replacement, etc.) are pricing
+    // helpers for Refacing/Repainting/Restaining, not showcase-worthy
+    // products — hidden from the customer-facing showroom by default so a
+    // new shop doesn't end up displaying "Hinge replacement" as a featured
+    // item without the owner ever having decided that. Still fully usable
+    // for quoting either way; this only affects the showroom gallery page.
+    // A shop owner can turn any of these back on from My Products.
+    const shopHidden = {};
+    try { Object.assign(shopHidden, shopRecord.fields['Hidden'] ? JSON.parse(shopRecord.fields['Hidden']) : {}); } catch(e) {}
+    let hiddenChanged = false;
+
     try {
       await Promise.all(masterItems.map(async master => {
         const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
@@ -2065,12 +2076,18 @@ window.logoutMember = async function () {
         if (created?.id) {
           const photoUrl = masterPhotos['spec_' + master.id];
           if (photoUrl) { shopPhotos['spec_' + created.id] = photoUrl; photosChanged = true; }
+          shopHidden['spec_' + created.id] = true;
+          hiddenChanged = true;
         }
         return created;
       }));
       if (photosChanged) {
         await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Photos': JSON.stringify(shopPhotos) });
         shopRecord.fields['Photos'] = JSON.stringify(shopPhotos);
+      }
+      if (hiddenChanged) {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Hidden': JSON.stringify(shopHidden) });
+        shopRecord.fields['Hidden'] = JSON.stringify(shopHidden);
       }
       await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Templates seeded': true });
       shopRecord.fields['Templates seeded'] = true;
@@ -4301,8 +4318,55 @@ window.logoutMember = async function () {
             nameInput.select();
           }
         }, 50);
+        // The "Hide from showroom" checkbox for this item actually lives on
+        // a different tab entirely (My Products), behind its own separate
+        // Save button — easy to forget about a brand new item you're not
+        // even looking at. Ask right now instead, while it's top of mind,
+        // and save the answer immediately so there's nothing left to
+        // remember later.
+        window.mqShowShowroomVisibilityPrompt(created.id);
       }
     } catch(e) { showMsg('mq-spec-msg', 'Error adding item.', 'error'); }
+  };
+
+  // Asks whether a just-created specialty item should appear on the
+  // customer-facing showroom page, and saves the answer straight to the
+  // shop's 'Hidden' field immediately — no need to visit My Products and
+  // click its separate Save button to make it stick.
+  window.mqShowShowroomVisibilityPrompt = function(specId) {
+    let modal = document.getElementById('mq-showroom-prompt-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-showroom-prompt-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:36px;margin-bottom:12px">🖼️</div>
+        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:10px">Show this in your showroom?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.6;margin-bottom:1.5rem">
+          Some specialty items are things customers browse and get excited about — others are really just pricing pieces for a job. Either is fine, but which is this one?
+        </div>
+        <button onclick="mqAnswerShowroomVisibilityPrompt('${specId}', true)" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">Yes, show it in showroom</button>
+        <button onclick="mqAnswerShowroomVisibilityPrompt('${specId}', false)" style="width:100%;padding:13px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">No, keep it hidden</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqAnswerShowroomVisibilityPrompt = async function(specId, showInShowroom) {
+    const modal = document.getElementById('mq-showroom-prompt-modal');
+    if (modal) modal.style.display = 'none';
+    if (showInShowroom) return; // default is already visible — nothing to save
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    try {
+      let hidden = {};
+      try { hidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) {}
+      hidden['spec_' + specId] = true;
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden': JSON.stringify(hidden) });
+      shopRec.fields['Hidden'] = JSON.stringify(hidden);
+      showMsg('mq-spec-msg', '✓ Got it — hidden from your showroom. You can change this anytime from My Products.');
+    } catch(e) { console.warn('Failed to save showroom visibility choice:', e); }
   };
 
   window.mqDeleteLead = async function(id) {
@@ -6504,7 +6568,5 @@ window.logoutMember = async function () {
   };
 
   init();
-
-
 
 })();
