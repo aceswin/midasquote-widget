@@ -733,7 +733,6 @@ window.logoutMember = async function () {
                 <div class="mq-page-title">Specialty items</div>
                 <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
-              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
             </div>
             <div id="mq-spec-msg"></div>
             <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
@@ -742,6 +741,9 @@ window.logoutMember = async function () {
               🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
               <br><br>
               🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate installed price, since the price above only covers supply.
+            </div>
+            <div style="margin-bottom:1rem">
+              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
             </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
@@ -4344,7 +4346,7 @@ window.logoutMember = async function () {
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:36px;margin-bottom:12px">🖼️</div>
-        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:10px">Show this in your showroom?</div>
+        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:10px">Show this new item in your showroom?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.6;margin-bottom:1.5rem">
           Some specialty items are things customers browse and get excited about — others are really just pricing pieces for a job. Either is fine, but which is this one?
         </div>
