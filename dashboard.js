@@ -3695,7 +3695,11 @@ window.logoutMember = async function () {
           <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:auto"/> per sq ft</label>
           <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:6px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
+        <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
+          <span style="font-size:11px;color:#6b7280">Question customers see:</span>
+          <span onclick="mqShowSpecHelpPopover(this,'This only shows to customers when install is priced differently than supply. Type your own question to customize it, or leave blank to use the placeholder text shown below as the default.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+        </div>
+        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
     }
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
