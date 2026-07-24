@@ -214,7 +214,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
         <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
         <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this.</p>
-        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item, with its own installed price. Leave it unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
+        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, $54.95/sqft to supply a door + $16.80/door to install it: enter 16.80 as the install price, not $71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
+        <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
         <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
@@ -326,6 +327,35 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // Items tab — explains why there are already items sitting there waiting
   // for them. Same dismiss-once-on-the-shop-record pattern as the main
   // welcome modal, so it stays dismissed across devices/browsers too.
+  // A single shared narrow popover, reused by any small (?) info icon in
+  // the app — clicking one positions this near it and fills in its text.
+  // Native title="" tooltips render as one long unwrapped line, which is
+  // exactly the problem this replaces; this one actually wraps and is
+  // click-triggered (which is what people instinctively try anyway),
+  // dismissed by clicking anywhere else.
+  window.mqShowSpecHelpPopover = function(triggerEl, text, event) {
+    if (event) event.stopPropagation();
+    let pop = document.getElementById('mq-spec-help-popover');
+    const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'mq-spec-help-popover';
+      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:230px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
+      document.body.appendChild(pop);
+    }
+    if (alreadyOpenForThis) { pop.style.display = 'none'; return; } // clicking the same icon again closes it
+    pop.textContent = text;
+    pop._trigger = triggerEl;
+    const rect = triggerEl.getBoundingClientRect();
+    pop.style.display = 'block';
+    pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    pop.style.left = Math.max(8, window.scrollX + rect.left - 100) + 'px';
+  };
+  document.addEventListener('click', () => {
+    const pop = document.getElementById('mq-spec-help-popover');
+    if (pop) pop.style.display = 'none';
+  });
+
   window.mqShowSpecialtyTipsModal = function() {
     let modal = document.getElementById('mq-specialty-tips-modal');
     if (!modal) {
@@ -740,7 +770,7 @@ window.logoutMember = async function () {
               <br><br>
               🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
               <br><br>
-              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate installed price, since the price above only covers supply.
+              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. $54.95/sqft supply + $16.80/door install — enter 16.80, not $71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
             </div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
@@ -2068,6 +2098,9 @@ window.logoutMember = async function () {
           'Offers install choice': master.fields['Offers install choice'] || false,
           'Install price': master.fields['Install price'] || 0,
           'Install mode': master.fields['Install mode'] || 'supply',
+          'Install per linear foot': master.fields['Install per linear foot'] || false,
+          'Install per square foot': master.fields['Install per square foot'] || false,
+          'Install quantity label': master.fields['Install quantity label'] || '',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,
@@ -3624,6 +3657,25 @@ window.logoutMember = async function () {
     } catch(e) { console.error('Failed to save specialty unit field', e); }
   };
 
+  // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
+  // install side's own pricing method — kept as separate fields entirely
+  // from the supply-side ones, since an item can easily be priced one way
+  // to supply and a different way to install (e.g. $54.95/sqft supply, a
+  // flat $16.80/door to install).
+  window.mqSaveSpecInstallUnit = async function(id, field, checked) {
+    const otherField = field === 'Install per linear foot' ? 'Install per square foot' : 'Install per linear foot';
+    const otherId = field === 'Install per linear foot' ? `mq-spec-installpersqft-${id}` : `mq-spec-installperft-${id}`;
+    try {
+      const updates = { [field]: checked };
+      if (checked) {
+        updates[otherField] = false;
+        const otherCheckbox = document.getElementById(otherId);
+        if (otherCheckbox) otherCheckbox.checked = false;
+      }
+      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
+    } catch(e) { console.error('Failed to save specialty install unit field', e); }
+  };
+
   // Builds whichever content belongs in the "Installed price / Mode" column
   // for a given specialty item — an editable installed price if the shop
   // is offering the customer a choice, or a plain "which mode is this
@@ -3631,8 +3683,19 @@ window.logoutMember = async function () {
   function mqSpecInstallColHTML(r) {
     const offersChoice = !!r.fields['Offers install choice'];
     if (offersChoice) {
-      return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">Installed price:</div>
-        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>`;
+      const installPerFt = !!r.fields['Install per linear foot'];
+      const installPerSqFt = !!r.fields['Install per square foot'];
+      return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+          <span style="font-size:11px;color:#6b7280">Install price (labor only, added on top)</span>
+          <span onclick="mqShowSpecHelpPopover(this,'e.g. \$54.95/sqft to supply a door + \$16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+        </div>
+        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>
+        <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:auto"/> per lin ft</label>
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:auto"/> per sq ft</label>
+          <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+        </div>
+        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:6px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
     }
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
@@ -3656,10 +3719,16 @@ window.logoutMember = async function () {
     try { await atUpdate(CONFIG.SPECIALTY_TABLE, id, { 'Offers install choice': offersChoice }); } catch(e) { console.error('Failed to save install choice toggle', e); }
     const existingPriceInput = document.getElementById(`mq-spec-installprice-${id}`);
     const existingModeSelect = document.getElementById(`mq-spec-mode-${id}`);
+    const existingInstallPerFt = document.getElementById(`mq-spec-installperft-${id}`);
+    const existingInstallPerSqFt = document.getElementById(`mq-spec-installpersqft-${id}`);
+    const existingInstallQtyLabel = document.getElementById(`mq-spec-installqtylabel-${id}`);
     col.innerHTML = mqSpecInstallColHTML({ id, fields: {
       'Offers install choice': offersChoice,
       'Install price': existingPriceInput ? existingPriceInput.value : '',
       'Install mode': existingModeSelect ? existingModeSelect.value : 'supply',
+      'Install per linear foot': existingInstallPerFt ? existingInstallPerFt.checked : false,
+      'Install per square foot': existingInstallPerSqFt ? existingInstallPerSqFt.checked : false,
+      'Install quantity label': existingInstallQtyLabel ? existingInstallQtyLabel.value : '',
     }});
   };
 
@@ -4001,6 +4070,9 @@ window.logoutMember = async function () {
               'Offers install choice': master.fields['Offers install choice'] || false,
               'Install price': master.fields['Install price'] || 0,
               'Install mode': master.fields['Install mode'] || 'supply',
+              'Install per linear foot': master.fields['Install per linear foot'] || false,
+              'Install per square foot': master.fields['Install per square foot'] || false,
+              'Install quantity label': master.fields['Install quantity label'] || '',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,
@@ -4113,6 +4185,9 @@ window.logoutMember = async function () {
             'Offers install choice': master.fields['Offers install choice'] || false,
             'Install price': master.fields['Install price'] || 0,
             'Install mode': master.fields['Install mode'] || 'supply',
+            'Install per linear foot': master.fields['Install per linear foot'] || false,
+            'Install per square foot': master.fields['Install per square foot'] || false,
+            'Install quantity label': master.fields['Install quantity label'] || '',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,

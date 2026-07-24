@@ -188,6 +188,9 @@
           offersInstallChoice: r.fields['Offers install choice']||false,
           installPrice: r.fields['Install price']||0,
           installMode: r.fields['Install mode']||'supply',
+          installPerFt: r.fields['Install per linear foot']||false,
+          installPerSqFt: r.fields['Install per square foot']||false,
+          installQtyLabel: r.fields['Install quantity label']||'',
           description: r.fields['Description']||'',
           category: r.fields['Category']||'',
         };
@@ -322,6 +325,7 @@
       #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
       @keyframes mqShakeChoice{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
       #midasquote-widget .mq-spec-mode-select.mq-needs-choice{animation:mqShakeChoice 0.4s ease;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
+      #midasquote-widget input.mq-needs-choice{animation:mqShakeChoice 0.4s ease;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
       #midasquote-widget .mq-vpicker-thumb{width:96px;height:96px;border-radius:6px;object-fit:cover;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:96px;height:96px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
@@ -692,13 +696,26 @@
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
+      const specUnitKind = (perFt, perSqFt) => perFt ? 'linear' : (perSqFt ? 'sqft' : 'item');
+      const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt) !== specUnitKind(s.installPerFt, s.installPerSqFt);
       const installModeHtml = s.offersInstallChoice
-        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;margin-top:4px;width:100%;background:#fff;color:#111;font-weight:600">
+        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;margin-top:4px;width:100%;background:#fff;color:#111;font-weight:600" onchange="mqSpecModeChanged('${prefix}',${i})">
             <option value="" selected disabled>Choose one</option>
             <option value="supply">Supply only</option>
             <option value="install">Supplied &amp; Installed</option>
           </select>`
         : (s.installMode === 'na' ? '' : `<div style="font-size:11px;color:#6b7280;margin-top:2px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`);
+      const installQtyRowHtml = installDiffers ? `
+        <div id="mq-spec-installqty-${prefix}-${i}" style="display:none;margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb">
+          <div style="font-size:11px;color:#374151;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
+          <div class="mq-qty-ctrl">
+            <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},-1)">−</button>
+            <input type="text" inputmode="${s.installPerFt||s.installPerSqFt?'decimal':'numeric'}" pattern="${s.installPerFt||s.installPerSqFt?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-installqty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:14px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetInstallQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},1)">+</button>
+            ${s.installPerSqFt ? calcBtn(`mq-installqty-${prefix}-${i}`,'sqft',s.label) : (s.installPerFt ? calcBtn(`mq-installqty-${prefix}-${i}`,'linear',s.label) : '')}
+          </div>
+          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : 'quantity')}</span>
+        </div>` : '';
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
         <div class="mq-spec-top">
@@ -707,6 +724,7 @@
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
             ${installModeHtml}
+            ${installQtyRowHtml}
           </div>
         </div>
         <div class="mq-spec-bottom">
@@ -771,7 +789,7 @@
         <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>Don't worry about doing any math yourself.</strong> Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the ${mqCalcIconInlineHTML()} and enter each one as its own section — got <strong>3 separate runs of upper cabinets</strong>? That's 3 sections. We'll add them up and convert everything for you, no matter how many walls you have.</div>
         <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
         <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
-        <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Give it its own section too, if you have one.</div>
+        <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.</div>
         ${cornerSection}`;
     }
     return `
@@ -1606,9 +1624,9 @@
 
     const ctDepth  = 25.5;
 
-    const diffOn={},specQty={},surfCounts={},surfs={},tallCabs={},tallCabCounts={};
+    const diffOn={},specQty={},installQty={},surfCounts={},surfs={},tallCabs={},tallCabCounts={};
     let pendingCb=null;
-    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
+    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);installQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
 
     function fmt(n){return '$'+Math.round(n).toLocaleString();}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
@@ -1657,6 +1675,11 @@
             const qtyInput = document.getElementById(`mq-qty-${prefix}-${idx}`);
             if (qtyInput) qtyInput.value = 0;
             el.classList.remove('on');
+          }
+          if (installQty[prefix] && installQty[prefix][idx] > 0) {
+            installQty[prefix][idx] = 0;
+            const installQtyInput = document.getElementById(`mq-installqty-${prefix}-${idx}`);
+            if (installQtyInput) installQtyInput.value = 0;
           }
         }
       });
@@ -2228,6 +2251,11 @@
           document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.remove('on');
           const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
           if (modeSel) modeSel.selectedIndex = 0;
+          if (installQty[prefix]) installQty[prefix][i] = 0;
+          const installQtyInput = document.getElementById(`mq-installqty-${prefix}-${i}`);
+          if (installQtyInput) installQtyInput.value = 0;
+          const installQtyRow = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
+          if (installQtyRow) installQtyRow.style.display = 'none';
         });
       }
       mqRefreshSectionVisibility(prefix);
@@ -2360,6 +2388,28 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       specQty[prefix][i]=n;
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
+    };
+
+    window.mqSpecModeChanged = function(prefix, i) {
+      const row = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
+      if (!row) return;
+      const sel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+      row.style.display = (sel && sel.value === 'install') ? 'block' : 'none';
+    };
+    window.mqAdjInstallQty=(prefix,i,d)=>{
+      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt);
+      let next = Math.max(0, (installQty[prefix][i]||0) + d);
+      if (allowDecimal) next = Math.round(next * 10) / 10;
+      installQty[prefix][i]=next;
+      const el=document.getElementById(`mq-installqty-${prefix}-${i}`);
+      if(el) el.value=installQty[prefix][i];
+    };
+    window.mqSetInstallQty=(prefix,i,val)=>{
+      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt);
+      const n = allowDecimal
+        ? Math.max(0, Math.round((parseFloat(val)||0) * 10) / 10)
+        : Math.max(0, parseInt(val,10)||0);
+      installQty[prefix][i]=n;
     };
 
     function renumberTallCabs(prefix){
@@ -2680,18 +2730,32 @@ window.mqTogDrawerConfig=(prefix)=>{
       let specTotal=0;
       specs.forEach((s,i)=>{
         if(!specQty[prefix][i]) return;
-        let unitPrice = s.price;
-        let modeLabel = '';
-        if (s.offersInstallChoice) {
-          const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
-          const mode = modeSel ? modeSel.value : 'supply';
-          if (mode === 'install') { unitPrice = s.installPrice; modeLabel = ' — Supplied & Installed'; }
-          else { modeLabel = ' — Supply only'; }
+        const supplyQty = specQty[prefix][i];
+        const supplyCost = s.price * supplyQty;
+        const supplyQtyLabel = s.perSqFt?`${supplyQty} sqft`:(s.perFt?`${supplyQty} ft`:(supplyQty>1?`× ${supplyQty}`:''));
+
+        if (!s.offersInstallChoice) {
+          specTotal += supplyCost;
+          lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel})`:s.label,cost:Math.round(supplyCost)});
+          return;
         }
-        const cost=unitPrice*specQty[prefix][i];
-        specTotal+=cost;
-        const qtyLabel=s.perSqFt?`${specQty[prefix][i]} sqft`:(s.perFt?`${specQty[prefix][i]} ft`:(specQty[prefix][i]>1?`× ${specQty[prefix][i]}`:''));
-        lines.push({label:qtyLabel?`${s.label} (${qtyLabel})${modeLabel}`:`${s.label}${modeLabel}`,cost:Math.round(cost)});
+
+        const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+        const mode = modeSel ? modeSel.value : 'supply';
+        if (mode !== 'install') {
+          specTotal += supplyCost;
+          lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel}) — Supply only`:`${s.label} — Supply only`,cost:Math.round(supplyCost)});
+          return;
+        }
+
+        const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
+        const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
+        const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : supplyQty;
+        const installCost = s.installPrice * installQtyVal;
+        const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
+        specTotal += supplyCost + installCost;
+        lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel}) — Supply`:`${s.label} — Supply`,cost:Math.round(supplyCost)});
+        lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
       });
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
@@ -2825,6 +2889,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     window.mqCalcCabinets=()=>{
+      if (!mqValidateInstallQty('c')) return;
       window.mqShowLead(async lead=>{
         document.getElementById('mq-c-calc-btn').disabled=true;
         document.getElementById('mq-c-loading').classList.add('show');
@@ -2866,6 +2931,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcBoth=()=>{
+      if (!mqValidateInstallQty('b')) return;
       window.mqShowLead(async lead=>{
         document.getElementById('mq-b-calc-btn').disabled=true;
         document.getElementById('mq-b-loading').classList.add('show');
@@ -3077,6 +3143,28 @@ window.mqTogDrawerConfig=(prefix)=>{
         setTimeout(() => sel.classList.remove('mq-needs-choice'), 700);
       }
       return false;
+    }
+
+    function mqValidateInstallQty(prefix) {
+      for (let i = 0; i < specs.length; i++) {
+        if (!specQty[prefix][i]) continue;
+        const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+        if (!modeSel || modeSel.value !== 'install') continue;
+        const row = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
+        if (!row) continue;
+        if ((installQty[prefix][i] || 0) > 0) continue;
+        const qtyInput = document.getElementById(`mq-installqty-${prefix}-${i}`);
+        if (qtyInput) {
+          qtyInput.classList.remove('mq-needs-choice');
+          void qtyInput.offsetWidth;
+          qtyInput.classList.add('mq-needs-choice');
+          qtyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          qtyInput.focus();
+          setTimeout(() => qtyInput.classList.remove('mq-needs-choice'), 700);
+        }
+        return false;
+      }
+      return true;
     }
 
     addSurfaceInternal('ct','Kitchen run');
