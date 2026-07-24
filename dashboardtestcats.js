@@ -182,6 +182,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
         <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
+        <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
         <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific.</p>
         <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
@@ -210,10 +211,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     specialty: {
       title: 'Specialty items',
       body: `
-        <p>Anything that isn't a standard cabinet box, door, or countertop — pullouts, lazy susans, custom range hoods, refacing-specific items, or anything unique to your shop.</p>
+        <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
+        <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
         <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this.</p>
         <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item, with its own installed price. Leave it unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
+        <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
       `
     },
@@ -316,6 +319,80 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (shopRecord && !shopRecord.fields['Welcome popup seen']) {
       shopRecord.fields['Welcome popup seen'] = true;
       atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Welcome popup seen': true }).catch(()=>{});
+    }
+  };
+
+  // Shown exactly once per shop, the first time they land on the Specialty
+  // Items tab — explains why there are already items sitting there waiting
+  // for them. Same dismiss-once-on-the-shop-record pattern as the main
+  // welcome modal, so it stays dismissed across devices/browsers too.
+  window.mqShowSpecialtyTipsModal = function() {
+    let modal = document.getElementById('mq-specialty-tips-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-specialty-tips-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:40px;margin-bottom:12px">⭐</div>
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+          You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to pre-populate items for shops that offer refacing, restaining, or repainting services.
+          <br><br>
+          Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info.
+        </div>
+        <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqCloseSpecialtyTipsModal = function() {
+    const modal = document.getElementById('mq-specialty-tips-modal');
+    if (modal) modal.style.display = 'none';
+    const shopRecord = window._mqShopRecord;
+    if (shopRecord && !shopRecord.fields['Specialty tips popup seen']) {
+      shopRecord.fields['Specialty tips popup seen'] = true;
+      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Specialty tips popup seen': true }).catch(()=>{});
+    }
+  };
+
+  // Shown exactly once per shop, the first time they land on the My
+  // Products tab — explains that items can be removed per project type,
+  // and specifically warns about Box Materials/Door Styles/Drawer
+  // Configurations being linked (same three categories as
+  // LINKED_CABINET_CATS below). Same dismiss-once-on-the-shop-record
+  // pattern as the other first-visit popups.
+  window.mqShowProductsTipsModal = function() {
+    let modal = document.getElementById('mq-products-tips-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-products-tips-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:40px;margin-bottom:12px">📦</div>
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+          You can remove any item from any project type here — just uncheck it under that item's project types.
+          <br><br>
+          One thing to know: <strong>Box Materials, Door Styles, and Drawer Configurations are connected.</strong> Remove one of these from a project type, and all three come out together — they always work as a set for cabinet pricing, so there's no way to keep just one.
+          <br><br>
+          Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info on this tab.
+        </div>
+        <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqCloseProductsTipsModal = function() {
+    const modal = document.getElementById('mq-products-tips-modal');
+    if (modal) modal.style.display = 'none';
+    const shopRecord = window._mqShopRecord;
+    if (shopRecord && !shopRecord.fields['Products tips popup seen']) {
+      shopRecord.fields['Products tips popup seen'] = true;
+      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Products tips popup seen': true }).catch(()=>{});
     }
   };
 
@@ -553,13 +630,13 @@ window.logoutMember = async function () {
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field">
                   <label class="mq-label">Quote range — low (% below estimate)</label>
-                  <input type="number" id="mq-shop-range-low" placeholder="10" min="0" max="50"/>
-                  <span class="mq-hint">Default 10 — quote shows up to 10% below your estimate</span>
+                  <input type="number" id="mq-shop-range-low" placeholder="5" min="0" max="50"/>
+                  <span class="mq-hint">Default 5 — quote shows up to 5% below your estimate</span>
                 </div>
                 <div class="mq-field">
                   <label class="mq-label">Quote range — high (% above estimate)</label>
-                  <input type="number" id="mq-shop-range-high" placeholder="15" min="0" max="50"/>
-                  <span class="mq-hint">Default 15 — quote shows up to 15% above your estimate</span>
+                  <input type="number" id="mq-shop-range-high" placeholder="20" min="0" max="50"/>
+                  <span class="mq-hint">Default 20 — quote shows up to 20% above your estimate</span>
                 </div>
               </div>
               <div class="mq-field" style="margin-bottom:1rem">
@@ -654,9 +731,8 @@ window.logoutMember = async function () {
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
-                <div class="mq-page-sub">Add-ons that appear as options in your widget. Include the full cost in your price — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
+                <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
-              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
             </div>
             <div id="mq-spec-msg"></div>
             <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
@@ -665,6 +741,9 @@ window.logoutMember = async function () {
               🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
               <br><br>
               🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate installed price, since the price above only covers supply.
+            </div>
+            <div style="margin-bottom:1rem">
+              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
             </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
@@ -1770,9 +1849,9 @@ window.logoutMember = async function () {
   // page instead of being hardcoded here. Bootstraps the master shop's own
   // Room types field once from these starting values if it's never been set.
   const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"**Measure in sections:** Break your cabinets into individual runs or sections — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**For each section:** Measure the width and the height. Inches work fine — you'll convert them in the next step.\n\n**Convert to square feet:** (Width ÷ 12) × (Height ÷ 12) = square feet for that section. Already measured in feet? Just multiply Width × Height directly.\n\n**Add it all up:** Once you have the square footage for every section, add them all together for your total.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!\n\n[tip]**Don't feel like converting inches or mm to square feet?** Tap the [calc] next to the field and it'll do the conversion and add up the sections for you.[/tip]", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
-    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"**Measure in sections:** Break your cabinets into individual runs or sections — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**For each section:** Measure the width and the height. Inches work fine — you'll convert them in the next step.\n\n**Convert to square feet:** (Width ÷ 12) × (Height ÷ 12) = square feet for that section. Already measured in feet? Just multiply Width × Height directly.\n\n**Add it all up:** Once you have the square footage for every section, add them all together for your total.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!\n\n[tip]**Don't feel like converting inches or mm to square feet?** Tap the [calc] next to the field and it'll do the conversion and add up the sections for you.[/tip]", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
-    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"**Measure in sections:** Break your cabinets into individual runs or sections — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**For each section:** Measure the width and the height. Inches work fine — you'll convert them in the next step.\n\n**Convert to square feet:** (Width ÷ 12) × (Height ÷ 12) = square feet for that section. Already measured in feet? Just multiply Width × Height directly.\n\n**Add it all up:** Once you have the square footage for every section, add them all together for your total.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!\n\n[tip]**Don't feel like converting inches or mm to square feet?** Tap the [calc] next to the field and it'll do the conversion and add up the sections for you.[/tip]", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
+    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
+    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
+    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
   };
 
   async function ensureMasterTemplateRoomDefs() {
@@ -1917,6 +1996,40 @@ window.logoutMember = async function () {
       } catch(e) { console.warn('Failed to add project type template rooms:', e); }
     }
 
+    // Refacing/Repainting/Restaining aren't priced through the cabinet/door
+    // pricing wizard — that reverse-engineers everything into linear feet,
+    // which doesn't fit these three (doors are normally priced per square
+    // foot as Specialty Items instead — see the Specialty Items help text).
+    // So by default, hide Box Materials, Door Styles, Drawer Configurations,
+    // Crown, Valance, and Tall Cabinets from these three project types. A
+    // shop owner can always turn any of them back on for a given project
+    // type from the My Products tab if they want to use the wizard for it
+    // after all.
+    // Door hinges deliberately isn't in this list — it doesn't need to be.
+    // The whole "Cabinet measurements" section (where hinges live) already
+    // hides itself on the widget whenever Box Materials has no visible
+    // options for a room (see mqRefreshSectionVisibility's `cabActive`
+    // check), so hiding Box Materials here hides hinges along with it for
+    // free.
+    const NON_WIZARD_ROOM_IDS = ['refacing', 'repainting', 'restaining'];
+    const NON_WIZARD_HIDDEN_CATS = ['material', 'door', 'drawer', 'trim_crown', 'trim_valance', 'tall_cabinet'];
+    const categoryRooms = window._mqCategoryRooms || {};
+    let categoryRoomsChanged = false;
+    NON_WIZARD_HIDDEN_CATS.forEach(cat => {
+      const hidden = new Set(categoryRooms[cat] || []);
+      NON_WIZARD_ROOM_IDS.forEach(roomId => {
+        if (!hidden.has(roomId)) { hidden.add(roomId); categoryRoomsChanged = true; }
+      });
+      categoryRooms[cat] = [...hidden];
+    });
+    if (categoryRoomsChanged) {
+      window._mqCategoryRooms = categoryRooms;
+      try {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Category rooms': JSON.stringify(categoryRooms) });
+        shopRecord.fields['Category rooms'] = JSON.stringify(categoryRooms);
+      } catch(e) { console.warn('Failed to seed default hidden categories for Refacing/Repainting/Restaining:', e); }
+    }
+
     const masterItems = await ensureMasterTemplateItems();
 
     // Master items can have their own reference photos (uploaded on the
@@ -1932,6 +2045,17 @@ window.logoutMember = async function () {
     try { Object.assign(shopPhotos, shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}); } catch(e) {}
     let photosChanged = false;
 
+    // These items (New doors, Edge tape replacement, etc.) are pricing
+    // helpers for Refacing/Repainting/Restaining, not showcase-worthy
+    // products — hidden from the customer-facing showroom by default so a
+    // new shop doesn't end up displaying "Hinge replacement" as a featured
+    // item without the owner ever having decided that. Still fully usable
+    // for quoting either way; this only affects the showroom gallery page.
+    // A shop owner can turn any of these back on from My Products.
+    const shopHidden = {};
+    try { Object.assign(shopHidden, shopRecord.fields['Hidden'] ? JSON.parse(shopRecord.fields['Hidden']) : {}); } catch(e) {}
+    let hiddenChanged = false;
+
     try {
       await Promise.all(masterItems.map(async master => {
         const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
@@ -1944,6 +2068,9 @@ window.logoutMember = async function () {
           'Offers install choice': master.fields['Offers install choice'] || false,
           'Install price': master.fields['Install price'] || 0,
           'Install mode': master.fields['Install mode'] || 'supply',
+          'Install per linear foot': master.fields['Install per linear foot'] || false,
+          'Install per square foot': master.fields['Install per square foot'] || false,
+          'Install quantity label': master.fields['Install quantity label'] || '',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,
@@ -1954,12 +2081,18 @@ window.logoutMember = async function () {
         if (created?.id) {
           const photoUrl = masterPhotos['spec_' + master.id];
           if (photoUrl) { shopPhotos['spec_' + created.id] = photoUrl; photosChanged = true; }
+          shopHidden['spec_' + created.id] = true;
+          hiddenChanged = true;
         }
         return created;
       }));
       if (photosChanged) {
         await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Photos': JSON.stringify(shopPhotos) });
         shopRecord.fields['Photos'] = JSON.stringify(shopPhotos);
+      }
+      if (hiddenChanged) {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Hidden': JSON.stringify(shopHidden) });
+        shopRecord.fields['Hidden'] = JSON.stringify(shopHidden);
       }
       await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Templates seeded': true });
       shopRecord.fields['Templates seeded'] = true;
@@ -1997,8 +2130,8 @@ window.logoutMember = async function () {
         }
       }
     }
-    set('mq-shop-range-low',  f['Quote range low']  || '10');
-    set('mq-shop-range-high', f['Quote range high'] || '15');
+    set('mq-shop-range-low',  f['Quote range low']  || '5');
+    set('mq-shop-range-high', f['Quote range high'] || '20');
     set('mq-shop-logo', f['Logo URL']);
     mqRefreshLogoPreview();
     mqWireUploadButton(
@@ -2102,52 +2235,62 @@ window.logoutMember = async function () {
   // enough there to be worth the extra line); everything else uses the
   // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section — got **3 separate runs of upper cabinets**? That's 3 sections. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
 
-**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+**Upper cabinets:** A section for every wall run where uppers will go.
 
-**Island cabinets:** Include island cabinets if you have one.
+**Base cabinets:** Same idea — a section for every run of base cabinets.
+
+**Island cabinets:** Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.
 
 **Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
-[corner-img]
 
-[tip]**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.[/tip]`;
+[corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
 
-**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+**Upper cabinets:** A section for every wall run where uppers will go.
+
+**Base cabinets:** Same idea — a section for every run of base cabinets.
 
 **Not sure?** Just use your best guess — this is a ballpark estimate!
-
-**Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
 
 **Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
-[corner-img]
 
-[tip]**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.[/tip]`;
+[corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
-`**Upper cabinets:** Stand at one end of the wall where your uppers will go and measure straight across to the other end. Write that number down in feet.
+`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
 
-**Base cabinets:** Same thing — measure the total wall length where your base cabinets will sit.
+**Upper cabinets:** A section for every wall run where uppers will go.
 
-**Not sure?** Just use your best guess — this is a ballpark estimate!
+**Base cabinets:** Same idea — a section for every run of base cabinets.
 
-**Tip:** measure in feet, not inches. If your wall is 12 feet and 6 inches wide, enter 12.5.
-
-[tip]**Don't feel like converting inches or mm?** Tap the [calc] next to the field and it'll convert it for you.[/tip]`;
+**Not sure?** Just use your best guess — this is a ballpark estimate!`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
   // own from scratch. Confirms first if the box already has something in it,
   // so a stray click can't silently wipe out real custom text.
+  const DEFAULT_MEASURE_GUIDE_TEXT_SQFT =
+`[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]
+
+**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.
+
+**Not sure?** Just use your best guess — this is a ballpark estimate!`;
+
   window.mqFillDefaultGuide = function(textareaId, roomId) {
     const ta = el(textareaId);
     if (!ta) return;
     if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
     ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
       : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
+      // Refacing/Repainting/Restaining are priced per square foot, not
+      // linear feet — there's no corner cabinet concept for them, so they
+      // get their own guide instead of falling through to the general
+      // (corner-cabinet) one below.
+      : (roomId === 'refacing' || roomId === 'repainting' || roomId === 'restaining') ? DEFAULT_MEASURE_GUIDE_TEXT_SQFT
       : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
   };
 
@@ -2162,9 +2305,9 @@ window.logoutMember = async function () {
       { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'garage.png' },
       { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'commercial.png' },
       { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'other.png' },
-      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"**Measure in sections:** Break your cabinets into individual runs or sections — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**For each section:** Measure the width and the height. Inches work fine — you'll convert them in the next step.\n\n**Convert to square feet:** (Width ÷ 12) × (Height ÷ 12) = square feet for that section. Already measured in feet? Just multiply Width × Height directly.\n\n**Add it all up:** Once you have the square footage for every section, add them all together for your total.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!\n\n[tip]**Don't feel like converting inches or mm to square feet?** Tap the [calc] next to the field and it'll do the conversion and add up the sections for you.[/tip]", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
-      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"**Measure in sections:** Break your cabinets into individual runs or sections — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**For each section:** Measure the width and the height. Inches work fine — you'll convert them in the next step.\n\n**Convert to square feet:** (Width ÷ 12) × (Height ÷ 12) = square feet for that section. Already measured in feet? Just multiply Width × Height directly.\n\n**Add it all up:** Once you have the square footage for every section, add them all together for your total.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!\n\n[tip]**Don't feel like converting inches or mm to square feet?** Tap the [calc] next to the field and it'll do the conversion and add up the sections for you.[/tip]", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
-      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"**Measure in sections:** Break your cabinets into individual runs or sections — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**For each section:** Measure the width and the height. Inches work fine — you'll convert them in the next step.\n\n**Convert to square feet:** (Width ÷ 12) × (Height ÷ 12) = square feet for that section. Already measured in feet? Just multiply Width × Height directly.\n\n**Add it all up:** Once you have the square footage for every section, add them all together for your total.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!\n\n[tip]**Don't feel like converting inches or mm to square feet?** Tap the [calc] next to the field and it'll do the conversion and add up the sections for you.[/tip]", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
+      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
+      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
+      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
     ];
   }
 
@@ -2430,6 +2573,9 @@ window.logoutMember = async function () {
 
   window.mqRemoveRoom = function(idx) {
     if (!window._mqRooms) return;
+    const room = window._mqRooms[idx];
+    const name = (room && room.name) ? room.name : 'this project type';
+    if (!confirm(`Are you sure you want to delete "${name}"? This won't take effect until you click Save.`)) return;
     window._mqRooms.splice(idx, 1);
     renderRoomsList();
   };
@@ -2827,8 +2973,8 @@ window.logoutMember = async function () {
         'Website':           gv('mq-shop-website'),
         'Lead notify email': gv('mq-shop-email'),
         'Brand colour':      gv('mq-shop-color'),
-        'Quote range low':   gn('mq-shop-range-low',  10),
-        'Quote range high':  gn('mq-shop-range-high', 15),
+        'Quote range low':   gn('mq-shop-range-low',  5),
+        'Quote range high':  gn('mq-shop-range-high', 20),
         'Logo URL':          gv('mq-shop-logo'),
         'Disclaimer text':   gv('mq-shop-disclaimer'),
         'Consultation link': gv('mq-shop-consult-link'),
@@ -3481,6 +3627,25 @@ window.logoutMember = async function () {
     } catch(e) { console.error('Failed to save specialty unit field', e); }
   };
 
+  // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
+  // install side's own pricing method — kept as separate fields entirely
+  // from the supply-side ones, since an item can easily be priced one way
+  // to supply and a different way to install (e.g. $54.95/sqft supply, a
+  // flat $16.80/door to install).
+  window.mqSaveSpecInstallUnit = async function(id, field, checked) {
+    const otherField = field === 'Install per linear foot' ? 'Install per square foot' : 'Install per linear foot';
+    const otherId = field === 'Install per linear foot' ? `mq-spec-installpersqft-${id}` : `mq-spec-installperft-${id}`;
+    try {
+      const updates = { [field]: checked };
+      if (checked) {
+        updates[otherField] = false;
+        const otherCheckbox = document.getElementById(otherId);
+        if (otherCheckbox) otherCheckbox.checked = false;
+      }
+      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
+    } catch(e) { console.error('Failed to save specialty install unit field', e); }
+  };
+
   // Builds whichever content belongs in the "Installed price / Mode" column
   // for a given specialty item — an editable installed price if the shop
   // is offering the customer a choice, or a plain "which mode is this
@@ -3488,8 +3653,20 @@ window.logoutMember = async function () {
   function mqSpecInstallColHTML(r) {
     const offersChoice = !!r.fields['Offers install choice'];
     if (offersChoice) {
+      const installPerFt = !!r.fields['Install per linear foot'];
+      const installPerSqFt = !!r.fields['Install per square foot'];
       return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">Installed price:</div>
-        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>`;
+        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>
+        <div style="margin-top:6px;font-size:11px;color:#6b7280">Install is priced:</div>
+        <div style="margin-top:2px;display:flex;gap:10px">
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:auto"/> per lin ft</label>
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:auto"/> per sq ft</label>
+        </div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:2px;max-width:220px">Leave both unchecked if install is priced per item — this can be different from how supply is priced above.</div>
+        <div style="margin-top:8px">
+          <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:230px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>
+          <div style="font-size:10px;color:#9ca3af;margin-top:2px;max-width:230px">Only shown to customers when install is priced differently than supply. Leave blank to use the default question shown as the placeholder above.</div>
+        </div>`;
     }
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
@@ -3513,10 +3690,16 @@ window.logoutMember = async function () {
     try { await atUpdate(CONFIG.SPECIALTY_TABLE, id, { 'Offers install choice': offersChoice }); } catch(e) { console.error('Failed to save install choice toggle', e); }
     const existingPriceInput = document.getElementById(`mq-spec-installprice-${id}`);
     const existingModeSelect = document.getElementById(`mq-spec-mode-${id}`);
+    const existingInstallPerFt = document.getElementById(`mq-spec-installperft-${id}`);
+    const existingInstallPerSqFt = document.getElementById(`mq-spec-installpersqft-${id}`);
+    const existingInstallQtyLabel = document.getElementById(`mq-spec-installqtylabel-${id}`);
     col.innerHTML = mqSpecInstallColHTML({ id, fields: {
       'Offers install choice': offersChoice,
       'Install price': existingPriceInput ? existingPriceInput.value : '',
       'Install mode': existingModeSelect ? existingModeSelect.value : 'supply',
+      'Install per linear foot': existingInstallPerFt ? existingInstallPerFt.checked : false,
+      'Install per square foot': existingInstallPerSqFt ? existingInstallPerSqFt.checked : false,
+      'Install quantity label': existingInstallQtyLabel ? existingInstallQtyLabel.value : '',
     }});
   };
 
@@ -3858,6 +4041,9 @@ window.logoutMember = async function () {
               'Offers install choice': master.fields['Offers install choice'] || false,
               'Install price': master.fields['Install price'] || 0,
               'Install mode': master.fields['Install mode'] || 'supply',
+              'Install per linear foot': master.fields['Install per linear foot'] || false,
+              'Install per square foot': master.fields['Install per square foot'] || false,
+              'Install quantity label': master.fields['Install quantity label'] || '',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,
@@ -3970,6 +4156,9 @@ window.logoutMember = async function () {
             'Offers install choice': master.fields['Offers install choice'] || false,
             'Install price': master.fields['Install price'] || 0,
             'Install mode': master.fields['Install mode'] || 'supply',
+            'Install per linear foot': master.fields['Install per linear foot'] || false,
+            'Install per square foot': master.fields['Install per square foot'] || false,
+            'Install quantity label': master.fields['Install quantity label'] || '',
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,
@@ -4191,8 +4380,55 @@ window.logoutMember = async function () {
             nameInput.select();
           }
         }, 50);
+        // The "Hide from showroom" checkbox for this item actually lives on
+        // a different tab entirely (My Products), behind its own separate
+        // Save button — easy to forget about a brand new item you're not
+        // even looking at. Ask right now instead, while it's top of mind,
+        // and save the answer immediately so there's nothing left to
+        // remember later.
+        window.mqShowShowroomVisibilityPrompt(created.id);
       }
     } catch(e) { showMsg('mq-spec-msg', 'Error adding item.', 'error'); }
+  };
+
+  // Asks whether a just-created specialty item should appear on the
+  // customer-facing showroom page, and saves the answer straight to the
+  // shop's 'Hidden' field immediately — no need to visit My Products and
+  // click its separate Save button to make it stick.
+  window.mqShowShowroomVisibilityPrompt = function(specId) {
+    let modal = document.getElementById('mq-showroom-prompt-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-showroom-prompt-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:36px;margin-bottom:12px">🖼️</div>
+        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:10px">Show this new item in your showroom?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.6;margin-bottom:1.5rem">
+          Some specialty items are things customers browse and get excited about — others are really just pricing pieces for a job. Either is fine, but which is this one?
+        </div>
+        <button onclick="mqAnswerShowroomVisibilityPrompt('${specId}', true)" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">Yes, show it in showroom</button>
+        <button onclick="mqAnswerShowroomVisibilityPrompt('${specId}', false)" style="width:100%;padding:13px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">No, keep it hidden</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqAnswerShowroomVisibilityPrompt = async function(specId, showInShowroom) {
+    const modal = document.getElementById('mq-showroom-prompt-modal');
+    if (modal) modal.style.display = 'none';
+    if (showInShowroom) return; // default is already visible — nothing to save
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    try {
+      let hidden = {};
+      try { hidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) {}
+      hidden['spec_' + specId] = true;
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden': JSON.stringify(hidden) });
+      shopRec.fields['Hidden'] = JSON.stringify(hidden);
+      showMsg('mq-spec-msg', '✓ Got it — hidden from your showroom. You can change this anytime from My Products.');
+    } catch(e) { console.warn('Failed to save showroom visibility choice:', e); }
   };
 
   window.mqDeleteLead = async function(id) {
@@ -5096,7 +5332,7 @@ window.logoutMember = async function () {
             tagMult: (parseInt(el('mq-pd-size-tag')?.value,10)||100)/100,
             lineMult: (parseInt(el('mq-pd-line-spacing')?.value,10)||100)/100,
             offsetPct: (parseInt(el('mq-pd-text-offset')?.value,10)||0)/100,
-            preText: el('mq-pd-pre-text')?.value || 'Another project by',
+            preText: el('mq-pd-pre-text')?.value ?? '',
             preColor: el('mq-pd-pre-color')?.value || '#6b6b6b',
             tagColor: el('mq-pd-tag-color')?.value || '#4b4b4b'
           };
@@ -5369,7 +5605,7 @@ window.logoutMember = async function () {
               pdCtx.font = tagFont;
               pdCtx.fillStyle = tc.tagColor;
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.34);
-              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?48:42) * tc.lineMult; });
+              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?58:50) * tc.lineMult; });
             }
           }
 
@@ -5501,7 +5737,7 @@ window.logoutMember = async function () {
               pdCtx.font = tagFont;
               pdCtx.fillStyle = tc.tagColor;
               const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.36);
-              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?48:42) * tc.lineMult; });
+              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?58:50) * tc.lineMult; });
             }
           }
 
@@ -5596,7 +5832,7 @@ window.logoutMember = async function () {
 
             if (tagline) {
               pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?44:38) * tc.lineMult; });
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?54:46) * tc.lineMult; });
             }
           }
 
@@ -5678,7 +5914,7 @@ window.logoutMember = async function () {
           if (tagline) {
             ty += 14 * tc.lineMult;
             pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-            pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 38 * tc.lineMult; });
+            pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 46 * tc.lineMult; });
           }
 
           pdClearShadow();
@@ -5761,7 +5997,7 @@ window.logoutMember = async function () {
             if (tagline) {
               cy += (isPortrait ? 20 : 14) * tc.lineMult;
               pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?42:38) * tc.lineMult; });
+              pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?50:44) * tc.lineMult; });
             }
           }
 
@@ -6337,6 +6573,18 @@ window.logoutMember = async function () {
         });
       }
     }
+    if (page === 'specialty') {
+      const specList = document.getElementById('mq-spec-list');
+      if (specList && window._mqShopRecord) {
+        specList.innerHTML = '<div class="mq-loading">Refreshing specialty items...</div>';
+        loadSpecialty(window._mqShopRecord.fields['Shop name']).then(specs => {
+          renderSpecialty(specs, window._mqShopRecord);
+        });
+      }
+      if (window._mqShopRecord && !window._mqShopRecord.fields['Specialty tips popup seen']) {
+        window.mqShowSpecialtyTipsModal();
+      }
+    }
     if (page === 'products') {
       const prodContent = document.getElementById('mq-products-content');
       if (prodContent) {
@@ -6349,6 +6597,9 @@ window.logoutMember = async function () {
           if (freshShop) window._mqShopRecord = freshShop;
           window._mqLineItems = lineItems;
           initProductsTab(window._mqShopRecord, lineItems);
+          if (window._mqShopRecord && !window._mqShopRecord.fields['Products tips popup seen']) {
+            window.mqShowProductsTipsModal();
+          }
         });
       }
     }
