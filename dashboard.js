@@ -2241,6 +2241,7 @@ window.logoutMember = async function () {
 **Island cabinets:** Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.
 
 **Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+
 [corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
@@ -2253,6 +2254,7 @@ window.logoutMember = async function () {
 **Not sure?** Just use your best guess — this is a ballpark estimate!
 
 **Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+
 [corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
@@ -2268,12 +2270,24 @@ window.logoutMember = async function () {
   // owner start from (and edit) the standard guide instead of writing their
   // own from scratch. Confirms first if the box already has something in it,
   // so a stray click can't silently wipe out real custom text.
+  const DEFAULT_MEASURE_GUIDE_TEXT_SQFT =
+`[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]
+
+**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.
+
+**Not sure?** Just use your best guess — this is a ballpark estimate!`;
+
   window.mqFillDefaultGuide = function(textareaId, roomId) {
     const ta = el(textareaId);
     if (!ta) return;
     if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
     ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
       : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
+      // Refacing/Repainting/Restaining are priced per square foot, not
+      // linear feet — there's no corner cabinet concept for them, so they
+      // get their own guide instead of falling through to the general
+      // (corner-cabinet) one below.
+      : (roomId === 'refacing' || roomId === 'repainting' || roomId === 'restaining') ? DEFAULT_MEASURE_GUIDE_TEXT_SQFT
       : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
   };
 
