@@ -3656,19 +3656,16 @@ window.logoutMember = async function () {
     if (offersChoice) {
       const installPerFt = !!r.fields['Install per linear foot'];
       const installPerSqFt = !!r.fields['Install per square foot'];
-      return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">Install price <span style="font-weight:600;color:#374151">(labor only — added on top of the price above, not a combined total)</span>:</div>
-        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>
-        <div style="font-size:10px;color:#9ca3af;margin-top:2px;max-width:220px">e.g. $54.95/sqft to supply a door + $16.80/door to install it — enter <strong>16.80</strong> here, not the combined total. The widget adds supply and install as two separate charges.</div>
-        <div style="margin-top:8px;font-size:11px;color:#6b7280">Install is priced:</div>
-        <div style="margin-top:2px;display:flex;gap:10px">
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:auto"/> per lin ft</label>
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:auto"/> per sq ft</label>
+      return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+          <span style="font-size:11px;color:#6b7280">Install price (labor only, added on top)</span>
+          <span title="e.g. $54.95/sqft to supply a door + $16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges." style="cursor:help;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <div style="font-size:10px;color:#9ca3af;margin-top:2px;max-width:220px">Leave both unchecked if install is priced per item. This can be a completely different method than supply — e.g. supply priced per sqft, install priced per door.</div>
-        <div style="margin-top:8px">
-          <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:230px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>
-          <div style="font-size:10px;color:#9ca3af;margin-top:2px;max-width:230px">Only shown to customers when install is priced differently than supply — that's when the widget needs its own quantity for install (e.g. "12 sqft to supply, but only 4 doors to install"). Leave blank to use the default question shown as the placeholder above.</div>
-        </div>`;
+        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>
+        <div style="margin-top:6px;display:flex;gap:10px;align-items:center">
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer" title="Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply per sqft, install per door."><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:auto"/> per lin ft</label>
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer" title="Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply per sqft, install per door."><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:auto"/> per sq ft</label>
+        </div>
+        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" title="Only shown to customers when install is priced differently than supply. Leave blank to use this placeholder as the default question." style="margin-top:6px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
     }
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
