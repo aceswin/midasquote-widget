@@ -4128,8 +4128,22 @@ window.logoutMember = async function () {
   window.mqPushSingleTemplateItem = async function(masterItemId) {
     showMsg('mq-templates-msg', 'Pushing this item to all shops...');
     try {
-      const master = (window._mqTemplateItems || []).find(m => m.id === masterItemId);
+      // Fetch this record fresh rather than trusting window._mqTemplateItems
+      // — that's just a snapshot taken when the tab first loaded, and every
+      // field edit since then (price, name, checkboxes, all of it) saves
+      // straight to Airtable without updating that snapshot. Reading from
+      // it here would silently push whatever the values were BEFORE your
+      // most recent edits, undoing them on every shop.
+      const fresh = await atGet(CONFIG.SPECIALTY_TABLE, `RECORD_ID()="${masterItemId}"`);
+      const master = fresh[0];
       if (!master) { showMsg('mq-templates-msg', 'Could not find that template item — try refreshing the page.', 'error'); return; }
+      // Keep the in-memory list in sync too, so anything else reading it
+      // this session (or a second push right after) also sees the current
+      // values instead of the stale ones.
+      if (window._mqTemplateItems) {
+        const idx = window._mqTemplateItems.findIndex(m => m.id === masterItemId);
+        if (idx !== -1) window._mqTemplateItems[idx] = master;
+      }
 
       const masterShop = await ensureMasterTemplateShop();
       let masterPhotos = {};
