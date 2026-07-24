@@ -2865,28 +2865,37 @@ window.mqTogDrawerConfig=(prefix)=>{
       let specTotal=0;
       specs.forEach((s,i)=>{
         if(!specQty[prefix][i]) return;
-        let unitPrice = s.price;
-        let modeLabel = '';
-        // Default to the same quantity used for supply — correct whenever
-        // install is priced the same way (e.g. both per sqft). Only
-        // overridden below when install's own method actually differs.
-        let qty = specQty[prefix][i];
-        if (s.offersInstallChoice) {
-          const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
-          const mode = modeSel ? modeSel.value : 'supply';
-          if (mode === 'install') {
-            unitPrice = s.installPrice;
-            modeLabel = ' — Supplied & Installed';
-            const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
-            const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
-            if (installKind !== supplyKind) qty = installQty[prefix][i] || 0;
-          }
-          else { modeLabel = ' — Supply only'; }
+        const supplyQty = specQty[prefix][i];
+        const supplyCost = s.price * supplyQty;
+        const supplyQtyLabel = s.perSqFt?`${supplyQty} sqft`:(s.perFt?`${supplyQty} ft`:(supplyQty>1?`× ${supplyQty}`:''));
+
+        if (!s.offersInstallChoice) {
+          specTotal += supplyCost;
+          lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel})`:s.label,cost:Math.round(supplyCost)});
+          return;
         }
-        const cost=unitPrice*qty;
-        specTotal+=cost;
-        const qtyLabel=s.perSqFt?`${specQty[prefix][i]} sqft`:(s.perFt?`${specQty[prefix][i]} ft`:(specQty[prefix][i]>1?`× ${specQty[prefix][i]}`:''));
-        lines.push({label:qtyLabel?`${s.label} (${qtyLabel})${modeLabel}`:`${s.label}${modeLabel}`,cost:Math.round(cost)});
+
+        const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+        const mode = modeSel ? modeSel.value : 'supply';
+        if (mode !== 'install') {
+          specTotal += supplyCost;
+          lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel}) — Supply only`:`${s.label} — Supply only`,cost:Math.round(supplyCost)});
+          return;
+        }
+
+        // Install price is its own rate, never a replacement for supply —
+        // "6 sqft supply + 12 sqft install" means both get charged and
+        // added together, not one overriding the other. Two separate line
+        // items too, so the customer can actually see the math instead of
+        // one merged, unexplained number.
+        const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
+        const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
+        const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : supplyQty;
+        const installCost = s.installPrice * installQtyVal;
+        const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
+        specTotal += supplyCost + installCost;
+        lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel}) — Supply`:`${s.label} — Supply`,cost:Math.round(supplyCost)});
+        lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
       });
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
