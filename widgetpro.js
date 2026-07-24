@@ -724,7 +724,6 @@
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
             ${installModeHtml}
-            ${installQtyRowHtml}
           </div>
         </div>
         <div class="mq-spec-bottom">
@@ -735,6 +734,7 @@
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</span>
+          ${installQtyRowHtml}
         </div>
       </div>`;
     };
@@ -3146,23 +3146,27 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function mqValidateInstallQty(prefix) {
+      const shake = (qtyInput) => {
+        if (!qtyInput) return;
+        qtyInput.classList.remove('mq-needs-choice');
+        void qtyInput.offsetWidth;
+        qtyInput.classList.add('mq-needs-choice');
+        qtyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        qtyInput.focus();
+        setTimeout(() => qtyInput.classList.remove('mq-needs-choice'), 700);
+      };
       for (let i = 0; i < specs.length; i++) {
-        if (!specQty[prefix][i]) continue;
         const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
         if (!modeSel || modeSel.value !== 'install') continue;
         const row = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
         if (!row) continue;
-        if ((installQty[prefix][i] || 0) > 0) continue;
-        const qtyInput = document.getElementById(`mq-installqty-${prefix}-${i}`);
-        if (qtyInput) {
-          qtyInput.classList.remove('mq-needs-choice');
-          void qtyInput.offsetWidth;
-          qtyInput.classList.add('mq-needs-choice');
-          qtyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          qtyInput.focus();
-          setTimeout(() => qtyInput.classList.remove('mq-needs-choice'), 700);
-        }
-        return false;
+
+        const supplyQty = specQty[prefix][i] || 0;
+        const instQty = installQty[prefix][i] || 0;
+        if (supplyQty === 0 && instQty === 0) continue;
+
+        if (supplyQty === 0) { shake(document.getElementById(`mq-qty-${prefix}-${i}`)); return false; }
+        if (instQty === 0) { shake(document.getElementById(`mq-installqty-${prefix}-${i}`)); return false; }
       }
       return true;
     }

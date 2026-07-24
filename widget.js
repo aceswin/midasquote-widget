@@ -778,7 +778,6 @@
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
             ${installModeHtml}
-            ${installQtyRowHtml}
           </div>
         </div>
         <div class="mq-spec-bottom">
@@ -789,6 +788,7 @@
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</span>
+          ${installQtyRowHtml}
         </div>
       </div>`;
     };
@@ -3285,30 +3285,38 @@ window.mqTogDrawerConfig=(prefix)=>{
       return false;
     }
 
-    // Blocks generating the estimate if any specialty item is set to
-    // "Supplied & Installed" with its own install-quantity field (shown
-    // only when install's pricing method differs from supply's) still
-    // sitting at 0 — otherwise the install line would silently price at
-    // $0 instead of flagging that something's missing. Shakes/focuses the
-    // first offending field instead, same pattern as mqSpecModeChosen.
+    // Blocks generating the estimate if a specialty item set to "Supplied &
+    // Installed" is missing either quantity it needs — the main supply
+    // quantity, or (when install's method differs from supply's) the
+    // separate install quantity. Catches both directions: forgetting
+    // install (price would silently be $0) and forgetting supply (the
+    // whole item would silently drop out of the estimate entirely, since
+    // that's the field that gates whether the item counts as selected at
+    // all — easy to miss since the install field now sits right below it).
+    // Shakes/focuses whichever field needs attention, same pattern as
+    // mqSpecModeChosen.
     function mqValidateInstallQty(prefix) {
+      const shake = (qtyInput) => {
+        if (!qtyInput) return;
+        qtyInput.classList.remove('mq-needs-choice');
+        void qtyInput.offsetWidth;
+        qtyInput.classList.add('mq-needs-choice');
+        qtyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        qtyInput.focus();
+        setTimeout(() => qtyInput.classList.remove('mq-needs-choice'), 700);
+      };
       for (let i = 0; i < specs.length; i++) {
-        if (!specQty[prefix][i]) continue;
         const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
         if (!modeSel || modeSel.value !== 'install') continue;
         const row = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
-        if (!row) continue; // methods match — no separate field to check
-        if ((installQty[prefix][i] || 0) > 0) continue;
-        const qtyInput = document.getElementById(`mq-installqty-${prefix}-${i}`);
-        if (qtyInput) {
-          qtyInput.classList.remove('mq-needs-choice');
-          void qtyInput.offsetWidth;
-          qtyInput.classList.add('mq-needs-choice');
-          qtyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          qtyInput.focus();
-          setTimeout(() => qtyInput.classList.remove('mq-needs-choice'), 700);
-        }
-        return false;
+        if (!row) continue; // methods match — no separate field, nothing extra to check
+
+        const supplyQty = specQty[prefix][i] || 0;
+        const instQty = installQty[prefix][i] || 0;
+        if (supplyQty === 0 && instQty === 0) continue; // genuinely not selected at all
+
+        if (supplyQty === 0) { shake(document.getElementById(`mq-qty-${prefix}-${i}`)); return false; }
+        if (instQty === 0) { shake(document.getElementById(`mq-installqty-${prefix}-${i}`)); return false; }
       }
       return true;
     }
