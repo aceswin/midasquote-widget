@@ -1220,6 +1220,10 @@ window.logoutMember = async function () {
                         </span>
                       </div>
                     </div>
+                    <div class="mq-field">
+                      <label class="mq-label">Shop name colour <span style="font-weight:400;color:#9ca3af;text-transform:none">(independent of the shape colour above)</span></label>
+                      <input type="color" id="mq-pd-name-color" value="#1a1a1a" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                    </div>
                   </div>
 
                   <div class="mq-field" style="margin-top:12px">
@@ -5643,7 +5647,7 @@ window.logoutMember = async function () {
             cy += (isPortrait ? 130 : 110) * tc.lineMult;
 
             pdCtx.font = nameFont;
-            pdCtx.fillStyle = shapeColor;
+            pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
             const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.36);
             nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?86:72) * tc.lineMult; });
 
@@ -5775,7 +5779,7 @@ window.logoutMember = async function () {
             cy += (isPortrait ? 130 : 110) * tc.lineMult;
 
             pdCtx.font = nameFont;
-            pdCtx.fillStyle = shapeColor;
+            pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
             const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.38);
             nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?82:68) * tc.lineMult; });
 
@@ -5871,7 +5875,7 @@ window.logoutMember = async function () {
             pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
             pdCtx.fillText(tc.preText, centerX, cy); cy += (isPortrait ? 90 : 76) * tc.lineMult;
 
-            pdCtx.font = nameFont; pdCtx.fillStyle = shapeColor;
+            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
             const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.36);
             nameLines.forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?74:62) * tc.lineMult; });
             cy += (isPortrait ? 20 : 14) * tc.lineMult;
@@ -5956,7 +5960,7 @@ window.logoutMember = async function () {
           let ty = cy + r + 70 + tc.offsetPct * H;
           pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
           pdCtx.fillText(tc.preText, cx, ty); ty += 58 * tc.lineMult;
-          pdCtx.font = nameFont; pdCtx.fillStyle = '#ffffff';
+          pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
           pdWrapText(pdShopName, nameFont, W*0.85).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 58 * tc.lineMult; });
           if (tagline) {
             ty += 14 * tc.lineMult;
@@ -6039,7 +6043,7 @@ window.logoutMember = async function () {
             let cy = (isPortrait ? splitAt*0.26 : H*0.30) + tc.offsetPct * H;
             pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
             pdCtx.fillText(tc.preText.toUpperCase(), centerX, cy); cy += (isPortrait?66:56) * tc.lineMult;
-            pdCtx.font = nameFont; pdCtx.fillStyle = textColor;
+            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || textColor;
             pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : splitAt*0.85).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?76:64) * tc.lineMult; });
             if (tagline) {
               cy += (isPortrait ? 20 : 14) * tc.lineMult;
@@ -6115,6 +6119,18 @@ window.logoutMember = async function () {
             else if (tpl === 'circular-badge') { preColorInput.value = '#f0f0f0'; tagColorInput.value = '#e0e0e0'; }
             else if (tpl === 'bold-modern') { preColorInput.value = '#d0d0d0'; tagColorInput.value = '#d0d0d0'; }
             else { preColorInput.value = '#6b6b6b'; tagColorInput.value = '#4b4b4b'; }
+          }
+          // Shop name colour is independent of shape colour (its own picker
+          // now, not derived from it) — still needs a sensible starting
+          // point per template though, same reasoning as the background
+          // colour above: diamond-arrow, circular-badge, and bold-modern
+          // all put the shop name over a dark panel/background by default,
+          // so white starts far more readable there than this picker's
+          // general black default.
+          const nameColorInput = el('mq-pd-name-color');
+          if (nameColorInput) {
+            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'bold-modern') nameColorInput.value = '#ffffff';
+            else nameColorInput.value = '#1a1a1a';
           }
           drawPosterDesigner();
         };
