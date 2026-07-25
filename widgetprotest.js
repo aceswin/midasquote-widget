@@ -3551,6 +3551,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         prefix,
         templateId: (window._mqProposalTemplates[0] || {}).id || null,
         customerName: '',
+        customerAddress: '',
+        jobName: '',
         description: '',
         // Editable copy — the original est.lines stays untouched so
         // reopening this modal always starts fresh from the real estimate.
@@ -3598,8 +3600,16 @@ window.mqTogDrawerConfig=(prefix)=>{
           <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer name *</label>
           <input type="text" value="${state.customerName.replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('customerName',this.value)" placeholder="e.g. Jane Smith" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
         </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer address <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+          <input type="text" value="${(state.customerAddress||'').replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('customerAddress',this.value)" placeholder="e.g. 123 Main St, Grande Prairie, AB" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Job name <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+          <input type="text" value="${(state.jobName||'').replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('jobName',this.value)" placeholder="e.g. Kitchen reface" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
+        </div>
         <div style="margin-bottom:14px">
-          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Description <span style="font-weight:400;color:#9ca3af">(for your own reference later — not shown on the printed proposal)</span></label>
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Description <span style="font-weight:400;color:#9ca3af">(shown on the printed proposal, right under the customer's name)</span></label>
           <textarea rows="2" oninput="mqProposalFieldChanged('description',this.value)" placeholder="e.g. Full kitchen reface, spoke to him at the counter" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;resize:vertical;font-family:inherit">${state.description.replace(/</g,'&lt;')}</textarea>
         </div>
 
@@ -3708,6 +3718,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       const payload = {
         shopToken,
         customerName: state.customerName.trim(),
+        customerAddress: state.customerAddress || '',
+        jobName: state.jobName || '',
         description: state.description || '',
         templateUsed: f['Template name'] || '',
         projectType: est.projectType || '',
@@ -3728,11 +3740,19 @@ window.mqTogDrawerConfig=(prefix)=>{
       mqOpenProposalPrintView(printWin, {
         shop: window._mqShopData || {},
         customerName: payload.customerName,
+        customerAddress: payload.customerAddress,
+        jobName: payload.jobName,
         description: payload.description,
         projectType: payload.projectType,
         lineItems: state.lines,
         saveFailed,
         subtotal, tax: taxAmt, deposit: depositAmt, total,
+        // Text blocks come straight from the chosen template — only
+        // included on the printed page when their "Show ___" checkbox
+        // is on in the dashboard.
+        paymentTerms: f['Show payment terms'] ? (f['Payment terms'] || '') : '',
+        warrantyNotice: f['Show warranty notice'] ? (f['Warranty notice'] || '') : '',
+        legalTerms: f['Show legal terms'] ? (f['Legal terms'] || '') : '',
         template: f,
       });
 
@@ -3763,6 +3783,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   table { width:100%; border-collapse:collapse; }
 </style>
 </head><body>
+  <div class="mq-no-print" style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">💡 Before printing or saving as PDF, open "More settings" in the print dialog and uncheck <strong>"Headers and footers"</strong> — otherwise Chrome adds its own date/title line at the top of the page.</div>
   ${opts.saveFailed ? `<div class="mq-no-print" style="background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px">⚠ Couldn't save this to your proposal history (connection issue) — it's not in "My Proposals," but you can still print/save it now.</div>` : ''}
   <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
     <div>
@@ -3776,11 +3797,18 @@ window.mqTogDrawerConfig=(prefix)=>{
     </div>
   </div>
 
+  ${opts.paymentTerms ? `<div style="background:#f9fafb;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;margin-bottom:20px">${(opts.paymentTerms||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>` : ''}
+
   <div style="margin-bottom:20px">
     <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Prepared for</div>
     <div style="font-size:16px;font-weight:700">${(opts.customerName||'').replace(/</g,'&lt;')}</div>
+    ${opts.customerAddress ? `<div style="font-size:13px;color:#6b7280;margin-top:2px">${(opts.customerAddress||'').replace(/</g,'&lt;')}</div>` : ''}
+    ${opts.jobName ? `<div style="font-size:14px;font-weight:600;margin-top:8px">${(opts.jobName||'').replace(/</g,'&lt;')}</div>` : ''}
     ${opts.projectType ? `<div style="font-size:13px;color:#6b7280;margin-top:2px">${(opts.projectType||'').replace(/</g,'&lt;')}</div>` : ''}
+    ${opts.description ? `<div style="font-size:14px;color:#374151;margin-top:8px;line-height:1.5">${(opts.description||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>` : ''}
   </div>
+
+  ${opts.warrantyNotice ? `<div style="font-size:12px;color:#6b7280;line-height:1.6;margin-bottom:20px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:8px">${(opts.warrantyNotice||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>` : ''}
 
   <table>
     <thead><tr>
@@ -3797,8 +3825,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     ${f['Show deposit'] ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;color:#166534;font-weight:700"><span>Deposit due</span><span>$${(opts.deposit||0).toFixed(2)}</span></div>` : ''}
   </div>
 
+  ${opts.legalTerms ? `<div style="font-size:11px;color:#6b7280;line-height:1.6;margin-top:30px;padding-top:12px;border-top:1px solid #e5e7eb">${(opts.legalTerms||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>` : ''}
+
   ${f['Show signature line'] ? `
-  <div style="margin-top:70px;display:flex;gap:40px">
+  <div style="margin-top:50px;display:flex;gap:40px">
     <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
     <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
   </div>` : ''}
@@ -3887,6 +3917,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       mqOpenProposalPrintView(printWin, {
         shop: window._mqShopData || {},
         customerName: f['Customer name'] || '',
+        customerAddress: f['Customer address'] || '',
+        jobName: f['Job name'] || '',
         description: f['Description'] || '',
         projectType: f['Project type'] || '',
         lineItems,
