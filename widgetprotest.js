@@ -1315,6 +1315,7 @@
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
         </div>
         ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:#0f2a52;border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
+        <button onclick="mqOpenProposalsList()" style="font-size:13px;font-weight:600;color:#fff;border:none;background:#0f2a52;border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">📄 My Proposals</button>
       </div>
       <div class="mq-powered-by" style="margin-top:10px;padding-top:0;border-top:none;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
       <div class="mq-tab-bar">
@@ -1353,6 +1354,9 @@
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
+          <div class="mq-cta-row">
+            <button class="mq-pri" onclick="mqOpenProposalModal('c')">📄 Create proposal</button>
+          </div>
           ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
@@ -1382,6 +1386,9 @@
           <div class="mq-cta-row">
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+          </div>
+          <div class="mq-cta-row">
+            <button class="mq-pri" onclick="mqOpenProposalModal('ct')">📄 Create proposal</button>
           </div>
           ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
@@ -1483,6 +1490,9 @@
           <div class="mq-cta-row" style="margin-top:1rem">
             ${askQuestionBtn}
             <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+          </div>
+          <div class="mq-cta-row">
+            <button class="mq-pri" onclick="mqOpenProposalModal('b')">📄 Create proposal</button>
           </div>
           ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
@@ -2903,6 +2913,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         // stops announcing it in the results panel.
         if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r);
+        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-c-result'));window.mqShowStartOverPanel();
         document.getElementById('mq-c-calc-btn').disabled=false;
@@ -2922,6 +2933,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const active=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length;
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
+          window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-ct-result'));window.mqShowStartOverPanel();
           document.getElementById('mq-ct-calc-btn').disabled=false;
@@ -2952,6 +2964,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
           const realTotalEl = document.getElementById('mq-b-grand-real');
           if (realTotalEl) realTotalEl.textContent = fmt(cab.total + ct.total);
+          window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: cab.total + ct.total } });
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-b-result'));window.mqShowStartOverPanel();
           document.getElementById('mq-b-calc-btn').disabled=false;
@@ -3489,6 +3502,349 @@ window.mqTogDrawerConfig=(prefix)=>{
       await window._mqDeferredInstallPrompt.userChoice;
       window._mqDeferredInstallPrompt = null;
       window.mqCloseHomeScreenModal();
+    };
+
+    // ============================================================
+    // PROPOSALS — build from a completed real-number estimate,
+    // pick a template (built in the Dashboard's Proposals tab),
+    // tweak line items, generate a printable page, and save it to
+    // a browsable history so it's never "which one did I give him."
+    // ============================================================
+
+    window.mqOpenProposalModal = async function(prefix) {
+      const est = (window._mqLastEstimate || {})[prefix];
+      if (!est || !est.lines || !est.lines.length) { alert('Please calculate an estimate first.'); return; }
+
+      let modal = document.getElementById('mq-proposal-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'mq-proposal-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100005;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto';
+        document.body.appendChild(modal);
+      }
+      modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:540px;width:100%;padding:1.75rem;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <div style="font-size:18px;font-weight:800;color:#111">📄 Create Proposal</div>
+          <button onclick="mqCloseProposalModal()" style="background:none;border:none;font-size:24px;color:#9ca3af;cursor:pointer;line-height:1">&times;</button>
+        </div>
+        <div id="mq-proposal-modal-body"><div style="text-align:center;padding:2rem;color:#6b7280">Loading templates...</div></div>
+      </div>`;
+      modal.style.display = 'flex';
+
+      // Fetched fresh every time this opens — cheap, and avoids showing a
+      // template that was just edited/deleted in the dashboard a minute ago.
+      try {
+        const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/proposal-templates?shop=${encodeURIComponent(shopToken)}`, {});
+        const j = await res.json();
+        window._mqProposalTemplates = j.templates || [];
+      } catch(e) { window._mqProposalTemplates = []; }
+
+      window._mqProposalState = {
+        prefix,
+        templateId: (window._mqProposalTemplates[0] || {}).id || null,
+        customerName: '',
+        description: '',
+        // Editable copy — the original est.lines stays untouched so
+        // reopening this modal always starts fresh from the real estimate.
+        lines: est.lines.map(l => ({ label: l.label, cost: l.cost })),
+      };
+      mqRenderProposalModalBody();
+    };
+
+    window.mqCloseProposalModal = function() {
+      const modal = document.getElementById('mq-proposal-modal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    function mqRenderProposalModalBody() {
+      const body = document.getElementById('mq-proposal-modal-body');
+      if (!body) return;
+      const templates = window._mqProposalTemplates || [];
+      const state = window._mqProposalState;
+
+      if (!templates.length) {
+        body.innerHTML = `<div style="text-align:center;padding:1.5rem;color:#374151;font-size:14px;line-height:1.7">
+          No proposal templates yet.<br>Set one up in your dashboard's <strong>Proposals</strong> tab first, then come back here.
+        </div>`;
+        return;
+      }
+
+      const template = templates.find(t => t.id === state.templateId) || templates[0];
+      state.templateId = template.id;
+      const f = template.fields;
+      const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
+      const taxAmt = f['Show tax'] ? subtotal * ((f['Tax percent'] || 0) / 100) : 0;
+      const total = subtotal + taxAmt;
+      const depositAmt = f['Show deposit']
+        ? (f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100))
+        : 0;
+
+      body.innerHTML = `
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Template</label>
+          <select onchange="mqProposalTemplateChosen(this.value)" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px">
+            ${templates.map(t => `<option value="${t.id}" ${t.id===template.id?'selected':''}>${(t.fields['Template name']||'Untitled').replace(/"/g,'&quot;')}</option>`).join('')}
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer name *</label>
+          <input type="text" value="${state.customerName.replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('customerName',this.value)" placeholder="e.g. Jane Smith" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Description <span style="font-weight:400;color:#9ca3af">(for your own reference later — not shown on the printed proposal)</span></label>
+          <textarea rows="2" oninput="mqProposalFieldChanged('description',this.value)" placeholder="e.g. Full kitchen reface, spoke to him at the counter" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;resize:vertical;font-family:inherit">${state.description.replace(/</g,'&lt;')}</textarea>
+        </div>
+
+        <div style="border-top:1px solid #e5e7eb;padding-top:12px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Line items — edit prices before generating</div>
+          <div>
+            ${state.lines.map((l, i) => `
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+                <input type="text" value="${(l.label||'').replace(/"/g,'&quot;')}" oninput="mqProposalLineChanged(${i},'label',this.value)" style="flex:1;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"/>
+                <input type="number" value="${l.cost}" oninput="mqProposalLineChanged(${i},'cost',this.value)" onblur="mqRenderProposalModalBody()" style="width:90px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"/>
+                <button onclick="mqRemoveProposalLine(${i})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>
+              </div>`).join('')}
+          </div>
+          <button onclick="mqAddProposalLine()" style="font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;font-weight:600;padding:4px 0">+ Add a line</button>
+        </div>
+
+        <div style="background:#f9fafb;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.8;margin-bottom:14px">
+          ${f['Show subtotal'] ? `<div style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>$${subtotal.toFixed(2)}</strong></div>` : ''}
+          ${f['Show tax'] ? `<div style="display:flex;justify-content:space-between"><span>Tax (${f['Tax percent']||0}%)</span><strong>$${taxAmt.toFixed(2)}</strong></div>` : ''}
+          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:1px solid #e5e7eb;margin-top:6px;padding-top:6px"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+          ${f['Show deposit'] ? `<div style="display:flex;justify-content:space-between;color:#166534;margin-top:4px"><span>Deposit due (${f['Deposit type']==='Flat amount'?'flat rate':((f['Deposit value']||0)+'%')})</span><strong>$${depositAmt.toFixed(2)}</strong></div>` : ''}
+          ${f['Show signature line'] ? `<div style="font-size:11px;color:#9ca3af;margin-top:6px">✓ This template includes a signature line on the printed page.</div>` : ''}
+        </div>
+
+        <button onclick="mqGenerateProposal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Generate &amp; Save Proposal →</button>
+      `;
+    }
+
+    window.mqProposalTemplateChosen = function(id) {
+      window._mqProposalState.templateId = id;
+      mqRenderProposalModalBody();
+    };
+    window.mqProposalFieldChanged = function(field, value) {
+      window._mqProposalState[field] = value;
+    };
+    window.mqProposalLineChanged = function(i, field, value) {
+      window._mqProposalState.lines[i][field] = field === 'cost' ? (parseFloat(value) || 0) : value;
+    };
+    window.mqRemoveProposalLine = function(i) {
+      window._mqProposalState.lines.splice(i, 1);
+      mqRenderProposalModalBody();
+    };
+    window.mqAddProposalLine = function() {
+      window._mqProposalState.lines.push({ label: '', cost: 0 });
+      mqRenderProposalModalBody();
+    };
+
+    window.mqGenerateProposal = async function() {
+      const state = window._mqProposalState;
+      const templates = window._mqProposalTemplates || [];
+      const template = templates.find(t => t.id === state.templateId) || templates[0];
+      if (!template) return;
+      const f = template.fields;
+
+      if (!state.customerName || !state.customerName.trim()) {
+        alert("Please enter the customer's name before generating the proposal.");
+        return;
+      }
+
+      const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
+      const taxAmt = f['Show tax'] ? subtotal * ((f['Tax percent'] || 0) / 100) : 0;
+      const total = subtotal + taxAmt;
+      const depositAmt = f['Show deposit']
+        ? (f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100))
+        : 0;
+      const est = (window._mqLastEstimate || {})[state.prefix] || {};
+
+      const payload = {
+        shopToken,
+        customerName: state.customerName.trim(),
+        description: state.description || '',
+        templateUsed: f['Template name'] || '',
+        projectType: est.projectType || '',
+        lineItems: state.lines,
+        subtotal, deposit: depositAmt, tax: taxAmt, total,
+      };
+
+      try {
+        await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-proposal`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        });
+      } catch(e) {
+        console.error('Failed to save proposal', e);
+        alert("Couldn't save this to your proposal history right now (connection issue?) — generating it anyway so you can still print it.");
+      }
+
+      mqOpenProposalPrintView({
+        shop: window._mqShopData || {},
+        customerName: payload.customerName,
+        description: payload.description,
+        projectType: payload.projectType,
+        lineItems: state.lines,
+        subtotal, tax: taxAmt, deposit: depositAmt, total,
+        template: f,
+      });
+
+      mqCloseProposalModal();
+    };
+
+    // Builds the actual printable page — opened in a new tab, formatted for
+    // both screen and print (@page margin rule keeps it clean on paper).
+    // Kept as a plain, self-contained HTML string (not this widget's own
+    // styling) since it needs to stand alone as something handed to a
+    // customer, independent of anything else on the page it was opened from.
+    function buildProposalPrintHTML(opts) {
+      const shop = opts.shop || {};
+      const f = opts.template || {};
+      const accent = f['Accent colour'] || '#1a3a6b';
+      const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
+      const lineRows = (opts.lineItems || []).map(l => `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${(l.label||'').replace(/</g,'&lt;')}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">$${(parseFloat(l.cost)||0).toFixed(2)}</td>
+        </tr>`).join('');
+
+      return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>Proposal — ${(opts.customerName||'').replace(/</g,'&lt;')}</title>
+<style>
+  @media print { @page { margin: 0.6in; } }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#111; max-width:720px; margin:0 auto; padding:32px 24px; }
+  table { width:100%; border-collapse:collapse; }
+</style>
+</head><body>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
+    <div>
+      ${logo}
+      <div style="font-size:18px;font-weight:800;margin-top:6px">${(shop['Shop name']||'').replace(/</g,'&lt;')}</div>
+      <div style="font-size:12px;color:#6b7280">${(shop['City']||'').replace(/</g,'&lt;')}${shop['Phone']?(' · '+shop['Phone']):''}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:22px;font-weight:800;color:${accent}">Proposal</div>
+      <div style="font-size:12px;color:#6b7280">${new Date().toLocaleDateString()}</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Prepared for</div>
+    <div style="font-size:16px;font-weight:700">${(opts.customerName||'').replace(/</g,'&lt;')}</div>
+    ${opts.projectType ? `<div style="font-size:13px;color:#6b7280;margin-top:2px">${(opts.projectType||'').replace(/</g,'&lt;')}</div>` : ''}
+  </div>
+
+  <table>
+    <thead><tr>
+      <th style="text-align:left;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Item</th>
+      <th style="text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Price</th>
+    </tr></thead>
+    <tbody>${lineRows}</tbody>
+  </table>
+
+  <div style="margin-top:16px;margin-left:auto;width:280px">
+    ${f['Show subtotal'] ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${(opts.subtotal||0).toFixed(2)}</span></div>` : ''}
+    ${f['Show tax'] ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${(opts.tax||0).toFixed(2)}</span></div>` : ''}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:18px;font-weight:800;border-top:2px solid ${accent};margin-top:4px"><span>Total</span><span>$${(opts.total||0).toFixed(2)}</span></div>
+    ${f['Show deposit'] ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;color:#166534;font-weight:700"><span>Deposit due</span><span>$${(opts.deposit||0).toFixed(2)}</span></div>` : ''}
+  </div>
+
+  ${f['Show signature line'] ? `
+  <div style="margin-top:70px;display:flex;gap:40px">
+    <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
+    <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
+  </div>` : ''}
+
+  ${f['Footer text'] ? `<div style="margin-top:40px;font-size:12px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:12px">${(f['Footer text']||'').replace(/</g,'&lt;')}</div>` : ''}
+</body></html>`;
+    }
+
+    function mqOpenProposalPrintView(opts) {
+      const win = window.open('', '_blank');
+      if (!win) { alert('Please allow pop-ups to view/print this proposal.'); return; }
+      win.document.write(buildProposalPrintHTML(opts));
+      win.document.close();
+      setTimeout(() => { try { win.print(); } catch(e) {} }, 400);
+    }
+
+    window.mqOpenProposalsList = async function() {
+      let modal = document.getElementById('mq-proposals-list-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'mq-proposals-list-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100005;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto';
+        document.body.appendChild(modal);
+      }
+      modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:1.75rem;max-height:85vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <div style="font-size:18px;font-weight:800;color:#111">📄 My Proposals</div>
+          <button onclick="mqCloseProposalsList()" style="background:none;border:none;font-size:24px;color:#9ca3af;cursor:pointer;line-height:1">&times;</button>
+        </div>
+        <div id="mq-proposals-list-body"><div style="text-align:center;padding:2rem;color:#6b7280">Loading...</div></div>
+      </div>`;
+      modal.style.display = 'flex';
+
+      try {
+        const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/proposals?shop=${encodeURIComponent(shopToken)}`, {});
+        const j = await res.json();
+        window._mqSavedProposals = j.proposals || [];
+      } catch(e) { window._mqSavedProposals = []; }
+
+      const body = document.getElementById('mq-proposals-list-body');
+      const list = window._mqSavedProposals;
+      if (!body) return;
+      if (!list.length) {
+        body.innerHTML = `<div style="text-align:center;padding:1.5rem;color:#6b7280;font-size:14px">No proposals saved yet. Create one from an estimate to see it here.</div>`;
+        return;
+      }
+      body.innerHTML = list.map(p => {
+        const f = p.fields;
+        const date = new Date(p.createdTime).toLocaleDateString();
+        return `<div onclick="mqReprintProposal('${p.id}')" style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+            <div style="font-weight:700;font-size:14px">${(f['Customer name']||'Unnamed').replace(/</g,'&lt;')}</div>
+            <div style="font-size:12px;color:#9ca3af;white-space:nowrap">${date}</div>
+          </div>
+          ${f['Description'] ? `<div style="font-size:12px;color:#6b7280;margin-top:2px">${(f['Description']||'').replace(/</g,'&lt;')}</div>` : ''}
+          <div style="font-size:12px;color:#374151;margin-top:4px">${(f['Project type']||'').replace(/</g,'&lt;')}${f['Project type']&&f['Template used']?' · ':''}${(f['Template used']||'').replace(/</g,'&lt;')} · <strong>$${(f['Total']||0).toFixed(2)}</strong></div>
+        </div>`;
+      }).join('');
+    };
+
+    window.mqCloseProposalsList = function() {
+      const modal = document.getElementById('mq-proposals-list-modal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    // Reprints from the frozen snapshot saved at creation time — not
+    // today's template settings, which may have since changed or been
+    // deleted. Footer text/accent colour aren't part of that snapshot
+    // (only totals + line items are), so a reprint uses sensible generic
+    // defaults for those two rather than the original template's exact look.
+    window.mqReprintProposal = function(id) {
+      const p = (window._mqSavedProposals || []).find(x => x.id === id);
+      if (!p) return;
+      const f = p.fields;
+      let lineItems = [];
+      try { lineItems = JSON.parse(f['Line items'] || '[]'); } catch(e) {}
+      const template = {
+        'Show subtotal': (f['Subtotal'] || 0) > 0,
+        'Show tax': (f['Tax'] || 0) > 0,
+        'Show deposit': (f['Deposit'] || 0) > 0,
+        'Show signature line': true,
+        'Accent colour': '#1a3a6b',
+      };
+      mqOpenProposalPrintView({
+        shop: window._mqShopData || {},
+        customerName: f['Customer name'] || '',
+        description: f['Description'] || '',
+        projectType: f['Project type'] || '',
+        lineItems,
+        subtotal: f['Subtotal'] || 0,
+        tax: f['Tax'] || 0,
+        deposit: f['Deposit'] || 0,
+        total: f['Total'] || 0,
+        template,
+      });
     };
   }
 
