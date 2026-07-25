@@ -2908,22 +2908,32 @@ window.logoutMember = async function () {
   // Simple one-pager for small jobs, a Standard proposal with deposit/tax,
   // and a Large-project version, so a shop owner has something usable
   // immediately rather than a blank list.
-  async function ensureProposalTemplatesSeeded(shopRecord) {
-    if (shopRecord.fields['Proposal templates seeded']) return;
-
-    const PAYMENT_TERMS_DEFAULT = '50% deposit required to start, remainder due upon completion.';
-    const WARRANTY_NOTICE_DEFAULT = `Due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, not a defect.
+  // Shared across ensureProposalTemplatesSeeded (the 3 starter templates)
+  // and mqAddProposalTemplate (any new custom template) — so nobody ever
+  // has to type this boilerplate from scratch, whether it's a starter
+  // template or one they add themselves later.
+  const PAYMENT_TERMS_DEFAULT = '50% deposit required to start, remainder due upon completion.';
+  const WARRANTY_NOTICE_DEFAULT = `Due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, not a defect.
 
 Finishes (painted or stained, opaque or clear) do not fully seal out moisture, especially in high-traffic, high-moisture areas such as around sinks. Humidity levels inside a home affect wood movement, and this is outside our control as the manufacturer.
 
 We use modern materials and techniques to keep joint visibility to a minimum, but cannot guarantee against natural wood movement — a single-piece composite door is the only way to eliminate visible joints entirely.
 
 To clean painted or lacquered doors and panels, use a damp cloth only — standing water can penetrate the wood, causing the finish to peel and voiding the warranty.`;
-    const LEGAL_TERMS_DEFAULT = `All materials are guaranteed to be as specified. All work will be completed in a workmanlike manner according to standard industry practices.
+  const LEGAL_TERMS_DEFAULT = `All materials are guaranteed to be as specified. All work will be completed in a workmanlike manner according to standard industry practices.
 
 Any alteration or deviation from the specifications above involving additional cost will be carried out only upon written authorization, and will become an extra charge added to this estimate.
 
 This agreement is contingent upon strikes, accidents, or delays beyond our control. The property owner is responsible for carrying fire, windstorm, and other necessary insurance. Our workers are fully covered by workers' compensation insurance.`;
+
+  const PROPOSAL_TEXT_DEFAULTS = {
+    'Payment terms': PAYMENT_TERMS_DEFAULT,
+    'Warranty notice': WARRANTY_NOTICE_DEFAULT,
+    'Legal terms': LEGAL_TERMS_DEFAULT,
+  };
+
+  async function ensureProposalTemplatesSeeded(shopRecord) {
+    if (shopRecord.fields['Proposal templates seeded']) return;
 
     const starters = [
       { name: 'Simple', size: 'Simple', accent: '#1a3a6b', footer: 'Thank you for your business!', signature: true, showDeposit: false, showSubtotal: false, showTax: false,
@@ -3055,19 +3065,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `
       <div style="margin-bottom:10px">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
-          <input type="checkbox" ${shown?'checked':''} onchange="mqSaveProposalField('${id}','${showField}',this.checked); mqToggleProposalTextBlock('${id}','${textField.replace(/ /g,'_')}')" style="width:auto"/> ${textField} <span style="font-weight:400;color:#9ca3af">(${positionNote})</span>
+          <input type="checkbox" ${shown?'checked':''} onchange="mqSaveProposalField('${id}','${showField}',this.checked); mqToggleProposalTextBlock('${id}','${textField.replace(/ /g,'_')}','${textField}')" style="width:auto"/> ${textField} <span style="font-weight:400;color:#9ca3af">(${positionNote})</span>
         </label>
         <textarea id="mq-prop-text-${textField.replace(/ /g,'_')}-${id}" rows="3" style="width:100%;margin-top:6px;display:${shown?'block':'none'}" onblur="mqSaveProposalField('${id}','${textField}',this.value)">${(f[textField]||'').replace(/</g,'&lt;')}</textarea>
       </div>`;
   }
 
-  window.mqToggleProposalTextBlock = function(id, safeFieldName) {
+  window.mqToggleProposalTextBlock = function(id, safeFieldName, realFieldName) {
     const box = document.getElementById(`mq-prop-text-${safeFieldName}-${id}`);
     if (!box) return;
     // Read the checkbox that's a sibling of this textarea's own label
     const wrapper = box.previousElementSibling;
     const checkbox = wrapper ? wrapper.querySelector('input[type=checkbox]') : null;
-    box.style.display = (checkbox && checkbox.checked) ? 'block' : 'none';
+    const isChecked = !!(checkbox && checkbox.checked);
+    box.style.display = isChecked ? 'block' : 'none';
+    // Turning it on with the box still empty — either an older template
+    // made before this feature existed, or one where the text was fully
+    // erased — fill it with the default wording instead of a blank box.
+    // Still completely editable or erasable afterward; this only ever
+    // fires once, the moment it goes from empty to checked.
+    if (isChecked && !box.value.trim() && PROPOSAL_TEXT_DEFAULTS[realFieldName]) {
+      box.value = PROPOSAL_TEXT_DEFAULTS[realFieldName];
+      mqSaveProposalField(id, realFieldName, box.value);
+    }
   };
 
   window.mqToggleProposalSubfields = function(id) {
@@ -3095,6 +3115,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Size category': 'Standard',
         'Accent colour': '#1a3a6b',
         'Show signature line': true,
+        // Pre-filled with the same defaults as the starter templates —
+        // checkboxes stay off until the shop owner turns them on, but the
+        // text is already good to go rather than a blank box to fill in.
+        'Payment terms': PAYMENT_TERMS_DEFAULT,
+        'Warranty notice': WARRANTY_NOTICE_DEFAULT,
+        'Legal terms': LEGAL_TERMS_DEFAULT,
         'Sort order': existing.length,
       });
       const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
