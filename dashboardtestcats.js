@@ -230,6 +230,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Signature line</strong> — adds a blank signature + date line at the bottom of the printed proposal. This app doesn't do e-signatures — this is meant for a real pen-on-paper signature after printing it out on your phone or in-shop.</p>
         <p><strong>Require a deposit</strong> — shows a deposit line on the proposal, either as a percentage of the total or a flat dollar amount you set here.</p>
         <p><strong>Add tax</strong> — a simple flat percentage applied to the subtotal. This isn't a full tax-compliance engine (it won't handle different rules for labor vs. materials, exemptions, etc.) — just an straightforward, editable percentage for shops that want tax shown on the proposal.</p>
+        <p><strong>Payment terms / Warranty notice / Legal terms</strong> — three optional text sections, each just a checkbox away from showing up on the printed proposal in a fixed spot: payment terms right after the header, warranty notice right after that, legal terms near the bottom after the costs. Edit the text however you like, or leave the starter wording in place.</p>
         <p>Proposals themselves — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
       `
     },
@@ -2908,10 +2909,28 @@ window.logoutMember = async function () {
   // immediately rather than a blank list.
   async function ensureProposalTemplatesSeeded(shopRecord) {
     if (shopRecord.fields['Proposal templates seeded']) return;
+
+    const PAYMENT_TERMS_DEFAULT = '50% deposit required to start, remainder due upon completion.';
+    const WARRANTY_NOTICE_DEFAULT = `Due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, not a defect.
+
+Finishes (painted or stained, opaque or clear) do not fully seal out moisture, especially in high-traffic, high-moisture areas such as around sinks. Humidity levels inside a home affect wood movement, and this is outside our control as the manufacturer.
+
+We use modern materials and techniques to keep joint visibility to a minimum, but cannot guarantee against natural wood movement — a single-piece composite door is the only way to eliminate visible joints entirely.
+
+To clean painted or lacquered doors and panels, use a damp cloth only — standing water can penetrate the wood, causing the finish to peel and voiding the warranty.`;
+    const LEGAL_TERMS_DEFAULT = `All materials are guaranteed to be as specified. All work will be completed in a workmanlike manner according to standard industry practices.
+
+Any alteration or deviation from the specifications above involving additional cost will be carried out only upon written authorization, and will become an extra charge added to this estimate.
+
+This agreement is contingent upon strikes, accidents, or delays beyond our control. The property owner is responsible for carrying fire, windstorm, and other necessary insurance. Our workers are fully covered by workers' compensation insurance.`;
+
     const starters = [
-      { name: 'Simple', size: 'Simple', accent: '#1a3a6b', footer: 'Thank you for your business!', signature: true, showDeposit: false, showSubtotal: false, showTax: false },
-      { name: 'Standard', size: 'Standard', accent: '#1a3a6b', footer: 'Prices valid for 30 days. Thank you for choosing us!', signature: true, showDeposit: true, depositType: 'Percent', depositValue: 25, showSubtotal: true, showTax: true, taxPct: 13 },
-      { name: 'Large Project', size: 'Large', accent: '#1a3a6b', footer: 'Prices valid for 30 days. A signed copy of this proposal will be kept on file. Thank you for choosing us!', signature: true, showDeposit: true, depositType: 'Percent', depositValue: 30, showSubtotal: true, showTax: true, taxPct: 13 },
+      { name: 'Simple', size: 'Simple', accent: '#1a3a6b', footer: 'Thank you for your business!', signature: true, showDeposit: false, showSubtotal: false, showTax: false,
+        showPayment: true, showWarranty: false, showLegal: false },
+      { name: 'Standard', size: 'Standard', accent: '#1a3a6b', footer: 'Prices valid for 30 days. Thank you for choosing us!', signature: true, showDeposit: true, depositType: 'Percent', depositValue: 25, showSubtotal: true, showTax: true, taxPct: 13,
+        showPayment: true, showWarranty: true, showLegal: true },
+      { name: 'Large Project', size: 'Large', accent: '#1a3a6b', footer: 'Prices valid for 30 days. A signed copy of this proposal will be kept on file. Thank you for choosing us!', signature: true, showDeposit: true, depositType: 'Percent', depositValue: 30, showSubtotal: true, showTax: true, taxPct: 13,
+        showPayment: true, showWarranty: true, showLegal: true },
     ];
     try {
       for (let i = 0; i < starters.length; i++) {
@@ -2929,6 +2948,12 @@ window.logoutMember = async function () {
           'Show subtotal': t.showSubtotal || false,
           'Show tax': t.showTax || false,
           'Tax percent': t.taxPct || 0,
+          'Show payment terms': t.showPayment,
+          'Payment terms': PAYMENT_TERMS_DEFAULT,
+          'Show warranty notice': t.showWarranty,
+          'Warranty notice': WARRANTY_NOTICE_DEFAULT,
+          'Show legal terms': t.showLegal,
+          'Legal terms': LEGAL_TERMS_DEFAULT,
           'Sort order': i,
         });
       }
@@ -3004,10 +3029,40 @@ window.logoutMember = async function () {
         </div>
 
         <label class="mq-label">Footer text</label>
-        <textarea rows="2" style="width:100%" onblur="mqSaveProposalField('${t.id}','Footer text',this.value)">${(f['Footer text']||'').replace(/</g,'&lt;')}</textarea>
+        <textarea rows="2" style="width:100%;margin-bottom:14px" onblur="mqSaveProposalField('${t.id}','Footer text',this.value)">${(f['Footer text']||'').replace(/</g,'&lt;')}</textarea>
+
+        <div style="border-top:1px solid #e5e7eb;padding-top:12px">
+          <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Optional sections — each appears in this order on the printed proposal, right where it's checked on</div>
+          ${mqProposalTextBlockHTML(t.id, 'Show payment terms', 'Payment terms', f, 'Right after the header')}
+          ${mqProposalTextBlockHTML(t.id, 'Show warranty notice', 'Warranty notice', f, 'Right after payment terms')}
+          ${mqProposalTextBlockHTML(t.id, 'Show legal terms', 'Legal terms', f, 'Near the bottom, after costs')}
+        </div>
       </div>`;
     }).join('');
   }
+
+  // One reusable checkbox + editable textarea "section" — shared by Payment
+  // terms / Warranty notice / Legal terms, since all three are the exact
+  // same pattern: toggle it on, edit the text, it shows up in a fixed spot.
+  function mqProposalTextBlockHTML(id, showField, textField, f, positionNote) {
+    const shown = !!f[showField];
+    return `
+      <div style="margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
+          <input type="checkbox" ${shown?'checked':''} onchange="mqSaveProposalField('${id}','${showField}',this.checked); mqToggleProposalTextBlock('${id}','${textField.replace(/ /g,'_')}')" style="width:auto"/> ${textField} <span style="font-weight:400;color:#9ca3af">(${positionNote})</span>
+        </label>
+        <textarea id="mq-prop-text-${textField.replace(/ /g,'_')}-${id}" rows="3" style="width:100%;margin-top:6px;display:${shown?'block':'none'}" onblur="mqSaveProposalField('${id}','${textField}',this.value)">${(f[textField]||'').replace(/</g,'&lt;')}</textarea>
+      </div>`;
+  }
+
+  window.mqToggleProposalTextBlock = function(id, safeFieldName) {
+    const box = document.getElementById(`mq-prop-text-${safeFieldName}-${id}`);
+    if (!box) return;
+    // Read the checkbox that's a sibling of this textarea's own label
+    const wrapper = box.previousElementSibling;
+    const checkbox = wrapper ? wrapper.querySelector('input[type=checkbox]') : null;
+    box.style.display = (checkbox && checkbox.checked) ? 'block' : 'none';
+  };
 
   window.mqToggleProposalSubfields = function(id) {
     const depBox = document.getElementById(`mq-prop-showdep-${id}`);
