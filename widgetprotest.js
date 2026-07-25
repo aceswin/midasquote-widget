@@ -253,7 +253,8 @@
         #midasquote-widget .mq-label{font-size:15px}
         #midasquote-widget .mq-hint{font-size:15px}
         #midasquote-widget .mq-sec-title{font-size:14px}
-        #midasquote-widget .mq-header{padding:0.85rem 0.6rem;gap:8px}
+        #midasquote-widget .mq-header{padding:0.85rem 0.6rem;gap:8px;flex-wrap:wrap}
+        #midasquote-widget .mq-header-actions{flex:1 1 100%;justify-content:flex-start;margin-top:4px}
         #midasquote-widget .mq-tab-bar{padding:8px 0.5rem;gap:5px}
         #midasquote-widget .mq-tab{padding:9px 6px;font-size:12.5px}
         /* The measuring guide image is a wide landscape infographic — on a
@@ -264,6 +265,7 @@
         #midasquote-widget .mq-measure-guide-img{width:calc(100% + 32px)!important;max-width:calc(100% + 32px)!important;margin-left:-16px!important;margin-right:-16px!important}
       }
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
+      #midasquote-widget .mq-header-actions{display:flex;gap:8px;flex-shrink:0}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
       #midasquote-widget .mq-logo img{width:100%;height:100%;object-fit:cover}
       #midasquote-widget .mq-shop-name{font-size:14px;font-weight:600;color:#111}
@@ -1314,8 +1316,10 @@
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
         </div>
-        ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:#0f2a52;border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
-        <button onclick="mqOpenProposalsList()" style="font-size:13px;font-weight:600;color:#fff;border:none;background:#0f2a52;border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">📄 My Proposals</button>
+        <div class="mq-header-actions">
+          ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:#0f2a52;border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
+          <button onclick="mqOpenProposalsList()" style="font-size:13px;font-weight:600;color:#fff;border:none;background:#0f2a52;border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15)" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">📄 My Proposals</button>
+        </div>
       </div>
       <div class="mq-powered-by" style="margin-top:10px;padding-top:0;border-top:none;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
       <div class="mq-tab-bar">
@@ -3867,10 +3871,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         document.body.appendChild(modal);
       }
       modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:1.75rem;max-height:85vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
           <div style="font-size:18px;font-weight:800;color:#111">📄 My Proposals</div>
           <button onclick="mqCloseProposalsList()" style="background:none;border:none;font-size:24px;color:#9ca3af;cursor:pointer;line-height:1">&times;</button>
         </div>
+        <input type="text" id="mq-proposals-search" oninput="mqRenderProposalsListBody(this.value)" placeholder="🔍 Search by customer, job, or description" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;margin-bottom:1rem;font-family:inherit"/>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;margin-top:-6px">Newest first</div>
         <div id="mq-proposals-list-body"><div style="text-align:center;padding:2rem;color:#6b7280">Loading...</div></div>
       </div>`;
       modal.style.display = 'flex';
@@ -3881,25 +3887,63 @@ window.mqTogDrawerConfig=(prefix)=>{
         window._mqSavedProposals = j.proposals || [];
       } catch(e) { console.error('Failed to load saved proposals', e); window._mqSavedProposals = []; }
 
+      mqRenderProposalsListBody('');
+    };
+
+    // Filters the already-fetched list client-side (customer name, job name,
+    // and description) — no need to re-hit the server for every keystroke.
+    window.mqRenderProposalsListBody = function(searchTerm) {
       const body = document.getElementById('mq-proposals-list-body');
-      const list = window._mqSavedProposals;
       if (!body) return;
-      if (!list.length) {
+      const term = (searchTerm || '').trim().toLowerCase();
+      const all = window._mqSavedProposals || [];
+      const list = term ? all.filter(p => {
+        const f = p.fields;
+        return (f['Customer name']||'').toLowerCase().includes(term)
+          || (f['Job name']||'').toLowerCase().includes(term)
+          || (f['Description']||'').toLowerCase().includes(term);
+      }) : all;
+
+      if (!all.length) {
         body.innerHTML = `<div style="text-align:center;padding:1.5rem;color:#6b7280;font-size:14px">No proposals saved yet. Create one from an estimate to see it here.</div>`;
+        return;
+      }
+      if (!list.length) {
+        body.innerHTML = `<div style="text-align:center;padding:1.5rem;color:#6b7280;font-size:14px">No proposals match "${searchTerm.replace(/</g,'&lt;')}".</div>`;
         return;
       }
       body.innerHTML = list.map(p => {
         const f = p.fields;
         const date = new Date(p.createdTime).toLocaleDateString();
-        return `<div onclick="mqReprintProposal('${p.id}')" style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-            <div style="font-weight:700;font-size:14px">${(f['Customer name']||'Unnamed').replace(/</g,'&lt;')}</div>
-            <div style="font-size:12px;color:#9ca3af;white-space:nowrap">${date}</div>
+        return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;position:relative">
+          <div onclick="mqReprintProposal('${p.id}')" style="cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:24px">
+              <div style="font-weight:700;font-size:14px">${(f['Customer name']||'Unnamed').replace(/</g,'&lt;')}</div>
+              <div style="font-size:12px;color:#9ca3af;white-space:nowrap">${date}</div>
+            </div>
+            ${f['Job name'] ? `<div style="font-size:13px;font-weight:600;margin-top:2px">${(f['Job name']||'').replace(/</g,'&lt;')}</div>` : ''}
+            ${f['Description'] ? `<div style="font-size:12px;color:#6b7280;margin-top:2px">${(f['Description']||'').replace(/</g,'&lt;')}</div>` : ''}
+            <div style="font-size:12px;color:#374151;margin-top:4px">${(f['Project type']||'').replace(/</g,'&lt;')}${f['Project type']&&f['Template used']?' · ':''}${(f['Template used']||'').replace(/</g,'&lt;')} · <strong>$${(f['Total']||0).toFixed(2)}</strong></div>
           </div>
-          ${f['Description'] ? `<div style="font-size:12px;color:#6b7280;margin-top:2px">${(f['Description']||'').replace(/</g,'&lt;')}</div>` : ''}
-          <div style="font-size:12px;color:#374151;margin-top:4px">${(f['Project type']||'').replace(/</g,'&lt;')}${f['Project type']&&f['Template used']?' · ':''}${(f['Template used']||'').replace(/</g,'&lt;')} · <strong>$${(f['Total']||0).toFixed(2)}</strong></div>
+          <button onclick="mqDeleteProposal('${p.id}',event)" title="Delete" style="position:absolute;top:10px;right:10px;background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:2px 4px">✕</button>
         </div>`;
       }).join('');
+    };
+
+    window.mqDeleteProposal = async function(id, event) {
+      if (event) event.stopPropagation(); // don't also trigger the reprint click on the card underneath
+      if (!confirm('Delete this proposal? This cannot be undone.')) return;
+      try {
+        await fetchWithRetry(`${CONFIG.PROXY_WORKER}/delete-proposal`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shopToken, proposalId: id }),
+        });
+        window._mqSavedProposals = (window._mqSavedProposals || []).filter(p => p.id !== id);
+        const searchInput = document.getElementById('mq-proposals-search');
+        mqRenderProposalsListBody(searchInput ? searchInput.value : '');
+      } catch(e) {
+        console.error('Failed to delete proposal', e);
+        alert('Could not delete this proposal — check your connection and try again.');
+      }
     };
 
     window.mqCloseProposalsList = function() {
