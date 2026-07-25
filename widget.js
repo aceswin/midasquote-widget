@@ -1299,31 +1299,11 @@
             ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
-          <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
-            <div style="display:flex;align-items:flex-start">
-              ${termHelpThumb(MQ_TERM_IMAGES.crownReturn,'What is a crown return?')}
-              <div style="flex:1;min-width:0">
-                <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
-                <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-                <div style="font-size:12px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
-              </div>
-            </div>
-          </div>
         </div>`:''}
         ${hasValance?`<div>
           <div class="mq-field"><label class="mq-label">Valance</label>
             ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems)}
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
-          </div>
-          <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
-            <div style="display:flex;align-items:flex-start">
-              ${termHelpThumb(MQ_TERM_IMAGES.valanceReturn,'What is a valance return?')}
-              <div style="flex:1;min-width:0">
-                <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
-                <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-                <div style="font-size:12px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
-              </div>
-            </div>
           </div>
         </div>`:''}
         </div>
@@ -1515,18 +1495,6 @@
             </div>
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:14px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                ${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',36,false)}<label style="font-size:14px;color:#374151"><strong>Side splashes</strong> (Quantity)</label>
-                <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
-              </div>
-              <div style="font-size:12px;color:#4b5563;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <label style="font-size:14px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
-                <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" step="0.1" oninput="mqRefreshBsFt('b')" style="width:70px"/>
-              </div>
-              <div style="font-size:13px;color:#4b5563;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
               <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
           </div>
@@ -3140,18 +3108,6 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
         <div id="mqs-bsft-block-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
           <div style="font-size:14px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            ${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',36,false)}<label style="font-size:14px;color:#374151"><strong>Side splashes</strong> (Quantity)</label>
-            <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
-          </div>
-          <div style="font-size:12px;color:#4b5563;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label style="font-size:14px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
-            <input type="number" id="mqs-bs-subtract-${id}" value="0" min="0" step="0.1" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
-          </div>
-          <div style="font-size:13px;color:#4b5563;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
           <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mqs-bsft-net-${id}">0</strong> ft</div>
         </div>`;
       document.getElementById(containerId)?.appendChild(card);
