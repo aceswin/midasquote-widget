@@ -231,6 +231,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Require a deposit</strong> — shows a deposit line on the proposal, either as a percentage of the total or a flat dollar amount you set here.</p>
         <p><strong>Add tax</strong> — a simple flat percentage applied to the subtotal. This isn't a full tax-compliance engine (it won't handle different rules for labor vs. materials, exemptions, etc.) — just an straightforward, editable percentage for shops that want tax shown on the proposal.</p>
         <p><strong>Payment terms / Warranty notice / Legal terms</strong> — three optional text sections, each just a checkbox away from showing up on the printed proposal in a fixed spot: payment terms right after the header, warranty notice right after that, legal terms near the bottom after the costs. Edit the text however you like, or leave the starter wording in place.</p>
+        <p><strong>Show individual item prices</strong> — on by default. Uncheck it if this template should keep pricing vague on paper — the proposal will still list every item, just without a price next to each one, only the total at the bottom. This is only a default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer, regardless of what the template says.</p>
         <p>Proposals themselves — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
       `
     },
@@ -2995,9 +2996,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteProposalTemplate('${t.id}','${(f['Template name']||'this template').replace(/'/g,"\\'")}')" title="Delete template" style="margin-top:18px">✕</button>
         </div>
 
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin-bottom:8px">
           <input type="checkbox" ${f['Show signature line']?'checked':''} onchange="mqSaveProposalField('${t.id}','Show signature line',this.checked)" style="width:auto"/> Include a signature line at the bottom
         </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin-bottom:10px">
+          <input type="checkbox" ${f['Show item prices']!==false?'checked':''} onchange="mqSaveProposalField('${t.id}','Show item prices',this.checked)" style="width:auto"/> Show individual item prices <span style="font-weight:400;color:#9ca3af">(uncheck to only show the total — some shops prefer not to itemize on paper)</span>
+        </label>
+
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:10px">This is just the default — whoever's creating a proposal in MidasQuote Pro can still switch it on or off for any one customer.</div>
 
         <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:10px">
           <div>

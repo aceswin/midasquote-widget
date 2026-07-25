@@ -3554,6 +3554,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         customerAddress: '',
         jobName: '',
         description: '',
+        showPrices: (window._mqProposalTemplates[0] || {}).fields ? window._mqProposalTemplates[0].fields['Show item prices'] !== false : true,
         // Editable copy — the original est.lines stays untouched so
         // reopening this modal always starts fresh from the real estimate.
         lines: est.lines.map(l => ({ label: l.label, cost: l.cost })),
@@ -3626,6 +3627,10 @@ window.mqTogDrawerConfig=(prefix)=>{
           <button onclick="mqAddProposalLine()" style="font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;font-weight:600;padding:4px 0">+ Add a line</button>
         </div>
 
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin-bottom:14px">
+          <input type="checkbox" ${state.showPrices?'checked':''} onchange="mqProposalFieldChanged('showPrices',this.checked)" style="width:auto"/> Show individual item prices on this proposal <span style="font-weight:400;color:#9ca3af">(just for this one — doesn't change the template's default)</span>
+        </label>
+
         <div style="background:#f9fafb;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.8;margin-bottom:14px">
           ${f['Show subtotal'] ? `<div style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>$<span id="mq-prop-subtotal-val">${subtotal.toFixed(2)}</span></strong></div>` : ''}
           ${f['Show tax'] ? `<div style="display:flex;justify-content:space-between"><span>Tax (${f['Tax percent']||0}%)</span><strong>$<span id="mq-prop-tax-val">${taxAmt.toFixed(2)}</span></strong></div>` : ''}
@@ -3640,6 +3645,8 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window.mqProposalTemplateChosen = function(id) {
       window._mqProposalState.templateId = id;
+      const newTemplate = (window._mqProposalTemplates || []).find(t => t.id === id);
+      if (newTemplate) window._mqProposalState.showPrices = newTemplate.fields['Show item prices'] !== false;
       mqRenderProposalModalBody();
     };
     window.mqProposalFieldChanged = function(field, value) {
@@ -3724,6 +3731,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         templateUsed: f['Template name'] || '',
         projectType: est.projectType || '',
         lineItems: state.lines,
+        showPrices: !!state.showPrices,
         subtotal, deposit: depositAmt, tax: taxAmt, total,
       };
 
@@ -3745,6 +3753,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         description: payload.description,
         projectType: payload.projectType,
         lineItems: state.lines,
+        showPrices: payload.showPrices,
         saveFailed,
         subtotal, tax: taxAmt, deposit: depositAmt, total,
         // Text blocks come straight from the chosen template — only
@@ -3769,10 +3778,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       const f = opts.template || {};
       const accent = f['Accent colour'] || '#1a3a6b';
       const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
-      const lineRows = (opts.lineItems || []).map(l => `
+      const showPrices = opts.showPrices !== false; // undefined (e.g. old reprints) defaults to showing, matching prior behavior
+      const lineRows = (opts.lineItems || []).map(l => showPrices ? `
         <tr>
           <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${(l.label||'').replace(/</g,'&lt;')}</td>
           <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">$${(parseFloat(l.cost)||0).toFixed(2)}</td>
+        </tr>` : `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${(l.label||'').replace(/</g,'&lt;')}</td>
         </tr>`).join('');
 
       return `<!DOCTYPE html>
@@ -3813,7 +3826,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   <table>
     <thead><tr>
       <th style="text-align:left;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Item</th>
-      <th style="text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Price</th>
+      ${showPrices ? `<th style="text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Price</th>` : ''}
     </tr></thead>
     <tbody>${lineRows}</tbody>
   </table>
@@ -3919,6 +3932,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         customerName: f['Customer name'] || '',
         customerAddress: f['Customer address'] || '',
         jobName: f['Job name'] || '',
+        showPrices: f['Show item prices'] !== false,
         description: f['Description'] || '',
         projectType: f['Project type'] || '',
         lineItems,
