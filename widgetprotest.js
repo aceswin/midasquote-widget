@@ -2121,8 +2121,16 @@
         if (manualWrap) manualWrap.style.display = 'flex';
         if (manualToggleCb) manualToggleCb.checked = true; // keeps it consistent even though it's hidden
         if (useCabCb) useCabCb.checked = false;
-      } else if (manualToggleCb && !manualToggleCb.checked && manualWrap) {
-        manualWrap.style.display = 'none';
+      } else {
+        // Cabinet boxes ARE part of this project type — default to using
+        // those measurements for crown/valance too, since re-typing footage
+        // that's already been measured once is exactly the busywork this
+        // checkbox exists to skip. Unconditional, same as the no-cabinets
+        // branch above — this re-asserts the sensible default whenever
+        // project type/room changes, rather than only on first load.
+        if (useCabCb) useCabCb.checked = true;
+        if (manualToggleCb) manualToggleCb.checked = false;
+        if (manualWrap) manualWrap.style.display = 'none';
       }
 
       // Countertop details — Both tab only (the standalone Countertops tab has
@@ -3601,7 +3609,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             ${state.lines.map((l, i) => `
               <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
                 <input type="text" value="${(l.label||'').replace(/"/g,'&quot;')}" oninput="mqProposalLineChanged(${i},'label',this.value)" style="flex:1;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"/>
-                <input type="number" value="${l.cost}" oninput="mqProposalLineChanged(${i},'cost',this.value)" onblur="mqRenderProposalModalBody()" style="width:90px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"/>
+                <input type="number" value="${l.cost}" oninput="mqProposalLineChanged(${i},'cost',this.value); mqUpdateProposalSummary()" style="width:90px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px"/>
                 <button onclick="mqRemoveProposalLine(${i})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>
               </div>`).join('')}
           </div>
@@ -3609,10 +3617,10 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
 
         <div style="background:#f9fafb;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.8;margin-bottom:14px">
-          ${f['Show subtotal'] ? `<div style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>$${subtotal.toFixed(2)}</strong></div>` : ''}
-          ${f['Show tax'] ? `<div style="display:flex;justify-content:space-between"><span>Tax (${f['Tax percent']||0}%)</span><strong>$${taxAmt.toFixed(2)}</strong></div>` : ''}
-          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:1px solid #e5e7eb;margin-top:6px;padding-top:6px"><span>Total</span><span>$${total.toFixed(2)}</span></div>
-          ${f['Show deposit'] ? `<div style="display:flex;justify-content:space-between;color:#166534;margin-top:4px"><span>Deposit due (${f['Deposit type']==='Flat amount'?'flat rate':((f['Deposit value']||0)+'%')})</span><strong>$${depositAmt.toFixed(2)}</strong></div>` : ''}
+          ${f['Show subtotal'] ? `<div style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>$<span id="mq-prop-subtotal-val">${subtotal.toFixed(2)}</span></strong></div>` : ''}
+          ${f['Show tax'] ? `<div style="display:flex;justify-content:space-between"><span>Tax (${f['Tax percent']||0}%)</span><strong>$<span id="mq-prop-tax-val">${taxAmt.toFixed(2)}</span></strong></div>` : ''}
+          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:1px solid #e5e7eb;margin-top:6px;padding-top:6px"><span>Total</span><span>$<span id="mq-prop-total-val">${total.toFixed(2)}</span></span></div>
+          ${f['Show deposit'] ? `<div style="display:flex;justify-content:space-between;color:#166534;margin-top:4px"><span>Deposit due (${f['Deposit type']==='Flat amount'?'flat rate':((f['Deposit value']||0)+'%')})</span><strong>$<span id="mq-prop-deposit-val">${depositAmt.toFixed(2)}</span></strong></div>` : ''}
           ${f['Show signature line'] ? `<div style="font-size:11px;color:#9ca3af;margin-top:6px">✓ This template includes a signature line on the printed page.</div>` : ''}
         </div>
 
@@ -3629,6 +3637,32 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
     window.mqProposalLineChanged = function(i, field, value) {
       window._mqProposalState.lines[i][field] = field === 'cost' ? (parseFloat(value) || 0) : value;
+    };
+
+    // Recomputes subtotal/tax/total/deposit and updates just those text
+    // nodes directly — deliberately NOT a full mqRenderProposalModalBody()
+    // call, since replacing the whole modal body while someone's mid-keystroke
+    // in the price field would yank focus out of the input on every character.
+    window.mqUpdateProposalSummary = function() {
+      const state = window._mqProposalState;
+      const templates = window._mqProposalTemplates || [];
+      const template = templates.find(t => t.id === state.templateId) || templates[0];
+      if (!template) return;
+      const f = template.fields;
+      const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
+      const taxAmt = f['Show tax'] ? subtotal * ((f['Tax percent'] || 0) / 100) : 0;
+      const total = subtotal + taxAmt;
+      const depositAmt = f['Show deposit']
+        ? (f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100))
+        : 0;
+      const subtotalEl = document.getElementById('mq-prop-subtotal-val');
+      const taxEl = document.getElementById('mq-prop-tax-val');
+      const totalEl = document.getElementById('mq-prop-total-val');
+      const depositEl = document.getElementById('mq-prop-deposit-val');
+      if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2);
+      if (taxEl) taxEl.textContent = taxAmt.toFixed(2);
+      if (totalEl) totalEl.textContent = total.toFixed(2);
+      if (depositEl) depositEl.textContent = depositAmt.toFixed(2);
     };
     window.mqRemoveProposalLine = function(i) {
       window._mqProposalState.lines.splice(i, 1);
