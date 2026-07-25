@@ -3800,7 +3800,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   table { width:100%; border-collapse:collapse; }
 </style>
 </head><body>
-  <div class="mq-no-print" style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">💡 Before printing or saving as PDF, open "More settings" in the print dialog and uncheck <strong>"Headers and footers"</strong> — otherwise Chrome adds its own date/title line at the top of the page.</div>
+  <div class="mq-no-print" style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">💡 If you see a Chrome date/title line (or something similar) at the top of the printed page or PDF, look for a "Headers and footers" option in your print settings and turn it off — it's not part of this document, just something some browsers add automatically.</div>
   ${opts.saveFailed ? `<div class="mq-no-print" style="background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px">⚠ Couldn't save this to your proposal history (connection issue) — it's not in "My Proposals," but you can still print/save it now.</div>` : ''}
   <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
     <div>
