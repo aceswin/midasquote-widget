@@ -305,7 +305,12 @@
       }
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
-      #midasquote-widget .mq-logo img{width:100%;height:100%;object-fit:cover}
+      /* A real uploaded logo isn't forced into that square anymore — shown
+         at its natural aspect ratio instead, so a wide or tall logo doesn't
+         get cropped to fit a square box. Only the no-logo "first letter"
+         placeholder above still uses the square/coloured background. */
+      #midasquote-widget .mq-logo-real{height:48px;max-width:180px;flex-shrink:0;display:flex;align-items:center}
+      #midasquote-widget .mq-logo-real img{max-height:48px;max-width:180px;width:auto;height:auto;object-fit:contain}
       #midasquote-widget .mq-shop-name{font-size:14px;font-weight:600;color:#111}
       #midasquote-widget .mq-shop-sub{font-size:13px;color:#4b5563}
       #midasquote-widget .mq-tab-bar{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;gap:8px}
@@ -1357,7 +1362,7 @@
 
   function buildWidgetHTML(shop, specs, data) {
     const hasCtInstall = hasCountertopInstall();
-    const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
+    const logoHTML = shop['Logo URL'] ? `<div class="mq-logo-real"><img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/></div>` : `<div class="mq-logo"><span>${(shop['Shop name']||'S').charAt(0)}</span></div>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
     const financingOn = shop['Offers financing'] === 'Yes';
     const financingHTML = financingOn
@@ -1370,7 +1375,7 @@
 
     return `
       <div class="mq-header">
-        <div class="mq-logo">${logoHTML}</div>
+        ${logoHTML}
         <div style="flex:1">
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
