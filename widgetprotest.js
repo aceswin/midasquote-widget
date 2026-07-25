@@ -3545,7 +3545,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/proposal-templates?shop=${encodeURIComponent(shopToken)}`, {});
         const j = await res.json();
         window._mqProposalTemplates = j.templates || [];
-      } catch(e) { window._mqProposalTemplates = []; }
+      } catch(e) { console.error('Failed to load proposal templates', e); window._mqProposalTemplates = []; }
 
       window._mqProposalState = {
         prefix,
@@ -3836,7 +3836,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/proposals?shop=${encodeURIComponent(shopToken)}`, {});
         const j = await res.json();
         window._mqSavedProposals = j.proposals || [];
-      } catch(e) { window._mqSavedProposals = []; }
+      } catch(e) { console.error('Failed to load saved proposals', e); window._mqSavedProposals = []; }
 
       const body = document.getElementById('mq-proposals-list-body');
       const list = window._mqSavedProposals;
