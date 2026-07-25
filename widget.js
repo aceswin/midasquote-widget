@@ -610,6 +610,17 @@
 
   // Lightbox for enlarging specialty item photos — same pattern as the
   // showroom page, kept inline here so it works without leaving the widget.
+  // If a shop's logo image fails to load (broken URL, expired hosting,
+  // whatever) — fall back to the plain letter avatar instead of leaving a
+  // broken-image icon with wrapped alt text on screen.
+  window.mqHandleLogoError = function(imgEl, brandColor, firstLetter) {
+    const wrap = imgEl.parentElement;
+    if (!wrap) return;
+    wrap.className = 'mq-logo';
+    wrap.style.background = brandColor;
+    wrap.innerHTML = `<span>${firstLetter}</span>`;
+  };
+
   window.mqPhotoLightbox = function(src, label) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
@@ -1362,7 +1373,9 @@
 
   function buildWidgetHTML(shop, specs, data) {
     const hasCtInstall = hasCountertopInstall();
-    const logoHTML = shop['Logo URL'] ? `<div class="mq-logo-real"><img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/></div>` : `<div class="mq-logo"><span>${(shop['Shop name']||'S').charAt(0)}</span></div>`;
+    const bcSafe = (shop['Brand colour']||'#1a1a1a').replace(/'/g,"\\'");
+    const letterSafe = ((shop['Shop name']||'S').charAt(0)||'S').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const logoHTML = shop['Logo URL'] ? `<div class="mq-logo-real"><img src="${shop['Logo URL']}" alt="${shop['Shop name']}" onerror="mqHandleLogoError(this,'${bcSafe}','${letterSafe}')"/></div>` : `<div class="mq-logo"><span>${(shop['Shop name']||'S').charAt(0)}</span></div>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
     const financingOn = shop['Offers financing'] === 'Yes';
     const financingHTML = financingOn
