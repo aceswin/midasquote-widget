@@ -3685,6 +3685,18 @@ window.mqTogDrawerConfig=(prefix)=>{
         return;
       }
 
+      // Opened right here, synchronously, as the very first thing — still
+      // inside the original click, before any awaited network call. Browsers
+      // only allow window.open() as a direct result of a user gesture; once
+      // an await (or a blocking alert()) happens first, later calling
+      // window.open() gets treated as unrelated to the click and blocked.
+      // We write the actual content into this blank window further down,
+      // once the save attempt (success or fail) is done.
+      const printWin = window.open('', '_blank');
+      if (!printWin) { alert('Please allow pop-ups to view/print this proposal.'); return; }
+      printWin.document.write('<!DOCTYPE html><html><body style="font-family:sans-serif;color:#6b7280;padding:40px;text-align:center">Preparing your proposal...</body></html>');
+      printWin.document.close();
+
       const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
       const taxAmt = f['Show tax'] ? subtotal * ((f['Tax percent'] || 0) / 100) : 0;
       const total = subtotal + taxAmt;
@@ -3703,21 +3715,23 @@ window.mqTogDrawerConfig=(prefix)=>{
         subtotal, deposit: depositAmt, tax: taxAmt, total,
       };
 
+      let saveFailed = false;
       try {
         await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-proposal`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         });
       } catch(e) {
         console.error('Failed to save proposal', e);
-        alert("Couldn't save this to your proposal history right now (connection issue?) — generating it anyway so you can still print it.");
+        saveFailed = true;
       }
 
-      mqOpenProposalPrintView({
+      mqOpenProposalPrintView(printWin, {
         shop: window._mqShopData || {},
         customerName: payload.customerName,
         description: payload.description,
         projectType: payload.projectType,
         lineItems: state.lines,
+        saveFailed,
         subtotal, tax: taxAmt, deposit: depositAmt, total,
         template: f,
       });
@@ -3744,11 +3758,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"/><title>Proposal — ${(opts.customerName||'').replace(/</g,'&lt;')}</title>
 <style>
-  @media print { @page { margin: 0.6in; } }
+  @media print { @page { margin: 0.6in; } .mq-no-print { display:none; } }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#111; max-width:720px; margin:0 auto; padding:32px 24px; }
   table { width:100%; border-collapse:collapse; }
 </style>
 </head><body>
+  ${opts.saveFailed ? `<div class="mq-no-print" style="background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px">⚠ Couldn't save this to your proposal history (connection issue) — it's not in "My Proposals," but you can still print/save it now.</div>` : ''}
   <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
     <div>
       ${logo}
@@ -3792,12 +3807,12 @@ window.mqTogDrawerConfig=(prefix)=>{
 </body></html>`;
     }
 
-    function mqOpenProposalPrintView(opts) {
-      const win = window.open('', '_blank');
-      if (!win) { alert('Please allow pop-ups to view/print this proposal.'); return; }
-      win.document.write(buildProposalPrintHTML(opts));
-      win.document.close();
-      setTimeout(() => { try { win.print(); } catch(e) {} }, 400);
+    function mqOpenProposalPrintView(printWin, opts) {
+      if (!printWin || printWin.closed) { alert('Please allow pop-ups to view/print this proposal.'); return; }
+      printWin.document.open(); // clears the "Preparing..." placeholder before writing the real page
+      printWin.document.write(buildProposalPrintHTML(opts));
+      printWin.document.close();
+      setTimeout(() => { try { printWin.print(); } catch(e) {} }, 400);
     }
 
     window.mqOpenProposalsList = async function() {
@@ -3867,7 +3882,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         'Show signature line': true,
         'Accent colour': '#1a3a6b',
       };
-      mqOpenProposalPrintView({
+      const printWin = window.open('', '_blank');
+      if (!printWin) { alert('Please allow pop-ups to view/print this proposal.'); return; }
+      mqOpenProposalPrintView(printWin, {
         shop: window._mqShopData || {},
         customerName: f['Customer name'] || '',
         description: f['Description'] || '',
