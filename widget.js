@@ -2207,8 +2207,16 @@
         if (manualWrap) manualWrap.style.display = 'flex';
         if (manualToggleCb) manualToggleCb.checked = true; // keeps it consistent even though it's hidden
         if (useCabCb) useCabCb.checked = false;
-      } else if (manualToggleCb && !manualToggleCb.checked && manualWrap) {
-        manualWrap.style.display = 'none';
+      } else {
+        // Cabinet boxes ARE part of this project type — default to using
+        // those measurements for crown/valance too, since re-typing footage
+        // that's already been measured once is exactly the busywork this
+        // checkbox exists to skip. Unconditional, same as the no-cabinets
+        // branch above — this re-asserts the sensible default whenever
+        // project type/room changes, rather than only on first load.
+        if (useCabCb) useCabCb.checked = true;
+        if (manualToggleCb) manualToggleCb.checked = false;
+        if (manualWrap) manualWrap.style.display = 'none';
       }
 
       // Countertop details — Both tab only (the standalone Countertops tab has
