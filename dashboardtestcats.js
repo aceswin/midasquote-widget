@@ -21,6 +21,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
     LEADS_TABLE:        'tblPcoTI8zCCHLICi',
     LINE_ITEMS_TABLE:   'tblCkJsJ2OC6DgXok',
+    PROPOSAL_TEMPLATES_TABLE: 'tblF2upUbaWOUvBAW',
     RESEND_API_KEY:     '',  // Removed — email sending goes through Cloudflare Worker which holds the key securely
     EMAIL_WORKER:       'https://midasquote-email.jordan132001.workers.dev',
     FROM_EMAIL:         'quotes@midasquote.com',
@@ -221,6 +222,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
       `
     },
+    proposals: {
+      title: 'Proposals',
+      body: `
+        <p>Build and customize proposal templates here — your team then picks one from <strong>MidasQuote Pro</strong>, right under a completed real-number estimate, to turn it into a clean, printable proposal for the customer to review and sign.</p>
+        <p>You start with three ready-made templates — <strong>Simple</strong> (small jobs, no deposit/tax), <strong>Standard</strong>, and <strong>Large Project</strong> — but every setting on every template is fully editable, and you can add as many of your own as you'd like.</p>
+        <p><strong>Signature line</strong> — adds a blank signature + date line at the bottom of the printed proposal. This app doesn't do e-signatures — this is meant for a real pen-on-paper signature after printing it out on your phone or in-shop.</p>
+        <p><strong>Require a deposit</strong> — shows a deposit line on the proposal, either as a percentage of the total or a flat dollar amount you set here.</p>
+        <p><strong>Add tax</strong> — a simple flat percentage applied to the subtotal. This isn't a full tax-compliance engine (it won't handle different rules for labor vs. materials, exemptions, etc.) — just an straightforward, editable percentage for shops that want tax shown on the proposal.</p>
+        <p>Proposals themselves — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
+      `
+    },
     embed: {
       title: 'Embed code',
       body: `
@@ -327,6 +339,35 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // Items tab — explains why there are already items sitting there waiting
   // for them. Same dismiss-once-on-the-shop-record pattern as the main
   // welcome modal, so it stays dismissed across devices/browsers too.
+  // A single shared narrow popover, reused by any small (?) info icon in
+  // the app — clicking one positions this near it and fills in its text.
+  // Native title="" tooltips render as one long unwrapped line, which is
+  // exactly the problem this replaces; this one actually wraps and is
+  // click-triggered (which is what people instinctively try anyway),
+  // dismissed by clicking anywhere else.
+  window.mqShowSpecHelpPopover = function(triggerEl, text, event) {
+    if (event) event.stopPropagation();
+    let pop = document.getElementById('mq-spec-help-popover');
+    const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'mq-spec-help-popover';
+      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:230px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
+      document.body.appendChild(pop);
+    }
+    if (alreadyOpenForThis) { pop.style.display = 'none'; return; } // clicking the same icon again closes it
+    pop.textContent = text;
+    pop._trigger = triggerEl;
+    const rect = triggerEl.getBoundingClientRect();
+    pop.style.display = 'block';
+    pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    pop.style.left = Math.max(8, window.scrollX + rect.left - 100) + 'px';
+  };
+  document.addEventListener('click', () => {
+    const pop = document.getElementById('mq-spec-help-popover');
+    if (pop) pop.style.display = 'none';
+  });
+
   window.mqShowSpecialtyTipsModal = function() {
     let modal = document.getElementById('mq-specialty-tips-modal');
     if (!modal) {
@@ -552,6 +593,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
+          <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
           <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
           <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
@@ -1191,6 +1233,10 @@ window.logoutMember = async function () {
                         </span>
                       </div>
                     </div>
+                    <div class="mq-field">
+                      <label class="mq-label">Shop name colour <span style="font-weight:400;color:#9ca3af;text-transform:none">(independent of the shape colour above)</span></label>
+                      <input type="color" id="mq-pd-name-color" value="#1a1a1a" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+                    </div>
                   </div>
 
                   <div class="mq-field" style="margin-top:12px">
@@ -1381,6 +1427,18 @@ window.logoutMember = async function () {
               </div>
               </div>
             </div>
+          </div>
+
+          <!-- PROPOSALS -->
+          <div class="mq-page" id="mq-page-proposals">
+            <button class="mq-help-btn" onclick="mqShowHelp('proposals')"><span class="mq-help-badge">?</span> Need help?</button>
+            <div class="mq-page-title">Proposals</div>
+            <div class="mq-page-sub">Set up templates here — your team picks one in MidasQuote Pro to turn a real-number estimate into a clean, printable proposal for the customer to sign.</div>
+            <div id="mq-prop-msg"></div>
+            <div style="margin-bottom:1rem">
+              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddProposalTemplate()">+ New template</button>
+            </div>
+            <div id="mq-prop-list"><div class="mq-loading">Loading proposal templates...</div></div>
           </div>
 
         </div>
@@ -2839,6 +2897,162 @@ window.logoutMember = async function () {
     if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
   };
 
+  async function loadProposalTemplates(shopName) {
+    const recs = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+    return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
+  }
+
+  // Seeded once per shop, same pattern as ensureProjectTypeTemplates — a
+  // Simple one-pager for small jobs, a Standard proposal with deposit/tax,
+  // and a Large-project version, so a shop owner has something usable
+  // immediately rather than a blank list.
+  async function ensureProposalTemplatesSeeded(shopRecord) {
+    if (shopRecord.fields['Proposal templates seeded']) return;
+    const starters = [
+      { name: 'Simple', size: 'Simple', accent: '#1a3a6b', footer: 'Thank you for your business!', signature: true, showDeposit: false, showSubtotal: false, showTax: false },
+      { name: 'Standard', size: 'Standard', accent: '#1a3a6b', footer: 'Prices valid for 30 days. Thank you for choosing us!', signature: true, showDeposit: true, depositType: 'Percent', depositValue: 25, showSubtotal: true, showTax: true, taxPct: 13 },
+      { name: 'Large Project', size: 'Large', accent: '#1a3a6b', footer: 'Prices valid for 30 days. A signed copy of this proposal will be kept on file. Thank you for choosing us!', signature: true, showDeposit: true, depositType: 'Percent', depositValue: 30, showSubtotal: true, showTax: true, taxPct: 13 },
+    ];
+    try {
+      for (let i = 0; i < starters.length; i++) {
+        const t = starters[i];
+        await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
+          'Shop': [shopRecord.id],
+          'Template name': t.name,
+          'Size category': t.size,
+          'Accent colour': t.accent,
+          'Footer text': t.footer,
+          'Show signature line': t.signature,
+          'Show deposit': t.showDeposit || false,
+          'Deposit type': t.depositType || 'Percent',
+          'Deposit value': t.depositValue || 0,
+          'Show subtotal': t.showSubtotal || false,
+          'Show tax': t.showTax || false,
+          'Tax percent': t.taxPct || 0,
+          'Sort order': i,
+        });
+      }
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Proposal templates seeded': true });
+      shopRecord.fields['Proposal templates seeded'] = true;
+    } catch(e) { console.warn('Failed to seed starter proposal templates:', e); }
+  }
+
+  function renderProposalTemplates(templates, shopRecord) {
+    const container = document.getElementById('mq-prop-list');
+    if (!container) return;
+    if (!templates.length) {
+      container.innerHTML = '<div class="mq-empty" style="padding:2rem">No proposal templates yet. Click "+ New template" to add your first one.</div>';
+      return;
+    }
+    container.innerHTML = templates.map(t => {
+      const f = t.fields;
+      const showDeposit = !!f['Show deposit'];
+      const showTax = !!f['Show tax'];
+      return `
+      <div class="mq-card" style="margin-bottom:1rem">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px">
+          <div style="flex:1;min-width:180px">
+            <label class="mq-label">Template name</label>
+            <input type="text" value="${(f['Template name']||'').replace(/"/g,'&quot;')}" onblur="mqSaveProposalField('${t.id}','Template name',this.value)"/>
+          </div>
+          <div style="width:150px">
+            <label class="mq-label">Size category</label>
+            <select onchange="mqSaveProposalField('${t.id}','Size category',this.value)" style="width:100%">
+              <option value="Simple" ${f['Size category']==='Simple'?'selected':''}>Simple</option>
+              <option value="Standard" ${f['Size category']==='Standard'||!f['Size category']?'selected':''}>Standard</option>
+              <option value="Large" ${f['Size category']==='Large'?'selected':''}>Large</option>
+            </select>
+          </div>
+          <div>
+            <label class="mq-label">Accent colour</label>
+            <input type="color" value="${f['Accent colour']||'#1a3a6b'}" onchange="mqSaveProposalField('${t.id}','Accent colour',this.value)" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+          </div>
+          <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteProposalTemplate('${t.id}','${(f['Template name']||'this template').replace(/'/g,"\\'")}')" title="Delete template" style="margin-top:18px">✕</button>
+        </div>
+
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin-bottom:10px">
+          <input type="checkbox" ${f['Show signature line']?'checked':''} onchange="mqSaveProposalField('${t.id}','Show signature line',this.checked)" style="width:auto"/> Include a signature line at the bottom
+        </label>
+
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:10px">
+          <div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
+              <input type="checkbox" id="mq-prop-showdep-${t.id}" ${showDeposit?'checked':''} onchange="mqSaveProposalField('${t.id}','Show deposit',this.checked); mqToggleProposalSubfields('${t.id}')" style="width:auto"/> Require a deposit
+            </label>
+            <div id="mq-prop-depfields-${t.id}" style="display:${showDeposit?'flex':'none'};gap:6px;margin-top:6px;align-items:center">
+              <select onchange="mqSaveProposalField('${t.id}','Deposit type',this.value)" style="width:auto">
+                <option value="Percent" ${f['Deposit type']!=='Flat amount'?'selected':''}>%</option>
+                <option value="Flat amount" ${f['Deposit type']==='Flat amount'?'selected':''}>$ flat</option>
+              </select>
+              <input type="number" value="${f['Deposit value']||''}" placeholder="0" style="width:80px" onblur="mqSaveProposalField('${t.id}','Deposit value',parseFloat(this.value)||0)"/>
+            </div>
+          </div>
+          <div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
+              <input type="checkbox" ${f['Show subtotal']?'checked':''} onchange="mqSaveProposalField('${t.id}','Show subtotal',this.checked)" style="width:auto"/> Show subtotal line
+            </label>
+          </div>
+          <div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
+              <input type="checkbox" id="mq-prop-showtax-${t.id}" ${showTax?'checked':''} onchange="mqSaveProposalField('${t.id}','Show tax',this.checked); mqToggleProposalSubfields('${t.id}')" style="width:auto"/> Add tax
+            </label>
+            <div id="mq-prop-taxfields-${t.id}" style="display:${showTax?'flex':'none'};gap:6px;margin-top:6px;align-items:center">
+              <input type="number" value="${f['Tax percent']||''}" placeholder="0" style="width:70px" onblur="mqSaveProposalField('${t.id}','Tax percent',parseFloat(this.value)||0)"/>
+              <span style="font-size:13px;color:#6b7280">%</span>
+            </div>
+          </div>
+        </div>
+
+        <label class="mq-label">Footer text</label>
+        <textarea rows="2" style="width:100%" onblur="mqSaveProposalField('${t.id}','Footer text',this.value)">${(f['Footer text']||'').replace(/</g,'&lt;')}</textarea>
+      </div>`;
+    }).join('');
+  }
+
+  window.mqToggleProposalSubfields = function(id) {
+    const depBox = document.getElementById(`mq-prop-showdep-${id}`);
+    const depFields = document.getElementById(`mq-prop-depfields-${id}`);
+    if (depBox && depFields) depFields.style.display = depBox.checked ? 'flex' : 'none';
+    const taxBox = document.getElementById(`mq-prop-showtax-${id}`);
+    const taxFields = document.getElementById(`mq-prop-taxfields-${id}`);
+    if (taxBox && taxFields) taxFields.style.display = taxBox.checked ? 'flex' : 'none';
+  };
+
+  window.mqSaveProposalField = async function(id, field, value) {
+    try { await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value }); }
+    catch(e) { console.error('Failed to save proposal template field', e); }
+  };
+
+  window.mqAddProposalTemplate = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    try {
+      const existing = await loadProposalTemplates(shopRec.fields['Shop name']);
+      await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
+        'Shop': [shopRec.id],
+        'Template name': 'New template',
+        'Size category': 'Standard',
+        'Accent colour': '#1a3a6b',
+        'Show signature line': true,
+        'Sort order': existing.length,
+      });
+      const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
+      renderProposalTemplates(templates, shopRec);
+      showMsg('mq-prop-msg', '✓ Template added — edit its name and settings below.');
+    } catch(e) { showMsg('mq-prop-msg', 'Error adding template.', 'error'); }
+  };
+
+  window.mqDeleteProposalTemplate = async function(id, name) {
+    if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
+    const shopRec = window._mqShopRecord;
+    try {
+      await atDelete(CONFIG.PROPOSAL_TEMPLATES_TABLE, id);
+      const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
+      renderProposalTemplates(templates, shopRec);
+      showMsg('mq-prop-msg', '✓ Template deleted.');
+    } catch(e) { showMsg('mq-prop-msg', 'Error deleting template.', 'error'); }
+  };
+
   function renderSpecialty(specs, shopRecord) {
     const container = el('mq-spec-list');
     if (!container) return;
@@ -3658,14 +3872,19 @@ window.logoutMember = async function () {
       const installPerSqFt = !!r.fields['Install per square foot'];
       return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
           <span style="font-size:11px;color:#6b7280">Install price (labor only, added on top)</span>
-          <span title="e.g. $54.95/sqft to supply a door + $16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges." style="cursor:help;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+          <span onclick="mqShowSpecHelpPopover(this,'e.g. \$54.95/sqft to supply a door + \$16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
         <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>
-        <div style="margin-top:6px;display:flex;gap:10px;align-items:center">
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer" title="Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply per sqft, install per door."><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:auto"/> per lin ft</label>
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer" title="Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply per sqft, install per door."><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:auto"/> per sq ft</label>
+        <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:auto"/> per lin ft</label>
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:auto"/> per sq ft</label>
+          <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" title="Only shown to customers when install is priced differently than supply. Leave blank to use this placeholder as the default question." style="margin-top:6px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
+        <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
+          <span style="font-size:11px;color:#6b7280">Question customers see:</span>
+          <span onclick="mqShowSpecHelpPopover(this,'This only shows to customers when install is priced differently than supply. Type your own question to customize it, or leave blank to use the placeholder text shown below as the default.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+        </div>
+        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
     }
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
@@ -4094,8 +4313,22 @@ window.logoutMember = async function () {
   window.mqPushSingleTemplateItem = async function(masterItemId) {
     showMsg('mq-templates-msg', 'Pushing this item to all shops...');
     try {
-      const master = (window._mqTemplateItems || []).find(m => m.id === masterItemId);
+      // Fetch this record fresh rather than trusting window._mqTemplateItems
+      // — that's just a snapshot taken when the tab first loaded, and every
+      // field edit since then (price, name, checkboxes, all of it) saves
+      // straight to Airtable without updating that snapshot. Reading from
+      // it here would silently push whatever the values were BEFORE your
+      // most recent edits, undoing them on every shop.
+      const fresh = await atGet(CONFIG.SPECIALTY_TABLE, `RECORD_ID()="${masterItemId}"`);
+      const master = fresh[0];
       if (!master) { showMsg('mq-templates-msg', 'Could not find that template item — try refreshing the page.', 'error'); return; }
+      // Keep the in-memory list in sync too, so anything else reading it
+      // this session (or a second push right after) also sees the current
+      // values instead of the stale ones.
+      if (window._mqTemplateItems) {
+        const idx = window._mqTemplateItems.findIndex(m => m.id === masterItemId);
+        if (idx !== -1) window._mqTemplateItems[idx] = master;
+      }
 
       const masterShop = await ensureMasterTemplateShop();
       let masterPhotos = {};
@@ -5595,7 +5828,7 @@ window.logoutMember = async function () {
             cy += (isPortrait ? 130 : 110) * tc.lineMult;
 
             pdCtx.font = nameFont;
-            pdCtx.fillStyle = shapeColor;
+            pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
             const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.36);
             nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?86:72) * tc.lineMult; });
 
@@ -5727,7 +5960,7 @@ window.logoutMember = async function () {
             cy += (isPortrait ? 130 : 110) * tc.lineMult;
 
             pdCtx.font = nameFont;
-            pdCtx.fillStyle = shapeColor;
+            pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
             const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.38);
             nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?82:68) * tc.lineMult; });
 
@@ -5823,7 +6056,7 @@ window.logoutMember = async function () {
             pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
             pdCtx.fillText(tc.preText, centerX, cy); cy += (isPortrait ? 90 : 76) * tc.lineMult;
 
-            pdCtx.font = nameFont; pdCtx.fillStyle = shapeColor;
+            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
             const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.36);
             nameLines.forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?74:62) * tc.lineMult; });
             cy += (isPortrait ? 20 : 14) * tc.lineMult;
@@ -5908,7 +6141,7 @@ window.logoutMember = async function () {
           let ty = cy + r + 70 + tc.offsetPct * H;
           pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
           pdCtx.fillText(tc.preText, cx, ty); ty += 58 * tc.lineMult;
-          pdCtx.font = nameFont; pdCtx.fillStyle = '#ffffff';
+          pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
           pdWrapText(pdShopName, nameFont, W*0.85).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 58 * tc.lineMult; });
           if (tagline) {
             ty += 14 * tc.lineMult;
@@ -5991,7 +6224,7 @@ window.logoutMember = async function () {
             let cy = (isPortrait ? splitAt*0.26 : H*0.30) + tc.offsetPct * H;
             pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
             pdCtx.fillText(tc.preText.toUpperCase(), centerX, cy); cy += (isPortrait?66:56) * tc.lineMult;
-            pdCtx.font = nameFont; pdCtx.fillStyle = textColor;
+            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || textColor;
             pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : splitAt*0.85).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?76:64) * tc.lineMult; });
             if (tagline) {
               cy += (isPortrait ? 20 : 14) * tc.lineMult;
@@ -6067,6 +6300,18 @@ window.logoutMember = async function () {
             else if (tpl === 'circular-badge') { preColorInput.value = '#f0f0f0'; tagColorInput.value = '#e0e0e0'; }
             else if (tpl === 'bold-modern') { preColorInput.value = '#d0d0d0'; tagColorInput.value = '#d0d0d0'; }
             else { preColorInput.value = '#6b6b6b'; tagColorInput.value = '#4b4b4b'; }
+          }
+          // Shop name colour is independent of shape colour (its own picker
+          // now, not derived from it) — still needs a sensible starting
+          // point per template though, same reasoning as the background
+          // colour above: diamond-arrow, circular-badge, and bold-modern
+          // all put the shop name over a dark panel/background by default,
+          // so white starts far more readable there than this picker's
+          // general black default.
+          const nameColorInput = el('mq-pd-name-color');
+          if (nameColorInput) {
+            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'bold-modern') nameColorInput.value = '#ffffff';
+            else nameColorInput.value = '#1a1a1a';
           }
           drawPosterDesigner();
         };
@@ -6582,6 +6827,17 @@ window.logoutMember = async function () {
       }
       if (window._mqShopRecord && !window._mqShopRecord.fields['Specialty tips popup seen']) {
         window.mqShowSpecialtyTipsModal();
+      }
+    }
+    if (page === 'proposals') {
+      const propList = document.getElementById('mq-prop-list');
+      if (propList && window._mqShopRecord) {
+        propList.innerHTML = '<div class="mq-loading">Loading proposal templates...</div>';
+        ensureProposalTemplatesSeeded(window._mqShopRecord).then(() =>
+          loadProposalTemplates(window._mqShopRecord.fields['Shop name'])
+        ).then(templates => {
+          renderProposalTemplates(templates, window._mqShopRecord);
+        });
       }
     }
     if (page === 'products') {
