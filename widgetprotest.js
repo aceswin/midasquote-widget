@@ -3745,7 +3745,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${(total||0).toFixed(2)}</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>💰 Deposit Due Today</span><span>$${(deposit||0).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>Deposit Due Today</span><span>$${(deposit||0).toFixed(2)}</span></div>
       </div>`;
     }
 
@@ -3886,7 +3886,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     function buildProposalPrintHTML(opts) {
       const shop = opts.shop || {};
       const accent = opts.accent || '#1a3a6b';
-      const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
+      const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" crossorigin="anonymous" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
       const pdfFilename = 'proposal-' + (opts.customerName||'proposal').replace(/[^a-z0-9]/gi,'-').toLowerCase() + '.pdf';
 
       return `<!DOCTYPE html>
@@ -3907,9 +3907,8 @@ window.mqTogDrawerConfig=(prefix)=>{
   <div class="mq-proposal-wrap">
   <div class="mq-no-print" style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px">💡 If you see a Chrome date/title line (or something similar) at the top of a printed copy, look for a "Headers and footers" option in your print settings and turn it off — it's not part of this document, just something some browsers add automatically. Using "Download PDF" below avoids this entirely.</div>
   ${opts.saveFailed ? `<div class="mq-no-print" style="background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">⚠ Couldn't save this to your proposal history (connection issue) — it's not in "My Proposals," but you can still download it now.</div>` : ''}
-  <div class="mq-no-print" style="display:flex;gap:10px;margin-bottom:20px">
-    <button id="mq-pdf-btn" onclick="mqDownloadProposalPdf()" style="flex:1;padding:12px;background:${accent};color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">⬇ Download PDF</button>
-    <button onclick="window.print()" style="padding:12px 16px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">🖨 Print</button>
+  <div class="mq-no-print" style="margin-bottom:20px">
+    <button id="mq-pdf-btn" onclick="mqDownloadProposalPdf()" style="width:100%;padding:12px;background:${accent};color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">⬇ Download PDF</button>
   </div>
   <div id="mq-proposal-content">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
@@ -3941,7 +3940,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         margin: 0.5,
         filename: '${pdfFilename}',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       }).from(el).save().then(() => {
         btn.textContent = originalText;
