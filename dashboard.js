@@ -35,6 +35,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   async function atGet(table, formula) {
     const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
     const res = await fetch(url, { headers: AT_HEADS });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
+    }
     const data = await res.json();
     return data.records || [];
   }
@@ -44,6 +48,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       method: 'PATCH', headers: AT_HEADS,
       body: JSON.stringify({ fields })
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
 
@@ -52,6 +60,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       method: 'POST', headers: AT_HEADS,
       body: JSON.stringify({ fields })
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
 
@@ -59,8 +71,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const res = await fetch(`${AT_BASE}/${table}/${id}`, {
       method: 'DELETE', headers: AT_HEADS
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
+
 
   function fmt(n) { return '$' + Math.round(n || 0).toLocaleString(); }
   function gv(id) { const e = document.getElementById(id); return e ? e.value : ''; }
@@ -2957,30 +2974,54 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   async function ensureProposalTemplatesSeeded(shopRecord) {
     if (shopRecord.fields['Proposal templates seeded']) return;
 
-    const starters = [
-      { name: 'Simple', size: 'Simple', accent: '#1a3a6b', body: PROPOSAL_BODY_SIMPLE, showPrices: true, depositType: 'Percent', depositValue: 0, taxPct: 0 },
-      { name: 'Standard', size: 'Standard', accent: '#1a3a6b', body: PROPOSAL_BODY_STANDARD, showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 },
-      { name: 'Large Project', size: 'Large', accent: '#1a3a6b', body: PROPOSAL_BODY_LARGE, showPrices: true, depositType: 'Percent', depositValue: 30, taxPct: 13 },
-    ];
-    try {
-      for (let i = 0; i < starters.length; i++) {
-        const t = starters[i];
-        await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
-          'Shop': [shopRecord.id],
-          'Template name': t.name,
-          'Size category': t.size,
-          'Accent colour': t.accent,
-          'Body': t.body,
-          'Show item prices': t.showPrices,
-          'Deposit type': t.depositType,
-          'Deposit value': t.depositValue,
-          'Tax percent': t.taxPct,
-          'Sort order': i,
-        });
+    // If a seed attempt for this shop is already running (e.g. the tab got
+    // clicked into twice in quick succession), just wait on that one
+    // instead of starting a second one — two overlapping attempts racing
+    // each other was almost certainly how a shop ended up with the
+    // "seeded" flag set while never actually getting its templates: one
+    // attempt got far enough to set the flag while the other's creates
+    // were still failing (an Airtable rate limit, a network blip, etc).
+    window._mqSeedingInProgress = window._mqSeedingInProgress || {};
+    if (window._mqSeedingInProgress[shopRecord.id]) {
+      return window._mqSeedingInProgress[shopRecord.id];
+    }
+
+    const doSeed = (async () => {
+      const starters = [
+        { name: 'Simple', size: 'Simple', accent: '#1a3a6b', body: PROPOSAL_BODY_SIMPLE, showPrices: true, depositType: 'Percent', depositValue: 0, taxPct: 0 },
+        { name: 'Standard', size: 'Standard', accent: '#1a3a6b', body: PROPOSAL_BODY_STANDARD, showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 },
+        { name: 'Large Project', size: 'Large', accent: '#1a3a6b', body: PROPOSAL_BODY_LARGE, showPrices: true, depositType: 'Percent', depositValue: 30, taxPct: 13 },
+      ];
+      try {
+        for (let i = 0; i < starters.length; i++) {
+          const t = starters[i];
+          await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
+            'Shop': [shopRecord.id],
+            'Template name': t.name,
+            'Size category': t.size,
+            'Accent colour': t.accent,
+            'Body': t.body,
+            'Show item prices': t.showPrices,
+            'Deposit type': t.depositType,
+            'Deposit value': t.depositValue,
+            'Tax percent': t.taxPct,
+            'Sort order': i,
+          });
+        }
+        // Only marked "seeded" once all 3 have actually landed — if any
+        // create above threw, we never reach this line, so the flag
+        // correctly stays unset and a future visit will retry properly.
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Proposal templates seeded': true });
+        shopRecord.fields['Proposal templates seeded'] = true;
+      } catch(e) {
+        console.warn('Failed to seed starter proposal templates:', e);
+      } finally {
+        delete window._mqSeedingInProgress[shopRecord.id];
       }
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Proposal templates seeded': true });
-      shopRecord.fields['Proposal templates seeded'] = true;
-    } catch(e) { console.warn('Failed to seed starter proposal templates:', e); }
+    })();
+
+    window._mqSeedingInProgress[shopRecord.id] = doSeed;
+    return doSeed;
   }
 
   const PROPOSAL_TOKENS_HELP = `
@@ -7139,6 +7180,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window._mqLineItems = lineItems;
   }
 
+  // Shared by every nav-triggered refetch below. Switching tabs used to
+  // re-query Airtable every single time, even if you'd been on that exact
+  // tab ten seconds earlier — harmless in isolation, but it adds up fast
+  // during normal back-and-forth dashboard use, and directly eats into
+  // Airtable's monthly API call allowance for no real benefit. This just
+  // skips the refetch (leaving whatever's already rendered in place) if
+  // it's been fetched recently; genuinely returning after a few minutes,
+  // or after an edit made elsewhere, still gets fresh data as normal.
+  window._mqLastFetchTimes = window._mqLastFetchTimes || {};
+  function mqShouldRefetch(key, minMs = 20000) {
+    const now = Date.now();
+    const last = window._mqLastFetchTimes[key] || 0;
+    if (now - last < minMs) return false;
+    window._mqLastFetchTimes[key] = now;
+    return true;
+  }
+
   // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
@@ -7201,7 +7259,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'leads') {
       const leadsTable = document.getElementById('mq-leads-table');
-      if (leadsTable && window._mqShopRecord) {
+      if (leadsTable && window._mqShopRecord && mqShouldRefetch('leads')) {
         leadsTable.innerHTML = '<div class="mq-loading">Refreshing leads...</div>';
         loadLeads(window._mqShopRecord.fields['Shop name']).then(leads => {
           window._mqLeads = sortLeadsArray(leads);
@@ -7214,7 +7272,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'specialty') {
       const specList = document.getElementById('mq-spec-list');
-      if (specList && window._mqShopRecord) {
+      if (specList && window._mqShopRecord && mqShouldRefetch('specialty')) {
         specList.innerHTML = '<div class="mq-loading">Refreshing specialty items...</div>';
         loadSpecialty(window._mqShopRecord.fields['Shop name']).then(specs => {
           renderSpecialty(specs, window._mqShopRecord);
@@ -7226,7 +7284,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'proposals') {
       const propList = document.getElementById('mq-prop-list');
-      if (propList && window._mqShopRecord) {
+      if (propList && window._mqShopRecord && mqShouldRefetch('proposals')) {
         propList.innerHTML = '<div class="mq-loading">Loading proposal templates...</div>';
         ensureProposalTemplatesSeeded(window._mqShopRecord).then(() =>
           loadProposalTemplates(window._mqShopRecord.fields['Shop name'])
@@ -7237,7 +7295,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'products') {
       const prodContent = document.getElementById('mq-products-content');
-      if (prodContent) {
+      if (prodContent && mqShouldRefetch('products')) {
         prodContent.innerHTML = '<div class="mq-loading">Loading your products...</div>';
         const shopToken = window._mqShopRecord.fields['Shop token'];
         Promise.all([
@@ -7255,12 +7313,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'templates') {
       const tmplContent = document.getElementById('mq-templates-content');
-      if (tmplContent) {
+      if (tmplContent && mqShouldRefetch('templates')) {
         tmplContent.innerHTML = '<div class="mq-loading">Loading templates...</div>';
         renderTemplates();
       }
       const masterRoomsContent = document.getElementById('mq-master-rooms-content');
-      if (masterRoomsContent) {
+      if (masterRoomsContent && mqShouldRefetch('masterRooms')) {
         masterRoomsContent.innerHTML = '<div class="mq-loading">Loading...</div>';
         renderMasterRoomDefs();
       }
