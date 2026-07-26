@@ -2985,6 +2985,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   const PROPOSAL_TOKENS_HELP = `
     <div style="margin-bottom:10px"><strong>**text**</strong> — bold, same as anywhere else. &nbsp; <strong>{hr}</strong> — a horizontal divider line, place it anywhere.</div>
+    <div style="margin-bottom:10px">Want a colored box (like a disclaimer callout) or colored text? Highlight some text below and use the buttons above the Body box — no need to type <code>{box:#hex}...{/box}</code> or <code>{color:#hex}...{/color}</code> by hand, though you can if you'd rather.</div>
 
     <div style="margin-bottom:6px"><strong>Customer &amp; job info</strong> <span style="font-weight:400">(filled in when the proposal is created in MidasQuote Pro)</span></div>
     <div style="margin-bottom:10px">{customer_name} · {customer_address} · {customer_phone} · {job_name} · {description} · {date}<br>
@@ -3088,7 +3089,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
         <label class="mq-label">Body — write the whole proposal yourself, place things wherever you want</label>
         <div style="font-size:11.5px;color:#374151;line-height:1.7;margin-bottom:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px 14px">${PROPOSAL_TOKENS_HELP}</div>
-        <textarea rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onblur="mqSaveProposalField('${t.id}','Body',this.value)">${(f['Body']||'').replace(/</g,'&lt;')}</textarea>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#f9fafb;border-radius:8px">
+          <div style="display:flex;align-items:center;gap:5px">
+            <input type="color" id="mq-prop-boxcolor-${t.id}" value="#eff6ff" title="Box background colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
+            <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${t.id}','box')">▭ Box selected text</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px">
+            <input type="color" id="mq-prop-textcolor-${t.id}" value="#dc2626" title="Text colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
+            <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${t.id}','color')">A Colour selected text</button>
+          </div>
+          <span style="font-size:10.5px;color:#9ca3af">Select some text in the box below first, then click one of these.</span>
+        </div>
+        <textarea id="mq-prop-body-${t.id}" rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onblur="mqSaveProposalField('${t.id}','Body',this.value)">${(f['Body']||'').replace(/</g,'&lt;')}</textarea>
         </div>
       </div>`;
     }).join('');
@@ -3101,6 +3113,32 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const isOpen = body.style.display !== 'none';
     body.style.display = isOpen ? 'none' : 'block';
     if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+  };
+
+  // Wraps whatever text is currently selected in the Body textarea with
+  // {box:#hex}...{/box} or {color:#hex}...{/color} — nobody has to type a
+  // hex code or remember the tag syntax, just pick a color, highlight some
+  // text, and click. Saves immediately, same as every other field here.
+  window.mqInsertProposalFormatting = function(id, kind) {
+    const textarea = document.getElementById(`mq-prop-body-${id}`);
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    if (start === end) {
+      alert('Select some text in the Body box first, then click this button to wrap it.');
+      return;
+    }
+    const colorInput = document.getElementById(kind === 'box' ? `mq-prop-boxcolor-${id}` : `mq-prop-textcolor-${id}`);
+    const hex = colorInput ? colorInput.value : (kind === 'box' ? '#eff6ff' : '#dc2626');
+    const openTag = kind === 'box' ? `{box:${hex}}` : `{color:${hex}}`;
+    const closeTag = kind === 'box' ? `{/box}` : `{/color}`;
+    const selected = textarea.value.substring(start, end);
+    const newValue = textarea.value.substring(0, start) + openTag + selected + closeTag + textarea.value.substring(end);
+    textarea.value = newValue;
+    mqSaveProposalField(id, 'Body', newValue);
+    textarea.focus();
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + openTag.length + selected.length + closeTag.length;
   };
 
   window.mqSaveProposalField = async function(id, field, value) {
@@ -3234,6 +3272,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </div>`;
   }
 
+  function mqPropFormatTextChunk(text) {
+    let html = mqPropEscapeHtml(text).replace(/\n/g, '<br>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\{color:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/color\}/g, (m, hex, inner) => `<span style="color:${hex}">${inner}</span>`);
+    return html;
+  }
+
   function mqPropRenderBodyTokens(bodyText, data) {
     const optionalEmpty = {
       '{customer_address}': !data.customerAddress,
@@ -3247,14 +3292,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
       return true;
     });
-
     const filteredText = lines.join('\n');
-    const paragraphs = filteredText.split(/\n{2,}/);
+
+    const customBlocks = {};
+    let blockIndex = 0;
+    const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (match, hex, inner) => {
+      const key = `\u0000BOX${blockIndex++}\u0000`;
+      const innerHtml = mqPropFormatTextChunk(inner.trim());
+      customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0;page-break-inside:avoid;break-inside:avoid">${innerHtml}</div>`;
+      return key;
+    });
+
+    const paragraphs = textWithPlaceholders.split(/\n{2,}/);
     let html = paragraphs.map(para => {
-      let p = mqPropEscapeHtml(para).replace(/\n/g, '<br>');
-      p = p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${p}</div>`;
+      const trimmed = para.trim();
+      if (/^\u0000BOX\d+\u0000$/.test(trimmed)) return trimmed;
+      return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${mqPropFormatTextChunk(para)}</div>`;
     }).join('');
+
+    for (const [key, fragHtml] of Object.entries(customBlocks)) {
+      html = html.split(key).join(fragHtml);
+    }
+
     const replacements = {
       '{customer_name}': mqPropEscapeHtml(data.customerName),
       '{customer_address}': mqPropEscapeHtml(data.customerAddress),

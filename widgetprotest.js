@@ -3829,6 +3829,18 @@ window.mqTogDrawerConfig=(prefix)=>{
     // AFTER escaping (curly braces aren't special HTML characters, so
     // "{deposit}" survives untouched) and swapped for either a plain escaped
     // value or a pre-built HTML fragment ({items}, {totals_box}, etc.).
+    // Turns one chunk of raw user text into formatted HTML — escape first
+    // (safety), then line breaks, then **bold**, then {color:#hex}...{/color}
+    // inline spans (color runs last since it wraps already-bolded HTML).
+    // Shared by both top-level paragraphs and the inside of a {box}, so
+    // formatting behaves identically whether it's inside a box or not.
+    function mqFormatProposalTextChunk(text) {
+      let html = mqEscapeHtml(text).replace(/\n/g, '<br>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\{color:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/color\}/g, (m, hex, inner) => `<span style="color:${hex}">${inner}</span>`);
+      return html;
+    }
+
     function mqRenderProposalBodyTokens(bodyText, data) {
       // Optional fields (customer left them blank, or the shop owner never
       // asked for one) collapse their whole line rather than leaving a
@@ -3846,6 +3858,23 @@ window.mqTogDrawerConfig=(prefix)=>{
         }
         return true;
       });
+      const filteredText = lines.join('\n');
+
+      // {box:#hex}...{/box} is extracted BEFORE paragraph-splitting, on the
+      // raw text — a box is a block (a whole colored card), so it needs to
+      // survive intact even if the shop owner put a blank line inside it,
+      // rather than getting split apart into two separate paragraph divs.
+      // Each match is swapped for a private placeholder (a null-byte marker
+      // nobody would ever type), rendered fully now, and substituted back
+      // in once the surrounding paragraph HTML is built.
+      const customBlocks = {};
+      let blockIndex = 0;
+      const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (match, hex, inner) => {
+        const key = `\u0000BOX${blockIndex++}\u0000`;
+        const innerHtml = mqFormatProposalTextChunk(inner.trim());
+        customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0;page-break-inside:avoid;break-inside:avoid">${innerHtml}</div>`;
+        return key;
+      });
 
       // Grouped into paragraphs (blank-line separated), each wrapped in its
       // own block with page-break-inside:avoid — otherwise a PDF page break
@@ -3853,13 +3882,18 @@ window.mqTogDrawerConfig=(prefix)=>{
       // height, with no idea where a line of text actually is) can land
       // right in the middle of a line, visibly chopping the tails off
       // descenders like y/p/g and continuing the rest on the next page.
-      const filteredText = lines.join('\n');
-      const paragraphs = filteredText.split(/\n{2,}/);
+      const paragraphs = textWithPlaceholders.split(/\n{2,}/);
       let html = paragraphs.map(para => {
-        let p = mqEscapeHtml(para).replace(/\n/g, '<br>');
-        p = p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${p}</div>`;
+        const trimmed = para.trim();
+        // A paragraph that's just a box placeholder is already a complete
+        // block on its own — don't wrap it in another paragraph div too.
+        if (/^\u0000BOX\d+\u0000$/.test(trimmed)) return trimmed;
+        return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${mqFormatProposalTextChunk(para)}</div>`;
       }).join('');
+
+      for (const [key, fragHtml] of Object.entries(customBlocks)) {
+        html = html.split(key).join(fragHtml);
+      }
 
       const replacements = {
         '{customer_name}': mqEscapeHtml(data.customerName),
