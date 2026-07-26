@@ -2993,7 +2993,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     <div style="margin-bottom:6px"><strong>Items &amp; totals</strong></div>
     <div style="margin-bottom:10px">
       {items} — styled list: coloured header, shaded rows.<br>
-      {items_plain} — the same list with no styling at all — bold item name, plain price, matches your body text.<br>
+      {items_plain} — the same list with no styling — bold item name, plain price, matches your body text.<br>
+      {items_plain_light} — same as {items_plain}, but item names aren't bold either.<br>
+      {items_header} — just the "Item / Price" header row on its own (no rows) — toss it above {items_plain} or {items_plain_light} if you want that classic header without the coloured box.<br>
       {totals_box} — a bold, coloured summary box with the deposit called out hard.<br>
       {totals_plain} — the same numbers as plain lines, no box.<br>
       {subtotal} · {tax} · {total} · {deposit} — the raw numbers individually, if you'd rather place them yourself.
@@ -3032,12 +3034,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     container.innerHTML = templates.map(t => {
       const f = t.fields;
+      const accent = f['Accent colour'] || '#1a3a6b';
+      const name = f['Template name'] || 'Untitled';
       return `
-      <div class="mq-card" style="margin-bottom:1rem">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px">
+      <div class="mq-card" style="margin-bottom:1rem;padding:0;overflow:hidden">
+        <div onclick="mqToggleProposalCard('${t.id}')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer">
+          <span id="mq-prop-chevron-${t.id}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+          <span style="width:14px;height:14px;border-radius:4px;background:${accent};flex-shrink:0"></span>
+          <strong id="mq-prop-header-name-${t.id}" style="font-size:14px">${name.replace(/</g,'&lt;')}</strong>
+          <span style="font-size:12px;color:#9ca3af">(${f['Size category']||'Standard'})</span>
+          <div style="flex:1"></div>
+          <button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqPreviewProposalTemplate('${t.id}')" title="Preview with sample data">👁 Preview</button>
+          <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="event.stopPropagation();mqDeleteProposalTemplate('${t.id}','${(name||'this template').replace(/'/g,"\\'")}')" title="Delete template">✕</button>
+        </div>
+        <div id="mq-prop-card-body-${t.id}" style="display:none;padding:0 16px 16px 16px;border-top:1px solid #e5e7eb">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin:14px 0 12px">
           <div style="flex:1;min-width:180px">
             <label class="mq-label">Template name</label>
-            <input type="text" value="${(f['Template name']||'').replace(/"/g,'&quot;')}" onblur="mqSaveProposalField('${t.id}','Template name',this.value)"/>
+            <input type="text" value="${(f['Template name']||'').replace(/"/g,'&quot;')}" onblur="mqSaveProposalField('${t.id}','Template name',this.value); const h=document.getElementById('mq-prop-header-name-${t.id}'); if(h) h.textContent=this.value||'Untitled';"/>
           </div>
           <div style="width:150px">
             <label class="mq-label">Size category</label>
@@ -3049,10 +3063,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </div>
           <div>
             <label class="mq-label">Accent colour</label>
-            <input type="color" value="${f['Accent colour']||'#1a3a6b'}" onchange="mqSaveProposalField('${t.id}','Accent colour',this.value)" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+            <input type="color" value="${accent}" onchange="mqSaveProposalField('${t.id}','Accent colour',this.value)" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
           </div>
-          <button class="mq-btn mq-btn-sm" onclick="mqPreviewProposalTemplate('${t.id}')" title="Preview with sample data" style="margin-top:18px">👁 Preview</button>
-          <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteProposalTemplate('${t.id}','${(f['Template name']||'this template').replace(/'/g,"\\'")}')" title="Delete template" style="margin-top:18px">✕</button>
         </div>
 
         <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
@@ -3077,19 +3089,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <label class="mq-label">Body — write the whole proposal yourself, place things wherever you want</label>
         <div style="font-size:11.5px;color:#374151;line-height:1.7;margin-bottom:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px 14px">${PROPOSAL_TOKENS_HELP}</div>
         <textarea rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onblur="mqSaveProposalField('${t.id}','Body',this.value)">${(f['Body']||'').replace(/</g,'&lt;')}</textarea>
+        </div>
       </div>`;
     }).join('');
   }
 
+  window.mqToggleProposalCard = function(id) {
+    const body = document.getElementById(`mq-prop-card-body-${id}`);
+    const chevron = document.getElementById(`mq-prop-chevron-${id}`);
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+  };
+
   window.mqSaveProposalField = async function(id, field, value) {
+    // Update the cache immediately, synchronously — Preview reads from
+    // this, not a fresh fetch. Doing this AFTER the network save (the old
+    // bug) meant Preview could still show a stale value if clicked before
+    // the Airtable request finished — this way it's correct the instant
+    // you blur the field, regardless of network speed.
+    const cached = (window._mqProposalTemplatesCache || []).find(t => t.id === id);
+    if (cached) cached.fields[field] = value;
     try {
       await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value });
-      // Keep the in-memory copy in sync too — otherwise Preview (which
-      // reads from this cache, not a fresh fetch, to stay fast) would keep
-      // showing whatever the value was when the tab first loaded, until a
-      // full page reload.
-      const cached = (window._mqProposalTemplatesCache || []).find(t => t.id === id);
-      if (cached) cached.fields[field] = value;
     }
     catch(e) { console.error('Failed to save proposal template field', e); }
   };
@@ -3166,6 +3189,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `<div style="margin:12px 0">${rows}</div>`;
   }
 
+  function mqPropBuildItemsPlainLightHtml(lines, showPrices) {
+    const rows = lines.map(l => showPrices ? `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+        <span>${mqPropEscapeHtml(l.label)}</span><span>$${l.cost.toFixed(2)}</span>
+      </div>` : `
+      <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><span>${mqPropEscapeHtml(l.label)}</span></div>`).join('');
+    return `<div style="margin:12px 0">${rows}</div>`;
+  }
+
+  function mqPropBuildItemsHeaderHtml(showPrices, accent) {
+    return `<div style="display:flex;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid ${accent};margin-bottom:4px">
+      <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;font-weight:700">Item</span>
+      ${showPrices ? `<span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;font-weight:700">Price</span>` : ''}
+    </div>`;
+  }
+
   function mqPropSignatureHtml() {
     return `<div style="margin-top:50px;display:flex;gap:40px">
       <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
@@ -3224,6 +3263,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       '{deposit}': '$' + data.deposit.toFixed(2),
       '{items}': data.itemsHtml,
       '{items_plain}': data.itemsPlainHtml,
+      '{items_plain_light}': data.itemsPlainLightHtml,
+      '{items_header}': data.itemsHeaderHtml,
       '{signature_line}': data.signatureHtml,
       '{totals_box}': data.totalsBoxHtml,
       '{totals_plain}': data.totalsPlainHtml,
@@ -3258,6 +3299,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const itemsHtml = mqPropBuildItemsHtml(sampleLines, showPrices, accent);
     const itemsPlainHtml = mqPropBuildItemsPlainHtml(sampleLines, showPrices);
+    const itemsPlainLightHtml = mqPropBuildItemsPlainLightHtml(sampleLines, showPrices);
+    const itemsHeaderHtml = mqPropBuildItemsHeaderHtml(showPrices, accent);
     const signatureHtml = mqPropSignatureHtml();
     const hrHtml = mqPropBuildHrHtml();
     const totalsBoxHtml = mqPropBuildTotalsBoxHtml(subtotal, taxAmt, total, depositAmt, accent);
@@ -3268,7 +3311,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', customerPhone: '(555) 123-4567', jobName: 'Kitchen Reface',
       description: 'Full kitchen reface — new doors, drawer fronts, and hardware throughout, plus a new quartz countertop.',
       date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt,
-      itemsHtml, itemsPlainHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
+      itemsHtml, itemsPlainHtml, itemsPlainLightHtml, itemsHeaderHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
     });
 
     const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';

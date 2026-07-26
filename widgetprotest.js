@@ -3747,6 +3747,28 @@ window.mqTogDrawerConfig=(prefix)=>{
       return `<div style="margin:12px 0">${rows}</div>`;
     }
 
+    // Same as above but regular weight, not bold — for shops who'd rather
+    // the item name read the same as everything else in the body.
+    function mqBuildProposalItemsPlainLightHtml(lines, showPrices) {
+      const rows = (lines||[]).map(l => showPrices ? `
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+          <span>${mqEscapeHtml(l.label)}</span><span>$${(parseFloat(l.cost)||0).toFixed(2)}</span>
+        </div>` : `
+        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><span>${mqEscapeHtml(l.label)}</span></div>`).join('');
+      return `<div style="margin:12px 0">${rows}</div>`;
+    }
+
+    // A standalone "Item / Price" header row — the classic look from the
+    // original styled table, but on its own, so it can sit above
+    // {items_plain} or {items_plain_light} for shops who want that header
+    // without the coloured box/shading the full {items} table has.
+    function mqBuildItemsHeaderHtml(showPrices, accent) {
+      return `<div style="display:flex;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid ${accent};margin-bottom:4px">
+        <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;font-weight:700">Item</span>
+        ${showPrices ? `<span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;font-weight:700">Price</span>` : ''}
+      </div>`;
+    }
+
     function mqBuildSignatureLineHtml() {
       return `<div style="margin-top:50px;display:flex;gap:40px">
         <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
@@ -3828,6 +3850,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         '{deposit}': '$' + (data.deposit||0).toFixed(2),
         '{items}': data.itemsHtml || '',
         '{items_plain}': data.itemsPlainHtml || '',
+        '{items_plain_light}': data.itemsPlainLightHtml || '',
+        '{items_header}': data.itemsHeaderHtml || '',
         '{signature_line}': data.signatureHtml || '',
         '{totals_box}': data.totalsBoxHtml || '',
         '{totals_plain}': data.totalsPlainHtml || '',
@@ -3873,6 +3897,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       const dateStr = new Date().toLocaleDateString();
       const itemsHtml = mqBuildProposalItemsHtml(state.lines, state.showPrices, accent);
       const itemsPlainHtml = mqBuildProposalItemsPlainHtml(state.lines, state.showPrices);
+      const itemsPlainLightHtml = mqBuildProposalItemsPlainLightHtml(state.lines, state.showPrices);
+      const itemsHeaderHtml = mqBuildItemsHeaderHtml(state.showPrices, accent);
       const signatureHtml = mqBuildSignatureLineHtml();
       const hrHtml = mqBuildHrHtml();
       const totalsBoxHtml = mqBuildTotalsBoxHtml(subtotal, taxAmt, total, depositAmt, accent);
@@ -3899,7 +3925,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         description: state.description || '',
         date: dateStr,
         subtotal, tax: taxAmt, total, deposit: depositAmt,
-        itemsHtml, itemsPlainHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
+        itemsHtml, itemsPlainHtml, itemsPlainLightHtml, itemsHeaderHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
       });
 
       const payload = {
