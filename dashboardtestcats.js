@@ -3011,6 +3011,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return PROPOSAL_BODY_STANDARD;
   }
 
+  // Everything a fresh starter template of this size was originally seeded
+  // with — used both for the initial seeding and for "Reset to defaults"
+  // on an existing template, so the two always stay in sync automatically.
+  function mqDefaultSettingsForSize(size) {
+    if (size === 'Simple') return { body: PROPOSAL_BODY_SIMPLE, accent: '#1a3a6b', showPrices: true, depositType: 'Percent', depositValue: 0, taxPct: 0 };
+    if (size === 'Large') return { body: PROPOSAL_BODY_LARGE, accent: '#1a3a6b', showPrices: true, depositType: 'Percent', depositValue: 30, taxPct: 13 };
+    return { body: PROPOSAL_BODY_STANDARD, accent: '#1a3a6b', showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 };
+  }
+
   function renderProposalTemplates(templates, shopRecord) {
     const container = document.getElementById('mq-prop-list');
     if (!container) return;
@@ -3101,6 +3110,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="font-size:10.5px;color:#9ca3af">Select some text in the box below first, then click one of these.</span>
         </div>
         <textarea id="mq-prop-body-${t.id}" rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onblur="mqSaveProposalField('${t.id}','Body',this.value)">${(f['Body']||'').replace(/</g,'&lt;')}</textarea>
+
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
+          <button class="mq-btn mq-btn-sm" onclick="mqResetProposalTemplateDefaults('${t.id}')">↺ Reset to defaults</button>
+          <span style="font-size:10.5px;color:#9ca3af;margin-left:8px">Restores the Body text, accent colour, deposit, tax, and prices setting for this template's size category — the name stays as you've set it.</span>
+        </div>
         </div>
       </div>`;
     }).join('');
@@ -3139,6 +3153,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     textarea.focus();
     textarea.selectionStart = start;
     textarea.selectionEnd = start + openTag.length + selected.length + closeTag.length;
+  };
+
+  // Restores everything about this template back to what a fresh starter
+  // of its size category originally looked like — Body text, accent
+  // colour, prices toggle, deposit, and tax. Leaves the template's name
+  // alone, since that's an identity the shop owner chose, not a "default."
+  window.mqResetProposalTemplateDefaults = async function(id) {
+    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    if (!t) return;
+    const name = t.fields['Template name'] || 'this template';
+    if (!confirm(`Reset "${name}" back to its default Body text, colours, deposit, and tax? Anything you've customized here will be lost — the template's name will stay the same.`)) return;
+
+    const defaults = mqDefaultSettingsForSize(t.fields['Size category']);
+    await Promise.all([
+      mqSaveProposalField(id, 'Body', defaults.body),
+      mqSaveProposalField(id, 'Accent colour', defaults.accent),
+      mqSaveProposalField(id, 'Show item prices', defaults.showPrices),
+      mqSaveProposalField(id, 'Deposit type', defaults.depositType),
+      mqSaveProposalField(id, 'Deposit value', defaults.depositValue),
+      mqSaveProposalField(id, 'Tax percent', defaults.taxPct),
+    ]);
+    renderProposalTemplates(window._mqProposalTemplatesCache, window._mqShopRecord);
+    showMsg('mq-prop-msg', `✓ "${name}" reset to defaults.`);
   };
 
   window.mqSaveProposalField = async function(id, field, value) {
