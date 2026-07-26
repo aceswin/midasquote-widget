@@ -3578,6 +3578,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         jobName: '',
         description: '',
         showPrices: (window._mqProposalTemplates[0] || {}).fields ? window._mqProposalTemplates[0].fields['Show item prices'] !== false : true,
+        waiveDeposit: false,
         // Editable copy — the original est.lines stays untouched so
         // reopening this modal always starts fresh from the real estimate.
         lines: est.lines.map(l => ({ label: l.label, cost: l.cost })),
@@ -3609,7 +3610,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
       const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
       const total = subtotal + taxAmt;
-      const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
+      const rawDepositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
+      const depositAmt = state.waiveDeposit ? 0 : rawDepositAmt;
 
       body.innerHTML = `
         <div style="margin-bottom:12px">
@@ -3656,11 +3658,16 @@ window.mqTogDrawerConfig=(prefix)=>{
           <input type="checkbox" ${state.showPrices?'checked':''} onchange="mqProposalFieldChanged('showPrices',this.checked)" style="width:auto"/> Show individual item prices on this proposal <span style="font-weight:400;color:#9ca3af">(just for this one — doesn't change the template's default)</span>
         </label>
 
+        ${(f['Deposit value']||0) > 0 ? `
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin-bottom:14px">
+          <input type="checkbox" ${state.waiveDeposit?'checked':''} onchange="mqProposalFieldChanged('waiveDeposit',this.checked); mqRenderProposalModalBody()" style="width:auto"/> Waive the deposit for this proposal <span style="font-weight:400;color:#9ca3af">(this template normally requires one — just skip it for this one customer)</span>
+        </label>` : ''}
+
         <div style="background:#f9fafb;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.8;margin-bottom:14px">
           <div style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>$<span id="mq-prop-subtotal-val">${subtotal.toFixed(2)}</span></strong></div>
           <div style="display:flex;justify-content:space-between"><span>Tax (${f['Tax percent']||0}%)</span><strong>$<span id="mq-prop-tax-val">${taxAmt.toFixed(2)}</span></strong></div>
           <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:1px solid #e5e7eb;margin-top:6px;padding-top:6px"><span>Total</span><span>$<span id="mq-prop-total-val">${total.toFixed(2)}</span></span></div>
-          <div style="display:flex;justify-content:space-between;color:#166534;margin-top:4px"><span>Deposit (${f['Deposit type']==='Flat amount'?'flat rate':((f['Deposit value']||0)+'%')})</span><strong>$<span id="mq-prop-deposit-val">${depositAmt.toFixed(2)}</span></strong></div>
+          <div style="display:flex;justify-content:space-between;color:#166534;margin-top:4px"><span>Deposit ${state.waiveDeposit?'(waived)':`(${f['Deposit type']==='Flat amount'?'flat rate':((f['Deposit value']||0)+'%')})`}</span><strong>$<span id="mq-prop-deposit-val">${depositAmt.toFixed(2)}</span></strong></div>
           <div style="font-size:11px;color:#9ca3af;margin-top:6px">These only actually show on the proposal wherever this template's Body uses the matching {tokens} — set up in the dashboard.</div>
         </div>
 
@@ -3672,6 +3679,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       window._mqProposalState.templateId = id;
       const newTemplate = (window._mqProposalTemplates || []).find(t => t.id === id);
       if (newTemplate) window._mqProposalState.showPrices = newTemplate.fields['Show item prices'] !== false;
+      window._mqProposalState.waiveDeposit = false;
       mqRenderProposalModalBody();
     };
     window.mqProposalFieldChanged = function(field, value) {
@@ -3694,7 +3702,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
       const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
       const total = subtotal + taxAmt;
-      const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
+      const rawDepositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
+      const depositAmt = state.waiveDeposit ? 0 : rawDepositAmt;
       const subtotalEl = document.getElementById('mq-prop-subtotal-val');
       const taxEl = document.getElementById('mq-prop-tax-val');
       const totalEl = document.getElementById('mq-prop-total-val');
@@ -3786,25 +3795,28 @@ window.mqTogDrawerConfig=(prefix)=>{
     // A single, prominent, pre-styled summary box — subtotal/tax/total as
     // plain lines, then the deposit called out hard (solid accent-colour
     // background, white bold text) so it's genuinely impossible to miss,
-    // not just another line of text sitting quietly in a paragraph.
+    // not just another line of text sitting quietly in a paragraph. The
+    // deposit row itself only shows if there's actually a deposit — a
+    // template with deposit set to 0 (or waived for one proposal in Pro)
+    // just gets a clean subtotal/tax/total, no dangling "$0.00" line.
     function mqBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
       return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${(total||0).toFixed(2)}</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>Deposit Due Today</span><span>$${(deposit||0).toFixed(2)}</span></div>
+        ${(deposit||0) > 0 ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>Deposit Due Today</span><span>$${deposit.toFixed(2)}</span></div>` : ''}
       </div>`;
     }
 
     // Same numbers, no box — plain lines, bold only on Total and Deposit,
     // matching the same "no extra styling layered on" philosophy as
-    // {items_plain}.
+    // {items_plain}. Same zero-deposit hiding as the box version above.
     function mqBuildTotalsPlainHtml(subtotal, tax, total, deposit) {
       return `<div style="margin:20px 0">
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>$${(total||0).toFixed(2)}</strong></div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><strong>Deposit Due Today</strong><strong>$${(deposit||0).toFixed(2)}</strong></div>
+        ${(deposit||0) > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><strong>Deposit Due Today</strong><strong>$${deposit.toFixed(2)}</strong></div>` : ''}
       </div>`;
     }
 
@@ -3890,7 +3902,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
       const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
       const total = subtotal + taxAmt;
-      const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
+      const rawDepositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
+      const depositAmt = state.waiveDeposit ? 0 : rawDepositAmt;
       const est = (window._mqLastEstimate || {})[state.prefix] || {};
 
       const accent = f['Accent colour'] || '#1a3a6b';

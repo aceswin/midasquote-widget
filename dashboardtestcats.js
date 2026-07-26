@@ -3221,7 +3221,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${tax.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${total.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>Deposit Due Today</span><span>$${deposit.toFixed(2)}</span></div>
+      ${deposit > 0 ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>Deposit Due Today</span><span>$${deposit.toFixed(2)}</span></div>` : ''}
     </div>`;
   }
 
@@ -3230,7 +3230,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${tax.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>$${total.toFixed(2)}</strong></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><strong>Deposit Due Today</strong><strong>$${deposit.toFixed(2)}</strong></div>
+      ${deposit > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><strong>Deposit Due Today</strong><strong>$${deposit.toFixed(2)}</strong></div>` : ''}
     </div>`;
   }
 
