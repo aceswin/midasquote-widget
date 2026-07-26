@@ -3574,6 +3574,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         templateId: (window._mqProposalTemplates[0] || {}).id || null,
         customerName: '',
         customerAddress: '',
+        customerPhone: '',
         jobName: '',
         description: '',
         showPrices: (window._mqProposalTemplates[0] || {}).fields ? window._mqProposalTemplates[0].fields['Show item prices'] !== false : true,
@@ -3624,6 +3625,10 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer address <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
           <input type="text" value="${(state.customerAddress||'').replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('customerAddress',this.value)" placeholder="e.g. 123 Main St, Grande Prairie, AB" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer phone <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+          <input type="text" value="${(state.customerPhone||'').replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('customerPhone',this.value)" placeholder="e.g. (780) 555-1234" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Job name <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
@@ -3729,11 +3734,31 @@ window.mqTogDrawerConfig=(prefix)=>{
       </table>`;
     }
 
+    // Same list, no box — no colored header, no shading, no shadow. Item
+    // name in bold, price plain, same font as the rest of the body. For
+    // shops whose existing paper proposal already has its own look and
+    // just needs the numbers, not another visual style layered on top.
+    function mqBuildProposalItemsPlainHtml(lines, showPrices) {
+      const rows = (lines||[]).map(l => showPrices ? `
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+          <strong>${mqEscapeHtml(l.label)}</strong><span>$${(parseFloat(l.cost)||0).toFixed(2)}</span>
+        </div>` : `
+        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><strong>${mqEscapeHtml(l.label)}</strong></div>`).join('');
+      return `<div style="margin:12px 0">${rows}</div>`;
+    }
+
     function mqBuildSignatureLineHtml() {
       return `<div style="margin-top:50px;display:flex;gap:40px">
         <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
         <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
       </div>`;
+    }
+
+    // A simple horizontal divider — placeable anywhere in the body text,
+    // for shops that just want a plain line break between sections rather
+    // than relying only on paragraph spacing.
+    function mqBuildHrHtml() {
+      return `<hr style="border:none;border-top:1px solid #d1d5db;margin:24px 0"/>`;
     }
 
     // A single, prominent, pre-styled summary box — subtotal/tax/total as
@@ -3749,6 +3774,18 @@ window.mqTogDrawerConfig=(prefix)=>{
       </div>`;
     }
 
+    // Same numbers, no box — plain lines, bold only on Total and Deposit,
+    // matching the same "no extra styling layered on" philosophy as
+    // {items_plain}.
+    function mqBuildTotalsPlainHtml(subtotal, tax, total, deposit) {
+      return `<div style="margin:20px 0">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>$${(total||0).toFixed(2)}</strong></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><strong>Deposit Due Today</strong><strong>$${(deposit||0).toFixed(2)}</strong></div>
+      </div>`;
+    }
+
     // Turns a shop owner's freeform Body text (typed in the dashboard, with
     // {tokens} scattered wherever they wanted them) into final HTML. The
     // body is plain text, not HTML — escaped and newline-converted first, so
@@ -3759,11 +3796,29 @@ window.mqTogDrawerConfig=(prefix)=>{
     // "{deposit}" survives untouched) and swapped for either a plain escaped
     // value or a pre-built HTML fragment ({items}, {totals_box}, etc.).
     function mqRenderProposalBodyTokens(bodyText, data) {
-      let html = mqEscapeHtml(bodyText || '').replace(/\n/g, '<br>');
+      // Optional fields (customer left them blank, or the shop owner never
+      // asked for one) collapse their whole line rather than leaving a
+      // label with nothing after it — e.g. "Job: {job_name}" with no job
+      // name typed just disappears entirely, not "Job:" sitting there empty.
+      const optionalEmpty = {
+        '{customer_address}': !data.customerAddress,
+        '{customer_phone}': !data.customerPhone,
+        '{job_name}': !data.jobName,
+        '{description}': !data.description,
+      };
+      const lines = (bodyText || '').split('\n').filter(line => {
+        for (const token in optionalEmpty) {
+          if (optionalEmpty[token] && line.includes(token)) return false;
+        }
+        return true;
+      });
+
+      let html = mqEscapeHtml(lines.join('\n')).replace(/\n/g, '<br>');
       html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       const replacements = {
         '{customer_name}': mqEscapeHtml(data.customerName),
         '{customer_address}': mqEscapeHtml(data.customerAddress),
+        '{customer_phone}': mqEscapeHtml(data.customerPhone),
         '{job_name}': mqEscapeHtml(data.jobName),
         '{description}': mqEscapeHtml(data.description).replace(/\n/g, '<br>'),
         '{date}': mqEscapeHtml(data.date),
@@ -3772,8 +3827,11 @@ window.mqTogDrawerConfig=(prefix)=>{
         '{total}': '$' + (data.total||0).toFixed(2),
         '{deposit}': '$' + (data.deposit||0).toFixed(2),
         '{items}': data.itemsHtml || '',
+        '{items_plain}': data.itemsPlainHtml || '',
         '{signature_line}': data.signatureHtml || '',
         '{totals_box}': data.totalsBoxHtml || '',
+        '{totals_plain}': data.totalsPlainHtml || '',
+        '{hr}': data.hrHtml || '',
       };
       for (const [token, val] of Object.entries(replacements)) {
         html = html.split(token).join(val);
@@ -3814,8 +3872,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       const accent = f['Accent colour'] || '#1a3a6b';
       const dateStr = new Date().toLocaleDateString();
       const itemsHtml = mqBuildProposalItemsHtml(state.lines, state.showPrices, accent);
+      const itemsPlainHtml = mqBuildProposalItemsPlainHtml(state.lines, state.showPrices);
       const signatureHtml = mqBuildSignatureLineHtml();
+      const hrHtml = mqBuildHrHtml();
       const totalsBoxHtml = mqBuildTotalsBoxHtml(subtotal, taxAmt, total, depositAmt, accent);
+      const totalsPlainHtml = mqBuildTotalsPlainHtml(subtotal, taxAmt, total, depositAmt);
 
       // A genuinely empty Body would otherwise silently produce a blank
       // proposal (header only, nothing else) — better to fall back to
@@ -3833,17 +3894,19 @@ window.mqTogDrawerConfig=(prefix)=>{
       const renderedBodyHtml = mqRenderProposalBodyTokens(bodyText, {
         customerName: state.customerName.trim(),
         customerAddress: state.customerAddress || '',
+        customerPhone: state.customerPhone || '',
         jobName: state.jobName || '',
         description: state.description || '',
         date: dateStr,
         subtotal, tax: taxAmt, total, deposit: depositAmt,
-        itemsHtml, signatureHtml, totalsBoxHtml,
+        itemsHtml, itemsPlainHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
       });
 
       const payload = {
         shopToken,
         customerName: state.customerName.trim(),
         customerAddress: state.customerAddress || '',
+        customerPhone: state.customerPhone || '',
         jobName: state.jobName || '',
         description: state.description || '',
         templateUsed: f['Template name'] || '',

@@ -228,7 +228,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Build proposal templates here — your team then picks one from <strong>MidasQuote Pro</strong>, right under a completed real-number estimate, to turn it into a clean, printable proposal for the customer to review and sign.</p>
         <p>You start with three ready-made templates — <strong>Simple</strong>, <strong>Standard</strong>, and <strong>Large Project</strong> — but you can rewrite any of them completely, or add as many of your own as you'd like.</p>
         <p><strong>The Body box is the whole proposal.</strong> Write it exactly like you'd write your own — your own wording, your own layout, your own order. Nothing is fixed except the branded header at the very top (your logo, shop name, accent colour, and the date) — everything below that is entirely yours to write.</p>
-        <p><strong>Tokens</strong> are how real data drops into your text. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you. Same idea for <code>{items}</code> (the full line-item list), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line — this app doesn't do e-signatures, this is for printing and signing in person).</p>
+        <p><strong>Tokens</strong> are how real data drops into your text. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you. Same idea for <code>{items}</code> (a styled list) or <code>{items_plain}</code> (the same list with no box or colour, if you'd rather it match your own paper proposal's look), <code>{totals_box}</code> or <code>{totals_plain}</code>, <code>{hr}</code> (a plain horizontal divider), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{customer_phone}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line — this app doesn't do e-signatures, this is for printing and signing in person).</p>
         <p><strong>Show individual item prices</strong> — on by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
         <p><strong>Deposit</strong> and <strong>Tax</strong> settings below the header row feed the <code>{deposit}</code> and <code>{tax}</code> tokens — set the percentage or flat amount here, then place the token wherever you want it to show up in the body text.</p>
         <p><strong>👁 Preview</strong> — shows exactly what this template will actually produce, filled with sample data (a fake customer, sample line items), so you can see how it looks without leaving the dashboard or running a real quote first.</p>
@@ -2922,6 +2922,7 @@ window.logoutMember = async function () {
 
   const PROPOSAL_BODY_STANDARD = `**Prepared for {customer_name}**
 {customer_address}
+{customer_phone}
 
 **Job:** {job_name}
 
@@ -2982,12 +2983,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { console.warn('Failed to seed starter proposal templates:', e); }
   }
 
-  const PROPOSAL_TOKENS_HELP = `**text** — makes that word or phrase bold, same as anywhere else.
-{customer_name} · {customer_address} · {job_name} · {description} · {date} — filled in when the proposal is created in MidasQuote Pro.
-{items} — the full line-item list (prices shown/hidden per the toggle below, or overridden per-proposal in Pro).
-{totals_box} — a ready-made, prominent summary box: subtotal, tax, total, and the deposit called out hard so it's impossible to miss. Recommended over the plain versions below.
-{subtotal} · {tax} · {total} · {deposit} — the same numbers as plain text, if you'd rather place them individually instead of using {totals_box}.
-{signature_line} — drops in a blank signature + date line, right at this spot.`;
+  const PROPOSAL_TOKENS_HELP = `
+    <div style="margin-bottom:10px"><strong>**text**</strong> — bold, same as anywhere else. &nbsp; <strong>{hr}</strong> — a horizontal divider line, place it anywhere.</div>
+
+    <div style="margin-bottom:6px"><strong>Customer &amp; job info</strong> <span style="font-weight:400">(filled in when the proposal is created in MidasQuote Pro)</span></div>
+    <div style="margin-bottom:10px">{customer_name} · {customer_address} · {customer_phone} · {job_name} · {description} · {date}<br>
+    <span style="font-size:10.5px">All except {customer_name} are optional — leave one blank on a given proposal and its whole line disappears automatically (e.g. a "Job:" line with nothing typed after it just won't show).</span></div>
+
+    <div style="margin-bottom:6px"><strong>Items &amp; totals</strong></div>
+    <div style="margin-bottom:10px">
+      {items} — styled list: coloured header, shaded rows.<br>
+      {items_plain} — the same list with no styling at all — bold item name, plain price, matches your body text.<br>
+      {totals_box} — a bold, coloured summary box with the deposit called out hard.<br>
+      {totals_plain} — the same numbers as plain lines, no box.<br>
+      {subtotal} · {tax} · {total} · {deposit} — the raw numbers individually, if you'd rather place them yourself.
+    </div>
+
+    <div><strong>{signature_line}</strong> — a blank signature + date line, right at this spot.</div>
+  `;
 
   function mqDefaultBodyForSize(size) {
     if (size === 'Simple') return PROPOSAL_BODY_SIMPLE;
@@ -3062,7 +3075,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
 
         <label class="mq-label">Body — write the whole proposal yourself, place things wherever you want</label>
-        <div style="font-size:11px;color:#6b7280;line-height:1.6;margin-bottom:6px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;padding:8px 10px">${PROPOSAL_TOKENS_HELP.replace(/\n/g,'<br>')}</div>
+        <div style="font-size:11.5px;color:#374151;line-height:1.7;margin-bottom:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px 14px">${PROPOSAL_TOKENS_HELP}</div>
         <textarea rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onblur="mqSaveProposalField('${t.id}','Body',this.value)">${(f['Body']||'').replace(/</g,'&lt;')}</textarea>
       </div>`;
     }).join('');
@@ -3144,6 +3157,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </table>`;
   }
 
+  function mqPropBuildItemsPlainHtml(lines, showPrices) {
+    const rows = lines.map(l => showPrices ? `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+        <strong>${mqPropEscapeHtml(l.label)}</strong><span>$${l.cost.toFixed(2)}</span>
+      </div>` : `
+      <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><strong>${mqPropEscapeHtml(l.label)}</strong></div>`).join('');
+    return `<div style="margin:12px 0">${rows}</div>`;
+  }
+
   function mqPropSignatureHtml() {
     return `<div style="margin-top:50px;display:flex;gap:40px">
       <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
@@ -3151,21 +3173,48 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </div>`;
   }
 
+  function mqPropBuildHrHtml() {
+    return `<hr style="border:none;border-top:1px solid #d1d5db;margin:24px 0"/>`;
+  }
+
   function mqPropBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
     return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${tax.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${total.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>💰 Deposit Due Today</span><span>$${deposit.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>Deposit Due Today</span><span>$${deposit.toFixed(2)}</span></div>
+    </div>`;
+  }
+
+  function mqPropBuildTotalsPlainHtml(subtotal, tax, total, deposit) {
+    return `<div style="margin:20px 0">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${tax.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>$${total.toFixed(2)}</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><strong>Deposit Due Today</strong><strong>$${deposit.toFixed(2)}</strong></div>
     </div>`;
   }
 
   function mqPropRenderBodyTokens(bodyText, data) {
-    let html = mqPropEscapeHtml(bodyText || '').replace(/\n/g, '<br>');
+    const optionalEmpty = {
+      '{customer_address}': !data.customerAddress,
+      '{customer_phone}': !data.customerPhone,
+      '{job_name}': !data.jobName,
+      '{description}': !data.description,
+    };
+    const lines = (bodyText || '').split('\n').filter(line => {
+      for (const token in optionalEmpty) {
+        if (optionalEmpty[token] && line.includes(token)) return false;
+      }
+      return true;
+    });
+
+    let html = mqPropEscapeHtml(lines.join('\n')).replace(/\n/g, '<br>');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     const replacements = {
       '{customer_name}': mqPropEscapeHtml(data.customerName),
       '{customer_address}': mqPropEscapeHtml(data.customerAddress),
+      '{customer_phone}': mqPropEscapeHtml(data.customerPhone),
       '{job_name}': mqPropEscapeHtml(data.jobName),
       '{description}': mqPropEscapeHtml(data.description).replace(/\n/g, '<br>'),
       '{date}': mqPropEscapeHtml(data.date),
@@ -3174,8 +3223,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       '{total}': '$' + data.total.toFixed(2),
       '{deposit}': '$' + data.deposit.toFixed(2),
       '{items}': data.itemsHtml,
+      '{items_plain}': data.itemsPlainHtml,
       '{signature_line}': data.signatureHtml,
       '{totals_box}': data.totalsBoxHtml,
+      '{totals_plain}': data.totalsPlainHtml,
+      '{hr}': data.hrHtml,
     };
     for (const [token, val] of Object.entries(replacements)) html = html.split(token).join(val);
     return html;
@@ -3205,14 +3257,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const showPrices = f['Show item prices'] !== false;
 
     const itemsHtml = mqPropBuildItemsHtml(sampleLines, showPrices, accent);
+    const itemsPlainHtml = mqPropBuildItemsPlainHtml(sampleLines, showPrices);
     const signatureHtml = mqPropSignatureHtml();
+    const hrHtml = mqPropBuildHrHtml();
     const totalsBoxHtml = mqPropBuildTotalsBoxHtml(subtotal, taxAmt, total, depositAmt, accent);
+    const totalsPlainHtml = mqPropBuildTotalsPlainHtml(subtotal, taxAmt, total, depositAmt);
     const dateStr = new Date().toLocaleDateString();
 
     const renderedBodyHtml = mqPropRenderBodyTokens(f['Body'] || '', {
-      customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', jobName: 'Kitchen Reface',
+      customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', customerPhone: '(555) 123-4567', jobName: 'Kitchen Reface',
       description: 'Full kitchen reface — new doors, drawer fronts, and hardware throughout, plus a new quartz countertop.',
-      date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt, itemsHtml, signatureHtml, totalsBoxHtml,
+      date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt,
+      itemsHtml, itemsPlainHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
     });
 
     const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
