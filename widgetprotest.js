@@ -3914,6 +3914,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         '{totals_box}': data.totalsBoxHtml || '',
         '{totals_plain}': data.totalsPlainHtml || '',
         '{hr}': data.hrHtml || '',
+        '{break}': '<div style="height:20px"></div>',
       };
       for (const [token, val] of Object.entries(replacements)) {
         html = html.split(token).join(val);

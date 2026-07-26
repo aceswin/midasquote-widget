@@ -2984,7 +2984,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   const PROPOSAL_TOKENS_HELP = `
-    <div style="margin-bottom:10px"><strong>**text**</strong> — bold, same as anywhere else. &nbsp; <strong>{hr}</strong> — a horizontal divider line, place it anywhere.</div>
+    <div style="margin-bottom:10px"><strong>**text**</strong> — bold, same as anywhere else. &nbsp; <strong>{hr}</strong> — a horizontal divider line, place it anywhere. &nbsp; <strong>{break}</strong> — extra vertical space wherever you need it (hitting Return extra times alone won't add space beyond one normal paragraph gap — use {break} instead for more).</div>
     <div style="margin-bottom:10px">Want a colored box (like a disclaimer callout) or colored text? Highlight some text below and use the buttons above the Body box — no need to type <code>{box:#hex}...{/box}</code> or <code>{color:#hex}...{/color}</code> by hand, though you can if you'd rather.</div>
 
     <div style="margin-bottom:6px"><strong>Customer &amp; job info</strong> <span style="font-weight:400">(filled in when the proposal is created in MidasQuote Pro)</span></div>
@@ -3370,6 +3370,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       '{totals_box}': data.totalsBoxHtml,
       '{totals_plain}': data.totalsPlainHtml,
       '{hr}': data.hrHtml,
+      '{break}': '<div style="height:20px"></div>',
     };
     for (const [token, val] of Object.entries(replacements)) html = html.split(token).join(val);
     return html;
