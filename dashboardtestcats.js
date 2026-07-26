@@ -225,13 +225,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     proposals: {
       title: 'Proposals',
       body: `
-        <p>Build and customize proposal templates here — your team then picks one from <strong>MidasQuote Pro</strong>, right under a completed real-number estimate, to turn it into a clean, printable proposal for the customer to review and sign.</p>
-        <p>You start with three ready-made templates — <strong>Simple</strong> (small jobs, no deposit/tax), <strong>Standard</strong>, and <strong>Large Project</strong> — but every setting on every template is fully editable, and you can add as many of your own as you'd like.</p>
-        <p><strong>Signature line</strong> — adds a blank signature + date line at the bottom of the printed proposal. This app doesn't do e-signatures — this is meant for a real pen-on-paper signature after printing it out on your phone or in-shop.</p>
-        <p><strong>Require a deposit</strong> — shows a deposit line on the proposal, either as a percentage of the total or a flat dollar amount you set here.</p>
-        <p><strong>Add tax</strong> — a simple flat percentage applied to the subtotal. This isn't a full tax-compliance engine (it won't handle different rules for labor vs. materials, exemptions, etc.) — just an straightforward, editable percentage for shops that want tax shown on the proposal.</p>
-        <p><strong>Payment terms / Warranty notice / Legal terms</strong> — three optional text sections, each just a checkbox away from showing up on the printed proposal in a fixed spot: payment terms right after the header, warranty notice right after that, legal terms near the bottom after the costs. Edit the text however you like, or leave the starter wording in place.</p>
-        <p><strong>Show individual item prices</strong> — on by default. Uncheck it if this template should keep pricing vague on paper — the proposal will still list every item, just without a price next to each one, only the total at the bottom. This is only a default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer, regardless of what the template says.</p>
+        <p>Build proposal templates here — your team then picks one from <strong>MidasQuote Pro</strong>, right under a completed real-number estimate, to turn it into a clean, printable proposal for the customer to review and sign.</p>
+        <p>You start with three ready-made templates — <strong>Simple</strong>, <strong>Standard</strong>, and <strong>Large Project</strong> — but you can rewrite any of them completely, or add as many of your own as you'd like.</p>
+        <p><strong>The Body box is the whole proposal.</strong> Write it exactly like you'd write your own — your own wording, your own layout, your own order. Nothing is fixed except the branded header at the very top (your logo, shop name, accent colour, and the date) — everything below that is entirely yours to write.</p>
+        <p><strong>Tokens</strong> are how real data drops into your text. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you. Same idea for <code>{items}</code> (the full line-item list), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line — this app doesn't do e-signatures, this is for printing and signing in person).</p>
+        <p><strong>Show individual item prices</strong> — on by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
+        <p><strong>Deposit</strong> and <strong>Tax</strong> settings below the header row feed the <code>{deposit}</code> and <code>{tax}</code> tokens — set the percentage or flat amount here, then place the token wherever you want it to show up in the body text.</p>
         <p>Proposals themselves — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
       `
     },
@@ -2906,42 +2905,63 @@ window.logoutMember = async function () {
 
   // Seeded once per shop, same pattern as ensureProjectTypeTemplates — a
   // Simple one-pager for small jobs, a Standard proposal with deposit/tax,
-  // and a Large-project version, so a shop owner has something usable
-  // immediately rather than a blank list.
-  // Shared across ensureProposalTemplatesSeeded (the 3 starter templates)
-  // and mqAddProposalTemplate (any new custom template) — so nobody ever
-  // has to type this boilerplate from scratch, whether it's a starter
-  // template or one they add themselves later.
-  const PAYMENT_TERMS_DEFAULT = '50% deposit required to start, remainder due upon completion.';
-  const WARRANTY_NOTICE_DEFAULT = `Due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, not a defect.
+  // Default starter "Body" text — this is what actually gets typed into the
+  // freeform Body box below, tokens and all. Shop owners can rewrite this
+  // completely; it's just a sensible starting point, built directly off a
+  // real proposal document a shop owner shared, genericized.
+  const PROPOSAL_BODY_SIMPLE = `{job_name}
+
+{description}
+
+{items}
+
+Total: {total}
+
+{signature_line}`;
+
+  const PROPOSAL_BODY_STANDARD = `{customer_name}
+{customer_address}
+
+JOB: {job_name}
+
+{description}
+
+Due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, not a defect.
 
 Finishes (painted or stained, opaque or clear) do not fully seal out moisture, especially in high-traffic, high-moisture areas such as around sinks. Humidity levels inside a home affect wood movement, and this is outside our control as the manufacturer.
 
 We use modern materials and techniques to keep joint visibility to a minimum, but cannot guarantee against natural wood movement — a single-piece composite door is the only way to eliminate visible joints entirely.
 
-To clean painted or lacquered doors and panels, use a damp cloth only — standing water can penetrate the wood, causing the finish to peel and voiding the warranty.`;
-  const LEGAL_TERMS_DEFAULT = `All materials are guaranteed to be as specified. All work will be completed in a workmanlike manner according to standard industry practices.
+To clean painted or lacquered doors and panels, use a damp cloth only — standing water can penetrate the wood, causing the finish to peel and voiding the warranty.
+
+{items}
+
+Subtotal: {subtotal}
+Tax: {tax}
+Total: {total}
+Deposit due now: {deposit}
+
+Prices valid for 30 days from the date above.
+
+All materials are guaranteed to be as specified. All work will be completed in a workmanlike manner according to standard industry practices.
 
 Any alteration or deviation from the specifications above involving additional cost will be carried out only upon written authorization, and will become an extra charge added to this estimate.
 
-This agreement is contingent upon strikes, accidents, or delays beyond our control. The property owner is responsible for carrying fire, windstorm, and other necessary insurance. Our workers are fully covered by workers' compensation insurance.`;
+This agreement is contingent upon strikes, accidents, or delays beyond our control. The property owner is responsible for carrying fire, windstorm, and other necessary insurance. Our workers are fully covered by workers' compensation insurance.
 
-  const PROPOSAL_TEXT_DEFAULTS = {
-    'Payment terms': PAYMENT_TERMS_DEFAULT,
-    'Warranty notice': WARRANTY_NOTICE_DEFAULT,
-    'Legal terms': LEGAL_TERMS_DEFAULT,
-  };
+{signature_line}`;
+
+  const PROPOSAL_BODY_LARGE = PROPOSAL_BODY_STANDARD + `
+
+A signed copy of this proposal will be kept on file.`;
 
   async function ensureProposalTemplatesSeeded(shopRecord) {
     if (shopRecord.fields['Proposal templates seeded']) return;
 
     const starters = [
-      { name: 'Simple', size: 'Simple', accent: '#1a3a6b', footer: 'Thank you for your business!', signature: true, showDeposit: false, showSubtotal: false, showTax: false,
-        showPayment: true, showWarranty: false, showLegal: false },
-      { name: 'Standard', size: 'Standard', accent: '#1a3a6b', footer: 'Prices valid for 30 days. Thank you for choosing us!', signature: true, showDeposit: true, depositType: 'Percent', depositValue: 25, showSubtotal: true, showTax: true, taxPct: 13,
-        showPayment: true, showWarranty: true, showLegal: true },
-      { name: 'Large Project', size: 'Large', accent: '#1a3a6b', footer: 'Prices valid for 30 days. A signed copy of this proposal will be kept on file. Thank you for choosing us!', signature: true, showDeposit: true, depositType: 'Percent', depositValue: 30, showSubtotal: true, showTax: true, taxPct: 13,
-        showPayment: true, showWarranty: true, showLegal: true },
+      { name: 'Simple', size: 'Simple', accent: '#1a3a6b', body: PROPOSAL_BODY_SIMPLE, showPrices: true, depositType: 'Percent', depositValue: 0, taxPct: 0 },
+      { name: 'Standard', size: 'Standard', accent: '#1a3a6b', body: PROPOSAL_BODY_STANDARD, showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 },
+      { name: 'Large Project', size: 'Large', accent: '#1a3a6b', body: PROPOSAL_BODY_LARGE, showPrices: true, depositType: 'Percent', depositValue: 30, taxPct: 13 },
     ];
     try {
       for (let i = 0; i < starters.length; i++) {
@@ -2951,20 +2971,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           'Template name': t.name,
           'Size category': t.size,
           'Accent colour': t.accent,
-          'Footer text': t.footer,
-          'Show signature line': t.signature,
-          'Show deposit': t.showDeposit || false,
-          'Deposit type': t.depositType || 'Percent',
-          'Deposit value': t.depositValue || 0,
-          'Show subtotal': t.showSubtotal || false,
-          'Show tax': t.showTax || false,
-          'Tax percent': t.taxPct || 0,
-          'Show payment terms': t.showPayment,
-          'Payment terms': PAYMENT_TERMS_DEFAULT,
-          'Show warranty notice': t.showWarranty,
-          'Warranty notice': WARRANTY_NOTICE_DEFAULT,
-          'Show legal terms': t.showLegal,
-          'Legal terms': LEGAL_TERMS_DEFAULT,
+          'Body': t.body,
+          'Show item prices': t.showPrices,
+          'Deposit type': t.depositType,
+          'Deposit value': t.depositValue,
+          'Tax percent': t.taxPct,
           'Sort order': i,
         });
       }
@@ -2972,6 +2983,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRecord.fields['Proposal templates seeded'] = true;
     } catch(e) { console.warn('Failed to seed starter proposal templates:', e); }
   }
+
+  const PROPOSAL_TOKENS_HELP = `{customer_name} · {customer_address} · {job_name} · {description} · {date} — filled in when the proposal is created in MidasQuote Pro.
+{items} — the full line-item list (prices shown/hidden per the toggle below, or overridden per-proposal in Pro).
+{subtotal} · {tax} · {total} · {deposit} — calculated automatically from the estimate and the settings below.
+{signature_line} — drops in a blank signature + date line, right at this spot.`;
 
   function renderProposalTemplates(templates, shopRecord) {
     const container = document.getElementById('mq-prop-list');
@@ -2982,8 +2998,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     container.innerHTML = templates.map(t => {
       const f = t.fields;
-      const showDeposit = !!f['Show deposit'];
-      const showTax = !!f['Show tax'];
       return `
       <div class="mq-card" style="margin-bottom:1rem">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px">
@@ -3006,98 +3020,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteProposalTemplate('${t.id}','${(f['Template name']||'this template').replace(/'/g,"\\'")}')" title="Delete template" style="margin-top:18px">✕</button>
         </div>
 
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin-bottom:8px">
-          <input type="checkbox" ${f['Show signature line']?'checked':''} onchange="mqSaveProposalField('${t.id}','Show signature line',this.checked)" style="width:auto"/> Include a signature line at the bottom
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin-bottom:10px">
-          <input type="checkbox" ${f['Show item prices']!==false?'checked':''} onchange="mqSaveProposalField('${t.id}','Show item prices',this.checked)" style="width:auto"/> Show individual item prices <span style="font-weight:400;color:#9ca3af">(uncheck to only show the total — some shops prefer not to itemize on paper)</span>
-        </label>
-
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:10px">This is just the default — whoever's creating a proposal in MidasQuote Pro can still switch it on or off for any one customer.</div>
-
-        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:10px">
-          <div>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
-              <input type="checkbox" id="mq-prop-showdep-${t.id}" ${showDeposit?'checked':''} onchange="mqSaveProposalField('${t.id}','Show deposit',this.checked); mqToggleProposalSubfields('${t.id}')" style="width:auto"/> Require a deposit
-            </label>
-            <div id="mq-prop-depfields-${t.id}" style="display:${showDeposit?'flex':'none'};gap:6px;margin-top:6px;align-items:center">
-              <select onchange="mqSaveProposalField('${t.id}','Deposit type',this.value)" style="width:auto">
-                <option value="Percent" ${f['Deposit type']!=='Flat amount'?'selected':''}>%</option>
-                <option value="Flat amount" ${f['Deposit type']==='Flat amount'?'selected':''}>$ flat</option>
-              </select>
-              <input type="number" value="${f['Deposit value']||''}" placeholder="0" style="width:80px" onblur="mqSaveProposalField('${t.id}','Deposit value',parseFloat(this.value)||0)"/>
-            </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
+            <input type="checkbox" ${f['Show item prices']!==false?'checked':''} onchange="mqSaveProposalField('${t.id}','Show item prices',this.checked)" style="width:auto"/> Show individual item prices <span style="font-weight:400;color:#9ca3af">(default — overridable per proposal in Pro)</span>
+          </label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label style="font-size:13px;color:#374151">Deposit:</label>
+            <select onchange="mqSaveProposalField('${t.id}','Deposit type',this.value)" style="width:auto">
+              <option value="Percent" ${f['Deposit type']!=='Flat amount'?'selected':''}>%</option>
+              <option value="Flat amount" ${f['Deposit type']==='Flat amount'?'selected':''}>$ flat</option>
+            </select>
+            <input type="number" value="${f['Deposit value']||''}" placeholder="0" style="width:70px" onblur="mqSaveProposalField('${t.id}','Deposit value',parseFloat(this.value)||0)"/>
           </div>
-          <div>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
-              <input type="checkbox" ${f['Show subtotal']?'checked':''} onchange="mqSaveProposalField('${t.id}','Show subtotal',this.checked)" style="width:auto"/> Show subtotal line
-            </label>
-          </div>
-          <div>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
-              <input type="checkbox" id="mq-prop-showtax-${t.id}" ${showTax?'checked':''} onchange="mqSaveProposalField('${t.id}','Show tax',this.checked); mqToggleProposalSubfields('${t.id}')" style="width:auto"/> Add tax
-            </label>
-            <div id="mq-prop-taxfields-${t.id}" style="display:${showTax?'flex':'none'};gap:6px;margin-top:6px;align-items:center">
-              <input type="number" value="${f['Tax percent']||''}" placeholder="0" style="width:70px" onblur="mqSaveProposalField('${t.id}','Tax percent',parseFloat(this.value)||0)"/>
-              <span style="font-size:13px;color:#6b7280">%</span>
-            </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label style="font-size:13px;color:#374151">Tax:</label>
+            <input type="number" value="${f['Tax percent']||''}" placeholder="0" style="width:60px" onblur="mqSaveProposalField('${t.id}','Tax percent',parseFloat(this.value)||0)"/>
+            <span style="font-size:13px;color:#6b7280">%</span>
           </div>
         </div>
 
-        <label class="mq-label">Footer text</label>
-        <textarea rows="2" style="width:100%;margin-bottom:14px" onblur="mqSaveProposalField('${t.id}','Footer text',this.value)">${(f['Footer text']||'').replace(/</g,'&lt;')}</textarea>
-
-        <div style="border-top:1px solid #e5e7eb;padding-top:12px">
-          <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Optional sections — each appears in this order on the printed proposal, right where it's checked on</div>
-          ${mqProposalTextBlockHTML(t.id, 'Show payment terms', 'Payment terms', f, 'Right after the header')}
-          ${mqProposalTextBlockHTML(t.id, 'Show warranty notice', 'Warranty notice', f, 'Right after payment terms')}
-          ${mqProposalTextBlockHTML(t.id, 'Show legal terms', 'Legal terms', f, 'Near the bottom, after costs')}
-        </div>
+        <label class="mq-label">Body — write the whole proposal yourself, place things wherever you want</label>
+        <div style="font-size:11px;color:#6b7280;line-height:1.6;margin-bottom:6px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;padding:8px 10px">${PROPOSAL_TOKENS_HELP.replace(/\n/g,'<br>')}</div>
+        <textarea rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onblur="mqSaveProposalField('${t.id}','Body',this.value)">${(f['Body']||'').replace(/</g,'&lt;')}</textarea>
       </div>`;
     }).join('');
   }
-
-  // One reusable checkbox + editable textarea "section" — shared by Payment
-  // terms / Warranty notice / Legal terms, since all three are the exact
-  // same pattern: toggle it on, edit the text, it shows up in a fixed spot.
-  function mqProposalTextBlockHTML(id, showField, textField, f, positionNote) {
-    const shown = !!f[showField];
-    return `
-      <div style="margin-bottom:10px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
-          <input type="checkbox" ${shown?'checked':''} onchange="mqSaveProposalField('${id}','${showField}',this.checked); mqToggleProposalTextBlock('${id}','${textField.replace(/ /g,'_')}','${textField}')" style="width:auto"/> ${textField} <span style="font-weight:400;color:#9ca3af">(${positionNote})</span>
-        </label>
-        <textarea id="mq-prop-text-${textField.replace(/ /g,'_')}-${id}" rows="3" style="width:100%;margin-top:6px;display:${shown?'block':'none'}" onblur="mqSaveProposalField('${id}','${textField}',this.value)">${(f[textField]||'').replace(/</g,'&lt;')}</textarea>
-      </div>`;
-  }
-
-  window.mqToggleProposalTextBlock = function(id, safeFieldName, realFieldName) {
-    const box = document.getElementById(`mq-prop-text-${safeFieldName}-${id}`);
-    if (!box) return;
-    // Read the checkbox that's a sibling of this textarea's own label
-    const wrapper = box.previousElementSibling;
-    const checkbox = wrapper ? wrapper.querySelector('input[type=checkbox]') : null;
-    const isChecked = !!(checkbox && checkbox.checked);
-    box.style.display = isChecked ? 'block' : 'none';
-    // Turning it on with the box still empty — either an older template
-    // made before this feature existed, or one where the text was fully
-    // erased — fill it with the default wording instead of a blank box.
-    // Still completely editable or erasable afterward; this only ever
-    // fires once, the moment it goes from empty to checked.
-    if (isChecked && !box.value.trim() && PROPOSAL_TEXT_DEFAULTS[realFieldName]) {
-      box.value = PROPOSAL_TEXT_DEFAULTS[realFieldName];
-      mqSaveProposalField(id, realFieldName, box.value);
-    }
-  };
-
-  window.mqToggleProposalSubfields = function(id) {
-    const depBox = document.getElementById(`mq-prop-showdep-${id}`);
-    const depFields = document.getElementById(`mq-prop-depfields-${id}`);
-    if (depBox && depFields) depFields.style.display = depBox.checked ? 'flex' : 'none';
-    const taxBox = document.getElementById(`mq-prop-showtax-${id}`);
-    const taxFields = document.getElementById(`mq-prop-taxfields-${id}`);
-    if (taxBox && taxFields) taxFields.style.display = taxBox.checked ? 'flex' : 'none';
-  };
 
   window.mqSaveProposalField = async function(id, field, value) {
     try { await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value }); }
@@ -3114,13 +3061,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Template name': 'New template',
         'Size category': 'Standard',
         'Accent colour': '#1a3a6b',
-        'Show signature line': true,
-        // Pre-filled with the same defaults as the starter templates —
-        // checkboxes stay off until the shop owner turns them on, but the
-        // text is already good to go rather than a blank box to fill in.
-        'Payment terms': PAYMENT_TERMS_DEFAULT,
-        'Warranty notice': WARRANTY_NOTICE_DEFAULT,
-        'Legal terms': LEGAL_TERMS_DEFAULT,
+        'Show item prices': true,
+        'Deposit type': 'Percent',
+        'Deposit value': 0,
+        'Tax percent': 0,
+        // Pre-filled with the Standard starter's body as a working example
+        // of token usage — fully editable/erasable, just not a blank box.
+        'Body': PROPOSAL_BODY_STANDARD,
         'Sort order': existing.length,
       });
       const templates = await loadProposalTemplates(shopRec.fields['Shop name']);

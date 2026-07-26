@@ -267,7 +267,12 @@
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-header-actions{display:flex;gap:8px;flex-shrink:0}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
-      #midasquote-widget .mq-logo img{width:100%;height:100%;object-fit:cover}
+      /* A real uploaded logo isn't forced into that square anymore — shown
+         at its natural aspect ratio instead, so a wide or tall logo doesn't
+         get cropped to fit a square box. Only the no-logo "first letter"
+         placeholder above still uses the square/coloured background. */
+      #midasquote-widget .mq-logo-real{height:48px;max-width:180px;flex-shrink:0;display:flex;align-items:center}
+      #midasquote-widget .mq-logo-real img{max-height:48px;max-width:180px;width:auto;height:auto;object-fit:contain}
       #midasquote-widget .mq-shop-name{font-size:14px;font-weight:600;color:#111}
       #midasquote-widget .mq-shop-sub{font-size:13px;color:#4b5563}
       #midasquote-widget .mq-tab-bar{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;gap:8px}
@@ -567,6 +572,17 @@
 
   // Lightbox for enlarging specialty item photos — same pattern as the
   // showroom page, kept inline here so it works without leaving the widget.
+  // If a shop's logo image fails to load (broken URL, expired hosting,
+  // whatever) — fall back to the plain letter avatar instead of leaving a
+  // broken-image icon with wrapped alt text on screen.
+  window.mqHandleLogoError = function(imgEl, brandColor, firstLetter) {
+    const wrap = imgEl.parentElement;
+    if (!wrap) return;
+    wrap.className = 'mq-logo';
+    wrap.style.background = brandColor;
+    wrap.innerHTML = `<span>${firstLetter}</span>`;
+  };
+
   window.mqPhotoLightbox = function(src, label) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
@@ -1294,7 +1310,9 @@
 
   function buildWidgetHTML(shop, specs, data) {
     const hasCtInstall = hasCountertopInstall();
-    const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
+    const bcSafe = (shop['Brand colour']||'#1a1a1a').replace(/'/g,"\\'");
+    const letterSafe = ((shop['Shop name']||'S').charAt(0)||'S').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const logoHTML = shop['Logo URL'] ? `<div class="mq-logo-real"><img src="${shop['Logo URL']}" alt="${shop['Shop name']}" onerror="mqHandleLogoError(this,'${bcSafe}','${letterSafe}')"/></div>` : `<div class="mq-logo"><span>${(shop['Shop name']||'S').charAt(0)}</span></div>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
     const financingOn = shop['Offers financing'] === 'Yes';
     const financingHTML = financingOn
@@ -1311,7 +1329,7 @@
         <div style="font-size:12px;color:#cbd5e1;letter-spacing:0.04em;margin-top:2px">Real numbers. Every time.</div>
       </div>
       <div class="mq-header">
-        <div class="mq-logo">${logoHTML}</div>
+        ${logoHTML}
         <div style="flex:1">
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
@@ -3588,11 +3606,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       state.templateId = template.id;
       const f = template.fields;
       const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
-      const taxAmt = f['Show tax'] ? subtotal * ((f['Tax percent'] || 0) / 100) : 0;
+      const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
       const total = subtotal + taxAmt;
-      const depositAmt = f['Show deposit']
-        ? (f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100))
-        : 0;
+      const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
 
       body.innerHTML = `
         <div style="margin-bottom:12px">
@@ -3614,7 +3630,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           <input type="text" value="${(state.jobName||'').replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('jobName',this.value)" placeholder="e.g. Kitchen reface" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
         </div>
         <div style="margin-bottom:14px">
-          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Description <span style="font-weight:400;color:#9ca3af">(shown on the printed proposal, right under the customer's name)</span></label>
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Description <span style="font-weight:400;color:#9ca3af">(wherever {description} is placed in the template)</span></label>
           <textarea rows="2" oninput="mqProposalFieldChanged('description',this.value)" placeholder="e.g. Full kitchen reface, spoke to him at the counter" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;resize:vertical;font-family:inherit">${state.description.replace(/</g,'&lt;')}</textarea>
         </div>
 
@@ -3636,14 +3652,14 @@ window.mqTogDrawerConfig=(prefix)=>{
         </label>
 
         <div style="background:#f9fafb;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.8;margin-bottom:14px">
-          ${f['Show subtotal'] ? `<div style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>$<span id="mq-prop-subtotal-val">${subtotal.toFixed(2)}</span></strong></div>` : ''}
-          ${f['Show tax'] ? `<div style="display:flex;justify-content:space-between"><span>Tax (${f['Tax percent']||0}%)</span><strong>$<span id="mq-prop-tax-val">${taxAmt.toFixed(2)}</span></strong></div>` : ''}
+          <div style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>$<span id="mq-prop-subtotal-val">${subtotal.toFixed(2)}</span></strong></div>
+          <div style="display:flex;justify-content:space-between"><span>Tax (${f['Tax percent']||0}%)</span><strong>$<span id="mq-prop-tax-val">${taxAmt.toFixed(2)}</span></strong></div>
           <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:1px solid #e5e7eb;margin-top:6px;padding-top:6px"><span>Total</span><span>$<span id="mq-prop-total-val">${total.toFixed(2)}</span></span></div>
-          ${f['Show deposit'] ? `<div style="display:flex;justify-content:space-between;color:#166534;margin-top:4px"><span>Deposit due (${f['Deposit type']==='Flat amount'?'flat rate':((f['Deposit value']||0)+'%')})</span><strong>$<span id="mq-prop-deposit-val">${depositAmt.toFixed(2)}</span></strong></div>` : ''}
-          ${f['Show signature line'] ? `<div style="font-size:11px;color:#9ca3af;margin-top:6px">✓ This template includes a signature line on the printed page.</div>` : ''}
+          <div style="display:flex;justify-content:space-between;color:#166534;margin-top:4px"><span>Deposit (${f['Deposit type']==='Flat amount'?'flat rate':((f['Deposit value']||0)+'%')})</span><strong>$<span id="mq-prop-deposit-val">${depositAmt.toFixed(2)}</span></strong></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:6px">These only actually show on the proposal wherever this template's Body uses the matching {tokens} — set up in the dashboard.</div>
         </div>
 
-        <button onclick="mqGenerateProposal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Generate &amp; Save Proposal →</button>
+        <button onclick="mqGenerateProposal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Generate Proposal →</button>
       `;
     }
 
@@ -3671,11 +3687,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!template) return;
       const f = template.fields;
       const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
-      const taxAmt = f['Show tax'] ? subtotal * ((f['Tax percent'] || 0) / 100) : 0;
+      const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
       const total = subtotal + taxAmt;
-      const depositAmt = f['Show deposit']
-        ? (f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100))
-        : 0;
+      const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
       const subtotalEl = document.getElementById('mq-prop-subtotal-val');
       const taxEl = document.getElementById('mq-prop-tax-val');
       const totalEl = document.getElementById('mq-prop-total-val');
@@ -3693,6 +3707,62 @@ window.mqTogDrawerConfig=(prefix)=>{
       window._mqProposalState.lines.push({ label: '', cost: 0 });
       mqRenderProposalModalBody();
     };
+
+    function mqEscapeHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function mqBuildProposalItemsHtml(lines, showPrices, accent) {
+      const rows = (lines||[]).map(l => showPrices ? `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${mqEscapeHtml(l.label)}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">$${(parseFloat(l.cost)||0).toFixed(2)}</td>
+        </tr>` : `
+        <tr><td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${mqEscapeHtml(l.label)}</td></tr>`).join('');
+      return `<table style="width:100%;border-collapse:collapse;margin:8px 0">
+        <thead><tr>
+          <th style="text-align:left;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Item</th>
+          ${showPrices ? `<th style="text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Price</th>` : ''}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    function mqBuildSignatureLineHtml() {
+      return `<div style="margin-top:50px;display:flex;gap:40px">
+        <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
+        <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
+      </div>`;
+    }
+
+    // Turns a shop owner's freeform Body text (typed in the dashboard, with
+    // {tokens} scattered wherever they wanted them) into final HTML. The
+    // body is plain text, not HTML — escaped and newline-converted first, so
+    // whatever they wrote renders correctly; tokens are matched AFTER that
+    // escaping step (curly braces aren't special HTML characters, so
+    // "{deposit}" survives untouched) and swapped for either a plain escaped
+    // value or a pre-built HTML fragment ({items}, {signature_line}).
+    function mqRenderProposalBodyTokens(bodyText, data) {
+      let html = mqEscapeHtml(bodyText || '').replace(/\n/g, '<br>');
+      const replacements = {
+        '{customer_name}': mqEscapeHtml(data.customerName),
+        '{customer_address}': mqEscapeHtml(data.customerAddress),
+        '{job_name}': mqEscapeHtml(data.jobName),
+        '{description}': mqEscapeHtml(data.description).replace(/\n/g, '<br>'),
+        '{date}': mqEscapeHtml(data.date),
+        '{subtotal}': '$' + (data.subtotal||0).toFixed(2),
+        '{tax}': '$' + (data.tax||0).toFixed(2),
+        '{total}': '$' + (data.total||0).toFixed(2),
+        '{deposit}': '$' + (data.deposit||0).toFixed(2),
+        '{items}': data.itemsHtml || '',
+        '{signature_line}': data.signatureHtml || '',
+      };
+      for (const [token, val] of Object.entries(replacements)) {
+        html = html.split(token).join(val);
+      }
+      return html;
+    }
 
     window.mqGenerateProposal = async function() {
       const state = window._mqProposalState;
@@ -3719,12 +3789,30 @@ window.mqTogDrawerConfig=(prefix)=>{
       printWin.document.close();
 
       const subtotal = state.lines.reduce((sum, l) => sum + (parseFloat(l.cost) || 0), 0);
-      const taxAmt = f['Show tax'] ? subtotal * ((f['Tax percent'] || 0) / 100) : 0;
+      const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
       const total = subtotal + taxAmt;
-      const depositAmt = f['Show deposit']
-        ? (f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100))
-        : 0;
+      const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
       const est = (window._mqLastEstimate || {})[state.prefix] || {};
+
+      const accent = f['Accent colour'] || '#1a3a6b';
+      const dateStr = new Date().toLocaleDateString();
+      const itemsHtml = mqBuildProposalItemsHtml(state.lines, state.showPrices, accent);
+      const signatureHtml = mqBuildSignatureLineHtml();
+
+      // Rendered once, here, and saved as-is (see payload.renderedBody
+      // below) — this is what actually gets shown, both right now and on
+      // every future reprint, so a reprint months from now is guaranteed
+      // identical to what was actually handed to the customer, even if the
+      // template itself gets edited or deleted afterward.
+      const renderedBodyHtml = mqRenderProposalBodyTokens(f['Body'] || '', {
+        customerName: state.customerName.trim(),
+        customerAddress: state.customerAddress || '',
+        jobName: state.jobName || '',
+        description: state.description || '',
+        date: dateStr,
+        subtotal, tax: taxAmt, total, deposit: depositAmt,
+        itemsHtml, signatureHtml,
+      });
 
       const payload = {
         shopToken,
@@ -3737,6 +3825,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         lineItems: state.lines,
         showPrices: !!state.showPrices,
         subtotal, deposit: depositAmt, tax: taxAmt, total,
+        renderedBody: renderedBodyHtml,
+        accentColour: accent,
       };
 
       let saveFailed = false;
@@ -3752,105 +3842,82 @@ window.mqTogDrawerConfig=(prefix)=>{
       mqOpenProposalPrintView(printWin, {
         shop: window._mqShopData || {},
         customerName: payload.customerName,
-        customerAddress: payload.customerAddress,
-        jobName: payload.jobName,
-        description: payload.description,
-        projectType: payload.projectType,
-        lineItems: state.lines,
-        showPrices: payload.showPrices,
+        accent,
+        renderedBodyHtml,
         saveFailed,
-        subtotal, tax: taxAmt, deposit: depositAmt, total,
-        // Text blocks come straight from the chosen template — only
-        // included on the printed page when their "Show ___" checkbox
-        // is on in the dashboard.
-        paymentTerms: f['Show payment terms'] ? (f['Payment terms'] || '') : '',
-        warrantyNotice: f['Show warranty notice'] ? (f['Warranty notice'] || '') : '',
-        legalTerms: f['Show legal terms'] ? (f['Legal terms'] || '') : '',
-        template: f,
       });
 
       mqCloseProposalModal();
     };
 
-    // Builds the actual printable page — opened in a new tab, formatted for
-    // both screen and print (@page margin rule keeps it clean on paper).
-    // Kept as a plain, self-contained HTML string (not this widget's own
-    // styling) since it needs to stand alone as something handed to a
-    // customer, independent of anything else on the page it was opened from.
+    // Builds the actual printable page — opened in a new tab. The header
+    // (logo, shop name, accent bar, date) is the one fixed part; everything
+    // below it is opts.renderedBodyHtml, already fully substituted from the
+    // shop owner's own freeform template text. Includes html2pdf.js so
+    // there's a real, direct "Download PDF" button that works the same way
+    // on a phone as it does on desktop — window.print()'s "save as PDF"
+    // option is unreliable on mobile browsers, so this skips that entirely.
     function buildProposalPrintHTML(opts) {
       const shop = opts.shop || {};
-      const f = opts.template || {};
-      const accent = f['Accent colour'] || '#1a3a6b';
+      const accent = opts.accent || '#1a3a6b';
       const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
-      const showPrices = opts.showPrices !== false; // undefined (e.g. old reprints) defaults to showing, matching prior behavior
-      const lineRows = (opts.lineItems || []).map(l => showPrices ? `
-        <tr>
-          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${(l.label||'').replace(/</g,'&lt;')}</td>
-          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">$${(parseFloat(l.cost)||0).toFixed(2)}</td>
-        </tr>` : `
-        <tr>
-          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${(l.label||'').replace(/</g,'&lt;')}</td>
-        </tr>`).join('');
+      const pdfFilename = 'proposal-' + (opts.customerName||'proposal').replace(/[^a-z0-9]/gi,'-').toLowerCase() + '.pdf';
 
       return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"/><title>Proposal — ${(opts.customerName||'').replace(/</g,'&lt;')}</title>
+<html><head><meta charset="utf-8"/><title>Proposal — ${mqEscapeHtml(opts.customerName)}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
   @media print { @page { margin: 0.6in; } .mq-no-print { display:none; } }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#111; max-width:720px; margin:0 auto; padding:32px 24px; }
-  table { width:100%; border-collapse:collapse; }
 </style>
 </head><body>
-  <div class="mq-no-print" style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">💡 If you see a Chrome date/title line (or something similar) at the top of the printed page or PDF, look for a "Headers and footers" option in your print settings and turn it off — it's not part of this document, just something some browsers add automatically.</div>
-  ${opts.saveFailed ? `<div class="mq-no-print" style="background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px">⚠ Couldn't save this to your proposal history (connection issue) — it's not in "My Proposals," but you can still print/save it now.</div>` : ''}
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
-    <div>
-      ${logo}
-      <div style="font-size:18px;font-weight:800;margin-top:6px">${(shop['Shop name']||'').replace(/</g,'&lt;')}</div>
-      <div style="font-size:12px;color:#6b7280">${(shop['City']||'').replace(/</g,'&lt;')}${shop['Phone']?(' · '+shop['Phone']):''}</div>
+  <div class="mq-no-print" style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px">💡 If you see a Chrome date/title line (or something similar) at the top of a printed copy, look for a "Headers and footers" option in your print settings and turn it off — it's not part of this document, just something some browsers add automatically. Using "Download PDF" below avoids this entirely.</div>
+  ${opts.saveFailed ? `<div class="mq-no-print" style="background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">⚠ Couldn't save this to your proposal history (connection issue) — it's not in "My Proposals," but you can still download it now.</div>` : ''}
+  <div class="mq-no-print" style="display:flex;gap:10px;margin-bottom:20px">
+    <button id="mq-pdf-btn" onclick="mqDownloadProposalPdf()" style="flex:1;padding:12px;background:${accent};color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">⬇ Download PDF</button>
+    <button onclick="window.print()" style="padding:12px 16px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">🖨 Print</button>
+  </div>
+  <div id="mq-proposal-content">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
+      <div>
+        ${logo}
+        <div style="font-size:18px;font-weight:800;margin-top:6px">${mqEscapeHtml(shop['Shop name'])}</div>
+        <div style="font-size:12px;color:#6b7280">${mqEscapeHtml(shop['City'])}${shop['Phone']?(' · '+mqEscapeHtml(shop['Phone'])):''}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:22px;font-weight:800;color:${accent}">Proposal</div>
+        <div style="font-size:12px;color:#6b7280">${new Date().toLocaleDateString()}</div>
+      </div>
     </div>
-    <div style="text-align:right">
-      <div style="font-size:22px;font-weight:800;color:${accent}">Proposal</div>
-      <div style="font-size:12px;color:#6b7280">${new Date().toLocaleDateString()}</div>
-    </div>
+    ${opts.renderedBodyHtml || ''}
   </div>
-
-  ${opts.paymentTerms ? `<div style="background:#f9fafb;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;margin-bottom:20px">${(opts.paymentTerms||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>` : ''}
-
-  <div style="margin-bottom:20px">
-    <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Prepared for</div>
-    <div style="font-size:16px;font-weight:700">${(opts.customerName||'').replace(/</g,'&lt;')}</div>
-    ${opts.customerAddress ? `<div style="font-size:13px;color:#6b7280;margin-top:2px">${(opts.customerAddress||'').replace(/</g,'&lt;')}</div>` : ''}
-    ${opts.jobName ? `<div style="font-size:14px;font-weight:600;margin-top:8px">${(opts.jobName||'').replace(/</g,'&lt;')}</div>` : ''}
-    ${opts.projectType ? `<div style="font-size:13px;color:#6b7280;margin-top:2px">${(opts.projectType||'').replace(/</g,'&lt;')}</div>` : ''}
-    ${opts.description ? `<div style="font-size:14px;color:#374151;margin-top:8px;line-height:1.5">${(opts.description||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>` : ''}
-  </div>
-
-  ${opts.warrantyNotice ? `<div style="font-size:12px;color:#6b7280;line-height:1.6;margin-bottom:20px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:8px">${(opts.warrantyNotice||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>` : ''}
-
-  <table>
-    <thead><tr>
-      <th style="text-align:left;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Item</th>
-      ${showPrices ? `<th style="text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Price</th>` : ''}
-    </tr></thead>
-    <tbody>${lineRows}</tbody>
-  </table>
-
-  <div style="margin-top:16px;margin-left:auto;width:280px">
-    ${f['Show subtotal'] ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${(opts.subtotal||0).toFixed(2)}</span></div>` : ''}
-    ${f['Show tax'] ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${(opts.tax||0).toFixed(2)}</span></div>` : ''}
-    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:18px;font-weight:800;border-top:2px solid ${accent};margin-top:4px"><span>Total</span><span>$${(opts.total||0).toFixed(2)}</span></div>
-    ${f['Show deposit'] ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;color:#166534;font-weight:700"><span>Deposit due</span><span>$${(opts.deposit||0).toFixed(2)}</span></div>` : ''}
-  </div>
-
-  ${opts.legalTerms ? `<div style="font-size:11px;color:#6b7280;line-height:1.6;margin-top:30px;padding-top:12px;border-top:1px solid #e5e7eb">${(opts.legalTerms||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>` : ''}
-
-  ${f['Show signature line'] ? `
-  <div style="margin-top:50px;display:flex;gap:40px">
-    <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
-    <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
-  </div>` : ''}
-
-  ${f['Footer text'] ? `<div style="margin-top:40px;font-size:12px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:12px">${(f['Footer text']||'').replace(/</g,'&lt;')}</div>` : ''}
+  <script>
+    function mqDownloadProposalPdf() {
+      const el = document.getElementById('mq-proposal-content');
+      const btn = document.getElementById('mq-pdf-btn');
+      if (!window.html2pdf) {
+        alert('Still loading — please wait a second and try again, or use Print instead.');
+        return;
+      }
+      const originalText = btn.textContent;
+      btn.textContent = 'Preparing PDF...';
+      btn.disabled = true;
+      html2pdf().set({
+        margin: 0.5,
+        filename: '${pdfFilename}',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      }).from(el).save().then(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }).catch(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        alert('Something went wrong generating the PDF — try Print instead.');
+      });
+    }
+  <\/script>
 </body></html>`;
     }
 
@@ -3859,7 +3926,6 @@ window.mqTogDrawerConfig=(prefix)=>{
       printWin.document.open(); // clears the "Preparing..." placeholder before writing the real page
       printWin.document.write(buildProposalPrintHTML(opts));
       printWin.document.close();
-      setTimeout(() => { try { printWin.print(); } catch(e) {} }, 400);
     }
 
     window.mqOpenProposalsList = async function() {
@@ -3951,40 +4017,22 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (modal) modal.style.display = 'none';
     };
 
-    // Reprints from the frozen snapshot saved at creation time — not
-    // today's template settings, which may have since changed or been
-    // deleted. Footer text/accent colour aren't part of that snapshot
-    // (only totals + line items are), so a reprint uses sensible generic
-    // defaults for those two rather than the original template's exact look.
+    // Reprints from the frozen, fully-rendered snapshot saved at creation
+    // time — literally the same HTML that was generated originally, not a
+    // reconstruction from today's template settings (which may have since
+    // changed, or been deleted entirely). This is what "saved exactly as it
+    // was" actually means: nothing to reassemble, nothing that can drift.
     window.mqReprintProposal = function(id) {
       const p = (window._mqSavedProposals || []).find(x => x.id === id);
       if (!p) return;
       const f = p.fields;
-      let lineItems = [];
-      try { lineItems = JSON.parse(f['Line items'] || '[]'); } catch(e) {}
-      const template = {
-        'Show subtotal': (f['Subtotal'] || 0) > 0,
-        'Show tax': (f['Tax'] || 0) > 0,
-        'Show deposit': (f['Deposit'] || 0) > 0,
-        'Show signature line': true,
-        'Accent colour': '#1a3a6b',
-      };
       const printWin = window.open('', '_blank');
       if (!printWin) { alert('Please allow pop-ups to view/print this proposal.'); return; }
       mqOpenProposalPrintView(printWin, {
         shop: window._mqShopData || {},
         customerName: f['Customer name'] || '',
-        customerAddress: f['Customer address'] || '',
-        jobName: f['Job name'] || '',
-        showPrices: f['Show item prices'] !== false,
-        description: f['Description'] || '',
-        projectType: f['Project type'] || '',
-        lineItems,
-        subtotal: f['Subtotal'] || 0,
-        tax: f['Tax'] || 0,
-        deposit: f['Deposit'] || 0,
-        total: f['Total'] || 0,
-        template,
+        accent: f['Accent colour'] || '#1a3a6b',
+        renderedBodyHtml: f['Rendered body'] || '',
       });
     };
   }
