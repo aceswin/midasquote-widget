@@ -231,6 +231,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Tokens</strong> are how real data drops into your text. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you. Same idea for <code>{items}</code> (the full line-item list), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line — this app doesn't do e-signatures, this is for printing and signing in person).</p>
         <p><strong>Show individual item prices</strong> — on by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
         <p><strong>Deposit</strong> and <strong>Tax</strong> settings below the header row feed the <code>{deposit}</code> and <code>{tax}</code> tokens — set the percentage or flat amount here, then place the token wherever you want it to show up in the body text.</p>
+        <p><strong>👁 Preview</strong> — shows exactly what this template will actually produce, filled with sample data (a fake customer, sample line items), so you can see how it looks without leaving the dashboard or running a real quote first.</p>
         <p>Proposals themselves — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
       `
     },
@@ -2989,6 +2990,12 @@ A signed copy of this proposal will be kept on file.`;
 {subtotal} · {tax} · {total} · {deposit} — calculated automatically from the estimate and the settings below.
 {signature_line} — drops in a blank signature + date line, right at this spot.`;
 
+  function mqDefaultBodyForSize(size) {
+    if (size === 'Simple') return PROPOSAL_BODY_SIMPLE;
+    if (size === 'Large') return PROPOSAL_BODY_LARGE;
+    return PROPOSAL_BODY_STANDARD;
+  }
+
   function renderProposalTemplates(templates, shopRecord) {
     const container = document.getElementById('mq-prop-list');
     if (!container) return;
@@ -2996,6 +3003,21 @@ A signed copy of this proposal will be kept on file.`;
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No proposal templates yet. Click "+ New template" to add your first one.</div>';
       return;
     }
+
+    // Migration: a template made before the freeform Body box existed (or
+    // any custom one that's simply never had Body text) gets a sensible
+    // default filled in automatically, based on its Size category — so
+    // nobody lands on a genuinely blank, empty-feeling template just
+    // because it happened to be created earlier.
+    templates.forEach(t => {
+      if (!t.fields['Body'] || !t.fields['Body'].trim()) {
+        const defaultBody = mqDefaultBodyForSize(t.fields['Size category']);
+        t.fields['Body'] = defaultBody;
+        mqSaveProposalField(t.id, 'Body', defaultBody);
+      }
+    });
+    window._mqProposalTemplatesCache = templates; // used by the Preview button below
+
     container.innerHTML = templates.map(t => {
       const f = t.fields;
       return `
@@ -3017,6 +3039,7 @@ A signed copy of this proposal will be kept on file.`;
             <label class="mq-label">Accent colour</label>
             <input type="color" value="${f['Accent colour']||'#1a3a6b'}" onchange="mqSaveProposalField('${t.id}','Accent colour',this.value)" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
           </div>
+          <button class="mq-btn mq-btn-sm" onclick="mqPreviewProposalTemplate('${t.id}')" title="Preview with sample data" style="margin-top:18px">👁 Preview</button>
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteProposalTemplate('${t.id}','${(f['Template name']||'this template').replace(/'/g,"\\'")}')" title="Delete template" style="margin-top:18px">✕</button>
         </div>
 
@@ -3085,6 +3108,116 @@ A signed copy of this proposal will be kept on file.`;
       renderProposalTemplates(templates, shopRec);
       showMsg('mq-prop-msg', '✓ Template deleted.');
     } catch(e) { showMsg('mq-prop-msg', 'Error deleting template.', 'error'); }
+  };
+
+
+  // Everything below mirrors the same token-rendering logic used for real
+  // in MidasQuote Pro (mqEscapeHtml / mqBuildProposalItemsHtml /
+  // mqRenderProposalBodyTokens) — kept in sync deliberately, since a
+  // preview that renders differently from the real thing would be worse
+  // than no preview at all.
+  function mqPropEscapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function mqPropBuildItemsHtml(lines, showPrices, accent) {
+    const rows = lines.map(l => showPrices ? `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${mqPropEscapeHtml(l.label)}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">$${l.cost.toFixed(2)}</td>
+      </tr>` : `
+      <tr><td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${mqPropEscapeHtml(l.label)}</td></tr>`).join('');
+    return `<table style="width:100%;border-collapse:collapse;margin:8px 0">
+      <thead><tr>
+        <th style="text-align:left;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Item</th>
+        ${showPrices ? `<th style="text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Price</th>` : ''}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  }
+
+  function mqPropSignatureHtml() {
+    return `<div style="margin-top:50px;display:flex;gap:40px">
+      <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
+      <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
+    </div>`;
+  }
+
+  function mqPropRenderBodyTokens(bodyText, data) {
+    let html = mqPropEscapeHtml(bodyText || '').replace(/\n/g, '<br>');
+    const replacements = {
+      '{customer_name}': mqPropEscapeHtml(data.customerName),
+      '{customer_address}': mqPropEscapeHtml(data.customerAddress),
+      '{job_name}': mqPropEscapeHtml(data.jobName),
+      '{description}': mqPropEscapeHtml(data.description).replace(/\n/g, '<br>'),
+      '{date}': mqPropEscapeHtml(data.date),
+      '{subtotal}': '$' + data.subtotal.toFixed(2),
+      '{tax}': '$' + data.tax.toFixed(2),
+      '{total}': '$' + data.total.toFixed(2),
+      '{deposit}': '$' + data.deposit.toFixed(2),
+      '{items}': data.itemsHtml,
+      '{signature_line}': data.signatureHtml,
+    };
+    for (const [token, val] of Object.entries(replacements)) html = html.split(token).join(val);
+    return html;
+  }
+
+  // Shows exactly what this template will actually produce in MidasQuote
+  // Pro — same token-rendering, same layout — but filled with clearly-fake
+  // sample data instead of a real customer/estimate, so a shop owner can
+  // see how it looks without having to leave the dashboard and run a real
+  // quote first.
+  window.mqPreviewProposalTemplate = function(id) {
+    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    if (!t) return;
+    const f = t.fields;
+    const shop = (window._mqShopRecord || {}).fields || {};
+    const accent = f['Accent colour'] || '#1a3a6b';
+
+    const sampleLines = [
+      { label: 'Upper cabinets — Maple Shaker', cost: 1850 },
+      { label: 'Base cabinets — Maple Shaker', cost: 2100 },
+      { label: 'Countertop — Quartz', cost: 1400 },
+    ];
+    const subtotal = sampleLines.reduce((s, l) => s + l.cost, 0);
+    const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
+    const total = subtotal + taxAmt;
+    const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
+    const showPrices = f['Show item prices'] !== false;
+
+    const itemsHtml = mqPropBuildItemsHtml(sampleLines, showPrices, accent);
+    const signatureHtml = mqPropSignatureHtml();
+    const dateStr = new Date().toLocaleDateString();
+
+    const renderedBodyHtml = mqPropRenderBodyTokens(f['Body'] || '', {
+      customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', jobName: 'Kitchen Reface',
+      description: 'This is a sample description — real ones come from whoever creates the proposal in MidasQuote Pro.',
+      date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt, itemsHtml, signatureHtml,
+    });
+
+    const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
+    const win = window.open('', '_blank');
+    if (!win) { alert('Please allow pop-ups to see this preview.'); return; }
+    win.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>Preview — ${mqPropEscapeHtml(f['Template name'])}</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#111;max-width:720px;margin:0 auto;padding:32px 24px}</style>
+</head><body>
+  <div style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px">\U0001F441 <strong>Preview only</strong> — filled with sample data (fake customer, fake line items) so you can see how "${mqPropEscapeHtml(f['Template name'])}" actually looks. Nothing here is saved or real.</div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
+    <div>
+      ${logo}
+      <div style="font-size:18px;font-weight:800;margin-top:6px">${mqPropEscapeHtml(shop['Shop name'])}</div>
+      <div style="font-size:12px;color:#6b7280">${mqPropEscapeHtml(shop['City'])}${shop['Phone']?(' \u00b7 '+mqPropEscapeHtml(shop['Phone'])):''}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:22px;font-weight:800;color:${accent}">Proposal</div>
+      <div style="font-size:12px;color:#6b7280">${dateStr}</div>
+    </div>
+  </div>
+  ${renderedBodyHtml}
+</body></html>`);
+    win.document.close();
   };
 
   function renderSpecialty(specs, shopRecord) {
