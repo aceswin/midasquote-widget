@@ -3817,12 +3817,20 @@ window.mqTogDrawerConfig=(prefix)=>{
       const signatureHtml = mqBuildSignatureLineHtml();
       const totalsBoxHtml = mqBuildTotalsBoxHtml(subtotal, taxAmt, total, depositAmt, accent);
 
+      // A genuinely empty Body would otherwise silently produce a blank
+      // proposal (header only, nothing else) — better to fall back to
+      // something minimally usable than hand someone a blank page with no
+      // indication anything's wrong.
+      const bodyText = (f['Body'] && f['Body'].trim())
+        ? f['Body']
+        : '{job_name}\n\n{description}\n\n{items}\n\n{totals_box}\n\n{signature_line}';
+
       // Rendered once, here, and saved as-is (see payload.renderedBody
       // below) — this is what actually gets shown, both right now and on
       // every future reprint, so a reprint months from now is guaranteed
       // identical to what was actually handed to the customer, even if the
       // template itself gets edited or deleted afterward.
-      const renderedBodyHtml = mqRenderProposalBodyTokens(f['Body'] || '', {
+      const renderedBodyHtml = mqRenderProposalBodyTokens(bodyText, {
         customerName: state.customerName.trim(),
         customerAddress: state.customerAddress || '',
         jobName: state.jobName || '',

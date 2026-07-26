@@ -3069,7 +3069,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   window.mqSaveProposalField = async function(id, field, value) {
-    try { await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value }); }
+    try {
+      await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value });
+      // Keep the in-memory copy in sync too — otherwise Preview (which
+      // reads from this cache, not a fresh fetch, to stay fast) would keep
+      // showing whatever the value was when the tab first loaded, until a
+      // full page reload.
+      const cached = (window._mqProposalTemplatesCache || []).find(t => t.id === id);
+      if (cached) cached.fields[field] = value;
+    }
     catch(e) { console.error('Failed to save proposal template field', e); }
   };
 
