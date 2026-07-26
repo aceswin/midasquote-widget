@@ -4022,7 +4022,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
 
     // Categories to exclude from My Products (no photos needed)
-    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other','hinge']);
+    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
 
     // Group line items by category directly — same source as pricing helper
     const byCategory = {};
