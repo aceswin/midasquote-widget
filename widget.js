@@ -2059,10 +2059,10 @@
 
     // Highlights whichever Calculate button belongs to this tab — used when
     // someone clicks "Done" on the last guided step, since there's nothing
-    // left in the step flow itself to scroll to at that point. Scrolling to
-    // and pulsing the real button keeps the person in control of actually
-    // triggering the estimate (which, on the Both tab, also kicks off the
-    // lead-capture step) rather than firing it for them automatically.
+    // left in the step flow itself to scroll to at that point. Scrolls to
+    // it, pulses it, then actually clicks it after a short delay so the
+    // scroll animation has time to land first — "Done" means done, not
+    // "now go find and click a second button yourself."
     function mqHighlightCalcButton(prefix) {
       const btnId = prefix === 'c' ? 'mq-c-calc-btn' : (prefix === 'ct' ? 'mq-ct-calc-btn' : 'mq-b-calc-btn');
       const btn = document.getElementById(btnId);
@@ -2072,6 +2072,7 @@
       void btn.offsetWidth; // restart the animation if it's already mid-pulse
       btn.classList.add('mq-calc-btn-pulse');
       setTimeout(() => btn.classList.remove('mq-calc-btn-pulse'), 1600);
+      setTimeout(() => { if (!btn.disabled) btn.click(); }, 500);
     }
 
     window.mqStepContinue = function(prefix) {
