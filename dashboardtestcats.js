@@ -2910,43 +2910,40 @@ window.logoutMember = async function () {
   // freeform Body box below, tokens and all. Shop owners can rewrite this
   // completely; it's just a sensible starting point, built directly off a
   // real proposal document a shop owner shared, genericized.
-  const PROPOSAL_BODY_SIMPLE = `{job_name}
+  const PROPOSAL_BODY_SIMPLE = `**{job_name}**
 
 {description}
 
 {items}
 
-Total: {total}
+{totals_box}
 
 {signature_line}`;
 
-  const PROPOSAL_BODY_STANDARD = `{customer_name}
+  const PROPOSAL_BODY_STANDARD = `**Prepared for {customer_name}**
 {customer_address}
 
-JOB: {job_name}
+**Job:** {job_name}
 
 {description}
 
-Due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, not a defect.
+**A note on your new cabinets:** due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, **not a defect**.
 
 Finishes (painted or stained, opaque or clear) do not fully seal out moisture, especially in high-traffic, high-moisture areas such as around sinks. Humidity levels inside a home affect wood movement, and this is outside our control as the manufacturer.
 
-We use modern materials and techniques to keep joint visibility to a minimum, but cannot guarantee against natural wood movement — a single-piece composite door is the only way to eliminate visible joints entirely.
+We use modern materials and techniques to keep joint visibility to a minimum, but cannot guarantee against natural wood movement — **a single-piece composite door is the only way to eliminate visible joints entirely.**
 
-To clean painted or lacquered doors and panels, use a damp cloth only — standing water can penetrate the wood, causing the finish to peel and voiding the warranty.
+To clean painted or lacquered doors and panels, **use a damp cloth only** — standing water can penetrate the wood, causing the finish to peel and voiding the warranty.
 
 {items}
 
-Subtotal: {subtotal}
-Tax: {tax}
-Total: {total}
-Deposit due now: {deposit}
+{totals_box}
 
-Prices valid for 30 days from the date above.
+**This proposal is valid for 30 days** from the date above.
 
 All materials are guaranteed to be as specified. All work will be completed in a workmanlike manner according to standard industry practices.
 
-Any alteration or deviation from the specifications above involving additional cost will be carried out only upon written authorization, and will become an extra charge added to this estimate.
+Any alteration or deviation from the specifications above involving additional cost will be carried out only upon **written authorization**, and will become an extra charge added to this estimate.
 
 This agreement is contingent upon strikes, accidents, or delays beyond our control. The property owner is responsible for carrying fire, windstorm, and other necessary insurance. Our workers are fully covered by workers' compensation insurance.
 
@@ -2954,7 +2951,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   const PROPOSAL_BODY_LARGE = PROPOSAL_BODY_STANDARD + `
 
-A signed copy of this proposal will be kept on file.`;
+**A signed copy of this proposal will be kept on file.**`;
 
   async function ensureProposalTemplatesSeeded(shopRecord) {
     if (shopRecord.fields['Proposal templates seeded']) return;
@@ -2985,9 +2982,11 @@ A signed copy of this proposal will be kept on file.`;
     } catch(e) { console.warn('Failed to seed starter proposal templates:', e); }
   }
 
-  const PROPOSAL_TOKENS_HELP = `{customer_name} · {customer_address} · {job_name} · {description} · {date} — filled in when the proposal is created in MidasQuote Pro.
+  const PROPOSAL_TOKENS_HELP = `**text** — makes that word or phrase bold, same as anywhere else.
+{customer_name} · {customer_address} · {job_name} · {description} · {date} — filled in when the proposal is created in MidasQuote Pro.
 {items} — the full line-item list (prices shown/hidden per the toggle below, or overridden per-proposal in Pro).
-{subtotal} · {tax} · {total} · {deposit} — calculated automatically from the estimate and the settings below.
+{totals_box} — a ready-made, prominent summary box: subtotal, tax, total, and the deposit called out hard so it's impossible to miss. Recommended over the plain versions below.
+{subtotal} · {tax} · {total} · {deposit} — the same numbers as plain text, if you'd rather place them individually instead of using {totals_box}.
 {signature_line} — drops in a blank signature + date line, right at this spot.`;
 
   function mqDefaultBodyForSize(size) {
@@ -3122,16 +3121,16 @@ A signed copy of this proposal will be kept on file.`;
   }
 
   function mqPropBuildItemsHtml(lines, showPrices, accent) {
-    const rows = lines.map(l => showPrices ? `
-      <tr>
-        <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${mqPropEscapeHtml(l.label)}</td>
-        <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">$${l.cost.toFixed(2)}</td>
+    const rows = lines.map((l, i) => showPrices ? `
+      <tr style="background:${i%2===0?'#ffffff':'#fafafa'}">
+        <td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;font-weight:600">$${l.cost.toFixed(2)}</td>
       </tr>` : `
-      <tr><td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${mqPropEscapeHtml(l.label)}</td></tr>`).join('');
-    return `<table style="width:100%;border-collapse:collapse;margin:8px 0">
-      <thead><tr>
-        <th style="text-align:left;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Item</th>
-        ${showPrices ? `<th style="text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Price</th>` : ''}
+      <tr style="background:${i%2===0?'#ffffff':'#fafafa'}"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td></tr>`).join('');
+    return `<table style="width:100%;border-collapse:collapse;margin:12px 0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <thead><tr style="background:${accent}">
+        <th style="text-align:left;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Item</th>
+        ${showPrices ? `<th style="text-align:right;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Price</th>` : ''}
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
@@ -3144,8 +3143,18 @@ A signed copy of this proposal will be kept on file.`;
     </div>`;
   }
 
+  function mqPropBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
+    return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${tax.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>\U0001F4B0 Deposit Due Today</span><span>$${deposit.toFixed(2)}</span></div>
+    </div>`;
+  }
+
   function mqPropRenderBodyTokens(bodyText, data) {
     let html = mqPropEscapeHtml(bodyText || '').replace(/\n/g, '<br>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     const replacements = {
       '{customer_name}': mqPropEscapeHtml(data.customerName),
       '{customer_address}': mqPropEscapeHtml(data.customerAddress),
@@ -3158,16 +3167,17 @@ A signed copy of this proposal will be kept on file.`;
       '{deposit}': '$' + data.deposit.toFixed(2),
       '{items}': data.itemsHtml,
       '{signature_line}': data.signatureHtml,
+      '{totals_box}': data.totalsBoxHtml,
     };
     for (const [token, val] of Object.entries(replacements)) html = html.split(token).join(val);
     return html;
   }
 
   // Shows exactly what this template will actually produce in MidasQuote
-  // Pro — same token-rendering, same layout — but filled with clearly-fake
-  // sample data instead of a real customer/estimate, so a shop owner can
-  // see how it looks without having to leave the dashboard and run a real
-  // quote first.
+  // Pro — same token-rendering, same layout, same visual polish — but
+  // filled with clearly-labeled sample data (not a real customer/estimate),
+  // so a shop owner can see how it looks without leaving the dashboard or
+  // running a real quote first.
   window.mqPreviewProposalTemplate = function(id) {
     const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
     if (!t) return;
@@ -3188,12 +3198,13 @@ A signed copy of this proposal will be kept on file.`;
 
     const itemsHtml = mqPropBuildItemsHtml(sampleLines, showPrices, accent);
     const signatureHtml = mqPropSignatureHtml();
+    const totalsBoxHtml = mqPropBuildTotalsBoxHtml(subtotal, taxAmt, total, depositAmt, accent);
     const dateStr = new Date().toLocaleDateString();
 
     const renderedBodyHtml = mqPropRenderBodyTokens(f['Body'] || '', {
       customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', jobName: 'Kitchen Reface',
-      description: 'This is a sample description — real ones come from whoever creates the proposal in MidasQuote Pro.',
-      date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt, itemsHtml, signatureHtml,
+      description: 'Full kitchen reface — new doors, drawer fronts, and hardware throughout, plus a new quartz countertop.',
+      date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt, itemsHtml, signatureHtml, totalsBoxHtml,
     });
 
     const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
@@ -3201,9 +3212,15 @@ A signed copy of this proposal will be kept on file.`;
     if (!win) { alert('Please allow pop-ups to see this preview.'); return; }
     win.document.write(`<!DOCTYPE html>
 <html><head><meta charset="utf-8"/><title>Preview — ${mqPropEscapeHtml(f['Template name'])}</title>
-<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#111;max-width:720px;margin:0 auto;padding:32px 24px}</style>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#111; background:#f3f4f6; margin:0; padding:40px 20px; }
+  .mq-proposal-wrap { max-width:720px; margin:0 auto; }
+  #mq-proposal-content { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.08); padding:40px 36px; }
+</style>
 </head><body>
-  <div style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px">\U0001F441 <strong>Preview only</strong> — filled with sample data (fake customer, fake line items) so you can see how "${mqPropEscapeHtml(f['Template name'])}" actually looks. Nothing here is saved or real.</div>
+  <div class="mq-proposal-wrap">
+  <div style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">\U0001F441 <strong>Preview only</strong> — sample customer and sample line items, so you can see exactly how "${mqPropEscapeHtml(f['Template name'])}" looks. Nothing here is saved or real.</div>
+  <div id="mq-proposal-content">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
     <div>
       ${logo}
@@ -3216,6 +3233,8 @@ A signed copy of this proposal will be kept on file.`;
     </div>
   </div>
   ${renderedBodyHtml}
+  </div>
+  </div>
 </body></html>`);
     win.document.close();
   };

@@ -3714,16 +3714,16 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function mqBuildProposalItemsHtml(lines, showPrices, accent) {
-      const rows = (lines||[]).map(l => showPrices ? `
-        <tr>
-          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${mqEscapeHtml(l.label)}</td>
-          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap">$${(parseFloat(l.cost)||0).toFixed(2)}</td>
+      const rows = (lines||[]).map((l, i) => showPrices ? `
+        <tr style="background:${i%2===0?'#ffffff':'#fafafa'}">
+          <td style="padding:12px 14px;border-bottom:1px solid #eee">${mqEscapeHtml(l.label)}</td>
+          <td style="padding:12px 14px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;font-weight:600">$${(parseFloat(l.cost)||0).toFixed(2)}</td>
         </tr>` : `
-        <tr><td style="padding:10px 0;border-bottom:1px solid #e5e7eb">${mqEscapeHtml(l.label)}</td></tr>`).join('');
-      return `<table style="width:100%;border-collapse:collapse;margin:8px 0">
-        <thead><tr>
-          <th style="text-align:left;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Item</th>
-          ${showPrices ? `<th style="text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid ${accent}">Price</th>` : ''}
+        <tr style="background:${i%2===0?'#ffffff':'#fafafa'}"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqEscapeHtml(l.label)}</td></tr>`).join('');
+      return `<table style="width:100%;border-collapse:collapse;margin:12px 0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+        <thead><tr style="background:${accent}">
+          <th style="text-align:left;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Item</th>
+          ${showPrices ? `<th style="text-align:right;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Price</th>` : ''}
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
@@ -3736,15 +3736,31 @@ window.mqTogDrawerConfig=(prefix)=>{
       </div>`;
     }
 
+    // A single, prominent, pre-styled summary box — subtotal/tax/total as
+    // plain lines, then the deposit called out hard (solid accent-colour
+    // background, white bold text) so it's genuinely impossible to miss,
+    // not just another line of text sitting quietly in a paragraph.
+    function mqBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
+      return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${(total||0).toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>💰 Deposit Due Today</span><span>$${(deposit||0).toFixed(2)}</span></div>
+      </div>`;
+    }
+
     // Turns a shop owner's freeform Body text (typed in the dashboard, with
     // {tokens} scattered wherever they wanted them) into final HTML. The
     // body is plain text, not HTML — escaped and newline-converted first, so
-    // whatever they wrote renders correctly; tokens are matched AFTER that
-    // escaping step (curly braces aren't special HTML characters, so
+    // whatever they wrote renders correctly. Simple markdown-style **bold**
+    // is supported too, applied to their own text before token substitution
+    // so it only ever touches what they actually typed. Tokens are matched
+    // AFTER escaping (curly braces aren't special HTML characters, so
     // "{deposit}" survives untouched) and swapped for either a plain escaped
-    // value or a pre-built HTML fragment ({items}, {signature_line}).
+    // value or a pre-built HTML fragment ({items}, {totals_box}, etc.).
     function mqRenderProposalBodyTokens(bodyText, data) {
       let html = mqEscapeHtml(bodyText || '').replace(/\n/g, '<br>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       const replacements = {
         '{customer_name}': mqEscapeHtml(data.customerName),
         '{customer_address}': mqEscapeHtml(data.customerAddress),
@@ -3757,6 +3773,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         '{deposit}': '$' + (data.deposit||0).toFixed(2),
         '{items}': data.itemsHtml || '',
         '{signature_line}': data.signatureHtml || '',
+        '{totals_box}': data.totalsBoxHtml || '',
       };
       for (const [token, val] of Object.entries(replacements)) {
         html = html.split(token).join(val);
@@ -3798,6 +3815,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const dateStr = new Date().toLocaleDateString();
       const itemsHtml = mqBuildProposalItemsHtml(state.lines, state.showPrices, accent);
       const signatureHtml = mqBuildSignatureLineHtml();
+      const totalsBoxHtml = mqBuildTotalsBoxHtml(subtotal, taxAmt, total, depositAmt, accent);
 
       // Rendered once, here, and saved as-is (see payload.renderedBody
       // below) — this is what actually gets shown, both right now and on
@@ -3811,7 +3829,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         description: state.description || '',
         date: dateStr,
         subtotal, tax: taxAmt, total, deposit: depositAmt,
-        itemsHtml, signatureHtml,
+        itemsHtml, signatureHtml, totalsBoxHtml,
       });
 
       const payload = {
@@ -3867,10 +3885,18 @@ window.mqTogDrawerConfig=(prefix)=>{
 <html><head><meta charset="utf-8"/><title>Proposal — ${mqEscapeHtml(opts.customerName)}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
-  @media print { @page { margin: 0.6in; } .mq-no-print { display:none; } }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#111; max-width:720px; margin:0 auto; padding:32px 24px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#111; background:#f3f4f6; margin:0; padding:40px 20px; }
+  .mq-proposal-wrap { max-width:720px; margin:0 auto; }
+  #mq-proposal-content { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.08); padding:40px 36px; }
+  @media print {
+    @page { margin: 0.6in; }
+    .mq-no-print { display:none; }
+    body { background:#fff; padding:0; }
+    #mq-proposal-content { box-shadow:none; border-radius:0; padding:0; }
+  }
 </style>
 </head><body>
+  <div class="mq-proposal-wrap">
   <div class="mq-no-print" style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px">💡 If you see a Chrome date/title line (or something similar) at the top of a printed copy, look for a "Headers and footers" option in your print settings and turn it off — it's not part of this document, just something some browsers add automatically. Using "Download PDF" below avoids this entirely.</div>
   ${opts.saveFailed ? `<div class="mq-no-print" style="background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">⚠ Couldn't save this to your proposal history (connection issue) — it's not in "My Proposals," but you can still download it now.</div>` : ''}
   <div class="mq-no-print" style="display:flex;gap:10px;margin-bottom:20px">
@@ -3890,6 +3916,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       </div>
     </div>
     ${opts.renderedBodyHtml || ''}
+  </div>
   </div>
   <script>
     function mqDownloadProposalPdf() {
