@@ -3166,11 +3166,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   function mqPropBuildItemsHtml(lines, showPrices, accent) {
     const rows = lines.map((l, i) => showPrices ? `
-      <tr style="background:${i%2===0?'#ffffff':'#fafafa'}">
+      <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid">
         <td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td>
         <td style="padding:12px 14px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;font-weight:600">$${l.cost.toFixed(2)}</td>
       </tr>` : `
-      <tr style="background:${i%2===0?'#ffffff':'#fafafa'}"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td></tr>`).join('');
+      <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td></tr>`).join('');
     return `<table style="width:100%;border-collapse:collapse;margin:12px 0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
       <thead><tr style="background:${accent}">
         <th style="text-align:left;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Item</th>
@@ -3182,19 +3182,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   function mqPropBuildItemsPlainHtml(lines, showPrices) {
     const rows = lines.map(l => showPrices ? `
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid">
         <strong>${mqPropEscapeHtml(l.label)}</strong><span>$${l.cost.toFixed(2)}</span>
       </div>` : `
-      <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><strong>${mqPropEscapeHtml(l.label)}</strong></div>`).join('');
+      <div style="padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid"><strong>${mqPropEscapeHtml(l.label)}</strong></div>`).join('');
     return `<div style="margin:12px 0">${rows}</div>`;
   }
 
   function mqPropBuildItemsPlainLightHtml(lines, showPrices) {
     const rows = lines.map(l => showPrices ? `
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid">
         <span>${mqPropEscapeHtml(l.label)}</span><span>$${l.cost.toFixed(2)}</span>
       </div>` : `
-      <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><span>${mqPropEscapeHtml(l.label)}</span></div>`).join('');
+      <div style="padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid"><span>${mqPropEscapeHtml(l.label)}</span></div>`).join('');
     return `<div style="margin:12px 0">${rows}</div>`;
   }
 
@@ -3206,7 +3206,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function mqPropSignatureHtml() {
-    return `<div style="margin-top:50px;display:flex;gap:40px">
+    return `<div style="margin-top:50px;display:flex;gap:40px;page-break-inside:avoid;break-inside:avoid">
       <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
       <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
     </div>`;
@@ -3217,7 +3217,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function mqPropBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
-    return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
+    return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0;page-break-inside:avoid;break-inside:avoid">
       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${tax.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${total.toFixed(2)}</span></div>
@@ -3226,7 +3226,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function mqPropBuildTotalsPlainHtml(subtotal, tax, total, deposit) {
-    return `<div style="margin:20px 0">
+    return `<div style="margin:20px 0;page-break-inside:avoid;break-inside:avoid">
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${tax.toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>$${total.toFixed(2)}</strong></div>
@@ -3248,8 +3248,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return true;
     });
 
-    let html = mqPropEscapeHtml(lines.join('\n')).replace(/\n/g, '<br>');
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    const filteredText = lines.join('\n');
+    const paragraphs = filteredText.split(/\n{2,}/);
+    let html = paragraphs.map(para => {
+      let p = mqPropEscapeHtml(para).replace(/\n/g, '<br>');
+      p = p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${p}</div>`;
+    }).join('');
     const replacements = {
       '{customer_name}': mqPropEscapeHtml(data.customerName),
       '{customer_address}': mqPropEscapeHtml(data.customerAddress),

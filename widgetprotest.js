@@ -3626,7 +3626,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer address <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
-          <input type="text" value="${(state.customerAddress||'').replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('customerAddress',this.value)" placeholder="e.g. 123 Main St, Grande Prairie, AB" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
+          <input type="text" value="${(state.customerAddress||'').replace(/"/g,'&quot;')}" oninput="mqProposalFieldChanged('customerAddress',this.value)" placeholder="e.g. 123 Main St, New York, NY" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:14px"/>
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Customer phone <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
@@ -3729,11 +3729,11 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     function mqBuildProposalItemsHtml(lines, showPrices, accent) {
       const rows = (lines||[]).map((l, i) => showPrices ? `
-        <tr style="background:${i%2===0?'#ffffff':'#fafafa'}">
+        <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid">
           <td style="padding:12px 14px;border-bottom:1px solid #eee">${mqEscapeHtml(l.label)}</td>
           <td style="padding:12px 14px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;font-weight:600">$${(parseFloat(l.cost)||0).toFixed(2)}</td>
         </tr>` : `
-        <tr style="background:${i%2===0?'#ffffff':'#fafafa'}"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqEscapeHtml(l.label)}</td></tr>`).join('');
+        <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqEscapeHtml(l.label)}</td></tr>`).join('');
       return `<table style="width:100%;border-collapse:collapse;margin:12px 0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
         <thead><tr style="background:${accent}">
           <th style="text-align:left;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Item</th>
@@ -3749,10 +3749,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     // just needs the numbers, not another visual style layered on top.
     function mqBuildProposalItemsPlainHtml(lines, showPrices) {
       const rows = (lines||[]).map(l => showPrices ? `
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid">
           <strong>${mqEscapeHtml(l.label)}</strong><span>$${(parseFloat(l.cost)||0).toFixed(2)}</span>
         </div>` : `
-        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><strong>${mqEscapeHtml(l.label)}</strong></div>`).join('');
+        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid"><strong>${mqEscapeHtml(l.label)}</strong></div>`).join('');
       return `<div style="margin:12px 0">${rows}</div>`;
     }
 
@@ -3760,10 +3760,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     // the item name read the same as everything else in the body.
     function mqBuildProposalItemsPlainLightHtml(lines, showPrices) {
       const rows = (lines||[]).map(l => showPrices ? `
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid">
           <span>${mqEscapeHtml(l.label)}</span><span>$${(parseFloat(l.cost)||0).toFixed(2)}</span>
         </div>` : `
-        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><span>${mqEscapeHtml(l.label)}</span></div>`).join('');
+        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid"><span>${mqEscapeHtml(l.label)}</span></div>`).join('');
       return `<div style="margin:12px 0">${rows}</div>`;
     }
 
@@ -3779,7 +3779,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function mqBuildSignatureLineHtml() {
-      return `<div style="margin-top:50px;display:flex;gap:40px">
+      return `<div style="margin-top:50px;display:flex;gap:40px;page-break-inside:avoid;break-inside:avoid">
         <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
         <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
       </div>`;
@@ -3800,7 +3800,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // template with deposit set to 0 (or waived for one proposal in Pro)
     // just gets a clean subtotal/tax/total, no dangling "$0.00" line.
     function mqBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
-      return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
+      return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0;page-break-inside:avoid;break-inside:avoid">
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${(total||0).toFixed(2)}</span></div>
@@ -3812,7 +3812,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // matching the same "no extra styling layered on" philosophy as
     // {items_plain}. Same zero-deposit hiding as the box version above.
     function mqBuildTotalsPlainHtml(subtotal, tax, total, deposit) {
-      return `<div style="margin:20px 0">
+      return `<div style="margin:20px 0;page-break-inside:avoid;break-inside:avoid">
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>$${(total||0).toFixed(2)}</strong></div>
@@ -3847,8 +3847,20 @@ window.mqTogDrawerConfig=(prefix)=>{
         return true;
       });
 
-      let html = mqEscapeHtml(lines.join('\n')).replace(/\n/g, '<br>');
-      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Grouped into paragraphs (blank-line separated), each wrapped in its
+      // own block with page-break-inside:avoid — otherwise a PDF page break
+      // (html2pdf just rasterizes the page and slices it at a fixed pixel
+      // height, with no idea where a line of text actually is) can land
+      // right in the middle of a line, visibly chopping the tails off
+      // descenders like y/p/g and continuing the rest on the next page.
+      const filteredText = lines.join('\n');
+      const paragraphs = filteredText.split(/\n{2,}/);
+      let html = paragraphs.map(para => {
+        let p = mqEscapeHtml(para).replace(/\n/g, '<br>');
+        p = p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${p}</div>`;
+      }).join('');
+
       const replacements = {
         '{customer_name}': mqEscapeHtml(data.customerName),
         '{customer_address}': mqEscapeHtml(data.customerAddress),
@@ -4007,7 +4019,6 @@ window.mqTogDrawerConfig=(prefix)=>{
 </style>
 </head><body>
   <div class="mq-proposal-wrap">
-  <div class="mq-no-print" style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px">💡 If you see a Chrome date/title line (or something similar) at the top of a printed copy, look for a "Headers and footers" option in your print settings and turn it off — it's not part of this document, just something some browsers add automatically. Using "Download PDF" below avoids this entirely.</div>
   ${opts.saveFailed ? `<div class="mq-no-print" style="background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">⚠ Couldn't save this to your proposal history (connection issue) — it's not in "My Proposals," but you can still download it now.</div>` : ''}
   <div class="mq-no-print" style="margin-bottom:20px">
     <button id="mq-pdf-btn" onclick="mqDownloadProposalPdf()" style="width:100%;padding:12px;background:${accent};color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">⬇ Download PDF</button>
@@ -4043,7 +4054,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         filename: '${pdfFilename}',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'avoid-all'] }
       }).from(el).save().then(() => {
         btn.textContent = originalText;
         btn.disabled = false;
