@@ -3376,8 +3376,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let blockIndex = 0;
     const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (match, hex, inner) => {
       const key = `\u0000BOX${blockIndex++}\u0000`;
-      const innerHtml = mqPropFormatTextChunk(inner.trim());
-      customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0;page-break-inside:avoid;break-inside:avoid">${innerHtml}</div>`;
+      const innerParas = inner.trim().split(/\n{2,}/).map(p => `<div style="page-break-inside:avoid;break-inside:avoid">${mqPropFormatTextChunk(p)}</div>`).join('<div style="height:12px"></div>');
+      customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
       return key;
     });
 
@@ -4499,10 +4499,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Template cards need editable name/price/unit fields too (regular My
   // Products items get that from the separate Specialty Items tab table —
   // templates don't have an equivalent, so it lives right on the card here).
-  function templateItemCard(r, savedPhotos, savedHidden, allItems) {
+  function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
     const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden);
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
+    const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:6px">
       <input type="text" value="${itemName.replace(/"/g,'&quot;')}" id="mq-spec-name-${r.id}" placeholder="Item name" style="font-size:13px;font-weight:600;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
       ${mqCategoryPickerHTML(r, categoryList, true)}
@@ -4518,7 +4519,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>
       <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
       ${photoHtml}
-      <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item</button>
+      <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item for ALL shops</button>
+      <div style="display:flex;gap:4px;margin-bottom:4px">
+        <select id="mq-tmpl-shoppick-${r.id}" style="flex:1;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px">
+          <option value="">Pick a shop…</option>
+          ${shopOptions}
+        </select>
+        <button class="mq-btn mq-btn-sm" style="white-space:nowrap" onclick="mqPushSingleTemplateItemToShop('${r.id}', document.getElementById('mq-tmpl-shoppick-${r.id}').value)">Push to just this shop</button>
+      </div>
+      <div style="font-size:10px;color:#9ca3af;margin-top:-2px;margin-bottom:2px">Use this to backfill one shop that's missing the item — every other shop (including ones you've already customized) stays untouched.</div>
       <button class="mq-btn mq-btn-danger mq-btn-sm" style="width:100%" onclick="mqDeleteTemplateItem('${r.id}')">Delete template item</button>
     </div>`;
   }
@@ -4527,6 +4536,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const masterShop = await ensureMasterTemplateShop();
     const items = await ensureMasterTemplateItems();
     window._mqTemplateItems = items;
+    const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
 
     let savedPhotos = {};
     let savedHidden = {};
@@ -4561,7 +4571,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           const itemName = r.fields['Item name'] || '';
           const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
           return `<div class="mq-tmpl-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
-            ${templateItemCard(r, savedPhotos, savedHidden, items)}
+            ${templateItemCard(r, savedPhotos, savedHidden, items, allShops)}
           </div>`;
         }).join('')}
       </div>
@@ -4746,6 +4756,90 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // a full overwrite by design right now, while there are no real shop
   // customizations to protect — revisit this once real shops exist and may
   // have renamed/retagged their own copies deliberately.
+  // The actual work of pushing one master item into one shop — creating the
+  // record, matching/replacing any existing copy, copying the photo, and
+  // adding any project types the item needs that the shop doesn't have yet.
+  // Shared by both "push to every shop" and "push to just one shop," so the
+  // two can never quietly drift apart or behave differently.
+  async function pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms) {
+    const result = { created: false, replaced: false, roomsAdded: 0, error: false };
+    try {
+      const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+      // Match by tag first, but also fall back to an exact name match —
+      // catches orphaned rows left behind by manual Airtable edits that
+      // never got (or lost) their tracking tag, so they don't silently
+      // block a clean push forever.
+      const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
+      const existingMatches = shopItems.filter(i =>
+        i.fields['Template source ID'] === master.id ||
+        (i.fields['Item name'] || '').trim().toLowerCase() === masterName
+      );
+
+      let shopRooms = [];
+      try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
+      if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
+      let shopRoomsChanged = false;
+      let vr = [];
+      try { vr = master.fields['Visible rooms'] ? JSON.parse(master.fields['Visible rooms']) : []; } catch(e) { vr = []; }
+      vr.forEach(roomId => {
+        if (!shopRooms.find(r => r.id === roomId)) {
+          const adminRoomDef = adminRooms.find(r => r.id === roomId);
+          shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
+          shopRoomsChanged = true;
+          result.roomsAdded++;
+        }
+      });
+      if (shopRoomsChanged) {
+        await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
+        shop.fields['Room types'] = JSON.stringify(shopRooms);
+      }
+
+      if (existingMatches.length) {
+        await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
+        result.replaced = true;
+      } else {
+        result.created = true;
+      }
+
+      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
+        'Shop': [shop.id],
+        'Item name': master.fields['Item name'],
+        'Special Items': master.fields['Item name'],
+        'Price': master.fields['Price'] || 0,
+        'Per linear foot': master.fields['Per linear foot'] || false,
+        'Per square foot': master.fields['Per square foot'] || false,
+        'Offers install choice': master.fields['Offers install choice'] || false,
+        'Install price': master.fields['Install price'] || 0,
+        'Install mode': master.fields['Install mode'] || 'supply',
+        'Install per linear foot': master.fields['Install per linear foot'] || false,
+        'Install per square foot': master.fields['Install per square foot'] || false,
+        'Install quantity label': master.fields['Install quantity label'] || '',
+        'Description': master.fields['Description'] || '',
+        'Category': master.fields['Category'] || '',
+        'Pro only': master.fields['Pro only'] || false,
+        'Active': false,
+        'Visible rooms': master.fields['Visible rooms'] || '[]',
+        'Template source ID': master.id,
+      });
+      if (!created?.id) {
+        result.error = true;
+        console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
+        return result;
+      }
+      if (masterPhotoUrl) {
+        let shopPhotos = {};
+        try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
+        shopPhotos['spec_' + created.id] = masterPhotoUrl;
+        await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
+        shop.fields['Photos'] = JSON.stringify(shopPhotos);
+      }
+    } catch(e) {
+      result.error = true;
+      console.error('Failed to push item to shop:', shop.fields['Shop name'], e);
+    }
+    return result;
+  }
+
   window.mqPushSingleTemplateItem = async function(masterItemId) {
     showMsg('mq-templates-msg', 'Pushing this item to all shops...');
     try {
@@ -4776,80 +4870,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
 
       for (const shop of allShops) {
-        try {
-          const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-          // Match by tag first, but also fall back to an exact name match —
-          // catches orphaned rows left behind by manual Airtable edits that
-          // never got (or lost) their tracking tag, so they don't silently
-          // block a clean push forever.
-          const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
-          const existingMatches = shopItems.filter(i =>
-            i.fields['Template source ID'] === master.id ||
-            (i.fields['Item name'] || '').trim().toLowerCase() === masterName
-          );
-
-          let shopRooms = [];
-          try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
-          if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
-          let shopRoomsChanged = false;
-          let vr = [];
-          try { vr = master.fields['Visible rooms'] ? JSON.parse(master.fields['Visible rooms']) : []; } catch(e) { vr = []; }
-          vr.forEach(roomId => {
-            if (!shopRooms.find(r => r.id === roomId)) {
-              const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
-              shopRoomsChanged = true;
-              roomsAddedCount++;
-            }
-          });
-          if (shopRoomsChanged) {
-            await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
-            shop.fields['Room types'] = JSON.stringify(shopRooms);
-          }
-
-          if (existingMatches.length) {
-            await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
-            replacedCount++;
-          } else {
-            createdCount++;
-          }
-
-          const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
-            'Shop': [shop.id],
-            'Item name': master.fields['Item name'],
-            'Special Items': master.fields['Item name'],
-            'Price': master.fields['Price'] || 0,
-            'Per linear foot': master.fields['Per linear foot'] || false,
-            'Per square foot': master.fields['Per square foot'] || false,
-            'Offers install choice': master.fields['Offers install choice'] || false,
-            'Install price': master.fields['Install price'] || 0,
-            'Install mode': master.fields['Install mode'] || 'supply',
-            'Install per linear foot': master.fields['Install per linear foot'] || false,
-            'Install per square foot': master.fields['Install per square foot'] || false,
-            'Install quantity label': master.fields['Install quantity label'] || '',
-          'Description': master.fields['Description'] || '',
-          'Category': master.fields['Category'] || '',
-          'Pro only': master.fields['Pro only'] || false,
-            'Active': false,
-            'Visible rooms': master.fields['Visible rooms'] || '[]',
-            'Template source ID': master.id,
-          });
-          if (!created?.id) {
-            errorCount++;
-            console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
-            continue;
-          }
-          if (masterPhotoUrl) {
-            let shopPhotos = {};
-            try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-            shopPhotos['spec_' + created.id] = masterPhotoUrl;
-            await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
-            shop.fields['Photos'] = JSON.stringify(shopPhotos);
-          }
-        } catch(e) {
-          errorCount++;
-          console.error('Failed to push item to shop:', shop.fields['Shop name'], e);
-        }
+        const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
+        if (r.error) errorCount++;
+        if (r.created) createdCount++;
+        if (r.replaced) replacedCount++;
+        roomsAddedCount += r.roomsAdded;
       }
       const roomsNote = roomsAddedCount ? `, added ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
       const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console` : '';
@@ -4857,6 +4882,48 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" — created for ${createdCount} shop${createdCount===1?'':'s'}, fully replaced for ${replacedCount} shop${replacedCount===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
     } catch(e) {
       console.error('Single item push failed:', e);
+      showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
+    }
+  };
+
+  // Pushes one master item into exactly one chosen shop — every other shop,
+  // including ones that already have their own edited copy of this item,
+  // is completely untouched. This is the safe option for backfilling an
+  // item onto a shop that's missing it without resetting anyone else's
+  // customizations, which the "push to every shop" button above cannot do
+  // (it always includes every real shop, with no way to exclude one).
+  window.mqPushSingleTemplateItemToShop = async function(masterItemId, shopId) {
+    if (!shopId) { showMsg('mq-templates-msg', 'Pick a shop first.', 'error'); return; }
+    showMsg('mq-templates-msg', 'Pushing to that shop...');
+    try {
+      const fresh = await atGet(CONFIG.SPECIALTY_TABLE, `RECORD_ID()="${masterItemId}"`);
+      const master = fresh[0];
+      if (!master) { showMsg('mq-templates-msg', 'Could not find that template item — try refreshing the page.', 'error'); return; }
+      if (window._mqTemplateItems) {
+        const idx = window._mqTemplateItems.findIndex(m => m.id === masterItemId);
+        if (idx !== -1) window._mqTemplateItems[idx] = master;
+      }
+
+      const masterShop = await ensureMasterTemplateShop();
+      let masterPhotos = {};
+      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+      const masterPhotoUrl = masterPhotos['spec_' + master.id];
+
+      const shops = await atGet(CONFIG.SHOPS_TABLE, `RECORD_ID()="${shopId}"`);
+      const shop = shops[0];
+      if (!shop) { showMsg('mq-templates-msg', 'Could not find that shop — try refreshing the page.', 'error'); return; }
+
+      const adminRooms = window._mqRooms || defaultRoomTypes();
+      const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
+      const roomsNote = r.roomsAdded ? `, added ${r.roomsAdded} new draft project type${r.roomsAdded===1?'':'s'}` : '';
+      await new Promise(res => setTimeout(res, 500));
+      if (r.error) {
+        showMsg('mq-templates-msg', `Error pushing "${master.fields['Item name']}" to ${shop.fields['Shop name']} — check the browser console.`, 'error');
+      } else {
+        showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" ${r.replaced ? 'replaced' : 'created'} for ${shop.fields['Shop name']}${roomsNote}. No other shop was touched.`, 'success');
+      }
+    } catch(e) {
+      console.error('Single-shop push failed:', e);
       showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
     }
   };

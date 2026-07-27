@@ -3878,8 +3878,16 @@ window.mqTogDrawerConfig=(prefix)=>{
       let blockIndex = 0;
       const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (match, hex, inner) => {
         const key = `\u0000BOX${blockIndex++}\u0000`;
-        const innerHtml = mqFormatProposalTextChunk(inner.trim());
-        customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0;page-break-inside:avoid;break-inside:avoid">${innerHtml}</div>`;
+        // Split the box's own content into paragraphs too, each individually
+        // protected from a mid-line page break — but the box itself (the
+        // outer colored container) is NOT marked unbreakable. A long box
+        // (like a multi-paragraph warranty notice) being forced to stay
+        // whole was exactly what caused a big blank gap: if the box didn't
+        // fit in whatever space was left on the page, the entire thing —
+        // plus all that leftover space — got pushed to the next page. This
+        // way it can break cleanly between its own paragraphs instead.
+        const innerParas = inner.trim().split(/\n{2,}/).map(p => `<div style="page-break-inside:avoid;break-inside:avoid">${mqFormatProposalTextChunk(p)}</div>`).join('<div style="height:12px"></div>');
+        customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
         return key;
       });
 
