@@ -199,6 +199,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Shop info',
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
+        <p><strong>Brand colour</strong> — used for your widget's tab bar, buttons, and logo placeholder.</p>
+        <p><strong>Guided quote flow colours</strong> — four more optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Leave any of them blank and it automatically matches your Brand colour — only set one explicitly if you want that specific piece to look different, like a dark background with light text.</p>
         <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
         <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
@@ -687,6 +689,43 @@ window.logoutMember = async function () {
                     <input type="color" id="mq-shop-color-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
                   </div>
                   <span class="mq-hint">Hex code for widget buttons</span>
+                </div>
+              </div>
+              <div style="margin-bottom:1rem;padding:14px 16px;background:#f9fafb;border-radius:8px">
+                <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px">Guided quote flow colours <span style="font-weight:400;color:#9ca3af">(optional — each defaults to match your Brand colour above if left blank)</span></div>
+                <div class="mq-grid2" style="gap:12px">
+                  <div class="mq-field"><label class="mq-label">Focal highlight colour</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="text" id="mq-shop-focalcolor" placeholder="matches brand colour" style="flex:1"/>
+                      <input type="color" id="mq-shop-focalcolor-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('focalcolor','Focal colour')" title="Reset to match brand colour">↺</button>
+                    </div>
+                    <span class="mq-hint">The ring around whichever step the customer's currently on, plus its number badge and the Continue button</span>
+                  </div>
+                  <div class="mq-field"><label class="mq-label">Box border colour</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="text" id="mq-shop-boxbordercolor" placeholder="matches brand colour" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxbordercolor-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbordercolor','Box border colour')" title="Reset to match brand colour">↺</button>
+                    </div>
+                    <span class="mq-hint">Border around the "Start here" and "Supply/install" highlight boxes</span>
+                  </div>
+                  <div class="mq-field"><label class="mq-label">Box background colour</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="text" id="mq-shop-boxbgcolor" placeholder="light tint of brand colour" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxbgcolor-swatch" value="#eff6ff" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbgcolor','Box background colour')" title="Reset to match brand colour">↺</button>
+                    </div>
+                    <span class="mq-hint">Background of those same highlight boxes</span>
+                  </div>
+                  <div class="mq-field"><label class="mq-label">Box text colour</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="text" id="mq-shop-boxtextcolor" placeholder="dark tint of brand colour" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxtextcolor-swatch" value="#1e40af" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxtextcolor','Box text colour')" title="Reset to match brand colour">↺</button>
+                    </div>
+                    <span class="mq-hint">Label text inside those boxes — worth setting explicitly if you go dark on the background above</span>
+                  </div>
                 </div>
               </div>
               <div class="mq-grid2" style="margin-bottom:1rem">
@@ -2208,6 +2247,34 @@ window.logoutMember = async function () {
         }
       }
     }
+    // The 4 optional guided-flow colors follow the exact same text+swatch
+    // sync pattern as Brand colour above — shared here since it's the same
+    // block 4 times over. Each one is allowed to be genuinely blank (that's
+    // the "match brand colour automatically" state), so the swatch just
+    // shows a neutral placeholder color rather than forcing a value.
+    [
+      ['mq-shop-focalcolor', 'Focal colour', '#1a1a1a'],
+      ['mq-shop-boxbordercolor', 'Box border colour', '#1a1a1a'],
+      ['mq-shop-boxbgcolor', 'Box background colour', '#eff6ff'],
+      ['mq-shop-boxtextcolor', 'Box text colour', '#1e40af'],
+    ].forEach(([fieldId, airtableName, fallbackSwatch]) => {
+      set(fieldId, f[airtableName]);
+      const swatch = el(fieldId + '-swatch');
+      const textField = el(fieldId);
+      const loadedColor = f[airtableName];
+      if (swatch) {
+        swatch.value = /^#[0-9a-fA-F]{6}$/.test(loadedColor) ? loadedColor : fallbackSwatch;
+        if (!swatch.dataset.mqWired) {
+          swatch.dataset.mqWired = '1';
+          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; });
+          if (textField) {
+            textField.addEventListener('input', () => {
+              if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) swatch.value = textField.value;
+            });
+          }
+        }
+      }
+    });
     set('mq-shop-range-low',  f['Quote range low']  || '5');
     set('mq-shop-range-high', f['Quote range high'] || '20');
     set('mq-shop-logo', f['Logo URL']);
@@ -2273,7 +2340,8 @@ window.logoutMember = async function () {
       'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
       'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
       'mq-shop-logo','mq-shop-disclaimer','mq-shop-consult-link',
-      'mq-shop-consult-email','mq-financing-link'
+      'mq-shop-consult-email','mq-financing-link',
+      'mq-shop-focalcolor','mq-shop-boxbordercolor','mq-shop-boxbgcolor','mq-shop-boxtextcolor'
     ];
     shopFieldIds.forEach(id => {
       const field = el(id);
@@ -2281,6 +2349,10 @@ window.logoutMember = async function () {
     });
     const swatch = el('mq-shop-color-swatch');
     if (swatch) swatch.addEventListener('change', shopAutoSave);
+    ['mq-shop-focalcolor-swatch','mq-shop-boxbordercolor-swatch','mq-shop-boxbgcolor-swatch','mq-shop-boxtextcolor-swatch'].forEach(id => {
+      const sw = el(id);
+      if (sw) sw.addEventListener('change', shopAutoSave);
+    });
   }
 
   // ============================================================
@@ -3615,6 +3687,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
   };
 
+  // Clears one of the 4 optional guided-flow color fields back to blank —
+  // blank is what actually means "match my brand colour automatically," so
+  // this isn't a preset value, it's just emptying the field and saving.
+  window.mqClearShopColorField = function(shortId, label) {
+    const textField = el('mq-shop-' + shortId);
+    const swatch = el('mq-shop-' + shortId + '-swatch');
+    if (textField) textField.value = '';
+    if (swatch) swatch.value = shortId === 'boxbgcolor' ? '#eff6ff' : (shortId === 'boxtextcolor' ? '#1e40af' : '#1a1a1a');
+    window.mqSaveShop();
+    showMsg('mq-shop-msg', `✓ ${label} reset to match your brand colour.`);
+  };
+
   window.mqSaveShop = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -3626,6 +3710,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Website':           gv('mq-shop-website'),
         'Lead notify email': gv('mq-shop-email'),
         'Brand colour':      gv('mq-shop-color'),
+        'Focal colour':      gv('mq-shop-focalcolor'),
+        'Box border colour': gv('mq-shop-boxbordercolor'),
+        'Box background colour': gv('mq-shop-boxbgcolor'),
+        'Box text colour':   gv('mq-shop-boxtextcolor'),
         'Quote range low':   gn('mq-shop-range-low',  5),
         'Quote range high':  gn('mq-shop-range-high', 20),
         'Logo URL':          gv('mq-shop-logo'),
