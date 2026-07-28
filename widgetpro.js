@@ -4113,7 +4113,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'avoid-all'] }
+        pagebreak: { mode: ['css'] }
       }).from(el).save().then(() => {
         btn.textContent = originalText;
         btn.disabled = false;
