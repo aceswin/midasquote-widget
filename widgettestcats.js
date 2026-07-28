@@ -305,7 +305,12 @@
       }
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
-      #midasquote-widget .mq-logo img{width:100%;height:100%;object-fit:cover}
+      /* A real uploaded logo isn't forced into that square anymore — shown
+         at its natural aspect ratio instead, so a wide or tall logo doesn't
+         get cropped to fit a square box. Only the no-logo "first letter"
+         placeholder above still uses the square/coloured background. */
+      #midasquote-widget .mq-logo-real{height:48px;max-width:180px;flex-shrink:0;display:flex;align-items:center}
+      #midasquote-widget .mq-logo-real img{max-height:48px;max-width:180px;width:auto;height:auto;object-fit:contain}
       #midasquote-widget .mq-shop-name{font-size:14px;font-weight:600;color:#111}
       #midasquote-widget .mq-shop-sub{font-size:13px;color:#4b5563}
       #midasquote-widget .mq-tab-bar{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;gap:8px}
@@ -605,6 +610,17 @@
 
   // Lightbox for enlarging specialty item photos — same pattern as the
   // showroom page, kept inline here so it works without leaving the widget.
+  // If a shop's logo image fails to load (broken URL, expired hosting,
+  // whatever) — fall back to the plain letter avatar instead of leaving a
+  // broken-image icon with wrapped alt text on screen.
+  window.mqHandleLogoError = function(imgEl, brandColor, firstLetter) {
+    const wrap = imgEl.parentElement;
+    if (!wrap) return;
+    wrap.className = 'mq-logo';
+    wrap.style.background = brandColor;
+    wrap.innerHTML = `<span>${firstLetter}</span>`;
+  };
+
   window.mqPhotoLightbox = function(src, label) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
@@ -761,7 +777,7 @@
         : (s.installMode === 'na' ? '' : `<div style="font-size:11px;color:#6b7280;margin-top:2px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`);
       const installQtyRowHtml = installDiffers ? `
         <div id="mq-spec-installqty-${prefix}-${i}" style="display:none;margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb">
-          <div style="font-size:11px;color:#374151;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},-1)">−</button>
             <input type="text" inputmode="${s.installPerFt||s.installPerSqFt?'decimal':'numeric'}" pattern="${s.installPerFt||s.installPerSqFt?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-installqty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:14px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetInstallQty('${prefix}',${i},this.value)" onclick="this.select()"/>
@@ -778,7 +794,6 @@
             <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
             ${installModeHtml}
-            ${installQtyRowHtml}
           </div>
         </div>
         <div class="mq-spec-bottom">
@@ -789,6 +804,7 @@
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</span>
+          ${installQtyRowHtml}
         </div>
       </div>`;
     };
@@ -1299,31 +1315,11 @@
             ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
-          <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
-            <div style="display:flex;align-items:flex-start">
-              ${termHelpThumb(MQ_TERM_IMAGES.crownReturn,'What is a crown return?')}
-              <div style="flex:1;min-width:0">
-                <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
-                <input type="number" id="mq-${prefix}-trim-crown-returns" value="0" min="0" max="20"/>
-                <div style="font-size:12px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the crown turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
-              </div>
-            </div>
-          </div>
         </div>`:''}
         ${hasValance?`<div>
           <div class="mq-field"><label class="mq-label">Valance</label>
             ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems)}
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
-          </div>
-          <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px">
-            <div style="display:flex;align-items:flex-start">
-              ${termHelpThumb(MQ_TERM_IMAGES.valanceReturn,'What is a valance return?')}
-              <div style="flex:1;min-width:0">
-                <label class="mq-label" style="color:#1d4ed8;font-weight:700">Returns to wall</label>
-                <input type="number" id="mq-${prefix}-trim-valance-returns" value="0" min="0" max="20"/>
-                <div style="font-size:12px;color:#1d4ed8;margin-top:6px;line-height:1.5">A "return" is where the valance turns and meets the wall. Each return adds 1 linear foot to your total — count how many you have. If unsure, just leave as 0.</div>
-              </div>
-            </div>
           </div>
         </div>`:''}
         </div>
@@ -1377,7 +1373,9 @@
 
   function buildWidgetHTML(shop, specs, data) {
     const hasCtInstall = hasCountertopInstall();
-    const logoHTML = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" alt="${shop['Shop name']}"/>` : `<span>${(shop['Shop name']||'S').charAt(0)}</span>`;
+    const bcSafe = (shop['Brand colour']||'#1a1a1a').replace(/'/g,"\\'");
+    const letterSafe = ((shop['Shop name']||'S').charAt(0)||'S').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const logoHTML = shop['Logo URL'] ? `<div class="mq-logo-real"><img src="${shop['Logo URL']}" alt="${shop['Shop name']}" onerror="mqHandleLogoError(this,'${bcSafe}','${letterSafe}')"/></div>` : `<div class="mq-logo"><span>${(shop['Shop name']||'S').charAt(0)}</span></div>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
     const financingOn = shop['Offers financing'] === 'Yes';
     const financingHTML = financingOn
@@ -1390,7 +1388,7 @@
 
     return `
       <div class="mq-header">
-        <div class="mq-logo">${logoHTML}</div>
+        ${logoHTML}
         <div style="flex:1">
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
@@ -1515,18 +1513,6 @@
             </div>
             <div id="mq-b-cab-bsft-block" style="display:none;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:0.75rem">
               <div style="font-size:14px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                ${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',36,false)}<label style="font-size:14px;color:#374151"><strong>Side splashes</strong> (Quantity)</label>
-                <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
-              </div>
-              <div style="font-size:12px;color:#4b5563;margin-bottom:8px;line-height:1.5">
-                A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <label style="font-size:14px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
-                <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" step="0.1" oninput="mqRefreshBsFt('b')" style="width:70px"/>
-              </div>
-              <div style="font-size:13px;color:#4b5563;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
               <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
           </div>
@@ -2073,10 +2059,10 @@
 
     // Highlights whichever Calculate button belongs to this tab — used when
     // someone clicks "Done" on the last guided step, since there's nothing
-    // left in the step flow itself to scroll to at that point. Scrolling to
-    // and pulsing the real button keeps the person in control of actually
-    // triggering the estimate (which, on the Both tab, also kicks off the
-    // lead-capture step) rather than firing it for them automatically.
+    // left in the step flow itself to scroll to at that point. Scrolls to
+    // it, pulses it, then actually clicks it after a short delay so the
+    // scroll animation has time to land first — "Done" means done, not
+    // "now go find and click a second button yourself."
     function mqHighlightCalcButton(prefix) {
       const btnId = prefix === 'c' ? 'mq-c-calc-btn' : (prefix === 'ct' ? 'mq-ct-calc-btn' : 'mq-b-calc-btn');
       const btn = document.getElementById(btnId);
@@ -2086,6 +2072,7 @@
       void btn.offsetWidth; // restart the animation if it's already mid-pulse
       btn.classList.add('mq-calc-btn-pulse');
       setTimeout(() => btn.classList.remove('mq-calc-btn-pulse'), 1600);
+      setTimeout(() => { if (!btn.disabled) btn.click(); }, 500);
     }
 
     window.mqStepContinue = function(prefix) {
@@ -2207,8 +2194,16 @@
         if (manualWrap) manualWrap.style.display = 'flex';
         if (manualToggleCb) manualToggleCb.checked = true; // keeps it consistent even though it's hidden
         if (useCabCb) useCabCb.checked = false;
-      } else if (manualToggleCb && !manualToggleCb.checked && manualWrap) {
-        manualWrap.style.display = 'none';
+      } else {
+        // Cabinet boxes ARE part of this project type — default to using
+        // those measurements for crown/valance too, since re-typing footage
+        // that's already been measured once is exactly the busywork this
+        // checkbox exists to skip. Unconditional, same as the no-cabinets
+        // branch above — this re-asserts the sensible default whenever
+        // project type/room changes, rather than only on first load.
+        if (useCabCb) useCabCb.checked = true;
+        if (manualToggleCb) manualToggleCb.checked = false;
+        if (manualWrap) manualWrap.style.display = 'none';
       }
 
       // Countertop details — Both tab only (the standalone Countertops tab has
@@ -3132,18 +3127,6 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
         <div id="mqs-bsft-block-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
           <div style="font-size:14px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            ${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',36,false)}<label style="font-size:14px;color:#374151"><strong>Side splashes</strong> (Quantity)</label>
-            <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
-          </div>
-          <div style="font-size:12px;color:#4b5563;margin-bottom:8px;line-height:1.5">
-            A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label style="font-size:14px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
-            <input type="number" id="mqs-bs-subtract-${id}" value="0" min="0" step="0.1" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
-          </div>
-          <div style="font-size:13px;color:#4b5563;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
           <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mqs-bsft-net-${id}">0</strong> ft</div>
         </div>`;
       document.getElementById(containerId)?.appendChild(card);
@@ -3285,30 +3268,38 @@ window.mqTogDrawerConfig=(prefix)=>{
       return false;
     }
 
-    // Blocks generating the estimate if any specialty item is set to
-    // "Supplied & Installed" with its own install-quantity field (shown
-    // only when install's pricing method differs from supply's) still
-    // sitting at 0 — otherwise the install line would silently price at
-    // $0 instead of flagging that something's missing. Shakes/focuses the
-    // first offending field instead, same pattern as mqSpecModeChosen.
+    // Blocks generating the estimate if a specialty item set to "Supplied &
+    // Installed" is missing either quantity it needs — the main supply
+    // quantity, or (when install's method differs from supply's) the
+    // separate install quantity. Catches both directions: forgetting
+    // install (price would silently be $0) and forgetting supply (the
+    // whole item would silently drop out of the estimate entirely, since
+    // that's the field that gates whether the item counts as selected at
+    // all — easy to miss since the install field now sits right below it).
+    // Shakes/focuses whichever field needs attention, same pattern as
+    // mqSpecModeChosen.
     function mqValidateInstallQty(prefix) {
+      const shake = (qtyInput) => {
+        if (!qtyInput) return;
+        qtyInput.classList.remove('mq-needs-choice');
+        void qtyInput.offsetWidth;
+        qtyInput.classList.add('mq-needs-choice');
+        qtyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        qtyInput.focus();
+        setTimeout(() => qtyInput.classList.remove('mq-needs-choice'), 700);
+      };
       for (let i = 0; i < specs.length; i++) {
-        if (!specQty[prefix][i]) continue;
         const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
         if (!modeSel || modeSel.value !== 'install') continue;
         const row = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
-        if (!row) continue; // methods match — no separate field to check
-        if ((installQty[prefix][i] || 0) > 0) continue;
-        const qtyInput = document.getElementById(`mq-installqty-${prefix}-${i}`);
-        if (qtyInput) {
-          qtyInput.classList.remove('mq-needs-choice');
-          void qtyInput.offsetWidth;
-          qtyInput.classList.add('mq-needs-choice');
-          qtyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          qtyInput.focus();
-          setTimeout(() => qtyInput.classList.remove('mq-needs-choice'), 700);
-        }
-        return false;
+        if (!row) continue; // methods match — no separate field, nothing extra to check
+
+        const supplyQty = specQty[prefix][i] || 0;
+        const instQty = installQty[prefix][i] || 0;
+        if (supplyQty === 0 && instQty === 0) continue; // genuinely not selected at all
+
+        if (supplyQty === 0) { shake(document.getElementById(`mq-qty-${prefix}-${i}`)); return false; }
+        if (instQty === 0) { shake(document.getElementById(`mq-installqty-${prefix}-${i}`)); return false; }
       }
       return true;
     }

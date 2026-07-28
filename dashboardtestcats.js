@@ -35,6 +35,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   async function atGet(table, formula) {
     const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
     const res = await fetch(url, { headers: AT_HEADS });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
+    }
     const data = await res.json();
     return data.records || [];
   }
@@ -44,6 +48,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       method: 'PATCH', headers: AT_HEADS,
       body: JSON.stringify({ fields })
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
 
@@ -52,6 +60,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       method: 'POST', headers: AT_HEADS,
       body: JSON.stringify({ fields })
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
 
@@ -59,8 +71,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const res = await fetch(`${AT_BASE}/${table}/${id}`, {
       method: 'DELETE', headers: AT_HEADS
     });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
+
 
   function fmt(n) { return '$' + Math.round(n || 0).toLocaleString(); }
   function gv(id) { const e = document.getElementById(id); return e ? e.value : ''; }
@@ -182,6 +199,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Shop info',
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
+        <p><strong>Brand colour</strong> — used for your widget's tab bar, buttons, and logo placeholder.</p>
+        <p><strong>Guided quote flow colours</strong> — four more optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Leave any of them blank and it automatically matches your Brand colour — only set one explicitly if you want that specific piece to look different, like a dark background with light text.</p>
         <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
         <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
@@ -670,6 +689,43 @@ window.logoutMember = async function () {
                     <input type="color" id="mq-shop-color-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
                   </div>
                   <span class="mq-hint">Hex code for widget buttons</span>
+                </div>
+              </div>
+              <div style="margin-bottom:1rem;padding:14px 16px;background:#f9fafb;border-radius:8px">
+                <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px">Guided quote flow colours <span style="font-weight:400;color:#9ca3af">(optional — each defaults to match your Brand colour above if left blank)</span></div>
+                <div class="mq-grid2" style="gap:12px">
+                  <div class="mq-field"><label class="mq-label">Focal highlight colour</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="text" id="mq-shop-focalcolor" placeholder="matches brand colour" style="flex:1"/>
+                      <input type="color" id="mq-shop-focalcolor-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('focalcolor','Focal colour')" title="Reset to match brand colour">↺</button>
+                    </div>
+                    <span class="mq-hint">The ring around whichever step the customer's currently on, plus its number badge and the Continue button</span>
+                  </div>
+                  <div class="mq-field"><label class="mq-label">Box border colour</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="text" id="mq-shop-boxbordercolor" placeholder="matches brand colour" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxbordercolor-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbordercolor','Box border colour')" title="Reset to match brand colour">↺</button>
+                    </div>
+                    <span class="mq-hint">Border around the "Start here" and "Supply/install" highlight boxes</span>
+                  </div>
+                  <div class="mq-field"><label class="mq-label">Box background colour</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="text" id="mq-shop-boxbgcolor" placeholder="light tint of brand colour" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxbgcolor-swatch" value="#eff6ff" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbgcolor','Box background colour')" title="Reset to match brand colour">↺</button>
+                    </div>
+                    <span class="mq-hint">Background of those same highlight boxes</span>
+                  </div>
+                  <div class="mq-field"><label class="mq-label">Box text colour</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <input type="text" id="mq-shop-boxtextcolor" placeholder="dark tint of brand colour" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxtextcolor-swatch" value="#1e40af" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxtextcolor','Box text colour')" title="Reset to match brand colour">↺</button>
+                    </div>
+                    <span class="mq-hint">Label text inside those boxes — worth setting explicitly if you go dark on the background above</span>
+                  </div>
                 </div>
               </div>
               <div class="mq-grid2" style="margin-bottom:1rem">
@@ -2191,6 +2247,34 @@ window.logoutMember = async function () {
         }
       }
     }
+    // The 4 optional guided-flow colors follow the exact same text+swatch
+    // sync pattern as Brand colour above — shared here since it's the same
+    // block 4 times over. Each one is allowed to be genuinely blank (that's
+    // the "match brand colour automatically" state), so the swatch just
+    // shows a neutral placeholder color rather than forcing a value.
+    [
+      ['mq-shop-focalcolor', 'Focal colour', '#1a1a1a'],
+      ['mq-shop-boxbordercolor', 'Box border colour', '#1a1a1a'],
+      ['mq-shop-boxbgcolor', 'Box background colour', '#eff6ff'],
+      ['mq-shop-boxtextcolor', 'Box text colour', '#1e40af'],
+    ].forEach(([fieldId, airtableName, fallbackSwatch]) => {
+      set(fieldId, f[airtableName]);
+      const swatch = el(fieldId + '-swatch');
+      const textField = el(fieldId);
+      const loadedColor = f[airtableName];
+      if (swatch) {
+        swatch.value = /^#[0-9a-fA-F]{6}$/.test(loadedColor) ? loadedColor : fallbackSwatch;
+        if (!swatch.dataset.mqWired) {
+          swatch.dataset.mqWired = '1';
+          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; });
+          if (textField) {
+            textField.addEventListener('input', () => {
+              if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) swatch.value = textField.value;
+            });
+          }
+        }
+      }
+    });
     set('mq-shop-range-low',  f['Quote range low']  || '5');
     set('mq-shop-range-high', f['Quote range high'] || '20');
     set('mq-shop-logo', f['Logo URL']);
@@ -2256,7 +2340,8 @@ window.logoutMember = async function () {
       'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
       'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
       'mq-shop-logo','mq-shop-disclaimer','mq-shop-consult-link',
-      'mq-shop-consult-email','mq-financing-link'
+      'mq-shop-consult-email','mq-financing-link',
+      'mq-shop-focalcolor','mq-shop-boxbordercolor','mq-shop-boxbgcolor','mq-shop-boxtextcolor'
     ];
     shopFieldIds.forEach(id => {
       const field = el(id);
@@ -2264,6 +2349,10 @@ window.logoutMember = async function () {
     });
     const swatch = el('mq-shop-color-swatch');
     if (swatch) swatch.addEventListener('change', shopAutoSave);
+    ['mq-shop-focalcolor-swatch','mq-shop-boxbordercolor-swatch','mq-shop-boxbgcolor-swatch','mq-shop-boxtextcolor-swatch'].forEach(id => {
+      const sw = el(id);
+      if (sw) sw.addEventListener('change', shopAutoSave);
+    });
   }
 
   // ============================================================
@@ -2957,30 +3046,54 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   async function ensureProposalTemplatesSeeded(shopRecord) {
     if (shopRecord.fields['Proposal templates seeded']) return;
 
-    const starters = [
-      { name: 'Simple', size: 'Simple', accent: '#1a3a6b', body: PROPOSAL_BODY_SIMPLE, showPrices: true, depositType: 'Percent', depositValue: 0, taxPct: 0 },
-      { name: 'Standard', size: 'Standard', accent: '#1a3a6b', body: PROPOSAL_BODY_STANDARD, showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 },
-      { name: 'Large Project', size: 'Large', accent: '#1a3a6b', body: PROPOSAL_BODY_LARGE, showPrices: true, depositType: 'Percent', depositValue: 30, taxPct: 13 },
-    ];
-    try {
-      for (let i = 0; i < starters.length; i++) {
-        const t = starters[i];
-        await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
-          'Shop': [shopRecord.id],
-          'Template name': t.name,
-          'Size category': t.size,
-          'Accent colour': t.accent,
-          'Body': t.body,
-          'Show item prices': t.showPrices,
-          'Deposit type': t.depositType,
-          'Deposit value': t.depositValue,
-          'Tax percent': t.taxPct,
-          'Sort order': i,
-        });
+    // If a seed attempt for this shop is already running (e.g. the tab got
+    // clicked into twice in quick succession), just wait on that one
+    // instead of starting a second one — two overlapping attempts racing
+    // each other was almost certainly how a shop ended up with the
+    // "seeded" flag set while never actually getting its templates: one
+    // attempt got far enough to set the flag while the other's creates
+    // were still failing (an Airtable rate limit, a network blip, etc).
+    window._mqSeedingInProgress = window._mqSeedingInProgress || {};
+    if (window._mqSeedingInProgress[shopRecord.id]) {
+      return window._mqSeedingInProgress[shopRecord.id];
+    }
+
+    const doSeed = (async () => {
+      const starters = [
+        { name: 'Simple', size: 'Simple', accent: '#1a3a6b', body: PROPOSAL_BODY_SIMPLE, showPrices: true, depositType: 'Percent', depositValue: 0, taxPct: 0 },
+        { name: 'Standard', size: 'Standard', accent: '#1a3a6b', body: PROPOSAL_BODY_STANDARD, showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 },
+        { name: 'Large Project', size: 'Large', accent: '#1a3a6b', body: PROPOSAL_BODY_LARGE, showPrices: true, depositType: 'Percent', depositValue: 30, taxPct: 13 },
+      ];
+      try {
+        for (let i = 0; i < starters.length; i++) {
+          const t = starters[i];
+          await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
+            'Shop': [shopRecord.id],
+            'Template name': t.name,
+            'Size category': t.size,
+            'Accent colour': t.accent,
+            'Body': t.body,
+            'Show item prices': t.showPrices,
+            'Deposit type': t.depositType,
+            'Deposit value': t.depositValue,
+            'Tax percent': t.taxPct,
+            'Sort order': i,
+          });
+        }
+        // Only marked "seeded" once all 3 have actually landed — if any
+        // create above threw, we never reach this line, so the flag
+        // correctly stays unset and a future visit will retry properly.
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Proposal templates seeded': true });
+        shopRecord.fields['Proposal templates seeded'] = true;
+      } catch(e) {
+        console.warn('Failed to seed starter proposal templates:', e);
+      } finally {
+        delete window._mqSeedingInProgress[shopRecord.id];
       }
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Proposal templates seeded': true });
-      shopRecord.fields['Proposal templates seeded'] = true;
-    } catch(e) { console.warn('Failed to seed starter proposal templates:', e); }
+    })();
+
+    window._mqSeedingInProgress[shopRecord.id] = doSeed;
+    return doSeed;
   }
 
   const PROPOSAL_TOKENS_HELP = `
@@ -3335,15 +3448,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let blockIndex = 0;
     const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (match, hex, inner) => {
       const key = `\u0000BOX${blockIndex++}\u0000`;
-      const innerHtml = mqPropFormatTextChunk(inner.trim());
-      customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0;page-break-inside:avoid;break-inside:avoid">${innerHtml}</div>`;
+      const innerParas = inner.trim().split(/\n{2,}/).map(p => `<div style="page-break-inside:avoid;break-inside:avoid">${mqPropFormatTextChunk(p)}</div>`).join('<div style="height:12px"></div>');
+      customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
       return key;
     });
 
     const paragraphs = textWithPlaceholders.split(/\n{2,}/);
+    const selfContainedTokens = new Set(['{items}', '{items_plain}', '{items_plain_light}', '{items_header}', '{totals_box}', '{totals_plain}', '{signature_line}', '{hr}']);
     let html = paragraphs.map(para => {
       const trimmed = para.trim();
       if (/^\u0000BOX\d+\u0000$/.test(trimmed)) return trimmed;
+      if (selfContainedTokens.has(trimmed)) return mqPropFormatTextChunk(para);
       return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${mqPropFormatTextChunk(para)}</div>`;
     }).join('');
 
@@ -3572,6 +3687,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
   };
 
+  // Clears one of the 4 optional guided-flow color fields back to blank —
+  // blank is what actually means "match my brand colour automatically," so
+  // this isn't a preset value, it's just emptying the field and saving.
+  window.mqClearShopColorField = function(shortId, label) {
+    const textField = el('mq-shop-' + shortId);
+    const swatch = el('mq-shop-' + shortId + '-swatch');
+    if (textField) textField.value = '';
+    if (swatch) swatch.value = shortId === 'boxbgcolor' ? '#eff6ff' : (shortId === 'boxtextcolor' ? '#1e40af' : '#1a1a1a');
+    window.mqSaveShop();
+    showMsg('mq-shop-msg', `✓ ${label} reset to match your brand colour.`);
+  };
+
   window.mqSaveShop = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -3583,6 +3710,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Website':           gv('mq-shop-website'),
         'Lead notify email': gv('mq-shop-email'),
         'Brand colour':      gv('mq-shop-color'),
+        'Focal colour':      gv('mq-shop-focalcolor'),
+        'Box border colour': gv('mq-shop-boxbordercolor'),
+        'Box background colour': gv('mq-shop-boxbgcolor'),
+        'Box text colour':   gv('mq-shop-boxtextcolor'),
         'Quote range low':   gn('mq-shop-range-low',  5),
         'Quote range high':  gn('mq-shop-range-high', 20),
         'Logo URL':          gv('mq-shop-logo'),
@@ -3981,7 +4112,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
 
     // Categories to exclude from My Products (no photos needed)
-    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other','hinge']);
+    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
 
     // Group line items by category directly — same source as pricing helper
     const byCategory = {};
@@ -4458,10 +4589,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Template cards need editable name/price/unit fields too (regular My
   // Products items get that from the separate Specialty Items tab table —
   // templates don't have an equivalent, so it lives right on the card here).
-  function templateItemCard(r, savedPhotos, savedHidden, allItems) {
+  function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
     const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden);
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
+    const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:6px">
       <input type="text" value="${itemName.replace(/"/g,'&quot;')}" id="mq-spec-name-${r.id}" placeholder="Item name" style="font-size:13px;font-weight:600;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
       ${mqCategoryPickerHTML(r, categoryList, true)}
@@ -4477,7 +4609,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>
       <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
       ${photoHtml}
-      <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item</button>
+      <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item for ALL shops</button>
+      <div style="display:flex;gap:4px;margin-bottom:4px">
+        <select id="mq-tmpl-shoppick-${r.id}" style="flex:1;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px">
+          <option value="">Pick a shop…</option>
+          ${shopOptions}
+        </select>
+        <button class="mq-btn mq-btn-sm" style="white-space:nowrap" onclick="mqPushSingleTemplateItemToShop('${r.id}', document.getElementById('mq-tmpl-shoppick-${r.id}').value)">Push to just this shop</button>
+      </div>
+      <div style="font-size:10px;color:#9ca3af;margin-top:-2px;margin-bottom:2px">Use this to backfill one shop that's missing the item — every other shop (including ones you've already customized) stays untouched.</div>
       <button class="mq-btn mq-btn-danger mq-btn-sm" style="width:100%" onclick="mqDeleteTemplateItem('${r.id}')">Delete template item</button>
     </div>`;
   }
@@ -4486,6 +4626,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const masterShop = await ensureMasterTemplateShop();
     const items = await ensureMasterTemplateItems();
     window._mqTemplateItems = items;
+    const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
 
     let savedPhotos = {};
     let savedHidden = {};
@@ -4520,7 +4661,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           const itemName = r.fields['Item name'] || '';
           const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
           return `<div class="mq-tmpl-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
-            ${templateItemCard(r, savedPhotos, savedHidden, items)}
+            ${templateItemCard(r, savedPhotos, savedHidden, items, allShops)}
           </div>`;
         }).join('')}
       </div>
@@ -4705,6 +4846,90 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // a full overwrite by design right now, while there are no real shop
   // customizations to protect — revisit this once real shops exist and may
   // have renamed/retagged their own copies deliberately.
+  // The actual work of pushing one master item into one shop — creating the
+  // record, matching/replacing any existing copy, copying the photo, and
+  // adding any project types the item needs that the shop doesn't have yet.
+  // Shared by both "push to every shop" and "push to just one shop," so the
+  // two can never quietly drift apart or behave differently.
+  async function pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms) {
+    const result = { created: false, replaced: false, roomsAdded: 0, error: false };
+    try {
+      const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+      // Match by tag first, but also fall back to an exact name match —
+      // catches orphaned rows left behind by manual Airtable edits that
+      // never got (or lost) their tracking tag, so they don't silently
+      // block a clean push forever.
+      const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
+      const existingMatches = shopItems.filter(i =>
+        i.fields['Template source ID'] === master.id ||
+        (i.fields['Item name'] || '').trim().toLowerCase() === masterName
+      );
+
+      let shopRooms = [];
+      try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
+      if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
+      let shopRoomsChanged = false;
+      let vr = [];
+      try { vr = master.fields['Visible rooms'] ? JSON.parse(master.fields['Visible rooms']) : []; } catch(e) { vr = []; }
+      vr.forEach(roomId => {
+        if (!shopRooms.find(r => r.id === roomId)) {
+          const adminRoomDef = adminRooms.find(r => r.id === roomId);
+          shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
+          shopRoomsChanged = true;
+          result.roomsAdded++;
+        }
+      });
+      if (shopRoomsChanged) {
+        await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
+        shop.fields['Room types'] = JSON.stringify(shopRooms);
+      }
+
+      if (existingMatches.length) {
+        await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
+        result.replaced = true;
+      } else {
+        result.created = true;
+      }
+
+      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
+        'Shop': [shop.id],
+        'Item name': master.fields['Item name'],
+        'Special Items': master.fields['Item name'],
+        'Price': master.fields['Price'] || 0,
+        'Per linear foot': master.fields['Per linear foot'] || false,
+        'Per square foot': master.fields['Per square foot'] || false,
+        'Offers install choice': master.fields['Offers install choice'] || false,
+        'Install price': master.fields['Install price'] || 0,
+        'Install mode': master.fields['Install mode'] || 'supply',
+        'Install per linear foot': master.fields['Install per linear foot'] || false,
+        'Install per square foot': master.fields['Install per square foot'] || false,
+        'Install quantity label': master.fields['Install quantity label'] || '',
+        'Description': master.fields['Description'] || '',
+        'Category': master.fields['Category'] || '',
+        'Pro only': master.fields['Pro only'] || false,
+        'Active': false,
+        'Visible rooms': master.fields['Visible rooms'] || '[]',
+        'Template source ID': master.id,
+      });
+      if (!created?.id) {
+        result.error = true;
+        console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
+        return result;
+      }
+      if (masterPhotoUrl) {
+        let shopPhotos = {};
+        try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
+        shopPhotos['spec_' + created.id] = masterPhotoUrl;
+        await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
+        shop.fields['Photos'] = JSON.stringify(shopPhotos);
+      }
+    } catch(e) {
+      result.error = true;
+      console.error('Failed to push item to shop:', shop.fields['Shop name'], e);
+    }
+    return result;
+  }
+
   window.mqPushSingleTemplateItem = async function(masterItemId) {
     showMsg('mq-templates-msg', 'Pushing this item to all shops...');
     try {
@@ -4735,80 +4960,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
 
       for (const shop of allShops) {
-        try {
-          const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-          // Match by tag first, but also fall back to an exact name match —
-          // catches orphaned rows left behind by manual Airtable edits that
-          // never got (or lost) their tracking tag, so they don't silently
-          // block a clean push forever.
-          const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
-          const existingMatches = shopItems.filter(i =>
-            i.fields['Template source ID'] === master.id ||
-            (i.fields['Item name'] || '').trim().toLowerCase() === masterName
-          );
-
-          let shopRooms = [];
-          try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
-          if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
-          let shopRoomsChanged = false;
-          let vr = [];
-          try { vr = master.fields['Visible rooms'] ? JSON.parse(master.fields['Visible rooms']) : []; } catch(e) { vr = []; }
-          vr.forEach(roomId => {
-            if (!shopRooms.find(r => r.id === roomId)) {
-              const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
-              shopRoomsChanged = true;
-              roomsAddedCount++;
-            }
-          });
-          if (shopRoomsChanged) {
-            await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
-            shop.fields['Room types'] = JSON.stringify(shopRooms);
-          }
-
-          if (existingMatches.length) {
-            await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
-            replacedCount++;
-          } else {
-            createdCount++;
-          }
-
-          const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
-            'Shop': [shop.id],
-            'Item name': master.fields['Item name'],
-            'Special Items': master.fields['Item name'],
-            'Price': master.fields['Price'] || 0,
-            'Per linear foot': master.fields['Per linear foot'] || false,
-            'Per square foot': master.fields['Per square foot'] || false,
-            'Offers install choice': master.fields['Offers install choice'] || false,
-            'Install price': master.fields['Install price'] || 0,
-            'Install mode': master.fields['Install mode'] || 'supply',
-            'Install per linear foot': master.fields['Install per linear foot'] || false,
-            'Install per square foot': master.fields['Install per square foot'] || false,
-            'Install quantity label': master.fields['Install quantity label'] || '',
-          'Description': master.fields['Description'] || '',
-          'Category': master.fields['Category'] || '',
-          'Pro only': master.fields['Pro only'] || false,
-            'Active': false,
-            'Visible rooms': master.fields['Visible rooms'] || '[]',
-            'Template source ID': master.id,
-          });
-          if (!created?.id) {
-            errorCount++;
-            console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
-            continue;
-          }
-          if (masterPhotoUrl) {
-            let shopPhotos = {};
-            try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-            shopPhotos['spec_' + created.id] = masterPhotoUrl;
-            await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
-            shop.fields['Photos'] = JSON.stringify(shopPhotos);
-          }
-        } catch(e) {
-          errorCount++;
-          console.error('Failed to push item to shop:', shop.fields['Shop name'], e);
-        }
+        const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
+        if (r.error) errorCount++;
+        if (r.created) createdCount++;
+        if (r.replaced) replacedCount++;
+        roomsAddedCount += r.roomsAdded;
       }
       const roomsNote = roomsAddedCount ? `, added ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
       const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console` : '';
@@ -4816,6 +4972,48 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" — created for ${createdCount} shop${createdCount===1?'':'s'}, fully replaced for ${replacedCount} shop${replacedCount===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
     } catch(e) {
       console.error('Single item push failed:', e);
+      showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
+    }
+  };
+
+  // Pushes one master item into exactly one chosen shop — every other shop,
+  // including ones that already have their own edited copy of this item,
+  // is completely untouched. This is the safe option for backfilling an
+  // item onto a shop that's missing it without resetting anyone else's
+  // customizations, which the "push to every shop" button above cannot do
+  // (it always includes every real shop, with no way to exclude one).
+  window.mqPushSingleTemplateItemToShop = async function(masterItemId, shopId) {
+    if (!shopId) { showMsg('mq-templates-msg', 'Pick a shop first.', 'error'); return; }
+    showMsg('mq-templates-msg', 'Pushing to that shop...');
+    try {
+      const fresh = await atGet(CONFIG.SPECIALTY_TABLE, `RECORD_ID()="${masterItemId}"`);
+      const master = fresh[0];
+      if (!master) { showMsg('mq-templates-msg', 'Could not find that template item — try refreshing the page.', 'error'); return; }
+      if (window._mqTemplateItems) {
+        const idx = window._mqTemplateItems.findIndex(m => m.id === masterItemId);
+        if (idx !== -1) window._mqTemplateItems[idx] = master;
+      }
+
+      const masterShop = await ensureMasterTemplateShop();
+      let masterPhotos = {};
+      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+      const masterPhotoUrl = masterPhotos['spec_' + master.id];
+
+      const shops = await atGet(CONFIG.SHOPS_TABLE, `RECORD_ID()="${shopId}"`);
+      const shop = shops[0];
+      if (!shop) { showMsg('mq-templates-msg', 'Could not find that shop — try refreshing the page.', 'error'); return; }
+
+      const adminRooms = window._mqRooms || defaultRoomTypes();
+      const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
+      const roomsNote = r.roomsAdded ? `, added ${r.roomsAdded} new draft project type${r.roomsAdded===1?'':'s'}` : '';
+      await new Promise(res => setTimeout(res, 500));
+      if (r.error) {
+        showMsg('mq-templates-msg', `Error pushing "${master.fields['Item name']}" to ${shop.fields['Shop name']} — check the browser console.`, 'error');
+      } else {
+        showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" ${r.replaced ? 'replaced' : 'created'} for ${shop.fields['Shop name']}${roomsNote}. No other shop was touched.`, 'success');
+      }
+    } catch(e) {
+      console.error('Single-shop push failed:', e);
       showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
     }
   };
@@ -7139,6 +7337,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window._mqLineItems = lineItems;
   }
 
+  // Shared by every nav-triggered refetch below. Switching tabs used to
+  // re-query Airtable every single time, even if you'd been on that exact
+  // tab ten seconds earlier — harmless in isolation, but it adds up fast
+  // during normal back-and-forth dashboard use, and directly eats into
+  // Airtable's monthly API call allowance for no real benefit. This just
+  // skips the refetch (leaving whatever's already rendered in place) if
+  // it's been fetched recently; genuinely returning after a few minutes,
+  // or after an edit made elsewhere, still gets fresh data as normal.
+  window._mqLastFetchTimes = window._mqLastFetchTimes || {};
+  function mqShouldRefetch(key, minMs = 20000) {
+    const now = Date.now();
+    const last = window._mqLastFetchTimes[key] || 0;
+    if (now - last < minMs) return false;
+    window._mqLastFetchTimes[key] = now;
+    return true;
+  }
+
   // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
@@ -7201,7 +7416,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'leads') {
       const leadsTable = document.getElementById('mq-leads-table');
-      if (leadsTable && window._mqShopRecord) {
+      if (leadsTable && window._mqShopRecord && mqShouldRefetch('leads')) {
         leadsTable.innerHTML = '<div class="mq-loading">Refreshing leads...</div>';
         loadLeads(window._mqShopRecord.fields['Shop name']).then(leads => {
           window._mqLeads = sortLeadsArray(leads);
@@ -7214,7 +7429,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'specialty') {
       const specList = document.getElementById('mq-spec-list');
-      if (specList && window._mqShopRecord) {
+      if (specList && window._mqShopRecord && mqShouldRefetch('specialty')) {
         specList.innerHTML = '<div class="mq-loading">Refreshing specialty items...</div>';
         loadSpecialty(window._mqShopRecord.fields['Shop name']).then(specs => {
           renderSpecialty(specs, window._mqShopRecord);
@@ -7226,7 +7441,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'proposals') {
       const propList = document.getElementById('mq-prop-list');
-      if (propList && window._mqShopRecord) {
+      if (propList && window._mqShopRecord && mqShouldRefetch('proposals')) {
         propList.innerHTML = '<div class="mq-loading">Loading proposal templates...</div>';
         ensureProposalTemplatesSeeded(window._mqShopRecord).then(() =>
           loadProposalTemplates(window._mqShopRecord.fields['Shop name'])
@@ -7237,7 +7452,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'products') {
       const prodContent = document.getElementById('mq-products-content');
-      if (prodContent) {
+      if (prodContent && mqShouldRefetch('products')) {
         prodContent.innerHTML = '<div class="mq-loading">Loading your products...</div>';
         const shopToken = window._mqShopRecord.fields['Shop token'];
         Promise.all([
@@ -7255,12 +7470,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (page === 'templates') {
       const tmplContent = document.getElementById('mq-templates-content');
-      if (tmplContent) {
+      if (tmplContent && mqShouldRefetch('templates')) {
         tmplContent.innerHTML = '<div class="mq-loading">Loading templates...</div>';
         renderTemplates();
       }
       const masterRoomsContent = document.getElementById('mq-master-rooms-content');
-      if (masterRoomsContent) {
+      if (masterRoomsContent && mqShouldRefetch('masterRooms')) {
         masterRoomsContent.innerHTML = '<div class="mq-loading">Loading...</div>';
         renderMasterRoomDefs();
       }
