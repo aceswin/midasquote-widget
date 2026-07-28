@@ -701,11 +701,11 @@ window.logoutMember = async function () {
                 <div class="mq-grid2" style="gap:12px">
                   <div class="mq-field"><label class="mq-label">Focal highlight colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-focalcolor" placeholder="#93c5fd (default)" style="flex:1"/>
-                      <input type="color" id="mq-shop-focalcolor-swatch" value="#93c5fd" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <input type="text" id="mq-shop-focalcolor" placeholder="#2563eb (default)" style="flex:1"/>
+                      <input type="color" id="mq-shop-focalcolor-swatch" value="#2563eb" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
                       <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('focalcolor','Focal colour')" title="Reset to MidasQuote default">↺</button>
                     </div>
-                    <span class="mq-hint">The ring around whichever step the customer's currently on, plus its number badge and the Continue button</span>
+                    <span class="mq-hint">The step number badge and the Continue button</span>
                   </div>
                   <div class="mq-field"><label class="mq-label">Box border colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
@@ -713,7 +713,7 @@ window.logoutMember = async function () {
                       <input type="color" id="mq-shop-boxbordercolor-swatch" value="#93c5fd" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
                       <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbordercolor','Box border colour')" title="Reset to MidasQuote default">↺</button>
                     </div>
-                    <span class="mq-hint">Border around the "Start here" and "Supply/install" highlight boxes</span>
+                    <span class="mq-hint">Border around the "Start here" and "Supply/install" boxes, plus the glowing ring around whichever step the customer's currently on (the two always match)</span>
                   </div>
                   <div class="mq-field"><label class="mq-label">Box background colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
@@ -2259,7 +2259,7 @@ window.logoutMember = async function () {
     // the "match brand colour automatically" state), so the swatch just
     // shows a neutral placeholder color rather than forcing a value.
     [
-      ['mq-shop-focalcolor', 'Focal colour', '#93c5fd'],
+      ['mq-shop-focalcolor', 'Focal colour', '#2563eb'],
       ['mq-shop-boxbordercolor', 'Box border colour', '#93c5fd'],
       ['mq-shop-boxbgcolor', 'Box background colour', '#eff6ff'],
       ['mq-shop-boxtextcolor', 'Box text colour', '#1e40af'],
@@ -3700,7 +3700,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const textField = el('mq-shop-' + shortId);
     const swatch = el('mq-shop-' + shortId + '-swatch');
     if (textField) textField.value = '';
-    if (swatch) swatch.value = shortId === 'boxbgcolor' ? '#eff6ff' : (shortId === 'boxtextcolor' ? '#1e40af' : '#93c5fd');
+    if (swatch) {
+      const defaults = { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' };
+      swatch.value = defaults[shortId] || '#1a1a1a';
+    }
     window.mqSaveShop();
     showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
   };

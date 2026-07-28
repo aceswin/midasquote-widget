@@ -306,8 +306,14 @@
     // optional customization; leaving them alone gets you the same
     // polished look every shop started with, regardless of what Brand
     // colour is set to elsewhere.
+    //
+    // Two genuinely different blues in the original design, not one:
+    // focalColor (#2563eb, richer/darker) is just the step-number badge and
+    // the Continue button. boxBorder (#93c5fd, lighter) is both the box's
+    // own border AND the glowing ring around the current step — those two
+    // always matched each other, which is the "layered double border" look.
     const boxBgIsCustom = !!boxBg;
-    focalColor = focalColor || '#93c5fd';
+    focalColor = focalColor || '#2563eb';
     boxBorder = boxBorder || '#93c5fd';
     boxBg = boxBg || '#eff6ff';
     boxText = boxText || '#1e40af';
@@ -366,7 +372,7 @@
       #midasquote-widget .mq-sec-header-row .mq-sec-title{margin-bottom:0}
       #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:12px;color:#6b7280;flex-shrink:0;margin-left:8px}
       #midasquote-widget .mq-collapse-arrow.open{transform:rotate(90deg)}
-      #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px ${focalColor},0 4px 14px rgba(0,0,0,0.10);opacity:1}
+      #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px ${boxBorder},0 4px 14px rgba(0,0,0,0.10);opacity:1}
       #midasquote-widget .mq-sec.mq-step-done{filter:brightness(0.8);transition:filter 0.2s}
       #midasquote-widget .mq-sec.mq-step-upcoming{filter:brightness(0.55);transition:filter 0.2s}
       #midasquote-widget .mq-sec.mq-step-current{transition:box-shadow 0.2s}
