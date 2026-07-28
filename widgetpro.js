@@ -3898,11 +3898,19 @@ window.mqTogDrawerConfig=(prefix)=>{
       // right in the middle of a line, visibly chopping the tails off
       // descenders like y/p/g and continuing the rest on the next page.
       const paragraphs = textWithPlaceholders.split(/\n{2,}/);
+      const selfContainedTokens = new Set(['{items}', '{items_plain}', '{items_plain_light}', '{items_header}', '{totals_box}', '{totals_plain}', '{signature_line}', '{hr}']);
       let html = paragraphs.map(para => {
         const trimmed = para.trim();
         // A paragraph that's just a box placeholder is already a complete
         // block on its own — don't wrap it in another paragraph div too.
         if (/^\u0000BOX\d+\u0000$/.test(trimmed)) return trimmed;
+        // Same idea for a paragraph that's just one of the pre-built
+        // fragment tokens — {items} in particular is a whole table with its
+        // OWN row-by-row breakability already built in (deliberately, so a
+        // long item list can flow across pages instead of forcing the
+        // entire table to stay on one page). Wrapping it in an outer
+        // "never break this" div here would silently undo that.
+        if (selfContainedTokens.has(trimmed)) return mqFormatProposalTextChunk(para);
         return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${mqFormatProposalTextChunk(para)}</div>`;
       }).join('');
 
@@ -4235,7 +4243,6 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
   }
 
-  
   init();
   mqInitMobileFontFix();
 
