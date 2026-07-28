@@ -3736,11 +3736,11 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     function mqBuildProposalItemsHtml(lines, showPrices, accent) {
       const rows = (lines||[]).map((l, i) => showPrices ? `
-        <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid">
+        <tr style="background:${i%2===0?'#ffffff':'#fafafa'}">
           <td style="padding:12px 14px;border-bottom:1px solid #eee">${mqEscapeHtml(l.label)}</td>
           <td style="padding:12px 14px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;font-weight:600">$${(parseFloat(l.cost)||0).toFixed(2)}</td>
         </tr>` : `
-        <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqEscapeHtml(l.label)}</td></tr>`).join('');
+        <tr style="background:${i%2===0?'#ffffff':'#fafafa'}"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqEscapeHtml(l.label)}</td></tr>`).join('');
       return `<table style="width:100%;border-collapse:collapse;margin:12px 0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
         <thead><tr style="background:${accent}">
           <th style="text-align:left;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Item</th>
@@ -3756,10 +3756,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     // just needs the numbers, not another visual style layered on top.
     function mqBuildProposalItemsPlainHtml(lines, showPrices) {
       const rows = (lines||[]).map(l => showPrices ? `
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
           <strong>${mqEscapeHtml(l.label)}</strong><span>$${(parseFloat(l.cost)||0).toFixed(2)}</span>
         </div>` : `
-        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid"><strong>${mqEscapeHtml(l.label)}</strong></div>`).join('');
+        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><strong>${mqEscapeHtml(l.label)}</strong></div>`).join('');
       return `<div style="margin:12px 0">${rows}</div>`;
     }
 
@@ -3767,10 +3767,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     // the item name read the same as everything else in the body.
     function mqBuildProposalItemsPlainLightHtml(lines, showPrices) {
       const rows = (lines||[]).map(l => showPrices ? `
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
           <span>${mqEscapeHtml(l.label)}</span><span>$${(parseFloat(l.cost)||0).toFixed(2)}</span>
         </div>` : `
-        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid"><span>${mqEscapeHtml(l.label)}</span></div>`).join('');
+        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><span>${mqEscapeHtml(l.label)}</span></div>`).join('');
       return `<div style="margin:12px 0">${rows}</div>`;
     }
 
@@ -3786,7 +3786,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function mqBuildSignatureLineHtml() {
-      return `<div style="margin-top:50px;display:flex;gap:40px;page-break-inside:avoid;break-inside:avoid">
+      return `<div style="margin-top:50px;display:flex;gap:40px">
         <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
         <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
       </div>`;
@@ -3807,7 +3807,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // template with deposit set to 0 (or waived for one proposal in Pro)
     // just gets a clean subtotal/tax/total, no dangling "$0.00" line.
     function mqBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
-      return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0;page-break-inside:avoid;break-inside:avoid">
+      return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>$${(total||0).toFixed(2)}</span></div>
@@ -3819,7 +3819,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // matching the same "no extra styling layered on" philosophy as
     // {items_plain}. Same zero-deposit hiding as the box version above.
     function mqBuildTotalsPlainHtml(subtotal, tax, total, deposit) {
-      return `<div style="margin:20px 0;page-break-inside:avoid;break-inside:avoid">
+      return `<div style="margin:20px 0">
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>$${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>$${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>$${(total||0).toFixed(2)}</strong></div>
@@ -3878,25 +3878,28 @@ window.mqTogDrawerConfig=(prefix)=>{
       let blockIndex = 0;
       const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (match, hex, inner) => {
         const key = `\u0000BOX${blockIndex++}\u0000`;
-        // Split the box's own content into paragraphs too, each individually
-        // protected from a mid-line page break — but the box itself (the
-        // outer colored container) is NOT marked unbreakable. A long box
-        // (like a multi-paragraph warranty notice) being forced to stay
-        // whole was exactly what caused a big blank gap: if the box didn't
-        // fit in whatever space was left on the page, the entire thing —
-        // plus all that leftover space — got pushed to the next page. This
-        // way it can break cleanly between its own paragraphs instead.
-        const innerParas = inner.trim().split(/\n{2,}/).map(p => `<div style="page-break-inside:avoid;break-inside:avoid">${mqFormatProposalTextChunk(p)}</div>`).join('<div style="height:12px"></div>');
+        // Split into paragraphs so line breaks render correctly; the box
+        // itself and its paragraphs are plain flowing content — no
+        // page-break-avoid marking anywhere (see note below on why).
+        const innerParas = inner.trim().split(/\n{2,}/).map(p => mqFormatProposalTextChunk(p)).join('<div style="height:12px"></div>');
         customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
         return key;
       });
 
-      // Grouped into paragraphs (blank-line separated), each wrapped in its
-      // own block with page-break-inside:avoid — otherwise a PDF page break
-      // (html2pdf just rasterizes the page and slices it at a fixed pixel
-      // height, with no idea where a line of text actually is) can land
-      // right in the middle of a line, visibly chopping the tails off
-      // descenders like y/p/g and continuing the rest on the next page.
+      // Grouped into paragraphs (blank-line separated). Deliberately NOT
+      // marked page-break-inside:avoid anywhere in this document — that was
+      // tried, and turned out to be worse than the problem it solved. This
+      // PDF library works by screenshotting the whole page and slicing it at
+      // a fixed pixel height; the ONLY way it can "protect" something from
+      // being split is to insert a blank spacer before it sized to whatever
+      // space is left on the page, then start it fresh on the next page.
+      // That means avoiding a split can cost an entire half-empty page —
+      // often a far worse visual result than the rare, minor cost of a
+      // single line occasionally landing right at a page break. So instead:
+      // no avoidance anywhere, which makes a stray mid-line break possible
+      // but rare, and makes a big blank gap mathematically impossible,
+      // since the gap-inserting logic only ever runs for elements marked
+      // avoid in the first place.
       const paragraphs = textWithPlaceholders.split(/\n{2,}/);
       const selfContainedTokens = new Set(['{items}', '{items_plain}', '{items_plain_light}', '{items_header}', '{totals_box}', '{totals_plain}', '{signature_line}', '{hr}']);
       let html = paragraphs.map(para => {
@@ -3911,7 +3914,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         // entire table to stay on one page). Wrapping it in an outer
         // "never break this" div here would silently undo that.
         if (selfContainedTokens.has(trimmed)) return mqFormatProposalTextChunk(para);
-        return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${mqFormatProposalTextChunk(para)}</div>`;
+        return `<div style="margin-bottom:16px">${mqFormatProposalTextChunk(para)}</div>`;
       }).join('');
 
       for (const [key, fragHtml] of Object.entries(customBlocks)) {
@@ -4112,8 +4115,13 @@ window.mqTogDrawerConfig=(prefix)=>{
         filename: '${pdfFilename}',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak: { mode: ['css'] }
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        // No pagebreak "avoid" config, deliberately — see the long comment
+        // in mqRenderProposalBodyTokens for the full reasoning. Short
+        // version: avoiding a mid-line break can only be done by inserting
+        // a blank spacer that pushes content to the next page, which risks
+        // a much worse half-empty page. Plain natural slicing, with no
+        // avoidance rules at all, makes that kind of gap impossible.
       }).from(el).save().then(() => {
         btn.textContent = originalText;
         btn.disabled = false;
