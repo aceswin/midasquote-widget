@@ -277,7 +277,40 @@
   // ============================================================
   // STYLES
   // ============================================================
-  function injectStyles(bc) {
+  // Small hex color helpers — used so the 4 new customizable box colors
+  // (focal ring, box border, box background, box text) can each have a
+  // sensible default automatically derived from the shop's one Brand
+  // colour, without the shop owner having to set anything themselves,
+  // while still being fully overridable individually.
+  function mqHexToRgb(hex) {
+    hex = (hex || '#000000').replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const num = parseInt(hex, 16) || 0;
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+  function mqRgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('');
+  }
+  function mqLightenHex(hex, pct) {
+    const { r, g, b } = mqHexToRgb(hex);
+    return mqRgbToHex(r + (255 - r) * pct, g + (255 - g) * pct, b + (255 - b) * pct);
+  }
+  function mqDarkenHex(hex, pct) {
+    const { r, g, b } = mqHexToRgb(hex);
+    return mqRgbToHex(r * (1 - pct), g * (1 - pct), b * (1 - pct));
+  }
+
+  function injectStyles(bc, focalColor, boxBorder, boxBg, boxText) {
+    // Each of the 4 optional shop-level fields falls back to something
+    // automatically derived from the brand colour if left blank — so a
+    // shop that's never touched these settings still gets a look that
+    // matches their brand, and a shop that wants full control (e.g. going
+    // dark on the background) can override each one independently.
+    focalColor = focalColor || bc;
+    boxBorder = boxBorder || bc;
+    boxBg = boxBg || mqLightenHex(bc, 0.94);
+    boxText = boxText || mqDarkenHex(bc, 0.35);
+    const boxBgStop2 = mqLightenHex(boxBg, 0.3); // second gradient stop, a touch lighter than the first
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
@@ -323,20 +356,22 @@
       #midasquote-widget .mq-tab-content{display:none;padding:1.5rem}
       #midasquote-widget .mq-tab-content.active{display:block}
       #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
-      #midasquote-widget .mq-sec{border-left:4px solid #bfdbfe}
-      #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
+      #midasquote-widget .mq-sec{border-left:4px solid ${boxBorder}}
+      #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:${focalColor};color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
       #midasquote-widget .mq-sec-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;cursor:pointer}
       #midasquote-widget .mq-sec-header-row .mq-sec-title{margin-bottom:0}
       #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:12px;color:#6b7280;flex-shrink:0;margin-left:8px}
       #midasquote-widget .mq-collapse-arrow.open{transform:rotate(90deg)}
-      #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px #93c5fd,0 4px 14px rgba(0,0,0,0.10);opacity:1}
+      #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px ${focalColor},0 4px 14px rgba(0,0,0,0.10);opacity:1}
       #midasquote-widget .mq-sec.mq-step-done{filter:brightness(0.8);transition:filter 0.2s}
       #midasquote-widget .mq-sec.mq-step-upcoming{filter:brightness(0.55);transition:filter 0.2s}
       #midasquote-widget .mq-sec.mq-step-current{transition:box-shadow 0.2s}
       #midasquote-widget .mq-step-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px dashed #e5e7eb}
-      #midasquote-widget .mq-step-continue-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+      #midasquote-widget .mq-step-continue-btn{background:${focalColor};color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
       #midasquote-widget .mq-step-back-btn{background:none;border:none;color:#4b5563;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;padding:9px 4px}
       #midasquote-widget .mq-step-done-badge{color:#16a34a;font-size:13px;font-weight:700}
+      #midasquote-widget .mq-focal-box{background:linear-gradient(135deg,${boxBg},${boxBgStop2});border:2px solid ${boxBorder};border-radius:12px;padding:16px 18px}
+      #midasquote-widget .mq-focal-box-label{color:${boxText}!important}
       #midasquote-widget .mq-sec-title{font-size:14px;font-weight:800;color:#1f2937;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem}
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
@@ -1168,13 +1203,13 @@
     return `
       <div class="mq-sec">
         <p class="mq-sec-title">Project basics</p>
-        <div style="background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:2px solid #93c5fd;border-radius:12px;padding:16px 18px">
-          <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#1e40af;margin-bottom:8px">
-            <span style="background:#2563eb;color:#fff;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
+        <div class="mq-focal-box">
+          <label class="mq-focal-box-label" style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;margin-bottom:8px">
+            <span class="mq-step-badge" style="width:26px;height:26px;font-size:14px">1</span>
             Start here — choose your project type
           </label>
           <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>!r.proOnly).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
-          <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#1d4ed8;margin-top:8px"></p>
+          <p class="mq-hint mq-focal-box-label" id="mq-${prefix}-room-vanity-note" style="display:none;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:13px;color:#92400e;line-height:1.5"></div>
         </div>
       </div>
@@ -1189,8 +1224,8 @@
       </div>
       <div class="mq-sec" id="mq-${prefix}-si-field">
         <p class="mq-sec-title">${hasInstall ? 'Supply + install' : 'Supply'}</p>
-        <div style="background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:2px solid #93c5fd;border-radius:12px;padding:16px 18px">
-          <div class="mq-field"><label class="mq-label" style="font-size:14px;font-weight:700;color:#1e40af">${hasInstall ? 'Supply + install?' : 'Supply'}</label>
+        <div class="mq-focal-box">
+          <div class="mq-field"><label class="mq-label mq-focal-box-label" style="font-size:14px;font-weight:700">${hasInstall ? 'Supply + install?' : 'Supply'}</label>
             <p class="mq-hint" style="margin-bottom:8px">${hasInstall ? "Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install)." : 'This shop offers supply only — installation is not included.'}</p>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')">${hasInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
         </div>
@@ -3455,7 +3490,13 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window._mqShopData=shop;
     window._mqFullData=data; // cached so mqStartNewEstimate can rebuild without refetching
-    injectStyles(shop['Brand colour']||'#1a1a1a');
+    injectStyles(
+      shop['Brand colour']||'#1a1a1a',
+      shop['Focal colour'],
+      shop['Box border colour'],
+      shop['Box background colour'],
+      shop['Box text colour']
+    );
     buildCTMAT(data);
     buildTRIM(data);
     buildTALLCAB(data);
