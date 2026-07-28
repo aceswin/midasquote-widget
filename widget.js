@@ -301,16 +301,20 @@
   }
 
   function injectStyles(bc, focalColor, boxBorder, boxBg, boxText) {
-    // Each of the 4 optional shop-level fields falls back to something
-    // automatically derived from the brand colour if left blank — so a
-    // shop that's never touched these settings still gets a look that
-    // matches their brand, and a shop that wants full control (e.g. going
-    // dark on the background) can override each one independently.
-    focalColor = focalColor || bc;
-    boxBorder = boxBorder || bc;
-    boxBg = boxBg || mqLightenHex(bc, 0.94);
-    boxText = boxText || mqDarkenHex(bc, 0.35);
-    const boxBgStop2 = mqLightenHex(boxBg, 0.3); // second gradient stop, a touch lighter than the first
+    // Defaults to MidasQuote's original blue scheme — not derived from the
+    // shop's brand colour. These 4 fields are a genuinely separate,
+    // optional customization; leaving them alone gets you the same
+    // polished look every shop started with, regardless of what Brand
+    // colour is set to elsewhere.
+    const boxBgIsCustom = !!boxBg;
+    focalColor = focalColor || '#93c5fd';
+    boxBorder = boxBorder || '#93c5fd';
+    boxBg = boxBg || '#eff6ff';
+    boxText = boxText || '#1e40af';
+    // Only run the auto-gradient math when they've actually set a custom
+    // background — the original default already has its own two hand-picked
+    // gradient stops (#eff6ff → #f0f9ff), no need to recompute those.
+    const boxBgStop2 = boxBgIsCustom ? mqLightenHex(boxBg, 0.3) : '#f0f9ff';
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
