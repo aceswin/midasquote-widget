@@ -2872,7 +2872,8 @@ window.mqTogDrawerConfig=(prefix)=>{
 
         const tcCost = Math.round(tcUnitPrice * tcQty);
         tallCabTotal += tcCost;
-        tallCabLines.push({label:`${tc.label} (${tcQty} × ${tcWidthIn}")`, cost: tcCost});
+        const tcDoorLabel = doorKey==='none'?'No doors':(door[doorKey]?.label||'');
+        tallCabLines.push({label:`${tc.label} (${tcQty} × ${tcWidthIn}") · ${tcDoorLabel} · ${si==='install'?'Supply + install':'Supply only'}`, cost: tcCost});
       });
 
       let trimCost = 0;
