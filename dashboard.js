@@ -4521,6 +4521,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   window.mqToggleSpecRoom = async function(itemId) {
     const rooms = window._mqRooms || defaultRoomTypes();
+    const items = window._mqSpecItemsList || [];
+    const cachedItem = items.find(it => it.id === itemId);
+    let prevRooms = [];
+    try { prevRooms = cachedItem && cachedItem.visibleRooms ? JSON.parse(cachedItem.visibleRooms) : []; } catch(e) { prevRooms = []; }
+
     const checkedIds = rooms
       .filter(r => document.getElementById(`mq-spec-room-${itemId}-${r.id}`)?.checked)
       .map(r => r.id);
@@ -4530,6 +4535,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await atUpdate(CONFIG.SPECIALTY_TABLE, itemId, { 'Visible rooms': JSON.stringify(toSave) });
       const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
       if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+      if (cachedItem) cachedItem.visibleRooms = JSON.stringify(toSave);
       // Keep the row's own filterable data in sync and immediately re-apply
       // whatever filter is currently active — an item that no longer
       // matches the project type being filtered on should disappear right
@@ -4537,8 +4543,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const row = document.querySelector(`#mq-spec-tbody tr[data-id="${itemId}"]`);
       if (row) row.setAttribute('data-rooms', JSON.stringify(toSave));
       if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
-    } catch(e) { console.error('Failed to save room links', e); }
+    } catch(e) {
+      console.error('Failed to save room links', e);
+      rooms.forEach(r => {
+        const cb = document.getElementById(`mq-spec-room-${itemId}-${r.id}`);
+        if (cb) cb.checked = (!prevRooms.length || prevRooms.includes(r.id));
+      });
+      const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms) + ' — save failed, try again';
+    }
   };
+
 
   function roomLinkSummaryText(visibleRooms, rooms) {
     if (!visibleRooms || !visibleRooms.length) return 'All project types';
@@ -5061,6 +5076,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqToggleLineItemRoom = async function(key, idsCsv, cat) {
     const ids = (idsCsv||'').split(',').filter(Boolean);
     const rooms = window._mqRooms || defaultRoomTypes();
+    // Find this item's cached record so we can (a) know its last-saved state
+    // for rollback if the save below fails, and (b) keep the cache itself in
+    // sync on success — otherwise a later category-level bulk toggle would
+    // read this item's stale pre-edit rooms and silently overwrite the change
+    // we're about to make.
+    const items = cat === 'specialty' ? (window._mqSpecItemsList || []) : ((window._mqByCategory || {})[cat] || []);
+    const cachedItem = items.find(it => (it.ids || [it.id]).join(',') === idsCsv);
+    let prevRooms = [];
+    try { prevRooms = cachedItem && cachedItem.visibleRooms ? JSON.parse(cachedItem.visibleRooms) : []; } catch(e) { prevRooms = []; }
+
     const checkedIds = rooms
       .filter(r => document.getElementById(`mq-li-room-${key}-${r.id}`)?.checked)
       .map(r => r.id);
@@ -5071,7 +5096,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(toSave) })));
       const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
       if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
-    } catch(e) { console.error('Failed to save line item room links', e); }
+      if (cachedItem) cachedItem.visibleRooms = JSON.stringify(toSave);
+    } catch(e) {
+      console.error('Failed to save line item room links', e);
+      // Save didn't stick — put the checkboxes back to the last known-good
+      // state instead of leaving the UI showing a change that never actually
+      // reached Airtable.
+      rooms.forEach(r => {
+        const cb = document.getElementById(`mq-li-room-${key}-${r.id}`);
+        if (cb) cb.checked = (!prevRooms.length || prevRooms.includes(r.id));
+      });
+      const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms) + ' — save failed, try again';
+    }
   };
 
   // Category-level hiding — e.g. hide the entire Door Styles category for
