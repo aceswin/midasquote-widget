@@ -27,19 +27,35 @@ let wizardBaseline = null;
   async function atGet(table, formula) {
     const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
     const res = await fetch(url, { headers: AT_HEADS() });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
+    }
     const data = await res.json();
     return data.records || [];
   }
   async function atCreate(table, fields) {
     const res = await fetch(`${AT_BASE_URL()}/${table}`, { method: 'POST', headers: AT_HEADS(), body: JSON.stringify({ fields }) });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
   async function atUpdate(table, id, fields) {
     const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'PATCH', headers: AT_HEADS(), body: JSON.stringify({ fields }) });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
   async function atDelete(table, id) {
     const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'DELETE', headers: AT_HEADS() });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
+    }
     return await res.json();
   }
 
@@ -1025,9 +1041,26 @@ window.mqphGoToWizard = function() {
     const container=document.getElementById('mq-pricing-helper-v2');
     if(container) container.innerHTML='<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Saving your pricing…</div>';
 
-    // Wipe all wizard-owned categories clean
+    // Wipe all wizard-owned categories clean. Now that atDelete actually
+    // throws on failure, a failed delete here would previously have been
+    // silently swallowed by the empty catch and we'd carry on to create a
+    // fresh replacement anyway — leaving the old, undeleted record plus a
+    // brand-new duplicate. Retry once, and if it still fails, stop before
+    // creating anything rather than risk more duplicates.
     const toDelete=lineItems.filter(r => r.fields && WIZARD_OWNED_CATEGORIES.includes(r.fields['Category']));
-    for(const r of toDelete) { try { await atDelete(LINE_ITEMS_TABLE,r.id); } catch(e){} }
+    const failedDeletes=[];
+    for(const r of toDelete) {
+      try { await atDelete(LINE_ITEMS_TABLE,r.id); }
+      catch(e) {
+        try { await atDelete(LINE_ITEMS_TABLE,r.id); }
+        catch(e2) { console.error('Delete failed twice, giving up on this record:', r.id, e2); failedDeletes.push(r); }
+      }
+    }
+    if (failedDeletes.length) {
+      wizardFinishing = false;
+      if (container) container.innerHTML = `<div style="padding:3rem;text-align:center;color:#dc2626;font-size:14px">Couldn't clear out ${failedDeletes.length} old pricing item(s) before saving — nothing else was changed, so you don't end up with duplicates. Please wait a moment and try again.</div>`;
+      return;
+    }
 
     // Write fresh records
     for(let i=0;i<wizardItems.length;i++) {
