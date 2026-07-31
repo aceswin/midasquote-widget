@@ -15,6 +15,7 @@
 let wizardBaseline = null;
   let wizardStep = 0;
   let wizardItems = [];
+  let wizardStepContrib = {}; // stepIndex -> the wizardItems that step's onNext added last time through
   let wizardFinishing = false;
   let currentEditId = null;
 
@@ -421,7 +422,7 @@ let wizardBaseline = null;
   };
 
 window.mqphGoToWizard = function() {
-    wizardStep = 0; wizardItems = []; wizardBaseline = null; wizardFinishing = false;
+    wizardStep = 0; wizardItems = []; wizardBaseline = null; wizardFinishing = false; wizardStepContrib = {};
     const container = document.getElementById('mq-pricing-helper-v2');
     if (container) { container.innerHTML = buildWizardHTML(); renderWizardStep(0); }
   };
@@ -1020,13 +1021,34 @@ window.mqphGoToWizard = function() {
   };
 
   window.mqphNext=function(){    const steps=buildWizardSteps();
+    // If we've been through this step before (i.e. the user hit Back to fix
+    // something and is now hitting Next again), pull out whatever it added
+    // last time before letting onNext push a fresh set — otherwise every
+    // revisit adds another duplicate copy on top.
+    if (wizardStepContrib[wizardStep]) {
+      wizardStepContrib[wizardStep].forEach(item => {
+        const idx = wizardItems.indexOf(item);
+        if (idx !== -1) wizardItems.splice(idx, 1);
+      });
+    }
+    const startLen = wizardItems.length;
     const result=steps[wizardStep].onNext?steps[wizardStep].onNext():null;
     if(result==='abort'){loadAndRender();return;}
+    wizardStepContrib[wizardStep] = wizardItems.slice(startLen);
     wizardStep++;
     if(wizardStep>=steps.length) mqphFinishWizard(); else renderWizardStep(wizardStep);
   };
   window.mqphBack=function(){if(wizardStep>0){wizardStep--;renderWizardStep(wizardStep);}};
   window.mqphSkip=function(){
+    // Skipping means "this step contributes nothing" — if it previously
+    // contributed items (Next, then Back, then Skip instead), drop those too.
+    if (wizardStepContrib[wizardStep]) {
+      wizardStepContrib[wizardStep].forEach(item => {
+        const idx = wizardItems.indexOf(item);
+        if (idx !== -1) wizardItems.splice(idx, 1);
+      });
+      wizardStepContrib[wizardStep] = [];
+    }
     wizardStep++;
     const steps=buildWizardSteps();
     if(wizardStep>=steps.length) mqphFinishWizard(); else renderWizardStep(wizardStep);
