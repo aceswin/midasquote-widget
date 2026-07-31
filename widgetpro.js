@@ -282,9 +282,9 @@
       #midasquote-widget .mq-tab-label{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
       #midasquote-widget .mq-tab-title{font-size:14px;font-weight:500;line-height:1}
       #midasquote-widget .mq-tab-sub{font-size:10px;opacity:0.7;line-height:1}
-      #midasquote-widget .mq-tab-content{display:none;padding:1.5rem}
+      #midasquote-widget .mq-tab-content{display:none;padding:15px}
       #midasquote-widget .mq-tab-content.active{display:block}
-      #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #1e3a5f;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
+      #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #1e3a5f;border-radius:10px;padding:15px;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-sec{border-left:4px solid #0f2a52}
       #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#0f2a52;color:#fbbf24;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
       #midasquote-widget .mq-sec-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;cursor:pointer}
