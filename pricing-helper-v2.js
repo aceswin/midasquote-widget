@@ -472,7 +472,7 @@ window.mqphGoToWizard = function() {
         </div>
         <div style="font-size:13px;color:#374151;line-height:1.9;margin-bottom:1.25rem">
           ✅ Box-only baseline (no doors, no drawers)<br/>
-          ✅ Door styles as upcharges (finish included in name)<br/>
+          ✅ Door styles as upcharges<br/>
           ✅ Drawer configurations as upcharges<br/>
           ✅ Separate upper and base rates<br/>
           ✅ Installation and removal rates
@@ -610,7 +610,7 @@ window.mqphGoToWizard = function() {
         const hi = wizardBaseline?.hingeIndex ?? 0;
         const hingeName = hinges[hi]?.fields['Name'] || 'your cheapest hinge';
         return `
-          <div class="mqph-hl">Doors are priced as an upcharge on top of the box. The finish is already in your door name.</div>
+          <div class="mqph-hl">Doors are priced as an upcharge on top of the box.</div>
           ${specBox([
             `<strong>Base cabinets + baseline door style (no drawers)</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
