@@ -4228,7 +4228,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           ${categoryRoomDisclosure(cat)}
           ${GROUPABLE_CATS.includes(cat) ? `<div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <button class="mq-btn mq-btn-secondary mq-btn-sm" onclick="event.stopPropagation();mqOpenGroupManager('${cat}',null)">+ New group</button>
-            <span style="font-size:11px;color:#9ca3af">Group items that are the same type or price — e.g. "Raised panel," "Shaker." Customers still pick the exact item, but if they're all the same price we'll let them know any one works. Leave items ungrouped and nothing changes.</span>
+            <span style="font-size:11px;color:#9ca3af">You can make a group for a type of style — like "Shaker" or "Raised panel" — or price several items the same and collect them into one group. Want to leave things as they are? Just don't create any groups.</span>
           </div>` : ''}
           <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
         </div>
