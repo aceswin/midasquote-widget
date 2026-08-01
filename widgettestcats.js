@@ -812,11 +812,11 @@
     const groupDropdown = hasAnyGroup ? `
       <div style="margin-bottom:8px">
         <label style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">${pickerLabel}</label>
-        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'')" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px">
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'')" style="font-size:13px;padding:6px 28px 6px 10px;border:1px solid #d1d5db;border-radius:6px;width:auto;max-width:100%;display:inline-block">
           ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}">${g}</option>`).join('')}
           ${hasOtherBucket ? `<option value="__other__" data-desc="">Other</option>` : ''}
         </select>
-        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.4">${groupDescOf(groupNames[0])}</div>
+        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:10px 0 6px;line-height:1.5">${groupDescOf(groupNames[0])}</div>
       </div>` : '';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
