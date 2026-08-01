@@ -4226,6 +4226,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div id="mq-cat-body-${cat}" style="display:none;padding:0 1.25rem 1.25rem">
           <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
           ${categoryRoomDisclosure(cat)}
+          ${GROUPABLE_CATS.includes(cat) ? `<div style="margin-bottom:12px"><button class="mq-btn mq-btn-secondary mq-btn-sm" onclick="event.stopPropagation();mqOpenGroupManager('${cat}',null)">+ New group</button></div>` : ''}
           <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
         </div>
       </div>`;
@@ -4242,13 +4243,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
         const card = photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
         if (!GROUPABLE_CATS.includes(cat)) return card;
-        return `<div>${card}<input type="text" value="${(item.groupName||'').replace(/"/g,'&quot;')}" list="mq-grouplist-${cat}" placeholder="Group name (optional)"
-          style="margin-top:6px;font-size:11px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box"
-          onchange="mqSaveItemGroup('${cat}','${item.ids.join(',')}',this.value)"/></div>`;
+        // A clickable badge showing this item's group (if any) — clicking it
+        // opens the same group manager, so reassigning an item is "click its
+        // group, check/uncheck it there" rather than retyping text per item.
+        const badge = item.groupName
+          ? `<button onclick="mqOpenGroupManager('${cat}','${item.groupName.replace(/'/g,"\\'")}')" style="margin-top:6px;width:100%;font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151;text-align:left">🏷️ ${item.groupName}</button>`
+          : `<div style="margin-top:6px;font-size:11px;color:#9ca3af;padding:4px 2px">Not in a group</div>`;
+        return `<div>${card}${badge}</div>`;
       };
 
       if (!GROUPABLE_CATS.includes(cat) || !items.some(i => i.groupName)) {
-        return items.map(buildCard).join('') + (GROUPABLE_CATS.includes(cat) ? `<datalist id="mq-grouplist-${cat}">${[...new Set(items.map(i=>i.groupName).filter(Boolean))].map(n=>`<option value="${n.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>` : '');
+        return items.map(buildCard).join('');
       }
 
       const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
@@ -4267,12 +4272,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           ${g.name ? `
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
-            <input type="text" value="${(g.desc||'').replace(/"/g,'&quot;')}" placeholder="Optional description shown to customers when this group is selected"
-              style="flex:1;min-width:200px;font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px"
-              onchange="mqSaveProductGroupDesc('${cat}','${g.name.replace(/'/g,"\\'")}',this.value)"/>
+            <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
+            ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
           ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
         </div>
-        ${g.members.map(buildCard).join('')}`).join('') + `<datalist id="mq-grouplist-${cat}">${groupNames.map(n=>`<option value="${n.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>`;
+        ${g.members.map(buildCard).join('')}`).join('');
     }
 
     // Assigns/renames/clears which group an item belongs to. Bulk-writes
@@ -4291,17 +4295,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       } catch(e) {
         console.error('Failed to save item group', e);
         alert('Could not save the group — please try again.');
-      }
-    };
-
-    window.mqSaveProductGroupDesc = async function(cat, groupName, value) {
-      const items = (byCategory[cat] || []).filter(i => i.groupName === groupName);
-      try {
-        await Promise.all(items.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group description': value }))));
-        items.forEach(i => i.groupDesc = value);
-      } catch(e) {
-        console.error('Failed to save group description', e);
-        alert('Could not save the description — please try again.');
       }
     };
 
@@ -4330,6 +4323,126 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       } catch(e) {
         console.error('Failed to reorder groups', e);
         alert('Could not reorder — please try again.');
+      }
+    };
+
+    // ============================================================
+    // GROUP MANAGER MODAL — create a group, rename it, edit its
+    // description, check/uncheck which items belong to it, or delete it.
+    // One place to do all of that instead of touching each item individually.
+    // ============================================================
+    function injectGroupManagerModal() {
+      if (document.getElementById('mq-group-manager')) return;
+      const modal = document.createElement('div');
+      modal.id = 'mq-group-manager';
+      modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1rem';
+      modal.innerHTML = `
+        <div style="background:#fff;border-radius:14px;width:100%;max-width:460px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+            <div id="mq-gm-title" style="font-size:15px;font-weight:600;color:#111">New group</div>
+            <button onclick="mqCloseGroupManager()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1">×</button>
+          </div>
+          <div style="padding:1.25rem;overflow-y:auto;flex:1">
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">Group name</label>
+            <input type="text" id="mq-gm-name" placeholder="e.g. Classic finishes" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;margin-bottom:1rem"/>
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">Description (optional, shown to customers)</label>
+            <textarea id="mq-gm-desc" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;margin-bottom:1rem;min-height:60px;font-family:inherit"></textarea>
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Items in this group</label>
+            <div id="mq-gm-items" style="display:flex;flex-direction:column;gap:2px"></div>
+          </div>
+          <div style="padding:1rem 1.25rem;border-top:1px solid #e5e7eb;display:flex;gap:8px;align-items:center;flex-shrink:0">
+            <button id="mq-gm-delete" class="mq-btn mq-btn-sm" style="color:#dc2626;display:none" onclick="mqDeleteProductGroup()">Delete group</button>
+            <div style="display:flex;gap:8px;margin-left:auto">
+              <button class="mq-btn mq-btn-sm" onclick="mqCloseGroupManager()">Cancel</button>
+              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqSaveGroupManager()">Save group</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+
+    let _gmCat = null;
+    let _gmOriginalName = null; // null = creating a brand new group
+
+    window.mqOpenGroupManager = function(cat, groupName) {
+      injectGroupManagerModal();
+      _gmCat = cat;
+      _gmOriginalName = groupName || null;
+      const items = byCategory[cat] || [];
+      const isNew = !groupName;
+      document.getElementById('mq-gm-title').textContent = isNew ? 'New group' : `Edit "${groupName}"`;
+      document.getElementById('mq-gm-name').value = groupName || '';
+      const members = isNew ? [] : items.filter(i => i.groupName === groupName);
+      document.getElementById('mq-gm-desc').value = members[0]?.groupDesc || '';
+      document.getElementById('mq-gm-delete').style.display = isNew ? 'none' : 'inline-block';
+      document.getElementById('mq-gm-items').innerHTML = items.map(item => `
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer;padding:5px 2px;border-radius:6px">
+          <input type="checkbox" data-item-ids="${item.ids.join(',')}" ${item.groupName === groupName ? 'checked' : ''} style="width:auto;flex-shrink:0"/>
+          <span>${item.baseName}</span>
+          ${item.groupName && item.groupName !== groupName ? `<span style="font-size:10px;color:#9ca3af;margin-left:auto">in "${item.groupName}"</span>` : ''}
+        </label>`).join('');
+      document.getElementById('mq-group-manager').style.display = 'flex';
+    };
+
+    window.mqCloseGroupManager = function() {
+      const m = document.getElementById('mq-group-manager');
+      if (m) m.style.display = 'none';
+    };
+
+    window.mqSaveGroupManager = async function() {
+      const cat = _gmCat;
+      const newName = document.getElementById('mq-gm-name').value.trim();
+      if (!newName) { alert('Please enter a group name.'); return; }
+      const desc = document.getElementById('mq-gm-desc').value.trim();
+      const items = byCategory[cat] || [];
+      const checkedIdsCsv = new Set([...document.querySelectorAll('#mq-gm-items input[type=checkbox]:checked')].map(cb => cb.dataset.itemIds));
+
+      // New groups go last by default; editing an existing group keeps its
+      // current position (reordering happens via the ↑/↓ buttons, not here).
+      const existingOrders = items.filter(i=>i.groupName && i.groupName !== _gmOriginalName).map(i=>i.groupOrder||0);
+      const order = _gmOriginalName
+        ? (items.find(i=>i.groupName===_gmOriginalName)?.groupOrder || 0)
+        : (existingOrders.length ? Math.max(...existingOrders)+1 : 0);
+
+      const writes = [];
+      items.forEach(item => {
+        const idsCsv = item.ids.join(',');
+        const shouldBeIn = checkedIdsCsv.has(idsCsv);
+        const wasInThisGroup = _gmOriginalName && item.groupName === _gmOriginalName;
+        if (shouldBeIn) {
+          item.ids.forEach(id => writes.push(atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': newName, 'Group description': desc, 'Group sort order': order })));
+          item.groupName = newName; item.groupDesc = desc; item.groupOrder = order;
+        } else if (wasInThisGroup) {
+          item.ids.forEach(id => writes.push(atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': '' })));
+          item.groupName = '';
+        }
+      });
+
+      try {
+        await Promise.all(writes);
+        mqCloseGroupManager();
+        const grid = document.getElementById(`mq-cat-grid-${cat}`);
+        if (grid) grid.innerHTML = catGridHtml(cat);
+      } catch(e) {
+        console.error('Failed to save group', e);
+        alert('Could not save the group — please try again.');
+      }
+    };
+
+    window.mqDeleteProductGroup = async function() {
+      const cat = _gmCat, groupName = _gmOriginalName;
+      if (!groupName) return;
+      if (!confirm(`Remove the "${groupName}" group? Items stay — they'll just go back to being ungrouped.`)) return;
+      const items = (byCategory[cat]||[]).filter(i => i.groupName === groupName);
+      try {
+        await Promise.all(items.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': '' }))));
+        items.forEach(i => i.groupName = '');
+        mqCloseGroupManager();
+        const grid = document.getElementById(`mq-cat-grid-${cat}`);
+        if (grid) grid.innerHTML = catGridHtml(cat);
+      } catch(e) {
+        console.error('Failed to remove group', e);
+        alert('Could not remove the group — please try again.');
       }
     };
     // Starts every category closed by default — with a lot of items across
