@@ -200,7 +200,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
         <p><strong>Brand colour</strong> — used for your widget's tab bar, buttons, and logo placeholder.</p>
-        <p><strong>Guided quote flow colours</strong> — four more optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Leave any of them blank and it automatically matches your Brand colour — only set one explicitly if you want that specific piece to look different, like a dark background with light text.</p>
+        <p><strong>MidasQuote default color scheme</strong> — a collapsed section further down with four optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Left alone, it's the same polished blue scheme every shop starts with — click to expand it only if you want to customize any piece, like a dark background with light text.</p>
         <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
         <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
@@ -691,41 +691,47 @@ window.logoutMember = async function () {
                   <span class="mq-hint">Hex code for widget buttons</span>
                 </div>
               </div>
-              <div style="margin-bottom:1rem;padding:14px 16px;background:#f9fafb;border-radius:8px">
-                <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px">Guided quote flow colours <span style="font-weight:400;color:#9ca3af">(optional — each defaults to match your Brand colour above if left blank)</span></div>
+              <div style="margin-bottom:1rem;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+                <div onclick="mqToggleColorScheme()" style="display:flex;align-items:center;gap:8px;padding:12px 16px;background:#f9fafb;cursor:pointer">
+                  <span id="mq-colorscheme-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                  <span style="font-size:13px;font-weight:700;color:#374151">MidasQuote default color scheme</span>
+                  <span style="font-size:12px;color:#9ca3af">— click to customize</span>
+                </div>
+                <div id="mq-colorscheme-body" style="display:none;padding:14px 16px">
                 <div class="mq-grid2" style="gap:12px">
                   <div class="mq-field"><label class="mq-label">Focal highlight colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-focalcolor" placeholder="matches brand colour" style="flex:1"/>
-                      <input type="color" id="mq-shop-focalcolor-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('focalcolor','Focal colour')" title="Reset to match brand colour">↺</button>
+                      <input type="text" id="mq-shop-focalcolor" placeholder="#2563eb (default)" style="flex:1"/>
+                      <input type="color" id="mq-shop-focalcolor-swatch" value="#2563eb" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('focalcolor','Focal colour')" title="Reset to MidasQuote default">↺</button>
                     </div>
-                    <span class="mq-hint">The ring around whichever step the customer's currently on, plus its number badge and the Continue button</span>
+                    <span class="mq-hint">The step number badge and the Continue button</span>
                   </div>
                   <div class="mq-field"><label class="mq-label">Box border colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-boxbordercolor" placeholder="matches brand colour" style="flex:1"/>
-                      <input type="color" id="mq-shop-boxbordercolor-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbordercolor','Box border colour')" title="Reset to match brand colour">↺</button>
+                      <input type="text" id="mq-shop-boxbordercolor" placeholder="#93c5fd (default)" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxbordercolor-swatch" value="#93c5fd" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbordercolor','Box border colour')" title="Reset to MidasQuote default">↺</button>
                     </div>
-                    <span class="mq-hint">Border around the "Start here" and "Supply/install" highlight boxes</span>
+                    <span class="mq-hint">Border around the "Start here" and "Supply/install" boxes, plus the glowing ring around whichever step the customer's currently on (the two always match)</span>
                   </div>
                   <div class="mq-field"><label class="mq-label">Box background colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-boxbgcolor" placeholder="light tint of brand colour" style="flex:1"/>
+                      <input type="text" id="mq-shop-boxbgcolor" placeholder="#eff6ff (default)" style="flex:1"/>
                       <input type="color" id="mq-shop-boxbgcolor-swatch" value="#eff6ff" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbgcolor','Box background colour')" title="Reset to match brand colour">↺</button>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbgcolor','Box background colour')" title="Reset to MidasQuote default">↺</button>
                     </div>
                     <span class="mq-hint">Background of those same highlight boxes</span>
                   </div>
                   <div class="mq-field"><label class="mq-label">Box text colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-boxtextcolor" placeholder="dark tint of brand colour" style="flex:1"/>
+                      <input type="text" id="mq-shop-boxtextcolor" placeholder="#1e40af (default)" style="flex:1"/>
                       <input type="color" id="mq-shop-boxtextcolor-swatch" value="#1e40af" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxtextcolor','Box text colour')" title="Reset to match brand colour">↺</button>
+                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxtextcolor','Box text colour')" title="Reset to MidasQuote default">↺</button>
                     </div>
                     <span class="mq-hint">Label text inside those boxes — worth setting explicitly if you go dark on the background above</span>
                   </div>
+                </div>
                 </div>
               </div>
               <div class="mq-grid2" style="margin-bottom:1rem">
@@ -821,7 +827,7 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('pricing')"><span class="mq-help-badge">?</span> Need help?</button>
             <div style="height:24px"></div>
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
-              🔧 <strong>Handles & knobs:</strong> Do not include hardware costs in your pricing here. If you supply handles or knobs, add them as a specialty items instead.
+              🔧 <strong>Handles & knobs:</strong> Don't include handles or knobs in your pricing here — since their prices vary so widely, add them as a specialty item instead. That said, if your shop installs handles as part of the job, your door installation price should still account for that labor.
             </div>
             <div id="mq-pricing-helper-v2"></div>
           </div>
@@ -2253,8 +2259,8 @@ window.logoutMember = async function () {
     // the "match brand colour automatically" state), so the swatch just
     // shows a neutral placeholder color rather than forcing a value.
     [
-      ['mq-shop-focalcolor', 'Focal colour', '#1a1a1a'],
-      ['mq-shop-boxbordercolor', 'Box border colour', '#1a1a1a'],
+      ['mq-shop-focalcolor', 'Focal colour', '#2563eb'],
+      ['mq-shop-boxbordercolor', 'Box border colour', '#93c5fd'],
       ['mq-shop-boxbgcolor', 'Box background colour', '#eff6ff'],
       ['mq-shop-boxtextcolor', 'Box text colour', '#1e40af'],
     ].forEach(([fieldId, airtableName, fallbackSwatch]) => {
@@ -3687,16 +3693,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
   };
 
-  // Clears one of the 4 optional guided-flow color fields back to blank —
-  // blank is what actually means "match my brand colour automatically," so
-  // this isn't a preset value, it's just emptying the field and saving.
+  // Clears one of the 4 optional color fields back to blank — blank means
+  // "use the original MidasQuote blue scheme," not a preset value tied to
+  // anything else, so this just empties the field and saves.
   window.mqClearShopColorField = function(shortId, label) {
     const textField = el('mq-shop-' + shortId);
     const swatch = el('mq-shop-' + shortId + '-swatch');
     if (textField) textField.value = '';
-    if (swatch) swatch.value = shortId === 'boxbgcolor' ? '#eff6ff' : (shortId === 'boxtextcolor' ? '#1e40af' : '#1a1a1a');
+    if (swatch) {
+      const defaults = { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' };
+      swatch.value = defaults[shortId] || '#1a1a1a';
+    }
     window.mqSaveShop();
-    showMsg('mq-shop-msg', `✓ ${label} reset to match your brand colour.`);
+    showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
+  };
+
+  window.mqToggleColorScheme = function() {
+    const body = el('mq-colorscheme-body');
+    const chevron = el('mq-colorscheme-chevron');
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
   };
 
   window.mqSaveShop = async function() {
@@ -4134,11 +4152,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // changes get applied to all of them together, keeping them in sync.
       let existing = byCategory[cat].find(x => x.baseName === baseName);
       if (!existing) {
-        existing = { id: r.id, ids: [r.id], baseName, fullName: r.fields['Name'] || baseName, visibleRooms: r.fields['Visible rooms'] };
+        existing = {
+          id: r.id, ids: [r.id], baseName, fullName: r.fields['Name'] || baseName, visibleRooms: r.fields['Visible rooms'],
+          groupName: (r.fields['Group name']||'').trim(),
+          groupDesc: r.fields['Group description']||'',
+          groupOrder: typeof r.fields['Group sort order']==='number' ? r.fields['Group sort order'] : 0,
+        };
         byCategory[cat].push(existing);
       } else {
         existing.ids.push(r.id);
         if (!existing.visibleRooms && r.fields['Visible rooms']) existing.visibleRooms = r.fields['Visible rooms'];
+        if (!existing.groupName && r.fields['Group name']) existing.groupName = r.fields['Group name'].trim();
       }
     });
 
@@ -4186,15 +4210,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden);
     }
 
+    // Groups only make sense for categories customers actually pick a
+    // style/material from — not hinges, countertops, or tall cabinets.
+    const GROUPABLE_CATS = ['material','door','drawer','trim_crown','trim_valance'];
+
     function catSection(cat) {
       const items = byCategory[cat] || [];
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
-      const cards = items.map(item => {
-        const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
-        const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
-        return photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
-      }).join('');
       return `<div class="mq-card" style="padding:0;overflow:hidden">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
@@ -4203,10 +4226,112 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div id="mq-cat-body-${cat}" style="display:none;padding:0 1.25rem 1.25rem">
           <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
           ${categoryRoomDisclosure(cat)}
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
+          <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
         </div>
       </div>`;
     }
+
+    // The grid contents get rebuilt on their own (without re-rendering the
+    // whole tab) whenever a group name, description, or order changes — so
+    // this is split out from catSection itself.
+    function catGridHtml(cat) {
+      const items = byCategory[cat] || [];
+      const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
+      const buildCard = (item) => {
+        const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
+        const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
+        const card = photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
+        if (!GROUPABLE_CATS.includes(cat)) return card;
+        return `<div>${card}<input type="text" value="${(item.groupName||'').replace(/"/g,'&quot;')}" list="mq-grouplist-${cat}" placeholder="Group name (optional)"
+          style="margin-top:6px;font-size:11px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box"
+          onchange="mqSaveItemGroup('${cat}','${item.ids.join(',')}',this.value)"/></div>`;
+      };
+
+      if (!GROUPABLE_CATS.includes(cat) || !items.some(i => i.groupName)) {
+        return items.map(buildCard).join('') + (GROUPABLE_CATS.includes(cat) ? `<datalist id="mq-grouplist-${cat}">${[...new Set(items.map(i=>i.groupName).filter(Boolean))].map(n=>`<option value="${n.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>` : '');
+      }
+
+      const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
+      const groupBlocks = groupNames.map(name => {
+        const members = items.filter(i => i.groupName === name);
+        const desc = members.find(m=>m.groupDesc)?.groupDesc || '';
+        const order = members.find(m=>m.groupOrder)?.groupOrder || 0;
+        return { name, members, desc, order };
+      }).sort((a,b) => a.order - b.order);
+      const ungrouped = items.filter(i => !i.groupName);
+      if (ungrouped.length) groupBlocks.push({ name: null, members: ungrouped, desc: '', order: Infinity }); // "Other" — always last
+
+      return groupBlocks.map((g, gi) => `
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:13px;color:#111">${g.name || 'Other'}</span>
+          ${g.name ? `
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
+            <input type="text" value="${(g.desc||'').replace(/"/g,'&quot;')}" placeholder="Optional description shown to customers when this group is selected"
+              style="flex:1;min-width:200px;font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px"
+              onchange="mqSaveProductGroupDesc('${cat}','${g.name.replace(/'/g,"\\'")}',this.value)"/>
+          ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
+        </div>
+        ${g.members.map(buildCard).join('')}`).join('') + `<datalist id="mq-grouplist-${cat}">${groupNames.map(n=>`<option value="${n.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>`;
+    }
+
+    // Assigns/renames/clears which group an item belongs to. Bulk-writes
+    // across every underlying id (materials/drawers can span 2 records —
+    // uppers/bases, some/mostly — that need to move together).
+    window.mqSaveItemGroup = async function(cat, idsCsv, value) {
+      const ids = (idsCsv||'').split(',').filter(Boolean);
+      const groupName = (value||'').trim();
+      const items = byCategory[cat] || [];
+      const item = items.find(i => i.ids.join(',') === idsCsv);
+      try {
+        await Promise.all(ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': groupName })));
+        if (item) item.groupName = groupName;
+        const grid = document.getElementById(`mq-cat-grid-${cat}`);
+        if (grid) grid.innerHTML = catGridHtml(cat);
+      } catch(e) {
+        console.error('Failed to save item group', e);
+        alert('Could not save the group — please try again.');
+      }
+    };
+
+    window.mqSaveProductGroupDesc = async function(cat, groupName, value) {
+      const items = (byCategory[cat] || []).filter(i => i.groupName === groupName);
+      try {
+        await Promise.all(items.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group description': value }))));
+        items.forEach(i => i.groupDesc = value);
+      } catch(e) {
+        console.error('Failed to save group description', e);
+        alert('Could not save the description — please try again.');
+      }
+    };
+
+    window.mqMoveProductGroup = async function(cat, groupName, dir) {
+      const items = byCategory[cat] || [];
+      const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
+      const groups = groupNames.map(name => {
+        const members = items.filter(i => i.groupName === name);
+        const order = members.find(m=>m.groupOrder)?.groupOrder || 0;
+        return { name, order, members };
+      }).sort((a,b) => a.order - b.order);
+      const idx = groups.findIndex(g => g.name === groupName);
+      const swapIdx = idx + dir;
+      if (idx === -1 || swapIdx < 0 || swapIdx >= groups.length) return;
+      const a = groups[idx], b = groups[swapIdx];
+      const aOrder = a.order, bOrder = b.order === aOrder ? aOrder + (dir>0?1:-1) : b.order; // guard against ties on first use
+      try {
+        await Promise.all([
+          ...a.members.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group sort order': bOrder }))),
+          ...b.members.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group sort order': aOrder }))),
+        ]);
+        a.members.forEach(i => i.groupOrder = bOrder);
+        b.members.forEach(i => i.groupOrder = aOrder);
+        const grid = document.getElementById(`mq-cat-grid-${cat}`);
+        if (grid) grid.innerHTML = catGridHtml(cat);
+      } catch(e) {
+        console.error('Failed to reorder groups', e);
+        alert('Could not reorder — please try again.');
+      }
+    };
     // Starts every category closed by default — with a lot of items across
     // several categories, having them all open at once made this tab feel
     // overwhelming. Click any category's header to open or close just that
@@ -4503,6 +4628,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   window.mqToggleSpecRoom = async function(itemId) {
     const rooms = window._mqRooms || defaultRoomTypes();
+    const items = window._mqSpecItemsList || [];
+    const cachedItem = items.find(it => it.id === itemId);
+    let prevRooms = [];
+    try { prevRooms = cachedItem && cachedItem.visibleRooms ? JSON.parse(cachedItem.visibleRooms) : []; } catch(e) { prevRooms = []; }
+
     const checkedIds = rooms
       .filter(r => document.getElementById(`mq-spec-room-${itemId}-${r.id}`)?.checked)
       .map(r => r.id);
@@ -4512,6 +4642,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await atUpdate(CONFIG.SPECIALTY_TABLE, itemId, { 'Visible rooms': JSON.stringify(toSave) });
       const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
       if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+      if (cachedItem) cachedItem.visibleRooms = JSON.stringify(toSave);
       // Keep the row's own filterable data in sync and immediately re-apply
       // whatever filter is currently active — an item that no longer
       // matches the project type being filtered on should disappear right
@@ -4519,8 +4650,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const row = document.querySelector(`#mq-spec-tbody tr[data-id="${itemId}"]`);
       if (row) row.setAttribute('data-rooms', JSON.stringify(toSave));
       if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
-    } catch(e) { console.error('Failed to save room links', e); }
+    } catch(e) {
+      console.error('Failed to save room links', e);
+      rooms.forEach(r => {
+        const cb = document.getElementById(`mq-spec-room-${itemId}-${r.id}`);
+        if (cb) cb.checked = (!prevRooms.length || prevRooms.includes(r.id));
+      });
+      const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms) + ' — save failed, try again';
+    }
   };
+
 
   function roomLinkSummaryText(visibleRooms, rooms) {
     if (!visibleRooms || !visibleRooms.length) return 'All project types';
@@ -5043,6 +5183,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqToggleLineItemRoom = async function(key, idsCsv, cat) {
     const ids = (idsCsv||'').split(',').filter(Boolean);
     const rooms = window._mqRooms || defaultRoomTypes();
+    // Find this item's cached record so we can (a) know its last-saved state
+    // for rollback if the save below fails, and (b) keep the cache itself in
+    // sync on success — otherwise a later category-level bulk toggle would
+    // read this item's stale pre-edit rooms and silently overwrite the change
+    // we're about to make.
+    const items = cat === 'specialty' ? (window._mqSpecItemsList || []) : ((window._mqByCategory || {})[cat] || []);
+    const cachedItem = items.find(it => (it.ids || [it.id]).join(',') === idsCsv);
+    let prevRooms = [];
+    try { prevRooms = cachedItem && cachedItem.visibleRooms ? JSON.parse(cachedItem.visibleRooms) : []; } catch(e) { prevRooms = []; }
+
     const checkedIds = rooms
       .filter(r => document.getElementById(`mq-li-room-${key}-${r.id}`)?.checked)
       .map(r => r.id);
@@ -5053,7 +5203,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(toSave) })));
       const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
       if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
-    } catch(e) { console.error('Failed to save line item room links', e); }
+      if (cachedItem) cachedItem.visibleRooms = JSON.stringify(toSave);
+    } catch(e) {
+      console.error('Failed to save line item room links', e);
+      // Save didn't stick — put the checkboxes back to the last known-good
+      // state instead of leaving the UI showing a change that never actually
+      // reached Airtable.
+      rooms.forEach(r => {
+        const cb = document.getElementById(`mq-li-room-${key}-${r.id}`);
+        if (cb) cb.checked = (!prevRooms.length || prevRooms.includes(r.id));
+      });
+      const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms) + ' — save failed, try again';
+    }
   };
 
   // Category-level hiding — e.g. hide the entire Door Styles category for
