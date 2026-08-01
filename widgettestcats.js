@@ -790,6 +790,26 @@
   }
 
   function pickerRow(selectId, items, extraOnChangeAttr) {
+    const hasAnyGroup = items.some(it => it.groupName);
+    // Preserves cluster order already established by sortBadgeAndGroupItems —
+    // groups are contiguous in `items`, so first-seen order here is correct.
+    const groupNames = hasAnyGroup ? [...new Set(items.filter(it => it.groupName).map(it => it.groupName))] : [];
+    const hasOtherBucket = hasAnyGroup && items.some(it => it.value !== 'none' && !it.groupName);
+    if (hasAnyGroup) {
+      // Default to showing just the first collection until the customer
+      // picks a different one — set here (during render) so the very first
+      // visibility pass picks it up, same as any other default selection.
+      window._mqGroupFilter = window._mqGroupFilter || {};
+      window._mqGroupFilter[selectId] = groupNames[0];
+    }
+    const groupDropdown = hasAnyGroup ? `
+      <div style="margin-bottom:8px">
+        <label style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">Pick a collection</label>
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value)" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px">
+          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}">${g}</option>`).join('')}
+          ${hasOtherBucket ? `<option value="__other__">Other</option>` : ''}
+        </select>
+      </div>` : '';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
@@ -801,10 +821,24 @@
       const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
       const roomsAttr = JSON.stringify(it.visibleRooms||[]).replace(/"/g,'&quot;');
       const groupNote = it.samePriceNote ? `<span class="mq-vpicker-group-note">✓ Same price as other ${(it.groupName||'').replace(/'/g,"\\'")} options</span>` : '';
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      // "none"/"no doors" always stays visible no matter which collection is
+      // picked — it's an opt-out, not a style choice. Real ungrouped items
+      // fall into the "Other" bucket instead.
+      const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
+    return `${groupDropdown}<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
+
+  // Fires when the "Pick a collection" dropdown changes — just updates which
+  // collection is active and re-runs the existing room-visibility pass,
+  // which now also checks this filter (see mqRefreshAllPickerVisibility).
+  window.mqFilterPickerByGroup = function(selectId, groupValue) {
+    window._mqGroupFilter = window._mqGroupFilter || {};
+    window._mqGroupFilter[selectId] = groupValue;
+    const m = selectId.match(/^mq-(c|b)-/);
+    if (m) window.mqRefreshAllPickerVisibility(m[1]);
+  };
 
   window.mqPickVisual = function(selectId, btnEl) {
     const chipEl = btnEl.closest('.mq-vpicker-chip');
@@ -1983,11 +2017,16 @@
       const scope = document.getElementById(prefix==='c' ? 'mq-tab-cabinets' : 'mq-tab-both');
       if (!scope) return;
       scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
+        const rowSelectId = row.id.replace(/^mq-vprow-/, '');
+        const groupFilter = (window._mqGroupFilter||{})[rowSelectId];
         let anyVisibleSelected=false, firstVisibleChip=null;
         row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
           let rooms=[];
           try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
-          const visible = !rooms.length || rooms.includes(roomId);
+          const roomOk = !rooms.length || rooms.includes(roomId);
+          const chipGroup = chip.getAttribute('data-group');
+          const groupOk = !groupFilter || chipGroup === groupFilter || chipGroup === '__always__';
+          const visible = roomOk && groupOk;
           chip.style.display = visible ? '' : 'none';
           if (visible && !firstVisibleChip) firstVisibleChip = chip;
           if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
