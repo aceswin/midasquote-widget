@@ -128,6 +128,10 @@
     try { categoryRooms = shop['Category rooms'] ? JSON.parse(shop['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
     window._mqCategoryRooms = categoryRooms;
 
+    // Per-category "Pick a collection" dropdown label (materials, doors,
+    // drawers, crown, valance can each say something different).
+    try { window._mqCategoryPickerLabels = shop['Category picker labels'] ? JSON.parse(shop['Category picker labels']) : {}; } catch(e) { window._mqCategoryPickerLabels = {}; }
+
     const p = payload.pricing || {};
 
     const lineItemRecords = payload.lineItems || [];
@@ -420,6 +424,7 @@
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:96px;height:96px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
+      #midasquote-widget .mq-vpicker-group-note{font-size:9px;color:#16a34a;text-align:center;line-height:1.25;margin-top:2px;max-width:100%}
       #midasquote-widget .mq-vpicker-select-btn{margin-top:5px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-select-btn{background:${bc};border-color:${bc};color:#fff}
       #midasquote-widget .mq-vpicker-chip.mq-suggested{box-shadow:0 0 0 2px #bbf7d0}
@@ -597,6 +602,9 @@
         // (trim_crown / trim_valance) for photo purposes, not just "trim"
         photoUrl:    (shopPhotos||{})[photoKeyFor(`trim_${type}`, item['Name'])] || '',
         visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), `trim_${type}`),
+        groupName:   (item['Group name']||'').trim(),
+        groupOrder:  item['Group sort order']||0,
+        groupDesc:   item['Group description']||'',
       };
     });
   }
@@ -756,7 +764,60 @@
     return noneItem ? [noneItem, ...badged] : badged;
   }
 
-  function pickerRow(selectId, items, extraOnChangeAttr) {
+  // Clusters items sharing a Group name together (shop-owner-controlled
+  // order first, then any ungrouped leftovers last, sorted cheapest-first
+  // within each cluster), and flags a cluster whose members all cost the
+  // exact same so the chip can show a quick reassurance note. Runs after
+  // badges are already assigned, so it only ever reorders — price badges
+  // still reflect standing across the whole list. No-op if nothing's grouped.
+  function applyItemGrouping(items) {
+    if (!items.some(it => it.groupName)) return items;
+    const groupNames = [...new Set(items.filter(it => it.groupName).map(it => it.groupName))];
+    const groups = groupNames.map(name => {
+      const members = items.filter(it => it.groupName === name).sort((a,b) => a.price - b.price);
+      const allSamePrice = members.every(m => m.price === members[0].price);
+      if (allSamePrice) members.forEach(m => m.samePriceNote = true);
+      const order = members.find(m => m.groupOrder)?.groupOrder || 0;
+      return { order, members };
+    }).sort((a,b) => a.order - b.order);
+    const ungrouped = items.filter(it => !it.groupName).sort((a,b) => a.price - b.price);
+    return [...groups.flatMap(g => g.members), ...ungrouped];
+  }
+
+  // sortAndBadgeItems already pins a "none"/"no doors" item first — grouping
+  // only ever applies to the real, priced options after that.
+  function sortBadgeAndGroupItems(items) {
+    const sorted = sortAndBadgeItems(items);
+    const noneItem = sorted.find(it => it.value === 'none');
+    const rest = sorted.filter(it => it.value !== 'none');
+    const grouped = applyItemGrouping(rest);
+    return noneItem ? [noneItem, ...grouped] : grouped;
+  }
+
+  function pickerRow(selectId, items, extraOnChangeAttr, category) {
+    const hasAnyGroup = items.some(it => it.groupName);
+    // Preserves cluster order already established by sortBadgeAndGroupItems —
+    // groups are contiguous in `items`, so first-seen order here is correct.
+    const groupNames = hasAnyGroup ? [...new Set(items.filter(it => it.groupName).map(it => it.groupName))] : [];
+    const hasOtherBucket = hasAnyGroup && items.some(it => it.value !== 'none' && !it.groupName);
+    const groupDescOf = (name) => (items.find(it => it.groupName === name && it.groupDesc)?.groupDesc || '');
+    const pickerLabel = ((window._mqCategoryPickerLabels||{})[category] || '').trim() || 'Pick a collection';
+    if (hasAnyGroup) {
+      // Default to showing just the first collection until the customer
+      // picks a different one — set here (during render) so the very first
+      // visibility pass picks it up, same as any other default selection.
+      window._mqGroupFilter = window._mqGroupFilter || {};
+      window._mqGroupFilter[selectId] = groupNames[0];
+    }
+    const groupDropdown = hasAnyGroup ? `
+      <div style="margin-bottom:8px">
+        <label style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">${pickerLabel}</label>
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'')" style="font-size:13px;padding:6px 28px 6px 10px;border:1px solid #d1d5db;border-radius:6px;width:auto;max-width:100%;display:inline-block">
+          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}">${g}</option>`).join('')}
+          ${hasOtherBucket ? `<option value="__other__" data-desc="">Other</option>` : ''}
+        </select>
+        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:10px 0 6px;line-height:1.5">${groupDescOf(groupNames[0])}</div>
+      </div>` : '';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
@@ -767,10 +828,28 @@
       const selectedClass = i===0 ? ' selected' : '';
       const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
       const roomsAttr = JSON.stringify(it.visibleRooms||[]).replace(/"/g,'&quot;');
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      const groupNote = it.samePriceNote ? `<span class="mq-vpicker-group-note">✓ Same price as other ${(it.groupName||'').replace(/'/g,"\\'")} options</span>` : '';
+      // "none"/"no doors" always stays visible no matter which collection is
+      // picked — it's an opt-out, not a style choice. Real ungrouped items
+      // fall into the "Other" bucket instead.
+      const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
+    return `${groupDropdown}<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
+
+  // Fires when the "Pick a collection" dropdown changes — updates which
+  // collection is active, refreshes its description text, and re-runs the
+  // existing room-visibility pass, which also checks this filter (see
+  // mqRefreshAllPickerVisibility).
+  window.mqFilterPickerByGroup = function(selectId, groupValue, desc) {
+    window._mqGroupFilter = window._mqGroupFilter || {};
+    window._mqGroupFilter[selectId] = groupValue;
+    const descEl = document.getElementById(`mq-groupdesc-${selectId}`);
+    if (descEl) descEl.textContent = desc || '';
+    const m = selectId.match(/^mq-(c|b)-/);
+    if (m) window.mqRefreshAllPickerVisibility(m[1]);
+  };
 
   window.mqPickVisual = function(selectId, btnEl) {
     const chipEl = btnEl.closest('.mq-vpicker-chip');
@@ -1167,12 +1246,16 @@
     const hasInstall = !hasDynamic || li.installItems.some(i => (i['Rate']||0) > 0);
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
-    const drawerConfigItems = sortAndBadgeItems(drawerConfigNames.map((n,i)=>({
-      value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️',
-      // Badge/sort by the "Some drawers" rate as the representative price for this config
-      price: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n && /some drawers/i.test(d['Name']))?.['Rate'] || 0,
-      visibleRooms: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n)?.visibleRooms || [],
-    })));
+    const drawerConfigItems = sortBadgeAndGroupItems(drawerConfigNames.map((n,i)=>{
+      const someRec = li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n && /some drawers/i.test(d['Name']));
+      return {
+        value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️',
+        // Badge/sort by the "Some drawers" rate as the representative price for this config
+        price: someRec?.['Rate'] || 0,
+        visibleRooms: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n)?.visibleRooms || [],
+        groupName: (someRec?.['Group name']||'').trim(), groupOrder: someRec?.['Group sort order']||0, groupDesc: someRec?.['Group description']||'',
+      };
+    }));
 
     // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
     // the shop has real pricing data, or the legacy fallback values when not)
@@ -1181,7 +1264,7 @@
     // glance which options cost more — "None" (where it exists) always stays
     // pinned first with no badge, since it's not really a "priced" choice.
     const mItems = li.materials.length > 0
-      ? sortAndBadgeItems(li.materials.map((m,i)=>{
+      ? sortBadgeAndGroupItems(li.materials.map((m,i)=>{
           // li.materials only carries whichever row (uppers or bases) won
           // the earlier dedup pass — it never actually has a rateB/rateU
           // property of its own. Look up the real "bases" rate the same
@@ -1192,22 +1275,22 @@
           const baseName = m._baseName || m['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim();
           const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
           const priceRate = bItem ? (bItem['Rate']||0) : (m['Rate']||0);
-          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[]};
+          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[], groupName:(m['Group name']||'').trim(), groupOrder:m['Group sort order']||0, groupDesc:m['Group description']||''};
         }))
       : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
-    const dItems = sortAndBadgeItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
+    const dItems = sortBadgeAndGroupItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
       li.doorStyles.length > 0
-        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[]}))
+        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[], groupName:(d['Group name']||'').trim(), groupOrder:d['Group sort order']||0, groupDesc:d['Group description']||''}))
         : [{value:'slab',label:'Slab',icon:'🚪'},{value:'shaker',label:'Shaker',icon:'🚪'}]
     ));
     const hingeItems = li.hinges.length > 0
       ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧', price:h['Rate']||0, visibleRooms:h.visibleRooms||[]})))
       : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
-    const crownItems = sortAndBadgeItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[]}))
+    const crownItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
     ));
-    const valanceItems = sortAndBadgeItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[]}))
+    const valanceItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
     ));
 
     return `
@@ -1261,10 +1344,10 @@
         </div>
         <div id="mq-${prefix}-shared">
           <div class="mq-field"><label class="mq-label">Box material</label>
-            ${pickerRow(`mq-${prefix}-mat`, mItems)}
+            ${pickerRow(`mq-${prefix}-mat`, mItems, null, 'material')}
             <select id="mq-${prefix}-mat" style="display:none">${mOpts}</select></div>
           <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
-            ${pickerRow(`mq-${prefix}-door`, dItems)}
+            ${pickerRow(`mq-${prefix}-door`, dItems, null, 'door')}
             <select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
           ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
             ${pickerRow(`mq-${prefix}-hinge`, hingeItems)}
@@ -1274,10 +1357,10 @@
         <div id="mq-${prefix}-diff" style="display:none">
           <div class="mq-sub-sec mq-sub-upper"><p class="mq-sub-title">🔼 Upper cabinets</p>
             <div class="mq-field"><label class="mq-label">Box material</label>
-              ${pickerRow(`mq-${prefix}-u-mat`, mItems)}
+              ${pickerRow(`mq-${prefix}-u-mat`, mItems, null, 'material')}
               <select id="mq-${prefix}-u-mat" style="display:none">${mOpts}</select></div>
             <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
-              ${pickerRow(`mq-${prefix}-u-door`, dItems)}
+              ${pickerRow(`mq-${prefix}-u-door`, dItems, null, 'door')}
               <select id="mq-${prefix}-u-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
             ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
               ${pickerRow(`mq-${prefix}-u-hinge`, hingeItems)}
@@ -1285,10 +1368,10 @@
           </div>
           <div class="mq-sub-sec mq-sub-base" style="margin-top:8px"><p class="mq-sub-title">🔽 Base cabinets</p>
             <div class="mq-field"><label class="mq-label">Box material</label>
-              ${pickerRow(`mq-${prefix}-b-mat`, mItems)}
+              ${pickerRow(`mq-${prefix}-b-mat`, mItems, null, 'material')}
               <select id="mq-${prefix}-b-mat" style="display:none">${mOpts}</select></div>
             <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
-              ${pickerRow(`mq-${prefix}-b-door`, dItems)}
+              ${pickerRow(`mq-${prefix}-b-door`, dItems, null, 'door')}
               <select id="mq-${prefix}-b-door" style="display:none">${dOpts}</select></div>
             ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
               ${pickerRow(`mq-${prefix}-b-hinge`, hingeItems)}
@@ -1321,7 +1404,7 @@
         </div>
         <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none;margin-top:10px">
           <label class="mq-label">Drawer type</label>
-          ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems)}
+          ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems, null, 'drawer')}
           <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
         </div>
       </div>`:''}
@@ -1357,13 +1440,13 @@
         </div>
         ${hasCrown?`<div style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
-            ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
+            ${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
         </div>`:''}
         ${hasValance?`<div>
           <div class="mq-field"><label class="mq-label">Valance</label>
-            ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems)}
+            ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
         </div>`:''}
@@ -1945,11 +2028,16 @@
       const scope = document.getElementById(prefix==='c' ? 'mq-tab-cabinets' : 'mq-tab-both');
       if (!scope) return;
       scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
+        const rowSelectId = row.id.replace(/^mq-vprow-/, '');
+        const groupFilter = (window._mqGroupFilter||{})[rowSelectId];
         let anyVisibleSelected=false, firstVisibleChip=null;
         row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
           let rooms=[];
           try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
-          const visible = !rooms.length || rooms.includes(roomId);
+          const roomOk = !rooms.length || rooms.includes(roomId);
+          const chipGroup = chip.getAttribute('data-group');
+          const groupOk = !groupFilter || chipGroup === groupFilter || chipGroup === '__always__';
+          const visible = roomOk && groupOk;
           chip.style.display = visible ? '' : 'none';
           if (visible && !firstVisibleChip) firstVisibleChip = chip;
           if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;

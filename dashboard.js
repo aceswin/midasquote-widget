@@ -4152,11 +4152,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // changes get applied to all of them together, keeping them in sync.
       let existing = byCategory[cat].find(x => x.baseName === baseName);
       if (!existing) {
-        existing = { id: r.id, ids: [r.id], baseName, fullName: r.fields['Name'] || baseName, visibleRooms: r.fields['Visible rooms'] };
+        existing = {
+          id: r.id, ids: [r.id], baseName, fullName: r.fields['Name'] || baseName, visibleRooms: r.fields['Visible rooms'],
+          groupName: (r.fields['Group name']||'').trim(),
+          groupDesc: r.fields['Group description']||'',
+          groupOrder: typeof r.fields['Group sort order']==='number' ? r.fields['Group sort order'] : 0,
+        };
         byCategory[cat].push(existing);
       } else {
         existing.ids.push(r.id);
         if (!existing.visibleRooms && r.fields['Visible rooms']) existing.visibleRooms = r.fields['Visible rooms'];
+        if (!existing.groupName && r.fields['Group name']) existing.groupName = r.fields['Group name'].trim();
       }
     });
 
@@ -4174,6 +4180,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // can bulk-sync every item in a category when its category-level
     // checkbox changes.
     window._mqByCategory = byCategory;
+
+    // Per-category "Pick a collection" dropdown label — e.g. shops may want
+    // "Pick a door style family" for doors but "Pick a finish" for materials.
+    // Stored as one JSON blob on the shop record, same pattern as "Category rooms".
+    let categoryPickerLabels = {};
+    try { categoryPickerLabels = shopRecord.fields['Category picker labels'] ? JSON.parse(shopRecord.fields['Category picker labels']) : {}; } catch(e) { categoryPickerLabels = {}; }
+    window._mqCategoryPickerLabels = categoryPickerLabels;
 
     // Build Products for showroom — all item names per category
     const savedProductsForShowroom = {};
@@ -4204,15 +4217,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden);
     }
 
+    // Groups only make sense for categories customers actually pick a
+    // style/material from — not hinges, countertops, or tall cabinets.
+    const GROUPABLE_CATS = ['material','door','drawer','trim_crown','trim_valance'];
+
     function catSection(cat) {
       const items = byCategory[cat] || [];
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
-      const cards = items.map(item => {
-        const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
-        const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
-        return photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
-      }).join('');
       return `<div class="mq-card" style="padding:0;overflow:hidden">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
@@ -4221,10 +4233,251 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div id="mq-cat-body-${cat}" style="display:none;padding:0 1.25rem 1.25rem">
           <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
           ${categoryRoomDisclosure(cat)}
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${cards}</div>
+          ${GROUPABLE_CATS.includes(cat) ? `<div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="mq-btn mq-btn-secondary mq-btn-sm" onclick="event.stopPropagation();mqOpenGroupManager('${cat}',null)">+ New group</button>
+            <span style="font-size:11px;color:#9ca3af">You can make a group for a type of style — like "Shaker" or "Raised panel" — or price several items the same and collect them into one group. Want to leave things as they are? Just don't create any groups.</span>
+          </div>
+          <div style="margin-bottom:12px">
+            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Dropdown label shown to customers for this category's collections (only appears once you've created a group here)</label>
+            <input type="text" value="${((window._mqCategoryPickerLabels||{})[cat]||'').replace(/"/g,'&quot;')}" placeholder="Pick a collection"
+              style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;max-width:320px;box-sizing:border-box"
+              onchange="mqSaveCategoryPickerLabel('${cat}',this.value)"/>
+          </div>` : ''}
+          <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
         </div>
       </div>`;
     }
+
+    // The grid contents get rebuilt on their own (without re-rendering the
+    // whole tab) whenever a group name, description, or order changes — so
+    // this is split out from catSection itself.
+    function catGridHtml(cat) {
+      const items = byCategory[cat] || [];
+      const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
+      const buildCard = (item) => {
+        const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
+        const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
+        const card = photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
+        if (!GROUPABLE_CATS.includes(cat)) return card;
+        // A clickable badge showing this item's group (if any) — clicking it
+        // opens the same group manager, so reassigning an item is "click its
+        // group, check/uncheck it there" rather than retyping text per item.
+        const badge = item.groupName
+          ? `<button onclick="mqOpenGroupManager('${cat}','${item.groupName.replace(/'/g,"\\'")}')" style="margin-top:6px;width:100%;font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151;text-align:left">🏷️ ${item.groupName}</button>`
+          : `<div style="margin-top:6px;font-size:11px;color:#9ca3af;padding:4px 2px">Not in a group</div>`;
+        return `<div>${card}${badge}</div>`;
+      };
+
+      if (!GROUPABLE_CATS.includes(cat) || !items.some(i => i.groupName)) {
+        return items.map(buildCard).join('');
+      }
+
+      const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
+      const groupBlocks = groupNames.map(name => {
+        const members = items.filter(i => i.groupName === name);
+        const desc = members.find(m=>m.groupDesc)?.groupDesc || '';
+        const order = members.find(m=>m.groupOrder)?.groupOrder || 0;
+        return { name, members, desc, order };
+      }).sort((a,b) => a.order - b.order);
+      const ungrouped = items.filter(i => !i.groupName);
+      if (ungrouped.length) groupBlocks.push({ name: null, members: ungrouped, desc: '', order: Infinity }); // "Other" — always last
+
+      return groupBlocks.map((g, gi) => `
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:13px;color:#111">${g.name || 'Other'}</span>
+          ${g.name ? `
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
+            <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
+            ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
+          ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
+        </div>
+        ${g.members.map(buildCard).join('')}`).join('');
+    }
+
+    // Per-category "Pick a collection" dropdown label — stored as one JSON
+    // blob on the shop record (same pattern as "Category rooms"), so this
+    // only ever touches that one field, never the Line Items.
+    window.mqSaveCategoryPickerLabel = async function(cat, value) {
+      const label = (value||'').trim();
+      const labels = { ...(window._mqCategoryPickerLabels||{}) };
+      if (label) labels[cat] = label; else delete labels[cat];
+      try {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Category picker labels': JSON.stringify(labels) });
+        window._mqCategoryPickerLabels = labels;
+        shopRecord.fields['Category picker labels'] = JSON.stringify(labels);
+      } catch(e) {
+        console.error('Failed to save picker label', e);
+        alert('Could not save that label — please try again.');
+      }
+    };
+
+    // Assigns/renames/clears which group an item belongs to. Bulk-writes
+    // across every underlying id (materials/drawers can span 2 records —
+    // uppers/bases, some/mostly — that need to move together).
+    window.mqSaveItemGroup = async function(cat, idsCsv, value) {
+      const ids = (idsCsv||'').split(',').filter(Boolean);
+      const groupName = (value||'').trim();
+      const items = byCategory[cat] || [];
+      const item = items.find(i => i.ids.join(',') === idsCsv);
+      try {
+        await Promise.all(ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': groupName })));
+        if (item) item.groupName = groupName;
+        const grid = document.getElementById(`mq-cat-grid-${cat}`);
+        if (grid) grid.innerHTML = catGridHtml(cat);
+      } catch(e) {
+        console.error('Failed to save item group', e);
+        alert('Could not save the group — please try again.');
+      }
+    };
+
+    window.mqMoveProductGroup = async function(cat, groupName, dir) {
+      const items = byCategory[cat] || [];
+      const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
+      const groups = groupNames.map(name => {
+        const members = items.filter(i => i.groupName === name);
+        const order = members.find(m=>m.groupOrder)?.groupOrder || 0;
+        return { name, order, members };
+      }).sort((a,b) => a.order - b.order);
+      const idx = groups.findIndex(g => g.name === groupName);
+      const swapIdx = idx + dir;
+      if (idx === -1 || swapIdx < 0 || swapIdx >= groups.length) return;
+      const a = groups[idx], b = groups[swapIdx];
+      const aOrder = a.order, bOrder = b.order === aOrder ? aOrder + (dir>0?1:-1) : b.order; // guard against ties on first use
+      try {
+        await Promise.all([
+          ...a.members.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group sort order': bOrder }))),
+          ...b.members.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group sort order': aOrder }))),
+        ]);
+        a.members.forEach(i => i.groupOrder = bOrder);
+        b.members.forEach(i => i.groupOrder = aOrder);
+        const grid = document.getElementById(`mq-cat-grid-${cat}`);
+        if (grid) grid.innerHTML = catGridHtml(cat);
+      } catch(e) {
+        console.error('Failed to reorder groups', e);
+        alert('Could not reorder — please try again.');
+      }
+    };
+
+    // ============================================================
+    // GROUP MANAGER MODAL — create a group, rename it, edit its
+    // description, check/uncheck which items belong to it, or delete it.
+    // One place to do all of that instead of touching each item individually.
+    // ============================================================
+    function injectGroupManagerModal() {
+      if (document.getElementById('mq-group-manager')) return;
+      const modal = document.createElement('div');
+      modal.id = 'mq-group-manager';
+      modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1rem';
+      modal.innerHTML = `
+        <div style="background:#fff;border-radius:14px;width:100%;max-width:460px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+            <div id="mq-gm-title" style="font-size:15px;font-weight:600;color:#111">New group</div>
+            <button onclick="mqCloseGroupManager()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1">×</button>
+          </div>
+          <div style="padding:1.25rem;overflow-y:auto;flex:1">
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">Group name</label>
+            <input type="text" id="mq-gm-name" placeholder="e.g. Classic finishes" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;margin-bottom:1rem"/>
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">Description (optional, shown to customers)</label>
+            <textarea id="mq-gm-desc" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;margin-bottom:1rem;min-height:60px;font-family:inherit"></textarea>
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Items in this group</label>
+            <div id="mq-gm-items" style="display:flex;flex-direction:column;gap:2px"></div>
+          </div>
+          <div style="padding:1rem 1.25rem;border-top:1px solid #e5e7eb;display:flex;gap:8px;align-items:center;flex-shrink:0">
+            <button id="mq-gm-delete" class="mq-btn mq-btn-sm" style="color:#dc2626;display:none" onclick="mqDeleteProductGroup()">Delete group</button>
+            <div style="display:flex;gap:8px;margin-left:auto">
+              <button class="mq-btn mq-btn-sm" onclick="mqCloseGroupManager()">Cancel</button>
+              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqSaveGroupManager()">Save group</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+
+    let _gmCat = null;
+    let _gmOriginalName = null; // null = creating a brand new group
+
+    window.mqOpenGroupManager = function(cat, groupName) {
+      injectGroupManagerModal();
+      _gmCat = cat;
+      _gmOriginalName = groupName || null;
+      const items = byCategory[cat] || [];
+      const isNew = !groupName;
+      document.getElementById('mq-gm-title').textContent = isNew ? 'New group' : `Edit "${groupName}"`;
+      document.getElementById('mq-gm-name').value = groupName || '';
+      const members = isNew ? [] : items.filter(i => i.groupName === groupName);
+      document.getElementById('mq-gm-desc').value = members[0]?.groupDesc || '';
+      document.getElementById('mq-gm-delete').style.display = isNew ? 'none' : 'inline-block';
+      document.getElementById('mq-gm-items').innerHTML = items.map(item => `
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer;padding:5px 2px;border-radius:6px">
+          <input type="checkbox" data-item-ids="${item.ids.join(',')}" ${item.groupName === groupName ? 'checked' : ''} style="width:auto;flex-shrink:0"/>
+          <span>${item.baseName}</span>
+          ${item.groupName && item.groupName !== groupName ? `<span style="font-size:10px;color:#9ca3af;margin-left:auto">in "${item.groupName}"</span>` : ''}
+        </label>`).join('');
+      document.getElementById('mq-group-manager').style.display = 'flex';
+    };
+
+    window.mqCloseGroupManager = function() {
+      const m = document.getElementById('mq-group-manager');
+      if (m) m.style.display = 'none';
+    };
+
+    window.mqSaveGroupManager = async function() {
+      const cat = _gmCat;
+      const newName = document.getElementById('mq-gm-name').value.trim();
+      if (!newName) { alert('Please enter a group name.'); return; }
+      const desc = document.getElementById('mq-gm-desc').value.trim();
+      const items = byCategory[cat] || [];
+      const checkedIdsCsv = new Set([...document.querySelectorAll('#mq-gm-items input[type=checkbox]:checked')].map(cb => cb.dataset.itemIds));
+
+      // New groups go last by default; editing an existing group keeps its
+      // current position (reordering happens via the ↑/↓ buttons, not here).
+      const existingOrders = items.filter(i=>i.groupName && i.groupName !== _gmOriginalName).map(i=>i.groupOrder||0);
+      const order = _gmOriginalName
+        ? (items.find(i=>i.groupName===_gmOriginalName)?.groupOrder || 0)
+        : (existingOrders.length ? Math.max(...existingOrders)+1 : 0);
+
+      const writes = [];
+      items.forEach(item => {
+        const idsCsv = item.ids.join(',');
+        const shouldBeIn = checkedIdsCsv.has(idsCsv);
+        const wasInThisGroup = _gmOriginalName && item.groupName === _gmOriginalName;
+        if (shouldBeIn) {
+          item.ids.forEach(id => writes.push(atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': newName, 'Group description': desc, 'Group sort order': order })));
+          item.groupName = newName; item.groupDesc = desc; item.groupOrder = order;
+        } else if (wasInThisGroup) {
+          item.ids.forEach(id => writes.push(atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': '' })));
+          item.groupName = '';
+        }
+      });
+
+      try {
+        await Promise.all(writes);
+        mqCloseGroupManager();
+        const grid = document.getElementById(`mq-cat-grid-${cat}`);
+        if (grid) grid.innerHTML = catGridHtml(cat);
+      } catch(e) {
+        console.error('Failed to save group', e);
+        alert('Could not save the group — please try again.');
+      }
+    };
+
+    window.mqDeleteProductGroup = async function() {
+      const cat = _gmCat, groupName = _gmOriginalName;
+      if (!groupName) return;
+      if (!confirm(`Remove the "${groupName}" group? Items stay — they'll just go back to being ungrouped.`)) return;
+      const items = (byCategory[cat]||[]).filter(i => i.groupName === groupName);
+      try {
+        await Promise.all(items.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': '' }))));
+        items.forEach(i => i.groupName = '');
+        mqCloseGroupManager();
+        const grid = document.getElementById(`mq-cat-grid-${cat}`);
+        if (grid) grid.innerHTML = catGridHtml(cat);
+      } catch(e) {
+        console.error('Failed to remove group', e);
+        alert('Could not remove the group — please try again.');
+      }
+    };
     // Starts every category closed by default — with a lot of items across
     // several categories, having them all open at once made this tab feel
     // overwhelming. Click any category's header to open or close just that

@@ -20,7 +20,7 @@ let wizardBaseline = null;
   let currentEditId = null;
 
   // Mini-wizard state
-  let miniWiz = { cat: null, name: '', step: 0 };
+  let miniWiz = { cat: null, name: '', step: 0, matchMode: false, matchName: '', matchRates: null };
 
   const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
   const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
@@ -1121,6 +1121,69 @@ window.mqphGoToWizard = function() {
   // MINI REVERSE-ENGINEERING WIZARD  (add single item)
   // ============================================================
 
+  // "Match another item's pricing" — lets a shop owner skip re-quoting the
+  // whole spec job and just copy an existing item's rate(s) directly instead.
+  // Material/drawer are 2-rate categories (uppers/bases, some/mostly drawers)
+  // stored as paired records with the same base name; door/hinge are single-rate.
+  function miniWizMatchOptions(cat) {
+    if (cat === 'material') {
+      return [...new Set(lineItems.filter(r=>r.fields&&r.fields['Category']==='material').map(r=>r.fields['Name'].replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim()))];
+    }
+    if (cat === 'drawer') {
+      return [...new Set(lineItems.filter(r=>r.fields&&r.fields['Category']==='drawer').map(r=>r.fields['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()))];
+    }
+    return lineItems.filter(r=>r.fields&&r.fields['Category']===cat).map(r=>r.fields['Name']);
+  }
+
+  function miniWizMatchBlock(cat) {
+    const options = miniWizMatchOptions(cat);
+    if (!options.length) return ''; // nothing to match against yet
+    const preview = miniWiz.matchRates ? (() => {
+      if (cat === 'material') return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (uppers) and $${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (bases) — same as "${miniWiz.matchName}"`;
+      if (cat === 'drawer') return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (some drawers) and $${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (mostly drawers) — same as "${miniWiz.matchName}"`;
+      return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft upcharge — same as "${miniWiz.matchName}"`;
+    })() : '';
+    return `
+      <div style="margin-bottom:1.25rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:500">
+          <input type="checkbox" id="mqph-mini-match-toggle" ${miniWiz.matchMode?'checked':''} onchange="mqphToggleMiniMatch(this.checked)" style="width:auto"/>
+          Match another ${CAT_LABELS[cat]||cat}'s pricing instead of quoting a new job
+        </label>
+        ${miniWiz.matchMode ? `
+          <select id="mqph-mini-match-select" onchange="mqphApplyMiniMatch('${cat}',this.value)" style="margin-top:8px;font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">Choose an item…</option>
+            ${options.map(n=>`<option value="${n.replace(/"/g,'&quot;')}" ${miniWiz.matchName===n?'selected':''}>${n}</option>`).join('')}
+          </select>
+          <div id="mqph-mini-match-preview" style="margin-top:8px;font-size:13px;color:#374151">${preview}</div>
+        ` : ''}
+      </div>`;
+  }
+
+  window.mqphToggleMiniMatch = function(checked) {
+    miniWiz.matchMode = checked;
+    miniWiz.matchName = '';
+    miniWiz.matchRates = null;
+    renderMiniWiz();
+  };
+
+  window.mqphApplyMiniMatch = function(cat, name) {
+    miniWiz.matchName = name;
+    if (!name) { miniWiz.matchRates = null; renderMiniWiz(); return; }
+    if (cat === 'material') {
+      const upperRec = lineItems.find(r=>r.fields&&r.fields['Category']==='material'&&r.fields['Name'].replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim()===name&&/uppers/i.test(r.fields['Name']));
+      const baseRec  = lineItems.find(r=>r.fields&&r.fields['Category']==='material'&&r.fields['Name'].replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim()===name&&/bases/i.test(r.fields['Name']));
+      miniWiz.matchRates = { rate0: upperRec?.fields['Rate']||0, rate1: baseRec?.fields['Rate']||0 };
+    } else if (cat === 'drawer') {
+      const someRec   = lineItems.find(r=>r.fields&&r.fields['Category']==='drawer'&&r.fields['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===name&&/some drawers/i.test(r.fields['Name']));
+      const mostlyRec = lineItems.find(r=>r.fields&&r.fields['Category']==='drawer'&&r.fields['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===name&&/mostly drawers/i.test(r.fields['Name']));
+      miniWiz.matchRates = { rate0: someRec?.fields['Rate']||0, rate1: mostlyRec?.fields['Rate']||0 };
+    } else {
+      const rec = lineItems.find(r=>r.fields&&r.fields['Category']===cat&&r.fields['Name']===name);
+      miniWiz.matchRates = { rate0: rec?.fields['Rate']||0 };
+    }
+    renderMiniWiz();
+  };
+
   // Returns the HTML content for each mini-wiz step
   function miniWizContent(cat, name, step) {
     const bl = getBaselineRates();
@@ -1133,6 +1196,13 @@ window.mqphGoToWizard = function() {
         </div>`;
     }
 
+    const matchBlock = miniWizMatchBlock(cat);
+    if (miniWiz.matchMode) {
+      // Match mode replaces the whole "quote a job" flow — nothing else to
+      // show once an existing item's pricing is being copied directly.
+      return matchBlock;
+    }
+
     if (cat === 'material') {
       if (step === 0) {
         return `
@@ -1142,6 +1212,7 @@ window.mqphGoToWizard = function() {
             `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
             `Material: <span class="mqph-spec-tag">${name}</span> &nbsp;·&nbsp; No doors &nbsp;·&nbsp; Supply only &nbsp;·&nbsp; Local delivery`,
           ])}
+          ${matchBlock}
           <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">Enter your quoted total for this 4 lin ft job</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
@@ -1157,6 +1228,7 @@ window.mqphGoToWizard = function() {
             `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
             `Material: <span class="mqph-spec-tag">${name}</span> &nbsp;·&nbsp; No doors &nbsp;·&nbsp; Supply only &nbsp;·&nbsp; Include toe kick`,
           ])}
+          ${matchBlock}
           <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">Enter your quoted total for this 4 lin ft job</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
@@ -1176,6 +1248,7 @@ window.mqphGoToWizard = function() {
           `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${name}</span>`,
           `<span class="mqph-spec-tag">3 doors: 2 on 30", 1 on 18"</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
         ])}
+        ${matchBlock}
         <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
         <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the door upcharge per lin ft</p>
         <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
@@ -1195,6 +1268,7 @@ window.mqphGoToWizard = function() {
           `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${bl.blDoorName}</span>`,
           `Hinges: <span class="mqph-spec-tag">${name}</span> · No drawers · Supply only`,
         ])}
+        ${matchBlock}
         <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
         <p class="mqph-calc-hint">We'll subtract ${baselineDesc} and divide by 4 to get the hinge upcharge per lin ft</p>
         <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
@@ -1214,6 +1288,7 @@ window.mqphGoToWizard = function() {
             `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
             `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
           ])}
+          ${matchBlock}
           <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the "some drawers" upcharge per lin ft</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
@@ -1232,6 +1307,7 @@ window.mqphGoToWizard = function() {
             `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
           ])}
           ${p0>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">1-drawer quote was $${p0.toLocaleString()} — bank quote should be higher.</p>`:''}
+          ${matchBlock}
           <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">We'll average this with your 1-drawer quote to get the "mostly drawers" rate</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
@@ -1298,7 +1374,7 @@ window.mqphGoToWizard = function() {
     const name = miniWiz.name;
     const step = miniWiz.step;
     const total = miniWizTotalSteps(cat);
-    const isLast = step >= total - 1;
+    const isLast = miniWiz.matchMode || step >= total - 1;
 
     const stepLabels = { material:['Upper rate','Base rate'], door:['Door upcharge'], hinge:['Hinge upcharge'], drawer:['Some drawers','Mostly drawers'] };
     const labels = stepLabels[cat] || [];
@@ -1319,7 +1395,7 @@ window.mqphGoToWizard = function() {
     const nextBtn = document.getElementById('mqph-mini-next');
     const backBtn = document.getElementById('mqph-mini-back');
     if (nextBtn) nextBtn.textContent = isLast ? 'Save →' : 'Next →';
-    if (backBtn) backBtn.style.display = step > 0 ? 'inline-block' : 'none';
+    if (backBtn) backBtn.style.display = (!miniWiz.matchMode && step > 0) ? 'inline-block' : 'none';
   }
 
   window.mqphMiniNext = async function() {
@@ -1327,6 +1403,49 @@ window.mqphGoToWizard = function() {
     const name = miniWiz.name;
     const step = miniWiz.step;
     const bl   = getBaselineRates();
+
+    // Match mode entirely bypasses the "quote a job" flow — just copy the
+    // matched item's rate(s) straight onto the new one and save.
+    if (miniWiz.matchMode) {
+      if (!miniWiz.matchRates) {
+        const sel = document.getElementById('mqph-mini-match-select');
+        if (sel) sel.style.borderColor = '#dc2626';
+        return;
+      }
+      const nextBtn = document.getElementById('mqph-mini-next');
+      if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
+      try {
+        const mr = miniWiz.matchRates;
+        if (cat === 'material') {
+          const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='material').length;
+          const upperRec = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${name} — uppers`, Category:'material', Rate:mr.rate0, Unit:'per lin ft — uppers', Description:'Box material rate uppers', Active:true, 'Sort order':sortBase+1 });
+          const baseRec  = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${name} — bases`, Category:'material', Rate:mr.rate1, Unit:'per lin ft — bases', Description:'Box material rate bases', Active:true, 'Sort order':sortBase+2 });
+          if (upperRec?.id) lineItems.push(upperRec);
+          if (baseRec?.id)  lineItems.push(baseRec);
+        } else if (cat === 'door') {
+          const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='door').length;
+          const rec = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:name, Category:'door', Rate:mr.rate0, Unit:'per lin ft upcharge', Description:'Door style upcharge', Active:true, 'Sort order':sortBase+1 });
+          if (rec?.id) lineItems.push(rec);
+        } else if (cat === 'hinge') {
+          const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='hinge').length;
+          const rec = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:name, Category:'hinge', Rate:mr.rate0, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':sortBase+1 });
+          if (rec?.id) lineItems.push(rec);
+        } else if (cat === 'drawer') {
+          const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='drawer').length;
+          const rec1 = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${name} — some drawers`, Category:'drawer', Rate:mr.rate0, Unit:'per lin ft upcharge', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1 });
+          const rec2 = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${name} — mostly drawers`, Category:'drawer', Rate:mr.rate1, Unit:'per lin ft upcharge', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':sortBase+2 });
+          if (rec1?.id) lineItems.push(rec1);
+          if (rec2?.id) lineItems.push(rec2);
+        }
+        mqphCloseMiniWiz();
+        await loadAndRender();
+      } catch(e) {
+        console.error('Failed to save matched item', e);
+        if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Save →'; }
+        alert('Error saving. Please try again.');
+      }
+      return;
+    }
 
     // Collect the value at this step
     const p = parseFloat(document.getElementById(`mqph-mini-p${step}`)?.value || document.getElementById('mqph-mini-p0')?.value || 0);
@@ -1432,11 +1551,11 @@ window.mqphGoToWizard = function() {
 
   window.mqphCloseMiniWiz = function() {
     document.getElementById('mqph-mini-overlay')?.classList.remove('show');
-    miniWiz = { cat:null, name:'', step:0 };
+    miniWiz = { cat:null, name:'', step:0, matchMode:false, matchName:'', matchRates:null };
   };
 
   function openMiniWiz(cat, name) {
-    miniWiz = { cat, name, step:0 };
+    miniWiz = { cat, name, step:0, matchMode:false, matchName:'', matchRates:null };
     const overlay = document.getElementById('mqph-mini-overlay');
     if (!overlay) return;
     overlay.classList.add('show');
@@ -2518,5 +2637,6 @@ window.mqphGoToWizard = function() {
     injectStyles();
     loadAndRender();
   };
+
 
 })();
