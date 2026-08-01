@@ -128,6 +128,8 @@
     try { categoryRooms = shop['Category rooms'] ? JSON.parse(shop['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
     window._mqCategoryRooms = categoryRooms;
 
+    window._mqGroupPickerLabel = shop['Group picker label'] || 'Pick a collection';
+
     const p = payload.pricing || {};
 
     const lineItemRecords = payload.lineItems || [];
@@ -600,6 +602,7 @@
         visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), `trim_${type}`),
         groupName:   (item['Group name']||'').trim(),
         groupOrder:  item['Group sort order']||0,
+        groupDesc:   item['Group description']||'',
       };
     });
   }
@@ -795,6 +798,7 @@
     // groups are contiguous in `items`, so first-seen order here is correct.
     const groupNames = hasAnyGroup ? [...new Set(items.filter(it => it.groupName).map(it => it.groupName))] : [];
     const hasOtherBucket = hasAnyGroup && items.some(it => it.value !== 'none' && !it.groupName);
+    const groupDescOf = (name) => (items.find(it => it.groupName === name && it.groupDesc)?.groupDesc || '');
     if (hasAnyGroup) {
       // Default to showing just the first collection until the customer
       // picks a different one — set here (during render) so the very first
@@ -804,11 +808,12 @@
     }
     const groupDropdown = hasAnyGroup ? `
       <div style="margin-bottom:8px">
-        <label style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">Pick a collection</label>
-        <select onchange="mqFilterPickerByGroup('${selectId}',this.value)" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px">
-          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}">${g}</option>`).join('')}
-          ${hasOtherBucket ? `<option value="__other__">Other</option>` : ''}
+        <label style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">${window._mqGroupPickerLabel || 'Pick a collection'}</label>
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'')" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px">
+          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}">${g}</option>`).join('')}
+          ${hasOtherBucket ? `<option value="__other__" data-desc="">Other</option>` : ''}
         </select>
+        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.4">${groupDescOf(groupNames[0])}</div>
       </div>` : '';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
@@ -830,12 +835,15 @@
     return `${groupDropdown}<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
 
-  // Fires when the "Pick a collection" dropdown changes — just updates which
-  // collection is active and re-runs the existing room-visibility pass,
-  // which now also checks this filter (see mqRefreshAllPickerVisibility).
-  window.mqFilterPickerByGroup = function(selectId, groupValue) {
+  // Fires when the "Pick a collection" dropdown changes — updates which
+  // collection is active, refreshes its description text, and re-runs the
+  // existing room-visibility pass, which also checks this filter (see
+  // mqRefreshAllPickerVisibility).
+  window.mqFilterPickerByGroup = function(selectId, groupValue, desc) {
     window._mqGroupFilter = window._mqGroupFilter || {};
     window._mqGroupFilter[selectId] = groupValue;
+    const descEl = document.getElementById(`mq-groupdesc-${selectId}`);
+    if (descEl) descEl.textContent = desc || '';
     const m = selectId.match(/^mq-(c|b)-/);
     if (m) window.mqRefreshAllPickerVisibility(m[1]);
   };
@@ -1242,7 +1250,7 @@
         // Badge/sort by the "Some drawers" rate as the representative price for this config
         price: someRec?.['Rate'] || 0,
         visibleRooms: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n)?.visibleRooms || [],
-        groupName: (someRec?.['Group name']||'').trim(), groupOrder: someRec?.['Group sort order']||0,
+        groupName: (someRec?.['Group name']||'').trim(), groupOrder: someRec?.['Group sort order']||0, groupDesc: someRec?.['Group description']||'',
       };
     }));
 
@@ -1264,22 +1272,22 @@
           const baseName = m._baseName || m['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim();
           const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
           const priceRate = bItem ? (bItem['Rate']||0) : (m['Rate']||0);
-          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[], groupName:(m['Group name']||'').trim(), groupOrder:m['Group sort order']||0};
+          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[], groupName:(m['Group name']||'').trim(), groupOrder:m['Group sort order']||0, groupDesc:m['Group description']||''};
         }))
       : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
     const dItems = sortBadgeAndGroupItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
       li.doorStyles.length > 0
-        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[], groupName:(d['Group name']||'').trim(), groupOrder:d['Group sort order']||0}))
+        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[], groupName:(d['Group name']||'').trim(), groupOrder:d['Group sort order']||0, groupDesc:d['Group description']||''}))
         : [{value:'slab',label:'Slab',icon:'🚪'},{value:'shaker',label:'Shaker',icon:'🚪'}]
     ));
     const hingeItems = li.hinges.length > 0
       ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧', price:h['Rate']||0, visibleRooms:h.visibleRooms||[]})))
       : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
     const crownItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0}))
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
     ));
     const valanceItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0}))
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
     ));
 
     return `
