@@ -765,6 +765,11 @@ window.logoutMember = async function () {
                 <textarea id="mq-shop-disclaimer" placeholder="Ballpark estimate only. Contact us for a full quote."></textarea>
                 <span class="mq-hint">Shown at the bottom of every quote</span>
               </div>
+              <div class="mq-field" style="margin-bottom:1.5rem">
+                <label class="mq-label">Collection picker label</label>
+                <input type="text" id="mq-shop-group-label" placeholder="Pick a collection"/>
+                <span class="mq-hint">Shown above the dropdown customers use to pick a style/material collection (only appears if you've grouped any items in My Products) — leave blank to use the default "Pick a collection"</span>
+              </div>
               <div id="mq-shop-consult-warning" class="mq-msg-error" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px">
                 ⚠️ Please fill in at least one — a consultation link or a consultation email. Without one, customers just get sent to your quote form instead when they click "Ask a question" or "Book a consultation."
               </div>
@@ -2305,6 +2310,7 @@ window.logoutMember = async function () {
       }
     );
     set('mq-shop-disclaimer', f['Disclaimer text']);
+    set('mq-shop-group-label', f['Group picker label']);
     set('mq-shop-consult-link', f['Consultation link']);
     set('mq-shop-consult-email', f['Consultation email']);
     window.mqCheckConsultFields = function() {
@@ -3736,6 +3742,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Quote range high':  gn('mq-shop-range-high', 20),
         'Logo URL':          gv('mq-shop-logo'),
         'Disclaimer text':   gv('mq-shop-disclaimer'),
+        'Group picker label': gv('mq-shop-group-label'),
         'Consultation link': gv('mq-shop-consult-link'),
         'Consultation email': gv('mq-shop-consult-email'),
         'Financing link':    gv('mq-financing-link'),
