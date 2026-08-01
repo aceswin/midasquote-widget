@@ -226,6 +226,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
         <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
         <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
+        <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another [category]'s pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
       `
     },
     specialty: {
@@ -271,6 +272,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Don't have your own photo for something? Many common items already have one of our own curated photos ready to use — just pick "Choose from library" instead of uploading your own. No need to go find or shoot a photo for every single item yourself.</p>
         <p>Every category starts collapsed — click any category's header to open just that one. With a lot of items configured, this keeps the page manageable.</p>
         <p>You can also control which project types each item shows up for right from here — the same setting as on the Specialty Items tab, just accessible from both places.</p>
+        <p><strong>Groups</strong> — in Box Materials, Door Styles, Drawer Configurations, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
       `
     },
     templates: {
@@ -353,6 +355,47 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (shopRecord && !shopRecord.fields['Welcome popup seen']) {
       shopRecord.fields['Welcome popup seen'] = true;
       atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Welcome popup seen': true }).catch(()=>{});
+    }
+  };
+
+  // "What's new" announcements — versioned rather than a fresh boolean field
+  // per announcement. Bump MQ_LATEST_ANNOUNCEMENT below whenever there's a
+  // new one to show; shops that have already seen a given version (or newer)
+  // never see it again, tracked by storing that version string on the shop
+  // record. Brand new shops never see past announcements — they get the
+  // current app as-is, so nothing worth announcing to them retroactively.
+  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-groups-matching';
+  const MQ_ANNOUNCEMENT_CONTENT = {
+    title: '🎉 Recently added',
+    body: `
+      <p><strong>Collections in My Products</strong> — group related items (like "Shaker" or "Raised panel") in Box Materials, Door Styles, Drawer Configurations, Crown, or Valance. Customers still pick the exact item, same as always — grouping just organizes related options together and, when every item in a group is the same price, lets customers know any one of them works.</p>
+      <p><strong>Match another item's pricing</strong> — when adding a new box material, door style, drawer config, or hinge in Pricing, a checkbox now lets you copy an existing item's rate directly instead of re-quoting a whole job.</p>
+      <p><strong>Product photos no longer get cropped</strong> — thumbnails in My Products and on the widget now show the whole photo, so tall or unusually-shaped images display in full.</p>
+    `,
+  };
+  window.mqShowAnnouncementModal = function() {
+    let modal = document.getElementById('mq-announcement-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-announcement-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:2rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:14px">${MQ_ANNOUNCEMENT_CONTENT.title}</div>
+        <div style="font-size:14px;color:#374151;line-height:1.7;text-align:left;margin-bottom:1.5rem">${MQ_ANNOUNCEMENT_CONTENT.body}</div>
+        <button onclick="mqCloseAnnouncementModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqCloseAnnouncementModal = function() {
+    const modal = document.getElementById('mq-announcement-modal');
+    if (modal) modal.style.display = 'none';
+    const shopRecord = window._mqShopRecord;
+    if (shopRecord && shopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
+      shopRecord.fields['Announcement seen'] = MQ_LATEST_ANNOUNCEMENT;
+      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Announcement seen': MQ_LATEST_ANNOUNCEMENT }).catch(()=>{});
     }
   };
 
@@ -7586,6 +7629,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     if (!shopRecord.fields['Welcome popup seen']) {
       window.mqShowWelcomeModal();
+      // Brand new shop — nothing to announce retroactively, so just mark
+      // them caught up on the current announcement without ever showing it.
+      if (shopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
+        shopRecord.fields['Announcement seen'] = MQ_LATEST_ANNOUNCEMENT;
+        atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Announcement seen': MQ_LATEST_ANNOUNCEMENT }).catch(()=>{});
+      }
+    } else if (shopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
+      window.mqShowAnnouncementModal();
     }
 
     // Save Stripe customer ID to Airtable if we have it and it's not stored yet
