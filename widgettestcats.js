@@ -128,7 +128,9 @@
     try { categoryRooms = shop['Category rooms'] ? JSON.parse(shop['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
     window._mqCategoryRooms = categoryRooms;
 
-    window._mqGroupPickerLabel = shop['Group picker label'] || 'Pick a collection';
+    // Per-category "Pick a collection" dropdown label (materials, doors,
+    // drawers, crown, valance can each say something different).
+    try { window._mqCategoryPickerLabels = shop['Category picker labels'] ? JSON.parse(shop['Category picker labels']) : {}; } catch(e) { window._mqCategoryPickerLabels = {}; }
 
     const p = payload.pricing || {};
 
@@ -792,13 +794,14 @@
     return noneItem ? [noneItem, ...grouped] : grouped;
   }
 
-  function pickerRow(selectId, items, extraOnChangeAttr) {
+  function pickerRow(selectId, items, extraOnChangeAttr, category) {
     const hasAnyGroup = items.some(it => it.groupName);
     // Preserves cluster order already established by sortBadgeAndGroupItems —
     // groups are contiguous in `items`, so first-seen order here is correct.
     const groupNames = hasAnyGroup ? [...new Set(items.filter(it => it.groupName).map(it => it.groupName))] : [];
     const hasOtherBucket = hasAnyGroup && items.some(it => it.value !== 'none' && !it.groupName);
     const groupDescOf = (name) => (items.find(it => it.groupName === name && it.groupDesc)?.groupDesc || '');
+    const pickerLabel = ((window._mqCategoryPickerLabels||{})[category] || '').trim() || 'Pick a collection';
     if (hasAnyGroup) {
       // Default to showing just the first collection until the customer
       // picks a different one — set here (during render) so the very first
@@ -808,7 +811,7 @@
     }
     const groupDropdown = hasAnyGroup ? `
       <div style="margin-bottom:8px">
-        <label style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">${window._mqGroupPickerLabel || 'Pick a collection'}</label>
+        <label style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">${pickerLabel}</label>
         <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'')" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px">
           ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}">${g}</option>`).join('')}
           ${hasOtherBucket ? `<option value="__other__" data-desc="">Other</option>` : ''}
@@ -1341,10 +1344,10 @@
         </div>
         <div id="mq-${prefix}-shared">
           <div class="mq-field"><label class="mq-label">Box material</label>
-            ${pickerRow(`mq-${prefix}-mat`, mItems)}
+            ${pickerRow(`mq-${prefix}-mat`, mItems, null, 'material')}
             <select id="mq-${prefix}-mat" style="display:none">${mOpts}</select></div>
           <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
-            ${pickerRow(`mq-${prefix}-door`, dItems)}
+            ${pickerRow(`mq-${prefix}-door`, dItems, null, 'door')}
             <select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
           ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
             ${pickerRow(`mq-${prefix}-hinge`, hingeItems)}
@@ -1354,10 +1357,10 @@
         <div id="mq-${prefix}-diff" style="display:none">
           <div class="mq-sub-sec mq-sub-upper"><p class="mq-sub-title">🔼 Upper cabinets</p>
             <div class="mq-field"><label class="mq-label">Box material</label>
-              ${pickerRow(`mq-${prefix}-u-mat`, mItems)}
+              ${pickerRow(`mq-${prefix}-u-mat`, mItems, null, 'material')}
               <select id="mq-${prefix}-u-mat" style="display:none">${mOpts}</select></div>
             <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
-              ${pickerRow(`mq-${prefix}-u-door`, dItems)}
+              ${pickerRow(`mq-${prefix}-u-door`, dItems, null, 'door')}
               <select id="mq-${prefix}-u-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
             ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
               ${pickerRow(`mq-${prefix}-u-hinge`, hingeItems)}
@@ -1365,10 +1368,10 @@
           </div>
           <div class="mq-sub-sec mq-sub-base" style="margin-top:8px"><p class="mq-sub-title">🔽 Base cabinets</p>
             <div class="mq-field"><label class="mq-label">Box material</label>
-              ${pickerRow(`mq-${prefix}-b-mat`, mItems)}
+              ${pickerRow(`mq-${prefix}-b-mat`, mItems, null, 'material')}
               <select id="mq-${prefix}-b-mat" style="display:none">${mOpts}</select></div>
             <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
-              ${pickerRow(`mq-${prefix}-b-door`, dItems)}
+              ${pickerRow(`mq-${prefix}-b-door`, dItems, null, 'door')}
               <select id="mq-${prefix}-b-door" style="display:none">${dOpts}</select></div>
             ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
               ${pickerRow(`mq-${prefix}-b-hinge`, hingeItems)}
@@ -1401,7 +1404,7 @@
         </div>
         <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none;margin-top:10px">
           <label class="mq-label">Drawer type</label>
-          ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems)}
+          ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems, null, 'drawer')}
           <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
         </div>
       </div>`:''}
@@ -1437,13 +1440,13 @@
         </div>
         ${hasCrown?`<div style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
-            ${pickerRow(`mq-${prefix}-trim-crown`, crownItems)}
+            ${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
         </div>`:''}
         ${hasValance?`<div>
           <div class="mq-field"><label class="mq-label">Valance</label>
-            ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems)}
+            ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
         </div>`:''}

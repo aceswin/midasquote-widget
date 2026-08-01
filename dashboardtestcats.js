@@ -765,11 +765,6 @@ window.logoutMember = async function () {
                 <textarea id="mq-shop-disclaimer" placeholder="Ballpark estimate only. Contact us for a full quote."></textarea>
                 <span class="mq-hint">Shown at the bottom of every quote</span>
               </div>
-              <div class="mq-field" style="margin-bottom:1.5rem">
-                <label class="mq-label">Collection picker label</label>
-                <input type="text" id="mq-shop-group-label" placeholder="Pick a collection"/>
-                <span class="mq-hint">Shown above the dropdown customers use to pick a style/material collection (only appears if you've grouped any items in My Products) — leave blank to use the default "Pick a collection"</span>
-              </div>
               <div id="mq-shop-consult-warning" class="mq-msg-error" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px">
                 ⚠️ Please fill in at least one — a consultation link or a consultation email. Without one, customers just get sent to your quote form instead when they click "Ask a question" or "Book a consultation."
               </div>
@@ -2310,7 +2305,6 @@ window.logoutMember = async function () {
       }
     );
     set('mq-shop-disclaimer', f['Disclaimer text']);
-    set('mq-shop-group-label', f['Group picker label']);
     set('mq-shop-consult-link', f['Consultation link']);
     set('mq-shop-consult-email', f['Consultation email']);
     window.mqCheckConsultFields = function() {
@@ -3742,7 +3736,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Quote range high':  gn('mq-shop-range-high', 20),
         'Logo URL':          gv('mq-shop-logo'),
         'Disclaimer text':   gv('mq-shop-disclaimer'),
-        'Group picker label': gv('mq-shop-group-label'),
         'Consultation link': gv('mq-shop-consult-link'),
         'Consultation email': gv('mq-shop-consult-email'),
         'Financing link':    gv('mq-financing-link'),
@@ -4188,6 +4181,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // checkbox changes.
     window._mqByCategory = byCategory;
 
+    // Per-category "Pick a collection" dropdown label — e.g. shops may want
+    // "Pick a door style family" for doors but "Pick a finish" for materials.
+    // Stored as one JSON blob on the shop record, same pattern as "Category rooms".
+    let categoryPickerLabels = {};
+    try { categoryPickerLabels = shopRecord.fields['Category picker labels'] ? JSON.parse(shopRecord.fields['Category picker labels']) : {}; } catch(e) { categoryPickerLabels = {}; }
+    window._mqCategoryPickerLabels = categoryPickerLabels;
+
     // Build Products for showroom — all item names per category
     const savedProductsForShowroom = {};
     Object.entries(byCategory).forEach(([cat, items]) => {
@@ -4236,6 +4236,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           ${GROUPABLE_CATS.includes(cat) ? `<div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <button class="mq-btn mq-btn-secondary mq-btn-sm" onclick="event.stopPropagation();mqOpenGroupManager('${cat}',null)">+ New group</button>
             <span style="font-size:11px;color:#9ca3af">You can make a group for a type of style — like "Shaker" or "Raised panel" — or price several items the same and collect them into one group. Want to leave things as they are? Just don't create any groups.</span>
+          </div>
+          <div style="margin-bottom:12px">
+            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Dropdown label shown to customers for this category's collections (only appears once you've created a group here)</label>
+            <input type="text" value="${((window._mqCategoryPickerLabels||{})[cat]||'').replace(/"/g,'&quot;')}" placeholder="Pick a collection"
+              style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;max-width:320px;box-sizing:border-box"
+              onchange="mqSaveCategoryPickerLabel('${cat}',this.value)"/>
           </div>` : ''}
           <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
         </div>
@@ -4288,6 +4294,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
         ${g.members.map(buildCard).join('')}`).join('');
     }
+
+    // Per-category "Pick a collection" dropdown label — stored as one JSON
+    // blob on the shop record (same pattern as "Category rooms"), so this
+    // only ever touches that one field, never the Line Items.
+    window.mqSaveCategoryPickerLabel = async function(cat, value) {
+      const label = (value||'').trim();
+      const labels = { ...(window._mqCategoryPickerLabels||{}) };
+      if (label) labels[cat] = label; else delete labels[cat];
+      try {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Category picker labels': JSON.stringify(labels) });
+        window._mqCategoryPickerLabels = labels;
+        shopRecord.fields['Category picker labels'] = JSON.stringify(labels);
+      } catch(e) {
+        console.error('Failed to save picker label', e);
+        alert('Could not save that label — please try again.');
+      }
+    };
 
     // Assigns/renames/clears which group an item belongs to. Bulk-writes
     // across every underlying id (materials/drawers can span 2 records —
