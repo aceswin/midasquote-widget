@@ -301,16 +301,26 @@
   }
 
   function injectStyles(bc, focalColor, boxBorder, boxBg, boxText) {
-    // Each of the 4 optional shop-level fields falls back to something
-    // automatically derived from the brand colour if left blank — so a
-    // shop that's never touched these settings still gets a look that
-    // matches their brand, and a shop that wants full control (e.g. going
-    // dark on the background) can override each one independently.
-    focalColor = focalColor || bc;
-    boxBorder = boxBorder || bc;
-    boxBg = boxBg || mqLightenHex(bc, 0.94);
-    boxText = boxText || mqDarkenHex(bc, 0.35);
-    const boxBgStop2 = mqLightenHex(boxBg, 0.3); // second gradient stop, a touch lighter than the first
+    // Defaults to MidasQuote's original blue scheme — not derived from the
+    // shop's brand colour. These 4 fields are a genuinely separate,
+    // optional customization; leaving them alone gets you the same
+    // polished look every shop started with, regardless of what Brand
+    // colour is set to elsewhere.
+    //
+    // Two genuinely different blues in the original design, not one:
+    // focalColor (#2563eb, richer/darker) is just the step-number badge and
+    // the Continue button. boxBorder (#93c5fd, lighter) is both the box's
+    // own border AND the glowing ring around the current step — those two
+    // always matched each other, which is the "layered double border" look.
+    const boxBgIsCustom = !!boxBg;
+    focalColor = focalColor || '#2563eb';
+    boxBorder = boxBorder || '#93c5fd';
+    boxBg = boxBg || '#eff6ff';
+    boxText = boxText || '#1e40af';
+    // Only run the auto-gradient math when they've actually set a custom
+    // background — the original default already has its own two hand-picked
+    // gradient stops (#eff6ff → #f0f9ff), no need to recompute those.
+    const boxBgStop2 = boxBgIsCustom ? mqLightenHex(boxBg, 0.3) : '#f0f9ff';
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
@@ -353,16 +363,16 @@
       #midasquote-widget .mq-tab-label{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
       #midasquote-widget .mq-tab-title{font-size:14px;font-weight:500;line-height:1}
       #midasquote-widget .mq-tab-sub{font-size:10px;opacity:0.7;line-height:1}
-      #midasquote-widget .mq-tab-content{display:none;padding:1.5rem}
+      #midasquote-widget .mq-tab-content{display:none;padding:15px}
       #midasquote-widget .mq-tab-content.active{display:block}
-      #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
+      #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:15px;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-sec{border-left:4px solid ${boxBorder}}
       #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:${focalColor};color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
       #midasquote-widget .mq-sec-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;cursor:pointer}
       #midasquote-widget .mq-sec-header-row .mq-sec-title{margin-bottom:0}
       #midasquote-widget .mq-collapse-arrow{display:inline-block;transition:transform 0.2s;font-size:12px;color:#6b7280;flex-shrink:0;margin-left:8px}
       #midasquote-widget .mq-collapse-arrow.open{transform:rotate(90deg)}
-      #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px ${focalColor},0 4px 14px rgba(0,0,0,0.10);opacity:1}
+      #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 3px ${boxBorder},0 4px 14px rgba(0,0,0,0.10);opacity:1}
       #midasquote-widget .mq-sec.mq-step-done{filter:brightness(0.8);transition:filter 0.2s}
       #midasquote-widget .mq-sec.mq-step-upcoming{filter:brightness(0.55);transition:filter 0.2s}
       #midasquote-widget .mq-sec.mq-step-current{transition:box-shadow 0.2s}
@@ -390,7 +400,7 @@
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
-      #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;cursor:pointer;display:block}
+      #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;display:block}
       #midasquote-widget .mq-spec-category-heading{color:${bc}}
       #midasquote-widget .mq-spec-category-group{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 14px 14px;background:#fafafa;box-shadow:0 8px 20px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.08)}
       #midasquote-widget .mq-spec-category-heading{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
@@ -410,6 +420,7 @@
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:96px;height:96px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
+      #midasquote-widget .mq-vpicker-group-note{font-size:9px;color:#16a34a;text-align:center;line-height:1.25;margin-top:2px;max-width:100%}
       #midasquote-widget .mq-vpicker-select-btn{margin-top:5px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-select-btn{background:${bc};border-color:${bc};color:#fff}
       #midasquote-widget .mq-vpicker-chip.mq-suggested{box-shadow:0 0 0 2px #bbf7d0}
@@ -587,6 +598,8 @@
         // (trim_crown / trim_valance) for photo purposes, not just "trim"
         photoUrl:    (shopPhotos||{})[photoKeyFor(`trim_${type}`, item['Name'])] || '',
         visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), `trim_${type}`),
+        groupName:   (item['Group name']||'').trim(),
+        groupOrder:  item['Group sort order']||0,
       };
     });
   }
@@ -746,6 +759,36 @@
     return noneItem ? [noneItem, ...badged] : badged;
   }
 
+  // Clusters items sharing a Group name together (shop-owner-controlled
+  // order first, then any ungrouped leftovers last, sorted cheapest-first
+  // within each cluster), and flags a cluster whose members all cost the
+  // exact same so the chip can show a quick reassurance note. Runs after
+  // badges are already assigned, so it only ever reorders — price badges
+  // still reflect standing across the whole list. No-op if nothing's grouped.
+  function applyItemGrouping(items) {
+    if (!items.some(it => it.groupName)) return items;
+    const groupNames = [...new Set(items.filter(it => it.groupName).map(it => it.groupName))];
+    const groups = groupNames.map(name => {
+      const members = items.filter(it => it.groupName === name).sort((a,b) => a.price - b.price);
+      const allSamePrice = members.every(m => m.price === members[0].price);
+      if (allSamePrice) members.forEach(m => m.samePriceNote = true);
+      const order = members.find(m => m.groupOrder)?.groupOrder || 0;
+      return { order, members };
+    }).sort((a,b) => a.order - b.order);
+    const ungrouped = items.filter(it => !it.groupName).sort((a,b) => a.price - b.price);
+    return [...groups.flatMap(g => g.members), ...ungrouped];
+  }
+
+  // sortAndBadgeItems already pins a "none"/"no doors" item first — grouping
+  // only ever applies to the real, priced options after that.
+  function sortBadgeAndGroupItems(items) {
+    const sorted = sortAndBadgeItems(items);
+    const noneItem = sorted.find(it => it.value === 'none');
+    const rest = sorted.filter(it => it.value !== 'none');
+    const grouped = applyItemGrouping(rest);
+    return noneItem ? [noneItem, ...grouped] : grouped;
+  }
+
   function pickerRow(selectId, items, extraOnChangeAttr) {
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
@@ -757,7 +800,8 @@
       const selectedClass = i===0 ? ' selected' : '';
       const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
       const roomsAttr = JSON.stringify(it.visibleRooms||[]).replace(/"/g,'&quot;');
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      const groupNote = it.samePriceNote ? `<span class="mq-vpicker-group-note">✓ Same price as other ${(it.groupName||'').replace(/'/g,"\\'")} options</span>` : '';
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
     return `<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
   }
@@ -826,7 +870,7 @@
         <div class="mq-spec-top">
           <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
           <div style="flex:1;min-width:0">
-            <span class="mq-spec-name" onclick="mqToggleSpec('${prefix}',${i})">${s.label}</span>
+            <span class="mq-spec-name">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
             ${installModeHtml}
           </div>
@@ -1157,12 +1201,16 @@
     const hasInstall = !hasDynamic || li.installItems.some(i => (i['Rate']||0) > 0);
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
-    const drawerConfigItems = sortAndBadgeItems(drawerConfigNames.map((n,i)=>({
-      value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️',
-      // Badge/sort by the "Some drawers" rate as the representative price for this config
-      price: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n && /some drawers/i.test(d['Name']))?.['Rate'] || 0,
-      visibleRooms: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n)?.visibleRooms || [],
-    })));
+    const drawerConfigItems = sortBadgeAndGroupItems(drawerConfigNames.map((n,i)=>{
+      const someRec = li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n && /some drawers/i.test(d['Name']));
+      return {
+        value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️',
+        // Badge/sort by the "Some drawers" rate as the representative price for this config
+        price: someRec?.['Rate'] || 0,
+        visibleRooms: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n)?.visibleRooms || [],
+        groupName: (someRec?.['Group name']||'').trim(), groupOrder: someRec?.['Group sort order']||0,
+      };
+    }));
 
     // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
     // the shop has real pricing data, or the legacy fallback values when not)
@@ -1171,7 +1219,7 @@
     // glance which options cost more — "None" (where it exists) always stays
     // pinned first with no badge, since it's not really a "priced" choice.
     const mItems = li.materials.length > 0
-      ? sortAndBadgeItems(li.materials.map((m,i)=>{
+      ? sortBadgeAndGroupItems(li.materials.map((m,i)=>{
           // li.materials only carries whichever row (uppers or bases) won
           // the earlier dedup pass — it never actually has a rateB/rateU
           // property of its own. Look up the real "bases" rate the same
@@ -1182,22 +1230,22 @@
           const baseName = m._baseName || m['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim();
           const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
           const priceRate = bItem ? (bItem['Rate']||0) : (m['Rate']||0);
-          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[]};
+          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[], groupName:(m['Group name']||'').trim(), groupOrder:m['Group sort order']||0};
         }))
       : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
-    const dItems = sortAndBadgeItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
+    const dItems = sortBadgeAndGroupItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
       li.doorStyles.length > 0
-        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[]}))
+        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[], groupName:(d['Group name']||'').trim(), groupOrder:d['Group sort order']||0}))
         : [{value:'slab',label:'Slab',icon:'🚪'},{value:'shaker',label:'Shaker',icon:'🚪'}]
     ));
     const hingeItems = li.hinges.length > 0
       ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧', price:h['Rate']||0, visibleRooms:h.visibleRooms||[]})))
       : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
-    const crownItems = sortAndBadgeItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[]}))
+    const crownItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0}))
     ));
-    const valanceItems = sortAndBadgeItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[]}))
+    const valanceItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0}))
     ));
 
     return `
@@ -2862,7 +2910,8 @@ window.mqTogDrawerConfig=(prefix)=>{
 
         const tcCost = Math.round(tcUnitPrice * tcQty);
         tallCabTotal += tcCost;
-        tallCabLines.push({label:`${tc.label} (${tcQty} × ${tcWidthIn}")`, cost: tcCost});
+        const tcDoorLabel = doorKey==='none'?'No doors':(door[doorKey]?.label||'');
+        tallCabLines.push({label:`${tc.label} (${tcQty} × ${tcWidthIn}") · ${tcDoorLabel} · ${si==='install'?'Supply + install':'Supply only'}`, cost: tcCost});
       });
 
       let trimCost = 0;

@@ -4226,7 +4226,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div id="mq-cat-body-${cat}" style="display:none;padding:0 1.25rem 1.25rem">
           <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
           ${categoryRoomDisclosure(cat)}
-          ${GROUPABLE_CATS.includes(cat) ? `<div style="margin-bottom:12px"><button class="mq-btn mq-btn-secondary mq-btn-sm" onclick="event.stopPropagation();mqOpenGroupManager('${cat}',null)">+ New group</button></div>` : ''}
+          ${GROUPABLE_CATS.includes(cat) ? `<div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="mq-btn mq-btn-secondary mq-btn-sm" onclick="event.stopPropagation();mqOpenGroupManager('${cat}',null)">+ New group</button>
+            <span style="font-size:11px;color:#9ca3af">Group items that are the same type or price — e.g. "Raised panel," "Shaker." Customers still pick the exact item, but if they're all the same price we'll let them know any one works. Leave items ungrouped and nothing changes.</span>
+          </div>` : ''}
           <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
         </div>
       </div>`;
