@@ -692,7 +692,7 @@
     const groupNames = [...new Set(items.filter(it => it.groupName).map(it => it.groupName))];
     const groups = groupNames.map(name => {
       const members = items.filter(it => it.groupName === name).sort((a,b) => a.price - b.price);
-      const allSamePrice = members.every(m => m.price === members[0].price);
+      const allSamePrice = members.length > 1 && members.every(m => m.price === members[0].price);
       if (allSamePrice) members.forEach(m => m.samePriceNote = true);
       const order = members.find(m => m.groupOrder)?.groupOrder || 0;
       return { order, members };
