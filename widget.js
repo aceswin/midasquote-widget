@@ -321,6 +321,7 @@
     boxBorder = boxBorder || '#93c5fd';
     boxBg = boxBg || '#eff6ff';
     boxText = boxText || '#1e40af';
+    window._mqFocalColor = focalColor;
     // Only run the auto-gradient math when they've actually set a custom
     // background — the original default already has its own two hand-picked
     // gradient stops (#eff6ff → #f0f9ff), no need to recompute those.
@@ -809,6 +810,11 @@
     const hasOtherBucket = hasAnyGroup && items.some(it => it.value !== 'none' && !it.groupName);
     const groupDescOf = (name) => (items.find(it => it.groupName === name && it.groupDesc)?.groupDesc || '');
     const pickerLabel = ((window._mqCategoryPickerLabels||{})[category] || '').trim() || 'Pick a collection';
+    const totalRealCount = items.filter(it => it.value !== 'none').length;
+    const countOf = (name) => name === '__other__'
+      ? items.filter(it => it.value !== 'none' && !it.groupName).length
+      : items.filter(it => it.groupName === name).length;
+    const countNote = (name) => `Showing ${countOf(name)} of ${totalRealCount} total — pick a different collection above to see the rest`;
     if (hasAnyGroup) {
       // Default to showing just the first collection until the customer
       // picks a different one — set here (during render) so the very first
@@ -816,14 +822,17 @@
       window._mqGroupFilter = window._mqGroupFilter || {};
       window._mqGroupFilter[selectId] = groupNames[0];
     }
+    const focal = window._mqFocalColor || '#2563eb';
+    const focalTint = mqLightenHex(focal, 0.85);
     const groupDropdown = hasAnyGroup ? `
-      <div style="margin-bottom:8px">
-        <label style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px">${pickerLabel}</label>
-        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'')" style="font-size:13px;padding:6px 28px 6px 10px;border:1px solid #d1d5db;border-radius:6px;width:auto;max-width:100%;display:inline-block">
-          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}">${g}</option>`).join('')}
-          ${hasOtherBucket ? `<option value="__other__" data-desc="">Other</option>` : ''}
+      <div style="margin-bottom:10px;background:${focalTint};border:1.5px solid ${focal};border-radius:10px;padding:12px 14px">
+        <label style="font-size:14px;font-weight:700;color:${focal};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${focal};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
+          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
+          ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
         </select>
-        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:10px 0 6px;line-height:1.5">${groupDescOf(groupNames[0])}</div>
+        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${focal};margin-top:8px">${countNote(groupNames[0])}</div>
+        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:4px 0 0;line-height:1.5">${groupDescOf(groupNames[0])}</div>
       </div>` : '';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
@@ -849,11 +858,17 @@
   // collection is active, refreshes its description text, and re-runs the
   // existing room-visibility pass, which also checks this filter (see
   // mqRefreshAllPickerVisibility).
-  window.mqFilterPickerByGroup = function(selectId, groupValue, desc) {
+  window.mqFilterPickerByGroup = function(selectId, groupValue, desc, count) {
     window._mqGroupFilter = window._mqGroupFilter || {};
     window._mqGroupFilter[selectId] = groupValue;
     const descEl = document.getElementById(`mq-groupdesc-${selectId}`);
     if (descEl) descEl.textContent = desc || '';
+    const countEl = document.getElementById(`mq-groupcount-${selectId}`);
+    if (countEl) {
+      const row = document.getElementById(`mq-vprow-${selectId}`);
+      const total = row ? row.querySelectorAll('.mq-vpicker-chip[data-value]:not([data-value="none"])').length : 0;
+      countEl.textContent = `Showing ${count||0} of ${total} total — pick a different collection above to see the rest`;
+    }
     const m = selectId.match(/^mq-(c|b)-/);
     if (m) window.mqRefreshAllPickerVisibility(m[1]);
   };
