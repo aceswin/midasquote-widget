@@ -483,6 +483,9 @@
             cutoutOptions: Array.isArray(cutoutOptions) ? cutoutOptions : [],
             photoUrl:    (shopPhotos||{})[photoKeyFor('countertop', item['Name'])] || '',
             visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), 'countertop'),
+            groupName:   (item['Group name']||'').trim(),
+            groupOrder:  item['Group sort order']||0,
+            groupDesc:   item['Group description']||'',
           };
         });
     } else {
@@ -566,7 +569,7 @@
   function ctMatItems() {
     const entries = Object.entries(CT_MAT);
     return entries.length
-      ? sortAndBadgeItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[]})))
+      ? sortBadgeAndGroupItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[], groupName:m.groupName||'', groupOrder:m.groupOrder||0, groupDesc:m.groupDesc||''})))
       : [{value:'lam', label:'Laminate', icon:'🪨'}];
   }
 
@@ -1523,7 +1526,7 @@
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
-              ${pickerRow('mq-b-ct-mat-cab', ctMatItems())}
+              ${pickerRow('mq-b-ct-mat-cab', ctMatItems(), null, 'countertop')}
               <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
             <div style="background:#f9fafb;border-radius:6px;padding:10px 12px;margin-bottom:0.75rem">
             <div id="mq-b-cab-dw-wrap">
@@ -3127,7 +3130,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
         <div class="mq-grid2" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">Material</label>
-            ${pickerRow(`mqsm-${id}`, ctMatItems())}
+            ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
             <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
           <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
             <select id="mqssi-${id}">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>

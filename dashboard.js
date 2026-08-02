@@ -272,7 +272,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Don't have your own photo for something? Many common items already have one of our own curated photos ready to use — just pick "Choose from library" instead of uploading your own. No need to go find or shoot a photo for every single item yourself.</p>
         <p>Every category starts collapsed — click any category's header to open just that one. With a lot of items configured, this keeps the page manageable.</p>
         <p>You can also control which project types each item shows up for right from here — the same setting as on the Specialty Items tab, just accessible from both places.</p>
-        <p><strong>Groups</strong> — in Box Materials, Door Styles, Drawer Configurations, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
+        <p><strong>Groups</strong> — in Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
       `
     },
     templates: {
@@ -4262,7 +4262,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     // Groups only make sense for categories customers actually pick a
     // style/material from — not hinges, countertops, or tall cabinets.
-    const GROUPABLE_CATS = ['material','door','drawer','trim_crown','trim_valance'];
+    const GROUPABLE_CATS = ['material','door','drawer','trim_crown','trim_valance','countertop'];
 
     function catSection(cat) {
       const items = byCategory[cat] || [];
