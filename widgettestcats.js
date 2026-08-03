@@ -569,6 +569,9 @@
           }
           let addonOptions = [];
           try { addonOptions = item['Addon options'] ? JSON.parse(item['Addon options']) : []; } catch(e) { addonOptions = []; }
+          if (Array.isArray(addonOptions)) {
+            addonOptions = addonOptions.map(a => ({ ...a, photoUrl: (shopPhotos||{})['addon_'+a.id] || '' }));
+          }
           CT_MAT[`ct_${i}`] = {
             label:       item['Name'],
             ps:          item['Rate']||0,
@@ -659,8 +662,16 @@
   }
 
   function ctMatOpts() {
-    return Object.entries(CT_MAT).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('') ||
-      `<option value="lam">Laminate</option>`;
+    // Must match ctMatItems()'s sorted/grouped order exactly — otherwise the
+    // browser's default-selected option (always the first one in the list)
+    // doesn't match whichever chip the visual picker highlights as selected,
+    // and anything reading the material before a chip gets manually clicked
+    // (e.g. the edge/addon lookup, or Calculate if clicked immediately)
+    // would use the wrong material.
+    const items = ctMatItems();
+    return items.length
+      ? items.map(it => `<option value="${it.value}">${it.label}</option>`).join('')
+      : `<option value="lam">Laminate</option>`;
   }
 
   function ctMatItems() {
@@ -1911,13 +1922,33 @@
     // Edge profile — single-select, defaults to a $0 "Standard edge" when a
     // material has no edge options configured (or none at all), so this is
     // fully invisible/no-op for any shop that hasn't touched the feature.
-    function edgeSelectHtml(m, selectId) {
+    // Rendered as photo chips (like every other picker in the widget) with a
+    // hidden input tracking the actual chosen value for the price calc.
+    function edgeSelectHtml(m, containerId) {
       const edges = edgeOptionsFor(m);
       if (!edges.length) return '';
+      const chip = (idx, label, photoUrl, icon, selected) => {
+        const thumb = photoUrl
+          ? `<img src="${photoUrl}" alt="${(label||'').replace(/"/g,'&quot;')}" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6"/>`
+          : `<div style="width:56px;height:56px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:22px">${icon}</div>`;
+        return `<div class="mq-edge-chip${selected?' selected':''}" onclick="mqSelectEdge(this,'${containerId}-sel','${idx}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid ${selected?'#1a1a1a':'#e5e7eb'};border-radius:8px;cursor:pointer;width:76px;flex-shrink:0">
+          ${thumb}<span style="font-size:11px;text-align:center;color:#374151;line-height:1.2">${(label||'').replace(/"/g,'&quot;')}</span>
+        </div>`;
+      };
+      const chips = [chip('none', 'Standard', '', '🚫', true)].concat(edges.map((e,i)=>chip(i, e.label||'Edge', e.photoUrl, '📐', false))).join('');
       return `<div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Edge</label>
-        <select id="${selectId}"><option value="none">Standard edge</option>${edges.map((e,i)=>`<option value="${i}">${(e.label||'Edge').replace(/"/g,'&quot;')} — ${e.rate?('$'+e.rate.toLocaleString()+'/lin ft'):'included'}</option>`).join('')}</select>
+        <input type="hidden" id="${containerId}-sel" value="none"/>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding:4px 2px">${chips}</div>
       </div>`;
     }
+    window.mqSelectEdge = function(chipEl, hiddenId, idx) {
+      const hidden = document.getElementById(hiddenId);
+      if (hidden) hidden.value = idx;
+      const row = chipEl.parentElement;
+      if (row) row.querySelectorAll('.mq-edge-chip').forEach(c => { c.classList.remove('selected'); c.style.borderColor = '#e5e7eb'; });
+      chipEl.classList.add('selected');
+      chipEl.style.borderColor = '#1a1a1a';
+    };
     // Addons — stackable, own quantity each, any pricing method.
     function addonRowsHtml(m, idPrefix) {
       const addons = addonOptionsFor(m);
@@ -1925,7 +1956,11 @@
       return `<div style="margin-bottom:0.75rem"><label class="mq-label" style="display:block;margin-bottom:6px">Add-ons</label>
         ${addons.map((a,i)=>{
           const priceLabel = a.pricingType==='flat' ? `$${(a.rate||0).toLocaleString()} each` : a.pricingType==='sqft' ? `$${(a.rate||0).toLocaleString()}/sq ft` : `$${(a.rate||0).toLocaleString()}/lin ft`;
+          const thumb = a.photoUrl
+            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" style="width:40px;height:40px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0"/>`
+            : `<div style="width:40px;height:40px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">➕</div>`;
           return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            ${thumb}
             <label style="font-size:14px;color:#4b5563;flex:1;display:flex;align-items:center;gap:6px;cursor:pointer">
               <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qty-${i}').style.display=this.checked?'':'none'" style="width:auto"/>
               ${(a.label||'Addon').replace(/"/g,'&quot;')} <span style="color:#9ca3af;font-size:12px">(${priceLabel})</span>
@@ -3463,7 +3498,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const addonEl = document.getElementById(addonContainerId);
       if (!matSel) return;
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
-      if (edgeEl) edgeEl.innerHTML = edgeSelectHtml(m, `${edgeContainerId}-sel`);
+      if (edgeEl) edgeEl.innerHTML = edgeSelectHtml(m, edgeContainerId);
       if (addonEl) addonEl.innerHTML = addonRowsHtml(m, `${addonContainerId}-a`);
     };
     window.mqRefreshBsFt=(prefix)=>{
