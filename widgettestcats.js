@@ -421,6 +421,9 @@
       #midasquote-widget .mq-spec-thumb{width:96px;height:96px;border-radius:6px;object-fit:contain;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:96px;height:96px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+      #midasquote-widget .mq-vpicker-wrap{position:relative}
+      #midasquote-widget .mq-vpicker-arrow{position:absolute;top:0;right:0;bottom:8px;width:34px;display:none;align-items:center;justify-content:flex-end;padding-right:2px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%);font-size:20px;font-weight:700;color:#374151;pointer-events:none}
+      #midasquote-widget .mq-vpicker-arrow.show{display:flex}
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:110px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
@@ -446,10 +449,10 @@
       #midasquote-widget .mq-qty-btn{width:22px;height:22px;border:1px solid #d1d5db;border-radius:4px;background:#fff;color:#111;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
       #midasquote-widget .mq-qty-val{font-size:14px;font-weight:500;min-width:16px;text-align:center}
       #midasquote-widget .mq-tog-row{display:flex;align-items:center;gap:10px;margin:1rem 0 0.75rem;padding:10px 12px;background:#f9fafb;border-radius:8px;cursor:pointer}
-      #midasquote-widget .mq-tog{width:36px;height:20px;background:#d1d5db;border-radius:10px;position:relative;transition:background 0.2s;flex-shrink:0}
-      #midasquote-widget .mq-tog.on{background:${bc}}
-      #midasquote-widget .mq-tog::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
-      #midasquote-widget .mq-tog.on::after{left:18px}
+      #midasquote-widget .mq-tog{width:36px !important;height:20px !important;background:#d1d5db !important;border-radius:10px !important;position:relative !important;display:inline-block !important;transition:background 0.2s;flex-shrink:0}
+      #midasquote-widget .mq-tog.on{background:${bc} !important}
+      #midasquote-widget .mq-tog::after{content:'' !important;position:absolute !important;width:16px !important;height:16px !important;background:#fff !important;border-radius:50% !important;top:2px !important;left:2px !important;transition:left 0.2s}
+      #midasquote-widget .mq-tog.on::after{left:18px !important}
       #midasquote-widget .mq-sub-sec{background:#f9fafb;border-radius:8px;padding:1rem;margin-top:0.75rem;border-left:4px solid #d1d5db}
       #midasquote-widget .mq-sub-sec.mq-sub-upper{border-left-color:#3b82f6;background:#eff6ff}
       #midasquote-widget .mq-sub-sec.mq-sub-base{border-left-color:#f59e0b;background:#fffbeb}
@@ -564,6 +567,8 @@
               {label:'Cooktop cutout', rate:item['Cooktop cutout rate']!=null?item['Cooktop cutout rate']:220},
             ];
           }
+          let addonOptions = [];
+          try { addonOptions = item['Addon options'] ? JSON.parse(item['Addon options']) : []; } catch(e) { addonOptions = []; }
           CT_MAT[`ct_${i}`] = {
             label:       item['Name'],
             ps:          item['Rate']||0,
@@ -572,8 +577,12 @@
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
             cutoutOptions: Array.isArray(cutoutOptions) ? cutoutOptions : [],
+            addonOptions: Array.isArray(addonOptions) ? addonOptions : [],
             photoUrl:    (shopPhotos||{})[photoKeyFor('countertop', item['Name'])] || '',
             visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), 'countertop'),
+            groupName:   (item['Group name']||'').trim(),
+            groupOrder:  item['Group sort order']||0,
+            groupDesc:   item['Group description']||'',
           };
         });
     } else {
@@ -657,7 +666,7 @@
   function ctMatItems() {
     const entries = Object.entries(CT_MAT);
     return entries.length
-      ? sortAndBadgeItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[]})))
+      ? sortBadgeAndGroupItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[], groupName:m.groupName||'', groupOrder:m.groupOrder||0, groupDesc:m.groupDesc||''})))
       : [{value:'lam', label:'Laminate', icon:'🪨'}];
   }
 
@@ -783,7 +792,7 @@
     const groupNames = [...new Set(items.filter(it => it.groupName).map(it => it.groupName))];
     const groups = groupNames.map(name => {
       const members = items.filter(it => it.groupName === name).sort((a,b) => a.price - b.price);
-      const allSamePrice = members.every(m => m.price === members[0].price);
+      const allSamePrice = members.length > 1 && members.every(m => m.price === members[0].price);
       if (allSamePrice) members.forEach(m => m.samePriceNote = true);
       const order = members.find(m => m.groupOrder)?.groupOrder || 0;
       return { order, members };
@@ -851,8 +860,33 @@
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
       return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    return `${groupDropdown}<div class="mq-vpicker-row" id="mq-vprow-${selectId}">${chips}</div>`;
+    return `${groupDropdown}<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
   }
+
+  // Shows a "more to scroll" arrow over the right edge of a picker row
+  // whenever its chips overflow the visible width and haven't been
+  // scrolled to the end yet — mainly for mobile, where several chips
+  // routinely don't fit on screen and there's no other visual hint that
+  // more options exist off to the right.
+  window.mqUpdatePickerArrow = function(selectId) {
+    const row = document.getElementById(`mq-vprow-${selectId}`);
+    const arrow = document.getElementById(`mq-vparrow-${selectId}`);
+    if (!row || !arrow) return;
+    const hasOverflow = row.scrollWidth > row.clientWidth + 4;
+    const nearEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
+    arrow.classList.toggle('show', hasOverflow && !nearEnd);
+  };
+  window.mqUpdateAllPickerArrows = function() {
+    // Deferred a frame — scrollWidth/clientWidth need real layout to have
+    // happened, which isn't guaranteed yet if this runs synchronously
+    // right after an innerHTML swap.
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.mq-vpicker-row[id]').forEach(row => {
+        window.mqUpdatePickerArrow(row.id.replace(/^mq-vprow-/, ''));
+      });
+    });
+  };
+  window.addEventListener('resize', () => window.mqUpdateAllPickerArrows());
 
   // Fires when the "Pick a collection" dropdown changes — updates which
   // collection is active, refreshes its description text, and re-runs the
@@ -1632,8 +1666,10 @@
           </label>
           <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
-              ${pickerRow('mq-b-ct-mat-cab', ctMatItems())}
-              <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
+              ${pickerRow('mq-b-ct-mat-cab', ctMatItems(), null, 'countertop')}
+              <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshCtAddons('mq-b-ct-mat-cab','mq-b-cab-edge','mq-b-cab-addons');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
+            <div id="mq-b-cab-edge"></div>
+            <div id="mq-b-cab-addons"></div>
             <div style="background:#f9fafb;border-radius:6px;padding:10px 12px;margin-bottom:0.75rem">
             <div id="mq-b-cab-dw-wrap">
                 <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-bottom:8px">
@@ -1827,6 +1863,43 @@
       if (m && Array.isArray(m.cutoutOptions) && m.cutoutOptions.length) return m.cutoutOptions;
       return [{label:'Sink cutout', rate:legacySinkR}, {label:'Cooktop cutout', rate:legacyCookR}];
     }
+    // Edge profiles (single-select per counter, always priced per linear
+    // foot) vs stackable addons (any pricing method, own quantity each) —
+    // both live in the same 'Addon options' list, split by the isEdge flag.
+    function edgeOptionsFor(m) {
+      return (m && Array.isArray(m.addonOptions) ? m.addonOptions : []).filter(a => a.isEdge);
+    }
+    function addonOptionsFor(m) {
+      return (m && Array.isArray(m.addonOptions) ? m.addonOptions : []).filter(a => !a.isEdge);
+    }
+    // Shared by both countertop paths (standalone Surfaces cards and the
+    // cabinet-tied "Both" tab flow) — each just passes in its own already-
+    // computed linFt/sqft/depth so the actual edge/addon math stays in one
+    // place. Edges are always linear-foot priced: counter linear feet plus
+    // 2 returns' worth of depth, approximating the sides we can't otherwise
+    // measure per-surface. Addons use whichever pricing method was set and
+    // are stackable by quantity.
+    function ctAddonsCost(m, edgeSelectId, addonIdPrefix, linFt, sqft, depthIn) {
+      let cost = 0;
+      const labelParts = [];
+      const edgeVal = gv(edgeSelectId);
+      if (edgeVal && edgeVal !== 'none') {
+        const edge = edgeOptionsFor(m)[parseInt(edgeVal, 10)];
+        if (edge) {
+          const edgeLinFt = linFt + 2 * ((depthIn || ctDepth) / 12);
+          cost += (edge.rate||0) * edgeLinFt;
+          labelParts.push(`${edge.label} edge`);
+        }
+      }
+      addonOptionsFor(m).forEach((a,i) => {
+        if (!document.getElementById(`${addonIdPrefix}-${i}`)?.checked) return;
+        const qty = gn(`${addonIdPrefix}-qty-${i}`, 1);
+        const unitCost = a.pricingType==='flat' ? (a.rate||0) : a.pricingType==='sqft' ? (a.rate||0)*sqft : (a.rate||0)*linFt;
+        cost += unitCost * qty;
+        labelParts.push(qty>1 ? `${a.label} ×${qty}` : a.label);
+      });
+      return { cost, labelParts };
+    }
     function bsOptsHtml(m) {
       return bsOptionsFor(m).map((o,i)=>`<option value="${i}">${(o.label||'Backsplash').replace(/"/g,'&quot;')}</option>`).join('');
     }
@@ -1834,6 +1907,33 @@
       return cutoutOptionsFor(m).map((o,i)=>
         `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:14px;color:#4b5563;min-width:110px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label><input type="number" id="${idPrefix}-${i}" value="0" min="0" max="10" style="width:55px"/></div>`
       ).join('');
+    }
+    // Edge profile — single-select, defaults to a $0 "Standard edge" when a
+    // material has no edge options configured (or none at all), so this is
+    // fully invisible/no-op for any shop that hasn't touched the feature.
+    function edgeSelectHtml(m, selectId) {
+      const edges = edgeOptionsFor(m);
+      if (!edges.length) return '';
+      return `<div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Edge</label>
+        <select id="${selectId}"><option value="none">Standard edge</option>${edges.map((e,i)=>`<option value="${i}">${(e.label||'Edge').replace(/"/g,'&quot;')} — ${e.rate?('$'+e.rate.toLocaleString()+'/lin ft'):'included'}</option>`).join('')}</select>
+      </div>`;
+    }
+    // Addons — stackable, own quantity each, any pricing method.
+    function addonRowsHtml(m, idPrefix) {
+      const addons = addonOptionsFor(m);
+      if (!addons.length) return '';
+      return `<div style="margin-bottom:0.75rem"><label class="mq-label" style="display:block;margin-bottom:6px">Add-ons</label>
+        ${addons.map((a,i)=>{
+          const priceLabel = a.pricingType==='flat' ? `$${(a.rate||0).toLocaleString()} each` : a.pricingType==='sqft' ? `$${(a.rate||0).toLocaleString()}/sq ft` : `$${(a.rate||0).toLocaleString()}/lin ft`;
+          return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <label style="font-size:14px;color:#4b5563;flex:1;display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qty-${i}').style.display=this.checked?'':'none'" style="width:auto"/>
+              ${(a.label||'Addon').replace(/"/g,'&quot;')} <span style="color:#9ca3af;font-size:12px">(${priceLabel})</span>
+            </label>
+            <input type="number" id="${idPrefix}-qty-${i}" value="1" min="1" max="20" style="width:55px;display:none"/>
+          </div>`;
+        }).join('')}
+      </div>`;
     }
 
     const ctDepth  = 25.5;
@@ -2045,31 +2145,37 @@
     // still-visible option gets auto-selected instead of silently leaving a
     // hidden (and possibly still-priced) choice active.
     window.mqRefreshAllPickerVisibility=(prefix)=>{
-      if (prefix !== 'c' && prefix !== 'b') return; // only Cabinets/Both tabs have a room selector
-      const roomId = gv(`mq-${prefix}-room`);
-      const scope = document.getElementById(prefix==='c' ? 'mq-tab-cabinets' : 'mq-tab-both');
-      if (!scope) return;
-      scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
-        const rowSelectId = row.id.replace(/^mq-vprow-/, '');
-        const groupFilter = (window._mqGroupFilter||{})[rowSelectId];
-        let anyVisibleSelected=false, firstVisibleChip=null;
-        row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
-          let rooms=[];
-          try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
-          const roomOk = !rooms.length || rooms.includes(roomId);
-          const chipGroup = chip.getAttribute('data-group');
-          const groupOk = !groupFilter || chipGroup === groupFilter || chipGroup === '__always__';
-          const visible = roomOk && groupOk;
-          chip.style.display = visible ? '' : 'none';
-          if (visible && !firstVisibleChip) firstVisibleChip = chip;
-          if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
-        });
-        if (!anyVisibleSelected && firstVisibleChip) {
-          const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
-          const btn = firstVisibleChip.querySelector('.mq-vpicker-select-btn');
-          if (selectId && btn) window.mqPickVisual(selectId, btn);
+      if (prefix === 'c' || prefix === 'b') {
+        const roomId = gv(`mq-${prefix}-room`);
+        const scope = document.getElementById(prefix==='c' ? 'mq-tab-cabinets' : 'mq-tab-both');
+        if (scope) {
+          scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
+            const rowSelectId = row.id.replace(/^mq-vprow-/, '');
+            const groupFilter = (window._mqGroupFilter||{})[rowSelectId];
+            let anyVisibleSelected=false, firstVisibleChip=null;
+            row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
+              let rooms=[];
+              try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
+              const roomOk = !rooms.length || rooms.includes(roomId);
+              const chipGroup = chip.getAttribute('data-group');
+              const groupOk = !groupFilter || chipGroup === groupFilter || chipGroup === '__always__';
+              const visible = roomOk && groupOk;
+              chip.style.display = visible ? '' : 'none';
+              if (visible && !firstVisibleChip) firstVisibleChip = chip;
+              if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
+            });
+            if (!anyVisibleSelected && firstVisibleChip) {
+              const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
+              const btn = firstVisibleChip.querySelector('.mq-vpicker-select-btn');
+              if (selectId && btn) window.mqPickVisual(selectId, btn);
+            }
+          });
         }
-      });
+      }
+      // Runs for every tab/prefix, not just Cabinets/Both — a picker's chips
+      // can overflow on the standalone Countertops tab too, and that tab has
+      // no room selector to have triggered this function via the branch above.
+      window.mqUpdateAllPickerArrows();
     };
     // If a whole category has zero real (non-"None") options left for the
     // current project type, hide the entire section — not just the empty
@@ -3119,9 +3225,10 @@ window.mqTogDrawerConfig=(prefix)=>{
             }
             const coChecked = document.getElementById(coId)?.checked;
             const cutoutCost = coChecked ? cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`${cutsId}-q-${i}`)*(o.rate||0),0) : 0;
-            const cost = supplyCost + installCost + bsCost + cutoutCost;
+            const addonsRes = ctAddonsCost(m, `mq-${prefix}-cab-edge-sel`, `mq-${prefix}-cab-addons-a`, linFt, sqft, ctDepth);
+            const cost = supplyCost + installCost + bsCost + cutoutCost + addonsRes.cost;
             sub += cost;
-            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}`, cost:Math.round(cost)});
+            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
           }
         }
       }
@@ -3155,8 +3262,10 @@ window.mqTogDrawerConfig=(prefix)=>{
         }
         const cost = supplyCost+installCost+bsCost
           +(document.getElementById('mqsco-'+id)?.checked?cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`mqscuts-${id}-q-${i}`)*(o.rate||0),0):0);
-        sub+=cost;
-        lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${Math.round(bsLinFt*10)/10} lin ft)`:''}`,cost:Math.round(cost)});
+        const addonsRes = ctAddonsCost(m, `mqs-edge-${id}-sel`, `mqs-addons-${id}-a`, linFt, sqft, d||ctDepth);
+        const totalCost = cost + addonsRes.cost;
+        sub+=totalCost;
+        lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${Math.round(bsLinFt*10)/10} lin ft)`:''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`,cost:Math.round(totalCost)});
       });
 
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
@@ -3267,13 +3376,13 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div class="mq-field"><label class="mq-label" style="color:#16a34a">Auto-calculated</label>
             <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
         </div>
-        <div class="mq-grid2" style="margin-bottom:1rem">
-          <div class="mq-field"><label class="mq-label">Material</label>
-            ${pickerRow(`mqsm-${id}`, ctMatItems())}
-            <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
-          <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
-            <select id="mqssi-${id}">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
-        </div>
+        <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
+          <select id="mqssi-${id}" style="width:auto;display:inline-block">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
+        <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
+          ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
+          <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
+        <div id="mqs-edge-${id}"></div>
+        <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
         <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:auto;flex-shrink:0"/> Cutouts needed</label>
         <div id="mqscuts-${id}" style="display:none;margin-top:8px;margin-bottom:0.75rem;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>
@@ -3288,6 +3397,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.getElementById(containerId)?.appendChild(card);
       window.mqRefreshBsOpts(`mqsm-${id}`, `mqsbs-${id}`);
       window.mqRefreshCutoutOpts(`mqsm-${id}`, `mqscuts-${id}`);
+      window.mqRefreshCtAddons(`mqsm-${id}`, `mqs-edge-${id}`, `mqs-addons-${id}`);
       window.mqRefreshSurfBsFt(id);
       mqRefreshAllPickerVisibility(prefix);
     }
@@ -3301,6 +3411,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(checked) {
         window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
         window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
+        window.mqRefreshCtAddons(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-edge`, `mq-${prefix}-cab-addons`);
         window.mqRefreshBsFt(prefix);
       }
     };
@@ -3345,6 +3456,15 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!matSel || !container) return;
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       container.innerHTML = cutoutRowsHtml(m, `${cutsContainerId}-q`);
+    };
+    window.mqRefreshCtAddons=(matSelectId, edgeContainerId, addonContainerId)=>{
+      const matSel = document.getElementById(matSelectId);
+      const edgeEl = document.getElementById(edgeContainerId);
+      const addonEl = document.getElementById(addonContainerId);
+      if (!matSel) return;
+      const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
+      if (edgeEl) edgeEl.innerHTML = edgeSelectHtml(m, `${edgeContainerId}-sel`);
+      if (addonEl) addonEl.innerHTML = addonRowsHtml(m, `${addonContainerId}-a`);
     };
     window.mqRefreshBsFt=(prefix)=>{
       // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
