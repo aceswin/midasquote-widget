@@ -1546,7 +1546,7 @@ window.logoutMember = async function () {
             <div class="mq-page-title">Proposals</div>
             <div class="mq-page-sub">Set up templates here — your team picks one in MidasQuote Pro to turn a real-number estimate into a clean, printable proposal for the customer to sign.</div>
             <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#1e40af;line-height:1.5">
-              💡 <strong>Heads up:</strong> prices shown in a proposal aren't locked to what's set up here. When building a proposal for a specific customer in MidasQuote Pro, your team can tweak any item's price in real time — handy for one-off adjustments — without changing your actual pricing setup anywhere else.
+              💡 <strong>Heads up:</strong> prices shown in a proposal aren't locked in — your team can tweak any item's price in real time in MidasQuote Pro when building a proposal for a specific customer, handy for one-off adjustments, without changing your actual pricing setup anywhere else.
             </div>
             <div id="mq-prop-msg"></div>
             <div style="margin-bottom:1rem">
@@ -4302,7 +4302,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Edge &amp; addon photos</div>
             <p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Names, pricing, and which materials each one applies to are managed in Pricing → Countertop pricing — this is just for adding a photo.</p>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-              ${mqCountertopAddonPhotoList().map(a => photoCard('addon_'+a.id, a.label, a.isEdge?'📐':'➕', null, null, null)).join('')}
+              ${mqCountertopAddonPhotoList().map(a => photoCard('addon_'+a.id, a.label, a.isEdge?'📐':'➕', 'countertop', null, null)).join('')}
             </div>
           </div>` : ''}
         </div>
