@@ -2274,13 +2274,14 @@ window.mqphGoToWizard = function() {
 
     return `
       <div class="mqph-ct-block">
-        <div class="mqph-cat-header">
-          <span class="mqph-cat-title">🏛️ Tall cabinets</span>
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('tallcab')" style="cursor:pointer">
+          <span class="mqph-cat-title"><span id="mqph-cat-arrow-tallcab" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏛️ Tall cabinets <span style="font-size:12px;font-weight:400;color:#9ca3af">(${tallCabs.length})</span></span>
           ${wizardHasRun
-            ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenTallCabAdd()">+ Add type</button>`
+            ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenTallCabAdd()">+ Add type</button>`
             : `<span style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:4px 10px">Complete main pricing wizard first</span>`
           }
         </div>
+        <div id="mqph-cat-body-tallcab" style="display:none">
         <div id="mqph-tallcab-msg" class="mqph-msg"></div>
         <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
           Add each tall cabinet variation you offer — with pullouts, oven unit, pantry, etc. Quote each as a standard <strong>24" wide unit using your baseline material, no doors</strong> (supply only). The widget automatically calculates door upcharges, material upcharges, hinge upcharges, and install on top based on what the customer has selected.
@@ -2290,6 +2291,7 @@ window.mqphGoToWizard = function() {
           : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">No tall cabinet types yet — add your first one above.</div>`
         }
         <div style="padding:0.75rem 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6">The widget reminds customers not to include tall cabinet wall space in their upper and base measurements.</div>
+        </div>
       </div>
 
       <!-- Tall cabinet add/edit modal -->
