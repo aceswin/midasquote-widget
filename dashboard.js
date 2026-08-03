@@ -227,6 +227,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
         <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
         <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another [category]'s pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
+        <p style="margin-top:1.25rem"><strong>How some of the trickier pricing actually works:</strong></p>
+        <p><strong>Extended (36"–40") upper cabinets</strong> add a flat 30% on top of the material/door cost and the install cost for upper cabinets only — base cabinets are never affected, since it's only the uppers that get taller to reach the ceiling.</p>
+        <p><strong>Tall cabinets</strong> are priced per unit: your wizard's baseline unit price (24" wide, baseline material & door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced just because it shares a door style with the rest of the kitchen.</p>
+        <p><strong>Countertop edges</strong> are always priced per linear foot — there's genuinely no other accurate way to price an edge profile, since its cost is set by the length of material being shaped, not the counter's overall area. To account for the parts of a counter this tool can't precisely measure — the "returns" where an edge wraps around each end — every edge calculation adds 2 extra returns' worth of the counter's depth on top of its straight length. That's a deliberately generous assumption rather than an exact one: since this is a ballpark estimate, it's better to slightly overestimate an edge than to surprise a customer with a bigger number later at the real quote.</p>
       `
     },
     specialty: {
@@ -4195,11 +4199,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // changes get applied to all of them together, keeping them in sync.
       let existing = byCategory[cat].find(x => x.baseName === baseName);
       if (!existing) {
+        let addonOptions = [];
+        try { addonOptions = r.fields['Addon options'] ? JSON.parse(r.fields['Addon options']) : []; } catch(e) { addonOptions = []; }
         existing = {
           id: r.id, ids: [r.id], baseName, fullName: r.fields['Name'] || baseName, visibleRooms: r.fields['Visible rooms'],
           groupName: (r.fields['Group name']||'').trim(),
           groupDesc: r.fields['Group description']||'',
           groupOrder: typeof r.fields['Group sort order']==='number' ? r.fields['Group sort order'] : 0,
+          addonOptions,
         };
         byCategory[cat].push(existing);
       } else {
@@ -4287,8 +4294,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               onchange="mqSaveCategoryPickerLabel('${cat}',this.value)"/>
           </div>` : ''}
           <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
+          ${cat === 'countertop' && mqCountertopAddonPhotoList().length ? `
+          <div style="margin-top:16px">
+            <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Edge &amp; addon photos</div>
+            <p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Names, pricing, and which materials each one applies to are managed in Pricing → Countertop pricing — this is just for adding a photo.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+              ${mqCountertopAddonPhotoList().map(a => photoCard('addon_'+a.id, a.label, a.isEdge?'📐':'➕', null, null, null)).join('')}
+            </div>
+          </div>` : ''}
         </div>
       </div>`;
+    }
+
+    // Every distinct edge/addon across all countertop materials, deduped by
+    // id — used only to offer a photo card here; everything else about an
+    // addon (name, pricing, which materials it applies to) is managed in
+    // Pricing → Countertop pricing instead.
+    function mqCountertopAddonPhotoList() {
+      const items = byCategory['countertop'] || [];
+      const seen = new Map();
+      items.forEach(item => (item.addonOptions||[]).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
+      return [...seen.values()];
     }
 
     // The grid contents get rebuilt on their own (without re-rendering the

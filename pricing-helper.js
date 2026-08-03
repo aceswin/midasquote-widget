@@ -1,788 +1,978 @@
 /*
- * MidasQuote Pricing Helper v1.0
- * Helps shop owners calculate their per-linear-foot rates
- * by back-calculating from their existing software quotes
+ * MidasQuote Pricing Helper v3.0
+ * Wizard-based setup + dynamic line item editor
+ * Replaces pricing-helper-v2.js
  */
 
-(function () {
+(function() {
 
-  const CONFIG = {
-       AIRTABLE_TOKEN:     'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
-    BASE_ID:            'app4zrMlVLwF2xn4h',
-    SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
-    PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
-    SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
-    LEADS_TABLE:        'tblPcoTI8zCCHLICi',
-    RESEND_API_KEY:     're_bkjuB6kc_HvraLCVCJntfLMjVBEjEkWuV',
-    EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
-FROM_EMAIL:         'quotes@midasquote.com',
-  };
+  const LINE_ITEMS_TABLE = 'tblCkJsJ2OC6DgXok';
 
-  const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
-  const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
+  let shopRecord = null;
+  let pricingRecord = null;
+  let lineItems = [];
+  let wizardBaseline = null;
+  let wizardStep = 0;
+  let wizardItems = [];
+  let currentEditId = null;
+
+  const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
+  const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
 
   async function atGet(table, formula) {
-    const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
-    const res = await fetch(url, { headers: AT_HEADS });
+    const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
+    const res = await fetch(url, { headers: AT_HEADS() });
     const data = await res.json();
     return data.records || [];
   }
 
-  async function atUpdate(table, id, fields) {
-    const res = await fetch(`${AT_BASE}/${table}/${id}`, {
-      method: 'PATCH', headers: AT_HEADS,
-      body: JSON.stringify({ fields })
-    });
-    return await res.json();
-  }
-
   async function atCreate(table, fields) {
-    const res = await fetch(`${AT_BASE}/${table}`, {
-      method: 'POST', headers: AT_HEADS,
+    const res = await fetch(`${AT_BASE_URL()}/${table}`, {
+      method: 'POST', headers: AT_HEADS(),
       body: JSON.stringify({ fields })
     });
     return await res.json();
   }
 
-  function gn(id, d = 0) { const v = parseFloat(document.getElementById(id)?.value); return isNaN(v) ? d : v; }
-  function gv(id) { return document.getElementById(id)?.value || ''; }
-  function el(id) { return document.getElementById(id); }
-  function fmt(n) { return '$' + Math.round(n || 0).toLocaleString(); }
+  async function atUpdate(table, id, fields) {
+    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, {
+      method: 'PATCH', headers: AT_HEADS(),
+      body: JSON.stringify({ fields })
+    });
+    return await res.json();
+  }
+
+  async function atDelete(table, id) {
+    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, {
+      method: 'DELETE', headers: AT_HEADS()
+    });
+    return await res.json();
+  }
 
   // ============================================================
-  // STATE
-  // ============================================================
-  let shopRecord = null;
-  let pricingRecord = null;
-  let materials = [];
-  let doorStyles = [];
-  let installMethod = 'per_lft';
-
-  // Default materials
-  const DEFAULT_MATERIALS = [
-    { id: 'melamine', name: 'Melamine', field: 'Melamine price', default: 280 },
-    { id: 'plywood',  name: 'Plywood',  field: 'Plywood price',  default: 380 },
-    { id: 'mdf',      name: 'Painted MDF', field: 'MDF price',   default: 350 },
-    { id: 'solid',    name: 'Solid wood', field: 'Solid wood price', default: 550 },
-  ];
-
-  const DEFAULT_DOORS = [
-    { id: 'slab',   name: 'Slab (flat)',   field: 'Slab multiplier',   default: 0 },
-    { id: 'shaker', name: 'Shaker',        field: 'Shaker multiplier', default: 0 },
-    { id: 'raised', name: 'Raised panel',  field: 'Raised multiplier', default: 0 },
-    { id: 'glass',  name: 'Glass inserts', field: 'Glass multiplier',  default: 0 },
-  ];
-
-  // ============================================================
-  // STYLES
+  // INJECT STYLES
   // ============================================================
   function injectStyles() {
-    if (document.getElementById('mq-ph-styles')) return;
+    if (document.getElementById('mqph3-styles')) return;
     const s = document.createElement('style');
-    s.id = 'mq-ph-styles';
+    s.id = 'mqph3-styles';
     s.textContent = `
-      #mq-pricing-helper *{box-sizing:border-box;margin:0;padding:0}
-      #mq-pricing-helper{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:0 auto;padding:2rem}
-      #mq-pricing-helper h1{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
-      #mq-pricing-helper .mq-ph-sub{font-size:14px;color:#6b7280;margin-bottom:2rem;line-height:1.5}
-      #mq-pricing-helper .mq-ph-tabs{display:flex;gap:4px;background:#f3f4f6;padding:4px;border-radius:10px;margin-bottom:2rem}
-      #mq-pricing-helper .mq-ph-tab{flex:1;padding:8px 12px;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;border-radius:8px;text-align:center;transition:all 0.15s;border:none;background:none;font-family:inherit}
-      #mq-pricing-helper .mq-ph-tab.active{background:#fff;color:#111;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
-      #mq-pricing-helper .mq-ph-section{display:none}
-      #mq-pricing-helper .mq-ph-section.active{display:block}
-      #mq-pricing-helper .mq-ph-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;margin-bottom:1.25rem}
-      #mq-pricing-helper .mq-ph-card-title{font-size:14px;font-weight:600;color:#111;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
-      #mq-pricing-helper .mq-ph-card-sub{font-size:12px;color:#6b7280;margin-bottom:1.25rem;line-height:1.5}
-      #mq-pricing-helper .mq-ph-calc{background:#f9fafb;border-radius:10px;padding:1.25rem;margin-top:1rem}
-      #mq-pricing-helper .mq-ph-calc-title{font-size:12px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:1rem}
-      #mq-pricing-helper .mq-ph-row{display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem;flex-wrap:wrap}
-      #mq-pricing-helper .mq-ph-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px}
-      #mq-pricing-helper .mq-ph-label{font-size:12px;font-weight:500;color:#374151}
-      #mq-pricing-helper .mq-ph-hint{font-size:11px;color:#9ca3af;line-height:1.4}
-      #mq-pricing-helper input[type=number],#mq-pricing-helper input[type=text],#mq-pricing-helper select{font-family:inherit;font-size:13px;color:#111;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;width:100%}
-      #mq-pricing-helper input:focus,#mq-pricing-helper select:focus{outline:none;border-color:#1a1a1a}
-      #mq-pricing-helper .mq-ph-result{background:#fff;border:1px solid #86efac;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:1rem}
-      #mq-pricing-helper .mq-ph-result-lbl{font-size:13px;color:#166534;font-weight:500}
-      #mq-pricing-helper .mq-ph-result-val{font-size:20px;font-weight:700;color:#16a34a}
-      #mq-pricing-helper .mq-ph-result-actions{display:flex;gap:8px;align-items:center}
-      #mq-pricing-helper .mq-ph-btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#111;font-family:inherit;transition:all 0.15s}
-      #mq-pricing-helper .mq-ph-btn:hover{background:#f9fafb}
-      #mq-pricing-helper .mq-ph-btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-      #mq-pricing-helper .mq-ph-btn-primary:hover{opacity:0.88;background:#1a1a1a}
-      #mq-pricing-helper .mq-ph-btn-sm{padding:5px 10px;font-size:12px}
-      #mq-pricing-helper .mq-ph-btn-danger{color:#dc2626;border-color:#fca5a5}
-      #mq-pricing-helper .mq-ph-btn-danger:hover{background:#fef2f2}
-      #mq-pricing-helper .mq-ph-divider{height:1px;background:#e5e7eb;margin:1.25rem 0}
-      #mq-pricing-helper .mq-ph-mat-header{display:grid;grid-template-columns:1fr 120px 120px 120px auto;gap:8px;align-items:center;padding:8px 12px;background:#f9fafb;border-radius:8px 8px 0 0;border:1px solid #e5e7eb;border-bottom:none;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em}
-      #mq-pricing-helper .mq-ph-mat-row{display:grid;grid-template-columns:1fr 120px 120px 120px auto;gap:8px;align-items:center;padding:10px 12px;border:1px solid #e5e7eb;border-top:none}
-      #mq-pricing-helper .mq-ph-mat-row:last-child{border-radius:0 0 8px 8px}
-      #mq-pricing-helper .mq-ph-mat-row input{border:1px solid #e5e7eb;border-radius:6px;padding:6px 8px;font-size:13px;font-family:inherit;width:100%}
-      #mq-pricing-helper .mq-ph-saved{background:#dcfce7;color:#166534;font-size:12px;padding:6px 12px;border-radius:6px;display:none;margin-top:8px}
-      #mq-pricing-helper .mq-ph-error{background:#fee2e2;color:#991b1b;font-size:12px;padding:6px 12px;border-radius:6px;display:none;margin-top:8px}
-      #mq-pricing-helper .mq-ph-info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;font-size:13px;color:#1e40af;line-height:1.5;margin-bottom:1rem}
-      #mq-pricing-helper .mq-ph-radio-group{display:flex;gap:12px;flex-wrap:wrap}
-      #mq-pricing-helper .mq-ph-radio{display:flex;align-items:center;gap:6px;font-size:13px;color:#111;cursor:pointer;padding:8px 14px;border:1px solid #e5e7eb;border-radius:8px;transition:all 0.15s}
-      #mq-pricing-helper .mq-ph-radio:has(input:checked){background:#f0fdf4;border-color:#86efac;color:#166534}
-      #mq-pricing-helper .mq-ph-summary{background:#fff;border:2px solid #1a1a1a;border-radius:12px;padding:1.5rem;margin-top:1.5rem}
-      #mq-pricing-helper .mq-ph-summary-title{font-size:15px;font-weight:700;color:#111;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
-      #mq-pricing-helper .mq-ph-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:1.25rem}
-      #mq-pricing-helper .mq-ph-summary-item{background:#f9fafb;border-radius:8px;padding:10px 12px}
-      #mq-pricing-helper .mq-ph-summary-lbl{font-size:11px;color:#6b7280;margin-bottom:2px}
-      #mq-pricing-helper .mq-ph-summary-val{font-size:16px;font-weight:700;color:#111}
+      #mq-pricing-helper-v2 *{box-sizing:border-box;margin:0;padding:0}
+      #mq-pricing-helper-v2{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2rem;max-width:900px}
+
+      /* WIZARD */
+      #mqph3-wizard{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
+      #mqph3-wizard-header{background:#1a1a1a;color:#fff;padding:1.5rem;display:flex;align-items:center;justify-content:space-between}
+      #mqph3-wizard-header h2{font-size:16px;font-weight:600;margin:0}
+      #mqph3-wizard-header p{font-size:13px;opacity:0.7;margin-top:4px}
+      #mqph3-progress{display:flex;gap:4px;margin-top:12px}
+      #mqph3-progress .step{flex:1;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;transition:background 0.3s}
+      #mqph3-progress .step.done{background:#a3e635}
+      #mqph3-progress .step.active{background:#fff}
+      #mqph3-wizard-body{padding:1.5rem}
+      #mqph3-wizard-nav{display:flex;gap:10px;padding:1rem 1.5rem;border-top:1px solid #e5e7eb;background:#f9fafb}
+
+      /* STEP CARDS */
+      .mqph3-step{display:none}
+      .mqph3-step.active{display:block}
+      .mqph3-step-title{font-size:18px;font-weight:700;color:#111;margin-bottom:6px}
+      .mqph3-step-sub{font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6}
+      .mqph3-highlight{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;color:#166534;line-height:1.6}
+      .mqph3-input-row{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+      .mqph3-input-row label{font-size:13px;color:#374151;flex:1;font-weight:500}
+      .mqph3-input-row input{width:130px;text-align:right;font-family:inherit;font-size:14px;font-weight:600;color:#111;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:8px 12px}
+      .mqph3-input-row input:focus{outline:none;border-color:#1a1a1a}
+      .mqph3-pfx{font-size:14px;color:#6b7280;font-weight:500}
+      .mqph3-result-box{background:#f9fafb;border-radius:8px;padding:1rem;margin-top:1rem;font-size:13px;color:#374151;line-height:1.8}
+      .mqph3-result-box strong{color:#111}
+      .mqph3-result-val{font-size:20px;font-weight:700;color:#16a34a}
+      .mqph3-skip-link{font-size:12px;color:#9ca3af;cursor:pointer;text-decoration:underline;margin-left:auto}
+      .mqph3-skip-link:hover{color:#6b7280}
+
+      /* BUTTONS */
+      .mqph3-btn{padding:10px 20px;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;border:none;font-family:inherit;transition:all 0.15s}
+      .mqph3-btn-primary{background:#1a1a1a;color:#fff}
+      .mqph3-btn-primary:hover{opacity:0.88}
+      .mqph3-btn-secondary{background:#fff;color:#111;border:1px solid #e5e7eb}
+      .mqph3-btn-secondary:hover{background:#f9fafb}
+      .mqph3-btn-danger{background:#fff;color:#dc2626;border:1px solid #fca5a5}
+      .mqph3-btn-danger:hover{background:#fef2f2}
+      .mqph3-btn-sm{padding:5px 12px;font-size:12px}
+      .mqph3-btn-success{background:#16a34a;color:#fff}
+      .mqph3-btn-success:hover{opacity:0.88}
+
+      /* ITEM TABLE */
+      #mqph3-items-section{margin-top:0}
+      .mqph3-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+      .mqph3-section-title{font-size:14px;font-weight:700;color:#111;display:flex;align-items:center;gap:8px}
+      .mqph3-category-block{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:1.25rem;overflow:hidden}
+      .mqph3-cat-header{background:#f9fafb;padding:12px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between}
+      .mqph3-cat-title{font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.06em}
+      .mqph3-item-row{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #f3f4f6}
+      .mqph3-item-row:last-child{border-bottom:none}
+      .mqph3-item-name{flex:1;font-size:13px;font-weight:500;color:#111}
+      .mqph3-item-desc{font-size:11px;color:#9ca3af;margin-top:1px}
+      .mqph3-item-rate{font-size:13px;font-weight:600;color:#111;min-width:80px;text-align:right}
+      .mqph3-item-unit{font-size:11px;color:#6b7280;min-width:70px;text-align:right}
+      .mqph3-item-active{width:36px;text-align:center}
+      .mqph3-toggle{width:32px;height:18px;background:#d1d5db;border-radius:9px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;display:inline-block}
+      .mqph3-toggle.on{background:#16a34a}
+      .mqph3-toggle::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
+      .mqph3-toggle.on::after{left:16px}
+      .mqph3-empty{text-align:center;padding:2rem;color:#9ca3af;font-size:13px}
+
+      /* MODAL */
+      #mqph3-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:1rem}
+      #mqph3-modal-overlay.show{display:flex}
+      #mqph3-modal{background:#fff;border-radius:12px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+      #mqph3-modal .mh{padding:1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between}
+      #mqph3-modal .mh h3{font-size:15px;font-weight:600;color:#111}
+      #mqph3-modal .mh button{background:none;border:none;font-size:20px;color:#6b7280;cursor:pointer;line-height:1}
+      #mqph3-modal .mb{padding:1.25rem}
+      .mqph3-field{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem}
+      .mqph3-field label{font-size:12px;font-weight:600;color:#374151}
+      .mqph3-field input,.mqph3-field select,.mqph3-field textarea{font-family:inherit;font-size:13px;color:#111;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;width:100%}
+      .mqph3-field input:focus,.mqph3-field select:focus{outline:none;border-color:#1a1a1a}
+      .mqph3-field textarea{resize:vertical;min-height:60px}
+      .mqph3-msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
+      .mqph3-msg-success{background:#dcfce7;color:#166534;border:1px solid #86efac}
+      .mqph3-msg-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+
+      /* CT DIRECT ENTRY */
+      #mqph3-ct-section{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:1.25rem;overflow:hidden}
+      #mqph3-ct-section .mqph3-cat-header{display:flex;align-items:center;justify-content:space-between}
+      .mqph3-ct-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #f3f4f6}
+      .mqph3-ct-row:last-child{border-bottom:none}
+      .mqph3-ct-label{flex:1;font-size:13px;color:#374151;font-weight:500}
+      .mqph3-ct-input{display:flex;align-items:center;gap:6px}
+      .mqph3-ct-input span{font-size:13px;color:#6b7280}
+      .mqph3-ct-input input{width:90px;text-align:right;font-family:inherit;font-size:13px;color:#111;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px}
+      .mqph3-ct-input input:focus{outline:none;border-color:#1a1a1a}
+      .mqph3-save-row{padding:1rem 1.5rem;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;align-items:center;gap:12px}
     `;
     document.head.appendChild(s);
   }
 
   // ============================================================
-  // BUILD HTML
+  // WIZARD STEPS DEFINITION
   // ============================================================
-  function buildHTML() {
+  function buildWizardSteps() {
+    return [
+      // Step 0: Welcome
+      {
+        id: 'welcome',
+        title: '👋 Welcome to Pricing Setup',
+        sub: `We'll walk you through setting up your pricing in about 10 minutes. You'll answer a few questions about your real jobs and we'll reverse-engineer your rates automatically — no math required.\n\nWhen you're done, your pricing will power the quote widget on your website.`,
+        content: () => `
+          <div class="mqph3-highlight">💡 <strong>How it works:</strong> We'll ask you to quote a few simple cabinet jobs using your existing quoting software. Then we'll calculate your per-linear-foot rates automatically. This ensures your estimates are accurate to your real pricing.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151">
+            <div>✅ Takes about 10 minutes</div>
+            <div>✅ Uses your real job prices</div>
+            <div>✅ You can re-run anytime</div>
+            <div>✅ Edit anything after setup</div>
+          </div>`,
+        skipLabel: null,
+        nextLabel: 'Start setup →',
+      },
+
+      // Step 1: Baseline quote
+      {
+        id: 'baseline',
+        title: '📐 Step 1 of 6 — Your baseline price',
+        sub: 'First, let\'s establish your baseline. In your quoting software, create a quote for exactly this job:',
+        content: () => `
+          <div class="mqph3-highlight">
+            <strong>Quote this exact job:</strong><br/>
+            • 4 linear feet of upper cabinets<br/>
+            • 4 linear feet of base cabinets<br/>
+            • Your most basic box material (e.g. white melamine)<br/>
+            • Flat slab doors<br/>
+            • No hardware upgrades<br/>
+            • Supply only (no installation)<br/>
+            • No removal, local delivery
+          </div>
+          <div class="mqph3-input-row">
+            <label>What's your total price for this job?</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-baseline-price" placeholder="0.00" step="0.01" oninput="mqph3CalcBaseline()"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>What material did you use as your baseline?</label>
+            <input type="text" id="mqph3-baseline-mat" placeholder="e.g. White melamine" style="width:200px;text-align:left"/>
+          </div>
+          <div id="mqph3-baseline-result" class="mqph3-result-box" style="display:none"></div>`,
+        skipLabel: 'Skip for now',
+        nextLabel: 'Next →',
+        onNext: () => {
+          const price = parseFloat(document.getElementById('mqph3-baseline-price')?.value || 0);
+          const mat = document.getElementById('mqph3-baseline-mat')?.value || 'Base material';
+          if (price > 0) {
+            wizardBaseline = { price, linFt: 8, ratePerFt: price / 8 };
+            wizardItems.push({
+              name: mat,
+              category: 'material',
+              rate: Math.round(wizardBaseline.ratePerFt * 100) / 100,
+              unit: 'per lin ft',
+              description: 'Baseline material — reverse engineered from sample quote',
+              active: true,
+              isBaseline: true,
+            });
+          }
+        }
+      },
+
+      // Step 2: Second material
+      {
+        id: 'material2',
+        title: '🪵 Step 2 of 6 — Second material upcharge',
+        sub: 'Now quote the same job but change only the cabinet material. Keep everything else identical.',
+        content: () => `
+          <div class="mqph3-highlight">
+            <strong>Same job as before, but:</strong><br/>
+            • Change cabinet material to your second option (e.g. prefinished birch plywood)<br/>
+            • Keep same doors, hardware, linear feet
+          </div>
+          <div class="mqph3-input-row">
+            <label>What material are you quoting now?</label>
+            <input type="text" id="mqph3-mat2-name" placeholder="e.g. Prefinished birch plywood" style="width:220px;text-align:left"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Total price for this job?</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-mat2-price" placeholder="0.00" step="0.01" oninput="mqph3CalcMat2()"/>
+          </div>
+          <div id="mqph3-mat2-result" class="mqph3-result-box" style="display:none"></div>`,
+        skipLabel: 'Skip — I only offer one material',
+        nextLabel: 'Next →',
+        onNext: () => {
+          const price = parseFloat(document.getElementById('mqph3-mat2-price')?.value || 0);
+          const name = document.getElementById('mqph3-mat2-name')?.value;
+          if (price > 0 && name && wizardBaseline) {
+            const upcharge = (price - wizardBaseline.price) / 8;
+            wizardItems.push({
+              name,
+              category: 'material',
+              rate: Math.round(upcharge * 100) / 100,
+              unit: 'per lin ft upcharge vs baseline',
+              description: 'Material upcharge — reverse engineered from sample quote',
+              active: true,
+            });
+          }
+        }
+      },
+
+      // Step 3: Door style upcharge
+      {
+        id: 'doors',
+        title: '🚪 Step 3 of 6 — Door style upcharge',
+        sub: 'Now quote the same baseline job but change the door style. Go back to your baseline material.',
+        content: () => `
+          <div class="mqph3-highlight">
+            <strong>Same baseline job, but:</strong><br/>
+            • Use your baseline material again<br/>
+            • Change door style to your most popular upgrade (e.g. shaker, raised panel)<br/>
+            • Keep everything else the same
+          </div>
+          <div class="mqph3-input-row">
+            <label>What door style are you quoting?</label>
+            <input type="text" id="mqph3-door1-name" placeholder="e.g. Maple shaker" style="width:220px;text-align:left"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Total price for this job?</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-door1-price" placeholder="0.00" step="0.01" oninput="mqph3CalcDoor1()"/>
+          </div>
+          <div id="mqph3-door1-result" class="mqph3-result-box" style="display:none"></div>`,
+        skipLabel: 'Skip — same price regardless of door style',
+        nextLabel: 'Next →',
+        onNext: () => {
+          const price = parseFloat(document.getElementById('mqph3-door1-price')?.value || 0);
+          const name = document.getElementById('mqph3-door1-name')?.value;
+          if (price > 0 && name && wizardBaseline) {
+            const upcharge = (price - wizardBaseline.price) / 8;
+            wizardItems.push({
+              name,
+              category: 'door',
+              rate: Math.round(upcharge * 100) / 100,
+              unit: 'per lin ft upcharge',
+              description: 'Door style upcharge — reverse engineered from sample quote',
+              active: true,
+            });
+          }
+        }
+      },
+
+      // Step 4: Hardware
+      {
+        id: 'hardware',
+        title: '⚙️ Step 4 of 6 — Hardware upgrades',
+        sub: 'Let\'s calculate your hardware upgrade upcharges using the same baseline job.',
+        content: () => `
+          <div class="mqph3-highlight">
+            <strong>Quote the baseline job twice:</strong><br/>
+            1. Add soft-close hinges only → enter that price<br/>
+            2. Upgrade to prefinished birch drawer boxes only → enter that price<br/>
+            (If you don't offer these, leave blank and skip)
+          </div>
+          <div class="mqph3-input-row">
+            <label>Baseline + soft-close hinges</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-hinges-price" placeholder="0.00" step="0.01" oninput="mqph3CalcHardware()"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Baseline + birch drawer boxes</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-drawers-price" placeholder="0.00" step="0.01" oninput="mqph3CalcHardware()"/>
+          </div>
+          <div id="mqph3-hardware-result" class="mqph3-result-box" style="display:none"></div>`,
+        skipLabel: 'Skip hardware upgrades',
+        nextLabel: 'Next →',
+        onNext: () => {
+          const hp = parseFloat(document.getElementById('mqph3-hinges-price')?.value || 0);
+          const dp = parseFloat(document.getElementById('mqph3-drawers-price')?.value || 0);
+          if (hp > 0 && wizardBaseline) {
+            wizardItems.push({
+              name: 'Soft-close hinges',
+              category: 'hardware',
+              rate: Math.round(((hp - wizardBaseline.price) / 8) * 100) / 100,
+              unit: 'per lin ft upcharge',
+              description: 'Soft-close hinge upgrade — reverse engineered from sample quote',
+              active: true,
+            });
+          }
+          if (dp > 0 && wizardBaseline) {
+            wizardItems.push({
+              name: 'Prefinished birch drawer boxes',
+              category: 'hardware',
+              rate: Math.round(((dp - wizardBaseline.price) / 8) * 100) / 100,
+              unit: 'per lin ft upcharge',
+              description: 'Birch drawer box upgrade — reverse engineered from sample quote',
+              active: true,
+            });
+          }
+        }
+      },
+
+      // Step 5: Installation
+      {
+        id: 'install',
+        title: '🔧 Step 5 of 6 — Installation rates',
+        sub: 'What do you charge to install cabinets? We keep uppers and bases separate since bases take more time.',
+        content: () => `
+          <div class="mqph3-highlight">
+            <strong>Quote installation only (no supply) for:</strong><br/>
+            • 4 linear feet of upper cabinets → enter install price<br/>
+            • 4 linear feet of base cabinets → enter install price<br/>
+            These are install-only prices, not including the cabinets themselves.
+          </div>
+          <div class="mqph3-input-row">
+            <label>Install price for 4ft of uppers</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-install-u" placeholder="0.00" step="0.01" oninput="mqph3CalcInstall()"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Install price for 4ft of bases</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-install-b" placeholder="0.00" step="0.01" oninput="mqph3CalcInstall()"/>
+          </div>
+          <div id="mqph3-install-result" class="mqph3-result-box" style="display:none"></div>`,
+        skipLabel: 'Skip — supply only, no installation',
+        nextLabel: 'Next →',
+        onNext: () => {
+          const up = parseFloat(document.getElementById('mqph3-install-u')?.value || 0);
+          const bp = parseFloat(document.getElementById('mqph3-install-b')?.value || 0);
+          if (up > 0) {
+            wizardItems.push({
+              name: 'Install — uppers',
+              category: 'install',
+              rate: Math.round((up / 4) * 100) / 100,
+              unit: 'per lin ft',
+              description: 'Upper cabinet installation rate — reverse engineered from sample quote',
+              active: true,
+            });
+          }
+          if (bp > 0) {
+            wizardItems.push({
+              name: 'Install — bases',
+              category: 'install',
+              rate: Math.round((bp / 4) * 100) / 100,
+              unit: 'per lin ft',
+              description: 'Base cabinet installation rate — reverse engineered from sample quote',
+              active: true,
+            });
+          }
+        }
+      },
+
+      // Step 6: Other rates
+      {
+        id: 'other',
+        title: '📋 Step 6 of 6 — Other rates',
+        sub: 'A few more rates to round out your pricing. Enter what applies to your shop.',
+        content: () => `
+          <div class="mqph3-input-row">
+            <label>Cabinet removal & disposal (per lin ft)</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-removal" placeholder="0.00" step="0.01"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Local zone radius (km)</label>
+            <input type="number" id="mqph3-zone-radius" placeholder="15" style="width:130px;text-align:right"/>
+            <span class="mqph3-pfx">km</span>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Zone 2 travel surcharge (flat fee)</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-zone2" placeholder="0.00"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Zone 3 travel surcharge (flat fee)</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-zone3" placeholder="0.00"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Zone 4 travel surcharge (flat fee)</label>
+            <span class="mqph3-pfx">$</span>
+            <input type="number" id="mqph3-zone4" placeholder="0.00"/>
+          </div>
+          <div class="mqph3-input-row">
+            <label>Tax rate</label>
+            <input type="number" id="mqph3-tax" placeholder="5" style="width:130px;text-align:right"/>
+            <span class="mqph3-pfx">%</span>
+          </div>`,
+        skipLabel: 'Skip other rates',
+        nextLabel: 'Finish setup →',
+        onNext: () => {
+          const removal = parseFloat(document.getElementById('mqph3-removal')?.value || 0);
+          const zr = parseFloat(document.getElementById('mqph3-zone-radius')?.value || 15);
+          const z2 = parseFloat(document.getElementById('mqph3-zone2')?.value || 0);
+          const z3 = parseFloat(document.getElementById('mqph3-zone3')?.value || 0);
+          const z4 = parseFloat(document.getElementById('mqph3-zone4')?.value || 0);
+          const tax = parseFloat(document.getElementById('mqph3-tax')?.value || 0);
+          if (removal > 0) wizardItems.push({ name: 'Cabinet removal', category: 'other', rate: removal, unit: 'per lin ft', description: 'Remove & dispose existing cabinets', active: true });
+          if (zr > 0) wizardItems.push({ name: 'Local zone radius', category: 'zone', rate: zr, unit: 'km', description: 'Jobs within this distance = no travel surcharge', active: true });
+          if (z2 > 0) wizardItems.push({ name: 'Zone 2 surcharge', category: 'zone', rate: z2, unit: 'flat', description: 'Travel surcharge for zone 2 jobs', active: true });
+          if (z3 > 0) wizardItems.push({ name: 'Zone 3 surcharge', category: 'zone', rate: z3, unit: 'flat', description: 'Travel surcharge for zone 3 jobs', active: true });
+          if (z4 > 0) wizardItems.push({ name: 'Zone 4 surcharge', category: 'zone', rate: z4, unit: 'flat', description: 'Travel surcharge for zone 4 jobs (100km+)', active: true });
+          if (tax > 0) wizardItems.push({ name: 'Tax rate', category: 'tax', rate: tax, unit: '%', description: 'Applied to cabinet subtotal', active: true });
+        }
+      },
+    ];
+  }
+
+  // ============================================================
+  // WIZARD CALCULATIONS
+  // ============================================================
+  window.mqph3CalcBaseline = function() {
+    const price = parseFloat(document.getElementById('mqph3-baseline-price')?.value || 0);
+    const res = document.getElementById('mqph3-baseline-result');
+    if (!res) return;
+    if (price > 0) {
+      const ratePerFt = price / 8;
+      res.style.display = 'block';
+      res.innerHTML = `<strong>Your baseline rate:</strong> <span class="mqph3-result-val">$${ratePerFt.toFixed(2)} / lin ft</span><br/><span style="font-size:12px;color:#6b7280">(${price} ÷ 8 lin ft = $${ratePerFt.toFixed(2)}/ft)</span>`;
+    } else {
+      res.style.display = 'none';
+    }
+  };
+
+  window.mqph3CalcMat2 = function() {
+    const price = parseFloat(document.getElementById('mqph3-mat2-price')?.value || 0);
+    const res = document.getElementById('mqph3-mat2-result');
+    if (!res || !wizardBaseline) return;
+    if (price > 0) {
+      const upcharge = (price - wizardBaseline.price) / 8;
+      res.style.display = 'block';
+      res.innerHTML = `<strong>Material upcharge:</strong> <span class="mqph3-result-val">$${upcharge.toFixed(2)} / lin ft</span><br/><span style="font-size:12px;color:#6b7280">(${price} − ${wizardBaseline.price} = $${(price - wizardBaseline.price).toFixed(2)} ÷ 8 lin ft)</span>`;
+    } else {
+      res.style.display = 'none';
+    }
+  };
+
+  window.mqph3CalcDoor1 = function() {
+    const price = parseFloat(document.getElementById('mqph3-door1-price')?.value || 0);
+    const res = document.getElementById('mqph3-door1-result');
+    if (!res || !wizardBaseline) return;
+    if (price > 0) {
+      const upcharge = (price - wizardBaseline.price) / 8;
+      res.style.display = 'block';
+      res.innerHTML = `<strong>Door style upcharge:</strong> <span class="mqph3-result-val">$${upcharge.toFixed(2)} / lin ft</span><br/><span style="font-size:12px;color:#6b7280">(${price} − ${wizardBaseline.price} = $${(price - wizardBaseline.price).toFixed(2)} ÷ 8 lin ft)</span>`;
+    } else {
+      res.style.display = 'none';
+    }
+  };
+
+  window.mqph3CalcHardware = function() {
+    const hp = parseFloat(document.getElementById('mqph3-hinges-price')?.value || 0);
+    const dp = parseFloat(document.getElementById('mqph3-drawers-price')?.value || 0);
+    const res = document.getElementById('mqph3-hardware-result');
+    if (!res || !wizardBaseline) return;
+    let html = '';
+    if (hp > 0) {
+      const u = (hp - wizardBaseline.price) / 8;
+      html += `<strong>Soft-close hinges upcharge:</strong> <span class="mqph3-result-val">$${u.toFixed(2)} / lin ft</span><br/>`;
+    }
+    if (dp > 0) {
+      const u = (dp - wizardBaseline.price) / 8;
+      html += `<strong>Birch drawer box upcharge:</strong> <span class="mqph3-result-val">$${u.toFixed(2)} / lin ft</span>`;
+    }
+    if (html) { res.style.display = 'block'; res.innerHTML = html; }
+    else res.style.display = 'none';
+  };
+
+  window.mqph3CalcInstall = function() {
+    const up = parseFloat(document.getElementById('mqph3-install-u')?.value || 0);
+    const bp = parseFloat(document.getElementById('mqph3-install-b')?.value || 0);
+    const res = document.getElementById('mqph3-install-result');
+    if (!res) return;
+    let html = '';
+    if (up > 0) html += `<strong>Upper install rate:</strong> <span class="mqph3-result-val">$${(up/4).toFixed(2)} / lin ft</span><br/>`;
+    if (bp > 0) html += `<strong>Base install rate:</strong> <span class="mqph3-result-val">$${(bp/4).toFixed(2)} / lin ft</span>`;
+    if (html) { res.style.display = 'block'; res.innerHTML = html; }
+    else res.style.display = 'none';
+  };
+
+  // ============================================================
+  // WIZARD NAVIGATION
+  // ============================================================
+  function renderWizardStep(steps, idx) {
+    steps.forEach((s, i) => {
+      const el = document.getElementById(`mqph3-step-${i}`);
+      if (el) el.classList.toggle('active', i === idx);
+    });
+    // progress
+    const dots = document.querySelectorAll('#mqph3-progress .step');
+    dots.forEach((d, i) => {
+      d.classList.remove('done','active');
+      if (i < idx) d.classList.add('done');
+      else if (i === idx) d.classList.add('active');
+    });
+    // nav buttons
+    const backBtn = document.getElementById('mqph3-back-btn');
+    const nextBtn = document.getElementById('mqph3-next-btn');
+    const skipBtn = document.getElementById('mqph3-skip-btn');
+    if (backBtn) backBtn.style.display = idx === 0 ? 'none' : 'inline-block';
+    if (nextBtn) nextBtn.textContent = steps[idx].nextLabel || 'Next →';
+    if (skipBtn) {
+      skipBtn.style.display = steps[idx].skipLabel ? 'inline-block' : 'none';
+      if (steps[idx].skipLabel) skipBtn.textContent = steps[idx].skipLabel;
+    }
+  }
+
+  window.mqph3Next = function() {
+    const steps = buildWizardSteps();
+    if (steps[wizardStep].onNext) steps[wizardStep].onNext();
+    wizardStep++;
+    if (wizardStep >= steps.length) {
+      mqph3FinishWizard();
+    } else {
+      renderWizardStep(steps, wizardStep);
+    }
+  };
+
+  window.mqph3Back = function() {
+    if (wizardStep > 0) {
+      wizardStep--;
+      renderWizardStep(buildWizardSteps(), wizardStep);
+    }
+  };
+
+  window.mqph3SkipStep = function() {
+    wizardStep++;
+    const steps = buildWizardSteps();
+    if (wizardStep >= steps.length) {
+      mqph3FinishWizard();
+    } else {
+      renderWizardStep(steps, wizardStep);
+    }
+  };
+
+  async function mqph3FinishWizard() {
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Saving your pricing setup...</div>';
+
+    // Delete existing line items for this shop
+    const existing = await atGet(LINE_ITEMS_TABLE, `{Shop} = "${shopRecord._recordId}"`);
+    for (const r of existing) {
+      await atDelete(LINE_ITEMS_TABLE, r.id);
+    }
+
+    // Create new line items
+    for (let i = 0; i < wizardItems.length; i++) {
+      const item = wizardItems[i];
+      await atCreate(LINE_ITEMS_TABLE, {
+        'Shop': [shopRecord._recordId],
+        'Name': item.name,
+        'Category': item.category,
+        'Rate': item.rate,
+        'Unit': item.unit,
+        'Description': item.description || '',
+        'Active': item.active !== false,
+        'Sort order': i + 1,
+      });
+    }
+
+    // Reload
+    await loadAndRender();
+  }
+
+  // ============================================================
+  // BUILD WIZARD HTML
+  // ============================================================
+  function buildWizardHTML() {
+    const steps = buildWizardSteps();
+    const progressDots = steps.map((_, i) => `<div class="step"></div>`).join('');
+    const stepDivs = steps.map((s, i) => `
+      <div class="mqph3-step ${i === 0 ? 'active' : ''}" id="mqph3-step-${i}">
+        <div class="mqph3-step-title">${s.title}</div>
+        <div class="mqph3-step-sub" style="white-space:pre-line">${s.sub}</div>
+        ${s.content()}
+      </div>`).join('');
+
     return `
-      <h1>⚙️ Pricing Setup Helper</h1>
-      <p class="mq-ph-sub">This tool helps you figure out your exact per-linear-foot rates by back-calculating from jobs you've already priced in your current software. No guessing — just real numbers from your real quotes.</p>
+      <div id="mqph3-wizard">
+        <div id="mqph3-wizard-header">
+          <div>
+            <h2>⚙️ Pricing Setup Wizard</h2>
+            <p>Let's get your pricing dialled in</p>
+          </div>
+        </div>
+        <div id="mqph3-progress">${progressDots}</div>
+        <div id="mqph3-wizard-body">${stepDivs}</div>
+        <div id="mqph3-wizard-nav">
+          <button class="mqph3-btn mqph3-btn-secondary" id="mqph3-back-btn" onclick="mqph3Back()" style="display:none">← Back</button>
+          <button class="mqph3-btn mqph3-btn-secondary mqph3-skip-link" id="mqph3-skip-btn" onclick="mqph3SkipStep()" style="display:none">Skip</button>
+          <button class="mqph3-btn mqph3-btn-primary" id="mqph3-next-btn" onclick="mqph3Next()" style="margin-left:auto">Start setup →</button>
+        </div>
+      </div>`;
+  }
 
-      <div class="mq-ph-tabs">
-        <button class="mq-ph-tab active" onclick="mqPhTab('materials',this)">🪵 Cabinet materials</button>
-        <button class="mq-ph-tab" onclick="mqPhTab('doors',this)">🚪 Door styles</button>
-        <button class="mq-ph-tab" onclick="mqPhTab('install',this)">🔨 Installation</button>
-        <button class="mq-ph-tab" onclick="mqPhTab('summary',this)">✅ Review & save</button>
+  // ============================================================
+  // ITEM EDITOR
+  // ============================================================
+  const CATEGORY_LABELS = {
+    material: '🪵 Cabinet materials',
+    door: '🚪 Door styles',
+    hardware: '⚙️ Hardware upgrades',
+    install: '🔧 Installation',
+    zone: '🚗 Travel zones',
+    tax: '🧾 Tax & other',
+    countertop: '🪨 Countertops',
+    other: '📋 Other',
+  };
+
+  function groupByCategory(items) {
+    const groups = {};
+    items.forEach(r => {
+      const cat = r.fields['Category'] || 'other';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(r);
+    });
+    return groups;
+  }
+
+  function buildItemsHTML(items) {
+    if (!items.length) {
+      return `<div class="mqph3-empty">No pricing items yet. Run the setup wizard or add items manually.</div>`;
+    }
+    const groups = groupByCategory(items);
+    return Object.entries(groups).map(([cat, recs]) => `
+      <div class="mqph3-category-block">
+        <div class="mqph3-cat-header">
+          <span class="mqph3-cat-title">${CATEGORY_LABELS[cat] || cat}</span>
+          <button class="mqph3-btn mqph3-btn-secondary mqph3-btn-sm" onclick="mqph3OpenAdd('${cat}')">+ Add</button>
+        </div>
+        ${recs.sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0)).map(r => `
+          <div class="mqph3-item-row" id="mqph3-row-${r.id}">
+            <div style="flex:1;min-width:0">
+              <div class="mqph3-item-name">${r.fields['Name'] || '—'}</div>
+              ${r.fields['Description'] ? `<div class="mqph3-item-desc">${r.fields['Description']}</div>` : ''}
+            </div>
+            <div class="mqph3-item-rate">$${(r.fields['Rate'] || 0).toLocaleString()}</div>
+            <div class="mqph3-item-unit">${r.fields['Unit'] || ''}</div>
+            <div class="mqph3-item-active">
+              <div class="mqph3-toggle ${r.fields['Active'] ? 'on' : ''}" onclick="mqph3ToggleActive('${r.id}', this)"></div>
+            </div>
+            <button class="mqph3-btn mqph3-btn-secondary mqph3-btn-sm" onclick="mqph3OpenEdit('${r.id}')">Edit</button>
+            <button class="mqph3-btn mqph3-btn-danger mqph3-btn-sm" onclick="mqph3DeleteItem('${r.id}')">Delete</button>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+
+  // ============================================================
+  // MODAL
+  // ============================================================
+  window.mqph3OpenAdd = function(defaultCat) {
+    currentEditId = null;
+    document.getElementById('mqph3-modal-title').textContent = 'Add pricing item';
+    document.getElementById('mqph3-item-name').value = '';
+    document.getElementById('mqph3-item-category').value = defaultCat || 'material';
+    document.getElementById('mqph3-item-rate').value = '';
+    document.getElementById('mqph3-item-unit').value = 'per lin ft';
+    document.getElementById('mqph3-item-desc').value = '';
+    document.getElementById('mqph3-item-active').checked = true;
+    document.getElementById('mqph3-modal-overlay').classList.add('show');
+  };
+
+  window.mqph3OpenEdit = function(id) {
+    const rec = lineItems.find(r => r.id === id);
+    if (!rec) return;
+    currentEditId = id;
+    document.getElementById('mqph3-modal-title').textContent = 'Edit pricing item';
+    document.getElementById('mqph3-item-name').value = rec.fields['Name'] || '';
+    document.getElementById('mqph3-item-category').value = rec.fields['Category'] || 'material';
+    document.getElementById('mqph3-item-rate').value = rec.fields['Rate'] || '';
+    document.getElementById('mqph3-item-unit').value = rec.fields['Unit'] || 'per lin ft';
+    document.getElementById('mqph3-item-desc').value = rec.fields['Description'] || '';
+    document.getElementById('mqph3-item-active').checked = rec.fields['Active'] !== false;
+    document.getElementById('mqph3-modal-overlay').classList.add('show');
+  };
+
+  window.mqph3CloseModal = function() {
+    document.getElementById('mqph3-modal-overlay').classList.remove('show');
+  };
+
+  window.mqph3SaveItem = async function() {
+    const name = document.getElementById('mqph3-item-name').value.trim();
+    const category = document.getElementById('mqph3-item-category').value;
+    const rate = parseFloat(document.getElementById('mqph3-item-rate').value || 0);
+    const unit = document.getElementById('mqph3-item-unit').value;
+    const desc = document.getElementById('mqph3-item-desc').value.trim();
+    const active = document.getElementById('mqph3-item-active').checked;
+
+    if (!name) { alert('Please enter a name.'); return; }
+
+    const fields = {
+      'Shop': [shopRecord._recordId],
+      'Name': name,
+      'Category': category,
+      'Rate': rate,
+      'Unit': unit,
+      'Description': desc,
+      'Active': active,
+      'Sort order': currentEditId ? undefined : (lineItems.length + 1),
+    };
+    if (!currentEditId) delete fields['Sort order'];
+
+    try {
+      if (currentEditId) {
+        await atUpdate(LINE_ITEMS_TABLE, currentEditId, fields);
+      } else {
+        fields['Sort order'] = lineItems.length + 1;
+        await atCreate(LINE_ITEMS_TABLE, fields);
+      }
+      mqph3CloseModal();
+      await loadAndRender();
+    } catch(e) {
+      alert('Error saving item. Please try again.');
+    }
+  };
+
+  window.mqph3DeleteItem = async function(id) {
+    if (!confirm('Delete this pricing item?')) return;
+    try {
+      await atDelete(LINE_ITEMS_TABLE, id);
+      await loadAndRender();
+    } catch(e) { alert('Error deleting item.'); }
+  };
+
+  window.mqph3ToggleActive = async function(id, toggleEl) {
+    const rec = lineItems.find(r => r.id === id);
+    if (!rec) return;
+    const newVal = !rec.fields['Active'];
+    toggleEl.classList.toggle('on', newVal);
+    rec.fields['Active'] = newVal;
+    await atUpdate(LINE_ITEMS_TABLE, id, { 'Active': newVal });
+  };
+
+  // ============================================================
+  // COUNTERTOP DIRECT ENTRY
+  // ============================================================
+  function buildCTHtml(p) {
+    const v = (field, def) => p[field] !== undefined ? p[field] : def;
+    const row = (id, label, field, def, suffix) => `
+      <div class="mqph3-ct-row">
+        <span class="mqph3-ct-label">${label}</span>
+        <div class="mqph3-ct-input">
+          <span>$</span>
+          <input type="number" id="mqph3-ct-${id}" value="${v(field, def)}" oninput="mqph3CTChanged()"/>
+          <span>${suffix || '/ sqft'}</span>
+        </div>
+      </div>`;
+    return `
+      <div id="mqph3-ct-section">
+        <div class="mqph3-cat-header">
+          <span class="mqph3-cat-title">🪨 Countertop rates (direct entry)</span>
+          <button class="mqph3-btn mqph3-btn-primary mqph3-btn-sm" onclick="mqph3SaveCT()">Save countertop rates</button>
+        </div>
+        <div id="mqph3-ct-msg" class="mqph3-msg"></div>
+        ${row('lam', 'Laminate', 'Lam supply', 18, '/ sqft supply')}
+        ${row('ss-econ', 'Solid surface — Economy', 'SS econ supply', 38, '/ sqft supply')}
+        ${row('ss-mid', 'Solid surface — Mid', 'SS mid supply', 58, '/ sqft supply')}
+        ${row('ss-prem', 'Solid surface — Premium', 'SS prem supply', 90, '/ sqft supply')}
+        ${row('gran-econ', 'Granite — Economy', 'Gran econ supply', 45, '/ sqft supply')}
+        ${row('gran-mid', 'Granite — Mid', 'Gran mid supply', 72, '/ sqft supply')}
+        ${row('gran-prem', 'Granite — Premium', 'Gran prem supply', 130, '/ sqft supply')}
+        ${row('quartz', 'Engineered quartz', 'Quartz supply', 85, '/ sqft supply')}
+        ${row('marble', 'Marble', 'Marble supply', 110, '/ sqft supply')}
+        ${row('butcher', 'Butcher block', 'Butcher supply', 42, '/ sqft supply')}
+        ${row('backsplash', 'Backsplash rate (material + install)', 'Backsplash rate', 12, '/ lin ft')}
+        ${row('sink', 'Sink cutout', 'Sink cutout', 180, 'each')}
+        ${row('cooktop', 'Cooktop cutout', 'Cooktop cutout', 220, 'each')}
+      </div>`;
+  }
+
+  window.mqph3CTChanged = function() {};
+
+  window.mqph3SaveCT = async function() {
+    const gn = id => parseFloat(document.getElementById(`mqph3-ct-${id}`)?.value || 0);
+    const fields = {
+      'Lam supply':        gn('lam'),
+      'SS econ supply':    gn('ss-econ'),
+      'SS mid supply':     gn('ss-mid'),
+      'SS prem supply':    gn('ss-prem'),
+      'Gran econ supply':  gn('gran-econ'),
+      'Gran mid supply':   gn('gran-mid'),
+      'Gran prem supply':  gn('gran-prem'),
+      'Quartz supply':     gn('quartz'),
+      'Marble supply':     gn('marble'),
+      'Butcher supply':    gn('butcher'),
+      'Backsplash rate':   gn('backsplash'),
+      'Sink cutout':       gn('sink'),
+      'Cooktop cutout':    gn('cooktop'),
+    };
+    try {
+      if (pricingRecord) {
+        await fetch(`https://api.airtable.com/v0/${shopRecord._baseId}/${shopRecord._pricingTable}/${pricingRecord.id}`, {
+          method: 'PATCH', headers: AT_HEADS(),
+          body: JSON.stringify({ fields })
+        });
+      }
+      const msg = document.getElementById('mqph3-ct-msg');
+      if (msg) { msg.textContent = '✓ Countertop rates saved!'; msg.className = 'mqph3-msg mqph3-msg-success'; msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000); }
+    } catch(e) {
+      const msg = document.getElementById('mqph3-ct-msg');
+      if (msg) { msg.textContent = 'Error saving.'; msg.className = 'mqph3-msg mqph3-msg-error'; msg.style.display = 'block'; }
+    }
+  };
+
+  // ============================================================
+  // MAIN RENDER
+  // ============================================================
+  async function loadAndRender() {
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (!container) return;
+
+    lineItems = await atGet(LINE_ITEMS_TABLE, `{Shop} = "${shopRecord._recordId}"`);
+    const hasItems = lineItems.length > 0;
+
+    const p = pricingRecord?.fields || {};
+
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px">⚙️ Pricing Setup</h2>
+          <p style="font-size:13px;color:#6b7280">Manage your rates — changes update your widget immediately.</p>
+        </div>
+        <button class="mqph3-btn mqph3-btn-secondary" onclick="mqph3RunWizard()">🧙 Re-run setup wizard</button>
       </div>
 
-      <!-- MATERIALS -->
-      <div class="mq-ph-section active" id="mqph-materials">
-        <div class="mq-ph-info">
-          💡 <strong>How this works:</strong> In your current software, quote a simple open cabinet with no doors — just the box. Use a standard 2-foot wide cabinet at whatever height you normally use. Enter what your software says it costs, and we'll calculate your per-linear-foot rate automatically.
+      <div id="mqph3-msg-global" class="mqph3-msg"></div>
+
+      ${hasItems ? `
+        <div class="mqph3-section-header">
+          <span class="mqph3-section-title">📋 Your pricing items</span>
+          <button class="mqph3-btn mqph3-btn-primary mqph3-btn-sm" onclick="mqph3OpenAdd()">+ Add item</button>
         </div>
-
-        <div id="mqph-mat-list"></div>
-
-        <button class="mq-ph-btn" onclick="mqPhAddMaterial()" style="margin-top:1rem">+ Add material type</button>
-
-        <div class="mq-ph-divider"></div>
-        <div style="display:flex;justify-content:flex-end">
-          <button class="mq-ph-btn mq-ph-btn-primary" onclick="mqPhTab('doors',document.querySelectorAll('.mq-ph-tab')[1])">Next: Door styles →</button>
+        <div id="mqph3-items-section">${buildItemsHTML(lineItems)}</div>
+      ` : `
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:3rem;text-align:center;margin-bottom:1.5rem">
+          <div style="font-size:32px;margin-bottom:12px">⚙️</div>
+          <div style="font-size:16px;font-weight:600;color:#111;margin-bottom:8px">No pricing set up yet</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:1.5rem">Run the setup wizard to get started — it takes about 10 minutes.</div>
+          <button class="mqph3-btn mqph3-btn-primary" onclick="mqph3RunWizard()">Start setup wizard →</button>
         </div>
-      </div>
+      `}
 
-      <!-- DOORS -->
-      <div class="mq-ph-section" id="mqph-doors">
-        <div class="mq-ph-info">
-          💡 <strong>How this works:</strong> Door style adders are the EXTRA cost per linear foot above your base cabinet price. Quote the same cabinet twice in your software — once with slab doors, once with shaker doors. The difference divided by linear feet = your shaker adder.
-        </div>
+      ${buildCTHtml(p)}
 
-        <div id="mqph-door-list"></div>
-
-        <button class="mq-ph-btn" onclick="mqPhAddDoor()" style="margin-top:1rem">+ Add door style</button>
-
-        <div class="mq-ph-divider"></div>
-        <div style="display:flex;justify-content:space-between">
-          <button class="mq-ph-btn" onclick="mqPhTab('materials',document.querySelectorAll('.mq-ph-tab')[0])">← Back</button>
-          <button class="mq-ph-btn mq-ph-btn-primary" onclick="mqPhTab('install',document.querySelectorAll('.mq-ph-tab')[2])">Next: Installation →</button>
-        </div>
-      </div>
-
-      <!-- INSTALL -->
-      <div class="mq-ph-section" id="mqph-install">
-        <div class="mq-ph-card">
-          <div class="mq-ph-card-title">Installation pricing method</div>
-          <p class="mq-ph-card-sub">How do you charge for installation? Choose the method that matches how you quote jobs.</p>
-
-          <div class="mq-ph-radio-group" style="margin-bottom:1.5rem">
-            <label class="mq-ph-radio">
-              <input type="radio" name="install-method" value="per_lft" checked onchange="mqPhInstallMethod('per_lft')"/>
-              Per linear foot
-            </label>
-            <label class="mq-ph-radio">
-              <input type="radio" name="install-method" value="per_cab" onchange="mqPhInstallMethod('per_cab')"/>
-              Per cabinet
-            </label>
-            <label class="mq-ph-radio">
-              <input type="radio" name="install-method" value="percent" onchange="mqPhInstallMethod('percent')"/>
-              % of material cost
-            </label>
-            <label class="mq-ph-radio">
-              <input type="radio" name="install-method" value="none" onchange="mqPhInstallMethod('none')"/>
-              I don't install
-            </label>
+      <!-- MODAL -->
+      <div id="mqph3-modal-overlay">
+        <div id="mqph3-modal">
+          <div class="mh">
+            <h3 id="mqph3-modal-title">Add pricing item</h3>
+            <button onclick="mqph3CloseModal()">×</button>
           </div>
-
-          <!-- Per linear foot -->
-          <div id="mqph-install-lft">
-            <div class="mq-ph-calc">
-              <div class="mq-ph-calc-title">Calculate your per-linear-foot install rate</div>
-              <div class="mq-ph-row">
-                <div class="mq-ph-field">
-                  <label class="mq-ph-label">What do you charge to install a typical kitchen?</label>
-                  <input type="number" id="mqph-install-job-cost" placeholder="e.g. 2500" oninput="mqPhCalcInstall()"/>
-                  <span class="mq-ph-hint">Total install charge for the whole job</span>
-                </div>
-                <div class="mq-ph-field">
-                  <label class="mq-ph-label">How many linear feet of cabinets?</label>
-                  <input type="number" id="mqph-install-job-ft" placeholder="e.g. 30" oninput="mqPhCalcInstall()"/>
-                  <span class="mq-ph-hint">Uppers + bases combined</span>
-                </div>
-              </div>
-              <div class="mq-ph-result" id="mqph-install-lft-result" style="display:none">
-                <div>
-                  <div class="mq-ph-result-lbl">Your install rate</div>
-                  <div class="mq-ph-result-val" id="mqph-install-lft-val">—</div>
-                </div>
-                <button class="mq-ph-btn mq-ph-btn-primary mq-ph-btn-sm" onclick="mqPhUseInstall()">Use this rate</button>
-              </div>
-              <div style="margin-top:1rem">
-                <label class="mq-ph-label">Or enter directly (per linear foot):</label>
-                <input type="number" id="mqph-install-direct" placeholder="e.g. 85" style="max-width:200px;margin-top:6px"/>
-              </div>
+          <div class="mb">
+            <div class="mqph3-field"><label>Name</label><input type="text" id="mqph3-item-name" placeholder="e.g. Maple shaker doors"/></div>
+            <div class="mqph3-field"><label>Category</label>
+              <select id="mqph3-item-category">
+                <option value="material">Material</option>
+                <option value="door">Door style</option>
+                <option value="hardware">Hardware</option>
+                <option value="install">Installation</option>
+                <option value="zone">Travel zone</option>
+                <option value="tax">Tax</option>
+                <option value="countertop">Countertop</option>
+                <option value="other">Other</option>
+              </select>
             </div>
-          </div>
-
-          <!-- Per cabinet -->
-          <div id="mqph-install-cab" style="display:none">
-            <div class="mq-ph-calc">
-              <div class="mq-ph-calc-title">Convert per-cabinet rate to per-linear-foot</div>
-              <div class="mq-ph-row">
-                <div class="mq-ph-field">
-                  <label class="mq-ph-label">Install charge per cabinet</label>
-                  <input type="number" id="mqph-install-per-cab" placeholder="e.g. 75" oninput="mqPhCalcInstallCab()"/>
-                </div>
-                <div class="mq-ph-field">
-                  <label class="mq-ph-label">Average cabinet width (inches)</label>
-                  <input type="number" id="mqph-install-cab-width" placeholder="e.g. 18" value="18" oninput="mqPhCalcInstallCab()"/>
-                  <span class="mq-ph-hint">Typically 15–21 inches for standard cabinets</span>
-                </div>
-              </div>
-              <div class="mq-ph-result" id="mqph-install-cab-result" style="display:none">
-                <div>
-                  <div class="mq-ph-result-lbl">Equivalent per-linear-foot rate</div>
-                  <div class="mq-ph-result-val" id="mqph-install-cab-val">—</div>
-                </div>
-                <button class="mq-ph-btn mq-ph-btn-primary mq-ph-btn-sm" onclick="mqPhUseInstallCab()">Use this rate</button>
-              </div>
+            <div class="mqph3-field"><label>Rate ($)</label><input type="number" id="mqph3-item-rate" placeholder="0.00" step="0.01"/></div>
+            <div class="mqph3-field"><label>Unit</label>
+              <select id="mqph3-item-unit">
+                <option value="per lin ft">Per lin ft</option>
+                <option value="per lin ft upcharge">Per lin ft upcharge</option>
+                <option value="flat">Flat fee</option>
+                <option value="each">Each</option>
+                <option value="%">%</option>
+                <option value="km">km</option>
+                <option value="/ sqft">Per sqft</option>
+              </select>
             </div>
-          </div>
-
-          <!-- Percent -->
-          <div id="mqph-install-pct" style="display:none">
-            <div class="mq-ph-calc">
-              <div class="mq-ph-calc-title">Estimate average install rate from percentage</div>
-              <div class="mq-ph-row">
-                <div class="mq-ph-field">
-                  <label class="mq-ph-label">Install as % of material cost</label>
-                  <input type="number" id="mqph-install-pct-val" placeholder="e.g. 25" oninput="mqPhCalcInstallPct()"/>
-                </div>
-                <div class="mq-ph-field">
-                  <label class="mq-ph-label">Your typical material cost per linear foot</label>
-                  <input type="number" id="mqph-install-pct-base" placeholder="e.g. 300" oninput="mqPhCalcInstallPct()"/>
-                  <span class="mq-ph-hint">Use your most common material rate</span>
-                </div>
-              </div>
-              <div class="mq-ph-result" id="mqph-install-pct-result" style="display:none">
-                <div>
-                  <div class="mq-ph-result-lbl">Equivalent per-linear-foot install rate</div>
-                  <div class="mq-ph-result-val" id="mqph-install-pct-res">—</div>
-                </div>
-                <button class="mq-ph-btn mq-ph-btn-primary mq-ph-btn-sm" onclick="mqPhUseInstallPct()">Use this rate</button>
-              </div>
+            <div class="mqph3-field"><label>Description (optional)</label><textarea id="mqph3-item-desc" placeholder="e.g. Soft-close hinge upgrade per linear foot"></textarea></div>
+            <div class="mqph3-field" style="flex-direction:row;align-items:center;gap:10px">
+              <label style="margin:0">Active</label>
+              <input type="checkbox" id="mqph3-item-active" checked style="width:auto"/>
             </div>
-          </div>
-
-          <!-- None -->
-          <div id="mqph-install-none" style="display:none">
-            <div class="mq-ph-info" style="background:#f0fdf4;border-color:#86efac;color:#166534">
-              ✓ No problem — the widget will default to "Supply only" and won't show install pricing to customers.
+            <div style="display:flex;gap:10px;margin-top:1rem">
+              <button class="mqph3-btn mqph3-btn-primary" onclick="mqph3SaveItem()" style="flex:1">Save item</button>
+              <button class="mqph3-btn mqph3-btn-secondary" onclick="mqph3CloseModal()">Cancel</button>
             </div>
-          </div>
-
-        </div>
-
-        <div class="mq-ph-divider"></div>
-        <div style="display:flex;justify-content:space-between">
-          <button class="mq-ph-btn" onclick="mqPhTab('doors',document.querySelectorAll('.mq-ph-tab')[1])">← Back</button>
-          <button class="mq-ph-btn mq-ph-btn-primary" onclick="mqPhTab('summary',document.querySelectorAll('.mq-ph-tab')[3])">Next: Review & save →</button>
-        </div>
-      </div>
-
-      <!-- SUMMARY -->
-      <div class="mq-ph-section" id="mqph-summary">
-        <div class="mq-ph-card">
-          <div class="mq-ph-card-title">Your calculated rates</div>
-          <p class="mq-ph-card-sub">Review everything below before saving to your widget. You can always come back and adjust.</p>
-          <div id="mqph-summary-content"></div>
-          <div id="mqph-save-msg" class="mq-ph-saved"></div>
-          <div id="mqph-save-err" class="mq-ph-error"></div>
-          <div style="margin-top:1.5rem;display:flex;gap:12px">
-            <button class="mq-ph-btn mq-ph-btn-primary" onclick="mqPhSaveAll()" style="flex:1;padding:12px">💾 Save all rates to my widget</button>
-            <button class="mq-ph-btn" onclick="mqPhTab('materials',document.querySelectorAll('.mq-ph-tab')[0])">← Start over</button>
           </div>
         </div>
       </div>
     `;
   }
 
-  // ============================================================
-  // MATERIAL CARD BUILDER
-  // ============================================================
-  function buildMaterialCard(mat, index) {
-    const isCustom = mat.custom === true;
-    return `
-      <div class="mq-ph-card" id="mqph-mat-${mat.id}">
-        <div class="mq-ph-card-title">
-          <span>
-            ${isCustom ? `<input type="text" value="${mat.name}" id="mqph-mat-name-${mat.id}" style="font-size:14px;font-weight:600;border:1px solid #e5e7eb;border-radius:6px;padding:3px 8px;width:200px" placeholder="Material name"/>` : `🪵 ${mat.name}`}
-          </span>
-          ${isCustom ? `<button class="mq-ph-btn mq-ph-btn-danger mq-ph-btn-sm" onclick="mqPhRemoveMaterial('${mat.id}')">Remove</button>` : ''}
-        </div>
-        <p class="mq-ph-card-sub">
-          In your software, quote a simple <strong>2-foot wide open cabinet with no doors</strong> made of ${mat.name.toLowerCase()}. Just the box — no hardware, no doors. Enter the cost below.
-        </p>
-        <div class="mq-ph-calc">
-          <div class="mq-ph-calc-title">Back-calculate your ${mat.name} rate</div>
-          <div class="mq-ph-row">
-            <div class="mq-ph-field">
-              <label class="mq-ph-label">Your software's cost for a 2ft ${mat.name} cabinet</label>
-              <input type="number" id="mqph-mat-cost-${mat.id}" placeholder="e.g. ${mat.default * 2}" oninput="mqPhCalcMat('${mat.id}',${mat.default})"/>
-              <span class="mq-ph-hint">Box only, no doors, no hardware</span>
-            </div>
-            <div class="mq-ph-field">
-              <label class="mq-ph-label">Cabinet width (feet)</label>
-              <input type="number" id="mqph-mat-ft-${mat.id}" value="2" oninput="mqPhCalcMat('${mat.id}',${mat.default})"/>
-              <span class="mq-ph-hint">Default is 2ft — change if needed</span>
-            </div>
-          </div>
-          <div class="mq-ph-result" id="mqph-mat-result-${mat.id}" style="display:none">
-            <div>
-              <div class="mq-ph-result-lbl">Your ${mat.name} rate per linear foot</div>
-              <div class="mq-ph-result-val" id="mqph-mat-val-${mat.id}">—</div>
-            </div>
-            <div class="mq-ph-result-actions">
-              <span style="font-size:12px;color:#6b7280" id="mqph-mat-saved-${mat.id}"></span>
-              <button class="mq-ph-btn mq-ph-btn-primary mq-ph-btn-sm" onclick="mqPhUseMat('${mat.id}','${mat.name}','${mat.field}')">Use this rate ✓</button>
-            </div>
-          </div>
-          <div style="margin-top:1rem">
-            <label class="mq-ph-label">Or enter directly:</label>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-              <input type="number" id="mqph-mat-direct-${mat.id}" placeholder="${mat.default}" style="max-width:150px"/>
-              <span style="font-size:13px;color:#6b7280">per linear foot</span>
-              <button class="mq-ph-btn mq-ph-btn-sm" onclick="mqPhUseMatDirect('${mat.id}','${mat.name}','${mat.field}')">Use</button>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:1rem;display:flex;align-items:center;justify-content:space-between">
-          <div style="font-size:13px;color:#6b7280">Current rate: <strong id="mqph-mat-current-${mat.id}">${mat.current ? fmt(mat.current) + '/ft' : 'Not set'}</strong></div>
-        </div>
-      </div>`;
-  }
-
-  function buildDoorCard(door, index) {
-    const isCustom = door.custom === true;
-    return `
-      <div class="mq-ph-card" id="mqph-door-${door.id}">
-        <div class="mq-ph-card-title">
-          <span>
-            ${isCustom ? `<input type="text" value="${door.name}" id="mqph-door-name-${door.id}" style="font-size:14px;font-weight:600;border:1px solid #e5e7eb;border-radius:6px;padding:3px 8px;width:200px" placeholder="Door style name"/>` : `🚪 ${door.name}`}
-          </span>
-          ${isCustom ? `<button class="mq-ph-btn mq-ph-btn-danger mq-ph-btn-sm" onclick="mqPhRemoveDoor('${door.id}')">Remove</button>` : ''}
-        </div>
-        <p class="mq-ph-card-sub">
-          Quote the same 2ft cabinet twice — once with your base/slab doors and once with ${door.name.toLowerCase()} doors. The difference ÷ linear feet = your ${door.name.toLowerCase()} adder.
-        </p>
-        <div class="mq-ph-calc">
-          <div class="mq-ph-calc-title">Calculate ${door.name} adder</div>
-          <div class="mq-ph-row">
-            <div class="mq-ph-field">
-              <label class="mq-ph-label">Cost with base/slab doors (2ft cabinet)</label>
-              <input type="number" id="mqph-door-base-${door.id}" placeholder="e.g. 560" oninput="mqPhCalcDoor('${door.id}')"/>
-            </div>
-            <div class="mq-ph-field">
-              <label class="mq-ph-label">Cost with ${door.name.toLowerCase()} doors (same cabinet)</label>
-              <input type="number" id="mqph-door-with-${door.id}" placeholder="e.g. 680" oninput="mqPhCalcDoor('${door.id}')"/>
-            </div>
-            <div class="mq-ph-field">
-              <label class="mq-ph-label">Cabinet width (feet)</label>
-              <input type="number" id="mqph-door-ft-${door.id}" value="2" oninput="mqPhCalcDoor('${door.id}')"/>
-            </div>
-          </div>
-          <div class="mq-ph-result" id="mqph-door-result-${door.id}" style="display:none">
-            <div>
-              <div class="mq-ph-result-lbl">${door.name} adder per linear foot</div>
-              <div class="mq-ph-result-val" id="mqph-door-val-${door.id}">—</div>
-            </div>
-            <div class="mq-ph-result-actions">
-              <span style="font-size:12px;color:#6b7280" id="mqph-door-saved-${door.id}"></span>
-              <button class="mq-ph-btn mq-ph-btn-primary mq-ph-btn-sm" onclick="mqPhUseDoor('${door.id}','${door.name}','${door.field}')">Use this rate ✓</button>
-            </div>
-          </div>
-          <div style="margin-top:1rem">
-            <label class="mq-ph-label">Or enter directly:</label>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-              <input type="number" id="mqph-door-direct-${door.id}" placeholder="${door.default}" style="max-width:150px"/>
-              <span style="font-size:13px;color:#6b7280">adder per linear foot</span>
-              <button class="mq-ph-btn mq-ph-btn-sm" onclick="mqPhUseDoorDirect('${door.id}','${door.name}','${door.field}')">Use</button>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:1rem;font-size:13px;color:#6b7280">Current adder: <strong id="mqph-door-current-${door.id}">${door.current ? fmt(door.current) + '/ft' : 'Not set (0)'}</strong></div>
-      </div>`;
-  }
-
-  // ============================================================
-  // CALCULATIONS
-  // ============================================================
-  window.mqPhCalcMat = function(id, defaultVal) {
-    const cost = gn(`mqph-mat-cost-${id}`);
-    const ft = gn(`mqph-mat-ft-${id}`, 2);
-    if (!cost || !ft) { el(`mqph-mat-result-${id}`).style.display = 'none'; return; }
-    const rate = cost / ft;
-    el(`mqph-mat-val-${id}`).textContent = fmt(rate) + '/ft';
-    el(`mqph-mat-result-${id}`).style.display = 'flex';
-    // Store calculated rate
-    const mat = materials.find(m => m.id === id);
-    if (mat) mat.calculated = rate;
-  };
-
-  window.mqPhCalcDoor = function(id) {
-    const base = gn(`mqph-door-base-${id}`);
-    const withDoor = gn(`mqph-door-with-${id}`);
-    const ft = gn(`mqph-door-ft-${id}`, 2);
-    if (!base || !withDoor || !ft) { el(`mqph-door-result-${id}`).style.display = 'none'; return; }
-    const adder = (withDoor - base) / ft;
-    el(`mqph-door-val-${id}`).textContent = adder >= 0 ? fmt(adder) + '/ft' : '— (no adder)';
-    el(`mqph-door-result-${id}`).style.display = 'flex';
-    const door = doorStyles.find(d => d.id === id);
-    if (door) door.calculated = Math.max(0, adder);
-  };
-
-  window.mqPhCalcInstall = function() {
-    const cost = gn('mqph-install-job-cost');
-    const ft = gn('mqph-install-job-ft');
-    if (!cost || !ft) { el('mqph-install-lft-result').style.display = 'none'; return; }
-    const rate = cost / ft;
-    el('mqph-install-lft-val').textContent = fmt(rate) + '/ft';
-    el('mqph-install-lft-result').style.display = 'flex';
-    window._mqInstallRate = rate;
-  };
-
-  window.mqPhCalcInstallCab = function() {
-    const perCab = gn('mqph-install-per-cab');
-    const width = gn('mqph-install-cab-width', 18);
-    if (!perCab || !width) { el('mqph-install-cab-result').style.display = 'none'; return; }
-    const rate = perCab / (width / 12);
-    el('mqph-install-cab-val').textContent = fmt(rate) + '/ft';
-    el('mqph-install-cab-result').style.display = 'flex';
-    window._mqInstallRate = rate;
-  };
-
-  window.mqPhCalcInstallPct = function() {
-    const pct = gn('mqph-install-pct-val');
-    const base = gn('mqph-install-pct-base');
-    if (!pct || !base) { el('mqph-install-pct-result').style.display = 'none'; return; }
-    const rate = base * (pct / 100);
-    el('mqph-install-pct-res').textContent = fmt(rate) + '/ft';
-    el('mqph-install-pct-result').style.display = 'flex';
-    window._mqInstallRate = rate;
-  };
-
-  // ============================================================
-  // USE RATE FUNCTIONS
-  // ============================================================
-  window.mqPhUseMat = function(id, name, field) {
-    const mat = materials.find(m => m.id === id);
-    if (!mat || !mat.calculated) return;
-    mat.saved = mat.calculated;
-    mat.field = field;
-    const savedEl = el(`mqph-mat-saved-${id}`);
-    if (savedEl) savedEl.textContent = '✓ Saved';
-    updateSummary();
-  };
-
-  window.mqPhUseMatDirect = function(id, name, field) {
-    const val = gn(`mqph-mat-direct-${id}`);
-    if (!val) return;
-    const mat = materials.find(m => m.id === id);
-    if (!mat) return;
-    mat.saved = val;
-    mat.field = field;
-    const savedEl = el(`mqph-mat-saved-${id}`);
-    if (savedEl) { savedEl.textContent = '✓ Saved'; }
-    updateSummary();
-  };
-
-  window.mqPhUseDoor = function(id, name, field) {
-    const door = doorStyles.find(d => d.id === id);
-    if (!door || door.calculated === undefined) return;
-    door.saved = door.calculated;
-    door.field = field;
-    const savedEl = el(`mqph-door-saved-${id}`);
-    if (savedEl) savedEl.textContent = '✓ Saved';
-    updateSummary();
-  };
-
-  window.mqPhUseDoorDirect = function(id, name, field) {
-    const val = gn(`mqph-door-direct-${id}`);
-    const door = doorStyles.find(d => d.id === id);
-    if (!door) return;
-    door.saved = val || 0;
-    door.field = field;
-    const savedEl = el(`mqph-door-saved-${id}`);
-    if (savedEl) savedEl.textContent = '✓ Saved';
-    updateSummary();
-  };
-
-  window.mqPhUseInstall = function() {
-    if (window._mqInstallRate) {
-      el('mqph-install-direct').value = Math.round(window._mqInstallRate);
-    }
-  };
-
-  window.mqPhUseInstallCab = function() {
-    if (window._mqInstallRate) {
-      el('mqph-install-direct').value = Math.round(window._mqInstallRate);
-    }
-  };
-
-  window.mqPhUseInstallPct = function() {
-    if (window._mqInstallRate) {
-      el('mqph-install-direct').value = Math.round(window._mqInstallRate);
+  window.mqph3RunWizard = function() {
+    wizardStep = 0;
+    wizardItems = [];
+    wizardBaseline = null;
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (container) {
+      container.innerHTML = buildWizardHTML();
+      renderWizardStep(buildWizardSteps(), 0);
     }
   };
 
   // ============================================================
-  // ADD / REMOVE
+  // INIT — called by dashboard.js
   // ============================================================
-  window.mqPhAddMaterial = function() {
-    const id = 'custom_mat_' + Date.now();
-    const newMat = { id, name: 'New material', field: id, default: 300, custom: true };
-    materials.push(newMat);
-    const container = el('mqph-mat-list');
-    const div = document.createElement('div');
-    div.innerHTML = buildMaterialCard(newMat, materials.length);
-    container.appendChild(div.firstElementChild);
-  };
+  window.mqph2Init = function(passedShopRecord, passedPricingRecord) {
+    if (!passedShopRecord) return;
 
-  window.mqPhRemoveMaterial = function(id) {
-    materials = materials.filter(m => m.id !== id);
-    const card = el(`mqph-mat-${id}`);
-    if (card) card.remove();
-    updateSummary();
-  };
-
-  window.mqPhAddDoor = function() {
-    const id = 'custom_door_' + Date.now();
-    const newDoor = { id, name: 'New door style', field: id, default: 0, custom: true };
-    doorStyles.push(newDoor);
-    const container = el('mqph-door-list');
-    const div = document.createElement('div');
-    div.innerHTML = buildDoorCard(newDoor, doorStyles.length);
-    container.appendChild(div.firstElementChild);
-  };
-
-  window.mqPhRemoveDoor = function(id) {
-    doorStyles = doorStyles.filter(d => d.id !== id);
-    const card = el(`mqph-door-${id}`);
-    if (card) card.remove();
-    updateSummary();
-  };
-
-  // ============================================================
-  // INSTALL METHOD SWITCH
-  // ============================================================
-  window.mqPhInstallMethod = function(method) {
-    installMethod = method;
-    ['lft','cab','pct','none'].forEach(m => {
-      const e = el(`mqph-install-${m}`);
-      if (e) e.style.display = 'none';
-    });
-    const show = el(`mqph-install-${method === 'per_lft' ? 'lft' : method === 'per_cab' ? 'cab' : method === 'percent' ? 'pct' : 'none'}`);
-    if (show) show.style.display = 'block';
-  };
-
-  // ============================================================
-  // TABS
-  // ============================================================
-  window.mqPhTab = function(id, btn) {
-    document.querySelectorAll('#mq-pricing-helper .mq-ph-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#mq-pricing-helper .mq-ph-section').forEach(s => s.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    const section = el(`mqph-${id}`);
-    if (section) section.classList.add('active');
-    if (id === 'summary') updateSummary();
-  };
-
-  // ============================================================
-  // SUMMARY
-  // ============================================================
-  function updateSummary() {
-    const container = el('mqph-summary-content');
-    if (!container) return;
-
-    const installRate = installMethod === 'none' ? 0 : (gn('mqph-install-direct') || window._mqInstallRate || 0);
-    const savedMats = materials.filter(m => m.saved !== undefined);
-    const savedDoors = doorStyles.filter(d => d.saved !== undefined);
-
-    container.innerHTML = `
-      <div style="margin-bottom:1.5rem">
-        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">🪵 Cabinet materials (per linear foot)</div>
-        <div class="mq-ph-summary-grid">
-          ${materials.map(m => `
-            <div class="mq-ph-summary-item">
-              <div class="mq-ph-summary-lbl">${m.custom ? (el(`mqph-mat-name-${m.id}`)?.value || m.name) : m.name}</div>
-              <div class="mq-ph-summary-val" style="${m.saved ? 'color:#16a34a' : 'color:#9ca3af'}">${m.saved ? fmt(m.saved) + '/ft' : 'Not set'}</div>
-            </div>`).join('')}
-        </div>
-      </div>
-      <div style="margin-bottom:1.5rem">
-        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">🚪 Door style adders (per linear foot)</div>
-        <div class="mq-ph-summary-grid">
-          ${doorStyles.map(d => `
-            <div class="mq-ph-summary-item">
-              <div class="mq-ph-summary-lbl">${d.custom ? (el(`mqph-door-name-${d.id}`)?.value || d.name) : d.name}</div>
-              <div class="mq-ph-summary-val" style="${d.saved !== undefined ? 'color:#16a34a' : 'color:#9ca3af'}">${d.saved !== undefined ? fmt(d.saved) + '/ft' : 'Not set'}</div>
-            </div>`).join('')}
-        </div>
-      </div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">🔨 Installation</div>
-        <div class="mq-ph-summary-grid">
-          <div class="mq-ph-summary-item">
-            <div class="mq-ph-summary-lbl">Install rate</div>
-            <div class="mq-ph-summary-val" style="${installRate ? 'color:#16a34a' : 'color:#9ca3af'}">${installRate ? fmt(installRate) + '/ft' : installMethod === 'none' ? 'Not included' : 'Not set'}</div>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  // ============================================================
-  // SAVE ALL
-  // ============================================================
-  window.mqPhSaveAll = async function() {
-    if (!pricingRecord && !shopRecord) {
-      el('mqph-save-err').textContent = 'No shop record found. Please refresh and try again.';
-      el('mqph-save-err').style.display = 'block';
-      return;
-    }
-
-    const installRate = installMethod === 'none' ? 0 : (gn('mqph-install-direct') || window._mqInstallRate || 0);
-    const fields = { 'Install rate uppers': Math.round(installRate) };
-
-    // Add material rates
-    materials.forEach(m => {
-      if (m.saved && m.field && !m.custom) {
-        fields[m.field] = Math.round(m.saved);
-      }
-    });
-
-    // Add door adders
-    doorStyles.forEach(d => {
-      if (d.saved !== undefined && d.field && !d.custom) {
-        fields[d.field] = Math.round(d.saved);
-      }
-    });
-
-    try {
-      if (pricingRecord) {
-        await atUpdate(CONFIG.PRICING_TABLE, pricingRecord.id, fields);
-      } else {
-        fields['Shop'] = [shopRecord.id];
-        await atCreate(CONFIG.PRICING_TABLE, fields);
-      }
-      el('mqph-save-msg').textContent = '✓ All rates saved to your widget!';
-      el('mqph-save-msg').style.display = 'block';
-      el('mqph-save-err').style.display = 'none';
-      setTimeout(() => { el('mqph-save-msg').style.display = 'none'; }, 4000);
-    } catch(e) {
-      el('mqph-save-err').textContent = 'Error saving — please try again.';
-      el('mqph-save-err').style.display = 'block';
-    }
-  };
-
-  // ============================================================
-  // INIT
-  // ============================================================
-  async function init() {
-    const container = document.getElementById('mq-pricing-helper');
-    if (!container) {
-      console.error('MidasQuote Pricing Helper: Add <div id="mq-pricing-helper"></div> to your page.');
-      return;
-    }
+    shopRecord = {
+      ...passedShopRecord,
+      _recordId: passedShopRecord.id,
+      _baseId: 'app4zrMlVLwF2xn4h',
+      _token: 'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
+      _pricingTable: 'tblu6AYZs8h7SIaQl',
+    };
+    pricingRecord = passedPricingRecord;
 
     injectStyles();
-    container.innerHTML = '<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Loading pricing helper...</div>';
-
-    // Get shop token
-    let shopToken = new URLSearchParams(window.location.search).get('shop');
-    if (!shopToken && window.$memberstackDom) {
-      try {
-        const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) shopToken = member.metaData?.shopToken || member.customFields?.shopToken;
-      } catch(e) {}
-    }
-    if (!shopToken) shopToken = 'dr-sales-001';
-
-    // Load records
-    const shops = await atGet(CONFIG.SHOPS_TABLE, `{Shop token} = "${shopToken}"`);
-    if (shops.length) shopRecord = shops[0];
-
-    if (shopRecord) {
-      const pricing = await atGet(CONFIG.PRICING_TABLE, `FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-      if (pricing.length) pricingRecord = pricing[0];
-    }
-
-    // Initialize materials with current values
-    materials = DEFAULT_MATERIALS.map(m => ({
-      ...m,
-      current: pricingRecord?.fields[m.field] || null,
-      saved: pricingRecord?.fields[m.field] || undefined,
-    }));
-
-    doorStyles = DEFAULT_DOORS.map(d => ({
-      ...d,
-      current: pricingRecord?.fields[d.field] || null,
-      saved: pricingRecord?.fields[d.field] !== undefined ? pricingRecord.fields[d.field] : undefined,
-    }));
-
-    // Build UI
-    container.innerHTML = buildHTML();
-
-    // Render material and door cards
-    const matList = el('mqph-mat-list');
-    materials.forEach((m, i) => {
-      const div = document.createElement('div');
-      div.innerHTML = buildMaterialCard(m, i);
-      matList.appendChild(div.firstElementChild);
-    });
-
-    const doorList = el('mqph-door-list');
-    doorStyles.forEach((d, i) => {
-      const div = document.createElement('div');
-      div.innerHTML = buildDoorCard(d, i);
-      doorList.appendChild(div.firstElementChild);
-    });
-
-    // Pre-fill existing rates if available
-    if (pricingRecord) {
-      const f = pricingRecord.fields;
-      if (f['Install rate uppers']) {
-        const direct = el('mqph-install-direct');
-        if (direct) direct.value = f['Install rate uppers'];
-      }
-      materials.forEach(m => {
-        if (m.saved) {
-          const cur = el(`mqph-mat-current-${m.id}`);
-          if (cur) cur.textContent = fmt(m.saved) + '/ft';
-        }
-      });
-      doorStyles.forEach(d => {
-        if (d.saved !== undefined) {
-          const cur = el(`mqph-door-current-${d.id}`);
-          if (cur) cur.textContent = fmt(d.saved) + '/ft';
-        }
-      });
-    }
-
-    updateSummary();
-  }
-
-  init();
+    loadAndRender();
+  };
 
 })();
