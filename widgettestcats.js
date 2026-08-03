@@ -1927,30 +1927,15 @@
     function edgeSelectHtml(m, containerId) {
       const edges = edgeOptionsFor(m);
       if (!edges.length) return '';
-      const chip = (idx, label, photoUrl, icon, selected) => {
-        const safePhoto = (photoUrl||'').replace(/'/g,"\\'");
-        const safeLabel = (label||'').replace(/'/g,"\\'");
-        const thumb = photoUrl
-          ? `<img src="${photoUrl}" alt="${(label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6;cursor:zoom-in"/>`
-          : `<div style="width:56px;height:56px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:22px">${icon}</div>`;
-        return `<div class="mq-edge-chip${selected?' selected':''}" onclick="mqSelectEdge(this,'${containerId}-sel','${idx}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid ${selected?'#1a1a1a':'#e5e7eb'};border-radius:8px;cursor:pointer;width:76px;flex-shrink:0">
-          ${thumb}<span style="font-size:11px;text-align:center;color:#374151;line-height:1.2">${(label||'').replace(/"/g,'&quot;')}</span>
-        </div>`;
-      };
-      const chips = [chip('none', 'Standard', '', '🚫', true)].concat(edges.map((e,i)=>chip(i, e.label||'Edge', e.photoUrl, '📐', false))).join('');
+      const items = sortAndBadgeItems([{value:'none', label:'Standard', icon:'🚫'}].concat(
+        edges.map((e,i)=>({value:String(i), label:e.label||'Edge', photoUrl:e.photoUrl, icon:'📐', price:e.rate||0}))
+      ));
+      const opts = items.map(it=>`<option value="${it.value}">${it.label}</option>`).join('');
       return `<div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Edge</label>
-        <input type="hidden" id="${containerId}-sel" value="none"/>
-        <div style="display:flex;gap:8px;overflow-x:auto;padding:4px 2px">${chips}</div>
+        ${pickerRow(`${containerId}-sel`, items)}
+        <select id="${containerId}-sel" style="display:none">${opts}</select>
       </div>`;
     }
-    window.mqSelectEdge = function(chipEl, hiddenId, idx) {
-      const hidden = document.getElementById(hiddenId);
-      if (hidden) hidden.value = idx;
-      const row = chipEl.parentElement;
-      if (row) row.querySelectorAll('.mq-edge-chip').forEach(c => { c.classList.remove('selected'); c.style.borderColor = '#e5e7eb'; });
-      chipEl.classList.add('selected');
-      chipEl.style.borderColor = '#1a1a1a';
-    };
     // Addons — stackable, own quantity each, any pricing method. Same card
     // shape as the edge chips (56px thumbnail) and the same +/- quantity
     // control style used by specialty items, so quantity sits right next to
@@ -3519,6 +3504,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       if (edgeEl) edgeEl.innerHTML = edgeSelectHtml(m, edgeContainerId);
       if (addonEl) addonEl.innerHTML = addonRowsHtml(m, `${addonContainerId}-a`);
+      window.mqUpdateAllPickerArrows();
     };
     window.mqRefreshBsFt=(prefix)=>{
       // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
