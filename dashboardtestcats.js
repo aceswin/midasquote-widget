@@ -4289,25 +4289,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;max-width:320px;box-sizing:border-box"
               onchange="mqSaveCategoryPickerLabel('${cat}',this.value)"/>
           </div>` : ''}
-          ${cat === 'countertop' && mqCountertopAddonPhotoList().length ? `
-          <div style="margin-bottom:16px;padding:12px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px">
-            <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Edge &amp; addon photos</div>
-            <p style="font-size:11px;color:#92400e;margin-bottom:10px">Names, pricing, and which materials each one applies to are managed in Pricing → Countertop pricing. This is just for adding a photo.</p>
-            ${mqCountertopAddonPhotoList().map(a => `
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                <span style="font-size:12px;font-weight:600;color:#92400e;min-width:140px">${a.isEdge?'📐':'➕'} ${a.label}</span>
-                <input type="text" value="${(a.photoUrl||'').replace(/"/g,'&quot;')}" placeholder="Photo URL"
-                  style="flex:1;font-size:12px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px"
-                  onchange="mqSaveAddonPhoto('${a.id}',this.value)"/>
-              </div>`).join('')}
-          </div>` : ''}
           <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
+          ${cat === 'countertop' && mqCountertopAddonPhotoList().length ? `
+          <div style="margin-top:16px">
+            <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Edge &amp; addon photos</div>
+            <p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Names, pricing, and which materials each one applies to are managed in Pricing → Countertop pricing — this is just for adding a photo.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+              ${mqCountertopAddonPhotoList().map(a => photoCard('addon_'+a.id, a.label, a.isEdge?'📐':'➕', null, null, null)).join('')}
+            </div>
+          </div>` : ''}
         </div>
       </div>`;
     }
 
     // Every distinct edge/addon across all countertop materials, deduped by
-    // id — used only to offer a photo field here; everything else about an
+    // id — used only to offer a photo card here; everything else about an
     // addon (name, pricing, which materials it applies to) is managed in
     // Pricing → Countertop pricing instead.
     function mqCountertopAddonPhotoList() {
@@ -4316,23 +4312,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       items.forEach(item => (item.addonOptions||[]).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
       return [...seen.values()];
     }
-
-    window.mqSaveAddonPhoto = async function(addonId, url) {
-      const photoUrl = (url||'').trim();
-      const items = (byCategory['countertop']||[]).filter(i => (i.addonOptions||[]).some(a=>a.id===addonId));
-      const writes = [];
-      items.forEach(item => {
-        const newList = item.addonOptions.map(a => a.id===addonId ? { ...a, photoUrl } : a);
-        item.addonOptions = newList;
-        item.ids.forEach(id => writes.push(atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Addon options': JSON.stringify(newList) })));
-      });
-      try {
-        await Promise.all(writes);
-      } catch(e) {
-        console.error('Failed to save addon photo', e);
-        alert('Could not save the photo — please try again.');
-      }
-    };
 
     // The grid contents get rebuilt on their own (without re-rendering the
     // whole tab) whenever a group name, description, or order changes — so
