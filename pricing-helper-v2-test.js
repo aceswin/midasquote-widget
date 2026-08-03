@@ -1612,15 +1612,16 @@ window.mqphGoToWizard = function() {
 
         ${['material','door','drawer','hinge','zone','install','other','tax'].filter(cat => groups[cat]).map(cat => [cat, groups[cat]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
           <div class="mqph-cat-block">
-            <div class="mqph-cat-header">
-              <span class="mqph-cat-title">${CAT_LABELS[cat]||cat}</span>
+            <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
+              <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
               ${cat==='install'
                 ? ''
                 : MINI_WIZ_CATS.includes(cat)
-                  ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
-                  : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenAdd('${cat}')">+ Add</button>`
+                  ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
+                  : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
               }
             </div>
+            <div id="mqph-cat-body-${cat}" style="display:none">
             ${recs.sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0)).map(r=>`
               <div class="mqph-row">
                 <div style="flex:1;min-width:0">
@@ -1633,6 +1634,7 @@ window.mqphGoToWizard = function() {
                 <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
                 <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
               </div>`).join('')}
+            </div>
           </div>`).join('')}
       `}
 
@@ -1837,6 +1839,17 @@ window.mqphGoToWizard = function() {
     try { await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender(); } catch(e) { alert('Error deleting.'); }
   };
 
+  // Collapsible category sections — same pattern as My Products, to keep
+  // this page manageable once a shop has a lot of pricing set up.
+  window.mqphToggleCategory = function(cat) {
+    const body = document.getElementById(`mqph-cat-body-${cat}`);
+    const arrow = document.getElementById(`mqph-cat-arrow-${cat}`);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+  };
+
   window.mqphToggle = async function(id, el) {
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
     const val = !rec.fields['Active'];
@@ -1998,10 +2011,11 @@ window.mqphGoToWizard = function() {
 
     return `
       <div class="mqph-ct-block">
-        <div class="mqph-cat-header">
-          <span class="mqph-cat-title">🪨 Countertop pricing</span>
-          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenCTAdd()">+ Add material</button>
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('countertop')" style="cursor:pointer">
+          <span class="mqph-cat-title"><span id="mqph-cat-arrow-countertop" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🪨 Countertop pricing <span style="font-size:12px;font-weight:400;color:#9ca3af">(${materials.length})</span></span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenCTAdd()">+ Add material</button>
         </div>
+        <div id="mqph-cat-body-countertop" style="display:none">
         <div id="mqph-ct-msg" class="mqph-msg"></div>
         <div class="mqph-info" style="margin:12px 16px">
           Each material now carries its own backsplash height options and cutout pricing — no more separate backsplash/cutout items to keep in sync. Add a material below, then set its backsplash heights and cutout rates right inside it.
@@ -2015,6 +2029,7 @@ window.mqphGoToWizard = function() {
           Edge profiles (like a bullnose or ogee edge) are always priced per linear foot and let the customer pick one per counter — if none are added, customers just get a standard edge at no extra charge. Addons (like a waterfall) can use any pricing method and stack in any quantity. Either kind can be tagged onto as many materials as you like.
         </div>
         ${addonList.length ? addonList.map(addonRow).join('') : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">No edges or addons yet.</div>`}
+        </div>
       </div>
 
       <!-- Countertop add/edit modal -->
@@ -2165,14 +2180,16 @@ window.mqphGoToWizard = function() {
 
     return `
       <div class="mqph-ct-block">
-        <div class="mqph-cat-header">
-          <span class="mqph-cat-title">👑 Crown moulding / valance</span>
-          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenTrimAdd()">+ Add style</button>
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('trim')" style="cursor:pointer">
+          <span class="mqph-cat-title"><span id="mqph-cat-arrow-trim" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>👑 Crown moulding / valance <span style="font-size:12px;font-weight:400;color:#9ca3af">(${trimItems.length})</span></span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenTrimAdd()">+ Add style</button>
         </div>
+        <div id="mqph-cat-body-trim" style="display:none">
         <div id="mqph-trim-msg" class="mqph-msg"></div>
         ${trimSection('Crown moulding', crownItems, 'No crown moulding styles yet — add one above.')}
         ${trimSection('Valance', valanceItems, 'No valance styles yet — add one above.')}
         <div style="padding:0.75rem 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6">Customers can choose crown, valance, both, or neither — cost is calculated from the upper cabinet linear footage plus any wall returns they enter.</div>
+        </div>
       </div>
 
       <!-- Trim add/edit modal -->
