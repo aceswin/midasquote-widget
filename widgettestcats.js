@@ -1951,29 +1951,44 @@
       chipEl.classList.add('selected');
       chipEl.style.borderColor = '#1a1a1a';
     };
-    // Addons — stackable, own quantity each, any pricing method.
+    // Addons — stackable, own quantity each, any pricing method. Same card
+    // shape as the edge chips (56px thumbnail) and the same +/- quantity
+    // control style used by specialty items, so quantity sits right next to
+    // the item instead of stretched across the full row width.
     function addonRowsHtml(m, idPrefix) {
       const addons = addonOptionsFor(m);
       if (!addons.length) return '';
       return `<div style="margin-bottom:0.75rem"><label class="mq-label" style="display:block;margin-bottom:6px">Add-ons</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
         ${addons.map((a,i)=>{
-          const priceLabel = a.pricingType==='flat' ? `$${(a.rate||0).toLocaleString()} each` : a.pricingType==='sqft' ? `$${(a.rate||0).toLocaleString()}/sq ft` : `$${(a.rate||0).toLocaleString()}/lin ft`;
           const safePhoto = (a.photoUrl||'').replace(/'/g,"\\'");
           const safeLabel = (a.label||'').replace(/'/g,"\\'");
           const thumb = a.photoUrl
-            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:40px;height:40px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0;cursor:zoom-in"/>`
-            : `<div style="width:40px;height:40px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">➕</div>`;
-          return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0;cursor:zoom-in"/>`
+            : `<div style="width:56px;height:56px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">➕</div>`;
+          return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
             ${thumb}
-            <label style="font-size:14px;color:#4b5563;flex:1;display:flex;align-items:center;gap:6px;cursor:pointer">
-              <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qty-${i}').style.display=this.checked?'':'none'" style="width:auto"/>
-              ${(a.label||'Addon').replace(/"/g,'&quot;')} <span style="color:#9ca3af;font-size:12px">(${priceLabel})</span>
-            </label>
-            <input type="number" id="${idPrefix}-qty-${i}" value="1" min="1" max="20" style="width:55px;display:none"/>
+            <div style="flex:1;min-width:0">
+              <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;font-weight:600;cursor:pointer">
+                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none'" style="width:auto"/>
+                ${(a.label||'Addon').replace(/"/g,'&quot;')}
+              </label>
+              <div class="mq-qty-ctrl" id="${idPrefix}-qtywrap-${i}" style="display:none;margin-top:6px">
+                <button class="mq-qty-btn" type="button" onclick="mqAdjAddonQty('${idPrefix}',${i},-1)">−</button>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="${idPrefix}-qty-${i}" value="1" style="width:36px;text-align:center;font-size:14px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" onclick="this.select()"/>
+                <button class="mq-qty-btn" type="button" onclick="mqAdjAddonQty('${idPrefix}',${i},1)">+</button>
+              </div>
+            </div>
           </div>`;
         }).join('')}
+        </div>
       </div>`;
     }
+    window.mqAdjAddonQty = function(idPrefix, i, delta) {
+      const input = document.getElementById(`${idPrefix}-qty-${i}`);
+      if (!input) return;
+      input.value = Math.max(1, (parseInt(input.value,10)||1) + delta);
+    };
 
     const ctDepth  = 25.5;
 
