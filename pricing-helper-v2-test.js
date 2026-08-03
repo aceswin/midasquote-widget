@@ -1976,19 +1976,25 @@ window.mqphGoToWizard = function() {
       return [...seen.values()];
     }
     const addonList = mqphCountertopAddonList();
-    const addonRow = (a) => `
+    const addonRow = (a) => {
+      const taggedMats = materials.filter(m=>getAddonOptions(m).some(x=>x.id===a.id));
+      const rates = taggedMats.map(m => getAddonOptions(m).find(x=>x.id===a.id)?.rate || 0);
+      const allSame = rates.every(r => r === rates[0]);
+      const rateLabel = !rates.length ? '$0' : allSame ? `$${rates[0].toLocaleString()}` : `$${Math.min(...rates).toLocaleString()}–$${Math.max(...rates).toLocaleString()}`;
+      return `
       <div class="mqph-row">
         <div style="flex:1;min-width:0">
           <div class="mqph-row-name">${a.isEdge?'📐':'➕'} ${a.label}${a.isEdge?' <span style="font-weight:400;color:#6b7280;font-size:12px">(edge profile)</span>':''}</div>
-          <div class="mqph-row-desc">Applies to: ${materials.filter(m=>getAddonOptions(m).some(x=>x.id===a.id)).map(m=>m.fields['Name']).join(', ') || '—'}</div>
+          <div class="mqph-row-desc">Applies to: ${taggedMats.map(m=>m.fields['Name']).join(', ') || '—'}</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;font-size:13px">
-          <span style="font-weight:600">$${(a.rate||0).toLocaleString()}</span>
+          <span style="font-weight:600">${rateLabel}</span>
           <span style="color:#6b7280;font-size:11px">${a.pricingType==='flat'?'flat rate':a.pricingType==='sqft'?'/ sq ft':'/ lin ft'}</span>
         </div>
         <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenAddonEdit('${a.id}')">Edit</button>
         <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDeleteAddon('${a.id}')">Delete</button>
       </div>`;
+    };
 
     return `
       <div class="mqph-ct-block">
@@ -2101,11 +2107,14 @@ window.mqphGoToWizard = function() {
               <div id="mqph-addon-edge-note" style="display:none;font-size:12px;color:#92400e;margin-top:6px">Edges are always priced per linear foot — this can't be changed.</div>
             </div>
 
-            <div class="mqph-field"><label>Rate ($)</label><input type="number" id="mqph-addon-rate" placeholder="0.00" step="0.01"/></div>
+            <div class="mqph-info" style="margin-bottom:1rem">
+              💡 Flat rate keeps things simplest for the customer — it's one clear number, and since this is a ballpark tool, small real-world variation (extra material for an odd-shaped counter, a bit more labor on one job vs. another) is exactly what the estimate range is already there to absorb. Per linear/square foot makes sense when the cost genuinely scales with the size of the job — just know it adds a bit more for the customer to think through.
+            </div>
 
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Applies to these countertop materials</div>
-              <div id="mqph-addon-materials" style="display:flex;flex-direction:column;gap:4px"></div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Check which materials this applies to, and set its own rate for each one — a waterfall on granite doesn't have to cost the same as a waterfall on laminate.</div>
+              <div id="mqph-addon-materials" style="display:flex;flex-direction:column;gap:6px"></div>
             </div>
           </div>
           <div class="mqph-modal-footer">
@@ -2644,11 +2653,19 @@ window.mqphGoToWizard = function() {
     const materials = mqphCountertopMaterials();
     if (!materials.length) { list.innerHTML = '<div style="font-size:12px;color:#9ca3af">No countertop materials set up yet.</div>'; return; }
     list.innerHTML = materials.map(m => {
-      const checked = getAddonOptions(m).some(a => a.id === addonId) ? 'checked' : '';
-      return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;cursor:pointer;padding:4px 2px">
-        <input type="checkbox" data-mat-id="${m.id}" ${checked} style="width:auto;flex-shrink:0"/>
-        <span>${m.fields['Name']||'—'}</span>
-      </label>`;
+      const existing = getAddonOptions(m).find(a => a.id === addonId);
+      const checked = existing ? 'checked' : '';
+      const rateVal = existing ? existing.rate : '';
+      return `<div style="display:flex;align-items:center;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;cursor:pointer;flex:1">
+          <input type="checkbox" data-mat-id="${m.id}" ${checked} onchange="document.getElementById('mqph-addon-rate-${m.id}').style.visibility=this.checked?'visible':'hidden'" style="width:auto;flex-shrink:0"/>
+          <span>${m.fields['Name']||'—'}</span>
+        </label>
+        <div style="display:flex;align-items:center;gap:4px;visibility:${existing?'visible':'hidden'}" id="mqph-addon-ratewrap-${m.id}">
+          <span style="font-size:12px;color:#6b7280">$</span>
+          <input type="number" id="mqph-addon-rate-${m.id}" value="${rateVal}" placeholder="0.00" step="0.01" style="width:70px;font-size:12px;padding:4px 6px;border:1px solid #d1d5db;border-radius:5px"/>
+        </div>
+      </div>`;
     }).join('');
   }
 
@@ -2658,7 +2675,6 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-addon-name').value = '';
     document.getElementById('mqph-addon-isedge').checked = false;
     document.getElementById('mqph-addon-pricing').value = 'flat';
-    document.getElementById('mqph-addon-rate').value = '';
     document.getElementById('mqph-addon-delete').style.display = 'none';
     mqphAddonToggleEdge(false);
     mqphPopulateAddonMaterials(null);
@@ -2673,7 +2689,6 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-addon-name').value = existing.label || '';
     document.getElementById('mqph-addon-isedge').checked = !!existing.isEdge;
     document.getElementById('mqph-addon-pricing').value = existing.pricingType || 'flat';
-    document.getElementById('mqph-addon-rate').value = existing.rate ?? '';
     document.getElementById('mqph-addon-delete').style.display = 'inline-block';
     mqphAddonToggleEdge(!!existing.isEdge);
     mqphPopulateAddonMaterials(addonId);
@@ -2687,9 +2702,7 @@ window.mqphGoToWizard = function() {
     if (!name) { alert('Please enter a name.'); return; }
     const isEdge = document.getElementById('mqph-addon-isedge').checked;
     const pricingType = isEdge ? 'linft' : document.getElementById('mqph-addon-pricing').value;
-    const rate = parseFloat(document.getElementById('mqph-addon-rate').value) || 0;
     const id = currentAddonEditId || ('addon_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7));
-    const addonObj = { id, label: name, isEdge, pricingType, rate };
 
     const materials = mqphCountertopMaterials();
     const checkedMatIds = new Set([...document.querySelectorAll('#mqph-addon-materials input[type=checkbox]:checked')].map(cb => cb.dataset.matId));
@@ -2700,8 +2713,15 @@ window.mqphGoToWizard = function() {
       const current = getAddonOptions(m);
       const currentlyIn = current.some(a => a.id === id);
       let newList = null;
-      if (shouldBeIn) newList = currentlyIn ? current.map(a => a.id===id ? addonObj : a) : [...current, addonObj];
-      else if (currentlyIn) newList = current.filter(a => a.id !== id);
+      if (shouldBeIn) {
+        // Each material gets its own rate — a waterfall on granite doesn't
+        // have to cost the same as a waterfall on laminate.
+        const rate = parseFloat(document.getElementById(`mqph-addon-rate-${m.id}`)?.value) || 0;
+        const addonObj = { id, label: name, isEdge, pricingType, rate };
+        newList = currentlyIn ? current.map(a => a.id===id ? addonObj : a) : [...current, addonObj];
+      } else if (currentlyIn) {
+        newList = current.filter(a => a.id !== id);
+      }
       if (newList) {
         m.fields['Addon options'] = JSON.stringify(newList);
         writes.push(atUpdate(LINE_ITEMS_TABLE, m.id, { 'Addon options': JSON.stringify(newList) }));
