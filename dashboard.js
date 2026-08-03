@@ -1545,6 +1545,9 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('proposals')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Proposals</div>
             <div class="mq-page-sub">Set up templates here — your team picks one in MidasQuote Pro to turn a real-number estimate into a clean, printable proposal for the customer to sign.</div>
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#1e40af;line-height:1.5">
+              💡 <strong>Heads up:</strong> prices shown in a proposal aren't locked to what's set up here. When building a proposal for a specific customer in MidasQuote Pro, your team can tweak any item's price in real time — handy for one-off adjustments — without changing your actual pricing setup anywhere else.
+            </div>
             <div id="mq-prop-msg"></div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddProposalTemplate()">+ New template</button>
