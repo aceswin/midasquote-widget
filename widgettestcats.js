@@ -1928,8 +1928,10 @@
       const edges = edgeOptionsFor(m);
       if (!edges.length) return '';
       const chip = (idx, label, photoUrl, icon, selected) => {
+        const safePhoto = (photoUrl||'').replace(/'/g,"\\'");
+        const safeLabel = (label||'').replace(/'/g,"\\'");
         const thumb = photoUrl
-          ? `<img src="${photoUrl}" alt="${(label||'').replace(/"/g,'&quot;')}" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6"/>`
+          ? `<img src="${photoUrl}" alt="${(label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6;cursor:zoom-in"/>`
           : `<div style="width:56px;height:56px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:22px">${icon}</div>`;
         return `<div class="mq-edge-chip${selected?' selected':''}" onclick="mqSelectEdge(this,'${containerId}-sel','${idx}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid ${selected?'#1a1a1a':'#e5e7eb'};border-radius:8px;cursor:pointer;width:76px;flex-shrink:0">
           ${thumb}<span style="font-size:11px;text-align:center;color:#374151;line-height:1.2">${(label||'').replace(/"/g,'&quot;')}</span>
@@ -1956,8 +1958,10 @@
       return `<div style="margin-bottom:0.75rem"><label class="mq-label" style="display:block;margin-bottom:6px">Add-ons</label>
         ${addons.map((a,i)=>{
           const priceLabel = a.pricingType==='flat' ? `$${(a.rate||0).toLocaleString()} each` : a.pricingType==='sqft' ? `$${(a.rate||0).toLocaleString()}/sq ft` : `$${(a.rate||0).toLocaleString()}/lin ft`;
+          const safePhoto = (a.photoUrl||'').replace(/'/g,"\\'");
+          const safeLabel = (a.label||'').replace(/'/g,"\\'");
           const thumb = a.photoUrl
-            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" style="width:40px;height:40px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0"/>`
+            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:40px;height:40px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0;cursor:zoom-in"/>`
             : `<div style="width:40px;height:40px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">➕</div>`;
           return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             ${thumb}
