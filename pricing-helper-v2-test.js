@@ -1870,6 +1870,16 @@ window.mqphGoToWizard = function() {
     } catch(e) { return []; }
   }
 
+  // Parse a material's edge/addon options JSON safely
+  function getAddonOptions(r) {
+    try {
+      const raw = r.fields['Addon options'];
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch(e) { return []; }
+  }
+
   // One-time migration: copy old global Backsplash/Sink/Cooktop rates onto
   // every existing material that hasn't been migrated yet, so pricing never
   // silently drops to $0 for an existing shop. Also upgrades materials that
@@ -1958,6 +1968,28 @@ window.mqphGoToWizard = function() {
       : `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
          <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`;
 
+    // Every distinct edge/addon across all countertop materials, deduped by id
+    // (the same addon object lives redundantly on every material it applies to).
+    function mqphCountertopAddonList() {
+      const seen = new Map();
+      materials.forEach(m => getAddonOptions(m).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
+      return [...seen.values()];
+    }
+    const addonList = mqphCountertopAddonList();
+    const addonRow = (a) => `
+      <div class="mqph-row">
+        <div style="flex:1;min-width:0">
+          <div class="mqph-row-name">${a.isEdge?'📐':'➕'} ${a.label}${a.isEdge?' <span style="font-weight:400;color:#6b7280;font-size:12px">(edge profile)</span>':''}</div>
+          <div class="mqph-row-desc">Applies to: ${materials.filter(m=>getAddonOptions(m).some(x=>x.id===a.id)).map(m=>m.fields['Name']).join(', ') || '—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+          <span style="font-weight:600">$${(a.rate||0).toLocaleString()}</span>
+          <span style="color:#6b7280;font-size:11px">${a.pricingType==='flat'?'flat rate':a.pricingType==='sqft'?'/ sq ft':'/ lin ft'}</span>
+        </div>
+        <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenAddonEdit('${a.id}')">Edit</button>
+        <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDeleteAddon('${a.id}')">Delete</button>
+      </div>`;
+
     return `
       <div class="mqph-ct-block">
         <div class="mqph-cat-header">
@@ -1969,6 +2001,14 @@ window.mqphGoToWizard = function() {
           Each material now carries its own backsplash height options and cutout pricing — no more separate backsplash/cutout items to keep in sync. Add a material below, then set its backsplash heights and cutout rates right inside it.
         </div>
         ${section('Materials', materials, matRow, 'No materials yet — add your first countertop material.')}
+        <div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between">
+          <span>Edges &amp; addons</span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenAddonAdd()">+ New edge/addon</button>
+        </div>
+        <div class="mqph-info" style="margin:12px 16px">
+          Edge profiles (like a bullnose or ogee edge) are always priced per linear foot and let the customer pick one per counter — if none are added, customers just get a standard edge at no extra charge. Addons (like a waterfall) can use any pricing method and stack in any quantity. Either kind can be tagged onto as many materials as you like.
+        </div>
+        ${addonList.length ? addonList.map(addonRow).join('') : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">No edges or addons yet.</div>`}
       </div>
 
       <!-- Countertop add/edit modal -->
@@ -2032,6 +2072,46 @@ window.mqphGoToWizard = function() {
           <div class="mqph-modal-footer">
             <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseCTModal()">Cancel</button>
             <button class="mqph-btn mqph-btn-primary" onclick="mqphSaveCTItem()" style="margin-left:auto">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Countertop edge/addon add/edit modal -->
+      <div class="mqph-overlay" id="mqph-addon-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-addon-modal-title">New edge/addon</h3></div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseAddonModal()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div class="mqph-field"><label>Name</label><input type="text" id="mqph-addon-name" placeholder="e.g. Waterfall edge"/></div>
+
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:1rem">
+              <input type="checkbox" id="mqph-addon-isedge" onchange="mqphAddonToggleEdge(this.checked)" style="width:auto"/>
+              This is an edge profile (customer picks one per counter — e.g. bullnose, ogee, mitered)
+            </label>
+
+            <div class="mqph-field">
+              <label>Pricing method</label>
+              <select id="mqph-addon-pricing">
+                <option value="flat">Flat rate</option>
+                <option value="linft">Per linear foot</option>
+                <option value="sqft">Per square foot</option>
+              </select>
+              <div id="mqph-addon-edge-note" style="display:none;font-size:12px;color:#92400e;margin-top:6px">Edges are always priced per linear foot — this can't be changed.</div>
+            </div>
+
+            <div class="mqph-field"><label>Rate ($)</label><input type="number" id="mqph-addon-rate" placeholder="0.00" step="0.01"/></div>
+
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Applies to these countertop materials</div>
+              <div id="mqph-addon-materials" style="display:flex;flex-direction:column;gap:4px"></div>
+            </div>
+          </div>
+          <div class="mqph-modal-footer">
+            <button id="mqph-addon-delete" class="mqph-btn mqph-btn-danger" style="display:none" onclick="mqphDeleteAddon()">Delete</button>
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseAddonModal()">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" onclick="mqphSaveAddon()" style="margin-left:auto">Save</button>
           </div>
         </div>
       </div>`;
@@ -2530,6 +2610,133 @@ window.mqphGoToWizard = function() {
     } catch(e) { alert('Error saving. Please try again.'); }
   };
 
+  // ============================================================
+  // COUNTERTOP EDGE/ADDON MANAGER — edge profiles (single-select per
+  // counter, always priced per linear foot) and stackable extras like a
+  // waterfall (flat/linear ft/sq ft). One addon object, redundantly stored
+  // in the 'Addon options' JSON list on every countertop material it
+  // applies to — create once here, tag onto as many materials as needed.
+  // ============================================================
+  let currentAddonEditId = null; // null = creating a brand new addon
+
+  window.mqphAddonToggleEdge = function(checked) {
+    const pricingSel = document.getElementById('mqph-addon-pricing');
+    const note = document.getElementById('mqph-addon-edge-note');
+    if (!pricingSel || !note) return;
+    if (checked) { pricingSel.value = 'linft'; pricingSel.disabled = true; note.style.display = 'block'; }
+    else { pricingSel.disabled = false; note.style.display = 'none'; }
+  };
+
+  function mqphCountertopMaterials() {
+    return lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&!(r.fields['Description']||'').includes('type:backsplash')&&!(r.fields['Description']||'').includes('type:cutout'))
+      .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+  }
+
+  function mqphCountertopAddonListAll() {
+    const seen = new Map();
+    mqphCountertopMaterials().forEach(m => getAddonOptions(m).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
+    return [...seen.values()];
+  }
+
+  function mqphPopulateAddonMaterials(addonId) {
+    const list = document.getElementById('mqph-addon-materials');
+    if (!list) return;
+    const materials = mqphCountertopMaterials();
+    if (!materials.length) { list.innerHTML = '<div style="font-size:12px;color:#9ca3af">No countertop materials set up yet.</div>'; return; }
+    list.innerHTML = materials.map(m => {
+      const checked = getAddonOptions(m).some(a => a.id === addonId) ? 'checked' : '';
+      return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;cursor:pointer;padding:4px 2px">
+        <input type="checkbox" data-mat-id="${m.id}" ${checked} style="width:auto;flex-shrink:0"/>
+        <span>${m.fields['Name']||'—'}</span>
+      </label>`;
+    }).join('');
+  }
+
+  window.mqphOpenAddonAdd = function() {
+    currentAddonEditId = null;
+    document.getElementById('mqph-addon-modal-title').textContent = 'New edge/addon';
+    document.getElementById('mqph-addon-name').value = '';
+    document.getElementById('mqph-addon-isedge').checked = false;
+    document.getElementById('mqph-addon-pricing').value = 'flat';
+    document.getElementById('mqph-addon-rate').value = '';
+    document.getElementById('mqph-addon-delete').style.display = 'none';
+    mqphAddonToggleEdge(false);
+    mqphPopulateAddonMaterials(null);
+    document.getElementById('mqph-addon-modal-overlay').classList.add('show');
+  };
+
+  window.mqphOpenAddonEdit = function(addonId) {
+    const existing = mqphCountertopAddonListAll().find(a => a.id === addonId);
+    if (!existing) return;
+    currentAddonEditId = addonId;
+    document.getElementById('mqph-addon-modal-title').textContent = `Edit "${existing.label}"`;
+    document.getElementById('mqph-addon-name').value = existing.label || '';
+    document.getElementById('mqph-addon-isedge').checked = !!existing.isEdge;
+    document.getElementById('mqph-addon-pricing').value = existing.pricingType || 'flat';
+    document.getElementById('mqph-addon-rate').value = existing.rate ?? '';
+    document.getElementById('mqph-addon-delete').style.display = 'inline-block';
+    mqphAddonToggleEdge(!!existing.isEdge);
+    mqphPopulateAddonMaterials(addonId);
+    document.getElementById('mqph-addon-modal-overlay').classList.add('show');
+  };
+
+  window.mqphCloseAddonModal = function() { document.getElementById('mqph-addon-modal-overlay')?.classList.remove('show'); };
+
+  window.mqphSaveAddon = async function() {
+    const name = document.getElementById('mqph-addon-name').value.trim();
+    if (!name) { alert('Please enter a name.'); return; }
+    const isEdge = document.getElementById('mqph-addon-isedge').checked;
+    const pricingType = isEdge ? 'linft' : document.getElementById('mqph-addon-pricing').value;
+    const rate = parseFloat(document.getElementById('mqph-addon-rate').value) || 0;
+    const id = currentAddonEditId || ('addon_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7));
+    const addonObj = { id, label: name, isEdge, pricingType, rate };
+
+    const materials = mqphCountertopMaterials();
+    const checkedMatIds = new Set([...document.querySelectorAll('#mqph-addon-materials input[type=checkbox]:checked')].map(cb => cb.dataset.matId));
+
+    const writes = [];
+    materials.forEach(m => {
+      const shouldBeIn = checkedMatIds.has(m.id);
+      const current = getAddonOptions(m);
+      const currentlyIn = current.some(a => a.id === id);
+      let newList = null;
+      if (shouldBeIn) newList = currentlyIn ? current.map(a => a.id===id ? addonObj : a) : [...current, addonObj];
+      else if (currentlyIn) newList = current.filter(a => a.id !== id);
+      if (newList) {
+        m.fields['Addon options'] = JSON.stringify(newList);
+        writes.push(atUpdate(LINE_ITEMS_TABLE, m.id, { 'Addon options': JSON.stringify(newList) }));
+      }
+    });
+
+    try {
+      await Promise.all(writes);
+      mqphCloseAddonModal();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Failed to save addon', e);
+      alert('Could not save — please try again.');
+    }
+  };
+
+  window.mqphDeleteAddon = async function(addonId) {
+    const id = addonId || currentAddonEditId;
+    if (!id) return;
+    if (!confirm('Delete this edge/addon? It will be removed from every countertop material using it.')) return;
+    const materials = mqphCountertopMaterials().filter(m => getAddonOptions(m).some(a=>a.id===id));
+    try {
+      await Promise.all(materials.map(m => {
+        const newList = getAddonOptions(m).filter(a=>a.id!==id);
+        m.fields['Addon options'] = JSON.stringify(newList);
+        return atUpdate(LINE_ITEMS_TABLE, m.id, { 'Addon options': JSON.stringify(newList) });
+      }));
+      mqphCloseAddonModal();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Failed to delete addon', e);
+      alert('Could not delete — please try again.');
+    }
+  };
+
   function populateTrimDoorOptions(selectedDoorNames) {
     const list = document.getElementById('mqph-trim-door-link-list');
     if (!list) return;
@@ -2637,6 +2844,5 @@ window.mqphGoToWizard = function() {
     injectStyles();
     loadAndRender();
   };
-
 
 })();
