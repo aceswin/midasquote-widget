@@ -1596,7 +1596,10 @@ window.mqphGoToWizard = function() {
       return `
         <div style="margin-bottom:1rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
           <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Group name (optional)</label>
-          <input type="text" id="mqph-bulk-group" list="mqph-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group"/>
+          <div style="position:relative">
+            <input type="text" id="mqph-bulk-group" list="mqph-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group" style="width:100%;padding-right:28px"/>
+            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:#9ca3af;font-size:11px">▼</span>
+          </div>
           <datalist id="mqph-bulk-group-list">${existingGroups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>
           <div style="font-size:11px;color:#6b7280;margin-top:4px">Match an existing group to add these to it, or type a new name to create one — applies to all ${miniWiz.bulkCount} items below.</div>
         </div>`;
@@ -2019,7 +2022,11 @@ window.mqphGoToWizard = function() {
   };
 
   // Collapsible category sections — same pattern as My Products, to keep
-  // this page manageable once a shop has a lot of pricing set up.
+  // this page manageable once a shop has a lot of pricing set up. Tracked
+  // in this set (not just the DOM) because loadAndRender rebuilds the whole
+  // page's HTML from scratch after every save/delete — without this, every
+  // section would silently re-collapse on every single action.
+  let _mqphExpandedCats = new Set();
   window.mqphToggleCategory = function(cat) {
     const body = document.getElementById(`mqph-cat-body-${cat}`);
     const arrow = document.getElementById(`mqph-cat-arrow-${cat}`);
@@ -2027,7 +2034,18 @@ window.mqphGoToWizard = function() {
     const opening = body.style.display === 'none';
     body.style.display = opening ? 'block' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+    if (opening) _mqphExpandedCats.add(cat); else _mqphExpandedCats.delete(cat);
   };
+  // Re-applies whichever sections were open before the last rebuild —
+  // called right after buildEditorHTML() replaces the page's innerHTML.
+  function mqphRestoreExpandedCats() {
+    _mqphExpandedCats.forEach(cat => {
+      const body = document.getElementById(`mqph-cat-body-${cat}`);
+      const arrow = document.getElementById(`mqph-cat-arrow-${cat}`);
+      if (body) body.style.display = 'block';
+      if (arrow) arrow.style.transform = 'rotate(90deg)';
+    });
+  }
 
   window.mqphToggle = async function(id, el) {
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
@@ -2921,7 +2939,10 @@ window.mqphGoToWizard = function() {
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">All share the pricing/backsplash/cutout settings you just set. Type each name — leave any blank and we'll flag it before saving.</p>
       <div style="margin-bottom:1rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
         <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Group name (optional)</label>
-        <input type="text" id="mqph-ct-bulk-group" list="mqph-ct-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group"/>
+        <div style="position:relative">
+          <input type="text" id="mqph-ct-bulk-group" list="mqph-ct-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group" style="width:100%;padding-right:28px"/>
+          <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:#9ca3af;font-size:11px">▼</span>
+        </div>
         <datalist id="mqph-ct-bulk-group-list">${existingGroups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>
         <div style="font-size:11px;color:#6b7280;margin-top:4px">Match an existing group to add these to it, or type a new name to create one.</div>
       </div>
@@ -3221,6 +3242,7 @@ window.mqphGoToWizard = function() {
       await migrateCTPricing();
     }
     container.innerHTML=buildEditorHTML();
+    mqphRestoreExpandedCats();
   }
 
   window.loadAndRender=loadAndRender;
