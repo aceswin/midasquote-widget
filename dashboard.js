@@ -1849,8 +1849,15 @@ window.logoutMember = async function () {
         URL.revokeObjectURL(objectUrl);
         const { width, height } = img;
         if (!width || !height) { resolve(file); return; }
-        if (width <= maxDim && height <= maxDim) { resolve(file); return; } // already small enough
-        const scale = maxDim / Math.max(width, height);
+        // Only shrink dimensions if actually oversized — never upscale a
+        // small image. But still re-encode at the ORIGINAL size below, even
+        // when no resizing happens: a real photo saved as PNG can easily be
+        // several MB at modest dimensions, since PNG is lossless and
+        // compresses photographic detail far worse than JPEG. Skipping
+        // compression just because the pixel dimensions were already small
+        // was the actual bug — file size and pixel dimensions aren't the
+        // same thing.
+        const scale = (width > maxDim || height > maxDim) ? maxDim / Math.max(width, height) : 1;
         const newW = Math.round(width * scale);
         const newH = Math.round(height * scale);
         const canvas = document.createElement('canvas');
@@ -1858,12 +1865,24 @@ window.logoutMember = async function () {
         canvas.height = newH;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, newW, newH);
-        // PNGs often carry transparency (icons, graphics) — keep those
-        // lossless. Everything else (real photos) compresses far better,
-        // and shrinks far more, re-encoded as JPEG.
-        const outType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        // Decide the output format by actually checking for transparency,
+        // rather than trusting the original file extension — a PNG with no
+        // transparent pixels (the overwhelming majority of real product
+        // photos) compresses far better re-encoded as JPEG, while a PNG
+        // that's genuinely using transparency needs to stay PNG or it'll
+        // get a black/white background baked in.
+        let hasTransparency = false;
+        try {
+          const data = ctx.getImageData(0, 0, newW, newH).data;
+          for (let i = 3; i < data.length; i += 4) { if (data[i] < 255) { hasTransparency = true; break; } }
+        } catch (e) { hasTransparency = file.type === 'image/png'; } // can't inspect pixels (e.g. tainted canvas) — assume worst case
+        const outType = hasTransparency ? 'image/png' : 'image/jpeg';
         canvas.toBlob((blob) => {
           if (!blob) { resolve(file); return; }
+          // Re-encoding a PNG (no quality knob, lossless) can occasionally
+          // come out larger than a well-optimized original — never ship a
+          // "compressed" file that's actually bigger than what we started with.
+          if (blob.size >= file.size) { resolve(file); return; }
           const ext = outType === 'image/png' ? 'png' : 'jpg';
           const newName = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.' + ext;
           resolve(new File([blob], newName, { type: outType }));
