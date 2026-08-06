@@ -172,6 +172,10 @@ let wizardBaseline = null;
       /* ── Mini-wizard steps ── */
       .mqph-mini-step{display:none !important}.mqph-mini-step.active{display:block !important}
       .mqph-name-input{font-family:inherit !important;font-size:15px !important;font-weight:600 !important;color:#111 !important;background:#fff !important;border:1.5px solid #d1d5db !important;border-radius:8px !important;padding:10px 14px !important;width:100% !important;margin-bottom:1.25rem !important}
+      /* Chrome/Edge draw their own little dropdown arrow on any input with
+         a "list" attribute — hides it so it doesn't overlap the custom ▼
+         we render ourselves next to the Group name fields. */
+      input[list]::-webkit-calendar-picker-indicator{display:none !important}
       .mqph-name-input:focus{outline:none !important;border-color:#1a1a1a !important}
       .mqph-price-input-wrap{display:flex !important;align-items:center !important;gap:8px !important;margin-bottom:8px !important}
       .mqph-price-input-wrap .mqph-pfx{font-size:22px !important;color:#9ca3af !important;font-weight:300 !important}
