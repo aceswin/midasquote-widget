@@ -2447,6 +2447,8 @@ window.logoutMember = async function () {
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
+**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
+
 **Island cabinets:** Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.
 
 **Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
@@ -2460,6 +2462,8 @@ window.logoutMember = async function () {
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
+**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
+
 **Not sure?** Just use your best guess — this is a ballpark estimate!
 
 **Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
@@ -2472,6 +2476,8 @@ window.logoutMember = async function () {
 **Upper cabinets:** A section for every wall run where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
+
+**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
 
 **Not sure?** Just use your best guess — this is a ballpark estimate!`;
 
