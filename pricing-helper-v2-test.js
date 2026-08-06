@@ -20,7 +20,7 @@ let wizardBaseline = null;
   let currentEditId = null;
 
   // Mini-wizard state
-  let miniWiz = { cat: null, name: '', step: 0, matchMode: false, matchName: '', matchRates: null };
+  let miniWiz = { cat: null, name: '', step: 0, matchMode: false, matchName: '', matchRates: null, bulkMode: false, bulkCount: 0, bulkRates: null, bulkNames: [] };
 
   const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
   const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
@@ -1186,6 +1186,7 @@ window.mqphGoToWizard = function() {
 
   // Returns the HTML content for each mini-wiz step
   function miniWizContent(cat, name, step) {
+    if (miniWiz.bulkMode) name = 'your new items (you\'ll name each one individually at the end)';
     const bl = getBaselineRates();
     const noBaseline = bl.blBasePrice <= 0;
 
@@ -1386,8 +1387,8 @@ window.mqphGoToWizard = function() {
     const catMeta = { material:{icon:'🪵',title:'Add box material'}, door:{icon:'🚪',title:'Add door style'}, hinge:{icon:'🔧',title:'Add door hinge'}, drawer:{icon:'🗄️',title:'Add drawer config'} };
     const meta = catMeta[cat] || { icon:'➕', title:'Add item' };
 
-    document.getElementById('mqph-mini-title').innerHTML = `${meta.icon} ${meta.title}`;
-    document.getElementById('mqph-mini-sub').textContent = name;
+    document.getElementById('mqph-mini-title').innerHTML = `${meta.icon} ${meta.title}${miniWiz.bulkMode ? ` (× ${miniWiz.bulkCount})` : ''}`;
+    document.getElementById('mqph-mini-sub').textContent = miniWiz.bulkMode ? `${miniWiz.bulkCount} items, same price` : name;
     document.getElementById('mqph-mini-progress').innerHTML = progressDots;
     document.getElementById('mqph-mini-content').innerHTML = miniWizContent(cat, name, step);
 
@@ -1412,6 +1413,12 @@ window.mqphGoToWizard = function() {
         if (sel) sel.style.borderColor = '#dc2626';
         return;
       }
+      if (miniWiz.bulkMode) {
+        miniWiz.bulkRates = miniWiz.matchRates;
+        mqphShowBulkNameScreen();
+        return;
+      }
+      if (!mqphWarnIfDuplicate(cat, name)) return;
       const nextBtn = document.getElementById('mqph-mini-next');
       if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
       try {
@@ -1466,7 +1473,28 @@ window.mqphGoToWizard = function() {
       return;
     }
 
-    // Last step — save to Airtable
+    // Last step — save to Airtable (or, in bulk mode, compute the shared
+    // rate(s) and move to the naming screen instead of saving yet)
+    if (miniWiz.bulkMode) {
+      miniWiz[`p${step}`] = p;
+      if (cat === 'material') {
+        miniWiz.bulkRates = { rate0: Math.round((miniWiz.p0/4)*100)/100, rate1: Math.round((miniWiz.p1/4)*100)/100 };
+      } else if (cat === 'door') {
+        miniWiz.bulkRates = { rate0: Math.round(((p - bl.blBasePrice)/4)*100)/100 };
+      } else if (cat === 'hinge') {
+        const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
+        miniWiz.bulkRates = { rate0: Math.round(((p - baseWithDoor)/4)*100)/100 };
+      } else if (cat === 'drawer') {
+        const p0 = miniWiz.p0 || 0, p1 = miniWiz.p1 || 0;
+        miniWiz.bulkRates = {
+          rate0: p0>0 ? Math.round(((p0 - bl.blBasePrice)/4)*100)/100 : 0,
+          rate1: (p0>0 && p1>0) ? Math.round((((p0+p1)/2 - bl.blBasePrice)/4)*100)/100 : 0,
+        };
+      }
+      mqphShowBulkNameScreen();
+      return;
+    }
+    if (!mqphWarnIfDuplicate(cat, name)) return;
     miniWiz[`p${step}`] = p;
     const nextBtn = document.getElementById('mqph-mini-next');
     if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
@@ -1545,17 +1573,104 @@ window.mqphGoToWizard = function() {
     }
   };
 
+  // After the shared price is set, this screen collects one name per item —
+  // empty inputs (not pre-filled placeholders) so nothing gets silently
+  // saved with a generic, un-renamed label.
+  window.mqphShowBulkNameScreen = function() {
+    const cat = miniWiz.cat;
+    const catMeta = { material:{icon:'🪵',label:'box material'}, door:{icon:'🚪',label:'door style'}, hinge:{icon:'🔧',label:'hinge'}, drawer:{icon:'🗄️',label:'drawer configuration'} };
+    const meta = catMeta[cat] || { icon:'➕', label:'item' };
+    document.getElementById('mqph-mini-title').innerHTML = `${meta.icon} Name your ${miniWiz.bulkCount} new ${meta.label}s`;
+    document.getElementById('mqph-mini-sub').textContent = 'All share the price you just set';
+    document.getElementById('mqph-mini-progress').innerHTML = '';
+    const rows = Array.from({length: miniWiz.bulkCount}, (_,i) => `
+      <div style="margin-bottom:8px">
+        <input type="text" id="mqph-bulk-name-${i}" class="mqph-name-input" style="font-size:14px;padding:8px 10px" placeholder="${meta.label.charAt(0).toUpperCase()+meta.label.slice(1)} #${i+1}"/>
+      </div>`).join('');
+    document.getElementById('mqph-mini-content').innerHTML = `
+      <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">Type each name. Leave any blank and we'll flag it before saving.</p>
+      <div style="max-height:340px;overflow-y:auto;padding-right:4px">${rows}</div>
+      <div id="mqph-bulk-name-warn" style="display:none;margin-top:10px;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#991b1b"></div>
+    `;
+    const nextBtn = document.getElementById('mqph-mini-next');
+    const backBtn = document.getElementById('mqph-mini-back');
+    if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = `Create ${miniWiz.bulkCount} items →`; nextBtn.onclick = () => mqphSaveBulkNames(); }
+    if (backBtn) { backBtn.style.display = 'inline-block'; backBtn.textContent = 'Cancel'; backBtn.onclick = () => mqphCloseMiniWiz(); }
+  };
+
+  window.mqphSaveBulkNames = async function() {
+    const cat = miniWiz.cat;
+    const count = miniWiz.bulkCount;
+    const names = [];
+    const blanks = [];
+    for (let i = 0; i < count; i++) {
+      const v = document.getElementById(`mqph-bulk-name-${i}`)?.value.trim() || '';
+      names.push(v);
+      if (!v) blanks.push(i+1);
+    }
+    const warnEl = document.getElementById('mqph-bulk-name-warn');
+    if (blanks.length) {
+      if (warnEl) { warnEl.style.display='block'; warnEl.textContent = `${blanks.length} item${blanks.length>1?'s are':' is'} still unnamed (#${blanks.slice(0,10).join(', ')}${blanks.length>10?', …':''}). Fill in every name before saving.`; }
+      const firstBlank = document.getElementById(`mqph-bulk-name-${blanks[0]-1}`);
+      if (firstBlank) firstBlank.focus();
+      return;
+    }
+    // Internal duplicates (two rows named the same thing) and duplicates
+    // against existing items — checked once as a batch rather than one
+    // popup per item, since confirming 90 times would be unusable.
+    const seen = new Map();
+    const internalDupes = [];
+    names.forEach((n,i) => {
+      const key = mqphBaseNameFor(cat, n).toLowerCase();
+      if (seen.has(key)) internalDupes.push(n); else seen.set(key, i);
+    });
+    const existingDupes = names.filter(n => mqphFindDuplicateName(cat, n));
+    const allDupes = [...new Set([...internalDupes, ...existingDupes])];
+    if (allDupes.length) {
+      const proceed = confirm(`These names look like duplicates (either repeated in your list, or already exist): ${allDupes.slice(0,15).join(', ')}${allDupes.length>15?', …':''}.\n\nSave everything anyway?`);
+      if (!proceed) return;
+    }
+
+    const nextBtn = document.getElementById('mqph-mini-next');
+    if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
+    const mr = miniWiz.bulkRates || {};
+    const writes = [];
+    let sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']===cat).length;
+    try {
+      for (const nm of names) {
+        if (cat === 'material') {
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${nm} — uppers`, Category:'material', Rate:mr.rate0||0, Unit:'per lin ft — uppers', Description:'Box material rate uppers', Active:true, 'Sort order':++sortBase }));
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${nm} — bases`, Category:'material', Rate:mr.rate1||0, Unit:'per lin ft — bases', Description:'Box material rate bases', Active:true, 'Sort order':++sortBase }));
+        } else if (cat === 'door') {
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:nm, Category:'door', Rate:mr.rate0||0, Unit:'per lin ft upcharge', Description:'Door style upcharge', Active:true, 'Sort order':++sortBase }));
+        } else if (cat === 'hinge') {
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:nm, Category:'hinge', Rate:mr.rate0||0, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':++sortBase }));
+        } else if (cat === 'drawer') {
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${nm} — some drawers`, Category:'drawer', Rate:mr.rate0||0, Unit:'per lin ft upcharge', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':++sortBase }));
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${nm} — mostly drawers`, Category:'drawer', Rate:mr.rate1||0, Unit:'per lin ft upcharge', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':++sortBase }));
+        }
+      }
+      await Promise.all(writes);
+      mqphCloseMiniWiz();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Bulk save error:', e);
+      if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = `Create ${count} items →`; }
+      alert('Something went wrong saving these — please try again. Anything already created stayed saved, so check My Products/Pricing before re-running to avoid duplicates.');
+    }
+  };
+
   window.mqphMiniBack = function() {
     if (miniWiz.step > 0) { miniWiz.step--; renderMiniWiz(); }
   };
 
   window.mqphCloseMiniWiz = function() {
     document.getElementById('mqph-mini-overlay')?.classList.remove('show');
-    miniWiz = { cat:null, name:'', step:0, matchMode:false, matchName:'', matchRates:null };
+    miniWiz = { cat:null, name:'', step:0, matchMode:false, matchName:'', matchRates:null, bulkMode:false, bulkCount:0, bulkRates:null, bulkNames:[] };
   };
 
-  function openMiniWiz(cat, name) {
-    miniWiz = { cat, name, step:0, matchMode:false, matchName:'', matchRates:null };
+  function openMiniWiz(cat, name, bulkCount) {
+    miniWiz = { cat, name, step:0, matchMode:false, matchName:'', matchRates:null, bulkMode: !!bulkCount, bulkCount: bulkCount||0, bulkRates:null, bulkNames:[] };
     const overlay = document.getElementById('mqph-mini-overlay');
     if (!overlay) return;
     overlay.classList.add('show');
@@ -1717,6 +1832,16 @@ window.mqphGoToWizard = function() {
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">What do you call this ${meta.label.toLowerCase()}? Use a descriptive name — it'll appear in your widget dropdown.</p>
       <input class="mqph-name-input" type="text" id="mqph-mini-name-inp" placeholder="${meta.ph}" onkeydown="if(event.key==='Enter')mqphMiniNameNext('${cat}')"/>
       ${cat === 'door' ? `<p style="font-size:12px;color:#9ca3af;margin-top:-0.5rem;line-height:1.5">Tip: Keep it simple. (e.g. "Maple shaker", "Painted MDF shaker", "Melamine Slabs", "Red Oak raised panel", "3/4 PLAM", Etc.)</p>` : ''}
+      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #e5e7eb">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:500">
+          <input type="checkbox" id="mqph-mini-bulk-toggle" onchange="mqphToggleMiniBulk('${cat}',this.checked)" style="width:auto"/>
+          Adding a bunch of these at the same price? (e.g. 90 door styles that all cost the same)
+        </label>
+        <div id="mqph-mini-bulk-wrap" style="display:none;margin-top:10px">
+          <div class="mqph-input-row"><label>How many ${meta.label.toLowerCase()}s?</label><input type="number" id="mqph-mini-bulk-count" min="2" max="300" placeholder="e.g. 90"/></div>
+          <p style="font-size:11px;color:#6b7280;margin-top:-6px">You'll quote one job to set the shared price, then name each one at the end.</p>
+        </div>
+      </div>
     `;
 
     const nextBtn = document.getElementById('mqph-mini-next');
@@ -1726,6 +1851,29 @@ window.mqphGoToWizard = function() {
 
     overlay.classList.add('show');
     setTimeout(() => document.getElementById('mqph-mini-name-inp')?.focus(), 100);
+  };
+
+  window.mqphToggleMiniBulk = function(cat, checked) {
+    const nameInp = document.getElementById('mqph-mini-name-inp');
+    const bulkWrap = document.getElementById('mqph-mini-bulk-wrap');
+    if (nameInp) nameInp.style.display = checked ? 'none' : 'block';
+    if (bulkWrap) bulkWrap.style.display = checked ? 'block' : 'none';
+    const nextBtn = document.getElementById('mqph-mini-next');
+    if (nextBtn) nextBtn.onclick = () => checked ? mqphMiniBulkCountNext(cat) : mqphMiniNameNext(cat);
+  };
+
+  window.mqphMiniBulkCountNext = function(cat) {
+    const count = parseInt(document.getElementById('mqph-mini-bulk-count')?.value || '0', 10);
+    if (!count || count < 2) {
+      const inp = document.getElementById('mqph-mini-bulk-count');
+      if (inp) { inp.style.borderColor = '#dc2626'; inp.focus(); }
+      return;
+    }
+    const nextBtn = document.getElementById('mqph-mini-next');
+    const backBtn = document.getElementById('mqph-mini-back');
+    if (nextBtn) nextBtn.onclick = () => mqphMiniNext();
+    if (backBtn) backBtn.onclick = () => mqphMiniBack();
+    openMiniWiz(cat, null, count);
   };
 
   window.mqphMiniNameNext = function(cat) {
@@ -1810,9 +1958,11 @@ window.mqphGoToWizard = function() {
   window.mqphSaveItem = async function() {
     const name = document.getElementById('mqph-item-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
+    const category = document.getElementById('mqph-item-cat').value;
+    if (!currentEditId && !mqphWarnIfDuplicate(category, name)) return;
     const fields = {
       shop:[shopRecord._recordId], Name:name,
-      Category:document.getElementById('mqph-item-cat').value,
+      Category:category,
       Rate:parseFloat(document.getElementById('mqph-item-rate').value||0),
       Unit:document.getElementById('mqph-item-unit').value,
       Description:document.getElementById('mqph-item-desc').value.trim(),
@@ -1884,6 +2034,34 @@ window.mqphGoToWizard = function() {
   }
 
   // Parse a material's edge/addon options JSON safely
+  // Duplicate-name detection — the actual cause of at least one real
+  // customer's inflated pricing: re-adding an item (via the mini-wizard or
+  // any "+ Add" flow) that already exists silently creates a second,
+  // independent record instead of catching the mistake. Material/drawer
+  // names carry a suffix (— uppers/bases, — some/mostly drawers) that has
+  // to be stripped before comparing, or "X — uppers" would never match
+  // itself. Comparison is case-insensitive and only checks active items —
+  // an intentionally-deactivated old item shouldn't block a legitimate
+  // re-add of the same name.
+  function mqphBaseNameFor(category, name) {
+    if (category === 'material') return (name||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+    if (category === 'drawer') return (name||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
+    return (name||'').trim();
+  }
+  function mqphFindDuplicateName(category, name, excludeIds) {
+    const targetBase = mqphBaseNameFor(category, name).toLowerCase();
+    if (!targetBase) return null;
+    const excludeSet = new Set(excludeIds||[]);
+    return lineItems.find(r => r.fields && r.fields['Category']===category && r.fields['Active']!==false && !excludeSet.has(r.id) && mqphBaseNameFor(category, r.fields['Name']).toLowerCase() === targetBase) || null;
+  }
+  // Returns true if it's OK to proceed (no duplicate, or the shop owner
+  // confirmed they want to add it anyway) — false if they backed out.
+  function mqphWarnIfDuplicate(category, name, excludeIds) {
+    const dupe = mqphFindDuplicateName(category, name, excludeIds);
+    if (!dupe) return true;
+    return confirm(`"${dupe.fields['Name']}" already exists in this category. Adding another one with the same name can cause pricing mix-ups later — Airtable can't tell them apart, and whichever one happens to be found first is the one that gets used.\n\nAdd it anyway?`);
+  }
+
   function getAddonOptions(r) {
     try {
       const raw = r.fields['Addon options'];
@@ -2391,6 +2569,7 @@ window.mqphGoToWizard = function() {
     } else if (step === 1) {
       const p = parseFloat(document.getElementById('mqph-tallcab-price')?.value || 0);
       if (!p || p <= 0) { const inp = document.getElementById('mqph-tallcab-price'); if(inp){inp.style.borderBottomColor='#dc2626';inp.focus();} return; }
+      if (!tallCabWiz.editId && !mqphWarnIfDuplicate('tall_cabinet', tallCabWiz.name)) return;
       tallCabWiz.price = p;
       const nextBtn = document.getElementById('mqph-tallcab-next');
       if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
@@ -2616,6 +2795,7 @@ window.mqphGoToWizard = function() {
   window.mqphSaveCTItem = async function() {
     const name = document.getElementById('mqph-ct-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
+    if (!currentCTEditId && !mqphWarnIfDuplicate('countertop', name)) return;
     const su = document.getElementById('mqph-ct-supply-unit').value;
     const iu = document.getElementById('mqph-ct-install-unit').value;
     // Drop any half-filled backsplash/cutout rows (no label) before saving
@@ -2829,6 +3009,10 @@ window.mqphGoToWizard = function() {
     const name = document.getElementById('mqph-trim-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
     const trimType = document.getElementById('mqph-trim-type').value;
+    if (!currentTrimEditId) {
+      const dupe = lineItems.find(r => r.fields && r.fields['Category']==='trim' && (r.fields['Trim type']||'crown')===trimType && r.fields['Active']!==false && (r.fields['Name']||'').trim().toLowerCase()===name.toLowerCase());
+      if (dupe && !confirm(`"${dupe.fields['Name']}" already exists in ${trimType==='valance'?'Valance':'Crown moulding'}. Adding another one with the same name can cause pricing mix-ups later.\n\nAdd it anyway?`)) return;
+    }
     const linkedDoors = Array.from(document.querySelectorAll('.mqph-trim-door-checkbox:checked')).map(cb => cb.value);
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'trim',
