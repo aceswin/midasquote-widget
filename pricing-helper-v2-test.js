@@ -1835,7 +1835,7 @@ window.mqphGoToWizard = function() {
       <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #e5e7eb">
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:500">
           <input type="checkbox" id="mqph-mini-bulk-toggle" onchange="mqphToggleMiniBulk('${cat}',this.checked)" style="width:auto"/>
-          Adding a bunch of these at the same price? (e.g. 90 door styles that all cost the same)
+          Adding multiple items at the same price? (e.g. 90 door styles that all cost the same)
         </label>
         <div id="mqph-mini-bulk-wrap" style="display:none;margin-top:10px">
           <div class="mqph-input-row"><label>How many ${meta.label.toLowerCase()}s?</label><input type="number" id="mqph-mini-bulk-count" min="2" max="300" placeholder="e.g. 90"/></div>
