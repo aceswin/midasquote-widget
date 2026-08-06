@@ -368,13 +368,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-groups-matching';
+  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-countertop-addons-bulk-add';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p><strong>Collections in My Products</strong> — group related items (like "Shaker" or "Raised panel") in Box Materials, Door Styles, Drawer Configurations, Crown, or Valance. Customers still pick the exact item, same as always — grouping just organizes related options together and, when every item in a group is the same price, lets customers know any one of them works.</p>
-      <p><strong>Match another item's pricing</strong> — when adding a new box material, door style, drawer config, or hinge in Pricing, a checkbox now lets you copy an existing item's rate directly instead of re-quoting a whole job.</p>
-      <p><strong>Product photos no longer get cropped</strong> — thumbnails in My Products and on the widget now show the whole photo, so tall or unusually-shaped images display in full.</p>
+      <p><strong>Countertop edges & add-ons</strong> — set up edge profiles (like a waterfall or bullnose edge) with their own pricing, even different pricing per material. Tag one edge or add-on onto as many countertop materials as you want instead of setting it up separately for each one.</p>
+      <p><strong>Add multiple items at once</strong> — adding a bunch of doors, materials, or countertop colors that are all the same price? Set the price once, then just name each one — instead of running through pricing setup 90 separate times. Works for materials, doors, drawers, hinges, and countertops, and you can group them together while you're at it.</p>
+      <p><strong>Faster-loading photos</strong> — photos you upload now get automatically resized and compressed, so pages load noticeably faster without any drop in quality.</p>
+      <p><strong>Smarter setup, fewer mistakes</strong> — you'll now get a warning if you're about to add something with the same name as an item you already have, so accidental duplicates (and the pricing mix-ups they can cause) get caught before they happen.</p>
+      <p><strong>Pricing page now collapses by section</strong> — same as My Products, so a big pricing setup doesn't turn into an endless scroll.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
@@ -7854,6 +7856,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
+    // Re-checks on every tab switch, not just the initial page load — so a
+    // shop already using the dashboard when a new announcement goes out
+    // sees it the moment they click anywhere, no refresh needed. Skips
+    // brand-new shops (still on the Welcome popup) the same way page load
+    // already does — nothing to announce retroactively to someone who's
+    // never used the app before.
+    if (window._mqShopRecord && window._mqShopRecord.fields['Welcome popup seen'] && window._mqShopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
+      window.mqShowAnnouncementModal();
+    }
     mqToggleFloatingSave(MQ_PAGE_SAVE_ACTIONS[page] || null);
     if (page === 'marketing' || page === 'embed') {
       const socialEl = document.getElementById('mq-mk-social');
