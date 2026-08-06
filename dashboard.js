@@ -1832,9 +1832,55 @@ window.logoutMember = async function () {
   // ============================================================
   // IMAGE UPLOAD — permanent hosting via Cloudflare R2 (replaces fragile pasted links)
   // ============================================================
+  // Resizes/compresses a photo in the browser before it's uploaded — phone
+  // photos routinely come in at 3-8MB and several thousand pixels wide, but
+  // nothing in this app ever displays an image wider than the lightbox
+  // view, so there's no reason to ship (and store) the full original.
+  // Falls back to the original file untouched on any failure — never blocks
+  // an upload just because resizing didn't work for some reason.
+  function mqResizeImageFile(file, maxDim = 1200, quality = 0.85) {
+    return new Promise((resolve) => {
+      // Animated GIFs would lose their animation — canvas only ever
+      // captures a single frame. Upload those as-is.
+      if (file.type === 'image/gif') { resolve(file); return; }
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const { width, height } = img;
+        if (!width || !height) { resolve(file); return; }
+        if (width <= maxDim && height <= maxDim) { resolve(file); return; } // already small enough
+        const scale = maxDim / Math.max(width, height);
+        const newW = Math.round(width * scale);
+        const newH = Math.round(height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = newW;
+        canvas.height = newH;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, newW, newH);
+        // PNGs often carry transparency (icons, graphics) — keep those
+        // lossless. Everything else (real photos) compresses far better,
+        // and shrinks far more, re-encoded as JPEG.
+        const outType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return; }
+          const ext = outType === 'image/png' ? 'png' : 'jpg';
+          const newName = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.' + ext;
+          resolve(new File([blob], newName, { type: outType }));
+        }, outType, outType === 'image/jpeg' ? quality : undefined);
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
+      img.src = objectUrl;
+    });
+  }
+
   async function mqUploadImage(file, shopToken, category) {
+    // Skip resizing for logos — usually already a small, deliberately-
+    // crafted file, and it represents the shop's brand, so it's not worth
+    // any risk of visible quality loss there. Everything else gets resized.
+    const uploadFile = category === 'logos' ? file : await mqResizeImageFile(file);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', uploadFile);
     formData.append('shopToken', shopToken || 'unknown-shop');
     formData.append('category', category || 'general');
     const res = await fetch(CONFIG.IMAGE_UPLOAD_URL, {
