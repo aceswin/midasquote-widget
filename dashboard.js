@@ -4433,6 +4433,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // The grid contents get rebuilt on their own (without re-rendering the
     // whole tab) whenever a group name, description, or order changes — so
     // this is split out from catSection itself.
+    // Tracks which product groups are expanded, keyed by "cat::groupName" so
+    // it survives re-renders (same reasoning as the category-level version
+    // below). Groups start COLLAPSED by default — unlike whole categories —
+    // since a single group can easily hold 40+ items, and switching from
+    // Group A to Group B shouldn't mean scrolling through all of A first.
+    let _mqExpandedProductGroups = new Set();
+    function mqGroupSlug(cat, groupKey) { return `${cat}-${groupKey.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`; }
+
+    window.mqToggleProductGroup = function(cat, groupKey) {
+      const fullKey = `${cat}::${groupKey}`;
+      const slug = mqGroupSlug(cat, groupKey);
+      const body = document.getElementById(`mq-group-body-${slug}`);
+      const arrow = document.getElementById(`mq-group-arrow-${slug}`);
+      if (!body) return;
+      const opening = body.style.display === 'none';
+      body.style.display = opening ? 'grid' : 'none';
+      if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+      if (opening) _mqExpandedProductGroups.add(fullKey); else _mqExpandedProductGroups.delete(fullKey);
+    };
+
     function catGridHtml(cat) {
       const items = byCategory[cat] || [];
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
@@ -4464,17 +4484,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const ungrouped = items.filter(i => !i.groupName);
       if (ungrouped.length) groupBlocks.push({ name: null, members: ungrouped, desc: '', order: Infinity }); // "Other" — always last
 
-      return groupBlocks.map((g, gi) => `
-        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap">
+      return groupBlocks.map((g, gi) => {
+        const groupKey = g.name || '__other__';
+        const fullKey = `${cat}::${groupKey}`;
+        const slug = mqGroupSlug(cat, groupKey);
+        const isOpen = _mqExpandedProductGroups.has(fullKey);
+        return `
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap;cursor:pointer" onclick="mqToggleProductGroup('${cat}','${groupKey.replace(/'/g,"\\'")}')">
+          <span id="mq-group-arrow-${slug}" style="display:inline-block;font-size:11px;color:#6b7280;transition:transform 0.2s;transform:rotate(${isOpen?'90deg':'0deg'})">▶</span>
           <span style="font-weight:700;font-size:13px;color:#111">${g.name || 'Other'}</span>
+          <span style="font-size:11px;color:#9ca3af">(${g.members.length})</span>
           ${g.name ? `
-            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
-            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
-            <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
+            <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
             ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
           ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
         </div>
-        ${g.members.map(buildCard).join('')}`).join('');
+        <div id="mq-group-body-${slug}" style="display:${isOpen?'grid':'none'};grid-column:1/-1;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+          ${g.members.map(buildCard).join('')}
+        </div>`;
+      }).join('');
     }
 
     // Per-category "Pick a collection" dropdown label — stored as one JSON
@@ -8002,5 +8032,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   init();
+
 
 })();
