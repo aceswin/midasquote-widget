@@ -329,6 +329,9 @@
     boxBg = boxBg || '#eff6ff';
     boxText = boxText || '#1e40af';
     window._mqFocalColor = focalColor;
+    window._mqBoxBorder = boxBorder;
+    window._mqBoxBg = boxBg;
+    window._mqBoxText = boxText;
     // Only run the auto-gradient math when they've actually set a custom
     // background — the original default already has its own two hand-picked
     // gradient stops (#eff6ff → #f0f9ff), no need to recompute those.
@@ -853,16 +856,17 @@
       window._mqGroupFilter = window._mqGroupFilter || {};
       window._mqGroupFilter[selectId] = groupNames[0];
     }
-    const focal = window._mqFocalColor || '#2563eb';
-    const focalTint = mqLightenHex(focal, 0.85);
+    const boxBorderColor = window._mqBoxBorder || '#93c5fd';
+    const boxBgColor = window._mqBoxBg || '#eff6ff';
+    const boxTextColor = window._mqBoxText || '#1e40af';
     const groupDropdown = hasAnyGroup ? `
-      <div style="margin-bottom:10px;background:${focalTint};border:1.5px solid ${focal};border-radius:10px;padding:12px 14px">
-        <label style="font-size:14px;font-weight:700;color:${focal};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
-        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${focal};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
+      <div style="margin-bottom:10px;background:${boxBgColor};border:1.5px solid ${boxBorderColor};border-radius:10px;padding:12px 14px">
+        <label style="font-size:14px;font-weight:700;color:${boxTextColor};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
           ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
           ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
         </select>
-        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${focal};margin-top:8px">${countNote(groupNames[0])}</div>
+        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${boxTextColor};margin-top:8px">${countNote(groupNames[0])}</div>
         <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:4px 0 0;line-height:1.5">${groupDescOf(groupNames[0])}</div>
       </div>` : '';
     const chips = items.map((it,i)=>{
