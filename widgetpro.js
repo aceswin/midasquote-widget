@@ -205,7 +205,7 @@
         };
       }));
 
-    return { shop, pricing:p, specs, li, hasDynamic, shopPhotos, roomTypes };
+    return { shop, pricing:p, specs, li, hasDynamic, shopPhotos, shopFeatured, roomTypes };
   }
 
   // ============================================================
@@ -459,7 +459,7 @@
   }
 
   function buildCTMAT(data) {
-    const { li, pricing, shopPhotos } = data;
+    const { li, pricing, shopPhotos, shopFeatured } = data;
     CT_MAT = {};
     const hasDynamicCT = li.countertopItems.length > 0;
     if (hasDynamicCT) {
@@ -522,7 +522,7 @@
 
   let TRIM = {};
   function buildTRIM(data) {
-    const { li, shopPhotos } = data;
+    const { li, shopPhotos, shopFeatured } = data;
     TRIM = {};
     (li.trimItems || []).forEach((item, i) => {
       let linkedDoors = [];
@@ -556,7 +556,7 @@
   // ── Tall cabinets ──
   let TALL_CAB = {};
   function buildTALLCAB(data) {
-    const { li, shopPhotos } = data;
+    const { li, shopPhotos, shopFeatured } = data;
     TALL_CAB = {};
     (li.tallCabItems || []).filter(item => item['Active'] !== false).forEach((item, i) => {
       TALL_CAB[`tc_${i}`] = {
@@ -1154,7 +1154,7 @@
   }
 
   function cabinetForm(prefix, specs, data) {
-    const { li, hasDynamic, shopPhotos, roomTypes } = data;
+    const { li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
