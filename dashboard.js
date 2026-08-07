@@ -4216,6 +4216,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const scope = document.getElementById('mq-products-content') || document;
     const photos = {};
     const hidden = {};
+    const featured = {};
     scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
@@ -4225,13 +4226,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const key = cb.id.replace('mq-hidden-', '');
       if (cb.checked) hidden[key] = true;
     });
+    scope.querySelectorAll('[id^="mq-featured-"]').forEach(cb => {
+      const key = cb.id.replace('mq-featured-', '');
+      if (cb.checked) featured[key] = true;
+    });
+    const badgeLabelInput = document.getElementById('mq-badge-label');
+    const badgeLabelToSave = badgeLabelInput ? (badgeLabelInput.value.trim() || 'Best seller') : (shopRec.fields['Badge label'] || 'Best seller');
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, {
         'Photos':  JSON.stringify(photos),
         'Hidden':  JSON.stringify(hidden),
+        'Featured items': JSON.stringify(featured),
+        'Badge label': badgeLabelToSave,
       });
       shopRec.fields['Photos']  = JSON.stringify(photos);
       shopRec.fields['Hidden']  = JSON.stringify(hidden);
+      shopRec.fields['Featured items'] = JSON.stringify(featured);
+      shopRec.fields['Badge label'] = badgeLabelToSave;
       scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
         btn.textContent = 'Saved ✓';
         btn.style.background = '#1a1a1a';
@@ -4371,9 +4382,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     let savedHidden = {};
     try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
+    let savedFeatured = {};
+    try { if (shopRecord.fields['Featured items']) savedFeatured = JSON.parse(shopRecord.fields['Featured items']); } catch(e) {}
+    const badgeLabel = (shopRecord.fields['Badge label'] || '').trim() || 'Best seller';
 
     function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
-      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden);
+      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel);
     }
 
     // Groups only make sense for categories customers actually pick a
@@ -4739,7 +4753,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const hasCats = catsOrdered.some(c => byCategory[c]?.length);
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
-        : catsOrdered.map(catSection).join('') + specSection;
+        : `<div class="mq-card" style="margin-bottom:1.25rem">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">🏆 Badge text</label>
+            <input type="text" id="mq-badge-label" value="${badgeLabel.replace(/"/g,'&quot;')}" placeholder="Best seller" style="font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;max-width:280px" oninput="mqMarkProductsDirty()"/>
+            <div style="font-size:11px;color:#9ca3af;margin-top:6px">Shown on any item you mark below — change the wording here (e.g. "Our pick," "Customer favorite") and every marked item updates automatically, no need to re-mark anything.</div>
+          </div>` + catsOrdered.map(catSection).join('') + specSection;
 
       // Wire up upload buttons for every photo card just rendered
       const shopToken = shopRecord.fields['Shop token'] || 'unknown-shop';
@@ -5050,9 +5068,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Module-level so both initProductsTab (My Products) and renderTemplates
   // (admin Templates tab) can share it, instead of it being locked inside one
   // function's closure over a specific shop's savedPhotos/savedHidden.
-  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden) {
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel) {
     const savedUrl = savedPhotos[key] || '';
     const isHidden = savedHidden[key] || false;
+    // savedFeatured is only ever passed in from My Products — every other
+    // caller (the Templates admin tab, etc.) omits it entirely, which is
+    // what keeps this toggle scoped to My Products only without needing a
+    // separate flag to remember to pass around.
+    const featuredHtml = savedFeatured ? (() => {
+      const isFeatured = savedFeatured[key] || false;
+      return `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;margin-bottom:8px;cursor:pointer">
+        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:auto" onchange="mqMarkProductsDirty()"/>
+        🏆 Mark as "${(badgeLabel||'Best seller').replace(/"/g,'&quot;')}"
+      </label>`;
+    })() : '';
     const preview = savedUrl
       ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
       : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
@@ -5061,6 +5090,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-photo-preview-${key}">${preview}</div>
       <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
       ${roomLinkHtml}
+      ${featuredHtml}
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
         <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
           onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
