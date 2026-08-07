@@ -1773,7 +1773,12 @@ window.mqphGoToWizard = function() {
               }
             </div>
             <div id="mqph-cat-body-${cat}" style="display:none">
-            ${recs.sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0)).map(r=>`
+            <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
+              <span style="cursor:pointer" onclick="mqphSetSort('${cat}','default')" title="Your custom order">Order ${mqphSortArrow(cat,'default')}</span>
+              <span style="cursor:pointer;flex:1" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
+              <span style="cursor:pointer;min-width:80px;text-align:right;margin-right:96px" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
+            </div>
+            ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
                 <div style="flex:1;min-width:0">
                   <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
@@ -2024,6 +2029,40 @@ window.mqphGoToWizard = function() {
     if (!confirm('Delete this item?')) return;
     try { await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender(); } catch(e) { alert('Error deleting.'); }
   };
+
+  // View-only sort for the item list within each category — doesn't touch
+  // the actual "Sort order" field at all, so it never affects what order
+  // customers see on the widget. Purely a convenience for finding/editing
+  // items in the dashboard (e.g. sort a big door list alphabetically to
+  // find one, then it's still in its normal custom order for customers).
+  let _mqphSortState = {}; // cat -> {field:'default'|'name'|'price', dir:'asc'|'desc'}
+  function mqphSortRecs(cat, recs) {
+    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const sorted = [...recs];
+    if (state.field === 'name') sorted.sort((a,b) => (a.fields['Name']||'').localeCompare(b.fields['Name']||''));
+    else if (state.field === 'price') sorted.sort((a,b) => (a.fields['Rate']||0) - (b.fields['Rate']||0));
+    else sorted.sort((a,b) => (a.fields['Sort order']||0) - (b.fields['Sort order']||0));
+    if (state.dir === 'desc') sorted.reverse();
+    return sorted;
+  }
+  function mqphSortArrow(cat, field) {
+    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    if (state.field !== field) return '<span style="opacity:0.35">↕</span>';
+    return state.dir === 'asc' ? '↑' : '↓';
+  }
+  window.mqphSetSort = function(cat, field) {
+    const current = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    _mqphSortState[cat] = { field, dir: (current.field === field && current.dir === 'asc') ? 'desc' : 'asc' };
+    mqphRerenderPricingPage();
+  };
+  // Re-renders using data already loaded in memory — no need to hit
+  // Airtable again just because a view-only sort preference changed.
+  function mqphRerenderPricingPage() {
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (!container) return;
+    container.innerHTML = buildEditorHTML();
+    mqphRestoreExpandedCats();
+  }
 
   // Collapsible category sections — same pattern as My Products, to keep
   // this page manageable once a shop has a lot of pricing set up. Tracked
