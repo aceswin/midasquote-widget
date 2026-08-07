@@ -1194,7 +1194,7 @@ window.logoutMember = async function () {
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
                 <div style="width:100%;max-width:280px">
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
-                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 2 minutes" maxlength="60" style="font-size:13px"/>
+                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 5 minutes" maxlength="60" style="font-size:13px"/>
                 </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
@@ -5935,7 +5935,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     function buildSocialPosts(quoteLink) {
       return [
-        `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 2 minutes. Try it now → ${quoteLink}`,
+        `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 5 minutes. Try it now → ${quoteLink}`,
         `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 60 seconds — right from your phone. ${quoteLink}`,
         `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
         `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
@@ -5962,7 +5962,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     Instant Pricing
     <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
   </div>
-  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 2 minutes</h2>
+  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
   <p style="font-size:14px;color:#5c5650;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
 </div>`;
 
@@ -6064,7 +6064,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
       let bgImage = _mqGraphicBgImage;
       let overlayOpacity = _mqGraphicOverlayOpacity;
-      let graphicHeadline = _mqGraphicHeadline || 'Get your cabinet quote in under 2 minutes';
+      let graphicHeadline = _mqGraphicHeadline || 'Get your cabinet quote in under 5 minutes';
 
       function wrapText(text, font, maxWidth) {
         ctx.font = font;
@@ -6204,7 +6204,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         graphicHeadlineInput.oninput = () => {
           const val = graphicHeadlineInput.value.trim();
           _mqGraphicHeadline = val;
-          graphicHeadline = val || 'Get your cabinet quote in under 2 minutes';
+          graphicHeadline = val || 'Get your cabinet quote in under 5 minutes';
           drawGraphic();
           saveHeadlinesDebounced(shopRecord);
         };
