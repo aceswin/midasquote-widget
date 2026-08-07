@@ -1774,9 +1774,8 @@ window.mqphGoToWizard = function() {
             </div>
             <div id="mqph-cat-body-${cat}" style="display:none">
             <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
-              <span style="cursor:pointer" onclick="mqphSetSort('${cat}','default')" title="Your custom order">Order ${mqphSortArrow(cat,'default')}</span>
               <span style="cursor:pointer;flex:1" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
-              <span style="cursor:pointer;min-width:80px;text-align:right;margin-right:96px" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
+              <span style="cursor:pointer;min-width:80px;text-align:right" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
             </div>
             ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
@@ -2052,7 +2051,14 @@ window.mqphGoToWizard = function() {
   }
   window.mqphSetSort = function(cat, field) {
     const current = _mqphSortState[cat] || {field:'default', dir:'asc'};
-    _mqphSortState[cat] = { field, dir: (current.field === field && current.dir === 'asc') ? 'desc' : 'asc' };
+    if (current.field === field) {
+      // 3rd click cycles back to default order — asc, then desc, then back
+      // to normal, without needing a dedicated "Order" label taking up
+      // space of its own.
+      _mqphSortState[cat] = current.dir === 'asc' ? { field, dir:'desc' } : { field:'default', dir:'asc' };
+    } else {
+      _mqphSortState[cat] = { field, dir:'asc' };
+    }
     mqphRerenderPricingPage();
   };
   // Re-renders using data already loaded in memory — no need to hit
