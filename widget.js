@@ -1070,7 +1070,7 @@
     </div>`;
     if (roomId === 'kitchen') {
       return `
-        <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
+        <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
         <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>Don't worry about doing any math yourself.</strong> Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the ${mqCalcIconInlineHTML()} and enter each one as its own section — got <strong>3 separate runs of upper cabinets</strong>? That's 3 sections. We'll add them up and convert everything for you, no matter how many walls you have.</div>
         <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
         <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
@@ -1078,7 +1078,7 @@
         ${cornerSection}`;
     }
     return `
-      <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
+      <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
       <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>Don't worry about doing any math yourself.</strong> Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the ${mqCalcIconInlineHTML()} and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.</div>
       <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
       <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
@@ -2182,7 +2182,7 @@
         return;
       }
       const title = document.createElement('div');
-      title.style.cssText = 'font-weight:600;margin-bottom:8px;color:#111';
+      title.style.cssText = 'font-weight:600;margin-bottom:18px;color:#111';
       title.textContent = '📏 How to measure for this project';
       guideEl.appendChild(title);
       // Safe renderer (escapes everything, then allows only **bold** and line
