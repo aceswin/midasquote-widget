@@ -368,15 +368,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-countertop-addons-bulk-add';
+  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-best-seller-badges';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p><strong>Countertop edges & add-ons</strong> — set up edge profiles (like a waterfall or bullnose edge) with their own pricing, even different pricing per material. Tag one edge or add-on onto as many countertop materials as you want instead of setting it up separately for each one.</p>
-      <p><strong>Add multiple items at once</strong> — adding a bunch of doors, materials, or countertop colors that are all the same price? Set the price once, then just name each one — instead of running through pricing setup 90 separate times. Works for materials, doors, drawers, hinges, and countertops, and you can group them together while you're at it.</p>
-      <p><strong>Faster-loading photos</strong> — photos you upload now get automatically resized and compressed, so pages load noticeably faster without any drop in quality.</p>
-      <p><strong>Smarter setup, fewer mistakes</strong> — you'll now get a warning if you're about to add something with the same name as an item you already have, so accidental duplicates (and the pricing mix-ups they can cause) get caught before they happen.</p>
-      <p><strong>Pricing page now collapses by section</strong> — same as My Products, so a big pricing setup doesn't turn into an endless scroll.</p>
+      <p><strong>Best seller badges</strong> — mark your top items (any door, material, drawer, countertop, or specialty item) with an eye-catching badge right on the widget. Customize the wording ("Best seller," "Our pick," whatever fits) and the color, both from the top of My Products — change either one later and every already-marked item updates automatically, no need to re-mark anything.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
