@@ -5936,7 +5936,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     function buildSocialPosts(quoteLink) {
       return [
         `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 5 minutes. Try it now → ${quoteLink}`,
-        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 60 seconds — right from your phone. ${quoteLink}`,
+        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 5 minutes — right from your phone. ${quoteLink}`,
         `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
         `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
         `Hey homeowners! If you're planning a kitchen remodel, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
