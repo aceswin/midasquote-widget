@@ -2508,45 +2508,41 @@ window.logoutMember = async function () {
   // enough there to be worth the extra line); everything else uses the
   // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section — got **3 separate runs of upper cabinets**? That's 3 sections. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
-
-**Upper cabinets:** A section for every wall run where uppers will go.
+`**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
+**Island cabinets:** Add these in with your base cabinets.
+
 **Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
 
-**Island cabinets:** Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.
+**Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
 
-**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+[corner-img]
 
-[corner-img]`;
+[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
-
-**Upper cabinets:** A section for every wall run where uppers will go.
+`**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
 **Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
 
-**Not sure?** Just use your best guess — this is a ballpark estimate!
+**Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
 
-**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+[corner-img]
 
-[corner-img]`;
+[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
-`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
-
-**Upper cabinets:** A section for every wall run where uppers will go.
+`**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
 **Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
 
-**Not sure?** Just use your best guess — this is a ballpark estimate!`;
+[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
@@ -8032,6 +8028,5 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   init();
-
 
 })();
