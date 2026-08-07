@@ -1391,11 +1391,11 @@
         </div>
       </div>
       <div class="mq-sec" id="mq-${prefix}-measuring-sec" onclick="mqOpenIfClosed('${prefix}-measuring')">
-        ${collapsibleHeader(`${prefix}-measuring`, 'How to measure', true)}
+        ${collapsibleHeader(`${prefix}-measuring`, 'How to measure')}
         <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
           📏 Tips for getting accurate measurements, plus a converter for inches/mm.
         </div>
-        <div id="mq-${prefix}-measuring-body" style="display:block">
+        <div id="mq-${prefix}-measuring-body" style="display:none">
           <div id="mq-${prefix}-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
         </div>
       </div>
