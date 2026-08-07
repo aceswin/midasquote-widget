@@ -4787,7 +4787,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <div>
                 <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Preview</label>
                 <div style="height:34px;display:flex;align-items:center">
-                  <span id="mq-badge-preview" style="display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:${badgeColor};color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);white-space:nowrap">🏆 ${badgeLabel.replace(/</g,'&lt;')}</span>
+                  <span id="mq-badge-preview" style="display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:${badgeColor};color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);white-space:nowrap">🏆 ${badgeLabel.replace(/</g,'&lt;')}</span>
                 </div>
               </div>
             </div>
