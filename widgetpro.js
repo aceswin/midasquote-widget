@@ -104,6 +104,8 @@
     try { shopFeatured = shop['Featured items'] ? JSON.parse(shop['Featured items']) : {}; } catch(e) { shopFeatured = {}; }
     const shopBadgeLabel = (shop['Badge label'] || '').trim() || 'Best seller';
     window._mqBadgeLabel = shopBadgeLabel;
+    const shopBadgeColor = /^#[0-9a-fA-F]{6}$/.test(shop['Badge color']) ? shop['Badge color'] : '#f59e0b';
+    window._mqBadgeColor = shopBadgeColor;
 
     // Room types — fully editable/addable by the shop now, each with its own
     // price adjustment %. Falls back to the original fixed 6 rooms (with
@@ -770,7 +772,7 @@
         ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
       const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
-      const featuredBadgeHtml = it.featured ? `<span class="mq-vpicker-featured-badge">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+      const featuredBadgeHtml = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
       const selectedClass = i===0 ? ' selected' : '';
       const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
       const roomsAttr = JSON.stringify(it.visibleRooms||[]).replace(/"/g,'&quot;');
@@ -837,7 +839,7 @@
         ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
-      const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+      const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
       const specUnitKind = (perFt, perSqFt) => perFt ? 'linear' : (perSqFt ? 'sqft' : 'item');
       const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt) !== specUnitKind(s.installPerFt, s.installPerSqFt);

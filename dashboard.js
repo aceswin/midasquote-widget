@@ -4207,6 +4207,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
   };
 
+  // Live-updates the badge preview next to the label/color fields as the
+  // shop owner types or picks — same visual spec as the actual widget badge
+  // (just sized up a touch for readability here, not crammed onto a tiny
+  // thumbnail corner).
+  window.mqUpdateBadgePreview = function() {
+    const label = (document.getElementById('mq-badge-label')?.value || '').trim() || 'Best seller';
+    const colorRaw = (document.getElementById('mq-badge-color')?.value || '').trim();
+    const color = /^#[0-9a-fA-F]{6}$/.test(colorRaw) ? colorRaw : '#f59e0b';
+    const preview = document.getElementById('mq-badge-preview');
+    if (preview) {
+      preview.style.background = color;
+      preview.textContent = `🏆 ${label}`;
+    }
+  };
+
   window.mqSaveProducts = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -4232,17 +4247,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     });
     const badgeLabelInput = document.getElementById('mq-badge-label');
     const badgeLabelToSave = badgeLabelInput ? (badgeLabelInput.value.trim() || 'Best seller') : (shopRec.fields['Badge label'] || 'Best seller');
+    const badgeColorInput = document.getElementById('mq-badge-color');
+    const badgeColorRaw = badgeColorInput ? badgeColorInput.value.trim() : shopRec.fields['Badge color'];
+    const badgeColorToSave = /^#[0-9a-fA-F]{6}$/.test(badgeColorRaw) ? badgeColorRaw : '#f59e0b';
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, {
         'Photos':  JSON.stringify(photos),
         'Hidden':  JSON.stringify(hidden),
         'Featured items': JSON.stringify(featured),
         'Badge label': badgeLabelToSave,
+        'Badge color': badgeColorToSave,
       });
       shopRec.fields['Photos']  = JSON.stringify(photos);
       shopRec.fields['Hidden']  = JSON.stringify(hidden);
       shopRec.fields['Featured items'] = JSON.stringify(featured);
       shopRec.fields['Badge label'] = badgeLabelToSave;
+      shopRec.fields['Badge color'] = badgeColorToSave;
       scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
         btn.textContent = 'Saved ✓';
         btn.style.background = '#1a1a1a';
@@ -4385,6 +4405,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let savedFeatured = {};
     try { if (shopRecord.fields['Featured items']) savedFeatured = JSON.parse(shopRecord.fields['Featured items']); } catch(e) {}
     const badgeLabel = (shopRecord.fields['Badge label'] || '').trim() || 'Best seller';
+    const badgeColor = /^#[0-9a-fA-F]{6}$/.test(shopRecord.fields['Badge color']) ? shopRecord.fields['Badge color'] : '#f59e0b';
 
     function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
       return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel);
@@ -4754,9 +4775,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
         : `<div class="mq-card" style="margin-bottom:1.25rem">
-            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">🏆 Badge text</label>
-            <input type="text" id="mq-badge-label" value="${badgeLabel.replace(/"/g,'&quot;')}" placeholder="Best seller" style="font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;max-width:280px" oninput="mqMarkProductsDirty()"/>
-            <div style="font-size:11px;color:#9ca3af;margin-top:6px">Shown on any item you mark below — change the wording here (e.g. "Our pick," "Customer favorite") and every marked item updates automatically, no need to re-mark anything.</div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">🏆 Badge</label>
+            <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+              <div>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Text</label>
+                <input type="text" id="mq-badge-label" value="${badgeLabel.replace(/"/g,'&quot;')}" placeholder="Best seller" style="font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:200px" oninput="mqMarkProductsDirty();mqUpdateBadgePreview()"/>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Color</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input type="text" id="mq-badge-color" value="${badgeColor}" style="font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100px" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('mq-badge-color-swatch').value=this.value;mqMarkProductsDirty();mqUpdateBadgePreview()"/>
+                  <input type="color" id="mq-badge-color-swatch" value="${badgeColor}" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0" oninput="document.getElementById('mq-badge-color').value=this.value;mqMarkProductsDirty();mqUpdateBadgePreview()"/>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Preview</label>
+                <div style="height:34px;display:flex;align-items:center">
+                  <span id="mq-badge-preview" style="display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:${badgeColor};color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);white-space:nowrap">🏆 ${badgeLabel.replace(/</g,'&lt;')}</span>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:10px">Shown on any item you mark below — change the wording or color here and every marked item updates automatically, no need to re-mark anything.</div>
           </div>` + catsOrdered.map(catSection).join('') + specSection;
 
       // Wire up upload buttons for every photo card just rendered
