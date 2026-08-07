@@ -2372,6 +2372,7 @@
           window.mqToggleCollapse(key);
         }
       }
+      mqObserveSectionsForScrollSpy();
     };
 
     // Highlights whichever Calculate button belongs to this tab — used when
@@ -2433,6 +2434,25 @@
       if (!sec) return;
       mqJumpToSectionIfNeeded(sec);
     });
+
+    // Scrolling counts as "arriving" at a section too, not just clicking
+    // Continue or tapping into it — a shrunk-viewport IntersectionObserver
+    // (top and bottom both pulled in 50%) leaves only a thin trigger line
+    // at the exact vertical center of the screen; whichever section is
+    // crossing that line becomes the current step, reusing the exact same
+    // logic a click already runs. Re-observing is cheap and safe to repeat
+    // (observing an already-observed element is a no-op), so this just gets
+    // called again anywhere section visibility/DOM already gets refreshed,
+    // rather than needing a separate mutation-tracking setup.
+    let _mqScrollSpyObserver = null;
+    function mqObserveSectionsForScrollSpy() {
+      if (!_mqScrollSpyObserver) {
+        _mqScrollSpyObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => { if (entry.isIntersecting) mqJumpToSectionIfNeeded(entry.target); });
+        }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
+      }
+      document.querySelectorAll('#midasquote-widget .mq-sec').forEach(sec => _mqScrollSpyObserver.observe(sec));
+    }
 
     window.mqRefreshSectionVisibility=(prefix)=>{
       if (prefix !== 'c' && prefix !== 'b') return;
