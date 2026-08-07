@@ -1122,7 +1122,7 @@
   // "Open"/"Close" + arrow on the right. `key` must be unique per section
   // (used to build the mq-${key}-body / -arrow / -label ids mqToggleCollapse
   // and mqRenumberSteps both key off of).
-  function collapsibleHeader(key, title) {
+  function collapsibleHeader(key, title, startOpen) {
     // stopPropagation so this doesn't also trigger the surrounding section's
     // own "click anywhere to open" handler (mqOpenIfClosed) — this header's
     // click already fully manages toggling both directions by itself. Since
@@ -1133,8 +1133,8 @@
     return `<div class="mq-sec-header-row" onclick="event.stopPropagation();mqToggleCollapse('${key}');mqJumpToSectionIfNeeded(event.currentTarget.closest('.mq-sec'))">
       <p class="mq-sec-title">${title}</p>
       <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-        <span id="mq-${key}-label" style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Open</span>
-        <span class="mq-collapse-arrow" id="mq-${key}-arrow">▶</span>
+        <span id="mq-${key}-label" style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">${startOpen ? 'Close' : 'Open'}</span>
+        <span class="mq-collapse-arrow${startOpen ? ' open' : ''}" id="mq-${key}-arrow">▶</span>
       </span>
     </div>`;
   }
@@ -1227,11 +1227,11 @@
         </div>
       </div>
       <div class="mq-sec" id="mq-${prefix}-measuring-sec" onclick="mqOpenIfClosed('${prefix}-measuring')">
-        ${collapsibleHeader(`${prefix}-measuring`, 'How to measure')}
+        ${collapsibleHeader(`${prefix}-measuring`, 'How to measure', true)}
         <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
           📏 Tips for getting accurate measurements, plus a converter for inches/mm.
         </div>
-        <div id="mq-${prefix}-measuring-body" style="display:none">
+        <div id="mq-${prefix}-measuring-body" style="display:block">
           <div id="mq-${prefix}-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
         </div>
       </div>
