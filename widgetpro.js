@@ -1562,10 +1562,10 @@
               <select id="mq-b-ct-si">${hasCtInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
           </div>
           <label id="mq-b-use-cab-wrap" style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
-            <input type="checkbox" id="mq-b-use-cab" onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
+            <input type="checkbox" id="mq-b-use-cab" checked onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
             <span style="font-size:14px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#6b7280">(assumes standard depth counter)</span></span>
           </label>
-          <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
+          <div id="mq-b-cab-mat" style="display:block;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
               ${pickerRow('mq-b-ct-mat-cab', ctMatItems(), null, 'countertop')}
               <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshCtAddons('mq-b-ct-mat-cab','mq-b-cab-edge','mq-b-cab-addons');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
@@ -1880,7 +1880,7 @@
       document.getElementById('mq-tab-'+id).classList.add('active');
       el.classList.add('active');
       if (id === 'cabinets') { mqRenumberSteps('c'); window.mqUpdateStepFocus('c'); }
-      else if (id === 'both') { mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
+      else if (id === 'both') { window.mqTogUseCab('b'); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
     };
 
     window.mqTogDiff=(prefix)=>{
@@ -2261,7 +2261,7 @@
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
       const next = sections[_mqStepIndex[prefix]];
-      if (next) mqScrollWithOffset(next);
+      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window.mqStepBack = function(prefix) {
@@ -2269,7 +2269,7 @@
       window.mqUpdateStepFocus(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
-      if (cur) mqScrollWithOffset(cur);
+      if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     // Clicking directly into any other section (ahead or already-done)
@@ -2513,7 +2513,7 @@
 
       if (prefix === 'b') {
         const useCabCt = document.getElementById('mq-b-use-cab');
-        if (useCabCt) useCabCt.checked = false;
+        if (useCabCt) useCabCt.checked = true;
         window.mqTogUseCab('b');
         const ctSurfaces = document.getElementById('mq-b-ct-surfaces');
         if (ctSurfaces) { ctSurfaces.innerHTML = ''; ctSurfaces.dataset.autoAdded = 'false'; }
