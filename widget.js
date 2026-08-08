@@ -2295,6 +2295,19 @@
       const top = rect.top + window.pageYOffset - (offsetPx || 80);
       window.scrollTo({ top, behavior: 'smooth' });
     }
+    // Used for step Continue/Back — puts the section's TOP edge a bit above
+    // the viewport's vertical center (not the section's own midpoint at
+    // center, which is what scrollIntoView({block:'center'}) does and
+    // pushes a tall section's top well above center). Landing the top just
+    // above center keeps this consistent with the scroll-spy's centerline
+    // trigger regardless of how tall or short the section is.
+    function mqScrollTopNearCenter(el, aboveCenterPx) {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const viewportCenter = window.innerHeight / 2;
+      const top = rect.top + window.pageYOffset - (viewportCenter - (aboveCenterPx == null ? 80 : aboveCenterPx));
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
     // Exposed globally so mqStartNewEstimate — a sibling function declared
     // outside wireWidget's scope — can actually reach this instead of
     // throwing a ReferenceError when the "Start a New Estimate" button
@@ -2400,7 +2413,7 @@
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
       const next = sections[_mqStepIndex[prefix]];
-      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (next) mqScrollTopNearCenter(next);
     };
 
     window.mqStepBack = function(prefix) {
@@ -2408,7 +2421,7 @@
       window.mqUpdateStepFocus(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
-      if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (cur) mqScrollTopNearCenter(cur);
     };
 
     // Clicking directly into any other section (ahead or already-done)
