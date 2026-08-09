@@ -2021,6 +2021,7 @@
       const input = document.getElementById(`${idPrefix}-qty-${i}`);
       if (!input) return;
       input.value = Math.max(1, (parseInt(input.value,10)||1) + delta);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     };
 
     const ctDepth  = 25.5;
@@ -2869,7 +2870,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
       specQty[prefix][i]=next;
       const el=document.getElementById(`mq-qty-${prefix}-${i}`);
-      if(el) el.value=specQty[prefix][i];
+      if(el) { el.value=specQty[prefix][i]; el.dispatchEvent(new Event('input', { bubbles: true })); }
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',specQty[prefix][i]>0);
     };
     window.mqSetQty=(prefix,i,val)=>{
@@ -2902,7 +2903,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (allowDecimal) next = Math.round(next * 10) / 10;
       installQty[prefix][i]=next;
       const el=document.getElementById(`mq-installqty-${prefix}-${i}`);
-      if(el) el.value=installQty[prefix][i];
+      if(el) { el.value=installQty[prefix][i]; el.dispatchEvent(new Event('input', { bubbles: true })); }
     };
     window.mqSetInstallQty=(prefix,i,val)=>{
       const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt);
@@ -2965,6 +2966,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       tallCabs[prefix][id]=Math.max(0,(tallCabs[prefix][id]||0)+d);
       const el=document.getElementById(`mq-tc-qty-${id}`);
       if(el) el.textContent=tallCabs[prefix][id];
+      mqScheduleLiveRecalc();
     };
     // Picking "None" zeroes the quantity out, same as before. Picking (or
     // switching to a different) real type auto-bumps quantity to 1 if it's
@@ -3281,7 +3283,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
 
-      const low=Math.round(total*(window._mqRangeLow||0.95)/100)*100, high=Math.round(total*(window._mqRangeHigh||1.20)/100)*100;
+      const low=Math.round(total*(window._mqRangeLow||0.95)/10)*10, high=Math.round(total*(window._mqRangeHigh||1.20)/10)*10;
       const roomLabel = roomObj ? roomObj.name : 'Cabinet';
       return {lines,sub:Math.round(total),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel};
     }
@@ -3388,7 +3390,7 @@ window.mqTogDrawerConfig=(prefix)=>{
 
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
       const total=sub;
-      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/100)*100,high:Math.round(total*(window._mqRangeHigh||1.20)/100)*100};
+      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10};
     }
 
     function renderResult(rangeEl,listEl,result){
