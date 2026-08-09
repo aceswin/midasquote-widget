@@ -95,6 +95,12 @@
     // real thumbnails instead of just text labels for unfamiliar terms.
     let shopPhotos = {};
     try { shopPhotos = shop['Photos'] ? JSON.parse(shop['Photos']) : {}; } catch(e) { shopPhotos = {}; }
+    let shopFeatured = {};
+    try { shopFeatured = shop['Featured items'] ? JSON.parse(shop['Featured items']) : {}; } catch(e) { shopFeatured = {}; }
+    const shopBadgeLabel = (shop['Badge label'] || '').trim() || 'Best seller';
+    window._mqBadgeLabel = shopBadgeLabel;
+    const shopBadgeColor = /^#[0-9a-fA-F]{6}$/.test(shop['Badge color']) ? shop['Badge color'] : '#f59e0b';
+    window._mqBadgeColor = shopBadgeColor;
 
     // Room types — fully editable/addable by the shop now, each with its own
     // price adjustment %. Falls back to the original fixed 6 rooms (with
@@ -105,12 +111,12 @@
     try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
     if (!Array.isArray(roomTypes) || !roomTypes.length) {
       roomTypes = [
-        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/kitchen.png', measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/kitchen.png' },
-        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/bathroom.png', measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/bathroom.png' },
-        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/laundry.png', measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/laundry.png' },
-        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/garage.png', measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/garage.png' },
-        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/commercial.png', measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/commercial.png' },
-        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/other.png', measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/other.png' },
+        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.png' },
+        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.png' },
+        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.png' },
+        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.png' },
+        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.png' },
+        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.png' },
         { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
         { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
         { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
@@ -162,10 +168,10 @@
 
     // Match photos uploaded via the dashboard's "My Products" tab (see the
     // module-level photoKeyFor helper above for the key format).
-    li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; m.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(m), 'material'); });
-    li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; d.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(d), 'door'); });
-    li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; h.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(h), 'hinge'); });
-    li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; dr.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(dr), 'drawer'); });
+    li.materials.forEach(m => { m.photoUrl = shopPhotos[photoKeyFor('material', m._baseName || m['Name'])] || ''; m.featured = shopFeatured[photoKeyFor('material', m._baseName || m['Name'])] || false; m.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(m), 'material'); });
+    li.doorStyles.forEach(d => { d.photoUrl = shopPhotos[photoKeyFor('door', d['Name'])] || ''; d.featured = shopFeatured[photoKeyFor('door', d['Name'])] || false; d.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(d), 'door'); });
+    li.hinges.forEach(h => { h.photoUrl = shopPhotos[photoKeyFor('hinge', h['Name'])] || ''; h.featured = shopFeatured[photoKeyFor('hinge', h['Name'])] || false; h.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(h), 'hinge'); });
+    li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; dr.featured = shopFeatured[photoKeyFor('drawer', dr['Name'])] || false; dr.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(dr), 'drawer'); });
 
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
     li.localRadius = localZone?.['Rate'] || 15;
@@ -187,6 +193,7 @@
           perFt:r.fields['Per linear foot']||false,
           perSqFt:r.fields['Per square foot']||false,
           photoUrl: shopPhotos['spec_' + r.id] || '',
+          featured: shopFeatured['spec_' + r.id] || false,
           visibleRooms, // empty array = visible for every room (backward compatible default)
           // Per-item supply/install choice — lets a shop offer some items
           // (e.g. refacing doors) supply-only even while installing
@@ -207,7 +214,7 @@
         };
       }));
 
-    return { shop, pricing:p, specs, li, hasDynamic, shopPhotos, roomTypes };
+    return { shop, pricing:p, specs, li, hasDynamic, shopPhotos, shopFeatured, roomTypes };
   }
 
   // ============================================================
@@ -322,6 +329,9 @@
     boxBg = boxBg || '#eff6ff';
     boxText = boxText || '#1e40af';
     window._mqFocalColor = focalColor;
+    window._mqBoxBorder = boxBorder;
+    window._mqBoxBg = boxBg;
+    window._mqBoxText = boxText;
     // Only run the auto-gradient math when they've actually set a custom
     // background — the original default already has its own two hand-picked
     // gradient stops (#eff6ff → #f0f9ff), no need to recompute those.
@@ -442,6 +452,31 @@
       #midasquote-widget .mq-vpicker-thumb{cursor:zoom-in}
       #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
+      #midasquote-widget .mq-vpicker-featured-badge{position:absolute;top:-6px;left:-6px;font-size:8px;font-weight:700;padding:2px 5px;border-radius:8px;background:#f59e0b;color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+      /* Sticky estimate bar — appears after the first real Calculate, then
+         tracks live as the customer swaps items. Fixed to the viewport
+         (not just the widget), since the widget can sit inside a much
+         longer page. */
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -6px 24px rgba(0,0,0,0.14);padding:10px 14px 12px;display:none;align-items:center;gap:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar.show{display:flex}
+      @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+      #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#374151;color:#fff;border:2px solid #fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.25);padding:0}
+      #mq-sticky-content{flex:1;min-width:0}
+      #mq-sticky-label{font-size:10px;font-weight:600;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+      #mq-sticky-price-wrap{position:relative;display:inline-block}
+      #mq-sticky-price{font-size:18px;font-weight:800;color:#111;display:inline-block;transition:color 0.3s}
+      #mq-sticky-price.pulse{animation:mqPricePulse 0.6s ease}
+      @keyframes mqPricePulse{0%{transform:scale(1)}35%{transform:scale(1.14)}100%{transform:scale(1)}}
+      .mq-sticky-delta{position:absolute;left:50%;top:-4px;transform:translateX(-50%);font-size:12px;font-weight:800;white-space:nowrap;opacity:0;pointer-events:none}
+      .mq-sticky-delta.show{animation:mqDeltaFloat 1.2s ease forwards}
+      @keyframes mqDeltaFloat{0%{opacity:0;transform:translate(-50%,4px) scale(0.8)}20%{opacity:1;transform:translate(-50%,-6px) scale(1.05)}100%{opacity:0;transform:translate(-50%,-30px) scale(1)}}
+      #mq-sticky-ctas{display:flex;gap:6px;flex-shrink:0}
+      #mq-sticky-ctas button{font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;white-space:nowrap;cursor:pointer;font-family:inherit;border:1px solid #d1d5db;background:#fff;color:#111;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+      #mq-sticky-ctas button.mq-pri{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+      @media (max-width:420px){
+        #mq-sticky-label{display:none}
+        #mq-sticky-ctas button{padding:9px 8px;font-size:11px}
+      }
       #midasquote-widget .mq-vpicker-badge-1{background:#dcfce7;color:#166534}
       #midasquote-widget .mq-vpicker-badge-2{background:#fef3c7;color:#92400e}
       #midasquote-widget .mq-vpicker-badge-3{background:linear-gradient(135deg,#f0d488,#d4af37);color:#1a1a1a;border:1px solid #b8901f}
@@ -544,7 +579,7 @@
   }
 
   function buildCTMAT(data) {
-    const { li, pricing, shopPhotos } = data;
+    const { li, pricing, shopPhotos, shopFeatured } = data;
     CT_MAT = {};
     const hasDynamicCT = li.countertopItems.length > 0;
     if (hasDynamicCT) {
@@ -582,6 +617,7 @@
             cutoutOptions: Array.isArray(cutoutOptions) ? cutoutOptions : [],
             addonOptions: Array.isArray(addonOptions) ? addonOptions : [],
             photoUrl:    (shopPhotos||{})[photoKeyFor('countertop', item['Name'])] || '',
+            featured:    (shopFeatured||{})[photoKeyFor('countertop', item['Name'])] || false,
             visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), 'countertop'),
             groupName:   (item['Group name']||'').trim(),
             groupOrder:  item['Group sort order']||0,
@@ -606,7 +642,7 @@
 
   let TRIM = {};
   function buildTRIM(data) {
-    const { li, shopPhotos } = data;
+    const { li, shopPhotos, shopFeatured } = data;
     TRIM = {};
     (li.trimItems || []).forEach((item, i) => {
       let linkedDoors = [];
@@ -621,6 +657,7 @@
         // Dashboard groups crown/valance into separate pseudo-categories
         // (trim_crown / trim_valance) for photo purposes, not just "trim"
         photoUrl:    (shopPhotos||{})[photoKeyFor(`trim_${type}`, item['Name'])] || '',
+        featured:    (shopFeatured||{})[photoKeyFor(`trim_${type}`, item['Name'])] || false,
         visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), `trim_${type}`),
         groupName:   (item['Group name']||'').trim(),
         groupOrder:  item['Group sort order']||0,
@@ -639,13 +676,14 @@
   // ── Tall cabinets ──
   let TALL_CAB = {};
   function buildTALLCAB(data) {
-    const { li, shopPhotos } = data;
+    const { li, shopPhotos, shopFeatured } = data;
     TALL_CAB = {};
     (li.tallCabItems || []).filter(item => item['Active'] !== false).forEach((item, i) => {
       TALL_CAB[`tc_${i}`] = {
         label: item['Name'],
         basePrice: item['Rate'] || 0,
         photoUrl: (shopPhotos||{})[photoKeyFor('tall_cabinet', item['Name'])] || '',
+        featured: (shopFeatured||{})[photoKeyFor('tall_cabinet', item['Name'])] || false,
         visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), 'tall_cabinet'),
       };
     });
@@ -657,7 +695,7 @@
 
   function tallCabItems() {
     return sortAndBadgeItems([{value:'none', label:'None', icon:'🚫'}].concat(
-      Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'🏛️', price:t.basePrice||0, visibleRooms:t.visibleRooms||[]}))
+      Object.entries(TALL_CAB).map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, featured:t.featured||false, icon:'🏛️', price:t.basePrice||0, visibleRooms:t.visibleRooms||[]}))
     ));
   }
 
@@ -677,8 +715,10 @@
   function ctMatItems() {
     const entries = Object.entries(CT_MAT);
     return entries.length
-      ? sortBadgeAndGroupItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[], groupName:m.groupName||'', groupOrder:m.groupOrder||0, groupDesc:m.groupDesc||''})))
-      : [{value:'lam', label:'Laminate', icon:'🪨'}];
+      ? sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
+          entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, featured:m.featured||false, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[], groupName:m.groupName||'', groupOrder:m.groupOrder||0, groupDesc:m.groupDesc||''}))
+        ))
+      : [{value:'none', label:'None', icon:'🚫'}, {value:'lam', label:'Laminate', icon:'🪨'}];
   }
 
   // ============================================================
@@ -822,7 +862,7 @@
     return noneItem ? [noneItem, ...grouped] : grouped;
   }
 
-  function pickerRow(selectId, items, extraOnChangeAttr, category) {
+  function pickerRow(selectId, items, extraOnChangeAttr, category, startUnselected) {
     const hasAnyGroup = items.some(it => it.groupName);
     // Preserves cluster order already established by sortBadgeAndGroupItems —
     // groups are contiguous in `items`, so first-seen order here is correct.
@@ -842,16 +882,17 @@
       window._mqGroupFilter = window._mqGroupFilter || {};
       window._mqGroupFilter[selectId] = groupNames[0];
     }
-    const focal = window._mqFocalColor || '#2563eb';
-    const focalTint = mqLightenHex(focal, 0.85);
+    const boxBorderColor = window._mqBoxBorder || '#93c5fd';
+    const boxBgColor = window._mqBoxBg || '#eff6ff';
+    const boxTextColor = window._mqBoxText || '#1e40af';
     const groupDropdown = hasAnyGroup ? `
-      <div style="margin-bottom:10px;background:${focalTint};border:1.5px solid ${focal};border-radius:10px;padding:12px 14px">
-        <label style="font-size:14px;font-weight:700;color:${focal};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
-        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${focal};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
+      <div style="margin-bottom:10px;background:${boxBgColor};border:1.5px solid ${boxBorderColor};border-radius:10px;padding:12px 14px">
+        <label style="font-size:14px;font-weight:700;color:${boxTextColor};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
           ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
           ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
         </select>
-        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${focal};margin-top:8px">${countNote(groupNames[0])}</div>
+        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${boxTextColor};margin-top:8px">${countNote(groupNames[0])}</div>
         <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:4px 0 0;line-height:1.5">${groupDescOf(groupNames[0])}</div>
       </div>` : '';
     const chips = items.map((it,i)=>{
@@ -861,17 +902,18 @@
         ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
       const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
-      const selectedClass = i===0 ? ' selected' : '';
-      const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
+      const featuredBadgeHtml = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+      const selectedClass = (i===0 && !startUnselected) ? ' selected' : '';
+      const selectBtnLabel = (i===0 && !startUnselected) ? '✓ Selected' : 'Select';
       const roomsAttr = JSON.stringify(it.visibleRooms||[]).replace(/"/g,'&quot;');
       const groupNote = it.samePriceNote ? `<span class="mq-vpicker-group-note">✓ Same price as other ${(it.groupName||'').replace(/'/g,"\\'")} options</span>` : '';
       // "none"/"no doors" always stays visible no matter which collection is
       // picked — it's an opt-out, not a style choice. Real ungrouped items
       // fall into the "Other" bucket instead.
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    return `${groupDropdown}<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
+    return `${groupDropdown}<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
   }
 
   // Shows a "more to scroll" arrow over the right edge of a picker row
@@ -942,6 +984,7 @@
         ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
+      const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
       // Items offering a choice get a dropdown that starts on a
       // non-selectable "Choose one" placeholder — not defaulted to match
@@ -980,7 +1023,7 @@
       return `
       <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
         <div class="mq-spec-top">
-          <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}</div>
+          <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}${featuredBadgeHtml}</div>
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
@@ -1049,11 +1092,11 @@
   // same markup.
   function defaultMeasureGuideHTML(roomId = 'kitchen') {
     const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
-      <img src="https://aceswin.github.io/midasquote-widget/measure-guides/corner-cabinets.png" alt="How to measure corner cabinets" onclick="mqPhotoLightbox('https://aceswin.github.io/midasquote-widget/measure-guides/corner-cabinets.png','How to measure corner cabinets')" onerror="this.style.display='none'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>
+      <img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.png" alt="How to measure corner cabinets" onclick="mqPhotoLightbox('https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.png','How to measure corner cabinets')" onerror="this.style.display='none'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>
     </div>`;
     if (roomId === 'kitchen') {
       return `
-        <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
+        <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
         <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>Don't worry about doing any math yourself.</strong> Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the ${mqCalcIconInlineHTML()} and enter each one as its own section — got <strong>3 separate runs of upper cabinets</strong>? That's 3 sections. We'll add them up and convert everything for you, no matter how many walls you have.</div>
         <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
         <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
@@ -1061,7 +1104,7 @@
         ${cornerSection}`;
     }
     return `
-      <div style="font-weight:600;margin-bottom:8px;color:#111">📏 Quick measuring guide</div>
+      <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
       <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>Don't worry about doing any math yourself.</strong> Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the ${mqCalcIconInlineHTML()} and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.</div>
       <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
       <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
@@ -1082,7 +1125,7 @@
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\n/g, '<br>');
     html = html.replace(/\[calc\]/g, mqCalcIconInlineHTML());
-    html = html.replace(/\[corner-img\]/g, '<img src="https://aceswin.github.io/midasquote-widget/measure-guides/corner-cabinets.png" alt="How to measure corner cabinets" onclick="mqPhotoLightbox(\'https://aceswin.github.io/midasquote-widget/measure-guides/corner-cabinets.png\',\'How to measure corner cabinets\')" onerror="this.style.display=\'none\'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>');
+    html = html.replace(/\[corner-img\]/g, '<img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.png" alt="How to measure corner cabinets" onclick="mqPhotoLightbox(\'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.png\',\'How to measure corner cabinets\')" onerror="this.style.display=\'none\'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>');
     // [tip]...[/tip] wraps a line in the same yellow callout box the
     // built-in default guide uses for its "don't feel like converting"
     // note — lets a shop owner get that same visual treatment on their own
@@ -1262,7 +1305,7 @@
   // "Open"/"Close" + arrow on the right. `key` must be unique per section
   // (used to build the mq-${key}-body / -arrow / -label ids mqToggleCollapse
   // and mqRenumberSteps both key off of).
-  function collapsibleHeader(key, title) {
+  function collapsibleHeader(key, title, startOpen) {
     // stopPropagation so this doesn't also trigger the surrounding section's
     // own "click anywhere to open" handler (mqOpenIfClosed) — this header's
     // click already fully manages toggling both directions by itself. Since
@@ -1273,8 +1316,8 @@
     return `<div class="mq-sec-header-row" onclick="event.stopPropagation();mqToggleCollapse('${key}');mqJumpToSectionIfNeeded(event.currentTarget.closest('.mq-sec'))">
       <p class="mq-sec-title">${title}</p>
       <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-        <span id="mq-${key}-label" style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Open</span>
-        <span class="mq-collapse-arrow" id="mq-${key}-arrow">▶</span>
+        <span id="mq-${key}-label" style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">${startOpen ? 'Close' : 'Open'}</span>
+        <span class="mq-collapse-arrow${startOpen ? ' open' : ''}" id="mq-${key}-arrow">▶</span>
       </span>
     </div>`;
   }
@@ -1296,7 +1339,7 @@
   }
 
   function cabinetForm(prefix, specs, data) {
-    const { li, hasDynamic, shopPhotos, roomTypes } = data;
+    const { li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -1316,7 +1359,7 @@
     const drawerConfigItems = sortBadgeAndGroupItems(drawerConfigNames.map((n,i)=>{
       const someRec = li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n && /some drawers/i.test(d['Name']));
       return {
-        value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', icon:'🗄️',
+        value:`${i}`, label:n, photoUrl:(shopPhotos||{})[photoKeyFor('drawer', n)]||'', featured:(shopFeatured||{})[photoKeyFor('drawer', n)]||false, icon:'🗄️',
         // Badge/sort by the "Some drawers" rate as the representative price for this config
         price: someRec?.['Rate'] || 0,
         visibleRooms: li.drawers.find(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===n)?.visibleRooms || [],
@@ -1342,22 +1385,22 @@
           const baseName = m._baseName || m['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim();
           const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
           const priceRate = bItem ? (bItem['Rate']||0) : (m['Rate']||0);
-          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[], groupName:(m['Group name']||'').trim(), groupOrder:m['Group sort order']||0, groupDesc:m['Group description']||''};
+          return {value:`dyn_${i}`, label:baseName, photoUrl:m.photoUrl, featured:m.featured||false, icon:'🪵', price:priceRate, visibleRooms:m.visibleRooms||[], groupName:(m['Group name']||'').trim(), groupOrder:m['Group sort order']||0, groupDesc:m['Group description']||''};
         }))
       : [{value:'melamine',label:'Melamine',icon:'🪵'},{value:'plywood',label:'Plywood',icon:'🪵'}];
     const dItems = sortBadgeAndGroupItems([{value:'none',label:'No doors',icon:'🚫'}].concat(
       li.doorStyles.length > 0
-        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[], groupName:(d['Group name']||'').trim(), groupOrder:d['Group sort order']||0, groupDesc:d['Group description']||''}))
+        ? li.doorStyles.map((d,i)=>({value:`dyn_${i}`, label:d['Name'], photoUrl:d.photoUrl, featured:d.featured||false, icon:'🚪', price:d['Rate']||0, visibleRooms:d.visibleRooms||[], groupName:(d['Group name']||'').trim(), groupOrder:d['Group sort order']||0, groupDesc:d['Group description']||''}))
         : [{value:'slab',label:'Slab',icon:'🚪'},{value:'shaker',label:'Shaker',icon:'🚪'}]
     ));
     const hingeItems = li.hinges.length > 0
-      ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, icon:'🔧', price:h['Rate']||0, visibleRooms:h.visibleRooms||[]})))
+      ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, featured:h.featured||false, icon:'🔧', price:h['Rate']||0, visibleRooms:h.visibleRooms||[]})))
       : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
     const crownItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, featured:t.featured||false, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
     ));
     const valanceItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, featured:t.featured||false, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
     ));
 
     return `
@@ -1388,6 +1431,8 @@
           <div class="mq-field"><label class="mq-label mq-focal-box-label" style="font-size:14px;font-weight:700">${hasInstall ? 'Supply + install?' : 'Supply'}</label>
             <p class="mq-hint mq-focal-box-label" style="margin-bottom:8px">${hasInstall ? "Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install)." : 'This shop offers supply only — installation is not included.'}</p>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')">${hasInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
+          <div class="mq-field" style="margin-top:0.75rem"><label class="mq-label mq-focal-box-label" style="font-size:14px;font-weight:700;margin-bottom:8px;display:block">Remove existing cabinets?</label>
+            <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
         </div>
       </div>
       <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec">
@@ -1462,11 +1507,11 @@
         <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;justify-content:flex-start">
           <div style="flex:0 1 150px;text-align:center">
             <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/mostly-drawers.png','Full drawer bank example')" onerror="this.style.display='none'"/>
-            <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this (stacked drawers, no door) → pick <strong>Mostly drawers</strong></div>
+            <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Mostly drawers</strong></div>
           </div>
           <div style="flex:0 1 150px;text-align:center">
             <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/some-drawers.png','Standard door with one top drawer example')" onerror="this.style.display='none'"/>
-            <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this (door + one top drawer) → pick <strong>Some drawers</strong></div>
+            <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Some drawers</strong></div>
           </div>
         </div>
         <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none;margin-top:10px">
@@ -1519,17 +1564,10 @@
         </div>`:''}
         </div>
       </div>`:''}
-      <div class="mq-sec" id="mq-${prefix}-removal-sec">
-        <p class="mq-sec-title">Removal</p>
-        <div class="mq-grid2">
-          <div class="mq-field"><label class="mq-label">Remove existing cabinets?</label>
-            <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
-        </div>
-      </div>
       <div class="mq-sec" id="mq-${prefix}-specialty-sec" onclick="mqOpenIfClosed('${prefix}-specialty')">
         ${collapsibleHeader(`${prefix}-specialty`, 'Details & Selections')}
         <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
-          ⭐ Optional extras and upgrades — browse and add anything you'd like.
+          ⭐ Optional extras and upgrades — browse and add anything you'd like. Items are priced as either flat rate, per square foot, or per linear foot. Some items may be supply only, supply + install only, or offer a choice of either.
         </div>
         <div id="mq-${prefix}-specialty-body" style="display:none">
           <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
@@ -1544,9 +1582,9 @@
   // the same regardless of who's doing the quote, so no per-shop upload
   // system needed, just one fixed set.
   const MQ_TERM_IMAGES = {
-    crownReturn:   'https://aceswin.github.io/midasquote-widget/term-images/crown-return.png',
-    valanceReturn: 'https://aceswin.github.io/midasquote-widget/term-images/valance-return.png',
-    sidesplash:    'https://aceswin.github.io/midasquote-widget/term-images/sidesplash.png',
+    crownReturn:   'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/term-images/crown-return.png',
+    valanceReturn: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/term-images/valance-return.png',
+    sidesplash:    'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/term-images/sidesplash.png',
   };
   function termHelpThumb(imgUrl, label, size = 48, showCaption = true) {
     const safeLabel = label.replace(/'/g, "\\'");
@@ -1580,6 +1618,7 @@
     const askQuestionBtn = (financingOn && financingLink)
       ? `<button onclick="window.open('${financingLink}','_blank')">Get pre-approved ↗</button>`
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
+    window._mqAskQuestionBtn = askQuestionBtn;
 
     return `
       <div class="mq-header">
@@ -1634,7 +1673,7 @@
       <div class="mq-tab-content" id="mq-tab-countertops">
         ${PRICE_LEGEND_HTML}
         <div class="mq-sec">
-          <p class="mq-sec-title">Surfaces</p>
+          <p class="mq-sec-title">Countertop surfaces</p>
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
@@ -1672,10 +1711,10 @@
               <select id="mq-b-ct-si">${hasCtInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
           </div>
           <label id="mq-b-use-cab-wrap" style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
-            <input type="checkbox" id="mq-b-use-cab" onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
+            <input type="checkbox" id="mq-b-use-cab" checked onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
             <span style="font-size:14px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#6b7280">(assumes standard depth counter)</span></span>
           </label>
-          <div id="mq-b-cab-mat" style="display:none;margin-top:0.75rem">
+          <div id="mq-b-cab-mat" style="display:block;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
               ${pickerRow('mq-b-ct-mat-cab', ctMatItems(), null, 'countertop')}
               <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshCtAddons('mq-b-ct-mat-cab','mq-b-cab-edge','mq-b-cab-addons');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
@@ -1695,7 +1734,7 @@
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-top:8px">
-                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
+                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed (sink, etc.)
               </label>
               <div id="mq-b-cab-cuts" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border-radius:6px"></div>
               <div style="font-size:14px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
@@ -1714,7 +1753,7 @@
             </div>
           </div>
         </div>
-        <div class="mq-sec"><p class="mq-sec-title" id="mq-b-ct-surfaces-title">Additional surfaces</p>
+        <div class="mq-sec"><p class="mq-sec-title" id="mq-b-ct-surfaces-title">Additional countertop surfaces</p>
           <div id="mq-b-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
         </div>
@@ -1991,7 +2030,7 @@
       document.getElementById('mq-tab-'+id).classList.add('active');
       el.classList.add('active');
       if (id === 'cabinets') { mqRenumberSteps('c'); window.mqUpdateStepFocus('c'); }
-      else if (id === 'both') { mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
+      else if (id === 'both') { window.mqTogUseCab('b'); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
     };
 
     window.mqTogDiff=(prefix)=>{
@@ -2059,20 +2098,20 @@
   // Restaining, or a shop's own custom-named project type) has no fallback
   // and simply shows blank, same as before.
   const MQ_DEFAULT_COVER_IMAGES = {
-    kitchen: 'https://aceswin.github.io/midasquote-widget/cover-images/kitchen.png',
-    bathroom: 'https://aceswin.github.io/midasquote-widget/cover-images/bathroom.png',
-    laundry: 'https://aceswin.github.io/midasquote-widget/cover-images/laundry.png',
-    garage: 'https://aceswin.github.io/midasquote-widget/cover-images/garage.png',
-    commercial: 'https://aceswin.github.io/midasquote-widget/cover-images/commercial.png',
-    other: 'https://aceswin.github.io/midasquote-widget/cover-images/other.png',
+    kitchen: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.png',
+    bathroom: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.png',
+    laundry: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.png',
+    garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.png',
+    commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.png',
+    other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.png',
   };
   const MQ_DEFAULT_MEASURE_IMAGES = {
-    kitchen: 'https://aceswin.github.io/midasquote-widget/measure-guides/kitchen.png',
-    bathroom: 'https://aceswin.github.io/midasquote-widget/measure-guides/bathroom.png',
-    laundry: 'https://aceswin.github.io/midasquote-widget/measure-guides/laundry.png',
-    garage: 'https://aceswin.github.io/midasquote-widget/measure-guides/garage.png',
-    commercial: 'https://aceswin.github.io/midasquote-widget/measure-guides/commercial.png',
-    other: 'https://aceswin.github.io/midasquote-widget/measure-guides/other.png',
+    kitchen: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.png',
+    bathroom: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.png',
+    laundry: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.png',
+    garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.png',
+    commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.png',
+    other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.png',
   };
 
   // Matches a room to one of the 6 default-image keys above. Tries the id
@@ -2165,7 +2204,7 @@
         return;
       }
       const title = document.createElement('div');
-      title.style.cssText = 'font-weight:600;margin-bottom:8px;color:#111';
+      title.style.cssText = 'font-weight:600;margin-bottom:18px;color:#111';
       title.textContent = '📏 How to measure for this project';
       guideEl.appendChild(title);
       // Safe renderer (escapes everything, then allows only **bold** and line
@@ -2203,7 +2242,7 @@
               if (visible && !firstVisibleChip) firstVisibleChip = chip;
               if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
             });
-            if (!anyVisibleSelected && firstVisibleChip) {
+            if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect) {
               const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
               const btn = firstVisibleChip.querySelector('.mq-vpicker-select-btn');
               if (selectId && btn) window.mqPickVisual(selectId, btn);
@@ -2276,6 +2315,19 @@
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const top = rect.top + window.pageYOffset - (offsetPx || 80);
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+    // Used for step Continue/Back — puts the section's TOP edge a bit above
+    // the viewport's vertical center (not the section's own midpoint at
+    // center, which is what scrollIntoView({block:'center'}) does and
+    // pushes a tall section's top well above center). Landing the top just
+    // above center keeps this consistent with the scroll-spy's centerline
+    // trigger regardless of how tall or short the section is.
+    function mqScrollTopNearCenter(el, aboveCenterPx) {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const viewportCenter = window.innerHeight / 2;
+      const top = rect.top + window.pageYOffset - (viewportCenter - (aboveCenterPx == null ? 80 : aboveCenterPx));
       window.scrollTo({ top, behavior: 'smooth' });
     }
     // Exposed globally so mqStartNewEstimate — a sibling function declared
@@ -2355,6 +2407,7 @@
           window.mqToggleCollapse(key);
         }
       }
+      mqObserveSectionsForScrollSpy();
     };
 
     // Highlights whichever Calculate button belongs to this tab — used when
@@ -2382,7 +2435,7 @@
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
       const next = sections[_mqStepIndex[prefix]];
-      if (next) mqScrollWithOffset(next);
+      if (next) mqScrollTopNearCenter(next);
     };
 
     window.mqStepBack = function(prefix) {
@@ -2390,7 +2443,7 @@
       window.mqUpdateStepFocus(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
-      if (cur) mqScrollWithOffset(cur);
+      if (cur) mqScrollTopNearCenter(cur);
     };
 
     // Clicking directly into any other section (ahead or already-done)
@@ -2416,6 +2469,25 @@
       if (!sec) return;
       mqJumpToSectionIfNeeded(sec);
     });
+
+    // Scrolling counts as "arriving" at a section too, not just clicking
+    // Continue or tapping into it — a shrunk-viewport IntersectionObserver
+    // (top and bottom both pulled in 50%) leaves only a thin trigger line
+    // at the exact vertical center of the screen; whichever section is
+    // crossing that line becomes the current step, reusing the exact same
+    // logic a click already runs. Re-observing is cheap and safe to repeat
+    // (observing an already-observed element is a no-op), so this just gets
+    // called again anywhere section visibility/DOM already gets refreshed,
+    // rather than needing a separate mutation-tracking setup.
+    let _mqScrollSpyObserver = null;
+    function mqObserveSectionsForScrollSpy() {
+      if (!_mqScrollSpyObserver) {
+        _mqScrollSpyObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => { if (entry.isIntersecting) mqJumpToSectionIfNeeded(entry.target); });
+        }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
+      }
+      document.querySelectorAll('#midasquote-widget .mq-sec').forEach(sec => _mqScrollSpyObserver.observe(sec));
+    }
 
     window.mqRefreshSectionVisibility=(prefix)=>{
       if (prefix !== 'c' && prefix !== 'b') return;
@@ -2449,9 +2521,6 @@
       // Project type/Measuring visible.
       const siField = document.getElementById(`mq-${prefix}-si-field`);
       if (siField) siField.style.display = cabActive ? '' : 'none';
-      // Removal only makes sense if there's a cabinet being priced at all
-      const removalSec = document.getElementById(`mq-${prefix}-removal-sec`);
-      if (removalSec) removalSec.style.display = cabActive ? '' : 'none';
 
       const drawSec = document.getElementById(`mq-${prefix}-drawers-sec`);
       if (drawSec) drawSec.style.display = rowHasReal(`mq-${prefix}-drawer-config`) ? '' : 'none';
@@ -2533,7 +2602,7 @@
           useCabCbCt.checked = false;
           window.mqTogUseCab('b');
         }
-        if (surfTitle) surfTitle.textContent = cabActive ? 'Additional surfaces' : 'Surfaces';
+        if (surfTitle) surfTitle.textContent = cabActive ? 'Additional countertop surfaces' : 'Countertop surfaces';
         if (!cabActive && surfContainer && !surfContainer.children.length) {
           // Only fires when there's truly nothing there yet — marked so we
           // know to clean it back up if a project type WITH cabinets gets
@@ -2636,7 +2705,7 @@
 
       if (prefix === 'b') {
         const useCabCt = document.getElementById('mq-b-use-cab');
-        if (useCabCt) useCabCt.checked = false;
+        if (useCabCt) useCabCt.checked = true;
         window.mqTogUseCab('b');
         const ctSurfaces = document.getElementById('mq-b-ct-surfaces');
         if (ctSurfaces) { ctSurfaces.innerHTML = ''; ctSurfaces.dataset.autoAdded = 'false'; }
@@ -3082,7 +3151,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
       if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uMatCost)});
       if(uFt>0&&uInstallCost>0) lines.push({label:`Upper cabinet install (${uFt} lin ft)`,cost:Math.round(uInstallCost)});
-      if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost)});
+      if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
       if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
@@ -3241,7 +3310,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const sqft  = linFt * (ctDepth / 12);
           const mat   = gv(matId);
           const si    = gv(ctSiId);
-          const m     = CT_MAT[mat] || Object.values(CT_MAT)[0];
+          const m     = mat === 'none' ? null : (CT_MAT[mat] || null);
           if (m) {
             const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
             const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
@@ -3275,8 +3344,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       Object.keys(surfs[prefix]).forEach(id=>{
         if(!document.getElementById('mqsc-'+id)) return;
         const mat=gv('mqsm-'+id);
+        if (mat === 'none') return; // customer explicitly chose no countertop for this surface
         const siOv=gv('mqssi-'+id), si=siOv==='inherit'?gv(ctSiId):(siOv||'supply');
-        const m=CT_MAT[mat]||Object.values(CT_MAT)[0];
+        const m=CT_MAT[mat]||null;
         if (!m) return;
         const w=gn('mqsw-'+id,0), d=gn('mqsd-'+id,ctDepth);
         const sqft=(w*(d||ctDepth))/144;
@@ -3338,6 +3408,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         // stops announcing it in the results panel.
         if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r);
+        window.mqShowStickyBar('c', r.low, r.high);
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-c-result'));window.mqShowStartOverPanel();
         document.getElementById('mq-c-calc-btn').disabled=false;
@@ -3357,6 +3428,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const active=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length;
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
+          window.mqShowStickyBar('ct', r.low, r.high);
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-ct-result'));window.mqShowStartOverPanel();
           document.getElementById('mq-ct-calc-btn').disabled=false;
@@ -3385,6 +3457,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           if(!ctRows.children.length){const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">None selected</span>`;ctRows.appendChild(d);}
           const tl=cab.low+ct.low,th=cab.high+ct.high;
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
+          window.mqShowStickyBar('b', tl, th);
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-b-result'));window.mqShowStartOverPanel();
           document.getElementById('mq-b-calc-btn').disabled=false;
@@ -3423,7 +3496,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
-        <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:auto;flex-shrink:0"/> Cutouts needed</label>
+        <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:auto;flex-shrink:0"/> Cutouts needed (sink, etc.)</label>
         <div id="mqscuts-${id}" style="display:none;margin-top:8px;margin-bottom:0.75rem;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Backsplash</label>
@@ -3483,6 +3556,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const matSel = document.getElementById(matSelectId);
       const bsSel  = document.getElementById(bsSelectId);
       if (!matSel || !bsSel) return;
+      if (matSel.value === 'none') { bsSel.innerHTML = '<option value="none">None</option>'; return; }
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       const prevVal = bsSel.value;
       bsSel.innerHTML = '<option value="none">None</option>' + bsOptsHtml(m);
@@ -3493,6 +3567,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const matSel = document.getElementById(matSelectId);
       const container = document.getElementById(cutsContainerId);
       if (!matSel || !container) return;
+      if (matSel.value === 'none') { container.innerHTML = ''; return; }
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       container.innerHTML = cutoutRowsHtml(m, `${cutsContainerId}-q`);
     };
@@ -3501,6 +3576,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const edgeEl = document.getElementById(edgeContainerId);
       const addonEl = document.getElementById(addonContainerId);
       if (!matSel) return;
+      if (matSel.value === 'none') { if (edgeEl) edgeEl.innerHTML = ''; if (addonEl) addonEl.innerHTML = ''; return; }
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       if (edgeEl) edgeEl.innerHTML = edgeSelectHtml(m, edgeContainerId);
       if (addonEl) addonEl.innerHTML = addonRowsHtml(m, `${addonContainerId}-a`);
@@ -3684,6 +3760,13 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
+    // Fresh estimate — nothing calculated yet, so hide any leftover sticky
+    // bar from before and let it re-earn its spot once they Calculate again.
+    window._mqStickyPrefix = null;
+    window._mqStickyDismissed = false;
+    window._mqStickyLast = null;
+    const stickyBar = document.getElementById('mq-sticky-bar');
+    if (stickyBar) stickyBar.classList.remove('show');
     const panel = document.getElementById('mq-start-over-panel');
     if (panel) panel.style.display = 'none';
     window.mqScrollWithOffset(container);
@@ -3724,6 +3807,107 @@ window.mqTogDrawerConfig=(prefix)=>{
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => mqBumpMobileFontSizes(document.body), 200);
     });
+  }
+
+  // ── Sticky estimate bar ──
+  // Appears the first time a real Calculate completes (lead capture and
+  // all — this never re-triggers that, it only reads the already-computed
+  // numbers). From then on, tracks live as the customer tweaks anything,
+  // by calling the same pure calcCabinet/calcCountertop functions Calculate
+  // itself uses — no popups, no re-saving a lead, just silent re-math.
+  window._mqStickyPrefix = null;
+  window._mqStickyDismissed = false;
+  window._mqStickyLast = null;
+  function mqSetupStickyBar() {
+    if (document.getElementById('mq-sticky-bar')) return;
+    const bar = document.createElement('div');
+    bar.id = 'mq-sticky-bar';
+    bar.innerHTML = `
+      <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
+      <div id="mq-sticky-content">
+        <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+        <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+      </div>
+      <div id="mq-sticky-ctas">
+        ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
+        <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+      </div>`;
+    document.body.appendChild(bar);
+  }
+  window.mqCloseStickyBar = function() {
+    window._mqStickyDismissed = true;
+    const bar = document.getElementById('mq-sticky-bar');
+    if (bar) bar.classList.remove('show');
+  };
+  // Called right after a real Calculate finishes for any tab — reveals the
+  // bar (unless the customer already dismissed it this session) and marks
+  // that tab as the one live updates should keep tracking.
+  window.mqShowStickyBar = function(prefix, low, high) {
+    window._mqStickyPrefix = prefix;
+    mqSetupStickyBar();
+    mqSetStickyPrice(low, high, false);
+    if (!window._mqStickyDismissed) {
+      const bar = document.getElementById('mq-sticky-bar');
+      if (bar) bar.classList.add('show');
+    }
+  };
+  function fmtRange(low, high) {
+    const f = n => '$' + Math.round(n).toLocaleString();
+    return `${f(low)} – ${f(high)}`;
+  }
+  // animate=true is the "something fun happens" part — a quick pulse on the
+  // number plus a floating +/-$ delta, so a customer actually notices their
+  // tweak moved the price instead of the number just silently changing.
+  function mqSetStickyPrice(low, high, animate) {
+    const el = document.getElementById('mq-sticky-price');
+    if (!el) return;
+    const prev = window._mqStickyLast;
+    el.textContent = fmtRange(low, high);
+    if (animate && prev) {
+      const prevMid = (prev.low + prev.high) / 2;
+      const newMid = (low + high) / 2;
+      const delta = Math.round(newMid - prevMid);
+      if (Math.abs(delta) >= 1) {
+        el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+        const wrap = document.getElementById('mq-sticky-price-wrap');
+        if (wrap) {
+          const badge = document.createElement('span');
+          badge.className = 'mq-sticky-delta show';
+          badge.style.color = delta > 0 ? '#dc2626' : '#16a34a';
+          badge.textContent = (delta > 0 ? '+' : '−') + '$' + Math.abs(delta).toLocaleString();
+          wrap.appendChild(badge);
+          setTimeout(() => badge.remove(), 1300);
+        }
+      }
+    }
+    window._mqStickyLast = { low, high };
+  }
+  // Silently re-runs the same math Calculate uses, for whichever tab is
+  // currently being tracked — no lead popup, no scrolling, no saving
+  // anything, just fresh numbers.
+  function mqLiveRecalcSticky() {
+    const prefix = window._mqStickyPrefix;
+    if (!prefix || window._mqStickyDismissed) return;
+    try {
+      let low, high;
+      if (prefix === 'b') {
+        const cab = calcCabinet('b'), ct = calcCountertop('b');
+        low = cab.low + ct.low; high = cab.high + ct.high;
+      } else if (prefix === 'ct') {
+        const r = calcCountertop('ct');
+        low = r.low; high = r.high;
+      } else {
+        const r = calcCabinet('c');
+        low = r.low; high = r.high;
+      }
+      mqSetStickyPrice(low, high, true);
+    } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
+  }
+  let _mqStickyDebounce = null;
+  function mqScheduleLiveRecalc() {
+    if (!window._mqStickyPrefix || window._mqStickyDismissed) return;
+    clearTimeout(_mqStickyDebounce);
+    _mqStickyDebounce = setTimeout(mqLiveRecalcSticky, 250);
   }
 
   async function init() {
@@ -3783,6 +3967,12 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
+    mqSetupStickyBar();
+    // Delegated so it automatically covers every input/select/checkbox in
+    // the widget, including ones added later (surface cards, tall cabinet
+    // rows, etc.) — no need to individually wire each one.
+    container.addEventListener('input', mqScheduleLiveRecalc);
+    container.addEventListener('change', mqScheduleLiveRecalc);
 
     // ── First-visit tips popup ──
     // Replaces the old showroom nudge — this widget now has photos, per-project
