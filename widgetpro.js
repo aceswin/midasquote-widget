@@ -736,7 +736,7 @@
     return noneItem ? [noneItem, ...grouped] : grouped;
   }
 
-  function pickerRow(selectId, items, extraOnChangeAttr, category) {
+  function pickerRow(selectId, items, extraOnChangeAttr, category, startUnselected) {
     const hasAnyGroup = items.some(it => it.groupName);
     const groupNames = hasAnyGroup ? [...new Set(items.filter(it => it.groupName).map(it => it.groupName))] : [];
     const hasOtherBucket = hasAnyGroup && items.some(it => it.value !== 'none' && !it.groupName);
@@ -773,14 +773,14 @@
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
       const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
       const featuredBadgeHtml = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
-      const selectedClass = i===0 ? ' selected' : '';
-      const selectBtnLabel = i===0 ? '✓ Selected' : 'Select';
+      const selectedClass = (i===0 && !startUnselected) ? ' selected' : '';
+      const selectBtnLabel = (i===0 && !startUnselected) ? '✓ Selected' : 'Select';
       const roomsAttr = JSON.stringify(it.visibleRooms||[]).replace(/"/g,'&quot;');
       const groupNote = it.samePriceNote ? `<span class="mq-vpicker-group-note">✓ Same price as other ${(it.groupName||'').replace(/'/g,"\\'")} options</span>` : '';
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
       return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    return `${groupDropdown}<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
+    return `${groupDropdown}<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
   }
 
   window.mqUpdatePickerArrow = function(selectId) {
@@ -1514,7 +1514,7 @@
       <div class="mq-tab-content" id="mq-tab-countertops">
         ${PRICE_LEGEND_HTML}
         <div class="mq-sec">
-          <p class="mq-sec-title">Surfaces</p>
+          <p class="mq-sec-title">Countertop surfaces</p>
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
@@ -1562,7 +1562,7 @@
           </label>
           <div id="mq-b-cab-mat" style="display:block;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
-              ${pickerRow('mq-b-ct-mat-cab', ctMatItems(), null, 'countertop')}
+              ${pickerRow('mq-b-ct-mat-cab', ctMatItems(), null, 'countertop', true)}
               <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshCtAddons('mq-b-ct-mat-cab','mq-b-cab-edge','mq-b-cab-addons');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
             <div id="mq-b-cab-edge"></div>
             <div id="mq-b-cab-addons"></div>
@@ -1580,7 +1580,7 @@
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-top:8px">
-                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed
+                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed (sink, etc.)
               </label>
               <div id="mq-b-cab-cuts" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border-radius:6px"></div>
               <div style="font-size:14px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
@@ -1611,7 +1611,7 @@
             </div>
           </div>
         </div>
-        <div class="mq-sec"><p class="mq-sec-title" id="mq-b-ct-surfaces-title">Additional surfaces</p>
+        <div class="mq-sec"><p class="mq-sec-title" id="mq-b-ct-surfaces-title">Additional countertop surfaces</p>
           <div id="mq-b-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
         </div>
@@ -2083,7 +2083,7 @@
               if (visible && !firstVisibleChip) firstVisibleChip = chip;
               if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
             });
-            if (!anyVisibleSelected && firstVisibleChip) {
+            if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect) {
               const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
               const btn = firstVisibleChip.querySelector('.mq-vpicker-select-btn');
               if (selectId && btn) window.mqPickVisual(selectId, btn);
@@ -2421,7 +2421,7 @@
           useCabCbCt.checked = false;
           window.mqTogUseCab('b');
         }
-        if (surfTitle) surfTitle.textContent = cabActive ? 'Additional surfaces' : 'Surfaces';
+        if (surfTitle) surfTitle.textContent = cabActive ? 'Additional countertop surfaces' : 'Countertop surfaces';
         if (!cabActive && surfContainer && !surfContainer.children.length) {
           addSurfaceInternal('b', 'Kitchen run');
           surfContainer.dataset.autoAdded = 'true';
@@ -3276,12 +3276,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
           <select id="mqssi-${id}" style="width:auto;display:inline-block">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
         <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
-          ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
+          ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop', true)}
           <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
-        <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:auto;flex-shrink:0"/> Cutouts needed</label>
+        <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:auto;flex-shrink:0"/> Cutouts needed (sink, etc.)</label>
         <div id="mqscuts-${id}" style="display:none;margin-top:8px;margin-bottom:0.75rem;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Backsplash</label>
