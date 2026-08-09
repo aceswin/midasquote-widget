@@ -691,8 +691,10 @@
   function ctMatItems() {
     const entries = Object.entries(CT_MAT);
     return entries.length
-      ? sortBadgeAndGroupItems(entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, featured:m.featured||false, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[], groupName:m.groupName||'', groupOrder:m.groupOrder||0, groupDesc:m.groupDesc||''})))
-      : [{value:'lam', label:'Laminate', icon:'🪨'}];
+      ? sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
+          entries.map(([k,m])=>({value:k, label:m.label, photoUrl:m.photoUrl, featured:m.featured||false, icon:'🪨', price:(m.ps||0)+(m.pi||0), visibleRooms:m.visibleRooms||[], groupName:m.groupName||'', groupOrder:m.groupOrder||0, groupDesc:m.groupDesc||''}))
+        ))
+      : [{value:'none', label:'None', icon:'🚫'}, {value:'lam', label:'Laminate', icon:'🪨'}];
   }
 
   // ============================================================
@@ -1689,7 +1691,7 @@
           </label>
           <div id="mq-b-cab-mat" style="display:block;margin-top:0.75rem">
             <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">Countertop material</label>
-              ${pickerRow('mq-b-ct-mat-cab', ctMatItems(), null, 'countertop', true)}
+              ${pickerRow('mq-b-ct-mat-cab', ctMatItems(), null, 'countertop')}
               <select id="mq-b-ct-mat-cab" onchange="mqRefreshBsOpts('mq-b-ct-mat-cab','mq-b-cab-bs');mqRefreshCutoutOpts('mq-b-ct-mat-cab','mq-b-cab-cuts');mqRefreshCtAddons('mq-b-ct-mat-cab','mq-b-cab-edge','mq-b-cab-addons');mqRefreshBsFt('b')" style="display:none">${ctMatOpts()}</select></div>
             <div id="mq-b-cab-edge"></div>
             <div id="mq-b-cab-addons"></div>
@@ -3283,7 +3285,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const sqft  = linFt * (ctDepth / 12);
           const mat   = gv(matId);
           const si    = gv(ctSiId);
-          const m     = CT_MAT[mat] || Object.values(CT_MAT)[0];
+          const m     = mat === 'none' ? null : (CT_MAT[mat] || null);
           if (m) {
             const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
             const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
@@ -3317,8 +3319,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       Object.keys(surfs[prefix]).forEach(id=>{
         if(!document.getElementById('mqsc-'+id)) return;
         const mat=gv('mqsm-'+id);
+        if (mat === 'none') return; // customer explicitly chose no countertop for this surface
         const siOv=gv('mqssi-'+id), si=siOv==='inherit'?gv(ctSiId):(siOv||'supply');
-        const m=CT_MAT[mat]||Object.values(CT_MAT)[0];
+        const m=CT_MAT[mat]||null;
         if (!m) return;
         const w=gn('mqsw-'+id,0), d=gn('mqsd-'+id,ctDepth);
         const sqft=(w*(d||ctDepth))/144;
@@ -3460,7 +3463,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
           <select id="mqssi-${id}" style="width:auto;display:inline-block">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
         <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
-          ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop', true)}
+          ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
           <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
@@ -3525,6 +3528,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const matSel = document.getElementById(matSelectId);
       const bsSel  = document.getElementById(bsSelectId);
       if (!matSel || !bsSel) return;
+      if (matSel.value === 'none') { bsSel.innerHTML = '<option value="none">None</option>'; return; }
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       const prevVal = bsSel.value;
       bsSel.innerHTML = '<option value="none">None</option>' + bsOptsHtml(m);
@@ -3535,6 +3539,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const matSel = document.getElementById(matSelectId);
       const container = document.getElementById(cutsContainerId);
       if (!matSel || !container) return;
+      if (matSel.value === 'none') { container.innerHTML = ''; return; }
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       container.innerHTML = cutoutRowsHtml(m, `${cutsContainerId}-q`);
     };
@@ -3543,6 +3548,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const edgeEl = document.getElementById(edgeContainerId);
       const addonEl = document.getElementById(addonContainerId);
       if (!matSel) return;
+      if (matSel.value === 'none') { if (edgeEl) edgeEl.innerHTML = ''; if (addonEl) addonEl.innerHTML = ''; return; }
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       if (edgeEl) edgeEl.innerHTML = edgeSelectHtml(m, edgeContainerId);
       if (addonEl) addonEl.innerHTML = addonRowsHtml(m, `${addonContainerId}-a`);
