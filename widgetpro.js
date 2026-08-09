@@ -2120,7 +2120,7 @@
           scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
             const rowSelectId = row.id.replace(/^mq-vprow-/, '');
             const groupFilter = (window._mqGroupFilter||{})[rowSelectId];
-            let anyVisibleSelected=false, firstVisibleChip=null;
+            let anyVisibleSelected=false, firstVisibleChip=null, selectedHiddenByGroupOnly=false;
             row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
               let rooms=[];
               try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
@@ -2131,8 +2131,9 @@
               chip.style.display = visible ? '' : 'none';
               if (visible && !firstVisibleChip) firstVisibleChip = chip;
               if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
+              if (!visible && roomOk && !groupOk && chip.classList.contains('selected')) selectedHiddenByGroupOnly = true;
             });
-            if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect) {
+            if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect && !selectedHiddenByGroupOnly) {
               const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
               const btn = firstVisibleChip.querySelector('.mq-vpicker-select-btn');
               if (selectId && btn) window.mqPickVisual(selectId, btn);
