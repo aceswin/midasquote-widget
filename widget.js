@@ -1543,7 +1543,7 @@
       <div class="mq-sec" id="mq-${prefix}-specialty-sec" onclick="mqOpenIfClosed('${prefix}-specialty')">
         ${collapsibleHeader(`${prefix}-specialty`, 'Details & Selections')}
         <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
-          ⭐ Optional extras and upgrades — browse and add anything you'd like.
+          ⭐ Optional extras and upgrades — browse and add anything you'd like. Items are priced as either flat rate, per square foot, or per linear foot. Some items may be supply only, supply + install only, or offer a choice of either.
         </div>
         <div id="mq-${prefix}-specialty-body" style="display:none">
           <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
