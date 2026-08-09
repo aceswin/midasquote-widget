@@ -462,7 +462,7 @@
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-content{flex:1;min-width:0}
-      #mq-sticky-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+      #mq-sticky-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
       #mq-sticky-price-wrap{position:relative;display:inline-block}
       #mq-sticky-price{font-size:19px;font-weight:800;color:#fff;display:inline-block;transition:color 0.3s;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
       #mq-sticky-price.pulse{animation:mqPricePulse 0.6s ease}
@@ -887,16 +887,6 @@
     const boxBorderColor = window._mqBoxBorder || '#93c5fd';
     const boxBgColor = window._mqBoxBg || '#eff6ff';
     const boxTextColor = window._mqBoxText || '#1e40af';
-    const groupDropdown = hasAnyGroup ? `
-      <div style="margin-bottom:10px;background:${boxBgColor};border:1.5px solid ${boxBorderColor};border-radius:10px;padding:12px 14px">
-        <label style="font-size:14px;font-weight:700;color:${boxTextColor};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
-        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
-          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
-          ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
-        </select>
-        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${boxTextColor};margin-top:8px">${countNote(groupNames[0])}</div>
-        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:4px 0 0;line-height:1.5">${groupDescOf(groupNames[0])}</div>
-      </div>` : '';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
@@ -915,7 +905,22 @@
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
       return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    return `${groupDropdown}<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
+    const vpickerWrap = `<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
+    if (!hasAnyGroup) return vpickerWrap;
+    // Trying items nested inside the same collection box, rather than as a
+    // separate block below it — reads as one unified "pick your style"
+    // unit instead of two disconnected pieces.
+    return `
+      <div style="margin-bottom:10px;background:${boxBgColor};border:1.5px solid ${boxBorderColor};border-radius:10px;padding:12px 14px">
+        <label style="font-size:14px;font-weight:700;color:${boxTextColor};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
+          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
+          ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
+        </select>
+        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${boxTextColor};margin-top:8px">${countNote(groupNames[0])}</div>
+        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:4px 0 10px;line-height:1.5">${groupDescOf(groupNames[0])}</div>
+        ${vpickerWrap}
+      </div>`;
   }
 
   // Shows a "more to scroll" arrow over the right edge of a picker row
@@ -1442,11 +1447,11 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" onclick="this.select()" style="width:52px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:52px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
@@ -1966,9 +1971,23 @@
     }
     function cutoutRowsHtml(m, idPrefix) {
       return cutoutOptionsFor(m).map((o,i)=>
-        `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="font-size:14px;color:#4b5563;min-width:110px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label><input type="number" id="${idPrefix}-${i}" value="0" min="0" max="10" style="width:55px"/></div>`
+        `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <label style="font-size:14px;color:#4b5563;min-width:110px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label>
+          <div class="mq-qty-ctrl">
+            <button class="mq-qty-btn" type="button" onclick="mqAdjCutoutQty('${idPrefix}',${i},-1)">−</button>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="${idPrefix}-${i}" value="0" style="width:36px;text-align:center;font-size:14px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" onclick="this.select()"/>
+            <button class="mq-qty-btn" type="button" onclick="mqAdjCutoutQty('${idPrefix}',${i},1)">+</button>
+          </div>
+        </div>`
       ).join('');
     }
+    window.mqAdjCutoutQty = function(idPrefix, i, delta) {
+      const input = document.getElementById(`${idPrefix}-${i}`);
+      if (!input) return;
+      const next = Math.max(0, Math.min(10, (parseInt(input.value,10)||0) + delta));
+      input.value = next;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
     // Edge profile — single-select, defaults to a $0 "Standard edge" when a
     // material has no edge options configured (or none at all), so this is
     // fully invisible/no-op for any shop that hasn't touched the feature.
@@ -2242,7 +2261,7 @@
           scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
             const rowSelectId = row.id.replace(/^mq-vprow-/, '');
             const groupFilter = (window._mqGroupFilter||{})[rowSelectId];
-            let anyVisibleSelected=false, firstVisibleChip=null;
+            let anyVisibleSelected=false, firstVisibleChip=null, selectedHiddenByGroupOnly=false;
             row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
               let rooms=[];
               try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
@@ -2253,8 +2272,13 @@
               chip.style.display = visible ? '' : 'none';
               if (visible && !firstVisibleChip) firstVisibleChip = chip;
               if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
+              // The actual selection should persist across a collection
+              // switch even though it's momentarily out of view — only a
+              // room change (a genuinely unavailable item) should force a
+              // new pick, never just browsing a different group.
+              if (!visible && roomOk && !groupOk && chip.classList.contains('selected')) selectedHiddenByGroupOnly = true;
             });
-            if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect) {
+            if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect && !selectedHiddenByGroupOnly) {
               const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
               const btn = firstVisibleChip.querySelector('.mq-vpicker-select-btn');
               if (selectId && btn) window.mqPickVisual(selectId, btn);
@@ -3594,6 +3618,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (edgeEl) edgeEl.innerHTML = edgeSelectHtml(m, edgeContainerId);
       if (addonEl) addonEl.innerHTML = addonRowsHtml(m, `${addonContainerId}-a`);
       window.mqUpdateAllPickerArrows();
+    };
+    window.mqAdjLinFt=(prefix, which, delta)=>{
+      const input = document.getElementById(`mq-${prefix}-${which}ft`);
+      if (!input) return;
+      const next = Math.max(0, Math.min(60, (parseFloat(input.value)||0) + delta));
+      input.value = next;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     };
     window.mqRefreshBsFt=(prefix)=>{
       // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
