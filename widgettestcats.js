@@ -1822,6 +1822,15 @@
   // ============================================================
   function wireWidget(data) {
     const { shop, pricing, specs, li, hasDynamic } = data;
+    // Exposed globally so the sticky estimate bar (which lives outside this
+    // closure — wireWidget runs fresh on every render/new estimate) can call
+    // the exact same pure calculation functions Calculate itself uses, for
+    // live updates as the customer tweaks anything. Safe to reference here
+    // even though calcCabinet/calcCountertop are defined further down in
+    // this function's body — function declarations are fully hoisted
+    // within their enclosing scope, so they're already callable by this point.
+    window._mqCalcCabinet = calcCabinet;
+    window._mqCalcCountertop = calcCountertop;
 
     const drawerConfigNames = [...new Set(
       li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
@@ -3888,26 +3897,24 @@ window.mqTogDrawerConfig=(prefix)=>{
   function mqLiveRecalcSticky() {
     const prefix = window._mqStickyPrefix;
     if (!prefix || window._mqStickyDismissed) return;
-    console.log('[MQ sticky] recalculating for prefix:', prefix);
+    if (!window._mqCalcCabinet || !window._mqCalcCountertop) return; // widget hasn't finished wiring yet
     try {
       let low, high;
       if (prefix === 'b') {
-        const cab = calcCabinet('b'), ct = calcCountertop('b');
+        const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
         low = cab.low + ct.low; high = cab.high + ct.high;
       } else if (prefix === 'ct') {
-        const r = calcCountertop('ct');
+        const r = window._mqCalcCountertop('ct');
         low = r.low; high = r.high;
       } else {
-        const r = calcCabinet('c');
+        const r = window._mqCalcCabinet('c');
         low = r.low; high = r.high;
       }
-      console.log('[MQ sticky] new range:', low, high, 'previous:', window._mqStickyLast);
       mqSetStickyPrice(low, high, true);
-    } catch (e) { console.error('[MQ sticky] live recalc threw:', e); }
+    } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
   }
   let _mqStickyDebounce = null;
-  function mqScheduleLiveRecalc(e) {
-    console.log('[MQ sticky] input/change event received from:', e && e.target && e.target.id, '| tracking prefix:', window._mqStickyPrefix, '| dismissed:', window._mqStickyDismissed);
+  function mqScheduleLiveRecalc() {
     if (!window._mqStickyPrefix || window._mqStickyDismissed) return;
     clearTimeout(_mqStickyDebounce);
     _mqStickyDebounce = setTimeout(mqLiveRecalcSticky, 250);
