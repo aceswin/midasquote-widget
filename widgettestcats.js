@@ -457,25 +457,27 @@
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
          longer page. */
-      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -6px 24px rgba(0,0,0,0.14);padding:10px 14px 12px;display:none;align-items:center;gap:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;align-items:center;gap:10px;flex-wrap:wrap;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
       #mq-sticky-bar.show{display:flex}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
-      #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#374151;color:#fff;border:2px solid #fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.25);padding:0}
+      #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-content{flex:1;min-width:0}
-      #mq-sticky-label{font-size:10px;font-weight:600;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+      #mq-sticky-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
       #mq-sticky-price-wrap{position:relative;display:inline-block}
-      #mq-sticky-price{font-size:18px;font-weight:800;color:#111;display:inline-block;transition:color 0.3s}
+      #mq-sticky-price{font-size:19px;font-weight:800;color:#fff;display:inline-block;transition:color 0.3s;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
       #mq-sticky-price.pulse{animation:mqPricePulse 0.6s ease}
       @keyframes mqPricePulse{0%{transform:scale(1)}35%{transform:scale(1.14)}100%{transform:scale(1)}}
       .mq-sticky-delta{position:absolute;left:50%;top:-4px;transform:translateX(-50%);font-size:12px;font-weight:800;white-space:nowrap;opacity:0;pointer-events:none}
       .mq-sticky-delta.show{animation:mqDeltaFloat 1.2s ease forwards}
       @keyframes mqDeltaFloat{0%{opacity:0;transform:translate(-50%,4px) scale(0.8)}20%{opacity:1;transform:translate(-50%,-6px) scale(1.05)}100%{opacity:0;transform:translate(-50%,-30px) scale(1)}}
       #mq-sticky-ctas{display:flex;gap:6px;flex-shrink:0}
-      #mq-sticky-ctas button{font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;white-space:nowrap;cursor:pointer;font-family:inherit;border:1px solid #d1d5db;background:#fff;color:#111;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
-      #mq-sticky-ctas button.mq-pri{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+      #mq-sticky-ctas button{font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;white-space:nowrap;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
+      #mq-sticky-ctas button.mq-pri{border-color:transparent;font-weight:700}
       @media (max-width:420px){
-        #mq-sticky-label{display:none}
-        #mq-sticky-ctas button{padding:9px 8px;font-size:11px}
+        #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
+        #mq-sticky-content{flex:1 1 100%}
+        #mq-sticky-ctas{flex:1 1 100%;margin-top:4px}
+        #mq-sticky-ctas button{flex:1;padding:9px 8px;font-size:11px}
       }
       #midasquote-widget .mq-vpicker-badge-1{background:#dcfce7;color:#166534}
       #midasquote-widget .mq-vpicker-badge-2{background:#fef3c7;color:#92400e}
@@ -1441,11 +1443,11 @@
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
             <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Not sure? Tap the calculator to measure</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
             <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Not sure? Tap the calculator to measure</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
@@ -3831,8 +3833,10 @@ window.mqTogDrawerConfig=(prefix)=>{
   window._mqStickyLast = null;
   function mqSetupStickyBar() {
     if (document.getElementById('mq-sticky-bar')) return;
+    const accent = window._mqFocalColor || '#fbbf24';
     const bar = document.createElement('div');
     bar.id = 'mq-sticky-bar';
+    bar.style.borderTop = `2px solid ${accent}`;
     bar.innerHTML = `
       <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
       <div id="mq-sticky-content">
@@ -3841,7 +3845,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       </div>
       <div id="mq-sticky-ctas">
         ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
-        <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+        <button class="mq-pri" style="background:${accent};color:#fff" onclick="mqShowConsultModal()">Book a consultation ↗</button>
       </div>`;
     document.body.appendChild(bar);
   }
@@ -3884,7 +3888,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (wrap) {
           const badge = document.createElement('span');
           badge.className = 'mq-sticky-delta show';
-          badge.style.color = delta > 0 ? '#dc2626' : '#16a34a';
+          badge.style.color = delta > 0 ? '#16a34a' : '#dc2626';
           badge.textContent = (delta > 0 ? '+' : '−') + '$' + Math.abs(delta).toLocaleString();
           wrap.appendChild(badge);
           setTimeout(() => badge.remove(), 1300);
