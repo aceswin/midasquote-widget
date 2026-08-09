@@ -3423,7 +3423,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         renderResult('mq-c-res-range','mq-c-line-items',r);
         window.mqShowStickyBar('c', r.low, r.high);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-c-result'));window.mqShowStartOverPanel();
+        document.getElementById('mq-c-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-c-result'));
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel);
       });
@@ -3443,7 +3443,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
           window.mqShowStickyBar('ct', r.low, r.high);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-ct-result'));window.mqShowStartOverPanel();
+          document.getElementById('mq-ct-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-ct-result'));
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines);
         },900);
@@ -3472,7 +3472,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
           window.mqShowStickyBar('b', tl, th);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-b-result'));window.mqShowStartOverPanel();
+          document.getElementById('mq-b-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-b-result'));
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel);
         },1200);
@@ -3742,27 +3742,6 @@ window.mqTogDrawerConfig=(prefix)=>{
   // field if this tried to reset values one at a time by hand.
   // Standalone panel below the widget (not inside it, so it survives
   // mqStartNewEstimate's full rebuild) — deliberately much more visible than
-  // a small footer link: dark card, clearly separated, matching the same
-  // "darkened" visual language used for done/upcoming steps.
-  function mqEnsureStartOverPanel() {
-    let panel = document.getElementById('mq-start-over-panel');
-    if (panel) return panel;
-    const container = document.getElementById('midasquote-widget');
-    if (!container) return null;
-    panel = document.createElement('div');
-    panel.id = 'mq-start-over-panel';
-    panel.style.cssText = 'display:none;max-width:900px;margin:0 auto 24px;background:#111827;border-radius:12px;padding:24px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.25)';
-    panel.innerHTML = `
-      <div style="color:#e5e7eb;font-size:16px;margin-bottom:14px">Want to look at a different project?</div>
-      <button type="button" onclick="mqStartNewEstimate()" style="background:#2563eb;color:#fff;border:none;border-radius:10px;padding:14px 30px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">🔄 Start a New Estimate</button>`;
-    container.insertAdjacentElement('afterend', panel);
-    return panel;
-  }
-  window.mqShowStartOverPanel = function() {
-    const panel = mqEnsureStartOverPanel();
-    if (panel) panel.style.display = 'block';
-  };
-
   window.mqStartNewEstimate = function() {
     const data = window._mqFullData;
     const container = document.getElementById('midasquote-widget');
@@ -3780,8 +3759,6 @@ window.mqTogDrawerConfig=(prefix)=>{
     window._mqStickyLast = null;
     const stickyBar = document.getElementById('mq-sticky-bar');
     if (stickyBar) stickyBar.classList.remove('show');
-    const panel = document.getElementById('mq-start-over-panel');
-    if (panel) panel.style.display = 'none';
     window.mqScrollWithOffset(container);
   };
 
