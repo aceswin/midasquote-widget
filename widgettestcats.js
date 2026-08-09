@@ -3888,6 +3888,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   function mqLiveRecalcSticky() {
     const prefix = window._mqStickyPrefix;
     if (!prefix || window._mqStickyDismissed) return;
+    console.log('[MQ sticky] recalculating for prefix:', prefix);
     try {
       let low, high;
       if (prefix === 'b') {
@@ -3900,11 +3901,13 @@ window.mqTogDrawerConfig=(prefix)=>{
         const r = calcCabinet('c');
         low = r.low; high = r.high;
       }
+      console.log('[MQ sticky] new range:', low, high, 'previous:', window._mqStickyLast);
       mqSetStickyPrice(low, high, true);
-    } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
+    } catch (e) { console.error('[MQ sticky] live recalc threw:', e); }
   }
   let _mqStickyDebounce = null;
-  function mqScheduleLiveRecalc() {
+  function mqScheduleLiveRecalc(e) {
+    console.log('[MQ sticky] input/change event received from:', e && e.target && e.target.id, '| tracking prefix:', window._mqStickyPrefix, '| dismissed:', window._mqStickyDismissed);
     if (!window._mqStickyPrefix || window._mqStickyDismissed) return;
     clearTimeout(_mqStickyDebounce);
     _mqStickyDebounce = setTimeout(mqLiveRecalcSticky, 250);
