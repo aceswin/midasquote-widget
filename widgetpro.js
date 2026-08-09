@@ -359,6 +359,28 @@
       #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
       #midasquote-widget .mq-vpicker-featured-badge{position:absolute;top:-6px;left:-6px;font-size:8px;font-weight:700;padding:2px 5px;border-radius:8px;background:#f59e0b;color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#0f2a52,#1e3a5f);border-top:2px solid #fbbf24;box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;align-items:center;gap:10px;flex-wrap:wrap;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar.show{display:flex}
+      @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+      #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#0f2a52;border:2px solid #0f2a52;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
+      #mq-sticky-content{flex:1;min-width:0}
+      #mq-sticky-label{font-size:10px;font-weight:600;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+      #mq-sticky-price-wrap{position:relative;display:inline-block}
+      #mq-sticky-price{font-size:19px;font-weight:800;color:#fff;display:inline-block;transition:color 0.3s;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
+      #mq-sticky-price.pulse{animation:mqPricePulse 0.6s ease}
+      @keyframes mqPricePulse{0%{transform:scale(1)}35%{transform:scale(1.14)}100%{transform:scale(1)}}
+      .mq-sticky-delta{position:absolute;left:50%;top:-4px;transform:translateX(-50%);font-size:12px;font-weight:800;white-space:nowrap;opacity:0;pointer-events:none}
+      .mq-sticky-delta.show{animation:mqDeltaFloat 1.2s ease forwards}
+      @keyframes mqDeltaFloat{0%{opacity:0;transform:translate(-50%,4px) scale(0.8)}20%{opacity:1;transform:translate(-50%,-6px) scale(1.05)}100%{opacity:0;transform:translate(-50%,-30px) scale(1)}}
+      #mq-sticky-ctas{display:flex;gap:6px;flex-shrink:0}
+      #mq-sticky-ctas button{font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;white-space:nowrap;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
+      #mq-sticky-ctas button.mq-pri{background:#fbbf24;color:#0f2a52;border-color:transparent;font-weight:700}
+      @media (max-width:420px){
+        #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
+        #mq-sticky-content{flex:1 1 100%}
+        #mq-sticky-ctas{flex:1 1 100%;margin-top:4px}
+        #mq-sticky-ctas button{flex:1;padding:9px 8px;font-size:11px}
+      }
       #midasquote-widget .mq-vpicker-badge-1{background:#dcfce7;color:#166534}
       #midasquote-widget .mq-vpicker-badge-2{background:#fef3c7;color:#92400e}
       #midasquote-widget .mq-vpicker-badge-3{background:linear-gradient(135deg,#f0d488,#d4af37);color:#1a1a1a;border:1px solid #b8901f}
@@ -1253,11 +1275,11 @@
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
             <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Not sure? Tap the calculator to measure</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
             <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Not sure? Tap the calculator to measure</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
@@ -1450,6 +1472,7 @@
     const askQuestionBtn = (financingOn && financingLink)
       ? `<button onclick="window.open('${financingLink}','_blank')">Get pre-approved ↗</button>`
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
+    window._mqAskQuestionBtn = askQuestionBtn;
 
     return `
       <div style="background:linear-gradient(135deg,#0f2a52,#1e3a5f);padding:16px 20px;text-align:center">
@@ -1684,6 +1707,15 @@
   // ============================================================
   function wireWidget(data) {
     const { shop, pricing, specs, li, hasDynamic } = data;
+    // Exposed globally so the sticky estimate bar (which lives outside this
+    // closure — wireWidget runs fresh on every render/new estimate) can call
+    // the exact same pure calculation functions Calculate itself uses, for
+    // live updates as the customer tweaks anything. Safe to reference here
+    // even though calcCabinet/calcCountertop are defined further down in
+    // this function's body — function declarations are fully hoisted
+    // within their enclosing scope, so they're already callable by this point.
+    window._mqCalcCabinet = calcCabinet;
+    window._mqCalcCountertop = calcCountertop;
 
     const drawerConfigNames = [...new Set(
       li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
@@ -1834,6 +1866,7 @@
       const input = document.getElementById(`${idPrefix}-qty-${i}`);
       if (!input) return;
       input.value = Math.max(1, (parseInt(input.value,10)||1) + delta);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     };
 
     // Shared by both countertop paths — see widget.js for the full
@@ -2659,7 +2692,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
       specQty[prefix][i]=next;
       const el=document.getElementById(`mq-qty-${prefix}-${i}`);
-      if(el) el.value=specQty[prefix][i];
+      if(el) { el.value=specQty[prefix][i]; el.dispatchEvent(new Event('input', { bubbles: true })); }
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',specQty[prefix][i]>0);
     };
     window.mqSetQty=(prefix,i,val)=>{
@@ -2688,7 +2721,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (allowDecimal) next = Math.round(next * 10) / 10;
       installQty[prefix][i]=next;
       const el=document.getElementById(`mq-installqty-${prefix}-${i}`);
-      if(el) el.value=installQty[prefix][i];
+      if(el) { el.value=installQty[prefix][i]; el.dispatchEvent(new Event('input', { bubbles: true })); }
     };
     window.mqSetInstallQty=(prefix,i,val)=>{
       const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt);
@@ -2751,6 +2784,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       tallCabs[prefix][id]=Math.max(0,(tallCabs[prefix][id]||0)+d);
       const el=document.getElementById(`mq-tc-qty-${id}`);
       if(el) el.textContent=tallCabs[prefix][id];
+      mqScheduleLiveRecalc();
     };
     // Picking "None" zeroes the quantity out, same as before. Picking (or
     // switching to a different) real type auto-bumps quantity to 1 if it's
@@ -3054,7 +3088,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
 
-      const low=Math.round(total*(window._mqRangeLow||0.95)/100)*100, high=Math.round(total*(window._mqRangeHigh||1.20)/100)*100;
+      const low=Math.round(total*(window._mqRangeLow||0.95)/10)*10, high=Math.round(total*(window._mqRangeHigh||1.20)/10)*10;
       const roomLabel = roomObj ? roomObj.name : 'Cabinet';
       return {lines,sub:Math.round(total),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel};
     }
@@ -3161,7 +3195,7 @@ window.mqTogDrawerConfig=(prefix)=>{
 
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
       const total=sub;
-      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/100)*100,high:Math.round(total*(window._mqRangeHigh||1.20)/100)*100};
+      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10};
     }
 
     function renderResult(rangeEl,listEl,result){
@@ -3195,8 +3229,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r);
         window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
+        window.mqShowStickyBar('c', r.low, r.high);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-c-result'));window.mqShowStartOverPanel();
+        document.getElementById('mq-c-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-c-result'));
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.total);
       });
@@ -3215,8 +3250,9 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
           window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
+          window.mqShowStickyBar('ct', r.low, r.high);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-ct-result'));window.mqShowStartOverPanel();
+          document.getElementById('mq-ct-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-ct-result'));
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines,r.total);
         },900);
@@ -3246,8 +3282,9 @@ window.mqTogDrawerConfig=(prefix)=>{
           const realTotalEl = document.getElementById('mq-b-grand-real');
           if (realTotalEl) realTotalEl.textContent = fmt(cab.total + ct.total);
           window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: cab.total + ct.total } });
+          window.mqShowStickyBar('b', tl, th);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-b-result'));window.mqShowStartOverPanel();
+          document.getElementById('mq-b-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-b-result'));
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.total+ct.total);
         },1200);
@@ -3510,30 +3547,6 @@ window.mqTogDrawerConfig=(prefix)=>{
   // network refetch needed. Reuses the exact same render sequence as the
   // initial page load, so it's guaranteed to reset everything (every input,
   // the guided step flow, results panels) rather than risk missing some
-  // field if this tried to reset values one at a time by hand.
-  // Standalone panel below the widget (not inside it, so it survives
-  // mqStartNewEstimate's full rebuild) — deliberately much more visible than
-  // a small footer link: dark card, clearly separated, matching the same
-  // "darkened" visual language used for done/upcoming steps.
-  function mqEnsureStartOverPanel() {
-    let panel = document.getElementById('mq-start-over-panel');
-    if (panel) return panel;
-    const container = document.getElementById('midasquote-widget');
-    if (!container) return null;
-    panel = document.createElement('div');
-    panel.id = 'mq-start-over-panel';
-    panel.style.cssText = 'display:none;max-width:900px;margin:0 auto 24px;background:#111827;border-radius:12px;padding:24px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.25)';
-    panel.innerHTML = `
-      <div style="color:#e5e7eb;font-size:16px;margin-bottom:14px">Want to look at a different project?</div>
-      <button type="button" onclick="mqStartNewEstimate()" style="background:#2563eb;color:#fff;border:none;border-radius:10px;padding:14px 30px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">🔄 Start a New Estimate</button>`;
-    container.insertAdjacentElement('afterend', panel);
-    return panel;
-  }
-  window.mqShowStartOverPanel = function() {
-    const panel = mqEnsureStartOverPanel();
-    if (panel) panel.style.display = 'block';
-  };
-
   window.mqStartNewEstimate = function() {
     const data = window._mqFullData;
     const container = document.getElementById('midasquote-widget');
@@ -3544,8 +3557,13 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
-    const panel = document.getElementById('mq-start-over-panel');
-    if (panel) panel.style.display = 'none';
+    // Fresh estimate — nothing calculated yet, so hide any leftover sticky
+    // bar from before and let it re-earn its spot once they Calculate again.
+    window._mqStickyPrefix = null;
+    window._mqStickyDismissed = false;
+    window._mqStickyLast = null;
+    const stickyBar = document.getElementById('mq-sticky-bar');
+    if (stickyBar) stickyBar.classList.remove('show');
     window.mqScrollWithOffset(container);
   };
 
@@ -3584,6 +3602,108 @@ window.mqTogDrawerConfig=(prefix)=>{
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => mqBumpMobileFontSizes(document.body), 200);
     });
+  }
+
+  // ── Sticky estimate bar ──
+  // Appears the first time a real Calculate completes (lead capture and
+  // all — this never re-triggers that, it only reads the already-computed
+  // numbers). From then on, tracks live as the customer tweaks anything,
+  // by calling the same pure calcCabinet/calcCountertop functions Calculate
+  // itself uses — no popups, no re-saving a lead, just silent re-math.
+  window._mqStickyPrefix = null;
+  window._mqStickyDismissed = false;
+  window._mqStickyLast = null;
+  function mqSetupStickyBar() {
+    if (document.getElementById('mq-sticky-bar')) return;
+    const bar = document.createElement('div');
+    bar.id = 'mq-sticky-bar';
+    bar.innerHTML = `
+      <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
+      <div id="mq-sticky-content">
+        <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+        <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+      </div>
+      <div id="mq-sticky-ctas">
+        ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
+        <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+      </div>`;
+    document.body.appendChild(bar);
+  }
+  window.mqCloseStickyBar = function() {
+    window._mqStickyDismissed = true;
+    const bar = document.getElementById('mq-sticky-bar');
+    if (bar) bar.classList.remove('show');
+  };
+  // Called right after a real Calculate finishes for any tab — reveals the
+  // bar (unless the customer already dismissed it this session) and marks
+  // that tab as the one live updates should keep tracking.
+  window.mqShowStickyBar = function(prefix, low, high) {
+    window._mqStickyPrefix = prefix;
+    mqSetupStickyBar();
+    mqSetStickyPrice(low, high, false);
+    if (!window._mqStickyDismissed) {
+      const bar = document.getElementById('mq-sticky-bar');
+      if (bar) bar.classList.add('show');
+    }
+  };
+  function fmtRange(low, high) {
+    const f = n => '$' + Math.round(n).toLocaleString();
+    return `${f(low)} – ${f(high)}`;
+  }
+  // animate=true is the "something fun happens" part — a quick pulse on the
+  // number plus a floating +/-$ delta, so a customer actually notices their
+  // tweak moved the price instead of the number just silently changing.
+  function mqSetStickyPrice(low, high, animate) {
+    const el = document.getElementById('mq-sticky-price');
+    if (!el) return;
+    const prev = window._mqStickyLast;
+    el.textContent = fmtRange(low, high);
+    if (animate && prev) {
+      const prevMid = (prev.low + prev.high) / 2;
+      const newMid = (low + high) / 2;
+      const delta = Math.round(newMid - prevMid);
+      if (Math.abs(delta) >= 1) {
+        el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+        const wrap = document.getElementById('mq-sticky-price-wrap');
+        if (wrap) {
+          const badge = document.createElement('span');
+          badge.className = 'mq-sticky-delta show';
+          badge.style.color = delta > 0 ? '#16a34a' : '#dc2626';
+          badge.textContent = (delta > 0 ? '+' : '−') + '$' + Math.abs(delta).toLocaleString();
+          wrap.appendChild(badge);
+          setTimeout(() => badge.remove(), 1300);
+        }
+      }
+    }
+    window._mqStickyLast = { low, high };
+  }
+  // Silently re-runs the same math Calculate uses, for whichever tab is
+  // currently being tracked — no lead popup, no scrolling, no saving
+  // anything, just fresh numbers.
+  function mqLiveRecalcSticky() {
+    const prefix = window._mqStickyPrefix;
+    if (!prefix || window._mqStickyDismissed) return;
+    if (!window._mqCalcCabinet || !window._mqCalcCountertop) return; // widget hasn't finished wiring yet
+    try {
+      let low, high;
+      if (prefix === 'b') {
+        const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
+        low = cab.low + ct.low; high = cab.high + ct.high;
+      } else if (prefix === 'ct') {
+        const r = window._mqCalcCountertop('ct');
+        low = r.low; high = r.high;
+      } else {
+        const r = window._mqCalcCabinet('c');
+        low = r.low; high = r.high;
+      }
+      mqSetStickyPrice(low, high, true);
+    } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
+  }
+  let _mqStickyDebounce = null;
+  function mqScheduleLiveRecalc() {
+    if (!window._mqStickyPrefix || window._mqStickyDismissed) return;
+    clearTimeout(_mqStickyDebounce);
+    _mqStickyDebounce = setTimeout(mqLiveRecalcSticky, 250);
   }
 
   async function init() {
@@ -3640,6 +3760,12 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
+    mqSetupStickyBar();
+    // Delegated so it automatically covers every input/select/checkbox in
+    // the widget, including ones added later (surface cards, tall cabinet
+    // rows, etc.) — no need to individually wire each one.
+    container.addEventListener('input', mqScheduleLiveRecalc);
+    container.addEventListener('change', mqScheduleLiveRecalc);
 
     // ── Pro Quoter intro popup ──
     // Replaces the customer-facing "first time here" tips with something
