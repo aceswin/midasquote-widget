@@ -1242,6 +1242,8 @@
             <p class="mq-hint" style="margin-bottom:8px;color:#cbd5e1">${hasInstall ? "Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install)." : 'This shop offers supply only — installation is not included.'}</p>
             <select id="mq-${prefix}-si" onchange="mqSyncCtSi('${prefix}')">${hasInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
         </div>
+        <div class="mq-field" style="margin-top:0.75rem"><label class="mq-label">Remove existing cabinets?</label>
+          <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
       </div>
       <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec">
         <p class="mq-sec-title">Cabinet measurements</p>
@@ -1399,22 +1401,6 @@
         </div>
         <div id="mq-${prefix}-specialty-body" style="display:none">
           <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
-        </div>
-      </div>
-      ${prefix === 'b' ? '' : removalSectionHTML(prefix)}`;
-  }
-
-  // Pulled out on its own so it can be placed at the true end of each
-  // tab's flow — after Countertops for the Both tab specifically, which
-  // sits outside cabinetForm's own template (see mq-tab-both below), so it
-  // can't just live at the end of this function for every prefix.
-  function removalSectionHTML(prefix) {
-    return `
-      <div class="mq-sec" id="mq-${prefix}-removal-sec">
-        <p class="mq-sec-title">Removal</p>
-        <div class="mq-grid2">
-          <div class="mq-field"><label class="mq-label">Remove existing cabinets?</label>
-            <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
         </div>
       </div>`;
   }
@@ -1629,7 +1615,6 @@
           <div id="mq-b-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
         </div>
-        ${removalSectionHTML('b')}
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
         <div class="mq-loading" id="mq-b-loading">Building your full project estimate...</div>
@@ -2360,9 +2345,6 @@
       // Project type/Measuring visible.
       const siField = document.getElementById(`mq-${prefix}-si-field`);
       if (siField) siField.style.display = cabActive ? '' : 'none';
-      // Removal only makes sense if there's a cabinet being priced at all
-      const removalSec = document.getElementById(`mq-${prefix}-removal-sec`);
-      if (removalSec) removalSec.style.display = cabActive ? '' : 'none';
 
       const drawSec = document.getElementById(`mq-${prefix}-drawers-sec`);
       if (drawSec) drawSec.style.display = rowHasReal(`mq-${prefix}-drawer-config`) ? '' : 'none';
