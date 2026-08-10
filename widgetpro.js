@@ -1535,12 +1535,10 @@
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
-            <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           <div class="mq-cta-row">
             <button class="mq-pri" onclick="mqOpenProposalModal('c')">📄 Create proposal</button>
           </div>
-          ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -1568,12 +1566,10 @@
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
             <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
-            <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
           <div class="mq-cta-row">
             <button class="mq-pri" onclick="mqOpenProposalModal('ct')">📄 Create proposal</button>
           </div>
-          ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -1672,14 +1668,9 @@
           <div class="mq-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
-          <div class="mq-cta-row" style="margin-top:1rem">
-            ${askQuestionBtn}
-            <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
-          </div>
           <div class="mq-cta-row">
             <button class="mq-pri" onclick="mqOpenProposalModal('b')">📄 Create proposal</button>
           </div>
-          ${financingHTML}
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -3237,6 +3228,61 @@ window.mqTogDrawerConfig=(prefix)=>{
         ul.appendChild(li);
       });
     }
+    // Refreshes the full results breakdown for whichever tab is currently
+    // showing one — reuses the exact same calc + render logic Calculate
+    // itself uses, just skipping the lead popup/loading spinner/scroll.
+    // Only touches a tab's results panel if it's actually visible, and
+    // returns the new range so the sticky bar can stay in sync off the
+    // same single calculation pass rather than computing everything twice.
+    window._mqRefreshResultsPanel = function(prefix) {
+      if (prefix === 'c') {
+        const panel = document.getElementById('mq-c-result');
+        if (!panel || !panel.classList.contains('show')) return null;
+        const r = calcCabinet('c');
+        const titleEl = document.getElementById('mq-c-res-title');
+        if (titleEl) titleEl.textContent = r.roomLabel + ' cabinet estimate';
+        const subEl = document.getElementById('mq-c-res-sub');
+        if (subEl) subEl.textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
+        renderResult('mq-c-res-range','mq-c-line-items', r);
+        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
+        return { low: r.low, high: r.high };
+      }
+      if (prefix === 'ct') {
+        const panel = document.getElementById('mq-ct-result');
+        if (!panel || !panel.classList.contains('show')) return null;
+        const r = calcCountertop('ct');
+        const active = Object.keys(surfs['ct']).filter(id => document.getElementById('mqsc-'+id)).length;
+        const subEl = document.getElementById('mq-ct-res-sub');
+        if (subEl) subEl.textContent = `${active} surface(s)`;
+        renderResult('mq-ct-res-range','mq-ct-line-items', r);
+        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
+        return { low: r.low, high: r.high };
+      }
+      if (prefix === 'b') {
+        const panel = document.getElementById('mq-b-result');
+        if (!panel || !panel.classList.contains('show')) return null;
+        const cab = calcCabinet('b'), ct = calcCountertop('b');
+        const cabRows = document.getElementById('mq-b-cab-rows');
+        if (cabRows) {
+          cabRows.innerHTML = '';
+          [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span><span style="float:right;font-weight:600;color:#166534">${fmt(l.cost)}</span>`;cabRows.appendChild(d);});
+        }
+        const ctRows = document.getElementById('mq-b-ct-rows');
+        if (ctRows) {
+          ctRows.innerHTML = '';
+          [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span><span style="float:right;font-weight:600;color:#166534">${fmt(l.cost)}</span>`;ctRows.appendChild(d);});
+          if (!ctRows.children.length) { const d=document.createElement('div'); d.className='mq-combined-row'; d.innerHTML=`<span class="mq-clbl">None selected</span>`; ctRows.appendChild(d); }
+        }
+        const tl = cab.low+ct.low, th = cab.high+ct.high;
+        const grandEl = document.getElementById('mq-b-grand');
+        if (grandEl) grandEl.textContent = fmt(tl)+' – '+fmt(th);
+        const realTotalEl = document.getElementById('mq-b-grand-real');
+        if (realTotalEl) realTotalEl.textContent = fmt(cab.total + ct.total);
+        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: cab.total + ct.total } });
+        return { low: tl, high: th };
+      }
+      return null;
+    };
 
     window.mqCalcCabinets=()=>{
       if (!mqValidateInstallQty('c')) return;
@@ -3746,20 +3792,19 @@ window.mqTogDrawerConfig=(prefix)=>{
   function mqLiveRecalcSticky() {
     const prefix = window._mqStickyPrefix;
     if (!prefix || window._mqStickyDismissed) return;
-    if (!window._mqCalcCabinet || !window._mqCalcCountertop) return; // widget hasn't finished wiring yet
     try {
-      let low, high;
-      if (prefix === 'b') {
-        const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-        low = cab.low + ct.low; high = cab.high + ct.high;
-      } else if (prefix === 'ct') {
-        const r = window._mqCalcCountertop('ct');
-        low = r.low; high = r.high;
-      } else {
-        const r = window._mqCalcCabinet('c');
-        low = r.low; high = r.high;
+      let range = window._mqRefreshResultsPanel ? window._mqRefreshResultsPanel(prefix) : null;
+      if (!range && window._mqCalcCabinet && window._mqCalcCountertop) {
+        if (prefix === 'b') {
+          const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
+          range = { low: cab.low + ct.low, high: cab.high + ct.high };
+        } else if (prefix === 'ct') {
+          range = window._mqCalcCountertop('ct');
+        } else {
+          range = window._mqCalcCabinet('c');
+        }
       }
-      mqSetStickyPrice(low, high, true);
+      if (range) mqSetStickyPrice(range.low, range.high, true);
     } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
   }
   let _mqStickyDebounce = null;
