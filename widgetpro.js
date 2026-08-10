@@ -2216,17 +2216,34 @@
     // "Powered by MidasQuote" line always ends up sitting a fixed few
     // pixels above the sticky bar, no matter how tall the breakdown is.
     // Keeps the brand line reliably visible every single time.
+    //
+    // Retries and re-measures rather than trusting a single calculation —
+    // there are several things that can still shift the layout right around
+    // this moment (the lead-capture modal closing, the body padding
+    // settling, the browser's own scroll-anchoring fighting an explicit
+    // scroll), so this keeps nudging toward the target and re-checking
+    // until it actually lands there, instead of assuming one shot got it
+    // right.
     function mqScrollPoweredByAboveSticky(prefix) {
       const resultId = prefix === 'c' ? 'mq-c-result' : prefix === 'ct' ? 'mq-ct-result' : 'mq-b-result';
-      const resultEl = document.getElementById(resultId);
-      const poweredBy = resultEl ? resultEl.querySelector('.mq-powered-by') : null;
-      if (!poweredBy) return;
-      const bar = document.getElementById('mq-sticky-bar');
-      const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
-      const targetGap = barHeight + 3;
-      const rect = poweredBy.getBoundingClientRect();
-      const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
-      window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+      let attempts = 0;
+      function tryScroll() {
+        attempts++;
+        const resultEl = document.getElementById(resultId);
+        const poweredBy = resultEl ? resultEl.querySelector('.mq-powered-by') : null;
+        if (!poweredBy) return;
+        const bar = document.getElementById('mq-sticky-bar');
+        const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
+        const targetGap = barHeight + 3;
+        const rect = poweredBy.getBoundingClientRect();
+        const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
+        if (Math.abs(scrollAmount) <= 2 || attempts >= 12) return; // close enough, or give up cleanly
+        window.scrollBy({ top: scrollAmount, behavior: attempts === 1 ? 'smooth' : 'auto' });
+        setTimeout(tryScroll, attempts === 1 ? 450 : 120);
+      }
+      mqAdjustWidgetBottomPadding(() => {
+        requestAnimationFrame(() => { setTimeout(tryScroll, 50); });
+      });
     }
     // Exposed globally so mqStartNewEstimate — a sibling function declared
     // outside wireWidget's scope — can actually reach this instead of
@@ -3742,7 +3759,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   // padding on an inner element in ways that aren't predictable from here,
   // but body is reliably the actual scrollable area almost everywhere.
   let _mqOrigBodyPaddingBottom = null;
-  function mqAdjustWidgetBottomPadding() {
+  function mqAdjustWidgetBottomPadding(afterApply) {
     requestAnimationFrame(() => {
       const bar = document.getElementById('mq-sticky-bar');
       if (_mqOrigBodyPaddingBottom === null) {
@@ -3753,6 +3770,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       } else {
         document.body.style.paddingBottom = _mqOrigBodyPaddingBottom;
       }
+      if (typeof afterApply === 'function') afterApply();
     });
   }
   window.mqCloseStickyBar = function() {
