@@ -785,7 +785,7 @@
     // Pro has its own fixed navy/gold theme regardless of shop branding, so
     // this uses that same navy directly rather than a per-shop color.
     const focal = '#0f2a52';
-    const focalTint = '#e9e9e9';
+    const focalTint = '#eef2f7';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
