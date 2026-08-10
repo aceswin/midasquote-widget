@@ -1454,32 +1454,14 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px">
-              <div style="position:relative;display:inline-block">
-                <input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.1" onclick="this.select()" style="width:136px;text-align:center;padding-right:26px"/>
-                <div style="position:absolute;right:2px;top:2px;bottom:2px;width:20px;display:flex;flex-direction:column">
-                  <button type="button" onclick="mqAdjLinFt('${prefix}','u',0.1)" style="flex:1;border:none;border-left:1px solid #d1d5db;background:#f9fafb;cursor:pointer;font-size:8px;line-height:1;padding:0;color:#374151;border-radius:0 4px 0 0">▲</button>
-                  <button type="button" onclick="mqAdjLinFt('${prefix}','u',-0.1)" style="flex:1;border:none;border-left:1px solid #d1d5db;border-top:1px solid #d1d5db;background:#f9fafb;cursor:pointer;font-size:8px;line-height:1;padding:0;color:#374151;border-radius:0 0 4px 0">▼</button>
-                </div>
-              </div>
-              ${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}
-            </div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-0.1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.1" onclick="this.select()" style="width:136px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',0.1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px">
-              <div style="position:relative;display:inline-block">
-                <input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.1" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:136px;text-align:center;padding-right:26px"/>
-                <div style="position:absolute;right:2px;top:2px;bottom:2px;width:20px;display:flex;flex-direction:column">
-                  <button type="button" onclick="mqAdjLinFt('${prefix}','b',0.1)" style="flex:1;border:none;border-left:1px solid #d1d5db;background:#f9fafb;cursor:pointer;font-size:8px;line-height:1;padding:0;color:#374151;border-radius:0 4px 0 0">▲</button>
-                  <button type="button" onclick="mqAdjLinFt('${prefix}','b',-0.1)" style="flex:1;border:none;border-left:1px solid #d1d5db;border-top:1px solid #d1d5db;background:#f9fafb;cursor:pointer;font-size:8px;line-height:1;padding:0;color:#374151;border-radius:0 0 4px 0">▼</button>
-                </div>
-              </div>
-              ${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}
-            </div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-0.1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.1" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:136px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',0.1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
-          <div class="mq-field"><label class="mq-label">Height (uppers)</label>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
         </div>
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
