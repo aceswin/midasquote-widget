@@ -844,6 +844,13 @@ window.logoutMember = async function () {
               </div>
               <div class="mq-toggle-row" style="margin-bottom:1.5rem">
                 <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Email me for every estimate</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Normally you're only notified when a customer gives their contact info. Turn this on to get an email every time anyone calculates an estimate — even if they skip that step.</div>
+                </div>
+                <div class="mq-toggle" id="mq-notify-every-toggle" onclick="mqToggleNotifyEvery()"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+                <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Show "View our products" link on widget</div>
                   <div style="font-size:12px;color:#6b7280;margin-top:2px">Customers can browse your showroom before getting a quote</div>
                 </div>
@@ -2452,6 +2459,10 @@ window.logoutMember = async function () {
       if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
     }
     set('mq-financing-link', f['Financing link']);
+    const notifyEveryToggle = el('mq-notify-every-toggle');
+    if (notifyEveryToggle) {
+      notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
+    }
 
     // ── Autosave: fire mqSaveShop 1.5s after the user stops editing any field ──
     let _shopAutoSaveTimer = null;
@@ -4853,6 +4864,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       showMsg('mq-shop-msg', !isOn ? '✓ Financing note will show on your widget.' : '✓ Financing note hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); if (linkWrap) linkWrap.style.display = isOn ? 'block' : 'none'; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  };
+
+  window.mqToggleNotifyEvery = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const toggle = el('mq-notify-every-toggle');
+    if (!toggle) return;
+    const isOn = toggle.classList.contains('on');
+    toggle.classList.toggle('on', !isOn);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Notify on every estimate': !isOn ? 'Yes' : 'No' });
+      shopRec.fields['Notify on every estimate'] = !isOn ? 'Yes' : 'No';
+      showMsg('mq-shop-msg', !isOn ? '✓ You\'ll be emailed for every estimate now.' : '✓ Back to only being notified when a customer gives their info.');
+    } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
 
   window.mqUpdateLeadStatus = async function(id, status) {
