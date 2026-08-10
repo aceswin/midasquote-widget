@@ -368,13 +368,16 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-groups-matching';
+  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-update-roundup';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p><strong>Collections in My Products</strong> — group related items (like "Shaker" or "Raised panel") in Box Materials, Door Styles, Drawer Configurations, Crown, or Valance. Customers still pick the exact item, same as always — grouping just organizes related options together and, when every item in a group is the same price, lets customers know any one of them works.</p>
-      <p><strong>Match another item's pricing</strong> — when adding a new box material, door style, drawer config, or hinge in Pricing, a checkbox now lets you copy an existing item's rate directly instead of re-quoting a whole job.</p>
-      <p><strong>Product photos no longer get cropped</strong> — thumbnails in My Products and on the widget now show the whole photo, so tall or unusually-shaped images display in full.</p>
+      <p style="margin-bottom:14px"><strong>Live-updating estimates</strong> — swap a door, material, or countertop and watch the whole estimate update instantly — not just the sticky total at the bottom, the full itemized breakdown too. No need to hit Calculate again to see it reflect your latest change.</p>
+      <p style="margin-bottom:14px"><strong>Email me a copy</strong> — customers can now email themselves their current estimate anytime, right from the sticky bar. Already gave their email earlier? It sends instantly. Skipped it? A quick one-field prompt asks just for that, nothing more.</p>
+      <p style="margin-bottom:14px"><strong>Smarter price badges</strong> — $/$$/$$$ badges now reflect real standing within each collection and category, instead of being thrown off by unrelated pricier (or cheaper) items elsewhere in your catalog.</p>
+      <p style="margin-bottom:14px"><strong>Best seller badges</strong> — mark your top items (any door, material, drawer, countertop, or specialty item) with an eye-catching badge right on the widget. Customize the wording ("Best seller," "Our pick," whatever fits) and the color, both from the top of My Products — change either one later and every already-marked item updates automatically, no need to re-mark anything.</p>
+      <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
+      <p style="font-size:13px;color:#4b5563;line-height:1.6">Mass price editing — update the price on multiple same-priced items all at once — and quick price edits right from the Pricing dashboard, no need to open each item individually.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
@@ -841,6 +844,13 @@ window.logoutMember = async function () {
               </div>
               <div class="mq-toggle-row" style="margin-bottom:1.5rem">
                 <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Email me for every estimate</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Normally you're only notified when a customer gives their contact info. Turn this on to get an email every time anyone calculates an estimate — even if they skip that step.</div>
+                </div>
+                <div class="mq-toggle" id="mq-notify-every-toggle" onclick="mqToggleNotifyEvery()"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+                <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Show "View our products" link on widget</div>
                   <div style="font-size:12px;color:#6b7280;margin-top:2px">Customers can browse your showroom before getting a quote</div>
                 </div>
@@ -1196,7 +1206,7 @@ window.logoutMember = async function () {
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
                 <div style="width:100%;max-width:280px">
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
-                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 2 minutes" maxlength="60" style="font-size:13px"/>
+                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 5 minutes" maxlength="60" style="font-size:13px"/>
                 </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
@@ -1832,9 +1842,74 @@ window.logoutMember = async function () {
   // ============================================================
   // IMAGE UPLOAD — permanent hosting via Cloudflare R2 (replaces fragile pasted links)
   // ============================================================
+  // Resizes/compresses a photo in the browser before it's uploaded — phone
+  // photos routinely come in at 3-8MB and several thousand pixels wide, but
+  // nothing in this app ever displays an image wider than the lightbox
+  // view, so there's no reason to ship (and store) the full original.
+  // Falls back to the original file untouched on any failure — never blocks
+  // an upload just because resizing didn't work for some reason.
+  function mqResizeImageFile(file, maxDim = 1200, quality = 0.85) {
+    return new Promise((resolve) => {
+      // Animated GIFs would lose their animation — canvas only ever
+      // captures a single frame. Upload those as-is.
+      if (file.type === 'image/gif') { resolve(file); return; }
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const { width, height } = img;
+        if (!width || !height) { resolve(file); return; }
+        // Only shrink dimensions if actually oversized — never upscale a
+        // small image. But still re-encode at the ORIGINAL size below, even
+        // when no resizing happens: a real photo saved as PNG can easily be
+        // several MB at modest dimensions, since PNG is lossless and
+        // compresses photographic detail far worse than JPEG. Skipping
+        // compression just because the pixel dimensions were already small
+        // was the actual bug — file size and pixel dimensions aren't the
+        // same thing.
+        const scale = (width > maxDim || height > maxDim) ? maxDim / Math.max(width, height) : 1;
+        const newW = Math.round(width * scale);
+        const newH = Math.round(height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = newW;
+        canvas.height = newH;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, newW, newH);
+        // Decide the output format by actually checking for transparency,
+        // rather than trusting the original file extension — a PNG with no
+        // transparent pixels (the overwhelming majority of real product
+        // photos) compresses far better re-encoded as JPEG, while a PNG
+        // that's genuinely using transparency needs to stay PNG or it'll
+        // get a black/white background baked in.
+        let hasTransparency = false;
+        try {
+          const data = ctx.getImageData(0, 0, newW, newH).data;
+          for (let i = 3; i < data.length; i += 4) { if (data[i] < 255) { hasTransparency = true; break; } }
+        } catch (e) { hasTransparency = file.type === 'image/png'; } // can't inspect pixels (e.g. tainted canvas) — assume worst case
+        const outType = hasTransparency ? 'image/png' : 'image/jpeg';
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return; }
+          // Re-encoding a PNG (no quality knob, lossless) can occasionally
+          // come out larger than a well-optimized original — never ship a
+          // "compressed" file that's actually bigger than what we started with.
+          if (blob.size >= file.size) { resolve(file); return; }
+          const ext = outType === 'image/png' ? 'png' : 'jpg';
+          const newName = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.' + ext;
+          resolve(new File([blob], newName, { type: outType }));
+        }, outType, outType === 'image/jpeg' ? quality : undefined);
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
+      img.src = objectUrl;
+    });
+  }
+
   async function mqUploadImage(file, shopToken, category) {
+    // Skip resizing for logos — usually already a small, deliberately-
+    // crafted file, and it represents the shop's brand, so it's not worth
+    // any risk of visible quality loss there. Everything else gets resized.
+    const uploadFile = category === 'logos' ? file : await mqResizeImageFile(file);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', uploadFile);
     formData.append('shopToken', shopToken || 'unknown-shop');
     formData.append('category', category || 'general');
     const res = await fetch(CONFIG.IMAGE_UPLOAD_URL, {
@@ -2384,6 +2459,10 @@ window.logoutMember = async function () {
       if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
     }
     set('mq-financing-link', f['Financing link']);
+    const notifyEveryToggle = el('mq-notify-every-toggle');
+    if (notifyEveryToggle) {
+      notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
+    }
 
     // ── Autosave: fire mqSaveShop 1.5s after the user stops editing any field ──
     let _shopAutoSaveTimer = null;
@@ -2441,39 +2520,41 @@ window.logoutMember = async function () {
   // enough there to be worth the extra line); everything else uses the
   // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section — got **3 separate runs of upper cabinets**? That's 3 sections. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
-
-**Upper cabinets:** A section for every wall run where uppers will go.
+`**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
-**Island cabinets:** Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.
+**Island cabinets:** Add these in with your base cabinets.
 
-**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
 
-[corner-img]`;
+**Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
+
+[corner-img]
+
+[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
-
-**Upper cabinets:** A section for every wall run where uppers will go.
+`**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
-**Not sure?** Just use your best guess — this is a ballpark estimate!
+**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
 
-**Corner cabinets:** At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
+**Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
 
-[corner-img]`;
+[corner-img]
+
+[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
-`[tip]**Don't worry about doing any math yourself.** Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the [calc] and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.[/tip]
-
-**Upper cabinets:** A section for every wall run where uppers will go.
+`**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
-**Not sure?** Just use your best guess — this is a ballpark estimate!`;
+**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
+
+[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
@@ -2500,17 +2581,53 @@ window.logoutMember = async function () {
       : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
   };
 
-  const MQ_DEFAULT_MEASURE_IMAGE_BASE = 'https://aceswin.github.io/midasquote-widget/measure-guides/';
-  const MQ_DEFAULT_COVER_IMAGE_BASE = 'https://aceswin.github.io/midasquote-widget/cover-images/';
+  // Deliberately separate from mqFillDefaultGuide above — a shop may want
+  // their own custom image with the default text, or vice versa, so these
+  // reset independently rather than being bundled into one button. Clears
+  // the field rather than writing a concrete URL into it — leaving it
+  // blank is what lets the widget's own fallback stay current forever
+  // without ever needing this button pressed again, and it also means the
+  // underlying GitHub address never has to be shown in the field.
+  window.mqFillDefaultMeasureImage = function(inputId, previewId, roomId) {
+    const inp = el(inputId);
+    if (!inp) return;
+    if (inp.value.trim() && !confirm('Clear this and use the default measuring guide image instead? (Automatically stays up to date if the default ever changes.)')) return;
+    inp.value = '';
+    const previewUrl = mqDefaultMeasureImageUrlFor(roomId);
+    const preview = document.getElementById(previewId);
+    if (preview) preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>';
+  };
+
+  const MQ_DEFAULT_MEASURE_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/';
+  const MQ_DEFAULT_COVER_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/';
+
+  // Which filename the widget itself falls back to for each standard room
+  // when a shop's own measureImage is blank — this list must always match
+  // MQ_DEFAULT_MEASURE_IMAGES in widget.js/widgetpro.js exactly. Used here
+  // only for admin-side previewing and the "Use default image" button —
+  // never written into a shop's own saved data (see defaultRoomTypes below).
+  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen:'kitchen1.jpg', bathroom:'bathroom1.jpg', laundry:'laundry1.jpg', garage:'garage1.jpg', commercial:'commercial1.jpg', other:'other1.jpg' };
+  function mqDefaultMeasureImageUrlFor(roomId) {
+    const file = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
+    return file ? MQ_DEFAULT_MEASURE_IMAGE_BASE + file : '';
+  }
 
   function defaultRoomTypes() {
     return [
-      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'kitchen.png' },
-      { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'bathroom.png' },
-      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'laundry.png' },
-      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'garage.png' },
-      { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'commercial.png' },
-      { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:MQ_DEFAULT_MEASURE_IMAGE_BASE+'other.png' },
+      // measureImage deliberately left blank for these 6 — the widget falls
+      // back to its own current default automatically whenever this is
+      // empty, so leaving it blank here means every shop that hasn't
+      // customized their own image always tracks whatever the current
+      // default is, forever, with zero manual intervention ever needed
+      // again. Baking a concrete URL in here would instead permanently
+      // freeze a shop at whatever the default happened to be the moment
+      // they first saved their Project Types page.
+      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.png', measureText:'', measureImage:'' },
+      { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.png', measureText:'', measureImage:'' },
+      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.png', measureText:'', measureImage:'' },
+      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:'' },
+      { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:'' },
+      { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:'' },
       { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
       { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
       { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
@@ -2637,7 +2754,7 @@ window.logoutMember = async function () {
             </div>
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                ${(r.measureImage || mqDefaultMeasureImageUrlFor(r.id)) ? `<img src="${r.measureImage || mqDefaultMeasureImageUrlFor(r.id)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
               </div>
               <div style="flex:1;min-width:0">
                 <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image (optional)</label>
@@ -2646,6 +2763,7 @@ window.logoutMember = async function () {
                   📤 Upload
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
+                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}')">↺ Use default image</button>
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
             </div>
@@ -3652,7 +3770,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -3667,6 +3785,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 <div style="display:flex;flex-direction:column;gap:2px">
                   <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:180px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
                   <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                  <button class="mq-btn mq-btn-danger mq-btn-sm" style="align-self:flex-start;margin-top:2px" onclick="mqDeleteSpec('${r.id}')">Delete</button>
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
@@ -3678,7 +3797,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
               <td><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" title="Hide this item from the customer-facing widget entirely — still shows in MidasQuote Pro, for every project type it's tagged to"/></td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
-              <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button></td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -4101,6 +4219,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
   };
 
+  // Live-updates the badge preview next to the label/color fields as the
+  // shop owner types or picks — same visual spec as the actual widget badge
+  // (just sized up a touch for readability here, not crammed onto a tiny
+  // thumbnail corner).
+  window.mqUpdateBadgePreview = function() {
+    const label = (document.getElementById('mq-badge-label')?.value || '').trim() || 'Best seller';
+    const colorRaw = (document.getElementById('mq-badge-color')?.value || '').trim();
+    const color = /^#[0-9a-fA-F]{6}$/.test(colorRaw) ? colorRaw : '#f59e0b';
+    const preview = document.getElementById('mq-badge-preview');
+    if (preview) {
+      preview.style.background = color;
+      preview.textContent = `🏆 ${label}`;
+    }
+  };
+
   window.mqSaveProducts = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -4110,6 +4243,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const scope = document.getElementById('mq-products-content') || document;
     const photos = {};
     const hidden = {};
+    const featured = {};
     scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
@@ -4119,13 +4253,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const key = cb.id.replace('mq-hidden-', '');
       if (cb.checked) hidden[key] = true;
     });
+    scope.querySelectorAll('[id^="mq-featured-"]').forEach(cb => {
+      const key = cb.id.replace('mq-featured-', '');
+      if (cb.checked) featured[key] = true;
+    });
+    const badgeLabelInput = document.getElementById('mq-badge-label');
+    const badgeLabelToSave = badgeLabelInput ? (badgeLabelInput.value.trim() || 'Best seller') : (shopRec.fields['Badge label'] || 'Best seller');
+    const badgeColorInput = document.getElementById('mq-badge-color');
+    const badgeColorRaw = badgeColorInput ? badgeColorInput.value.trim() : shopRec.fields['Badge color'];
+    const badgeColorToSave = /^#[0-9a-fA-F]{6}$/.test(badgeColorRaw) ? badgeColorRaw : '#f59e0b';
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, {
         'Photos':  JSON.stringify(photos),
         'Hidden':  JSON.stringify(hidden),
+        'Featured items': JSON.stringify(featured),
+        'Badge label': badgeLabelToSave,
+        'Badge color': badgeColorToSave,
       });
       shopRec.fields['Photos']  = JSON.stringify(photos);
       shopRec.fields['Hidden']  = JSON.stringify(hidden);
+      shopRec.fields['Featured items'] = JSON.stringify(featured);
+      shopRec.fields['Badge label'] = badgeLabelToSave;
+      shopRec.fields['Badge color'] = badgeColorToSave;
       scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
         btn.textContent = 'Saved ✓';
         btn.style.background = '#1a1a1a';
@@ -4265,9 +4414,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     let savedHidden = {};
     try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
+    let savedFeatured = {};
+    try { if (shopRecord.fields['Featured items']) savedFeatured = JSON.parse(shopRecord.fields['Featured items']); } catch(e) {}
+    const badgeLabel = (shopRecord.fields['Badge label'] || '').trim() || 'Best seller';
+    const badgeColor = /^#[0-9a-fA-F]{6}$/.test(shopRecord.fields['Badge color']) ? shopRecord.fields['Badge color'] : '#f59e0b';
 
     function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
-      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden);
+      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel);
     }
 
     // Groups only make sense for categories customers actually pick a
@@ -4312,10 +4465,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Every distinct edge/addon across all countertop materials, deduped by
     // id — used only to offer a photo card here; everything else about an
     // addon (name, pricing, which materials it applies to) is managed in
-    // Pricing → Countertop pricing instead.
+    // Pricing → Countertop pricing instead. "Standard" (the free default
+    // edge every material falls back to) isn't a real addon record — it's
+    // always added in here under a fixed key so shops can still give it a
+    // photo even with zero custom edges configured.
     function mqCountertopAddonPhotoList() {
       const items = byCategory['countertop'] || [];
       const seen = new Map();
+      seen.set('standard_edge', { id:'standard_edge', label:'Standard', isEdge:true });
       items.forEach(item => (item.addonOptions||[]).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
       return [...seen.values()];
     }
@@ -4323,6 +4480,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // The grid contents get rebuilt on their own (without re-rendering the
     // whole tab) whenever a group name, description, or order changes — so
     // this is split out from catSection itself.
+    // Tracks which product groups are expanded, keyed by "cat::groupName" so
+    // it survives re-renders (same reasoning as the category-level version
+    // below). Groups start COLLAPSED by default — unlike whole categories —
+    // since a single group can easily hold 40+ items, and switching from
+    // Group A to Group B shouldn't mean scrolling through all of A first.
+    let _mqExpandedProductGroups = new Set();
+    function mqGroupSlug(cat, groupKey) { return `${cat}-${groupKey.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`; }
+
+    window.mqToggleProductGroup = function(cat, groupKey) {
+      const fullKey = `${cat}::${groupKey}`;
+      const slug = mqGroupSlug(cat, groupKey);
+      const body = document.getElementById(`mq-group-body-${slug}`);
+      const arrow = document.getElementById(`mq-group-arrow-${slug}`);
+      if (!body) return;
+      const opening = body.style.display === 'none';
+      body.style.display = opening ? 'grid' : 'none';
+      if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+      if (opening) _mqExpandedProductGroups.add(fullKey); else _mqExpandedProductGroups.delete(fullKey);
+    };
+
     function catGridHtml(cat) {
       const items = byCategory[cat] || [];
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
@@ -4354,17 +4531,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const ungrouped = items.filter(i => !i.groupName);
       if (ungrouped.length) groupBlocks.push({ name: null, members: ungrouped, desc: '', order: Infinity }); // "Other" — always last
 
-      return groupBlocks.map((g, gi) => `
-        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap">
+      return groupBlocks.map((g, gi) => {
+        const groupKey = g.name || '__other__';
+        const fullKey = `${cat}::${groupKey}`;
+        const slug = mqGroupSlug(cat, groupKey);
+        const isOpen = _mqExpandedProductGroups.has(fullKey);
+        return `
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap;cursor:pointer" onclick="mqToggleProductGroup('${cat}','${groupKey.replace(/'/g,"\\'")}')">
+          <span id="mq-group-arrow-${slug}" style="display:inline-block;font-size:11px;color:#6b7280;transition:transform 0.2s;transform:rotate(${isOpen?'90deg':'0deg'})">▶</span>
           <span style="font-weight:700;font-size:13px;color:#111">${g.name || 'Other'}</span>
+          <span style="font-size:11px;color:#9ca3af">(${g.members.length})</span>
           ${g.name ? `
-            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
-            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
-            <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
+            <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
             ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
           ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
         </div>
-        ${g.members.map(buildCard).join('')}`).join('');
+        <div id="mq-group-body-${slug}" style="display:${isOpen?'grid':'none'};grid-column:1/-1;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+          ${g.members.map(buildCard).join('')}
+        </div>`;
+      }).join('');
     }
 
     // Per-category "Pick a collection" dropdown label — stored as one JSON
@@ -4603,7 +4790,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const hasCats = catsOrdered.some(c => byCategory[c]?.length);
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
-        : catsOrdered.map(catSection).join('') + specSection;
+        : `<div class="mq-card" style="margin-bottom:1.25rem">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">🏆 Badge</label>
+            <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+              <div>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Text</label>
+                <input type="text" id="mq-badge-label" value="${badgeLabel.replace(/"/g,'&quot;')}" placeholder="Best seller" style="font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:200px" oninput="mqMarkProductsDirty();mqUpdateBadgePreview()"/>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Color</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input type="text" id="mq-badge-color" value="${badgeColor}" style="font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100px" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('mq-badge-color-swatch').value=this.value;mqMarkProductsDirty();mqUpdateBadgePreview()"/>
+                  <input type="color" id="mq-badge-color-swatch" value="${badgeColor}" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0" oninput="document.getElementById('mq-badge-color').value=this.value;mqMarkProductsDirty();mqUpdateBadgePreview()"/>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Preview</label>
+                <div style="height:34px;display:flex;align-items:center">
+                  <span id="mq-badge-preview" style="display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:${badgeColor};color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);white-space:nowrap">🏆 ${badgeLabel.replace(/</g,'&lt;')}</span>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:10px">Shown on any item you mark below — change the wording or color here and every marked item updates automatically, no need to re-mark anything.</div>
+          </div>` + catsOrdered.map(catSection).join('') + specSection;
 
       // Wire up upload buttons for every photo card just rendered
       const shopToken = shopRecord.fields['Shop token'] || 'unknown-shop';
@@ -4655,6 +4864,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
       showMsg('mq-shop-msg', !isOn ? '✓ Financing note will show on your widget.' : '✓ Financing note hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); if (linkWrap) linkWrap.style.display = isOn ? 'block' : 'none'; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  };
+
+  window.mqToggleNotifyEvery = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const toggle = el('mq-notify-every-toggle');
+    if (!toggle) return;
+    const isOn = toggle.classList.contains('on');
+    toggle.classList.toggle('on', !isOn);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Notify on every estimate': !isOn ? 'Yes' : 'No' });
+      shopRec.fields['Notify on every estimate'] = !isOn ? 'Yes' : 'No';
+      showMsg('mq-shop-msg', !isOn ? '✓ You\'ll be emailed for every estimate now.' : '✓ Back to only being notified when a customer gives their info.');
+    } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
 
   window.mqUpdateLeadStatus = async function(id, status) {
@@ -4914,9 +5137,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Module-level so both initProductsTab (My Products) and renderTemplates
   // (admin Templates tab) can share it, instead of it being locked inside one
   // function's closure over a specific shop's savedPhotos/savedHidden.
-  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden) {
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel) {
     const savedUrl = savedPhotos[key] || '';
     const isHidden = savedHidden[key] || false;
+    // savedFeatured is only ever passed in from My Products — every other
+    // caller (the Templates admin tab, etc.) omits it entirely, which is
+    // what keeps this toggle scoped to My Products only without needing a
+    // separate flag to remember to pass around.
+    const featuredHtml = savedFeatured ? (() => {
+      const isFeatured = savedFeatured[key] || false;
+      return `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;margin-bottom:8px;cursor:pointer">
+        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:auto" onchange="mqMarkProductsDirty()"/>
+        🏆 Mark as "${(badgeLabel||'Best seller').replace(/"/g,'&quot;')}"
+      </label>`;
+    })() : '';
     const preview = savedUrl
       ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
       : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
@@ -4925,6 +5159,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-photo-preview-${key}">${preview}</div>
       <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
       ${roomLinkHtml}
+      ${featuredHtml}
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
         <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
           onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
@@ -5734,8 +5969,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     function buildSocialPosts(quoteLink) {
       return [
-        `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 2 minutes. Try it now → ${quoteLink}`,
-        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 60 seconds — right from your phone. ${quoteLink}`,
+        `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 5 minutes. Try it now → ${quoteLink}`,
+        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 5 minutes — right from your phone. ${quoteLink}`,
         `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
         `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
         `Hey homeowners! If you're planning a kitchen remodel, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
@@ -5761,7 +5996,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     Instant Pricing
     <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
   </div>
-  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 2 minutes</h2>
+  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
   <p style="font-size:14px;color:#5c5650;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
 </div>`;
 
@@ -5863,7 +6098,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
       let bgImage = _mqGraphicBgImage;
       let overlayOpacity = _mqGraphicOverlayOpacity;
-      let graphicHeadline = _mqGraphicHeadline || 'Get your cabinet quote in under 2 minutes';
+      let graphicHeadline = _mqGraphicHeadline || 'Get your cabinet quote in under 5 minutes';
 
       function wrapText(text, font, maxWidth) {
         ctx.font = font;
@@ -6003,7 +6238,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         graphicHeadlineInput.oninput = () => {
           const val = graphicHeadlineInput.value.trim();
           _mqGraphicHeadline = val;
-          graphicHeadline = val || 'Get your cabinet quote in under 2 minutes';
+          graphicHeadline = val || 'Get your cabinet quote in under 5 minutes';
           drawGraphic();
           saveHeadlinesDebounced(shopRecord);
         };
@@ -7746,6 +7981,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
+    // Re-checks on every tab switch, not just the initial page load — so a
+    // shop already using the dashboard when a new announcement goes out
+    // sees it the moment they click anywhere, no refresh needed. Skips
+    // brand-new shops (still on the Welcome popup) the same way page load
+    // already does — nothing to announce retroactively to someone who's
+    // never used the app before.
+    if (window._mqShopRecord && window._mqShopRecord.fields['Welcome popup seen'] && window._mqShopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
+      window.mqShowAnnouncementModal();
+    }
     mqToggleFloatingSave(MQ_PAGE_SAVE_ACTIONS[page] || null);
     if (page === 'marketing' || page === 'embed') {
       const socialEl = document.getElementById('mq-mk-social');
@@ -7873,7 +8117,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
