@@ -1821,6 +1821,21 @@
           <button class="mq-modal-btn" onclick="mqOpenConsultMailto()">Open in email app ↗</button>
           <button class="mq-modal-skip" onclick="document.getElementById('mq-consult-email-overlay').classList.remove('show')">Close</button>
         </div>
+      </div>
+
+      <!-- QUICK EMAIL MODAL — only shown if the customer skipped the main
+           lead form earlier, so "Email me a copy" still has somewhere to
+           send to without re-asking for name/phone they already declined. -->
+      <div class="mq-overlay" id="mq-quick-email-overlay">
+        <div class="mq-modal">
+          <p class="mq-modal-title">Where should we send it?</p>
+          <p class="mq-modal-sub">Enter your email and we'll send your current estimate.</p>
+          <div class="mq-modal-fields">
+            <div class="mq-field"><label class="mq-label">Email address</label><input type="email" id="mq-quick-email-input" placeholder="jane@email.com" onkeydown="if(event.key==='Enter')mqSubmitQuickEmail()"/></div>
+          </div>
+          <button class="mq-modal-btn" onclick="mqSubmitQuickEmail()">Send it →</button>
+          <button class="mq-modal-skip" onclick="document.getElementById('mq-quick-email-overlay').classList.remove('show')">Cancel</button>
+        </div>
       </div>`;
   }
 
@@ -3520,6 +3535,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     window.mqCalcCabinets=()=>{
       if (!mqValidateInstallQty('c')) return;
       window.mqShowLead(async lead=>{
+        window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-c-calc-btn').disabled=true;
         document.getElementById('mq-c-loading').classList.add('show');
         document.getElementById('mq-c-result').classList.remove('show');
@@ -3544,6 +3560,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const hasSurfaces=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length>0;
       if(!hasSurfaces){alert('Please add at least one surface.');return;}
       window.mqShowLead(async lead=>{
+        window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-ct-calc-btn').disabled=true;
         document.getElementById('mq-ct-loading').classList.add('show');
         document.getElementById('mq-ct-result').classList.remove('show');
@@ -3564,6 +3581,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     window.mqCalcBoth=()=>{
       if (!mqValidateInstallQty('b')) return;
       window.mqShowLead(async lead=>{
+        window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-b-calc-btn').disabled=true;
         document.getElementById('mq-b-loading').classList.add('show');
         document.getElementById('mq-b-result').classList.remove('show');
@@ -3968,7 +3986,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
@@ -4003,6 +4021,69 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (typeof afterApply === 'function') afterApply();
     });
   }
+  // "Email me a copy" — lives next to the sticky bar's price. Reuses the
+  // exact same live calc functions and email-sending pattern already used
+  // for the automatic post-Calculate email, just triggered on demand with
+  // whatever the customer's current numbers are right now. If they skipped
+  // giving an email the first time, this asks just for an email (not the
+  // full name/phone form again) before sending.
+  function mqCurrentLiveResult() {
+    const prefix = window._mqStickyPrefix;
+    if (!prefix || !window._mqCalcCabinet || !window._mqCalcCountertop) return null;
+    if (prefix === 'b') {
+      const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
+      return { low: cab.low + ct.low, high: cab.high + ct.high, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
+    }
+    if (prefix === 'ct') {
+      const r = window._mqCalcCountertop('ct');
+      return { low: r.low, high: r.high, lines: r.lines };
+    }
+    const r = window._mqCalcCabinet('c');
+    return { low: r.low, high: r.high, lines: r.lines };
+  }
+  async function mqSendQuoteCopy(email) {
+    const linkEl = document.getElementById('mq-sticky-email-link');
+    const result = mqCurrentLiveResult();
+    if (!result) return;
+    const shop = window._mqShopData || {};
+    if (linkEl) linkEl.textContent = 'Sending...';
+    const customerLineRows = (result.lines||[]).filter(l=>l&&l.label&&!l.bold)
+      .sort((a,b)=>b.cost-a.cost)
+      .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
+    await sendEmail(email, `Your updated quote from ${shop['Shop name']||''}`,
+      `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+        <h2 style="color:#1a1a1a">Your updated quote from ${shop['Shop name']||''}</h2>
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
+          <div style="font-size:14px;color:#666;margin-bottom:4px">Your estimated range</div>
+          <div style="font-size:28px;font-weight:700;color:#16a34a">$${Math.round(result.low).toLocaleString()} – $${Math.round(result.high).toLocaleString()}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+          <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What's included</td></tr>${customerLineRows}
+        </table>
+        <p style="color:#666;font-size:14px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
+        <p style="color:#666;font-size:14px"><strong>${shop['Shop name']||''}</strong><br/>${shop['Phone']||''}</p>
+      </div>`);
+    if (linkEl) {
+      linkEl.textContent = '✓ Sent!';
+      setTimeout(() => { linkEl.textContent = '📧 Email me a copy'; }, 2500);
+    }
+  }
+  window.mqEmailMyQuote = async function() {
+    if (window._mqLeadEmail) {
+      await mqSendQuoteCopy(window._mqLeadEmail);
+    } else {
+      const overlay = document.getElementById('mq-quick-email-overlay');
+      if (overlay) overlay.classList.add('show');
+    }
+  };
+  window.mqSubmitQuickEmail = async function() {
+    const input = document.getElementById('mq-quick-email-input');
+    const email = (input && input.value || '').trim();
+    if (!email || !email.includes('@')) { if (input) input.focus(); return; }
+    window._mqLeadEmail = email;
+    document.getElementById('mq-quick-email-overlay').classList.remove('show');
+    await mqSendQuoteCopy(email);
+  };
   window.mqCloseStickyBar = function() {
     window._mqStickyDismissed = true;
     const bar = document.getElementById('mq-sticky-bar');
