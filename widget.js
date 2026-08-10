@@ -111,12 +111,12 @@
     try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
     if (!Array.isArray(roomTypes) || !roomTypes.length) {
       roomTypes = [
-        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.png' },
-        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.png' },
-        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.png' },
-        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.png' },
-        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.png' },
-        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.png' },
+        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.jpg' },
+        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.jpg' },
+        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.jpg' },
+        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.jpg' },
+        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.jpg' },
+        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.jpg' },
         { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
         { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
         { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
@@ -885,18 +885,8 @@
       window._mqGroupFilter[selectId] = groupNames[0];
     }
     const boxBorderColor = window._mqBoxBorder || '#93c5fd';
-    const boxBgColor = window._mqBoxBg || '#eff6ff';
+    const boxBgColor = '#e9e9e9';
     const boxTextColor = window._mqBoxText || '#1e40af';
-    const groupDropdown = hasAnyGroup ? `
-      <div style="margin-bottom:10px;background:${boxBgColor};border:1.5px solid ${boxBorderColor};border-radius:10px;padding:12px 14px">
-        <label style="font-size:14px;font-weight:700;color:${boxTextColor};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
-        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
-          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
-          ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
-        </select>
-        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${boxTextColor};margin-top:8px">${countNote(groupNames[0])}</div>
-        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:4px 0 0;line-height:1.5">${groupDescOf(groupNames[0])}</div>
-      </div>` : '';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
@@ -915,7 +905,22 @@
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
       return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    return `${groupDropdown}<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
+    const vpickerWrap = `<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
+    if (!hasAnyGroup) return vpickerWrap;
+    // Trying items nested inside the same collection box, rather than as a
+    // separate block below it — reads as one unified "pick your style"
+    // unit instead of two disconnected pieces.
+    return `
+      <div style="margin-bottom:10px;background:${boxBgColor};border:1.5px solid ${boxBorderColor};border-radius:10px;padding:12px 14px">
+        <label style="font-size:14px;font-weight:700;color:${boxTextColor};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
+        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
+          ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
+          ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
+        </select>
+        <div id="mq-groupcount-${selectId}" style="font-size:12px;font-weight:600;color:${boxTextColor};margin-top:8px">${countNote(groupNames[0])}</div>
+        <div id="mq-groupdesc-${selectId}" style="font-size:12px;color:#6b7280;margin:4px 0 10px;line-height:1.5">${groupDescOf(groupNames[0])}</div>
+        ${vpickerWrap}
+      </div>`;
   }
 
   // Shows a "more to scroll" arrow over the right edge of a picker row
@@ -1094,7 +1099,7 @@
   // same markup.
   function defaultMeasureGuideHTML(roomId = 'kitchen') {
     const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
-      <img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.png" alt="How to measure corner cabinets" onclick="mqPhotoLightbox('https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.png','How to measure corner cabinets')" onerror="this.style.display='none'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>
+      <img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg" alt="How to measure corner cabinets" onclick="mqPhotoLightbox('https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg','How to measure corner cabinets')" onerror="this.style.display='none'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>
     </div>`;
     if (roomId === 'kitchen') {
       return `
@@ -1127,7 +1132,7 @@
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\n/g, '<br>');
     html = html.replace(/\[calc\]/g, mqCalcIconInlineHTML());
-    html = html.replace(/\[corner-img\]/g, '<img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.png" alt="How to measure corner cabinets" onclick="mqPhotoLightbox(\'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.png\',\'How to measure corner cabinets\')" onerror="this.style.display=\'none\'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>');
+    html = html.replace(/\[corner-img\]/g, '<img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg" alt="How to measure corner cabinets" onclick="mqPhotoLightbox(\'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg\',\'How to measure corner cabinets\')" onerror="this.style.display=\'none\'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>');
     // [tip]...[/tip] wraps a line in the same yellow callout box the
     // built-in default guide uses for its "don't feel like converting"
     // note — lets a shop owner get that same visual treatment on their own
@@ -1442,11 +1447,11 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" onclick="this.select()" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" onclick="this.select()" style="width:52px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center"><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="flex:1;min-width:0"/>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:52px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
@@ -2132,12 +2137,12 @@
     other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.png',
   };
   const MQ_DEFAULT_MEASURE_IMAGES = {
-    kitchen: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.png',
-    bathroom: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.png',
-    laundry: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.png',
-    garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.png',
-    commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.png',
-    other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.png',
+    kitchen: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.jpg',
+    bathroom: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.jpg',
+    laundry: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.jpg',
+    garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.jpg',
+    commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.jpg',
+    other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.jpg',
   };
 
   // Matches a room to one of the 6 default-image keys above. Tries the id
@@ -3613,6 +3618,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (edgeEl) edgeEl.innerHTML = edgeSelectHtml(m, edgeContainerId);
       if (addonEl) addonEl.innerHTML = addonRowsHtml(m, `${addonContainerId}-a`);
       window.mqUpdateAllPickerArrows();
+    };
+    window.mqAdjLinFt=(prefix, which, delta)=>{
+      const input = document.getElementById(`mq-${prefix}-${which}ft`);
+      if (!input) return;
+      const next = Math.max(0, Math.min(60, (parseFloat(input.value)||0) + delta));
+      input.value = next;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     };
     window.mqRefreshBsFt=(prefix)=>{
       // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
