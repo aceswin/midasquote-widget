@@ -892,7 +892,7 @@
       window._mqGroupFilter[selectId] = groupNames[0];
     }
     const boxBorderColor = window._mqBoxBorder || '#93c5fd';
-    const boxBgColor = '#e9e9e9';
+    const boxBgColor = window._mqBoxBg || '#eff6ff';
     const boxTextColor = window._mqBoxText || '#1e40af';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
@@ -1455,11 +1455,11 @@
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
             <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" onclick="this.select()" style="width:68px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections — no need to do the math yourself!</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
             <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:68px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections — no need to do the math yourself!</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
@@ -3437,6 +3437,57 @@ window.mqTogDrawerConfig=(prefix)=>{
         ul.appendChild(li);
       });
     }
+    // Refreshes the full results breakdown for whichever tab is currently
+    // showing one — reuses the exact same calc + render logic Calculate
+    // itself uses, just skipping the lead popup/loading spinner/scroll.
+    // Only touches a tab's results panel if it's actually visible (no point
+    // silently rebuilding a hidden panel on every keystroke elsewhere), and
+    // returns the new range so the sticky bar can stay in sync off the same
+    // single calculation pass rather than computing everything twice.
+    window._mqRefreshResultsPanel = function(prefix) {
+      if (prefix === 'c') {
+        const panel = document.getElementById('mq-c-result');
+        if (!panel || !panel.classList.contains('show')) return null;
+        const r = calcCabinet('c');
+        const titleEl = document.getElementById('mq-c-res-title');
+        if (titleEl) titleEl.textContent = r.roomLabel + ' cabinet estimate';
+        const subEl = document.getElementById('mq-c-res-sub');
+        if (subEl) subEl.textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
+        renderResult('mq-c-res-range','mq-c-line-items', r);
+        return { low: r.low, high: r.high };
+      }
+      if (prefix === 'ct') {
+        const panel = document.getElementById('mq-ct-result');
+        if (!panel || !panel.classList.contains('show')) return null;
+        const r = calcCountertop('ct');
+        const active = Object.keys(surfs['ct']).filter(id => document.getElementById('mqsc-'+id)).length;
+        const subEl = document.getElementById('mq-ct-res-sub');
+        if (subEl) subEl.textContent = `${active} surface(s)`;
+        renderResult('mq-ct-res-range','mq-ct-line-items', r);
+        return { low: r.low, high: r.high };
+      }
+      if (prefix === 'b') {
+        const panel = document.getElementById('mq-b-result');
+        if (!panel || !panel.classList.contains('show')) return null;
+        const cab = calcCabinet('b'), ct = calcCountertop('b');
+        const cabRows = document.getElementById('mq-b-cab-rows');
+        if (cabRows) {
+          cabRows.innerHTML = '';
+          [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;cabRows.appendChild(d);});
+        }
+        const ctRows = document.getElementById('mq-b-ct-rows');
+        if (ctRows) {
+          ctRows.innerHTML = '';
+          [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
+          if (!ctRows.children.length) { const d=document.createElement('div'); d.className='mq-combined-row'; d.innerHTML=`<span class="mq-clbl">None selected</span>`; ctRows.appendChild(d); }
+        }
+        const tl = cab.low+ct.low, th = cab.high+ct.high;
+        const grandEl = document.getElementById('mq-b-grand');
+        if (grandEl) grandEl.textContent = fmt(tl)+' – '+fmt(th);
+        return { low: tl, high: th };
+      }
+      return null;
+    };
 
     window.mqCalcCabinets=()=>{
       if (!mqValidateInstallQty('c')) return;
@@ -3950,20 +4001,23 @@ window.mqTogDrawerConfig=(prefix)=>{
   function mqLiveRecalcSticky() {
     const prefix = window._mqStickyPrefix;
     if (!prefix || window._mqStickyDismissed) return;
-    if (!window._mqCalcCabinet || !window._mqCalcCountertop) return; // widget hasn't finished wiring yet
     try {
-      let low, high;
-      if (prefix === 'b') {
-        const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-        low = cab.low + ct.low; high = cab.high + ct.high;
-      } else if (prefix === 'ct') {
-        const r = window._mqCalcCountertop('ct');
-        low = r.low; high = r.high;
-      } else {
-        const r = window._mqCalcCabinet('c');
-        low = r.low; high = r.high;
+      // Refreshes the full breakdown (line items, totals, everything) if
+      // that tab's results panel is on screen, and hands back the new
+      // range so the sticky bar updates off the exact same calculation —
+      // no separate/duplicate math, both pieces always agree.
+      let range = window._mqRefreshResultsPanel ? window._mqRefreshResultsPanel(prefix) : null;
+      if (!range && window._mqCalcCabinet && window._mqCalcCountertop) {
+        if (prefix === 'b') {
+          const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
+          range = { low: cab.low + ct.low, high: cab.high + ct.high };
+        } else if (prefix === 'ct') {
+          range = window._mqCalcCountertop('ct');
+        } else {
+          range = window._mqCalcCabinet('c');
+        }
       }
-      mqSetStickyPrice(low, high, true);
+      if (range) mqSetStickyPrice(range.low, range.high, true);
     } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
   }
   let _mqStickyDebounce = null;
