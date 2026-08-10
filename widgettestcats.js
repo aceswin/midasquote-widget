@@ -458,6 +458,26 @@
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
          longer page. */
+      /* These 3 modals live on document.body now (see mqSetupModalOverlays),
+         not nested inside #midasquote-widget, so they can't rely on any of
+         the widget's own scoped CSS — this is a small, self-contained copy
+         of just what they need, under their own dedicated classes so
+         nothing here can collide with the widget's internal styling or the
+         host page's own CSS. */
+      .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999998;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+      .mq-overlay.show{display:flex}
+      .mq-modal{background:#f8faff;border-radius:12px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.18);position:relative;margin:auto;box-sizing:border-box}
+      .mq-modal *{box-sizing:border-box}
+      .mq-modal-title{font-size:16px;font-weight:600;color:#111;margin:0 0 4px}
+      .mq-modal-sub{font-size:14px;color:#4b5563;margin:0 0 1.25rem;line-height:1.5}
+      .mq-modal-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
+      .mq-modal-field{display:flex;flex-direction:column;gap:5px}
+      .mq-modal-field label{font-size:15px;color:#374151}
+      .mq-modal-field input{font-size:16px;font-family:inherit;width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;background:#fff}
+      .mq-modal-field input:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
+      .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
+      .mq-modal-skip{width:100%;padding:8px;font-size:14px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
+      .mq-modal-copy-btn{flex-shrink:0;padding:6px 12px;font-size:13px;font-weight:600;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111;cursor:pointer;font-family:inherit}
       #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
       #mq-sticky-bar.show{display:block}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
@@ -1792,50 +1812,6 @@
           <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
-      </div>
-
-      <!-- LEAD MODAL -->
-      <div class="mq-overlay" id="mq-lead-overlay">
-        <div class="mq-modal">
-          <p class="mq-modal-title">Almost there — one quick step</p>
-          <p class="mq-modal-sub">Enter your details and we'll send you a copy of your estimate.</p>
-          <div class="mq-modal-fields">
-            <div class="mq-field"><label class="mq-label">Your name</label><input type="text" id="mq-lead-name" placeholder="Jane Smith"/></div>
-            <div class="mq-field"><label class="mq-label">Email address</label><input type="email" id="mq-lead-email" placeholder="jane@email.com"/></div>
-            <div class="mq-field"><label class="mq-label">Phone number <span style="color:#6b7280;font-weight:400">(optional)</span></label><input type="tel" id="mq-lead-phone" placeholder="(555) 000-0000"/></div>
-          </div>
-          <button class="mq-modal-btn" onclick="mqSubmitLead()">Show my estimate →</button>
-          <button class="mq-modal-skip" onclick="mqSkipLead()">Skip for now</button>
-        </div>
-      </div>
-
-      <!-- CONSULT EMAIL FALLBACK MODAL -->
-      <div class="mq-overlay" id="mq-consult-email-overlay">
-        <div class="mq-modal">
-          <p class="mq-modal-title">Get in touch</p>
-          <p class="mq-modal-sub">Send your question or consultation request to:</p>
-          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span id="mq-consult-email-display" style="font-size:14px;font-weight:600;color:#111;word-break:break-all">—</span>
-            <button class="mq-btn mq-btn-sm" id="mq-consult-email-copy-btn" onclick="mqCopyConsultEmail()" style="flex-shrink:0">Copy</button>
-          </div>
-          <button class="mq-modal-btn" onclick="mqOpenConsultMailto()">Open in email app ↗</button>
-          <button class="mq-modal-skip" onclick="document.getElementById('mq-consult-email-overlay').classList.remove('show')">Close</button>
-        </div>
-      </div>
-
-      <!-- QUICK EMAIL MODAL — only shown if the customer skipped the main
-           lead form earlier, so "Email me a copy" still has somewhere to
-           send to without re-asking for name/phone they already declined. -->
-      <div class="mq-overlay" id="mq-quick-email-overlay">
-        <div class="mq-modal">
-          <p class="mq-modal-title">Where should we send it?</p>
-          <p class="mq-modal-sub">Enter your email and we'll send your current estimate.</p>
-          <div class="mq-modal-fields">
-            <div class="mq-field"><label class="mq-label">Email address</label><input type="email" id="mq-quick-email-input" placeholder="jane@email.com" onkeydown="if(event.key==='Enter')mqSubmitQuickEmail()"/></div>
-          </div>
-          <button class="mq-modal-btn" onclick="mqSubmitQuickEmail()">Send it →</button>
-          <button class="mq-modal-skip" onclick="document.getElementById('mq-quick-email-overlay').classList.remove('show')">Cancel</button>
-        </div>
       </div>`;
   }
 
@@ -3080,8 +3056,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       }catch(e){}
       const overlay=document.getElementById('mq-lead-overlay');
       overlay.classList.add('show');
-      // Scroll the overlay into view so it appears at the user's current position
-      overlay.scrollIntoView({behavior:'smooth',block:'center'});
+      // No scrolling needed — this is now a body-level position:fixed
+      // overlay, so it already appears centered in whatever the current
+      // viewport is, wherever the customer happens to be scrolled to.
     };
     window.mqSkipLead=()=>{
       document.getElementById('mq-lead-overlay').classList.remove('show');
@@ -3975,6 +3952,54 @@ window.mqTogDrawerConfig=(prefix)=>{
   window._mqStickyPrefix = null;
   window._mqStickyDismissed = false;
   window._mqStickyLast = null;
+  // Moved out of the widget's own nested container and onto document.body
+  // directly — same reasoning as the sticky bar. If anything on the host
+  // page (a transform, filter, etc. on some ancestor) breaks position:fixed
+  // for elements nested inside the widget, appending straight to body
+  // sidesteps that entirely, so these reliably center in the current
+  // viewport with zero scrolling ever needed to reach them.
+  function mqSetupModalOverlays() {
+    if (document.getElementById('mq-lead-overlay')) return;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="mq-overlay" id="mq-lead-overlay">
+        <div class="mq-modal">
+          <p class="mq-modal-title">Almost there — one quick step</p>
+          <p class="mq-modal-sub">Enter your details and we'll send you a copy of your estimate.</p>
+          <div class="mq-modal-fields">
+            <div class="mq-modal-field"><label>Your name</label><input type="text" id="mq-lead-name" placeholder="Jane Smith"/></div>
+            <div class="mq-modal-field"><label>Email address</label><input type="email" id="mq-lead-email" placeholder="jane@email.com"/></div>
+            <div class="mq-modal-field"><label>Phone number <span style="color:#6b7280;font-weight:400">(optional)</span></label><input type="tel" id="mq-lead-phone" placeholder="(555) 000-0000"/></div>
+          </div>
+          <button class="mq-modal-btn" onclick="mqSubmitLead()">Show my estimate →</button>
+          <button class="mq-modal-skip" onclick="mqSkipLead()">Skip for now</button>
+        </div>
+      </div>
+      <div class="mq-overlay" id="mq-consult-email-overlay">
+        <div class="mq-modal">
+          <p class="mq-modal-title">Get in touch</p>
+          <p class="mq-modal-sub">Send your question or consultation request to:</p>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span id="mq-consult-email-display" style="font-size:14px;font-weight:600;color:#111;word-break:break-all">—</span>
+            <button class="mq-modal-copy-btn" id="mq-consult-email-copy-btn" onclick="mqCopyConsultEmail()">Copy</button>
+          </div>
+          <button class="mq-modal-btn" onclick="mqOpenConsultMailto()">Open in email app ↗</button>
+          <button class="mq-modal-skip" onclick="document.getElementById('mq-consult-email-overlay').classList.remove('show')">Close</button>
+        </div>
+      </div>
+      <div class="mq-overlay" id="mq-quick-email-overlay">
+        <div class="mq-modal">
+          <p class="mq-modal-title">Where should we send it?</p>
+          <p class="mq-modal-sub">Enter your email and we'll send your current estimate.</p>
+          <div class="mq-modal-fields">
+            <div class="mq-modal-field"><label>Email address</label><input type="email" id="mq-quick-email-input" placeholder="jane@email.com" onkeydown="if(event.key==='Enter')mqSubmitQuickEmail()"/></div>
+          </div>
+          <button class="mq-modal-btn" onclick="mqSubmitQuickEmail()">Send it →</button>
+          <button class="mq-modal-skip" onclick="document.getElementById('mq-quick-email-overlay').classList.remove('show')">Cancel</button>
+        </div>
+      </div>`;
+    while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
+  }
   function mqSetupStickyBar() {
     if (document.getElementById('mq-sticky-bar')) return;
     const accent = window._mqFocalColor || '#fbbf24';
@@ -3986,7 +4011,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
@@ -4223,6 +4248,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
+    mqSetupModalOverlays();
     mqSetupStickyBar();
     // Delegated so it automatically covers every input/select/checkbox in
     // the widget, including ones added later (surface cards, tall cabinet
