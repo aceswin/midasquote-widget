@@ -2672,7 +2672,7 @@
           // picked afterward, rather than leaving a stray auto-added card
           // behind once "Use my base cabinet measurements" is back and
           // this section should go back to being genuinely empty/optional.
-          addSurfaceInternal('b', 'Kitchen run');
+          addSurfaceInternal('b');
           surfContainer.dataset.autoAdded = 'true';
         } else if (cabActive && surfContainer && surfContainer.dataset.autoAdded === 'true') {
           surfContainer.innerHTML = '';
@@ -3590,8 +3590,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const id=`s${prefix}${surfCounts[prefix]}`;
       surfs[prefix][id]=1;
       const hasCtInstall = hasCountertopInstall();
-      const names=['Kitchen run','Island top','Bathroom vanity','Bar top','Custom surface'];
-      const n=name||names[Math.min(surfCounts[prefix]-1,names.length-1)];
+      const n=name||`Surface ${surfCounts[prefix]}`;
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
       const card=document.createElement('div');
       card.className='mq-surface-card';card.id='mqsc-'+id;
@@ -3852,7 +3851,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       return true;
     }
 
-    addSurfaceInternal('ct','Kitchen run');
+    addSurfaceInternal('ct');
     // Auto-add one starting tall cabinet card per tab so the photo picker is
     // visible immediately on load — starts at qty 0 so it doesn't silently
     // count as "added" until the customer actually wants one.
