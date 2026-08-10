@@ -368,11 +368,16 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-best-seller-badges';
+  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-update-roundup';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p><strong>Best seller badges</strong> — mark your top items (any door, material, drawer, countertop, or specialty item) with an eye-catching badge right on the widget. Customize the wording ("Best seller," "Our pick," whatever fits) and the color, both from the top of My Products — change either one later and every already-marked item updates automatically, no need to re-mark anything.</p>
+      <p style="margin-bottom:14px"><strong>Live-updating estimates</strong> — swap a door, material, or countertop and watch the whole estimate update instantly — not just the sticky total at the bottom, the full itemized breakdown too. No need to hit Calculate again to see it reflect your latest change.</p>
+      <p style="margin-bottom:14px"><strong>Email me a copy</strong> — customers can now email themselves their current estimate anytime, right from the sticky bar. Already gave their email earlier? It sends instantly. Skipped it? A quick one-field prompt asks just for that, nothing more.</p>
+      <p style="margin-bottom:14px"><strong>Smarter price badges</strong> — $/$$/$$$ badges now reflect real standing within each collection and category, instead of being thrown off by unrelated pricier (or cheaper) items elsewhere in your catalog.</p>
+      <p style="margin-bottom:14px"><strong>Best seller badges</strong> — mark your top items (any door, material, drawer, countertop, or specialty item) with an eye-catching badge right on the widget. Customize the wording ("Best seller," "Our pick," whatever fits) and the color, both from the top of My Products — change either one later and every already-marked item updates automatically, no need to re-mark anything.</p>
+      <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
+      <p style="font-size:13px;color:#4b5563;line-height:1.6">Mass price editing — update the price on multiple same-priced items all at once — and quick price edits right from the Pricing dashboard, no need to open each item individually.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
