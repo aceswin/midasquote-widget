@@ -885,7 +885,7 @@
       window._mqGroupFilter[selectId] = groupNames[0];
     }
     const boxBorderColor = window._mqBoxBorder || '#93c5fd';
-    const boxBgColor = window._mqBoxBg || '#eff6ff';
+    const boxBgColor = '#e9e9e9';
     const boxTextColor = window._mqBoxText || '#1e40af';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
