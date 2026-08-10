@@ -4449,10 +4449,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Every distinct edge/addon across all countertop materials, deduped by
     // id — used only to offer a photo card here; everything else about an
     // addon (name, pricing, which materials it applies to) is managed in
-    // Pricing → Countertop pricing instead.
+    // Pricing → Countertop pricing instead. "Standard" (the free default
+    // edge every material falls back to) isn't a real addon record — it's
+    // always added in here under a fixed key so shops can still give it a
+    // photo even with zero custom edges configured.
     function mqCountertopAddonPhotoList() {
       const items = byCategory['countertop'] || [];
       const seen = new Map();
+      seen.set('standard_edge', { id:'standard_edge', label:'Standard', isEdge:true });
       items.forEach(item => (item.addonOptions||[]).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
       return [...seen.values()];
     }
