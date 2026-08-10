@@ -443,7 +443,7 @@
       #midasquote-widget .mq-vpicker-arrow{position:absolute;top:0;right:0;bottom:8px;width:34px;display:none;align-items:center;justify-content:flex-end;padding-right:2px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%);font-size:20px;font-weight:700;color:#374151;pointer-events:none}
       #midasquote-widget .mq-vpicker-arrow.show{display:flex}
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:110px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
-      #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
+      #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
       #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
       @keyframes mqShakeChoice{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
