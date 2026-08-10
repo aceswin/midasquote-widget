@@ -190,6 +190,13 @@
           id:r.id,
           label:r.fields['Item name']||r.fields['Special Items'],
           price:r.fields['Price']||0,
+          // Badges reflect the item's real total cost (supply + install
+          // combined), not just the supply price — otherwise two items with
+          // identical install pricing but very different supply costs (e.g.
+          // an MDF vs. a rift oak refacing door) end up looking like the
+          // same price tier. This never touches the actual `price` field
+          // used for real math above — it's purely for sorting into $/$$/$$$.
+          badgePrice:(r.fields['Price']||0)+(r.fields['Install price']||0),
           perFt:r.fields['Per linear foot']||false,
           perSqFt:r.fields['Per square foot']||false,
           photoUrl: shopPhotos['spec_' + r.id] || '',
@@ -842,16 +849,17 @@
   // tight cluster of similar prices doesn't get artificially split apart.
   function assignBadges(realItems) {
     if (!realItems.length) return realItems;
-    const sorted = [...realItems].sort((a,b)=>a.price-b.price);
-    const allEqual = sorted.every(it => it.price === sorted[0].price);
+    const priceOf = it => (it.badgePrice != null ? it.badgePrice : it.price);
+    const sorted = [...realItems].sort((a,b)=>priceOf(a)-priceOf(b));
+    const allEqual = sorted.every(it => priceOf(it) === priceOf(sorted[0]));
     if (allEqual) { sorted.forEach(it => it.badge = '$'); return sorted; }
     const n = sorted.length;
     if (n === 2) { sorted[0].badge='$'; sorted[1].badge='$$$'; }
     else if (n === 3) { sorted[0].badge='$'; sorted[1].badge='$$'; sorted[2].badge='$$$'; }
     else {
-      const min = sorted[0].price, max = sorted[n-1].price, range = max-min;
+      const min = priceOf(sorted[0]), max = priceOf(sorted[n-1]), range = max-min;
       const b1 = min + range/3, b2 = min + 2*range/3;
-      sorted.forEach(it => { it.badge = it.price<=b1 ? '$' : (it.price<=b2 ? '$$' : '$$$'); });
+      sorted.forEach(it => { const p = priceOf(it); it.badge = p<=b1 ? '$' : (p<=b2 ? '$$' : '$$$'); });
     }
     return sorted;
   }
@@ -865,20 +873,24 @@
   // Clusters items sharing a Group name together (shop-owner-controlled
   // order first, then any ungrouped leftovers last, sorted cheapest-first
   // within each cluster), and flags a cluster whose members all cost the
-  // exact same so the chip can show a quick reassurance note. Runs after
-  // badges are already assigned, so it only ever reorders — price badges
-  // still reflect standing across the whole list. No-op if nothing's grouped.
+  // exact same so the chip can show a quick reassurance note. Re-badges
+  // each group's own members (and the ungrouped bucket) scoped to just
+  // themselves, rather than leaving the badges from the earlier whole-list
+  // pass — a group that happens to sit entirely at the cheap (or pricey)
+  // end of the full list's range would otherwise show every item with the
+  // same badge, hiding a real cheapest-to-priciest spread within that
+  // specific group. No-op if nothing's grouped.
   function applyItemGrouping(items) {
     if (!items.some(it => it.groupName)) return items;
     const groupNames = [...new Set(items.filter(it => it.groupName).map(it => it.groupName))];
     const groups = groupNames.map(name => {
-      const members = items.filter(it => it.groupName === name).sort((a,b) => a.price - b.price);
+      const members = assignBadges(items.filter(it => it.groupName === name)).sort((a,b) => a.price - b.price);
       const allSamePrice = members.length > 1 && members.every(m => m.price === members[0].price);
       if (allSamePrice) members.forEach(m => m.samePriceNote = true);
       const order = members.find(m => m.groupOrder)?.groupOrder || 0;
       return { order, members };
     }).sort((a,b) => a.order - b.order);
-    const ungrouped = items.filter(it => !it.groupName).sort((a,b) => a.price - b.price);
+    const ungrouped = assignBadges(items.filter(it => !it.groupName)).sort((a,b) => a.price - b.price);
     return [...groups.flatMap(g => g.members), ...ungrouped];
   }
 
