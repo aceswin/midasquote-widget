@@ -411,6 +411,7 @@
       #midasquote-widget .mq-label{font-size:15px;color:#374151}
       #midasquote-widget .mq-hint{font-size:14px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
+      #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:136px!important}
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
@@ -1454,14 +1455,14 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" onclick="this.select()" style="width:68px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-0.1)">−</button><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.1" onclick="this.select()" style="text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',0.1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:68px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-0.1)">−</button><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.1" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',0.1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
-          <div class="mq-field"><label class="mq-label">Height (uppers)</label>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
         </div>
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
@@ -2390,7 +2391,7 @@
         if (!poweredBy) return;
         const bar = document.getElementById('mq-sticky-bar');
         const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
-        const targetGap = barHeight + 3;
+        const targetGap = barHeight + 8;
         const rect = poweredBy.getBoundingClientRect();
         const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
         if (Math.abs(scrollAmount) <= 2 || attempts >= 12) return; // close enough, or give up cleanly
@@ -3708,7 +3709,8 @@ window.mqTogDrawerConfig=(prefix)=>{
     window.mqAdjLinFt=(prefix, which, delta)=>{
       const input = document.getElementById(`mq-${prefix}-${which}ft`);
       if (!input) return;
-      const next = Math.max(0, Math.min(60, (parseFloat(input.value)||0) + delta));
+      let next = Math.max(0, Math.min(60, (parseFloat(input.value)||0) + delta));
+      next = Math.round(next * 10) / 10; // keep to one decimal — avoids 0.1+0.1 floating-point drift
       input.value = next;
       input.dispatchEvent(new Event('input', { bubbles: true }));
     };
