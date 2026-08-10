@@ -257,14 +257,14 @@
         : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`
       ).join('');
 
-    if (!lead._isSkip) await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
+    if (!lead._isSkip || shop['Notify on every estimate'] === 'Yes') await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name || 'Anonymous visitor'}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#1a1a1a">New ${quoteType} quote lead</h2>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Customer details</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name}</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email}</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone}</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
         </table>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Quote breakdown</td></tr>${lineRows}
@@ -4114,37 +4114,33 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!prefix || !window._mqCalcCabinet || !window._mqCalcCountertop) return null;
     if (prefix === 'b') {
       const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-      return { low: cab.low + ct.low, high: cab.high + ct.high, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
+      return {
+        low: cab.low + ct.low, high: cab.high + ct.high,
+        lines: [{label:'Cabinets',header:true}, ...cab.lines.filter(l=>!l.bold), {label:'Countertops',header:true}, ...ct.lines.filter(l=>!l.bold)],
+        quoteType: 'Cabinets + Countertops', roomLabel: cab.roomLabel,
+      };
     }
     if (prefix === 'ct') {
       const r = window._mqCalcCountertop('ct');
-      return { low: r.low, high: r.high, lines: r.lines };
+      return { low: r.low, high: r.high, lines: r.lines, quoteType: 'Countertops', roomLabel: '' };
     }
     const r = window._mqCalcCabinet('c');
-    return { low: r.low, high: r.high, lines: r.lines };
+    return { low: r.low, high: r.high, lines: r.lines, quoteType: 'Cabinets', roomLabel: r.roomLabel };
   }
+  // Goes through the exact same saveLead used for the automatic post-
+  // Calculate email — creates/updates the Airtable lead record, notifies
+  // the shop (subject to their "notify on every estimate" setting), and
+  // emails the customer their current numbers, all in one call rather than
+  // duplicating that logic separately here.
   async function mqSendQuoteCopy(email) {
     const linkEl = document.getElementById('mq-sticky-email-link');
     const result = mqCurrentLiveResult();
-    if (!result) return;
-    const shop = window._mqShopData || {};
+    const data = window._mqFullData;
+    if (!result || !data) return;
     if (linkEl) linkEl.textContent = 'Sending...';
-    const customerLineRows = (result.lines||[]).filter(l=>l&&l.label&&!l.bold)
-      .sort((a,b)=>b.cost-a.cost)
-      .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
-    await sendEmail(email, `Your updated quote from ${shop['Shop name']||''}`,
-      `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2 style="color:#1a1a1a">Your updated quote from ${shop['Shop name']||''}</h2>
-        <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-          <div style="font-size:14px;color:#666;margin-bottom:4px">Your estimated range</div>
-          <div style="font-size:28px;font-weight:700;color:#16a34a">$${Math.round(result.low).toLocaleString()} – $${Math.round(result.high).toLocaleString()}</div>
-        </div>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-          <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What's included</td></tr>${customerLineRows}
-        </table>
-        <p style="color:#666;font-size:14px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
-        <p style="color:#666;font-size:14px"><strong>${shop['Shop name']||''}</strong><br/>${shop['Phone']||''}</p>
-      </div>`);
+    try {
+      await saveLead(data, { name:'', email, phone:'', _isSkip:false }, result.quoteType, result.low, result.high, result.lines, result.roomLabel);
+    } catch(e) { console.error('Email me a copy failed', e); }
     if (linkEl) {
       linkEl.textContent = '✓ Sent!';
       setTimeout(() => { linkEl.textContent = '📧 Email me a copy'; }, 2500);
