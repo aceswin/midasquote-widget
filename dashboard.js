@@ -2590,7 +2590,7 @@ window.logoutMember = async function () {
   // MQ_DEFAULT_MEASURE_IMAGES in widget.js/widgetpro.js exactly. Used here
   // only for admin-side previewing and the "Use default image" button —
   // never written into a shop's own saved data (see defaultRoomTypes below).
-  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen:'kitchen1.png', bathroom:'bathroom1.png', laundry:'laundry1.png', garage:'garage1.png', commercial:'commercial1.png', other:'other1.png' };
+  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen:'kitchen1.jpg', bathroom:'bathroom1.jpg', laundry:'laundry1.jpg', garage:'garage1.jpg', commercial:'commercial1.jpg', other:'other1.jpg' };
   function mqDefaultMeasureImageUrlFor(roomId) {
     const file = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
     return file ? MQ_DEFAULT_MEASURE_IMAGE_BASE + file : '';
