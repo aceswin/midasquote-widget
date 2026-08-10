@@ -2365,6 +2365,25 @@
       const top = rect.top + window.pageYOffset - (viewportCenter - (aboveCenterPx == null ? 80 : aboveCenterPx));
       window.scrollTo({ top, behavior: 'smooth' });
     }
+    // Used right after Calculate — rather than anchoring the TOP of the
+    // results panel to the viewport (which is where a short vs. long
+    // breakdown ends up landing at wildly different spots depending on how
+    // many items were selected), this anchors the BOTTOM instead: the
+    // "Powered by MidasQuote" line always ends up sitting a fixed few
+    // pixels above the sticky bar, no matter how tall the breakdown is.
+    // Keeps the brand line reliably visible every single time.
+    function mqScrollPoweredByAboveSticky(prefix) {
+      const resultId = prefix === 'c' ? 'mq-c-result' : prefix === 'ct' ? 'mq-ct-result' : 'mq-b-result';
+      const resultEl = document.getElementById(resultId);
+      const poweredBy = resultEl ? resultEl.querySelector('.mq-powered-by') : null;
+      if (!poweredBy) return;
+      const bar = document.getElementById('mq-sticky-bar');
+      const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
+      const targetGap = barHeight + 3;
+      const rect = poweredBy.getBoundingClientRect();
+      const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
+      window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+    }
     // Exposed globally so mqStartNewEstimate — a sibling function declared
     // outside wireWidget's scope — can actually reach this instead of
     // throwing a ReferenceError when the "Start a New Estimate" button
@@ -3497,7 +3516,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         renderResult('mq-c-res-range','mq-c-line-items',r);
         window.mqShowStickyBar('c', r.low, r.high);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-c-result'));
+        document.getElementById('mq-c-result').classList.add('show');mqScrollPoweredByAboveSticky('c');
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel);
       });
@@ -3517,7 +3536,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           renderResult('mq-ct-res-range','mq-ct-line-items',r);
           window.mqShowStickyBar('ct', r.low, r.high);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-ct-result'));
+          document.getElementById('mq-ct-result').classList.add('show');mqScrollPoweredByAboveSticky('ct');
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines);
         },900);
@@ -3546,7 +3565,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
           window.mqShowStickyBar('b', tl, th);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');mqScrollWithOffset(document.getElementById('mq-b-result'));
+          document.getElementById('mq-b-result').classList.add('show');mqScrollPoweredByAboveSticky('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel);
         },1200);
