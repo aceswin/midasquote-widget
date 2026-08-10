@@ -359,10 +359,16 @@
       #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
       #midasquote-widget .mq-vpicker-featured-badge{position:absolute;top:-6px;left:-6px;font-size:8px;font-weight:700;padding:2px 5px;border-radius:8px;background:#f59e0b;color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
-      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#0f2a52,#1e3a5f);border-top:2px solid #fbbf24;box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;align-items:center;gap:10px;flex-wrap:wrap;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
-      #mq-sticky-bar.show{display:flex}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#0f2a52,#1e3a5f);border-top:2px solid #fbbf24;box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar.show{display:block}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+      /* Background/border stay full-bleed on the outer bar, but the actual
+         content centers within a max-width column — same width the results
+         panel itself uses, so wide desktop screens don't stretch the price
+         and buttons apart to the far edges. */
+      #mq-sticky-inner{position:relative;max-width:900px;width:100%;margin:0 auto}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#0f2a52;border:2px solid #0f2a52;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
+      #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       #mq-sticky-content{flex:1;min-width:0}
       #mq-sticky-label{font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
       #mq-sticky-price-wrap{position:relative;display:inline-block}
@@ -375,6 +381,7 @@
       #mq-sticky-ctas{display:flex;gap:6px;flex-shrink:0}
       #mq-sticky-ctas button{font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;white-space:nowrap;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
       #mq-sticky-ctas button.mq-pri{background:#fbbf24;color:#0f2a52;border-color:transparent;font-weight:700}
+      #mq-sticky-financing{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.14);font-size:12px;font-weight:700;color:#fbbf24;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:0.01em}
       @media (max-width:420px){
         #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
         #mq-sticky-content{flex:1 1 100%}
@@ -1275,13 +1282,13 @@
         <p class="mq-sec-title">Cabinet measurements</p>
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
-          <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" onclick="this.select()" style="width:52px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" onclick="this.select()" style="width:68px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
-          <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:52px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Tap the calculator to convert & add up multiple sections easily.</div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:68px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
@@ -1475,6 +1482,7 @@
       ? `<button onclick="window.open('${financingLink}','_blank')">Get pre-approved ↗</button>`
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
     window._mqAskQuestionBtn = askQuestionBtn;
+    window._mqFinancingOn = financingOn;
 
     return `
       <div style="background:linear-gradient(135deg,#0f2a52,#1e3a5f);padding:16px 20px;text-align:center">
@@ -3588,6 +3596,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     window._mqStickyLast = null;
     const stickyBar = document.getElementById('mq-sticky-bar');
     if (stickyBar) stickyBar.classList.remove('show');
+    mqAdjustWidgetBottomPadding();
     window.mqScrollWithOffset(container);
   };
 
@@ -3642,21 +3651,50 @@ window.mqTogDrawerConfig=(prefix)=>{
     const bar = document.createElement('div');
     bar.id = 'mq-sticky-bar';
     bar.innerHTML = `
-      <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
-      <div id="mq-sticky-content">
-        <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-        <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
-      </div>
-      <div id="mq-sticky-ctas">
-        ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
-        <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+      <div id="mq-sticky-inner">
+        <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
+        <div id="mq-sticky-main">
+          <div id="mq-sticky-content">
+            <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+          </div>
+          <div id="mq-sticky-ctas">
+            ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
+            <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+          </div>
+        </div>
+        ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available</div>` : ''}
       </div>`;
     document.body.appendChild(bar);
+    window.addEventListener('resize', mqAdjustWidgetBottomPadding);
+  }
+  // The bar is position:fixed, so it never pushes page content out of the
+  // way on its own — without this, it silently sits on top of whatever's
+  // scrolled to the bottom (financing note, "Powered by" footer, etc.),
+  // hiding it completely rather than just overlapping it. Pads the page's
+  // own body rather than the widget's container — the widget lives inside
+  // a host page (Shopify/Webflow/etc) whose own CSS can interfere with
+  // padding on an inner element in ways that aren't predictable from here,
+  // but body is reliably the actual scrollable area almost everywhere.
+  let _mqOrigBodyPaddingBottom = null;
+  function mqAdjustWidgetBottomPadding() {
+    requestAnimationFrame(() => {
+      const bar = document.getElementById('mq-sticky-bar');
+      if (_mqOrigBodyPaddingBottom === null) {
+        _mqOrigBodyPaddingBottom = document.body.style.paddingBottom || '';
+      }
+      if (bar && bar.classList.contains('show')) {
+        document.body.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
+      } else {
+        document.body.style.paddingBottom = _mqOrigBodyPaddingBottom;
+      }
+    });
   }
   window.mqCloseStickyBar = function() {
     window._mqStickyDismissed = true;
     const bar = document.getElementById('mq-sticky-bar');
     if (bar) bar.classList.remove('show');
+    mqAdjustWidgetBottomPadding();
   };
   // Called right after a real Calculate finishes for any tab — reveals the
   // bar (unless the customer already dismissed it this session) and marks
@@ -3669,6 +3707,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bar = document.getElementById('mq-sticky-bar');
       if (bar) bar.classList.add('show');
     }
+    mqAdjustWidgetBottomPadding();
   };
   function fmtRange(low, high) {
     const f = n => '$' + Math.round(n).toLocaleString();
