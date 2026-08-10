@@ -2374,15 +2374,25 @@
     // Keeps the brand line reliably visible every single time.
     function mqScrollPoweredByAboveSticky(prefix) {
       const resultId = prefix === 'c' ? 'mq-c-result' : prefix === 'ct' ? 'mq-ct-result' : 'mq-b-result';
-      const resultEl = document.getElementById(resultId);
-      const poweredBy = resultEl ? resultEl.querySelector('.mq-powered-by') : null;
-      if (!poweredBy) return;
-      const bar = document.getElementById('mq-sticky-bar');
-      const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
-      const targetGap = barHeight + 3;
-      const rect = poweredBy.getBoundingClientRect();
-      const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
-      window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+      // Body padding is applied on its own deferred animation frame — if we
+      // calculate the scroll distance before that's actually landed, the
+      // page can still be too short to scroll this far yet, or the target
+      // shifts out from under the calculation mid-flight. Explicitly wait
+      // for padding to finish, then one more frame for the browser to
+      // finish reflowing with it, before measuring anything.
+      mqAdjustWidgetBottomPadding(() => {
+        requestAnimationFrame(() => {
+          const resultEl = document.getElementById(resultId);
+          const poweredBy = resultEl ? resultEl.querySelector('.mq-powered-by') : null;
+          if (!poweredBy) return;
+          const bar = document.getElementById('mq-sticky-bar');
+          const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
+          const targetGap = barHeight + 3;
+          const rect = poweredBy.getBoundingClientRect();
+          const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
+          window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+        });
+      });
     }
     // Exposed globally so mqStartNewEstimate — a sibling function declared
     // outside wireWidget's scope — can actually reach this instead of
@@ -3942,7 +3952,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   // padding on an inner element in ways that aren't predictable from here,
   // but body is reliably the actual scrollable area almost everywhere.
   let _mqOrigBodyPaddingBottom = null;
-  function mqAdjustWidgetBottomPadding() {
+  function mqAdjustWidgetBottomPadding(afterApply) {
     requestAnimationFrame(() => {
       const bar = document.getElementById('mq-sticky-bar');
       if (_mqOrigBodyPaddingBottom === null) {
@@ -3953,6 +3963,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       } else {
         document.body.style.paddingBottom = _mqOrigBodyPaddingBottom;
       }
+      if (typeof afterApply === 'function') afterApply();
     });
   }
   window.mqCloseStickyBar = function() {
