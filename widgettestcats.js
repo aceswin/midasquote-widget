@@ -190,6 +190,13 @@
           id:r.id,
           label:r.fields['Item name']||r.fields['Special Items'],
           price:r.fields['Price']||0,
+          // Badges reflect the item's real total cost (supply + install
+          // combined), not just the supply price — otherwise two items with
+          // identical install pricing but very different supply costs (e.g.
+          // an MDF vs. a rift oak refacing door) end up looking like the
+          // same price tier. This never touches the actual `price` field
+          // used for real math above — it's purely for sorting into $/$$/$$$.
+          badgePrice:(r.fields['Price']||0)+(r.fields['Install price']||0),
           perFt:r.fields['Per linear foot']||false,
           perSqFt:r.fields['Per square foot']||false,
           photoUrl: shopPhotos['spec_' + r.id] || '',
@@ -842,16 +849,17 @@
   // tight cluster of similar prices doesn't get artificially split apart.
   function assignBadges(realItems) {
     if (!realItems.length) return realItems;
-    const sorted = [...realItems].sort((a,b)=>a.price-b.price);
-    const allEqual = sorted.every(it => it.price === sorted[0].price);
+    const priceOf = it => (it.badgePrice != null ? it.badgePrice : it.price);
+    const sorted = [...realItems].sort((a,b)=>priceOf(a)-priceOf(b));
+    const allEqual = sorted.every(it => priceOf(it) === priceOf(sorted[0]));
     if (allEqual) { sorted.forEach(it => it.badge = '$'); return sorted; }
     const n = sorted.length;
     if (n === 2) { sorted[0].badge='$'; sorted[1].badge='$$$'; }
     else if (n === 3) { sorted[0].badge='$'; sorted[1].badge='$$'; sorted[2].badge='$$$'; }
     else {
-      const min = sorted[0].price, max = sorted[n-1].price, range = max-min;
+      const min = priceOf(sorted[0]), max = priceOf(sorted[n-1]), range = max-min;
       const b1 = min + range/3, b2 = min + 2*range/3;
-      sorted.forEach(it => { it.badge = it.price<=b1 ? '$' : (it.price<=b2 ? '$$' : '$$$'); });
+      sorted.forEach(it => { const p = priceOf(it); it.badge = p<=b1 ? '$' : (p<=b2 ? '$$' : '$$$'); });
     }
     return sorted;
   }
@@ -1178,7 +1186,7 @@
   // opened the calculator from.
   let _mqCalcMode = 'linear'; // 'linear' or 'sqft'
   let _mqCalcTargetId = null;
-  let _mqCalcUnit = 'ft'; // 'ft', 'in', or 'mm'
+  let _mqCalcUnit = 'in'; // 'ft', 'in', or 'mm'
   let _mqCalcSections = []; // linear: [{val}]  ·  sqft: [{w,h}]
   let _mqCalcFieldLabel = ''; // shown in the modal so it's clear which field this fills in
 
@@ -2672,7 +2680,7 @@
           // picked afterward, rather than leaving a stray auto-added card
           // behind once "Use my base cabinet measurements" is back and
           // this section should go back to being genuinely empty/optional.
-          addSurfaceInternal('b', 'Kitchen run');
+          addSurfaceInternal('b');
           surfContainer.dataset.autoAdded = 'true';
         } else if (cabActive && surfContainer && surfContainer.dataset.autoAdded === 'true') {
           surfContainer.innerHTML = '';
@@ -3590,8 +3598,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const id=`s${prefix}${surfCounts[prefix]}`;
       surfs[prefix][id]=1;
       const hasCtInstall = hasCountertopInstall();
-      const names=['Kitchen run','Island top','Bathroom vanity','Bar top','Custom surface'];
-      const n=name||names[Math.min(surfCounts[prefix]-1,names.length-1)];
+      const n=name||`Surface ${surfCounts[prefix]}`;
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
       const card=document.createElement('div');
       card.className='mq-surface-card';card.id='mqsc-'+id;
@@ -3852,7 +3859,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       return true;
     }
 
-    addSurfaceInternal('ct','Kitchen run');
+    addSurfaceInternal('ct');
     // Auto-add one starting tall cabinet card per tab so the photo picker is
     // visible immediately on load — starts at qty 0 so it doesn't silently
     // count as "added" until the customer actually wants one.
