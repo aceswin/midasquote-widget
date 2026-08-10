@@ -184,7 +184,7 @@
     const hasDynamic = li.materials.length > 0;
 
     const specRecords = payload.specialty || [];
-    const specs = assignBadges(specRecords
+    const specsRaw = specRecords
       .map(r=>{
         const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty');
         return {
@@ -212,7 +212,17 @@
           description: r.fields['Description']||'',
           category: r.fields['Category']||'',
         };
-      }));
+      });
+    // Badge PER CATEGORY, not across the whole specialty items catalog at
+    // once — otherwise one pricier (or cheaper) category elsewhere skews
+    // every OTHER category's items toward looking artificially uniform by
+    // comparison, hiding a real cheapest-to-priciest spread that exists
+    // within a given category on its own (e.g. Doors judged against
+    // Hardware's price range instead of just other Doors).
+    [...new Set(specsRaw.map(s => s.category || ''))].forEach(cat => {
+      assignBadges(specsRaw.filter(s => (s.category||'') === cat));
+    });
+    const specs = specsRaw;
 
     return { shop, pricing:p, specs, li, hasDynamic, shopPhotos, shopFeatured, roomTypes };
   }
