@@ -1049,7 +1049,7 @@
           <div style="font-size:11px;color:#6b7280;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},-1)">−</button>
-            <input type="text" inputmode="${s.installPerFt||s.installPerSqFt?'decimal':'numeric'}" pattern="${s.installPerFt||s.installPerSqFt?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-installqty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:14px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetInstallQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <input type="text" inputmode="${s.installPerFt||s.installPerSqFt?'decimal':'numeric'}" pattern="${s.installPerFt||s.installPerSqFt?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-installqty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetInstallQty('${prefix}',${i},this.value)" onclick="this.select()"/>
             <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},1)">+</button>
             ${s.installPerSqFt ? calcBtn(`mq-installqty-${prefix}-${i}`,'sqft',s.label) : (s.installPerFt ? calcBtn(`mq-installqty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
@@ -1068,7 +1068,7 @@
         <div class="mq-spec-bottom">
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-            <input type="text" inputmode="${(s.perSqFt||s.perFt)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:14px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <input type="text" inputmode="${(s.perSqFt||s.perFt)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
@@ -1966,7 +1966,7 @@
           <label style="font-size:14px;color:#4b5563;min-width:110px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label>
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" type="button" onclick="mqAdjCutoutQty('${idPrefix}',${i},-1)">−</button>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" id="${idPrefix}-${i}" value="0" style="width:36px;text-align:center;font-size:14px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" onclick="this.select()"/>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="${idPrefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" onclick="this.select()"/>
             <button class="mq-qty-btn" type="button" onclick="mqAdjCutoutQty('${idPrefix}',${i},1)">+</button>
           </div>
         </div>`
@@ -2020,7 +2020,7 @@
               </label>
               <div class="mq-qty-ctrl" id="${idPrefix}-qtywrap-${i}" style="display:none;margin-top:6px">
                 <button class="mq-qty-btn" type="button" onclick="mqAdjAddonQty('${idPrefix}',${i},-1)">−</button>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" id="${idPrefix}-qty-${i}" value="1" style="width:36px;text-align:center;font-size:14px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" onclick="this.select()"/>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="${idPrefix}-qty-${i}" value="1" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" onclick="this.select()"/>
                 <button class="mq-qty-btn" type="button" onclick="mqAdjAddonQty('${idPrefix}',${i},1)">+</button>
               </div>
             </div>
@@ -3598,7 +3598,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       card.innerHTML=`
         <div class="mq-surface-header">
           <div class="mq-surface-num">${surfCounts[prefix]}</div>
-          <input id="mqsn-${id}" value="${n}" style="font-size:14px;font-weight:500;color:#111;background:none;border:none;outline:none;flex:1;font-family:inherit"/>
+          <input id="mqsn-${id}" value="${n}" style="font-size:16px;font-weight:500;color:#111;background:none;border:none;outline:none;flex:1;font-family:inherit"/>
           <button class="mq-remove-btn" onclick="mqRemoveSurf('${prefix}','${id}')">Remove</button>
         </div>
         <div class="mq-grid3" style="margin-bottom:1rem">
