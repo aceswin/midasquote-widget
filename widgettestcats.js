@@ -457,9 +457,14 @@
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
          longer page. */
-      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
-      #mq-sticky-bar.show{display:flex}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar.show{display:block}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+      /* Background/border stay full-bleed on the outer bar, but the actual
+         content centers within a max-width column — same width the results
+         panel itself uses, so wide desktop screens don't stretch the price
+         and buttons apart to the far edges. */
+      #mq-sticky-inner{position:relative;max-width:900px;width:100%;margin:0 auto}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       #mq-sticky-content{flex:1;min-width:0}
@@ -3850,18 +3855,20 @@ window.mqTogDrawerConfig=(prefix)=>{
     bar.id = 'mq-sticky-bar';
     bar.style.borderTop = `2px solid ${accent}`;
     bar.innerHTML = `
-      <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
-      <div id="mq-sticky-main">
-        <div id="mq-sticky-content">
-          <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-          <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+      <div id="mq-sticky-inner">
+        <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
+        <div id="mq-sticky-main">
+          <div id="mq-sticky-content">
+            <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+          </div>
+          <div id="mq-sticky-ctas">
+            ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
+            <button class="mq-pri" style="background:${accent};color:#fff" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+          </div>
         </div>
-        <div id="mq-sticky-ctas">
-          ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
-          <button class="mq-pri" style="background:${accent};color:#fff" onclick="mqShowConsultModal()">Book a consultation ↗</button>
-        </div>
-      </div>
-      ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available</div>` : ''}`;
+        ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available</div>` : ''}
+      </div>`;
     document.body.appendChild(bar);
     window.addEventListener('resize', mqAdjustWidgetBottomPadding);
   }
