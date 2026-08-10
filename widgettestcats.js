@@ -1249,15 +1249,15 @@
     const rows = _mqCalcSections.map((s, idx) => _mqCalcMode === 'linear' ? `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
-        <input type="number" value="${s.val}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="number" value="${s.val}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:13px;color:#4b5563;width:44px">${unitLabel}</span>
         ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
       </div>` : `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
-        <input type="number" value="${s.w}" placeholder="Width" oninput="mqCalcUpdateSection(${idx},'w',this.value)" style="flex:1;min-width:0;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="number" value="${s.w}" placeholder="Width" oninput="mqCalcUpdateSection(${idx},'w',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:12px;color:#6b7280;flex-shrink:0">×</span>
-        <input type="number" value="${s.h}" placeholder="Height" oninput="mqCalcUpdateSection(${idx},'h',this.value)" style="flex:1;min-width:0;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="number" value="${s.h}" placeholder="Height" oninput="mqCalcUpdateSection(${idx},'h',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:13px;color:#4b5563;width:44px">${unitLabel}</span>
         ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
       </div>`
