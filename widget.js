@@ -1121,6 +1121,12 @@
       order.splice(order.indexOf('__other__'), 1);
       order.push('__other__');
     }
+    // Cheapest-to-priciest within each group — same total-cost metric the
+    // $/$$/$$$ badge already uses, so ordering and badge always agree with
+    // each other rather than one being sorted and the other left however
+    // Airtable happened to return the rows.
+    const badgePriceOf = idx => { const s = specs[idx]; return s.badgePrice != null ? s.badgePrice : s.price; };
+    Object.values(groups).forEach(idxs => idxs.sort((a,b) => badgePriceOf(a) - badgePriceOf(b)));
 
     return order.map((cat, gi) => {
       const label = cat === '__other__' ? 'Other' : cat;
