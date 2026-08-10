@@ -457,10 +457,11 @@
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
          longer page. */
-      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;align-items:center;gap:10px;flex-wrap:wrap;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
       #mq-sticky-bar.show{display:flex}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
+      #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       #mq-sticky-content{flex:1;min-width:0}
       #mq-sticky-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
       #mq-sticky-price-wrap{position:relative;display:inline-block}
@@ -473,6 +474,7 @@
       #mq-sticky-ctas{display:flex;gap:6px;flex-shrink:0}
       #mq-sticky-ctas button{font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;white-space:nowrap;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
       #mq-sticky-ctas button.mq-pri{border-color:transparent;font-weight:700}
+      #mq-sticky-financing{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.14);font-size:12px;font-weight:700;color:#fbbf24;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:0.01em}
       @media (max-width:420px){
         #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
         #mq-sticky-content{flex:1 1 100%}
@@ -1626,6 +1628,7 @@
       ? `<button onclick="window.open('${financingLink}','_blank')">Get pre-approved ↗</button>`
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
     window._mqAskQuestionBtn = askQuestionBtn;
+    window._mqFinancingOn = financingOn;
 
     return `
       <div class="mq-header">
@@ -3790,6 +3793,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     window._mqStickyLast = null;
     const stickyBar = document.getElementById('mq-sticky-bar');
     if (stickyBar) stickyBar.classList.remove('show');
+    mqAdjustWidgetBottomPadding();
     window.mqScrollWithOffset(container);
   };
 
@@ -3847,20 +3851,42 @@ window.mqTogDrawerConfig=(prefix)=>{
     bar.style.borderTop = `2px solid ${accent}`;
     bar.innerHTML = `
       <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
-      <div id="mq-sticky-content">
-        <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-        <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+      <div id="mq-sticky-main">
+        <div id="mq-sticky-content">
+          <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+          <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+        </div>
+        <div id="mq-sticky-ctas">
+          ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
+          <button class="mq-pri" style="background:${accent};color:#fff" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+        </div>
       </div>
-      <div id="mq-sticky-ctas">
-        ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
-        <button class="mq-pri" style="background:${accent};color:#fff" onclick="mqShowConsultModal()">Book a consultation ↗</button>
-      </div>`;
+      ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available</div>` : ''}`;
     document.body.appendChild(bar);
+    window.addEventListener('resize', mqAdjustWidgetBottomPadding);
+  }
+  // The bar is position:fixed, so it never pushes page content out of the
+  // way on its own — without this, it silently sits on top of whatever's
+  // scrolled to the bottom (financing note, "Powered by" footer, etc.),
+  // hiding it completely rather than just overlapping it. Measures the
+  // bar's real rendered height (financing badge, mobile wrap, etc. all
+  // change this) and pads the widget's own container to match, so
+  // everything stays reachable by scrolling clear of the bar.
+  function mqAdjustWidgetBottomPadding() {
+    const bar = document.getElementById('mq-sticky-bar');
+    const widget = document.getElementById('midasquote-widget');
+    if (!widget) return;
+    if (bar && bar.classList.contains('show')) {
+      widget.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
+    } else {
+      widget.style.paddingBottom = '';
+    }
   }
   window.mqCloseStickyBar = function() {
     window._mqStickyDismissed = true;
     const bar = document.getElementById('mq-sticky-bar');
     if (bar) bar.classList.remove('show');
+    mqAdjustWidgetBottomPadding();
   };
   // Called right after a real Calculate finishes for any tab — reveals the
   // bar (unless the customer already dismissed it this session) and marks
@@ -3873,6 +3899,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bar = document.getElementById('mq-sticky-bar');
       if (bar) bar.classList.add('show');
     }
+    mqAdjustWidgetBottomPadding();
   };
   function fmtRange(low, high) {
     const f = n => '$' + Math.round(n).toLocaleString();
