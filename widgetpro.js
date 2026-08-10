@@ -1027,7 +1027,7 @@
   // opened the calculator from.
   let _mqCalcMode = 'linear'; // 'linear' or 'sqft'
   let _mqCalcTargetId = null;
-  let _mqCalcUnit = 'ft'; // 'ft', 'in', or 'mm'
+  let _mqCalcUnit = 'in'; // 'ft', 'in', or 'mm'
   let _mqCalcSections = []; // linear: [{val}]  ·  sqft: [{w,h}]
   let _mqCalcFieldLabel = ''; // shown in the modal so it's clear which field this fills in
 
