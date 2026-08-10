@@ -411,6 +411,7 @@
       #midasquote-widget .mq-label{font-size:15px;color:#374151}
       #midasquote-widget .mq-hint{font-size:14px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
+      #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:70px!important}
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
@@ -1454,11 +1455,11 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-0.1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.1" onclick="this.select()" style="width:136px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',0.1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.1,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.1,event)" ontouchend="mqLinFtHoldStop()">−</button><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.1" onclick="this.select()" style="text-align:center"/><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',0.1,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.1,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-0.1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.1" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:136px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',0.1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.1,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.1,event)" ontouchend="mqLinFtHoldStop()">−</button><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.1" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center"/><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',0.1,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.1,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
@@ -3713,6 +3714,35 @@ window.mqTogDrawerConfig=(prefix)=>{
       input.value = next;
       input.dispatchEvent(new Event('input', { bubbles: true }));
     };
+    // Holding a +/- button down repeats mqAdjLinFt automatically instead of
+    // needing dozens of individual taps to reach a bigger number. A normal
+    // quick tap still just fires once — the repeat only kicks in after a
+    // short hold, and speeds up the longer it's held.
+    let _mqLinFtHoldTimer = null, _mqLinFtHoldInterval = null, _mqLinFtHoldTicks = 0;
+    window.mqLinFtHoldStart = function(prefix, which, delta, evt) {
+      if (evt && evt.cancelable) evt.preventDefault(); // stop touch from also firing a synthetic click/mousedown
+      window.mqLinFtHoldStop();
+      mqAdjLinFt(prefix, which, delta); // fires once immediately, covers a normal tap
+      _mqLinFtHoldTicks = 0;
+      _mqLinFtHoldTimer = setTimeout(() => {
+        _mqLinFtHoldInterval = setInterval(() => {
+          mqAdjLinFt(prefix, which, delta);
+          _mqLinFtHoldTicks++;
+          // Speeds up the longer it's held — starts a bit deliberate, ramps
+          // up for someone genuinely holding through a big number.
+          if (_mqLinFtHoldTicks === 8 || _mqLinFtHoldTicks === 20) {
+            clearInterval(_mqLinFtHoldInterval);
+            _mqLinFtHoldInterval = setInterval(() => mqAdjLinFt(prefix, which, delta), _mqLinFtHoldTicks < 20 ? 60 : 30);
+          }
+        }, 110);
+      }, 400);
+    };
+    window.mqLinFtHoldStop = function() {
+      clearTimeout(_mqLinFtHoldTimer);
+      clearInterval(_mqLinFtHoldInterval);
+      _mqLinFtHoldTimer = null;
+      _mqLinFtHoldInterval = null;
+    };
     window.mqRefreshBsFt=(prefix)=>{
       // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
       const baseFt = gn(`mq-${prefix}-bft`, 0);
@@ -3935,7 +3965,6 @@ window.mqTogDrawerConfig=(prefix)=>{
     bar.style.borderTop = `2px solid ${accent}`;
     bar.innerHTML = `
       <div id="mq-sticky-inner">
-        <button id="mq-sticky-close" onclick="mqCloseStickyBar()" aria-label="Close">×</button>
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
