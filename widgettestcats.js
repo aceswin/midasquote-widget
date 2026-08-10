@@ -2372,26 +2372,33 @@
     // "Powered by MidasQuote" line always ends up sitting a fixed few
     // pixels above the sticky bar, no matter how tall the breakdown is.
     // Keeps the brand line reliably visible every single time.
+    //
+    // Retries and re-measures rather than trusting a single calculation —
+    // there are several things that can still shift the layout right around
+    // this moment (the lead-capture modal closing, the body padding
+    // settling, the browser's own scroll-anchoring fighting an explicit
+    // scroll), so this keeps nudging toward the target and re-checking
+    // until it actually lands there, instead of assuming one shot got it
+    // right.
     function mqScrollPoweredByAboveSticky(prefix) {
       const resultId = prefix === 'c' ? 'mq-c-result' : prefix === 'ct' ? 'mq-ct-result' : 'mq-b-result';
-      // Body padding is applied on its own deferred animation frame — if we
-      // calculate the scroll distance before that's actually landed, the
-      // page can still be too short to scroll this far yet, or the target
-      // shifts out from under the calculation mid-flight. Explicitly wait
-      // for padding to finish, then one more frame for the browser to
-      // finish reflowing with it, before measuring anything.
+      let attempts = 0;
+      function tryScroll() {
+        attempts++;
+        const resultEl = document.getElementById(resultId);
+        const poweredBy = resultEl ? resultEl.querySelector('.mq-powered-by') : null;
+        if (!poweredBy) return;
+        const bar = document.getElementById('mq-sticky-bar');
+        const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
+        const targetGap = barHeight + 3;
+        const rect = poweredBy.getBoundingClientRect();
+        const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
+        if (Math.abs(scrollAmount) <= 2 || attempts >= 12) return; // close enough, or give up cleanly
+        window.scrollBy({ top: scrollAmount, behavior: attempts === 1 ? 'smooth' : 'auto' });
+        setTimeout(tryScroll, attempts === 1 ? 450 : 120);
+      }
       mqAdjustWidgetBottomPadding(() => {
-        requestAnimationFrame(() => {
-          const resultEl = document.getElementById(resultId);
-          const poweredBy = resultEl ? resultEl.querySelector('.mq-powered-by') : null;
-          if (!poweredBy) return;
-          const bar = document.getElementById('mq-sticky-bar');
-          const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
-          const targetGap = barHeight + 3;
-          const rect = poweredBy.getBoundingClientRect();
-          const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
-          window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
-        });
+        requestAnimationFrame(() => { setTimeout(tryScroll, 50); });
       });
     }
     // Exposed globally so mqStartNewEstimate — a sibling function declared
