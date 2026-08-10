@@ -1723,7 +1723,7 @@
   // WIRE LOGIC
   // ============================================================
   function wireWidget(data) {
-    const { shop, pricing, specs, li, hasDynamic } = data;
+    const { shop, pricing, specs, li, hasDynamic, shopPhotos } = data;
     // Exposed globally so the sticky estimate bar (which lives outside this
     // closure — wireWidget runs fresh on every render/new estimate) can call
     // the exact same pure calculation functions Calculate itself uses, for
@@ -1855,7 +1855,7 @@
     function edgeSelectHtml(m, containerId) {
       const edges = edgeOptionsFor(m);
       if (!edges.length) return '';
-      const items = sortAndBadgeItems([{value:'none', label:'Standard', icon:'🚫'}].concat(
+      const items = sortAndBadgeItems([{value:'none', label:'Standard', icon:'🚫', photoUrl:(shopPhotos||{})['addon_standard_edge']||''}].concat(
         edges.map((e,i)=>({value:String(i), label:e.label||'Edge', photoUrl:e.photoUrl, icon:'📐', price:e.rate||0}))
       ));
       const opts = items.map(it=>`<option value="${it.value}">${it.label}</option>`).join('');
