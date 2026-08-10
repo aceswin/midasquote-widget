@@ -1209,11 +1209,27 @@
   let _mqCalcUnit = 'in'; // 'ft', 'in', or 'mm'
   let _mqCalcSections = []; // linear: [{val}]  ·  sqft: [{w,h}]
   let _mqCalcFieldLabel = ''; // shown in the modal so it's clear which field this fills in
+  // Remembers the sections entered for each field (keyed by targetId), so
+  // closing the calculator and reopening it later — even without ever
+  // clicking "Use this total" — picks back up where it left off instead of
+  // starting blank. Only restored if the field's current value still
+  // matches what those sections would add up to; if it's changed since
+  // (typed over directly, adjusted with the +/- steppers, etc.) the old
+  // breakdown no longer reflects reality, so it starts fresh instead.
+  let _mqCalcSavedSections = {};
 
   function mqCalcToFeet(val, unit) {
     const n = parseFloat(val) || 0;
     if (unit === 'ft') return n;
     return unit === 'mm' ? n / 304.8 : n / 12;
+  }
+
+  function mqCalcComputeTotalFor(sections, mode, unit) {
+    if (mode === 'linear') {
+      const totalUnits = sections.reduce((sum, s) => sum + (parseFloat(s.val) || 0), 0);
+      return mqCalcToFeet(totalUnits, unit);
+    }
+    return sections.reduce((sum, s) => sum + mqCalcToFeet(s.w, unit) * mqCalcToFeet(s.h, unit), 0);
   }
 
   function mqEnsureCalcModal() {
@@ -1244,12 +1260,30 @@
     _mqCalcMode = mode;
     _mqCalcTargetId = targetId;
     _mqCalcFieldLabel = fieldLabel || '';
-    _mqCalcSections = mode === 'linear' ? [{ val: '' }] : [{ w: '', h: '' }];
+    const saved = _mqCalcSavedSections[targetId];
+    const targetEl = document.getElementById(targetId);
+    let restored = false;
+    if (saved && saved.mode === mode && targetEl) {
+      const savedTotal = mqCalcComputeTotalFor(saved.sections, saved.mode, saved.unit);
+      const roundedSavedTotal = targetId.startsWith('mq-qty-') ? Math.round(savedTotal*10)/10 : Math.round(savedTotal*100)/100;
+      const currentVal = parseFloat(targetEl.value) || 0;
+      if (Math.abs(roundedSavedTotal - currentVal) < 0.01) {
+        _mqCalcSections = saved.sections.map(s => ({ ...s })); // copy, not the same reference
+        _mqCalcUnit = saved.unit;
+        restored = true;
+      }
+    }
+    if (!restored) {
+      _mqCalcSections = mode === 'linear' ? [{ val: '' }] : [{ w: '', h: '' }];
+    }
     mqEnsureCalcModal().style.display = 'flex';
     mqRenderCalc();
   };
 
   window.mqCloseMeasureCalc = function() {
+    if (_mqCalcTargetId) {
+      _mqCalcSavedSections[_mqCalcTargetId] = { mode: _mqCalcMode, unit: _mqCalcUnit, sections: _mqCalcSections.map(s => ({ ...s })) };
+    }
     const modal = document.getElementById('mq-measure-calc');
     if (modal) modal.style.display = 'none';
   };
@@ -1276,11 +1310,7 @@
   };
 
   function mqCalcComputeTotal() {
-    if (_mqCalcMode === 'linear') {
-      const totalUnits = _mqCalcSections.reduce((sum, s) => sum + (parseFloat(s.val) || 0), 0);
-      return mqCalcToFeet(totalUnits, _mqCalcUnit);
-    }
-    return _mqCalcSections.reduce((sum, s) => sum + mqCalcToFeet(s.w, _mqCalcUnit) * mqCalcToFeet(s.h, _mqCalcUnit), 0);
+    return mqCalcComputeTotalFor(_mqCalcSections, _mqCalcMode, _mqCalcUnit);
   }
 
   function mqRenderCalcTotal() {
