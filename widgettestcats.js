@@ -1453,13 +1453,13 @@
         <p class="mq-sec-title">Cabinet measurements</p>
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
-          <div class="mq-field"><label class="mq-label">Upper cabinets (lin ft)</label>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
             <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',-1)">−</button><input type="number" id="mq-${prefix}-uft" value="0" min="0" max="60" onclick="this.select()" style="width:68px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','u',1)">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Add up all your upper cabinet sections here.</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections — no need to do the math yourself!</div>
           </div>
-          <div class="mq-field"><label class="mq-label">Base cabinets (lin ft)</label>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
             <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',-1)">−</button><input type="number" id="mq-${prefix}-bft" value="0" min="0" max="60" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="width:68px;text-align:center"/><button class="mq-qty-btn" type="button" onclick="mqAdjLinFt('${prefix}','b',1)">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Add up all your base cabinet sections here.</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections — no need to do the math yourself!</div>
           </div>
           <div class="mq-field"><label class="mq-label">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
@@ -3875,19 +3875,24 @@ window.mqTogDrawerConfig=(prefix)=>{
   // The bar is position:fixed, so it never pushes page content out of the
   // way on its own — without this, it silently sits on top of whatever's
   // scrolled to the bottom (financing note, "Powered by" footer, etc.),
-  // hiding it completely rather than just overlapping it. Measures the
-  // bar's real rendered height (financing badge, mobile wrap, etc. all
-  // change this) and pads the widget's own container to match, so
-  // everything stays reachable by scrolling clear of the bar.
+  // hiding it completely rather than just overlapping it. Pads the page's
+  // own body rather than the widget's container — the widget lives inside
+  // a host page (Shopify/Webflow/etc) whose own CSS can interfere with
+  // padding on an inner element in ways that aren't predictable from here,
+  // but body is reliably the actual scrollable area almost everywhere.
+  let _mqOrigBodyPaddingBottom = null;
   function mqAdjustWidgetBottomPadding() {
-    const bar = document.getElementById('mq-sticky-bar');
-    const widget = document.getElementById('midasquote-widget');
-    if (!widget) return;
-    if (bar && bar.classList.contains('show')) {
-      widget.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
-    } else {
-      widget.style.paddingBottom = '';
-    }
+    requestAnimationFrame(() => {
+      const bar = document.getElementById('mq-sticky-bar');
+      if (_mqOrigBodyPaddingBottom === null) {
+        _mqOrigBodyPaddingBottom = document.body.style.paddingBottom || '';
+      }
+      if (bar && bar.classList.contains('show')) {
+        document.body.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
+      } else {
+        document.body.style.paddingBottom = _mqOrigBodyPaddingBottom;
+      }
+    });
   }
   window.mqCloseStickyBar = function() {
     window._mqStickyDismissed = true;
