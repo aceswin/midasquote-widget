@@ -1536,11 +1536,11 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" oninput="mqAutoSizeLinFtInput(this)" onclick="this.select()" style="text-align:center;padding-right:28px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" oninput="mqAutoSizeLinFtInput(this)" onclick="this.select()" style="text-align:center;padding-right:34px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}');mqAutoSizeLinFtInput(this)" onclick="this.select()" style="text-align:center;padding-right:28px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}');mqAutoSizeLinFtInput(this)" onclick="this.select()" style="text-align:center;padding-right:34px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
@@ -3892,13 +3892,16 @@ window.mqTogDrawerConfig=(prefix)=>{
     // starts small for "0", widens as the number gets longer (two digits,
     // a decimal point, etc). Uses setProperty(...,'important') since the
     // base CSS rule is itself !important — a plain style.width assignment
-    // wouldn't actually be able to override that.
-    function mqAutoSizeLinFtInput(input) {
+    // wouldn't actually be able to override that. Exposed on window (not a
+    // plain local function) because it's called from an inline oninput=""
+    // HTML attribute, which runs in the global scope, not inside this
+    // closure — a local function here would never actually be reachable.
+    window.mqAutoSizeLinFtInput = function(input) {
       if (!input) return;
       const len = String(input.value ?? '0').length;
-      const width = Math.min(88, Math.max(46, 30 + len * 9));
+      const width = Math.min(96, Math.max(46, 34 + len * 12));
       input.style.setProperty('width', width + 'px', 'important');
-    }
+    };
     window.mqAdjLinFt=(prefix, which, delta)=>{
       const input = document.getElementById(`mq-${prefix}-${which}ft`);
       if (!input) return;
