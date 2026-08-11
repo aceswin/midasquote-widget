@@ -182,7 +182,7 @@
     // Items flagged "Pro only" never appear here at all — same idea as a
     // Pro-only project type, just at the individual item level. They still
     // show up in MidasQuote Pro, for every project type they're tagged to.
-    const specs = assignBadges(specRecords
+    const specsRaw = specRecords
       .filter(r => !r.fields['Pro only'])
       .map(r=>{
         const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty');
@@ -219,7 +219,17 @@
           description: r.fields['Description']||'',
           category: r.fields['Category']||'',
         };
-      }));
+      });
+    // Badge PER CATEGORY, not across the whole specialty items catalog at
+    // once — otherwise one pricier (or cheaper) category elsewhere skews
+    // every OTHER category's items toward looking artificially uniform by
+    // comparison, hiding a real cheapest-to-priciest spread that exists
+    // within a given category on its own (e.g. Doors judged against
+    // Hardware's price range instead of just other Doors).
+    [...new Set(specsRaw.map(s => s.category || ''))].forEach(cat => {
+      assignBadges(specsRaw.filter(s => (s.category||'') === cat));
+    });
+    const specs = specsRaw;
 
     return { shop, pricing:p, specs, li, hasDynamic, shopPhotos, shopFeatured, roomTypes };
   }
@@ -247,14 +257,14 @@
         : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`
       ).join('');
 
-    if (!lead._isSkip) await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name}`,
+    if (!lead._isSkip || shop['Notify on every estimate'] === 'Yes') await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name || 'Anonymous visitor'}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#1a1a1a">New ${quoteType} quote lead</h2>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Customer details</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name}</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email}</td></tr>
-          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone}</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
+          <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
         </table>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Quote breakdown</td></tr>${lineRows}
@@ -443,7 +453,7 @@
       #midasquote-widget .mq-vpicker-arrow{position:absolute;top:0;right:0;bottom:8px;width:34px;display:none;align-items:center;justify-content:flex-end;padding-right:2px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%);font-size:20px;font-weight:700;color:#374151;pointer-events:none}
       #midasquote-widget .mq-vpicker-arrow.show{display:flex}
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:110px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
-      #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc};background:${bc}0d}
+      #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
       #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
       @keyframes mqShakeChoice{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
@@ -873,20 +883,24 @@
   // Clusters items sharing a Group name together (shop-owner-controlled
   // order first, then any ungrouped leftovers last, sorted cheapest-first
   // within each cluster), and flags a cluster whose members all cost the
-  // exact same so the chip can show a quick reassurance note. Runs after
-  // badges are already assigned, so it only ever reorders — price badges
-  // still reflect standing across the whole list. No-op if nothing's grouped.
+  // exact same so the chip can show a quick reassurance note. Re-badges
+  // each group's own members (and the ungrouped bucket) scoped to just
+  // themselves, rather than leaving the badges from the earlier whole-list
+  // pass — a group that happens to sit entirely at the cheap (or pricey)
+  // end of the full list's range would otherwise show every item with the
+  // same badge, hiding a real cheapest-to-priciest spread within that
+  // specific group. No-op if nothing's grouped.
   function applyItemGrouping(items) {
     if (!items.some(it => it.groupName)) return items;
     const groupNames = [...new Set(items.filter(it => it.groupName).map(it => it.groupName))];
     const groups = groupNames.map(name => {
-      const members = items.filter(it => it.groupName === name).sort((a,b) => a.price - b.price);
+      const members = assignBadges(items.filter(it => it.groupName === name)).sort((a,b) => a.price - b.price);
       const allSamePrice = members.length > 1 && members.every(m => m.price === members[0].price);
       if (allSamePrice) members.forEach(m => m.samePriceNote = true);
       const order = members.find(m => m.groupOrder)?.groupOrder || 0;
       return { order, members };
     }).sort((a,b) => a.order - b.order);
-    const ungrouped = items.filter(it => !it.groupName).sort((a,b) => a.price - b.price);
+    const ungrouped = assignBadges(items.filter(it => !it.groupName)).sort((a,b) => a.price - b.price);
     return [...groups.flatMap(g => g.members), ...ungrouped];
   }
 
@@ -1107,6 +1121,12 @@
       order.splice(order.indexOf('__other__'), 1);
       order.push('__other__');
     }
+    // Cheapest-to-priciest within each group — same total-cost metric the
+    // $/$$/$$$ badge already uses, so ordering and badge always agree with
+    // each other rather than one being sorted and the other left however
+    // Airtable happened to return the rows.
+    const badgePriceOf = idx => { const s = specs[idx]; return s.badgePrice != null ? s.badgePrice : s.price; };
+    Object.values(groups).forEach(idxs => idxs.sort((a,b) => badgePriceOf(a) - badgePriceOf(b)));
 
     return order.map((cat, gi) => {
       const label = cat === '__other__' ? 'Other' : cat;
@@ -1189,11 +1209,27 @@
   let _mqCalcUnit = 'in'; // 'ft', 'in', or 'mm'
   let _mqCalcSections = []; // linear: [{val}]  ·  sqft: [{w,h}]
   let _mqCalcFieldLabel = ''; // shown in the modal so it's clear which field this fills in
+  // Remembers the sections entered for each field (keyed by targetId), so
+  // closing the calculator and reopening it later — even without ever
+  // clicking "Use this total" — picks back up where it left off instead of
+  // starting blank. Only restored if the field's current value still
+  // matches what those sections would add up to; if it's changed since
+  // (typed over directly, adjusted with the +/- steppers, etc.) the old
+  // breakdown no longer reflects reality, so it starts fresh instead.
+  let _mqCalcSavedSections = {};
 
   function mqCalcToFeet(val, unit) {
     const n = parseFloat(val) || 0;
     if (unit === 'ft') return n;
     return unit === 'mm' ? n / 304.8 : n / 12;
+  }
+
+  function mqCalcComputeTotalFor(sections, mode, unit) {
+    if (mode === 'linear') {
+      const totalUnits = sections.reduce((sum, s) => sum + (parseFloat(s.val) || 0), 0);
+      return mqCalcToFeet(totalUnits, unit);
+    }
+    return sections.reduce((sum, s) => sum + mqCalcToFeet(s.w, unit) * mqCalcToFeet(s.h, unit), 0);
   }
 
   function mqEnsureCalcModal() {
@@ -1224,12 +1260,30 @@
     _mqCalcMode = mode;
     _mqCalcTargetId = targetId;
     _mqCalcFieldLabel = fieldLabel || '';
-    _mqCalcSections = mode === 'linear' ? [{ val: '' }] : [{ w: '', h: '' }];
+    const saved = _mqCalcSavedSections[targetId];
+    const targetEl = document.getElementById(targetId);
+    let restored = false;
+    if (saved && saved.mode === mode && targetEl) {
+      const savedTotal = mqCalcComputeTotalFor(saved.sections, saved.mode, saved.unit);
+      const roundedSavedTotal = targetId.startsWith('mq-qty-') ? Math.round(savedTotal*10)/10 : Math.round(savedTotal*100)/100;
+      const currentVal = parseFloat(targetEl.value) || 0;
+      if (Math.abs(roundedSavedTotal - currentVal) < 0.01) {
+        _mqCalcSections = saved.sections.map(s => ({ ...s })); // copy, not the same reference
+        _mqCalcUnit = saved.unit;
+        restored = true;
+      }
+    }
+    if (!restored) {
+      _mqCalcSections = mode === 'linear' ? [{ val: '' }] : [{ w: '', h: '' }];
+    }
     mqEnsureCalcModal().style.display = 'flex';
     mqRenderCalc();
   };
 
   window.mqCloseMeasureCalc = function() {
+    if (_mqCalcTargetId) {
+      _mqCalcSavedSections[_mqCalcTargetId] = { mode: _mqCalcMode, unit: _mqCalcUnit, sections: _mqCalcSections.map(s => ({ ...s })) };
+    }
     const modal = document.getElementById('mq-measure-calc');
     if (modal) modal.style.display = 'none';
   };
@@ -1256,11 +1310,7 @@
   };
 
   function mqCalcComputeTotal() {
-    if (_mqCalcMode === 'linear') {
-      const totalUnits = _mqCalcSections.reduce((sum, s) => sum + (parseFloat(s.val) || 0), 0);
-      return mqCalcToFeet(totalUnits, _mqCalcUnit);
-    }
-    return _mqCalcSections.reduce((sum, s) => sum + mqCalcToFeet(s.w, _mqCalcUnit) * mqCalcToFeet(s.h, _mqCalcUnit), 0);
+    return mqCalcComputeTotalFor(_mqCalcSections, _mqCalcMode, _mqCalcUnit);
   }
 
   function mqRenderCalcTotal() {
@@ -1827,7 +1877,7 @@
   // WIRE LOGIC
   // ============================================================
   function wireWidget(data) {
-    const { shop, pricing, specs, li, hasDynamic } = data;
+    const { shop, pricing, specs, li, hasDynamic, shopPhotos } = data;
     // Exposed globally so the sticky estimate bar (which lives outside this
     // closure — wireWidget runs fresh on every render/new estimate) can call
     // the exact same pure calculation functions Calculate itself uses, for
@@ -1995,7 +2045,7 @@
     function edgeSelectHtml(m, containerId) {
       const edges = edgeOptionsFor(m);
       if (!edges.length) return '';
-      const items = sortAndBadgeItems([{value:'none', label:'Standard', icon:'🚫'}].concat(
+      const items = sortAndBadgeItems([{value:'none', label:'Standard', icon:'🚫', photoUrl:(shopPhotos||{})['addon_standard_edge']||''}].concat(
         edges.map((e,i)=>({value:String(i), label:e.label||'Edge', photoUrl:e.photoUrl, icon:'📐', price:e.rate||0}))
       ));
       const opts = items.map(it=>`<option value="${it.value}">${it.label}</option>`).join('');
@@ -2874,11 +2924,13 @@
     // selection with the same green used in the suggestion note — a light
     // ring, not a hard border, so it layers cleanly whether or not that
     // chip also happens to be the one actually selected.
-    function mqMarkSuggestedChip(selectId, matchKey) {
+    function mqMarkSuggestedChip(selectId, matchKeys) {
       document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => c.classList.remove('mq-suggested'));
-      if (!matchKey) return;
-      const chip = document.querySelector(`[data-vpicker-for="${selectId}"][data-value="${matchKey}"]`);
-      if (chip) chip.classList.add('mq-suggested');
+      const keys = Array.isArray(matchKeys) ? matchKeys : (matchKeys ? [matchKeys] : []);
+      keys.forEach(matchKey => {
+        const chip = document.querySelector(`[data-vpicker-for="${selectId}"][data-value="${matchKey}"]`);
+        if (chip) chip.classList.add('mq-suggested');
+      });
     }
 
     window.mqApplyLinkedTrim=(prefix, doorKey)=>{
@@ -2901,16 +2953,20 @@
       const doorItem=(data.li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)];
       const doorName=doorItem?doorItem['Name']:'';
 
-      const crownMatchKey=Object.keys(TRIM).find(k=>TRIM[k].type==='crown' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
-      const valanceMatchKey=Object.keys(TRIM).find(k=>TRIM[k].type==='valance' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
-      mqMarkSuggestedChip(`mq-${prefix}-trim-crown`, crownMatchKey);
-      mqMarkSuggestedChip(`mq-${prefix}-trim-valance`, valanceMatchKey);
+      // filter, not find — a door style can have several crowns/valances
+      // linked to it (e.g. a standard one and a "to ceiling" variant), and
+      // all of them should show as suggested, not just whichever happens
+      // to be first in TRIM's key order.
+      const crownMatchKeys=Object.keys(TRIM).filter(k=>TRIM[k].type==='crown' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
+      const valanceMatchKeys=Object.keys(TRIM).filter(k=>TRIM[k].type==='valance' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
+      mqMarkSuggestedChip(`mq-${prefix}-trim-crown`, crownMatchKeys);
+      mqMarkSuggestedChip(`mq-${prefix}-trim-valance`, valanceMatchKeys);
 
       // Don't auto-select — just show a suggestion note so the customer stays in control
       if(note){
         const suggestions=[];
-        if(crownMatchKey) suggestions.push(TRIM[crownMatchKey].label);
-        if(valanceMatchKey) suggestions.push(TRIM[valanceMatchKey].label);
+        if(crownMatchKeys.length) suggestions.push(crownMatchKeys.map(k=>TRIM[k].label).join(' or '));
+        if(valanceMatchKeys.length) suggestions.push(valanceMatchKeys.map(k=>TRIM[k].label).join(' or '));
         if(suggestions.length){ note.textContent=`💡 ${suggestions.join(' & ')} is typically used with this door style — add it below if you'd like it included`; note.style.display='block'; }
         else note.style.display='none';
       }
@@ -4064,37 +4120,33 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!prefix || !window._mqCalcCabinet || !window._mqCalcCountertop) return null;
     if (prefix === 'b') {
       const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-      return { low: cab.low + ct.low, high: cab.high + ct.high, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
+      return {
+        low: cab.low + ct.low, high: cab.high + ct.high,
+        lines: [{label:'Cabinets',header:true}, ...cab.lines.filter(l=>!l.bold), {label:'Countertops',header:true}, ...ct.lines.filter(l=>!l.bold)],
+        quoteType: 'Cabinets + Countertops', roomLabel: cab.roomLabel,
+      };
     }
     if (prefix === 'ct') {
       const r = window._mqCalcCountertop('ct');
-      return { low: r.low, high: r.high, lines: r.lines };
+      return { low: r.low, high: r.high, lines: r.lines, quoteType: 'Countertops', roomLabel: '' };
     }
     const r = window._mqCalcCabinet('c');
-    return { low: r.low, high: r.high, lines: r.lines };
+    return { low: r.low, high: r.high, lines: r.lines, quoteType: 'Cabinets', roomLabel: r.roomLabel };
   }
+  // Goes through the exact same saveLead used for the automatic post-
+  // Calculate email — creates/updates the Airtable lead record, notifies
+  // the shop (subject to their "notify on every estimate" setting), and
+  // emails the customer their current numbers, all in one call rather than
+  // duplicating that logic separately here.
   async function mqSendQuoteCopy(email) {
     const linkEl = document.getElementById('mq-sticky-email-link');
     const result = mqCurrentLiveResult();
-    if (!result) return;
-    const shop = window._mqShopData || {};
+    const data = window._mqFullData;
+    if (!result || !data) return;
     if (linkEl) linkEl.textContent = 'Sending...';
-    const customerLineRows = (result.lines||[]).filter(l=>l&&l.label&&!l.bold)
-      .sort((a,b)=>b.cost-a.cost)
-      .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
-    await sendEmail(email, `Your updated quote from ${shop['Shop name']||''}`,
-      `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2 style="color:#1a1a1a">Your updated quote from ${shop['Shop name']||''}</h2>
-        <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-          <div style="font-size:14px;color:#666;margin-bottom:4px">Your estimated range</div>
-          <div style="font-size:28px;font-weight:700;color:#16a34a">$${Math.round(result.low).toLocaleString()} – $${Math.round(result.high).toLocaleString()}</div>
-        </div>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-          <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What's included</td></tr>${customerLineRows}
-        </table>
-        <p style="color:#666;font-size:14px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
-        <p style="color:#666;font-size:14px"><strong>${shop['Shop name']||''}</strong><br/>${shop['Phone']||''}</p>
-      </div>`);
+    try {
+      await saveLead(data, { name:'', email, phone:'', _isSkip:false }, result.quoteType, result.low, result.high, result.lines, result.roomLabel);
+    } catch(e) { console.error('Email me a copy failed', e); }
     if (linkEl) {
       linkEl.textContent = '✓ Sent!';
       setTimeout(() => { linkEl.textContent = '📧 Email me a copy'; }, 2500);
