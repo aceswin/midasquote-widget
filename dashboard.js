@@ -4359,6 +4359,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           groupDesc: r.fields['Group description']||'',
           groupOrder: typeof r.fields['Group sort order']==='number' ? r.fields['Group sort order'] : 0,
           addonOptions,
+          price: r.fields['Rate']||0,
         };
         byCategory[cat].push(existing);
       } else {
@@ -4640,7 +4641,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">Description (optional, shown to customers)</label>
             <textarea id="mq-gm-desc" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;margin-bottom:1rem;min-height:60px;font-family:inherit"></textarea>
             <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Items in this group</label>
-            <div id="mq-gm-items" style="display:flex;flex-direction:column;gap:2px"></div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <input type="text" id="mq-gm-search" placeholder="Search items…" oninput="mqGroupManagerSearch(this.value)" style="flex:1;font-size:13px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
+              <select id="mq-gm-sort" onchange="mqGroupManagerSort(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;flex-shrink:0">
+                <option value="default">Default order</option>
+                <option value="name">Name (A–Z)</option>
+                <option value="price-asc">Price (low→high)</option>
+                <option value="price-desc">Price (high→low)</option>
+              </select>
+            </div>
+            <div id="mq-gm-items" style="display:flex;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto;border:1px solid #f3f4f6;border-radius:8px;padding:4px"></div>
           </div>
           <div style="padding:1rem 1.25rem;border-top:1px solid #e5e7eb;display:flex;gap:8px;align-items:center;flex-shrink:0">
             <button id="mq-gm-delete" class="mq-btn mq-btn-sm" style="color:#dc2626;display:none" onclick="mqDeleteProductGroup()">Delete group</button>
@@ -4655,26 +4665,71 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     let _gmCat = null;
     let _gmOriginalName = null; // null = creating a brand new group
+    // Checked state is tracked here rather than read straight from the DOM,
+    // because searching filters items out of the DOM entirely — a checked
+    // item that's been searched away would otherwise be silently missed
+    // when saving. Keyed by item.id (the first real Airtable record id for
+    // that item), which stays stable across re-renders and re-sorts.
+    let _gmCheckedIds = new Set();
+    let _gmAllItems = [];
+    let _gmSearchText = '';
+    let _gmSortBy = 'default';
 
     window.mqOpenGroupManager = function(cat, groupName) {
       injectGroupManagerModal();
       _gmCat = cat;
       _gmOriginalName = groupName || null;
       const items = byCategory[cat] || [];
+      _gmAllItems = items;
       const isNew = !groupName;
       document.getElementById('mq-gm-title').textContent = isNew ? 'New group' : `Edit "${groupName}"`;
       document.getElementById('mq-gm-name').value = groupName || '';
       const members = isNew ? [] : items.filter(i => i.groupName === groupName);
       document.getElementById('mq-gm-desc').value = members[0]?.groupDesc || '';
       document.getElementById('mq-gm-delete').style.display = isNew ? 'none' : 'inline-block';
-      document.getElementById('mq-gm-items').innerHTML = items.map(item => `
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer;padding:5px 2px;border-radius:6px">
-          <input type="checkbox" data-item-ids="${item.ids.join(',')}" ${item.groupName === groupName ? 'checked' : ''} style="width:auto;flex-shrink:0"/>
-          <span>${item.baseName}</span>
-          ${item.groupName && item.groupName !== groupName ? `<span style="font-size:10px;color:#9ca3af;margin-left:auto">in "${item.groupName}"</span>` : ''}
-        </label>`).join('');
+      _gmCheckedIds = new Set(members.map(i => i.id));
+      _gmSearchText = '';
+      _gmSortBy = 'default';
+      const searchInput = document.getElementById('mq-gm-search');
+      if (searchInput) searchInput.value = '';
+      const sortSelect = document.getElementById('mq-gm-sort');
+      if (sortSelect) sortSelect.value = 'default';
+      mqRenderGroupManagerItems();
       document.getElementById('mq-group-manager').style.display = 'flex';
     };
+
+    window.mqGroupManagerSearch = function(val) {
+      _gmSearchText = (val || '').toLowerCase();
+      mqRenderGroupManagerItems();
+    };
+
+    window.mqGroupManagerSort = function(val) {
+      _gmSortBy = val;
+      mqRenderGroupManagerItems();
+    };
+
+    window.mqGroupManagerToggleItem = function(id) {
+      if (_gmCheckedIds.has(id)) _gmCheckedIds.delete(id);
+      else _gmCheckedIds.add(id);
+    };
+
+    function mqRenderGroupManagerItems() {
+      const groupName = _gmOriginalName;
+      let items = [..._gmAllItems];
+      if (_gmSearchText) items = items.filter(i => i.baseName.toLowerCase().includes(_gmSearchText));
+      if (_gmSortBy === 'name') items.sort((a,b) => a.baseName.localeCompare(b.baseName));
+      else if (_gmSortBy === 'price-asc') items.sort((a,b) => (a.price||0) - (b.price||0));
+      else if (_gmSortBy === 'price-desc') items.sort((a,b) => (b.price||0) - (a.price||0));
+      const list = document.getElementById('mq-gm-items');
+      if (!list) return;
+      list.innerHTML = items.length ? items.map(item => `
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer;padding:5px 4px;border-radius:6px">
+          <input type="checkbox" onchange="mqGroupManagerToggleItem('${item.id}')" ${_gmCheckedIds.has(item.id) ? 'checked' : ''} style="width:auto;flex-shrink:0"/>
+          <span>${item.baseName}</span>
+          <span style="font-size:11px;color:#9ca3af">$${(item.price||0).toFixed(2)}</span>
+          ${item.groupName && item.groupName !== groupName ? `<span style="font-size:10px;color:#9ca3af;margin-left:auto">in "${item.groupName}"</span>` : ''}
+        </label>`).join('') : `<div style="font-size:12px;color:#9ca3af;padding:10px 4px">No items match "${_gmSearchText}".</div>`;
+    }
 
     window.mqCloseGroupManager = function() {
       const m = document.getElementById('mq-group-manager');
@@ -4687,7 +4742,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!newName) { alert('Please enter a group name.'); return; }
       const desc = document.getElementById('mq-gm-desc').value.trim();
       const items = byCategory[cat] || [];
-      const checkedIdsCsv = new Set([...document.querySelectorAll('#mq-gm-items input[type=checkbox]:checked')].map(cb => cb.dataset.itemIds));
 
       // New groups go last by default; editing an existing group keeps its
       // current position (reordering happens via the ↑/↓ buttons, not here).
@@ -4698,8 +4752,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
       const writes = [];
       items.forEach(item => {
-        const idsCsv = item.ids.join(',');
-        const shouldBeIn = checkedIdsCsv.has(idsCsv);
+        const shouldBeIn = _gmCheckedIds.has(item.id);
         const wasInThisGroup = _gmOriginalName && item.groupName === _gmOriginalName;
         if (shouldBeIn) {
           item.ids.forEach(id => writes.push(atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': newName, 'Group description': desc, 'Group sort order': order })));
