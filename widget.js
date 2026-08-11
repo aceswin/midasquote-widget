@@ -428,7 +428,7 @@
       #midasquote-widget .mq-label{font-size:15px;color:#374151;margin-bottom:4px}
       #midasquote-widget .mq-hint{font-size:14px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
-      #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:46px!important}
+      #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:var(--mq-linft-w, 46px)!important}
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
@@ -3890,17 +3890,20 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
     // Grows/shrinks the linear feet input to match its current value —
     // starts small for "0", widens as the number gets longer (two digits,
-    // a decimal point, etc). Uses setProperty(...,'important') since the
-    // base CSS rule is itself !important — a plain style.width assignment
-    // wouldn't actually be able to override that. Exposed on window (not a
-    // plain local function) because it's called from an inline oninput=""
-    // HTML attribute, which runs in the global scope, not inside this
-    // closure — a local function here would never actually be reachable.
+    // a decimal point, etc). Sets a CSS variable rather than the width
+    // property directly — the base CSS rule (itself !important, needed to
+    // beat the global qty-ctrl input rule) reads its width FROM this
+    // variable, so there's no cascade/specificity battle to win at all;
+    // the !important rule never changes, just what value it points to.
+    // Exposed on window (not a plain local function) because it's called
+    // from an inline oninput="" HTML attribute, which runs in the global
+    // scope, not inside this closure — a local function here would never
+    // actually be reachable.
     window.mqAutoSizeLinFtInput = function(input) {
       if (!input) return;
       const len = String(input.value ?? '0').length;
       const width = Math.min(96, Math.max(46, 34 + len * 12));
-      input.style.setProperty('width', width + 'px', 'important');
+      input.style.setProperty('--mq-linft-w', width + 'px');
     };
     window.mqAdjLinFt=(prefix, which, delta)=>{
       const input = document.getElementById(`mq-${prefix}-${which}ft`);
