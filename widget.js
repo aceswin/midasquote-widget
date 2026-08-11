@@ -1647,7 +1647,7 @@
         ${hasCrown?`<div id="mq-${prefix}-crown-field-wrap" style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <div id="mq-${prefix}-crown-picker-wrap" style="flex:1;min-width:0">${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}</div>
+              <div id="mq-${prefix}-crown-picker-wrap">${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}</div>
               <div id="mq-${prefix}-crown-empty-msg" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:13px;color:#166534;font-weight:600;white-space:nowrap">No crowns linked to this door style</div>
             </div>
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
@@ -1656,7 +1656,7 @@
         ${hasValance?`<div id="mq-${prefix}-valance-field-wrap">
           <div class="mq-field"><label class="mq-label">Valance</label>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <div id="mq-${prefix}-valance-picker-wrap" style="flex:1;min-width:0">${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}</div>
+              <div id="mq-${prefix}-valance-picker-wrap">${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}</div>
               <div id="mq-${prefix}-valance-empty-msg" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:13px;color:#166534;font-weight:600;white-space:nowrap">No valances linked to this door style</div>
             </div>
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
