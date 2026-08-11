@@ -172,6 +172,10 @@ let wizardBaseline = null;
       /* ── Mini-wizard steps ── */
       .mqph-mini-step{display:none !important}.mqph-mini-step.active{display:block !important}
       .mqph-name-input{font-family:inherit !important;font-size:15px !important;font-weight:600 !important;color:#111 !important;background:#fff !important;border:1.5px solid #d1d5db !important;border-radius:8px !important;padding:10px 14px !important;width:100% !important;margin-bottom:1.25rem !important}
+      /* Chrome/Edge draw their own little dropdown arrow on any input with
+         a "list" attribute — hides it so it doesn't overlap the custom ▼
+         we render ourselves next to the Group name fields. */
+      input[list]::-webkit-calendar-picker-indicator{display:none !important}
       .mqph-name-input:focus{outline:none !important;border-color:#1a1a1a !important}
       .mqph-price-input-wrap{display:flex !important;align-items:center !important;gap:8px !important;margin-bottom:8px !important}
       .mqph-price-input-wrap .mqph-pfx{font-size:22px !important;color:#9ca3af !important;font-weight:300 !important}
@@ -415,6 +419,31 @@ let wizardBaseline = null;
         lineItems = lineItems.filter(r => !pricedDrawers.find(p => p.id === r.id));
       }
     }
+    // For doors: any crown/valance linked to this door style needs that
+    // link cleaned up too, otherwise it keeps pointing at a door name that
+    // no longer exists — the widget would just silently never match it,
+    // but it'd sit there stale in the dashboard forever.
+    if (cat === 'door') {
+      const doorRec = lineItems.find(r => r.id === id);
+      const doorName = doorRec?.fields['Name'] || '';
+      if (doorName) {
+        const linkedTrims = lineItems.filter(r => {
+          if (!r.fields || r.fields['Category'] !== 'trim') return false;
+          let linked = [];
+          try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+          return linked.includes(doorName);
+        });
+        for (const t of linkedTrims) {
+          let linked = [];
+          try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+          const cleaned = linked.filter(name => name !== doorName);
+          try {
+            await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(cleaned) });
+            t.fields['Linked door style'] = JSON.stringify(cleaned);
+          } catch(e) { console.error('Failed to clean up linked door style', e); }
+        }
+      }
+    }
     await atDelete(LINE_ITEMS_TABLE, id);
     lineItems = lineItems.filter(r => r.id !== id);
     const chip = document.getElementById(`mqph-chip-${id}`);
@@ -470,6 +499,7 @@ window.mqphGoToWizard = function() {
           <strong>Every step uses the same spec:</strong>&nbsp;
           <span class="mqph-spec-tag">1 × 30" cabinet</span> + <span class="mqph-spec-tag">1 × 18" cabinet</span> = <span class="mqph-spec-tag">4 linear feet</span>
         </div>
+        <div style="font-size:13px;color:#374151;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1.25rem;line-height:1.6">💡 <strong>Tip:</strong> Just price your main, most-common items here — not every single variation. Once your baseline is set, use the <strong>+ Add</strong> button on each category to add a whole batch of similarly-priced items at once — much faster than running through this wizard for every option.</div>
         <div style="font-size:13px;color:#374151;line-height:1.9;margin-bottom:1.25rem">
           ✅ Box-only baseline (no doors, no drawers)<br/>
           ✅ Door styles as upcharges<br/>
@@ -1596,7 +1626,10 @@ window.mqphGoToWizard = function() {
       return `
         <div style="margin-bottom:1rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
           <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Group name (optional)</label>
-          <input type="text" id="mqph-bulk-group" list="mqph-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group"/>
+          <div style="position:relative">
+            <input type="text" id="mqph-bulk-group" list="mqph-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group" style="width:100%;padding-right:28px"/>
+            <span onclick="document.getElementById('mqph-bulk-group').focus()" style="position:absolute;right:6px;top:0;bottom:0;width:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9ca3af;font-size:11px">▼</span>
+          </div>
           <datalist id="mqph-bulk-group-list">${existingGroups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>
           <div style="font-size:11px;color:#6b7280;margin-top:4px">Match an existing group to add these to it, or type a new name to create one — applies to all ${miniWiz.bulkCount} items below.</div>
         </div>`;
@@ -1761,12 +1794,16 @@ window.mqphGoToWizard = function() {
               ${cat==='install'
                 ? ''
                 : MINI_WIZ_CATS.includes(cat)
-                  ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
+                  ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>${['door','material'].includes(cat) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenBulkEdit('${cat}')">📊 Bulk edit</button>` : ''}`
                   : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
               }
             </div>
             <div id="mqph-cat-body-${cat}" style="display:none">
-            ${recs.sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0)).map(r=>`
+            <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
+              <span style="cursor:pointer;flex:1" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
+              <span style="cursor:pointer;min-width:80px;text-align:right" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
+            </div>
+            ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
                 <div style="flex:1;min-width:0">
                   <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
@@ -1785,6 +1822,34 @@ window.mqphGoToWizard = function() {
       ${buildCTHtml()}
       ${buildTrimHtml()}
       ${buildTallCabHtml()}
+
+      <!-- Bulk price edit overlay — Doors, Box Materials, Crown, Valance only -->
+      <div class="mqph-overlay" id="mqph-bulk-overlay">
+        <div class="mqph-modal" style="max-width:560px">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-bulk-title">Bulk edit prices</h3></div>
+            <button class="mqph-modal-close" onclick="mqphCloseBulkEdit()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div class="mqph-field">
+              <label>Narrow to a group <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+              <select id="mqph-bulk-group-filter" onchange="mqphBulkFilterGroup(this.value)"></select>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin:-4px 0 10px">Items with the exact same price(s) are grouped together below — check a whole group at once, or expand it to hand-pick individual items.</div>
+            <div id="mqph-bulk-clusters" style="max-height:280px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:1rem"></div>
+            <div id="mqph-bulk-edit-form" style="display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
+              <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:0.75rem" id="mqph-bulk-selected-count"></div>
+              <div id="mqph-bulk-price-fields"></div>
+              <div style="margin-top:10px">
+                <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px">Or match another item's price</label>
+                <input type="text" id="mqph-bulk-match-search" placeholder="Search items to match…" oninput="mqphBulkMatchSearch(this.value)" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
+                <div id="mqph-bulk-match-results" style="max-height:140px;overflow-y:auto;margin-top:4px"></div>
+              </div>
+              <button class="mqph-btn mqph-btn-primary" style="margin-top:1rem;width:100%" onclick="mqphBulkApply()">Update selected items →</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Mini-wizard overlay -->
       <div class="mqph-overlay" id="mqph-mini-overlay">
@@ -2015,11 +2080,307 @@ window.mqphGoToWizard = function() {
 
   window.mqphDelete = async function(id) {
     if (!confirm('Delete this item?')) return;
-    try { await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender(); } catch(e) { alert('Error deleting.'); }
+    try {
+      // Same door → linked-crown/valance cleanup as mqphDeleteChip, for
+      // this second, more generic delete path.
+      const rec = lineItems.find(r => r.id === id);
+      if (rec && rec.fields && rec.fields['Category'] === 'door') {
+        const doorName = rec.fields['Name'] || '';
+        if (doorName) {
+          const linkedTrims = lineItems.filter(r => {
+            if (!r.fields || r.fields['Category'] !== 'trim') return false;
+            let linked = [];
+            try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+            return linked.includes(doorName);
+          });
+          for (const t of linkedTrims) {
+            let linked = [];
+            try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+            const cleaned = linked.filter(name => name !== doorName);
+            try { await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(cleaned) }); } catch(e) { console.error('Failed to clean up linked door style', e); }
+          }
+        }
+      }
+      await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender();
+    } catch(e) { alert('Error deleting.'); }
   };
 
+  // ============================================================
+  // BULK PRICE EDIT — update many same-priced items at once
+  // (Doors, Box Materials, Crown, Valance only)
+  //
+  // The underlying record structure differs by category, which this
+  // normalizes away: a door/crown/valance is one Airtable record, but a box
+  // material is actually TWO separate records (uppers + bases) linked only
+  // by a shared name pattern. Every category gets flattened here into a
+  // "logical item" with one or two named price fields, so the rest of this
+  // feature (clustering, selection, editing) doesn't need to care which
+  // category it's looking at.
+  // ============================================================
+  let _bulkEdit = { cat: null, items: [], groupFilter: '', checkedIds: new Set(), openClusters: new Set() };
+  const BULK_EDIT_LABELS = { material: '🪵 Box Materials', door: '🚪 Door Styles', trim_crown: '👑 Crown Moulding', trim_valance: '📏 Valance' };
+
+  function mqphBulkEditItems(cat) {
+    if (cat === 'material') {
+      const recs = lineItems.filter(r => r.fields && r.fields['Category'] === 'material');
+      const byBase = {};
+      recs.forEach(r => {
+        const nm = r.fields['Name'] || '';
+        const baseName = nm.replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+        const isUpper = /—\s*uppers\s*$/i.test(nm);
+        if (!byBase[baseName]) byBase[baseName] = { baseName, upperRec: null, baseRec: null, groupName: (r.fields['Group name']||'').trim() };
+        if (isUpper) byBase[baseName].upperRec = r; else byBase[baseName].baseRec = r;
+      });
+      // Only items with BOTH halves present are editable here — a
+      // material missing one half is a data problem to fix by hand, not
+      // something bulk edit should guess at.
+      return Object.values(byBase).filter(it => it.upperRec && it.baseRec).map(it => ({
+        id: 'mat:' + it.baseName,
+        label: it.baseName,
+        groupName: it.groupName,
+        priceFields: [
+          { key: 'upper', label: 'Uppers price', recId: it.upperRec.id, value: it.upperRec.fields['Rate']||0 },
+          { key: 'base', label: 'Bases price', recId: it.baseRec.id, value: it.baseRec.fields['Rate']||0 },
+        ],
+      }));
+    }
+    if (cat === 'door') {
+      return lineItems.filter(r => r.fields && r.fields['Category'] === 'door').map(r => ({
+        id: r.id, label: r.fields['Name']||'—', groupName: (r.fields['Group name']||'').trim(),
+        priceFields: [{ key: 'price', label: 'Price', recId: r.id, value: r.fields['Rate']||0 }],
+      }));
+    }
+    if (cat === 'trim_crown' || cat === 'trim_valance') {
+      const trimType = cat === 'trim_crown' ? 'crown' : 'valance';
+      return lineItems.filter(r => r.fields && r.fields['Category'] === 'trim' && (r.fields['Trim type']||'crown') === trimType).map(r => ({
+        id: r.id, label: r.fields['Name']||'—', groupName: (r.fields['Group name']||'').trim(),
+        priceFields: [
+          { key: 'supply', label: 'Supply price', recId: r.id, value: r.fields['Rate']||0 },
+          { key: 'install', label: 'Install price', recId: r.id, value: r.fields['Install rate']||0 },
+        ],
+      }));
+    }
+    return [];
+  }
+
+  window.mqphOpenBulkEdit = function(cat) {
+    _bulkEdit = { cat, items: mqphBulkEditItems(cat), groupFilter: '', checkedIds: new Set(), openClusters: new Set() };
+    document.getElementById('mqph-bulk-title').textContent = `Bulk edit — ${BULK_EDIT_LABELS[cat]||cat}`;
+    const groups = [...new Set(_bulkEdit.items.filter(i=>i.groupName).map(i=>i.groupName))];
+    const groupSel = document.getElementById('mqph-bulk-group-filter');
+    groupSel.innerHTML = `<option value="">All items</option>` + groups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}">${g}</option>`).join('');
+    groupSel.value = '';
+    mqphRenderBulkClusters();
+    document.getElementById('mqph-bulk-edit-form').style.display = 'none';
+    document.getElementById('mqph-bulk-overlay').classList.add('show');
+  };
+
+  window.mqphCloseBulkEdit = function() {
+    document.getElementById('mqph-bulk-overlay').classList.remove('show');
+  };
+
+  window.mqphBulkFilterGroup = function(val) {
+    _bulkEdit.groupFilter = val;
+    mqphRenderBulkClusters();
+  };
+
+  // Two items only cluster together if EVERY price field matches exactly —
+  // for materials that means uppers AND bases both have to match, not just
+  // one of them.
+  function mqphBulkPriceKey(item) {
+    return item.priceFields.map(f => f.value.toFixed(2)).join('|');
+  }
+
+  function mqphBulkVisibleItems() {
+    return _bulkEdit.groupFilter ? _bulkEdit.items.filter(i => i.groupName === _bulkEdit.groupFilter) : _bulkEdit.items;
+  }
+
+  function mqphRenderBulkClusters() {
+    const container = document.getElementById('mqph-bulk-clusters');
+    if (!container) return;
+    const items = mqphBulkVisibleItems();
+    if (!items.length) {
+      container.innerHTML = `<div style="padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af">No items ${_bulkEdit.groupFilter?'in this group':'found'}.</div>`;
+      return;
+    }
+    const clusters = {};
+    items.forEach(it => {
+      const key = mqphBulkPriceKey(it);
+      if (!clusters[key]) clusters[key] = { key, priceFields: it.priceFields, items: [] };
+      clusters[key].items.push(it);
+    });
+    const clusterList = Object.values(clusters).sort((a,b) => b.items.length - a.items.length);
+    container.innerHTML = clusterList.map(c => {
+      const allChecked = c.items.every(it => _bulkEdit.checkedIds.has(it.id));
+      const someChecked = !allChecked && c.items.some(it => _bulkEdit.checkedIds.has(it.id));
+      const isOpen = _bulkEdit.openClusters.has(c.key);
+      const priceLabel = c.priceFields.map(f => `${f.label}: $${f.value.toFixed(2)}`).join(' · ');
+      const keyEsc = c.key.replace(/'/g,"\\'");
+      return `
+        <div style="border-bottom:1px solid #f3f4f6">
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:${allChecked?'#eff6ff':'#fff'}">
+            <input type="checkbox" ${allChecked?'checked':''} onclick="mqphSelectBulkCluster('${keyEsc}')" style="width:auto;flex-shrink:0"/>
+            <span style="flex:1;font-size:13px;font-weight:600;color:#111;cursor:pointer" onclick="mqphExpandBulkCluster('${keyEsc}')">${priceLabel} <span style="font-weight:400;color:#9ca3af">— ${c.items.length} item${c.items.length!==1?'s':''}</span></span>
+            <span onclick="mqphExpandBulkCluster('${keyEsc}')" style="font-size:11px;color:#2563eb;cursor:pointer;user-select:none;white-space:nowrap">${isOpen?'Hide items ▲':'Show items ▼'}</span>
+          </div>
+          ${isOpen ? `<div style="padding:4px 12px 8px 34px">${c.items.map(it => `
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#374151;padding:4px 0;cursor:pointer">
+              <input type="checkbox" ${_bulkEdit.checkedIds.has(it.id)?'checked':''} onchange="mqphToggleBulkItem('${it.id.replace(/'/g,"\\'")}')" style="width:auto;flex-shrink:0"/>
+              <span>${it.label}${it.groupName?` <span style="color:#9ca3af">— ${it.groupName}</span>`:''}</span>
+            </label>`).join('')}</div>` : ''}
+        </div>`;
+    }).join('');
+    mqphUpdateBulkForm();
+  }
+
+  window.mqphExpandBulkCluster = function(key) {
+    if (_bulkEdit.openClusters.has(key)) _bulkEdit.openClusters.delete(key);
+    else _bulkEdit.openClusters.add(key);
+    mqphRenderBulkClusters();
+  };
+
+  window.mqphSelectBulkCluster = function(key) {
+    const clusterItems = mqphBulkVisibleItems().filter(it => mqphBulkPriceKey(it) === key);
+    const allChecked = clusterItems.every(it => _bulkEdit.checkedIds.has(it.id));
+    clusterItems.forEach(it => { if (allChecked) _bulkEdit.checkedIds.delete(it.id); else _bulkEdit.checkedIds.add(it.id); });
+    mqphRenderBulkClusters();
+  };
+
+  window.mqphToggleBulkItem = function(id) {
+    if (_bulkEdit.checkedIds.has(id)) _bulkEdit.checkedIds.delete(id);
+    else _bulkEdit.checkedIds.add(id);
+    mqphRenderBulkClusters();
+  };
+
+  function mqphUpdateBulkForm() {
+    const form = document.getElementById('mqph-bulk-edit-form');
+    const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    if (!selected.length) { form.style.display = 'none'; return; }
+    form.style.display = 'block';
+    document.getElementById('mqph-bulk-selected-count').textContent = `${selected.length} item${selected.length!==1?'s':''} selected`;
+    // Every logical item in a category shares the same price-field shape,
+    // so the first selected item's fields define the form.
+    document.getElementById('mqph-bulk-price-fields').innerHTML = selected[0].priceFields.map((f,i) => `
+      <div class="mqph-input-row" style="margin-bottom:8px">
+        <label>${f.label}</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="color:#6b7280">$</span>
+          <input type="number" id="mqph-bulk-newprice-${i}" step="0.01" style="width:120px" placeholder="New price"/>
+        </div>
+      </div>`).join('');
+    const matchResults = document.getElementById('mqph-bulk-match-results');
+    if (matchResults) matchResults.innerHTML = '';
+    const searchInput = document.getElementById('mqph-bulk-match-search');
+    if (searchInput) searchInput.value = '';
+  }
+
+  window.mqphBulkMatchSearch = function(val) {
+    const term = (val||'').toLowerCase().trim();
+    const resultsEl = document.getElementById('mqph-bulk-match-results');
+    if (!resultsEl) return;
+    if (!term) { resultsEl.innerHTML = ''; return; }
+    const matches = _bulkEdit.items.filter(it => it.label.toLowerCase().includes(term)).slice(0, 8);
+    resultsEl.innerHTML = matches.length ? matches.map(it => `
+      <div onclick="mqphBulkPickMatch('${it.id.replace(/'/g,"\\'")}')" style="padding:6px 8px;font-size:12px;cursor:pointer;border-radius:6px;display:flex;justify-content:space-between;gap:8px" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+        <span>${it.label}</span>
+        <span style="color:#6b7280;white-space:nowrap">${it.priceFields.map(f=>'$'+f.value.toFixed(2)).join(' / ')}</span>
+      </div>`).join('') : `<div style="font-size:12px;color:#9ca3af;padding:6px 8px">No matches.</div>`;
+  };
+
+  window.mqphBulkPickMatch = function(id) {
+    const target = _bulkEdit.items.find(it => it.id === id);
+    if (!target) return;
+    target.priceFields.forEach((f,i) => {
+      const input = document.getElementById(`mqph-bulk-newprice-${i}`);
+      if (input) input.value = f.value.toFixed(2);
+    });
+    document.getElementById('mqph-bulk-match-search').value = `Matched to: ${target.label}`;
+    document.getElementById('mqph-bulk-match-results').innerHTML = '';
+  };
+
+  window.mqphBulkApply = async function() {
+    const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    if (!selected.length) return;
+    const newValues = selected[0].priceFields.map((f,i) => {
+      const v = parseFloat(document.getElementById(`mqph-bulk-newprice-${i}`)?.value);
+      return isNaN(v) ? null : v;
+    });
+    if (newValues.some(v => v === null)) { alert('Please enter a new price for every field (or pick an item above to match).'); return; }
+
+    const summary = selected[0].priceFields.map((f,i) => `${f.label} → $${newValues[i].toFixed(2)}`).join(', ');
+    if (!confirm(`Update ${selected.length} item${selected.length!==1?'s':''}?\n\n${summary}`)) return;
+
+    // Group field updates by underlying record id first — crown/valance
+    // have supply AND install on the same record, so those need to go out
+    // as one combined update rather than two separate concurrent writes to
+    // the same record.
+    const writes = [];
+    selected.forEach(it => {
+      const byRecId = {};
+      it.priceFields.forEach((f,i) => {
+        const fieldName = f.key === 'install' ? 'Install rate' : 'Rate';
+        if (!byRecId[f.recId]) byRecId[f.recId] = {};
+        byRecId[f.recId][fieldName] = newValues[i];
+      });
+      Object.entries(byRecId).forEach(([recId, fields]) => writes.push(atUpdate(LINE_ITEMS_TABLE, recId, fields)));
+    });
+    try {
+      await Promise.all(writes);
+      mqphCloseBulkEdit();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Bulk update failed', e);
+      alert('Something went wrong updating some items — please check and try again.');
+    }
+  };
+
+  // View-only sort for the item list within each category — doesn't touch
+  // the actual "Sort order" field at all, so it never affects what order
+  // customers see on the widget. Purely a convenience for finding/editing
+  // items in the dashboard (e.g. sort a big door list alphabetically to
+  // find one, then it's still in its normal custom order for customers).
+  let _mqphSortState = {}; // cat -> {field:'default'|'name'|'price', dir:'asc'|'desc'}
+  function mqphSortRecs(cat, recs) {
+    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const sorted = [...recs];
+    if (state.field === 'name') sorted.sort((a,b) => (a.fields['Name']||'').localeCompare(b.fields['Name']||''));
+    else if (state.field === 'price') sorted.sort((a,b) => (a.fields['Rate']||0) - (b.fields['Rate']||0));
+    else sorted.sort((a,b) => (a.fields['Sort order']||0) - (b.fields['Sort order']||0));
+    if (state.dir === 'desc') sorted.reverse();
+    return sorted;
+  }
+  function mqphSortArrow(cat, field) {
+    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    if (state.field !== field) return '<span style="opacity:0.35">↕</span>';
+    return state.dir === 'asc' ? '↑' : '↓';
+  }
+  window.mqphSetSort = function(cat, field) {
+    const current = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    if (current.field === field) {
+      // 3rd click cycles back to default order — asc, then desc, then back
+      // to normal, without needing a dedicated "Order" label taking up
+      // space of its own.
+      _mqphSortState[cat] = current.dir === 'asc' ? { field, dir:'desc' } : { field:'default', dir:'asc' };
+    } else {
+      _mqphSortState[cat] = { field, dir:'asc' };
+    }
+    mqphRerenderPricingPage();
+  };
+  // Re-renders using data already loaded in memory — no need to hit
+  // Airtable again just because a view-only sort preference changed.
+  function mqphRerenderPricingPage() {
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (!container) return;
+    container.innerHTML = buildEditorHTML();
+    mqphRestoreExpandedCats();
+  }
+
   // Collapsible category sections — same pattern as My Products, to keep
-  // this page manageable once a shop has a lot of pricing set up.
+  // this page manageable once a shop has a lot of pricing set up. Tracked
+  // in this set (not just the DOM) because loadAndRender rebuilds the whole
+  // page's HTML from scratch after every save/delete — without this, every
+  // section would silently re-collapse on every single action.
+  let _mqphExpandedCats = new Set();
   window.mqphToggleCategory = function(cat) {
     const body = document.getElementById(`mqph-cat-body-${cat}`);
     const arrow = document.getElementById(`mqph-cat-arrow-${cat}`);
@@ -2027,7 +2388,18 @@ window.mqphGoToWizard = function() {
     const opening = body.style.display === 'none';
     body.style.display = opening ? 'block' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+    if (opening) _mqphExpandedCats.add(cat); else _mqphExpandedCats.delete(cat);
   };
+  // Re-applies whichever sections were open before the last rebuild —
+  // called right after buildEditorHTML() replaces the page's innerHTML.
+  function mqphRestoreExpandedCats() {
+    _mqphExpandedCats.forEach(cat => {
+      const body = document.getElementById(`mqph-cat-body-${cat}`);
+      const arrow = document.getElementById(`mqph-cat-arrow-${cat}`);
+      if (body) body.style.display = 'block';
+      if (arrow) arrow.style.transform = 'rotate(90deg)';
+    });
+  }
 
   window.mqphToggle = async function(id, el) {
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
@@ -2390,11 +2762,11 @@ window.mqphGoToWizard = function() {
         </div>`;
     }
 
-    const trimSection = (title, items, emptyMsg) => items.length > 0
-      ? `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
-         ${items.map(trimRow).join('')}`
-      : `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
-         <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`;
+    const trimSection = (title, items, emptyMsg, bulkCat) => `<div style="padding:8px 16px 4px;display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border-bottom:1px solid #f3f4f6">
+        <span style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em">${title}</span>
+        ${items.length > 0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenBulkEdit('${bulkCat}')">📊 Bulk edit</button>` : ''}
+      </div>
+      ${items.length > 0 ? items.map(trimRow).join('') : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
 
     return `
       <div class="mqph-ct-block">
@@ -2404,8 +2776,8 @@ window.mqphGoToWizard = function() {
         </div>
         <div id="mqph-cat-body-trim" style="display:none">
         <div id="mqph-trim-msg" class="mqph-msg"></div>
-        ${trimSection('Crown moulding', crownItems, 'No crown moulding styles yet — add one above.')}
-        ${trimSection('Valance', valanceItems, 'No valance styles yet — add one above.')}
+        ${trimSection('Crown moulding', crownItems, 'No crown moulding styles yet — add one above.', 'trim_crown')}
+        ${trimSection('Valance', valanceItems, 'No valance styles yet — add one above.', 'trim_valance')}
         <div style="padding:0.75rem 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6">Customers can choose crown, valance, both, or neither — cost is calculated from the upper cabinet linear footage plus any wall returns they enter.</div>
         </div>
       </div>
@@ -2423,16 +2795,21 @@ window.mqphGoToWizard = function() {
             </div>
             <div class="mqph-field">
               <label>Type</label>
-              <select id="mqph-trim-type"><option value="crown">Crown moulding</option><option value="valance">Valance</option></select>
+              <select id="mqph-trim-type" onchange="mqphUpdateTrimTypeHint()"><option value="crown">Crown moulding</option><option value="valance">Valance</option></select>
             </div>
             <div class="mqph-field">
               <label>Style name</label>
               <input type="text" id="mqph-trim-name" placeholder="e.g. Standard crown — Maple"/>
             </div>
             <div class="mqph-field">
-              <label>Auto-apply with door styles <span style="text-transform:none;font-weight:400;color:#9ca3af">(optional, pick as many as apply)</span></label>
+              <label>Which door styles show this <span id="mqph-trim-type-label-for-hint">crown</span>?</label>
+              <div style="display:flex;gap:6px;margin-bottom:6px">
+                <input type="text" id="mqph-trim-door-search" placeholder="Search door styles…" oninput="mqphTrimDoorSearch(this.value)" style="flex:1;font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
+                <button type="button" onclick="mqphTrimDoorSelectAll(true)" style="font-size:11px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;white-space:nowrap">Select all</button>
+                <button type="button" onclick="mqphTrimDoorSelectAll(false)" style="font-size:11px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;white-space:nowrap">Deselect all</button>
+              </div>
               <div id="mqph-trim-door-link-list" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;max-height:160px;overflow-y:auto"></div>
-              <div style="font-size:11px;color:#9ca3af;margin-top:4px">If checked, this trim is automatically suggested whenever a customer chooses one of these door styles — they can still switch it themselves if they want something different.</div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">Only the door styles checked here will show this <span id="mqph-trim-type-label-for-hint2">crown</span> as an option on the widget — anything left unchecked stays hidden for it. "Select all" / "Deselect all" only apply to whatever's currently showing under your search.</div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
@@ -2921,7 +3298,10 @@ window.mqphGoToWizard = function() {
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">All share the pricing/backsplash/cutout settings you just set. Type each name — leave any blank and we'll flag it before saving.</p>
       <div style="margin-bottom:1rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
         <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Group name (optional)</label>
-        <input type="text" id="mqph-ct-bulk-group" list="mqph-ct-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group"/>
+        <div style="position:relative">
+          <input type="text" id="mqph-ct-bulk-group" list="mqph-ct-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group" style="width:100%;padding-right:28px"/>
+          <span onclick="document.getElementById('mqph-ct-bulk-group').focus()" style="position:absolute;right:6px;top:0;bottom:0;width:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9ca3af;font-size:11px">▼</span>
+        </div>
         <datalist id="mqph-ct-bulk-group-list">${existingGroups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>
         <div style="font-size:11px;color:#6b7280;margin-top:4px">Match an existing group to add these to it, or type a new name to create one.</div>
       </div>
@@ -3131,25 +3511,73 @@ window.mqphGoToWizard = function() {
     }
   };
 
+  // Checked state is tracked here rather than read straight from the DOM,
+  // same reasoning as the product-group manager: searching filters door
+  // names out of the DOM entirely, so a checked door that's been searched
+  // away would otherwise be silently lost when saving.
+  let _trimDoorChecked = new Set();
+  let _trimDoorAllNames = [];
+  let _trimDoorSearchText = '';
+
   function populateTrimDoorOptions(selectedDoorNames) {
+    const doorItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='door');
+    _trimDoorAllNames = doorItems.map(d => d.fields['Name']||'').filter(Boolean);
+    const selected = Array.isArray(selectedDoorNames) ? selectedDoorNames : (selectedDoorNames ? [selectedDoorNames] : []);
+    _trimDoorChecked = new Set(selected);
+    _trimDoorSearchText = '';
+    const searchInput = document.getElementById('mqph-trim-door-search');
+    if (searchInput) searchInput.value = '';
+    mqphRenderTrimDoorList();
+  }
+
+  function mqphRenderTrimDoorList() {
     const list = document.getElementById('mqph-trim-door-link-list');
     if (!list) return;
-    const selected = Array.isArray(selectedDoorNames) ? selectedDoorNames : (selectedDoorNames ? [selectedDoorNames] : []);
-    const doorItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='door');
-    if (!doorItems.length) {
+    if (!_trimDoorAllNames.length) {
       list.innerHTML = '<div style="font-size:12px;color:#9ca3af">No door styles set up yet.</div>';
       return;
     }
-    list.innerHTML = doorItems.map((d,i) => {
-      const name = d.fields['Name']||'';
-      const checked = selected.includes(name) ? 'checked' : '';
+    let names = [..._trimDoorAllNames];
+    if (_trimDoorSearchText) names = names.filter(n => n.toLowerCase().includes(_trimDoorSearchText));
+    if (!names.length) {
+      list.innerHTML = `<div style="font-size:12px;color:#9ca3af">No door styles match "${_trimDoorSearchText}".</div>`;
+      return;
+    }
+    list.innerHTML = names.map(name => {
+      const checked = _trimDoorChecked.has(name) ? 'checked' : '';
       return `<label class="mqph-trim-door-row" style="display:flex !important;flex-direction:row !important;align-items:center !important;gap:8px !important;font-size:13px !important;font-weight:400 !important;text-transform:none !important;letter-spacing:normal !important;color:#374151 !important;cursor:pointer;padding:6px 4px;border-radius:6px"
         onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background='transparent'">
-        <input type="checkbox" class="mqph-trim-door-checkbox" value="${name.replace(/"/g,'&quot;')}" ${checked} style="width:16px !important;height:16px !important;flex-shrink:0;margin:0 !important"/>
+        <input type="checkbox" onchange="mqphTrimDoorToggle('${name.replace(/'/g,"\\'")}')" ${checked} style="width:16px !important;height:16px !important;flex-shrink:0;margin:0 !important"/>
         <span style="flex:1">${name}</span>
       </label>`;
     }).join('');
   }
+
+  window.mqphTrimDoorSearch = function(val) {
+    _trimDoorSearchText = (val || '').toLowerCase();
+    mqphRenderTrimDoorList();
+  };
+
+  window.mqphTrimDoorToggle = function(name) {
+    if (_trimDoorChecked.has(name)) _trimDoorChecked.delete(name);
+    else _trimDoorChecked.add(name);
+  };
+
+  window.mqphTrimDoorSelectAll = function(select) {
+    // Scoped to whatever's currently visible under the active search — not
+    // the full list — so searching "maple" then clicking Select all only
+    // touches those maple results, leaving everything else as it was.
+    let names = [..._trimDoorAllNames];
+    if (_trimDoorSearchText) names = names.filter(n => n.toLowerCase().includes(_trimDoorSearchText));
+    names.forEach(n => { if (select) _trimDoorChecked.add(n); else _trimDoorChecked.delete(n); });
+    mqphRenderTrimDoorList();
+  };
+
+  window.mqphUpdateTrimTypeHint = function() {
+    const type = document.getElementById('mqph-trim-type')?.value || 'crown';
+    const label = type === 'valance' ? 'valance' : 'crown';
+    document.querySelectorAll('#mqph-trim-type-label-for-hint, #mqph-trim-type-label-for-hint2').forEach(el => { el.textContent = label; });
+  };
 
   window.mqphOpenTrimAdd = function() {
     currentTrimEditId = null;
@@ -3159,7 +3587,12 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-trim-supply-rate').value = '';
     document.getElementById('mqph-trim-install-rate').value = '';
     document.getElementById('mqph-trim-active').checked = true;
-    populateTrimDoorOptions([]);
+    // Every door checked by default — a brand new style shows for
+    // everything until the shop deliberately narrows it down, rather than
+    // silently showing for nothing until they think to check boxes.
+    const allDoorNames = lineItems.filter(r=>r.fields&&r.fields['Category']==='door').map(d=>d.fields['Name']||'').filter(Boolean);
+    populateTrimDoorOptions(allDoorNames);
+    mqphUpdateTrimTypeHint();
     document.getElementById('mqph-trim-modal-overlay').classList.add('show');
   };
 
@@ -3175,6 +3608,7 @@ window.mqphGoToWizard = function() {
     let linkedDoors = [];
     try { linkedDoors = rec.fields['Linked door style'] ? JSON.parse(rec.fields['Linked door style']) : []; } catch(e) { linkedDoors = []; }
     populateTrimDoorOptions(linkedDoors);
+    mqphUpdateTrimTypeHint();
     document.getElementById('mqph-trim-modal-overlay').classList.add('show');
   };
 
@@ -3188,7 +3622,7 @@ window.mqphGoToWizard = function() {
       const dupe = lineItems.find(r => r.fields && r.fields['Category']==='trim' && (r.fields['Trim type']||'crown')===trimType && r.fields['Active']!==false && (r.fields['Name']||'').trim().toLowerCase()===name.toLowerCase());
       if (dupe && !confirm(`"${dupe.fields['Name']}" already exists in ${trimType==='valance'?'Valance':'Crown moulding'}. Adding another one with the same name can cause pricing mix-ups later.\n\nAdd it anyway?`)) return;
     }
-    const linkedDoors = Array.from(document.querySelectorAll('.mqph-trim-door-checkbox:checked')).map(cb => cb.value);
+    const linkedDoors = [..._trimDoorChecked];
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'trim',
       Rate:parseFloat(document.getElementById('mqph-trim-supply-rate').value||0),
@@ -3221,6 +3655,7 @@ window.mqphGoToWizard = function() {
       await migrateCTPricing();
     }
     container.innerHTML=buildEditorHTML();
+    mqphRestoreExpandedCats();
   }
 
   window.loadAndRender=loadAndRender;
