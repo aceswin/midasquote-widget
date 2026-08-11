@@ -1596,7 +1596,7 @@
           </select>
         </div>
         <div style="font-size:13px;color:#4b5563;margin:12px 0 10px;line-height:1.5">
-          🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full stacked drawer banks with no door at all. 🗄️ <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
+          🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full drawer banks. 🗄️ <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
         </div>
         <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;justify-content:flex-start">
           <div style="flex:0 1 150px;text-align:center">
