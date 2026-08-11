@@ -4359,7 +4359,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           groupDesc: r.fields['Group description']||'',
           groupOrder: typeof r.fields['Group sort order']==='number' ? r.fields['Group sort order'] : 0,
           addonOptions,
-          price: r.fields['Price']||0,
+          price: r.fields['Rate']||0,
         };
         byCategory[cat].push(existing);
       } else {
