@@ -499,6 +499,7 @@ window.mqphGoToWizard = function() {
           <strong>Every step uses the same spec:</strong>&nbsp;
           <span class="mqph-spec-tag">1 × 30" cabinet</span> + <span class="mqph-spec-tag">1 × 18" cabinet</span> = <span class="mqph-spec-tag">4 linear feet</span>
         </div>
+        <div style="font-size:13px;color:#374151;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1.25rem;line-height:1.6">💡 <strong>Tip:</strong> Just price your main, most-common items here — not every single variation. Once your baseline is set, use the <strong>+ Add</strong> button on each category to add a whole batch of similarly-priced items at once — much faster than running through this wizard for every option.</div>
         <div style="font-size:13px;color:#374151;line-height:1.9;margin-bottom:1.25rem">
           ✅ Box-only baseline (no doors, no drawers)<br/>
           ✅ Door styles as upcharges<br/>
