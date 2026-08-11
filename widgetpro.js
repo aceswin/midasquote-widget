@@ -331,7 +331,7 @@
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-field{flex-direction:column;gap:5px;min-width:0}
-      #midasquote-widget .mq-label{font-size:15px;color:#374151}
+      #midasquote-widget .mq-label{font-size:15px;color:#374151;margin-bottom:4px}
       #midasquote-widget .mq-hint{font-size:14px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
       #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:70px!important}
@@ -358,15 +358,15 @@
       #midasquote-widget .mq-vpicker-wrap{position:relative}
       #midasquote-widget .mq-vpicker-arrow{position:absolute;top:0;right:0;bottom:8px;width:34px;display:none;align-items:center;justify-content:flex-end;padding-right:2px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%);font-size:20px;font-weight:700;color:#374151;pointer-events:none}
       #midasquote-widget .mq-vpicker-arrow.show{display:flex}
-      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:110px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
       #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
       @keyframes mqShakeChoice{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
       #midasquote-widget .mq-spec-mode-select.mq-needs-choice{animation:mqShakeChoice 0.4s ease;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
       #midasquote-widget input.mq-needs-choice{animation:mqShakeChoice 0.4s ease;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
-      #midasquote-widget .mq-vpicker-thumb{width:96px;height:96px;border-radius:6px;object-fit:contain;background:#f3f4f6}
-      #midasquote-widget .mq-vpicker-thumb-placeholder{width:96px;height:96px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
+      #midasquote-widget .mq-vpicker-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;background:#f3f4f6}
+      #midasquote-widget .mq-vpicker-thumb-placeholder{width:116px;height:116px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
       #midasquote-widget .mq-vpicker-group-note{font-size:9px;color:#16a34a;text-align:center;line-height:1.25;margin-top:2px;max-width:100%}
