@@ -1365,11 +1365,11 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center"/><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center;padding-right:28px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center"/><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:28px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
@@ -2969,7 +2969,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div style="display:flex;align-items:flex-end;gap:2rem;flex-wrap:wrap">
           <div class="mq-field" style="margin-bottom:0">
             <label class="mq-label">Width (inches)</label>
-            <input type="number" id="mq-tc-width-${id}" value="24" min="12" max="48" style="width:100px"/>
+            <input type="number" id="mq-tc-width-${id}" value="24" min="12" max="48" onblur="mqValidateTallCabWidth('${id}')" style="width:100px"/>
+            <div id="mq-tc-width-note-${id}" style="display:none;font-size:11px;font-weight:600;color:#dc2626;margin-top:3px">Must be 12" or wider.</div>
           </div>
           <div>
             <label class="mq-label" style="display:block;margin-bottom:5px">Quantity</label>
@@ -2986,6 +2987,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       mqRefreshSectionVisibility(prefix);
     }
     window.mqAddTallCab=(prefix)=>addTallCabInternal(prefix);
+    // Reverts to 12" and shows a brief note if someone types anything
+    // narrower — the min attribute alone doesn't actually stop manual
+    // typing, it only affects the native spinner arrows.
+    window.mqValidateTallCabWidth = function(id) {
+      const input = document.getElementById(`mq-tc-width-${id}`);
+      const note = document.getElementById(`mq-tc-width-note-${id}`);
+      if (!input) return;
+      const val = parseFloat(input.value);
+      if (isNaN(val) || val < 12) {
+        input.value = 12;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        if (note) {
+          note.style.display = 'block';
+          clearTimeout(note._mqHideTimer);
+          note._mqHideTimer = setTimeout(() => { note.style.display = 'none'; }, 4000);
+        }
+      }
+    };
     window.mqRemoveTallCab=(prefix,id)=>{
       document.getElementById(`mq-tc-card-${id}`)?.remove();
       delete tallCabs[prefix][id];
