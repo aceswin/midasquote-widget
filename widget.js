@@ -1646,15 +1646,19 @@
         </div>
         ${hasCrown?`<div id="mq-${prefix}-crown-field-wrap" style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
-            <div id="mq-${prefix}-crown-picker-wrap">${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}</div>
-            <div id="mq-${prefix}-crown-empty-msg" style="display:none;font-size:13px;color:#6b7280;padding:8px 0">There are no crowns linked to this door type.</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div id="mq-${prefix}-crown-picker-wrap" style="flex:1;min-width:0">${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}</div>
+              <div id="mq-${prefix}-crown-empty-msg" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:13px;color:#166534;font-weight:600;white-space:nowrap">No crowns linked to this door style</div>
+            </div>
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
         </div>`:''}
         ${hasValance?`<div id="mq-${prefix}-valance-field-wrap">
           <div class="mq-field"><label class="mq-label">Valance</label>
-            <div id="mq-${prefix}-valance-picker-wrap">${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}</div>
-            <div id="mq-${prefix}-valance-empty-msg" style="display:none;font-size:13px;color:#6b7280;padding:8px 0">There are no valances linked to this door type.</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div id="mq-${prefix}-valance-picker-wrap" style="flex:1;min-width:0">${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}</div>
+              <div id="mq-${prefix}-valance-empty-msg" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:13px;color:#166534;font-weight:600;white-space:nowrap">No valances linked to this door style</div>
+            </div>
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
         </div>`:''}
@@ -2402,15 +2406,13 @@
               if (!visible && roomOk && !groupOk && chip.classList.contains('selected')) selectedHiddenByGroupOnly = true;
             });
             // A door style that isn't linked to any crown/valance at all
-            // leaves this row with nothing but "None" showing — swap the
-            // picker itself for a plain explanation instead of hiding the
-            // whole field, so the label stays put and it's clear why
-            // nothing's there rather than looking like a broken empty gap.
+            // leaves this row with nothing but a "None" card showing — that
+            // card stays exactly as-is (it's still a real, styled choice),
+            // just with a small note beside it explaining why nothing else
+            // is there.
             if (isTrimRow) {
               const isCrown = rowSelectId.endsWith('-trim-crown');
-              const pickerWrapEl = document.getElementById(isCrown ? `mq-${prefix}-crown-picker-wrap` : `mq-${prefix}-valance-picker-wrap`);
               const emptyMsgEl = document.getElementById(isCrown ? `mq-${prefix}-crown-empty-msg` : `mq-${prefix}-valance-empty-msg`);
-              if (pickerWrapEl) pickerWrapEl.style.display = anyRealVisible ? '' : 'none';
               if (emptyMsgEl) emptyMsgEl.style.display = anyRealVisible ? 'none' : 'block';
             }
             if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect && !selectedHiddenByGroupOnly) {
@@ -3040,10 +3042,10 @@
       if (note) {
         const doorItem = doorKey && doorKey !== 'none' ? (li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)] : null;
         const doorName = doorItem ? doorItem['Name'] : '';
-        const crownPickerWrap = document.getElementById(`mq-${prefix}-crown-picker-wrap`);
-        const valancePickerWrap = document.getElementById(`mq-${prefix}-valance-picker-wrap`);
-        const crownShowing = crownPickerWrap && crownPickerWrap.style.display !== 'none';
-        const valanceShowing = valancePickerWrap && valancePickerWrap.style.display !== 'none';
+        const crownEmptyMsg = document.getElementById(`mq-${prefix}-crown-empty-msg`);
+        const valanceEmptyMsg = document.getElementById(`mq-${prefix}-valance-empty-msg`);
+        const crownShowing = crownEmptyMsg && crownEmptyMsg.style.display === 'none';
+        const valanceShowing = valanceEmptyMsg && valanceEmptyMsg.style.display === 'none';
         if (doorName && (crownShowing || valanceShowing)) {
           const parts = [];
           if (crownShowing) parts.push('crown');
