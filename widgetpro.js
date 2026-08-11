@@ -1475,7 +1475,8 @@
         </div>
         ${hasCrown?`<div id="mq-${prefix}-crown-field-wrap" style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
-            ${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}
+            <div id="mq-${prefix}-crown-picker-wrap">${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}</div>
+            <div id="mq-${prefix}-crown-empty-msg" style="display:none;font-size:13px;color:#6b7280;padding:8px 0">There are no crowns linked to this door type.</div>
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-crown-returns-wrap" style="display:none;margin-top:10px;background:#0f2a52;border:1.5px solid #d97706;border-radius:8px;padding:10px 12px">
@@ -1491,7 +1492,8 @@
         </div>`:''}
         ${hasValance?`<div id="mq-${prefix}-valance-field-wrap">
           <div class="mq-field"><label class="mq-label">Valance</label>
-            ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}
+            <div id="mq-${prefix}-valance-picker-wrap">${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}</div>
+            <div id="mq-${prefix}-valance-empty-msg" style="display:none;font-size:13px;color:#6b7280;padding:8px 0">There are no valances linked to this door type.</div>
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
           </div>
           <div class="mq-field" id="mq-${prefix}-trim-valance-returns-wrap" style="display:none;margin-top:10px;background:#0f2a52;border:1.5px solid #d97706;border-radius:8px;padding:10px 12px">
@@ -2259,13 +2261,16 @@
               if (!visible && roomOk && !groupOk && chip.classList.contains('selected')) selectedHiddenByGroupOnly = true;
             });
             // A door style that isn't linked to any crown/valance at all
-            // leaves this row with nothing but "None" showing — collapse
-            // the whole field away rather than displaying a picker with
-            // just one greyed-out option in it.
+            // leaves this row with nothing but "None" showing — swap the
+            // picker itself for a plain explanation instead of hiding the
+            // whole field, so the label stays put and it's clear why
+            // nothing's there rather than looking like a broken empty gap.
             if (isTrimRow) {
-              const wrapId = rowSelectId.endsWith('-trim-crown') ? `mq-${prefix}-crown-field-wrap` : `mq-${prefix}-valance-field-wrap`;
-              const wrapEl = document.getElementById(wrapId);
-              if (wrapEl) wrapEl.style.display = anyRealVisible ? '' : 'none';
+              const isCrown = rowSelectId.endsWith('-trim-crown');
+              const pickerWrapEl = document.getElementById(isCrown ? `mq-${prefix}-crown-picker-wrap` : `mq-${prefix}-valance-picker-wrap`);
+              const emptyMsgEl = document.getElementById(isCrown ? `mq-${prefix}-crown-empty-msg` : `mq-${prefix}-valance-empty-msg`);
+              if (pickerWrapEl) pickerWrapEl.style.display = anyRealVisible ? '' : 'none';
+              if (emptyMsgEl) emptyMsgEl.style.display = anyRealVisible ? 'none' : 'block';
             }
             if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect && !selectedHiddenByGroupOnly) {
               const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
@@ -2850,10 +2855,10 @@
       if (note) {
         const doorItem = doorKey && doorKey !== 'none' ? (li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)] : null;
         const doorName = doorItem ? doorItem['Name'] : '';
-        const crownWrap = document.getElementById(`mq-${prefix}-crown-field-wrap`);
-        const valanceWrap = document.getElementById(`mq-${prefix}-valance-field-wrap`);
-        const crownShowing = crownWrap && crownWrap.style.display !== 'none';
-        const valanceShowing = valanceWrap && valanceWrap.style.display !== 'none';
+        const crownPickerWrap = document.getElementById(`mq-${prefix}-crown-picker-wrap`);
+        const valancePickerWrap = document.getElementById(`mq-${prefix}-valance-picker-wrap`);
+        const crownShowing = crownPickerWrap && crownPickerWrap.style.display !== 'none';
+        const valanceShowing = valancePickerWrap && valancePickerWrap.style.display !== 'none';
         if (doorName && (crownShowing || valanceShowing)) {
           const parts = [];
           if (crownShowing) parts.push('crown');
