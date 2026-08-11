@@ -1222,6 +1222,7 @@
       // recalculation as you type), others for 'change'. Covers either.
       targetEl.dispatchEvent(new Event('input', { bubbles: true }));
       targetEl.dispatchEvent(new Event('change', { bubbles: true }));
+      if (targetEl.classList.contains('mq-linft-input') && window.mqAutoSizeLinFtInput) window.mqAutoSizeLinFtInput(targetEl);
     }
     mqCloseMeasureCalc();
     if (targetEl) {
@@ -3727,6 +3728,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       const len = String(input.value ?? '0').length;
       const width = Math.min(96, Math.max(46, 34 + len * 12));
       input.style.setProperty('--mq-linft-w', width + 'px');
+      // Some mobile browsers don't reliably re-layout a number input just
+      // from a style/variable change — reading a layout property right
+      // after forces a synchronous reflow instead of leaving it deferred.
+      void input.offsetWidth;
     };
     window.mqAdjLinFt=(prefix, which, delta)=>{
       const input = document.getElementById(`mq-${prefix}-${which}ft`);
@@ -3735,6 +3740,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       next = Math.round(next * 10) / 10; // keep to one decimal — avoids floating-point drift
       input.value = next;
       input.dispatchEvent(new Event('input', { bubbles: true }));
+      // Called directly here too, not just left to the dispatched event
+      // reaching the inline oninput="" handler — one less thing that has
+      // to work correctly on every mobile browser for the resize to happen.
+      if (window.mqAutoSizeLinFtInput) window.mqAutoSizeLinFtInput(input);
     };
     // Holding a +/- button down repeats mqAdjLinFt automatically instead of
     // needing dozens of individual taps to reach a bigger number. A normal
