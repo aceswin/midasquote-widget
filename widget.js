@@ -2924,11 +2924,13 @@
     // selection with the same green used in the suggestion note — a light
     // ring, not a hard border, so it layers cleanly whether or not that
     // chip also happens to be the one actually selected.
-    function mqMarkSuggestedChip(selectId, matchKey) {
+    function mqMarkSuggestedChip(selectId, matchKeys) {
       document.querySelectorAll(`[data-vpicker-for="${selectId}"]`).forEach(c => c.classList.remove('mq-suggested'));
-      if (!matchKey) return;
-      const chip = document.querySelector(`[data-vpicker-for="${selectId}"][data-value="${matchKey}"]`);
-      if (chip) chip.classList.add('mq-suggested');
+      const keys = Array.isArray(matchKeys) ? matchKeys : (matchKeys ? [matchKeys] : []);
+      keys.forEach(matchKey => {
+        const chip = document.querySelector(`[data-vpicker-for="${selectId}"][data-value="${matchKey}"]`);
+        if (chip) chip.classList.add('mq-suggested');
+      });
     }
 
     window.mqApplyLinkedTrim=(prefix, doorKey)=>{
@@ -2951,16 +2953,20 @@
       const doorItem=(data.li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)];
       const doorName=doorItem?doorItem['Name']:'';
 
-      const crownMatchKey=Object.keys(TRIM).find(k=>TRIM[k].type==='crown' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
-      const valanceMatchKey=Object.keys(TRIM).find(k=>TRIM[k].type==='valance' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
-      mqMarkSuggestedChip(`mq-${prefix}-trim-crown`, crownMatchKey);
-      mqMarkSuggestedChip(`mq-${prefix}-trim-valance`, valanceMatchKey);
+      // filter, not find — a door style can have several crowns/valances
+      // linked to it (e.g. a standard one and a "to ceiling" variant), and
+      // all of them should show as suggested, not just whichever happens
+      // to be first in TRIM's key order.
+      const crownMatchKeys=Object.keys(TRIM).filter(k=>TRIM[k].type==='crown' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
+      const valanceMatchKeys=Object.keys(TRIM).filter(k=>TRIM[k].type==='valance' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
+      mqMarkSuggestedChip(`mq-${prefix}-trim-crown`, crownMatchKeys);
+      mqMarkSuggestedChip(`mq-${prefix}-trim-valance`, valanceMatchKeys);
 
       // Don't auto-select — just show a suggestion note so the customer stays in control
       if(note){
         const suggestions=[];
-        if(crownMatchKey) suggestions.push(TRIM[crownMatchKey].label);
-        if(valanceMatchKey) suggestions.push(TRIM[valanceMatchKey].label);
+        if(crownMatchKeys.length) suggestions.push(crownMatchKeys.map(k=>TRIM[k].label).join(' or '));
+        if(valanceMatchKeys.length) suggestions.push(valanceMatchKeys.map(k=>TRIM[k].label).join(' or '));
         if(suggestions.length){ note.textContent=`💡 ${suggestions.join(' & ')} is typically used with this door style — add it below if you'd like it included`; note.style.display='block'; }
         else note.style.display='none';
       }
