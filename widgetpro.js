@@ -334,7 +334,7 @@
       #midasquote-widget .mq-label{font-size:15px;color:#374151;margin-bottom:4px}
       #midasquote-widget .mq-hint{font-size:14px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
-      #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:58px!important}
+      #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:73px!important}
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
