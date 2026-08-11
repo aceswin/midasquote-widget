@@ -557,6 +557,8 @@
       #midasquote-widget .mq-line-items li:last-child{border-bottom:none}
       #midasquote-widget .mq-li-lbl{color:#4b5563}
       #midasquote-widget .mq-disclaimer{font-size:13px;color:#4b5563;background:#f9fafb;border-radius:6px;padding:10px 12px;margin-top:1rem;line-height:1.5}
+      #midasquote-widget .mq-empty-calc-msg{font-size:13px;font-weight:600;color:#b91c1c;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:6px;padding:10px 12px;margin-top:10px;line-height:1.5;text-align:center}
+      #midasquote-widget .mq-calc-btn.mq-needs-choice{animation:mqShakeChoice 0.4s ease;box-shadow:0 0 0 3px rgba(220,38,38,0.25)}
       #midasquote-widget .mq-travel-note{font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 12px;margin-top:8px;line-height:1.5}
       #midasquote-widget .mq-powered-by{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:12px;color:#6b7280;letter-spacing:0.01em}
       #midasquote-widget .mq-powered-by a{color:#6b7280;text-decoration:none;font-weight:500;transition:color 0.15s}
@@ -1745,6 +1747,7 @@
         ${PRICE_LEGEND_HTML}
         ${cabinetForm('c', specs, data)}
         <button class="mq-calc-btn" id="mq-c-calc-btn" onclick="mqCalcCabinets()">Calculate cabinet estimate</button>
+        <div class="mq-empty-calc-msg" id="mq-c-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
         <div class="mq-loading" id="mq-c-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-c-result">
           <div class="mq-res-hdr">
@@ -1772,6 +1775,7 @@
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <button class="mq-calc-btn" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
+        <div class="mq-empty-calc-msg" id="mq-ct-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
         <div class="mq-loading" id="mq-ct-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-ct-result">
           <div class="mq-res-hdr">
@@ -1850,6 +1854,7 @@
         </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
+        <div class="mq-empty-calc-msg" id="mq-b-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
         <div class="mq-loading" id="mq-b-loading">Building your full project estimate...</div>
         <div class="mq-combined-result" id="mq-b-result">
           <div class="mq-combined-title">✨ Full project estimate</div>
@@ -3671,6 +3676,7 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window.mqCalcCabinets=()=>{
       if (!mqValidateInstallQty('c')) return;
+      if (!mqValidateNotEmpty('c', calcCabinet('c'))) return;
       window.mqShowLead(async lead=>{
         window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-c-calc-btn').disabled=true;
@@ -3696,6 +3702,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     window.mqCalcCountertops=()=>{
       const hasSurfaces=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length>0;
       if(!hasSurfaces){alert('Please add at least one surface.');return;}
+      if (!mqValidateNotEmpty('ct', calcCountertop('ct'))) return;
       window.mqShowLead(async lead=>{
         window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-ct-calc-btn').disabled=true;
@@ -3717,6 +3724,8 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window.mqCalcBoth=()=>{
       if (!mqValidateInstallQty('b')) return;
+      const dryCab=calcCabinet('b'), dryCt=calcCountertop('b');
+      if (!mqValidateNotEmpty('b', { low: dryCab.low+dryCt.low, high: dryCab.high+dryCt.high })) return;
       window.mqShowLead(async lead=>{
         window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-b-calc-btn').disabled=true;
@@ -3985,6 +3994,29 @@ window.mqTogDrawerConfig=(prefix)=>{
     // all — easy to miss since the install field now sits right below it).
     // Shakes/focuses whichever field needs attention, same pattern as
     // mqSpecModeChosen.
+    // Blocks Calculate if the resulting estimate would be $0 — nothing
+    // meaningful was actually selected (every picker left on "None"/"No
+    // doors", zero linear feet, etc). Shakes the Calculate button itself
+    // rather than a specific field, since there's no single thing to point
+    // to — the whole form is effectively empty.
+    function mqValidateNotEmpty(prefix, result) {
+      if ((result.low||0) > 0 || (result.high||0) > 0) return true;
+      const btn = document.getElementById(`mq-${prefix}-calc-btn`);
+      if (btn) {
+        btn.classList.remove('mq-needs-choice');
+        void btn.offsetWidth;
+        btn.classList.add('mq-needs-choice');
+        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => btn.classList.remove('mq-needs-choice'), 700);
+      }
+      const msgEl = document.getElementById(`mq-${prefix}-empty-calc-msg`);
+      if (msgEl) {
+        msgEl.style.display = 'block';
+        clearTimeout(msgEl._mqHideTimer);
+        msgEl._mqHideTimer = setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+      }
+      return false;
+    }
     function mqValidateInstallQty(prefix) {
       const shake = (qtyInput) => {
         if (!qtyInput) return;
