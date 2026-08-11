@@ -419,6 +419,31 @@ let wizardBaseline = null;
         lineItems = lineItems.filter(r => !pricedDrawers.find(p => p.id === r.id));
       }
     }
+    // For doors: any crown/valance linked to this door style needs that
+    // link cleaned up too, otherwise it keeps pointing at a door name that
+    // no longer exists — the widget would just silently never match it,
+    // but it'd sit there stale in the dashboard forever.
+    if (cat === 'door') {
+      const doorRec = lineItems.find(r => r.id === id);
+      const doorName = doorRec?.fields['Name'] || '';
+      if (doorName) {
+        const linkedTrims = lineItems.filter(r => {
+          if (!r.fields || r.fields['Category'] !== 'trim') return false;
+          let linked = [];
+          try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+          return linked.includes(doorName);
+        });
+        for (const t of linkedTrims) {
+          let linked = [];
+          try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+          const cleaned = linked.filter(name => name !== doorName);
+          try {
+            await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(cleaned) });
+            t.fields['Linked door style'] = JSON.stringify(cleaned);
+          } catch(e) { console.error('Failed to clean up linked door style', e); }
+        }
+      }
+    }
     await atDelete(LINE_ITEMS_TABLE, id);
     lineItems = lineItems.filter(r => r.id !== id);
     const chip = document.getElementById(`mqph-chip-${id}`);
@@ -2026,7 +2051,29 @@ window.mqphGoToWizard = function() {
 
   window.mqphDelete = async function(id) {
     if (!confirm('Delete this item?')) return;
-    try { await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender(); } catch(e) { alert('Error deleting.'); }
+    try {
+      // Same door → linked-crown/valance cleanup as mqphDeleteChip, for
+      // this second, more generic delete path.
+      const rec = lineItems.find(r => r.id === id);
+      if (rec && rec.fields && rec.fields['Category'] === 'door') {
+        const doorName = rec.fields['Name'] || '';
+        if (doorName) {
+          const linkedTrims = lineItems.filter(r => {
+            if (!r.fields || r.fields['Category'] !== 'trim') return false;
+            let linked = [];
+            try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+            return linked.includes(doorName);
+          });
+          for (const t of linkedTrims) {
+            let linked = [];
+            try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+            const cleaned = linked.filter(name => name !== doorName);
+            try { await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(cleaned) }); } catch(e) { console.error('Failed to clean up linked door style', e); }
+          }
+        }
+      }
+      await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender();
+    } catch(e) { alert('Error deleting.'); }
   };
 
   // View-only sort for the item list within each category — doesn't touch
@@ -2490,16 +2537,21 @@ window.mqphGoToWizard = function() {
             </div>
             <div class="mqph-field">
               <label>Type</label>
-              <select id="mqph-trim-type"><option value="crown">Crown moulding</option><option value="valance">Valance</option></select>
+              <select id="mqph-trim-type" onchange="mqphUpdateTrimTypeHint()"><option value="crown">Crown moulding</option><option value="valance">Valance</option></select>
             </div>
             <div class="mqph-field">
               <label>Style name</label>
               <input type="text" id="mqph-trim-name" placeholder="e.g. Standard crown — Maple"/>
             </div>
             <div class="mqph-field">
-              <label>Auto-apply with door styles <span style="text-transform:none;font-weight:400;color:#9ca3af">(optional, pick as many as apply)</span></label>
+              <label>Which door styles show this <span id="mqph-trim-type-label-for-hint">crown</span>?</label>
+              <div style="display:flex;gap:6px;margin-bottom:6px">
+                <input type="text" id="mqph-trim-door-search" placeholder="Search door styles…" oninput="mqphTrimDoorSearch(this.value)" style="flex:1;font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
+                <button type="button" onclick="mqphTrimDoorSelectAll(true)" style="font-size:11px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;white-space:nowrap">Select all</button>
+                <button type="button" onclick="mqphTrimDoorSelectAll(false)" style="font-size:11px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;white-space:nowrap">Deselect all</button>
+              </div>
               <div id="mqph-trim-door-link-list" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;max-height:160px;overflow-y:auto"></div>
-              <div style="font-size:11px;color:#9ca3af;margin-top:4px">If checked, this trim is automatically suggested whenever a customer chooses one of these door styles — they can still switch it themselves if they want something different.</div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">Only the door styles checked here will show this <span id="mqph-trim-type-label-for-hint2">crown</span> as an option on the widget — anything left unchecked stays hidden for it. "Select all" / "Deselect all" only apply to whatever's currently showing under your search.</div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
@@ -3201,25 +3253,73 @@ window.mqphGoToWizard = function() {
     }
   };
 
+  // Checked state is tracked here rather than read straight from the DOM,
+  // same reasoning as the product-group manager: searching filters door
+  // names out of the DOM entirely, so a checked door that's been searched
+  // away would otherwise be silently lost when saving.
+  let _trimDoorChecked = new Set();
+  let _trimDoorAllNames = [];
+  let _trimDoorSearchText = '';
+
   function populateTrimDoorOptions(selectedDoorNames) {
+    const doorItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='door');
+    _trimDoorAllNames = doorItems.map(d => d.fields['Name']||'').filter(Boolean);
+    const selected = Array.isArray(selectedDoorNames) ? selectedDoorNames : (selectedDoorNames ? [selectedDoorNames] : []);
+    _trimDoorChecked = new Set(selected);
+    _trimDoorSearchText = '';
+    const searchInput = document.getElementById('mqph-trim-door-search');
+    if (searchInput) searchInput.value = '';
+    mqphRenderTrimDoorList();
+  }
+
+  function mqphRenderTrimDoorList() {
     const list = document.getElementById('mqph-trim-door-link-list');
     if (!list) return;
-    const selected = Array.isArray(selectedDoorNames) ? selectedDoorNames : (selectedDoorNames ? [selectedDoorNames] : []);
-    const doorItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='door');
-    if (!doorItems.length) {
+    if (!_trimDoorAllNames.length) {
       list.innerHTML = '<div style="font-size:12px;color:#9ca3af">No door styles set up yet.</div>';
       return;
     }
-    list.innerHTML = doorItems.map((d,i) => {
-      const name = d.fields['Name']||'';
-      const checked = selected.includes(name) ? 'checked' : '';
+    let names = [..._trimDoorAllNames];
+    if (_trimDoorSearchText) names = names.filter(n => n.toLowerCase().includes(_trimDoorSearchText));
+    if (!names.length) {
+      list.innerHTML = `<div style="font-size:12px;color:#9ca3af">No door styles match "${_trimDoorSearchText}".</div>`;
+      return;
+    }
+    list.innerHTML = names.map(name => {
+      const checked = _trimDoorChecked.has(name) ? 'checked' : '';
       return `<label class="mqph-trim-door-row" style="display:flex !important;flex-direction:row !important;align-items:center !important;gap:8px !important;font-size:13px !important;font-weight:400 !important;text-transform:none !important;letter-spacing:normal !important;color:#374151 !important;cursor:pointer;padding:6px 4px;border-radius:6px"
         onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background='transparent'">
-        <input type="checkbox" class="mqph-trim-door-checkbox" value="${name.replace(/"/g,'&quot;')}" ${checked} style="width:16px !important;height:16px !important;flex-shrink:0;margin:0 !important"/>
+        <input type="checkbox" onchange="mqphTrimDoorToggle('${name.replace(/'/g,"\\'")}')" ${checked} style="width:16px !important;height:16px !important;flex-shrink:0;margin:0 !important"/>
         <span style="flex:1">${name}</span>
       </label>`;
     }).join('');
   }
+
+  window.mqphTrimDoorSearch = function(val) {
+    _trimDoorSearchText = (val || '').toLowerCase();
+    mqphRenderTrimDoorList();
+  };
+
+  window.mqphTrimDoorToggle = function(name) {
+    if (_trimDoorChecked.has(name)) _trimDoorChecked.delete(name);
+    else _trimDoorChecked.add(name);
+  };
+
+  window.mqphTrimDoorSelectAll = function(select) {
+    // Scoped to whatever's currently visible under the active search — not
+    // the full list — so searching "maple" then clicking Select all only
+    // touches those maple results, leaving everything else as it was.
+    let names = [..._trimDoorAllNames];
+    if (_trimDoorSearchText) names = names.filter(n => n.toLowerCase().includes(_trimDoorSearchText));
+    names.forEach(n => { if (select) _trimDoorChecked.add(n); else _trimDoorChecked.delete(n); });
+    mqphRenderTrimDoorList();
+  };
+
+  window.mqphUpdateTrimTypeHint = function() {
+    const type = document.getElementById('mqph-trim-type')?.value || 'crown';
+    const label = type === 'valance' ? 'valance' : 'crown';
+    document.querySelectorAll('#mqph-trim-type-label-for-hint, #mqph-trim-type-label-for-hint2').forEach(el => { el.textContent = label; });
+  };
 
   window.mqphOpenTrimAdd = function() {
     currentTrimEditId = null;
@@ -3229,7 +3329,12 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-trim-supply-rate').value = '';
     document.getElementById('mqph-trim-install-rate').value = '';
     document.getElementById('mqph-trim-active').checked = true;
-    populateTrimDoorOptions([]);
+    // Every door checked by default — a brand new style shows for
+    // everything until the shop deliberately narrows it down, rather than
+    // silently showing for nothing until they think to check boxes.
+    const allDoorNames = lineItems.filter(r=>r.fields&&r.fields['Category']==='door').map(d=>d.fields['Name']||'').filter(Boolean);
+    populateTrimDoorOptions(allDoorNames);
+    mqphUpdateTrimTypeHint();
     document.getElementById('mqph-trim-modal-overlay').classList.add('show');
   };
 
@@ -3245,6 +3350,7 @@ window.mqphGoToWizard = function() {
     let linkedDoors = [];
     try { linkedDoors = rec.fields['Linked door style'] ? JSON.parse(rec.fields['Linked door style']) : []; } catch(e) { linkedDoors = []; }
     populateTrimDoorOptions(linkedDoors);
+    mqphUpdateTrimTypeHint();
     document.getElementById('mqph-trim-modal-overlay').classList.add('show');
   };
 
@@ -3258,7 +3364,7 @@ window.mqphGoToWizard = function() {
       const dupe = lineItems.find(r => r.fields && r.fields['Category']==='trim' && (r.fields['Trim type']||'crown')===trimType && r.fields['Active']!==false && (r.fields['Name']||'').trim().toLowerCase()===name.toLowerCase());
       if (dupe && !confirm(`"${dupe.fields['Name']}" already exists in ${trimType==='valance'?'Valance':'Crown moulding'}. Adding another one with the same name can cause pricing mix-ups later.\n\nAdd it anyway?`)) return;
     }
-    const linkedDoors = Array.from(document.querySelectorAll('.mqph-trim-door-checkbox:checked')).map(cb => cb.value);
+    const linkedDoors = [..._trimDoorChecked];
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'trim',
       Rate:parseFloat(document.getElementById('mqph-trim-supply-rate').value||0),
