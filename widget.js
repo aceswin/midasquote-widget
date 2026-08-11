@@ -948,12 +948,13 @@
       const selectedClass = (i===0 && !startUnselected) ? ' selected' : '';
       const selectBtnLabel = (i===0 && !startUnselected) ? '✓ Selected' : 'Select';
       const roomsAttr = JSON.stringify(it.visibleRooms||[]).replace(/"/g,'&quot;');
+      const doorsAttr = JSON.stringify(it.linkedDoors||[]).replace(/"/g,'&quot;');
       const groupNote = it.samePriceNote ? `<span class="mq-vpicker-group-note">✓ Same price as other ${(it.groupName||'').replace(/'/g,"\\'")} options</span>` : '';
       // "none"/"no doors" always stays visible no matter which collection is
       // picked — it's an opt-out, not a style choice. Real ungrouped items
       // fall into the "Other" bucket instead.
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-doors="${doorsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
     const vpickerWrap = `<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
     if (!hasAnyGroup) return vpickerWrap;
@@ -963,7 +964,7 @@
     return `
       <div style="margin-bottom:10px;background:${boxBgColor};border:1.5px solid ${boxBorderColor};border-radius:10px;padding:12px 14px">
         <label style="font-size:14px;font-weight:700;color:${boxTextColor};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
-        <select onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
+        <select id="mq-groupselect-${selectId}" onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
           ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
           ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
         </select>
@@ -1490,10 +1491,10 @@
       ? sortAndBadgeItems(li.hinges.map((h,i)=>({value:`dyn_${i}`, label:h['Name'], photoUrl:h.photoUrl, featured:h.featured||false, icon:'🔧', price:h['Rate']||0, visibleRooms:h.visibleRooms||[]})))
       : [{value:'softclose',label:'Soft-close',icon:'🔧'},{value:'regular',label:'Regular',icon:'🔧'}];
     const crownItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, featured:t.featured||false, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
+      Object.entries(TRIM).filter(([k,t])=>t.type==='crown').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, featured:t.featured||false, icon:'👑', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||'', linkedDoors:t.linkedDoors||[]}))
     ));
     const valanceItems = sortBadgeAndGroupItems([{value:'none',label:'None',icon:'🚫'}].concat(
-      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, featured:t.featured||false, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||''}))
+      Object.entries(TRIM).filter(([k,t])=>t.type==='valance').map(([k,t])=>({value:k, label:t.label, photoUrl:t.photoUrl, featured:t.featured||false, icon:'📏', price:(t.ps||0)+(t.pi||0), visibleRooms:t.visibleRooms||[], groupName:t.groupName||'', groupOrder:t.groupOrder||0, groupDesc:t.groupDesc||'', linkedDoors:t.linkedDoors||[]}))
     ));
 
     return `
@@ -1643,13 +1644,13 @@
           <input type="number" id="mq-${prefix}-trim-manual-ft" value="0" min="0" step="0.5" style="width:90px"/>
           ${calcBtn(`mq-${prefix}-trim-manual-ft`,'linear','Crown & valance')}
         </div>
-        ${hasCrown?`<div style="margin-bottom:8px">
+        ${hasCrown?`<div id="mq-${prefix}-crown-field-wrap" style="margin-bottom:8px">
           <div class="mq-field"><label class="mq-label">Crown moulding</label>
             ${pickerRow(`mq-${prefix}-trim-crown`, crownItems, null, 'trim_crown')}
             <select id="mq-${prefix}-trim-crown" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('crown')}</select>
           </div>
         </div>`:''}
-        ${hasValance?`<div>
+        ${hasValance?`<div id="mq-${prefix}-valance-field-wrap">
           <div class="mq-field"><label class="mq-label">Valance</label>
             ${pickerRow(`mq-${prefix}-trim-valance`, valanceItems, null, 'trim_valance')}
             <select id="mq-${prefix}-trim-valance" onchange="mqTogTrimReturns('${prefix}')" style="display:none">${trimOpts('valance')}</select>
@@ -2305,28 +2306,108 @@
     window.mqRefreshAllPickerVisibility=(prefix)=>{
       if (prefix === 'c' || prefix === 'b') {
         const roomId = gv(`mq-${prefix}-room`);
+        // Crown/valance are the only picker rows where a door-style match
+        // matters — everything else ignores currentDoorName entirely.
+        const doorKey = gv(`mq-${prefix}-door`);
+        let currentDoorName = '';
+        if (doorKey && doorKey !== 'none') {
+          const doorItem = (li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)];
+          currentDoorName = doorItem ? doorItem['Name'] : '';
+        }
         const scope = document.getElementById(prefix==='c' ? 'mq-tab-cabinets' : 'mq-tab-both');
         if (scope) {
+          // First pass, crown/valance only: hide any "Pick a collection"
+          // option whose group has zero members eligible for the current
+          // door — otherwise a customer can land on a group like "Maple
+          // crowns" that shows completely empty once an MDF door filters
+          // every member out. Done as its own separate pass (not folded
+          // into the chip-visibility loop below) so switching away from an
+          // invalidated group here doesn't recursively re-enter this same
+          // function via mqFilterPickerByGroup.
           scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
             const rowSelectId = row.id.replace(/^mq-vprow-/, '');
+            if (!(rowSelectId.endsWith('-trim-crown') || rowSelectId.endsWith('-trim-valance'))) return;
+            const groupHasDoorEligibleMember = {};
+            row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
+              if (chip.getAttribute('data-value') === 'none') return;
+              const chipGroup = chip.getAttribute('data-group');
+              if (!chipGroup) return;
+              let rooms=[];
+              try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
+              const roomOk = !rooms.length || rooms.includes(roomId);
+              let doors=[];
+              try { doors = JSON.parse(chip.getAttribute('data-doors')||'[]'); } catch(e) { doors=[]; }
+              const doorOk = !doors.length || !currentDoorName || doors.includes(currentDoorName);
+              if (roomOk && doorOk) groupHasDoorEligibleMember[chipGroup] = true;
+            });
+            const selectEl = document.getElementById(`mq-groupselect-${rowSelectId}`);
+            if (!selectEl) return;
+            let currentValueStillValid = false;
+            [...selectEl.options].forEach(opt => {
+              if (opt.value === '__other__') { opt.hidden = false; opt.disabled = false; if (opt.value === selectEl.value) currentValueStillValid = true; return; }
+              const hasEligible = !!groupHasDoorEligibleMember[opt.value];
+              opt.hidden = !hasEligible;
+              opt.disabled = !hasEligible;
+              if (hasEligible && opt.value === selectEl.value) currentValueStillValid = true;
+            });
+            if (!currentValueStillValid) {
+              const firstValidOption = [...selectEl.options].find(o => !o.hidden);
+              if (firstValidOption) {
+                selectEl.value = firstValidOption.value;
+                window._mqGroupFilter = window._mqGroupFilter || {};
+                window._mqGroupFilter[rowSelectId] = firstValidOption.value;
+                const descEl = document.getElementById(`mq-groupdesc-${rowSelectId}`);
+                if (descEl) descEl.textContent = firstValidOption.dataset.desc || '';
+                const countEl = document.getElementById(`mq-groupcount-${rowSelectId}`);
+                if (countEl) {
+                  const total = row.querySelectorAll('.mq-vpicker-chip[data-value]:not([data-value="none"])').length;
+                  countEl.textContent = `Showing ${firstValidOption.dataset.count||0} of ${total} total — pick a different collection above to see the rest`;
+                }
+              }
+            }
+          });
+          scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
+            const rowSelectId = row.id.replace(/^mq-vprow-/, '');
+            const isTrimRow = rowSelectId.endsWith('-trim-crown') || rowSelectId.endsWith('-trim-valance');
             const groupFilter = (window._mqGroupFilter||{})[rowSelectId];
-            let anyVisibleSelected=false, firstVisibleChip=null, selectedHiddenByGroupOnly=false;
+            let anyVisibleSelected=false, firstVisibleChip=null, selectedHiddenByGroupOnly=false, anyRealVisible=false;
             row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
               let rooms=[];
               try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
               const roomOk = !rooms.length || rooms.includes(roomId);
               const chipGroup = chip.getAttribute('data-group');
               const groupOk = !groupFilter || chipGroup === groupFilter || chipGroup === '__always__';
-              const visible = roomOk && groupOk;
+              // "None" stays available regardless of door — it's an opt-out,
+              // not a style tied to a particular door. An item with no
+              // linkedDoors at all (never touched since this feature
+              // shipped) also stays visible for everything, rather than
+              // suddenly disappearing for shops who haven't reviewed it yet.
+              let doorOk = true;
+              if (isTrimRow && chip.getAttribute('data-value') !== 'none') {
+                let doors=[];
+                try { doors = JSON.parse(chip.getAttribute('data-doors')||'[]'); } catch(e) { doors=[]; }
+                doorOk = !doors.length || !currentDoorName || doors.includes(currentDoorName);
+              }
+              const visible = roomOk && groupOk && doorOk;
               chip.style.display = visible ? '' : 'none';
               if (visible && !firstVisibleChip) firstVisibleChip = chip;
               if (visible && chip.classList.contains('selected')) anyVisibleSelected = true;
+              if (visible && chip.getAttribute('data-value') !== 'none') anyRealVisible = true;
               // The actual selection should persist across a collection
               // switch even though it's momentarily out of view — only a
               // room change (a genuinely unavailable item) should force a
               // new pick, never just browsing a different group.
               if (!visible && roomOk && !groupOk && chip.classList.contains('selected')) selectedHiddenByGroupOnly = true;
             });
+            // A door style that isn't linked to any crown/valance at all
+            // leaves this row with nothing but "None" showing — collapse
+            // the whole field away rather than displaying a picker with
+            // just one greyed-out option in it.
+            if (isTrimRow) {
+              const wrapId = rowSelectId.endsWith('-trim-crown') ? `mq-${prefix}-crown-field-wrap` : `mq-${prefix}-valance-field-wrap`;
+              const wrapEl = document.getElementById(wrapId);
+              if (wrapEl) wrapEl.style.display = anyRealVisible ? '' : 'none';
+            }
             if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect && !selectedHiddenByGroupOnly) {
               const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
               const btn = firstVisibleChip.querySelector('.mq-vpicker-select-btn');
@@ -2937,40 +3018,38 @@
       const crownSelect=document.getElementById(`mq-${prefix}-trim-crown`);
       const valanceSelect=document.getElementById(`mq-${prefix}-trim-valance`);
       if(!crownSelect && !valanceSelect) return; // shop has no trim styles configured
-      const noteId=`mq-${prefix}-trim-auto-note`;
-      let note=document.getElementById(noteId);
-
-      if(!doorKey || doorKey==='none'){
-        if(crownSelect) crownSelect.value='none';
-        if(valanceSelect) valanceSelect.value='none';
-        if(note) note.style.display='none';
-        mqMarkSuggestedChip(`mq-${prefix}-trim-crown`, null);
-        mqMarkSuggestedChip(`mq-${prefix}-trim-valance`, null);
-        mqTogTrimReturns(prefix);
-        return;
-      }
-
-      const doorItem=(data.li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)];
-      const doorName=doorItem?doorItem['Name']:'';
-
-      // filter, not find — a door style can have several crowns/valances
-      // linked to it (e.g. a standard one and a "to ceiling" variant), and
-      // all of them should show as suggested, not just whichever happens
-      // to be first in TRIM's key order.
-      const crownMatchKeys=Object.keys(TRIM).filter(k=>TRIM[k].type==='crown' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
-      const valanceMatchKeys=Object.keys(TRIM).filter(k=>TRIM[k].type==='valance' && TRIM[k].linkedDoors && TRIM[k].linkedDoors.includes(doorName));
-      mqMarkSuggestedChip(`mq-${prefix}-trim-crown`, crownMatchKeys);
-      mqMarkSuggestedChip(`mq-${prefix}-trim-valance`, valanceMatchKeys);
-
-      // Don't auto-select — just show a suggestion note so the customer stays in control
-      if(note){
-        const suggestions=[];
-        if(crownMatchKeys.length) suggestions.push(crownMatchKeys.map(k=>TRIM[k].label).join(' or '));
-        if(valanceMatchKeys.length) suggestions.push(valanceMatchKeys.map(k=>TRIM[k].label).join(' or '));
-        if(suggestions.length){ note.textContent=`💡 ${suggestions.join(' & ')} is typically used with this door style — add it below if you'd like it included`; note.style.display='block'; }
-        else note.style.display='none';
-      }
+      // Crown/valance visibility is now driven entirely by which doors
+      // they're linked to (see mqRefreshAllPickerVisibility's door-linkage
+      // check) — switching doors just needs to re-run that filter. If the
+      // customer's current pick no longer applies to the new door, that
+      // same function's existing auto-select-fallback picks a valid
+      // replacement automatically, same as it already does for room changes.
+      window.mqRefreshAllPickerVisibility(prefix);
       mqTogTrimReturns(prefix);
+
+      // Small confirmation note above both fields — not a suggestion among
+      // alternatives anymore (everything shown IS already matched to this
+      // door), just a quick reassurance that what's showing was narrowed
+      // down deliberately, not just however it happened to be listed.
+      const note = document.getElementById(`mq-${prefix}-trim-auto-note`);
+      if (note) {
+        const doorItem = doorKey && doorKey !== 'none' ? (li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)] : null;
+        const doorName = doorItem ? doorItem['Name'] : '';
+        const crownWrap = document.getElementById(`mq-${prefix}-crown-field-wrap`);
+        const valanceWrap = document.getElementById(`mq-${prefix}-valance-field-wrap`);
+        const crownShowing = crownWrap && crownWrap.style.display !== 'none';
+        const valanceShowing = valanceWrap && valanceWrap.style.display !== 'none';
+        if (doorName && (crownShowing || valanceShowing)) {
+          const parts = [];
+          if (crownShowing) parts.push('crown');
+          if (valanceShowing) parts.push('valance');
+          const partsText = parts.join(' & ');
+          note.textContent = `✅ ${partsText.charAt(0).toUpperCase()+partsText.slice(1)} options below are matched to your ${doorName} door style`;
+          note.style.display = 'block';
+        } else {
+          note.style.display = 'none';
+        }
+      }
     };
 
 window.mqTogDrawerConfig=(prefix)=>{
