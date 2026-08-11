@@ -425,7 +425,7 @@
       #midasquote-widget .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
       #midasquote-widget .mq-field{flex-direction:column;gap:5px;min-width:0}
-      #midasquote-widget .mq-label{font-size:15px;color:#374151}
+      #midasquote-widget .mq-label{font-size:15px;color:#374151;margin-bottom:4px}
       #midasquote-widget .mq-hint{font-size:14px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
       #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:70px!important}
@@ -557,6 +557,8 @@
       #midasquote-widget .mq-line-items li:last-child{border-bottom:none}
       #midasquote-widget .mq-li-lbl{color:#4b5563}
       #midasquote-widget .mq-disclaimer{font-size:13px;color:#4b5563;background:#f9fafb;border-radius:6px;padding:10px 12px;margin-top:1rem;line-height:1.5}
+      #midasquote-widget .mq-empty-calc-msg{font-size:13px;font-weight:600;color:#b91c1c;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:6px;padding:10px 12px;margin-top:10px;line-height:1.5;text-align:center}
+      #midasquote-widget .mq-calc-btn.mq-needs-choice{animation:mqShakeChoice 0.4s ease;box-shadow:0 0 0 3px rgba(220,38,38,0.25)}
       #midasquote-widget .mq-travel-note{font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 12px;margin-top:8px;line-height:1.5}
       #midasquote-widget .mq-powered-by{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:12px;color:#6b7280;letter-spacing:0.01em}
       #midasquote-widget .mq-powered-by a{color:#6b7280;text-decoration:none;font-weight:500;transition:color 0.15s}
@@ -1596,7 +1598,7 @@
           </select>
         </div>
         <div style="font-size:13px;color:#4b5563;margin:12px 0 10px;line-height:1.5">
-          🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full stacked drawer banks with no door at all. 🗄️ <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
+          🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full drawer banks. 🗄️ <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
         </div>
         <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;justify-content:flex-start">
           <div style="flex:0 1 150px;text-align:center">
@@ -1745,6 +1747,7 @@
         ${PRICE_LEGEND_HTML}
         ${cabinetForm('c', specs, data)}
         <button class="mq-calc-btn" id="mq-c-calc-btn" onclick="mqCalcCabinets()">Calculate cabinet estimate</button>
+        <div class="mq-empty-calc-msg" id="mq-c-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
         <div class="mq-loading" id="mq-c-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-c-result">
           <div class="mq-res-hdr">
@@ -1772,6 +1775,7 @@
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <button class="mq-calc-btn" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
+        <div class="mq-empty-calc-msg" id="mq-ct-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
         <div class="mq-loading" id="mq-ct-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-ct-result">
           <div class="mq-res-hdr">
@@ -1850,6 +1854,7 @@
         </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
+        <div class="mq-empty-calc-msg" id="mq-b-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
         <div class="mq-loading" id="mq-b-loading">Building your full project estimate...</div>
         <div class="mq-combined-result" id="mq-b-result">
           <div class="mq-combined-title">✨ Full project estimate</div>
@@ -2022,7 +2027,7 @@
     function cutoutRowsHtml(m, idPrefix) {
       return cutoutOptionsFor(m).map((o,i)=>
         `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <label style="font-size:14px;color:#4b5563;min-width:130px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label>
+          <label style="font-size:14px;color:#4b5563;min-width:110px">${(o.label||'Cutout').replace(/"/g,'&quot;')}</label>
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" type="button" onclick="mqAdjCutoutQty('${idPrefix}',${i},-1)">−</button>
             <input type="text" inputmode="numeric" pattern="[0-9]*" id="${idPrefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" onclick="this.select()"/>
@@ -2366,6 +2371,10 @@
               }
             }
           });
+          // null = shop has no such field at all; true/false set below once
+          // that row is actually processed — used after the loop to decide
+          // whether to collapse the whole Crown moulding/valance section.
+          let crownHasRealOptions = null, valanceHasRealOptions = null;
           scope.querySelectorAll('.mq-vpicker-row').forEach(row=>{
             const rowSelectId = row.id.replace(/^mq-vprow-/, '');
             const isTrimRow = rowSelectId.endsWith('-trim-crown') || rowSelectId.endsWith('-trim-valance');
@@ -2399,14 +2408,16 @@
               // new pick, never just browsing a different group.
               if (!visible && roomOk && !groupOk && chip.classList.contains('selected')) selectedHiddenByGroupOnly = true;
             });
-            // A door style that isn't linked to any crown/valance at all
-            // leaves this row with nothing but "None" showing — collapse
-            // the whole field away rather than displaying a picker with
-            // just one greyed-out option in it.
+            // A door style with nothing linked for this field means there's
+            // no real choice to make at all — hide the whole field (label
+            // included) rather than showing a picker with just "None" in
+            // it. Tracked so the outer section below can also collapse if
+            // BOTH crown and valance end up with nothing.
             if (isTrimRow) {
-              const wrapId = rowSelectId.endsWith('-trim-crown') ? `mq-${prefix}-crown-field-wrap` : `mq-${prefix}-valance-field-wrap`;
-              const wrapEl = document.getElementById(wrapId);
+              const isCrown = rowSelectId.endsWith('-trim-crown');
+              const wrapEl = document.getElementById(isCrown ? `mq-${prefix}-crown-field-wrap` : `mq-${prefix}-valance-field-wrap`);
               if (wrapEl) wrapEl.style.display = anyRealVisible ? '' : 'none';
+              if (isCrown) crownHasRealOptions = anyRealVisible; else valanceHasRealOptions = anyRealVisible;
             }
             if (!anyVisibleSelected && firstVisibleChip && !row.dataset.noAutoSelect && !selectedHiddenByGroupOnly) {
               const selectId = firstVisibleChip.getAttribute('data-vpicker-for');
@@ -2414,6 +2425,17 @@
               if (selectId && btn) window.mqPickVisual(selectId, btn);
             }
           });
+          // If this shop has crown and/or valance configured at all, but
+          // neither one has a single real option for the currently selected
+          // door, there's nothing left in this section worth showing —
+          // collapse the whole "Crown moulding / valance" step away, same
+          // as any other section that ends up with zero real choices.
+          const trimSec = document.getElementById(`mq-${prefix}-trim-sec`);
+          if (trimSec && (crownHasRealOptions !== null || valanceHasRealOptions !== null)) {
+            const anyTrimAvailable = crownHasRealOptions === true || valanceHasRealOptions === true;
+            trimSec.style.display = anyTrimAvailable ? '' : 'none';
+            if (window.mqRenumberSteps) window.mqRenumberSteps(prefix);
+          }
         }
       }
       // Runs for every tab/prefix, not just Cabinets/Both — a picker's chips
@@ -3026,6 +3048,30 @@
       // replacement automatically, same as it already does for room changes.
       window.mqRefreshAllPickerVisibility(prefix);
       mqTogTrimReturns(prefix);
+
+      // Small confirmation note above both fields — not a suggestion among
+      // alternatives anymore (everything shown IS already matched to this
+      // door), just a quick reassurance that what's showing was narrowed
+      // down deliberately, not just however it happened to be listed.
+      const note = document.getElementById(`mq-${prefix}-trim-auto-note`);
+      if (note) {
+        const doorItem = doorKey && doorKey !== 'none' ? (li.doorStyles||[])[parseInt(doorKey.replace('dyn_',''),10)] : null;
+        const doorName = doorItem ? doorItem['Name'] : '';
+        const crownWrap = document.getElementById(`mq-${prefix}-crown-field-wrap`);
+        const valanceWrap = document.getElementById(`mq-${prefix}-valance-field-wrap`);
+        const crownShowing = crownWrap && crownWrap.style.display !== 'none';
+        const valanceShowing = valanceWrap && valanceWrap.style.display !== 'none';
+        if (doorName && (crownShowing || valanceShowing)) {
+          const parts = [];
+          if (crownShowing) parts.push('crown');
+          if (valanceShowing) parts.push('valance');
+          const partsText = parts.join(' & ');
+          note.textContent = `✅ ${partsText.charAt(0).toUpperCase()+partsText.slice(1)} options below are matched to your ${doorName} door style`;
+          note.style.display = 'block';
+        } else {
+          note.style.display = 'none';
+        }
+      }
     };
 
 window.mqTogDrawerConfig=(prefix)=>{
@@ -3630,6 +3676,7 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window.mqCalcCabinets=()=>{
       if (!mqValidateInstallQty('c')) return;
+      if (!mqValidateNotEmpty('c', calcCabinet('c'))) return;
       window.mqShowLead(async lead=>{
         window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-c-calc-btn').disabled=true;
@@ -3655,6 +3702,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     window.mqCalcCountertops=()=>{
       const hasSurfaces=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length>0;
       if(!hasSurfaces){alert('Please add at least one surface.');return;}
+      if (!mqValidateNotEmpty('ct', calcCountertop('ct'))) return;
       window.mqShowLead(async lead=>{
         window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-ct-calc-btn').disabled=true;
@@ -3676,6 +3724,8 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window.mqCalcBoth=()=>{
       if (!mqValidateInstallQty('b')) return;
+      const dryCab=calcCabinet('b'), dryCt=calcCountertop('b');
+      if (!mqValidateNotEmpty('b', { low: dryCab.low+dryCt.low, high: dryCab.high+dryCt.high })) return;
       window.mqShowLead(async lead=>{
         window._mqLeadEmail = (lead && !lead._isSkip && lead.email) ? lead.email : (window._mqLeadEmail || '');
         document.getElementById('mq-b-calc-btn').disabled=true;
@@ -3944,6 +3994,29 @@ window.mqTogDrawerConfig=(prefix)=>{
     // all — easy to miss since the install field now sits right below it).
     // Shakes/focuses whichever field needs attention, same pattern as
     // mqSpecModeChosen.
+    // Blocks Calculate if the resulting estimate would be $0 — nothing
+    // meaningful was actually selected (every picker left on "None"/"No
+    // doors", zero linear feet, etc). Shakes the Calculate button itself
+    // rather than a specific field, since there's no single thing to point
+    // to — the whole form is effectively empty.
+    function mqValidateNotEmpty(prefix, result) {
+      if ((result.low||0) > 0 || (result.high||0) > 0) return true;
+      const btn = document.getElementById(`mq-${prefix}-calc-btn`);
+      if (btn) {
+        btn.classList.remove('mq-needs-choice');
+        void btn.offsetWidth;
+        btn.classList.add('mq-needs-choice');
+        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => btn.classList.remove('mq-needs-choice'), 700);
+      }
+      const msgEl = document.getElementById(`mq-${prefix}-empty-calc-msg`);
+      if (msgEl) {
+        msgEl.style.display = 'block';
+        clearTimeout(msgEl._mqHideTimer);
+        msgEl._mqHideTimer = setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+      }
+      return false;
+    }
     function mqValidateInstallQty(prefix) {
       const shake = (qtyInput) => {
         if (!qtyInput) return;
