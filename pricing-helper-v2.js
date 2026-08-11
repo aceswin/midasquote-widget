@@ -1802,6 +1802,7 @@ window.mqphGoToWizard = function() {
             <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
               <span style="cursor:pointer;flex:1" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
               <span style="cursor:pointer;min-width:80px;text-align:right" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
+              ${['door','material'].includes(cat) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenBulkEdit('${cat}')">📊 Bulk edit</button>` : ''}
             </div>
             ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
@@ -1822,6 +1823,34 @@ window.mqphGoToWizard = function() {
       ${buildCTHtml()}
       ${buildTrimHtml()}
       ${buildTallCabHtml()}
+
+      <!-- Bulk price edit overlay — Doors, Box Materials, Crown, Valance only -->
+      <div class="mqph-overlay" id="mqph-bulk-overlay">
+        <div class="mqph-modal" style="max-width:560px">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-bulk-title">Bulk edit prices</h3></div>
+            <button class="mqph-modal-close" onclick="mqphCloseBulkEdit()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div class="mqph-field">
+              <label>Narrow to a group <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+              <select id="mqph-bulk-group-filter" onchange="mqphBulkFilterGroup(this.value)"></select>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin:-4px 0 10px">Items with the exact same price(s) are grouped together below — check a whole group at once, or expand it to hand-pick individual items.</div>
+            <div id="mqph-bulk-clusters" style="max-height:280px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:1rem"></div>
+            <div id="mqph-bulk-edit-form" style="display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
+              <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:0.75rem" id="mqph-bulk-selected-count"></div>
+              <div id="mqph-bulk-price-fields"></div>
+              <div style="margin-top:10px">
+                <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px">Or match another item's price</label>
+                <input type="text" id="mqph-bulk-match-search" placeholder="Search items to match…" oninput="mqphBulkMatchSearch(this.value)" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
+                <div id="mqph-bulk-match-results" style="max-height:140px;overflow-y:auto;margin-top:4px"></div>
+              </div>
+              <button class="mqph-btn mqph-btn-primary" style="margin-top:1rem;width:100%" onclick="mqphBulkApply()">Update selected items →</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Mini-wizard overlay -->
       <div class="mqph-overlay" id="mqph-mini-overlay">
@@ -2075,6 +2104,235 @@ window.mqphGoToWizard = function() {
       }
       await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender();
     } catch(e) { alert('Error deleting.'); }
+  };
+
+  // ============================================================
+  // BULK PRICE EDIT — update many same-priced items at once
+  // (Doors, Box Materials, Crown, Valance only)
+  //
+  // The underlying record structure differs by category, which this
+  // normalizes away: a door/crown/valance is one Airtable record, but a box
+  // material is actually TWO separate records (uppers + bases) linked only
+  // by a shared name pattern. Every category gets flattened here into a
+  // "logical item" with one or two named price fields, so the rest of this
+  // feature (clustering, selection, editing) doesn't need to care which
+  // category it's looking at.
+  // ============================================================
+  let _bulkEdit = { cat: null, items: [], groupFilter: '', checkedIds: new Set(), openClusters: new Set() };
+  const BULK_EDIT_LABELS = { material: '🪵 Box Materials', door: '🚪 Door Styles', trim_crown: '👑 Crown Moulding', trim_valance: '📏 Valance' };
+
+  function mqphBulkEditItems(cat) {
+    if (cat === 'material') {
+      const recs = lineItems.filter(r => r.fields && r.fields['Category'] === 'material');
+      const byBase = {};
+      recs.forEach(r => {
+        const nm = r.fields['Name'] || '';
+        const baseName = nm.replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+        const isUpper = /—\s*uppers\s*$/i.test(nm);
+        if (!byBase[baseName]) byBase[baseName] = { baseName, upperRec: null, baseRec: null, groupName: (r.fields['Group name']||'').trim() };
+        if (isUpper) byBase[baseName].upperRec = r; else byBase[baseName].baseRec = r;
+      });
+      // Only items with BOTH halves present are editable here — a
+      // material missing one half is a data problem to fix by hand, not
+      // something bulk edit should guess at.
+      return Object.values(byBase).filter(it => it.upperRec && it.baseRec).map(it => ({
+        id: 'mat:' + it.baseName,
+        label: it.baseName,
+        groupName: it.groupName,
+        priceFields: [
+          { key: 'upper', label: 'Uppers price', recId: it.upperRec.id, value: it.upperRec.fields['Rate']||0 },
+          { key: 'base', label: 'Bases price', recId: it.baseRec.id, value: it.baseRec.fields['Rate']||0 },
+        ],
+      }));
+    }
+    if (cat === 'door') {
+      return lineItems.filter(r => r.fields && r.fields['Category'] === 'door').map(r => ({
+        id: r.id, label: r.fields['Name']||'—', groupName: (r.fields['Group name']||'').trim(),
+        priceFields: [{ key: 'price', label: 'Price', recId: r.id, value: r.fields['Rate']||0 }],
+      }));
+    }
+    if (cat === 'trim_crown' || cat === 'trim_valance') {
+      const trimType = cat === 'trim_crown' ? 'crown' : 'valance';
+      return lineItems.filter(r => r.fields && r.fields['Category'] === 'trim' && (r.fields['Trim type']||'crown') === trimType).map(r => ({
+        id: r.id, label: r.fields['Name']||'—', groupName: (r.fields['Group name']||'').trim(),
+        priceFields: [
+          { key: 'supply', label: 'Supply price', recId: r.id, value: r.fields['Rate']||0 },
+          { key: 'install', label: 'Install price', recId: r.id, value: r.fields['Install rate']||0 },
+        ],
+      }));
+    }
+    return [];
+  }
+
+  window.mqphOpenBulkEdit = function(cat) {
+    _bulkEdit = { cat, items: mqphBulkEditItems(cat), groupFilter: '', checkedIds: new Set(), openClusters: new Set() };
+    document.getElementById('mqph-bulk-title').textContent = `Bulk edit — ${BULK_EDIT_LABELS[cat]||cat}`;
+    const groups = [...new Set(_bulkEdit.items.filter(i=>i.groupName).map(i=>i.groupName))];
+    const groupSel = document.getElementById('mqph-bulk-group-filter');
+    groupSel.innerHTML = `<option value="">All items</option>` + groups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}">${g}</option>`).join('');
+    groupSel.value = '';
+    mqphRenderBulkClusters();
+    document.getElementById('mqph-bulk-edit-form').style.display = 'none';
+    document.getElementById('mqph-bulk-overlay').classList.add('show');
+  };
+
+  window.mqphCloseBulkEdit = function() {
+    document.getElementById('mqph-bulk-overlay').classList.remove('show');
+  };
+
+  window.mqphBulkFilterGroup = function(val) {
+    _bulkEdit.groupFilter = val;
+    mqphRenderBulkClusters();
+  };
+
+  // Two items only cluster together if EVERY price field matches exactly —
+  // for materials that means uppers AND bases both have to match, not just
+  // one of them.
+  function mqphBulkPriceKey(item) {
+    return item.priceFields.map(f => f.value.toFixed(2)).join('|');
+  }
+
+  function mqphBulkVisibleItems() {
+    return _bulkEdit.groupFilter ? _bulkEdit.items.filter(i => i.groupName === _bulkEdit.groupFilter) : _bulkEdit.items;
+  }
+
+  function mqphRenderBulkClusters() {
+    const container = document.getElementById('mqph-bulk-clusters');
+    if (!container) return;
+    const items = mqphBulkVisibleItems();
+    if (!items.length) {
+      container.innerHTML = `<div style="padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af">No items ${_bulkEdit.groupFilter?'in this group':'found'}.</div>`;
+      return;
+    }
+    const clusters = {};
+    items.forEach(it => {
+      const key = mqphBulkPriceKey(it);
+      if (!clusters[key]) clusters[key] = { key, priceFields: it.priceFields, items: [] };
+      clusters[key].items.push(it);
+    });
+    const clusterList = Object.values(clusters).sort((a,b) => b.items.length - a.items.length);
+    container.innerHTML = clusterList.map(c => {
+      const allChecked = c.items.every(it => _bulkEdit.checkedIds.has(it.id));
+      const someChecked = !allChecked && c.items.some(it => _bulkEdit.checkedIds.has(it.id));
+      const isOpen = _bulkEdit.openClusters.has(c.key);
+      const priceLabel = c.priceFields.map(f => `${f.label}: $${f.value.toFixed(2)}`).join(' · ');
+      const keyEsc = c.key.replace(/'/g,"\\'");
+      return `
+        <div style="border-bottom:1px solid #f3f4f6">
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:${allChecked?'#eff6ff':'#fff'}">
+            <input type="checkbox" ${allChecked?'checked':''} onclick="mqphSelectBulkCluster('${keyEsc}')" style="width:auto;flex-shrink:0"/>
+            <span style="flex:1;font-size:13px;font-weight:600;color:#111;cursor:pointer" onclick="mqphExpandBulkCluster('${keyEsc}')">${priceLabel} <span style="font-weight:400;color:#9ca3af">— ${c.items.length} item${c.items.length!==1?'s':''}</span></span>
+            <span onclick="mqphExpandBulkCluster('${keyEsc}')" style="font-size:11px;color:#2563eb;cursor:pointer;user-select:none;white-space:nowrap">${isOpen?'Hide items ▲':'Show items ▼'}</span>
+          </div>
+          ${isOpen ? `<div style="padding:4px 12px 8px 34px">${c.items.map(it => `
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#374151;padding:4px 0;cursor:pointer">
+              <input type="checkbox" ${_bulkEdit.checkedIds.has(it.id)?'checked':''} onchange="mqphToggleBulkItem('${it.id.replace(/'/g,"\\'")}')" style="width:auto;flex-shrink:0"/>
+              <span>${it.label}${it.groupName?` <span style="color:#9ca3af">— ${it.groupName}</span>`:''}</span>
+            </label>`).join('')}</div>` : ''}
+        </div>`;
+    }).join('');
+    mqphUpdateBulkForm();
+  }
+
+  window.mqphExpandBulkCluster = function(key) {
+    if (_bulkEdit.openClusters.has(key)) _bulkEdit.openClusters.delete(key);
+    else _bulkEdit.openClusters.add(key);
+    mqphRenderBulkClusters();
+  };
+
+  window.mqphSelectBulkCluster = function(key) {
+    const clusterItems = mqphBulkVisibleItems().filter(it => mqphBulkPriceKey(it) === key);
+    const allChecked = clusterItems.every(it => _bulkEdit.checkedIds.has(it.id));
+    clusterItems.forEach(it => { if (allChecked) _bulkEdit.checkedIds.delete(it.id); else _bulkEdit.checkedIds.add(it.id); });
+    mqphRenderBulkClusters();
+  };
+
+  window.mqphToggleBulkItem = function(id) {
+    if (_bulkEdit.checkedIds.has(id)) _bulkEdit.checkedIds.delete(id);
+    else _bulkEdit.checkedIds.add(id);
+    mqphRenderBulkClusters();
+  };
+
+  function mqphUpdateBulkForm() {
+    const form = document.getElementById('mqph-bulk-edit-form');
+    const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    if (!selected.length) { form.style.display = 'none'; return; }
+    form.style.display = 'block';
+    document.getElementById('mqph-bulk-selected-count').textContent = `${selected.length} item${selected.length!==1?'s':''} selected`;
+    // Every logical item in a category shares the same price-field shape,
+    // so the first selected item's fields define the form.
+    document.getElementById('mqph-bulk-price-fields').innerHTML = selected[0].priceFields.map((f,i) => `
+      <div class="mqph-input-row" style="margin-bottom:8px">
+        <label>${f.label}</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="color:#6b7280">$</span>
+          <input type="number" id="mqph-bulk-newprice-${i}" step="0.01" style="width:120px" placeholder="New price"/>
+        </div>
+      </div>`).join('');
+    const matchResults = document.getElementById('mqph-bulk-match-results');
+    if (matchResults) matchResults.innerHTML = '';
+    const searchInput = document.getElementById('mqph-bulk-match-search');
+    if (searchInput) searchInput.value = '';
+  }
+
+  window.mqphBulkMatchSearch = function(val) {
+    const term = (val||'').toLowerCase().trim();
+    const resultsEl = document.getElementById('mqph-bulk-match-results');
+    if (!resultsEl) return;
+    if (!term) { resultsEl.innerHTML = ''; return; }
+    const matches = _bulkEdit.items.filter(it => it.label.toLowerCase().includes(term)).slice(0, 8);
+    resultsEl.innerHTML = matches.length ? matches.map(it => `
+      <div onclick="mqphBulkPickMatch('${it.id.replace(/'/g,"\\'")}')" style="padding:6px 8px;font-size:12px;cursor:pointer;border-radius:6px;display:flex;justify-content:space-between;gap:8px" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+        <span>${it.label}</span>
+        <span style="color:#6b7280;white-space:nowrap">${it.priceFields.map(f=>'$'+f.value.toFixed(2)).join(' / ')}</span>
+      </div>`).join('') : `<div style="font-size:12px;color:#9ca3af;padding:6px 8px">No matches.</div>`;
+  };
+
+  window.mqphBulkPickMatch = function(id) {
+    const target = _bulkEdit.items.find(it => it.id === id);
+    if (!target) return;
+    target.priceFields.forEach((f,i) => {
+      const input = document.getElementById(`mqph-bulk-newprice-${i}`);
+      if (input) input.value = f.value.toFixed(2);
+    });
+    document.getElementById('mqph-bulk-match-search').value = `Matched to: ${target.label}`;
+    document.getElementById('mqph-bulk-match-results').innerHTML = '';
+  };
+
+  window.mqphBulkApply = async function() {
+    const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    if (!selected.length) return;
+    const newValues = selected[0].priceFields.map((f,i) => {
+      const v = parseFloat(document.getElementById(`mqph-bulk-newprice-${i}`)?.value);
+      return isNaN(v) ? null : v;
+    });
+    if (newValues.some(v => v === null)) { alert('Please enter a new price for every field (or pick an item above to match).'); return; }
+
+    const summary = selected[0].priceFields.map((f,i) => `${f.label} → $${newValues[i].toFixed(2)}`).join(', ');
+    if (!confirm(`Update ${selected.length} item${selected.length!==1?'s':''}?\n\n${summary}`)) return;
+
+    // Group field updates by underlying record id first — crown/valance
+    // have supply AND install on the same record, so those need to go out
+    // as one combined update rather than two separate concurrent writes to
+    // the same record.
+    const writes = [];
+    selected.forEach(it => {
+      const byRecId = {};
+      it.priceFields.forEach((f,i) => {
+        const fieldName = f.key === 'install' ? 'Install rate' : 'Rate';
+        if (!byRecId[f.recId]) byRecId[f.recId] = {};
+        byRecId[f.recId][fieldName] = newValues[i];
+      });
+      Object.entries(byRecId).forEach(([recId, fields]) => writes.push(atUpdate(LINE_ITEMS_TABLE, recId, fields)));
+    });
+    try {
+      await Promise.all(writes);
+      mqphCloseBulkEdit();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Bulk update failed', e);
+      alert('Something went wrong updating some items — please check and try again.');
+    }
   };
 
   // View-only sort for the item list within each category — doesn't touch
@@ -2505,11 +2763,11 @@ window.mqphGoToWizard = function() {
         </div>`;
     }
 
-    const trimSection = (title, items, emptyMsg) => items.length > 0
-      ? `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
-         ${items.map(trimRow).join('')}`
-      : `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
-         <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`;
+    const trimSection = (title, items, emptyMsg, bulkCat) => `<div style="padding:8px 16px 4px;display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border-bottom:1px solid #f3f4f6">
+        <span style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em">${title}</span>
+        ${items.length > 0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenBulkEdit('${bulkCat}')">📊 Bulk edit</button>` : ''}
+      </div>
+      ${items.length > 0 ? items.map(trimRow).join('') : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
 
     return `
       <div class="mqph-ct-block">
@@ -2519,8 +2777,8 @@ window.mqphGoToWizard = function() {
         </div>
         <div id="mqph-cat-body-trim" style="display:none">
         <div id="mqph-trim-msg" class="mqph-msg"></div>
-        ${trimSection('Crown moulding', crownItems, 'No crown moulding styles yet — add one above.')}
-        ${trimSection('Valance', valanceItems, 'No valance styles yet — add one above.')}
+        ${trimSection('Crown moulding', crownItems, 'No crown moulding styles yet — add one above.', 'trim_crown')}
+        ${trimSection('Valance', valanceItems, 'No valance styles yet — add one above.', 'trim_valance')}
         <div style="padding:0.75rem 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6">Customers can choose crown, valance, both, or neither — cost is calculated from the upper cabinet linear footage plus any wall returns they enter.</div>
         </div>
       </div>
