@@ -2520,7 +2520,9 @@ window.logoutMember = async function () {
   // enough there to be worth the extra line); everything else uses the
   // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`**Upper cabinets:** A section for every place where uppers will go.
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
+
+**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
@@ -2530,12 +2532,12 @@ window.logoutMember = async function () {
 
 **Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
 
-[corner-img]
-
-[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
+[corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`**Upper cabinets:** A section for every place where uppers will go.
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
+
+**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
@@ -2543,18 +2545,16 @@ window.logoutMember = async function () {
 
 **Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
 
-[corner-img]
-
-[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
+[corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
-`**Upper cabinets:** A section for every place where uppers will go.
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
+
+**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
-**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
-
-[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
+**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
