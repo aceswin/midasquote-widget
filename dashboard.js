@@ -2532,7 +2532,7 @@ window.logoutMember = async function () {
 
 [corner-img]
 
-[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
+[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
 `**Upper cabinets:** A section for every place where uppers will go.
@@ -2545,7 +2545,7 @@ window.logoutMember = async function () {
 
 [corner-img]
 
-[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
+[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
 `**Upper cabinets:** A section for every place where uppers will go.
@@ -2554,7 +2554,7 @@ window.logoutMember = async function () {
 
 **Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
 
-[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
+[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
