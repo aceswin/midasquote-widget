@@ -611,12 +611,16 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
-      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
+      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
       .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
       .mq-hover-preview .mq-hp-label{font-size:12px;color:#374151;text-align:center;margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:180px}
       .mq-lightbox.show{display:flex}
+      .mq-lightbox-track-wrap{width:100%;max-width:100%}
+      .mq-lightbox-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;overscroll-behavior-x:contain;touch-action:pan-x}
+      .mq-lightbox-track::-webkit-scrollbar{display:none}
+      .mq-lightbox-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
       .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
       .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
       .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:12px}
@@ -815,6 +819,13 @@
   // the starting index, and the lightbox shows nav arrows/swipe to move
   // through the rest without closing. Every other call site is untouched:
   // omit those args and it behaves exactly as a single, non-navigable photo.
+  // The image(s) sit in a genuine horizontally-scrollable track (same
+  // mechanism as every other scroll row in the widget) rather than a manual
+  // touchstart/touchend measurement — that approach never actually tracked
+  // the finger during the drag, only jumped at the very end, and let the
+  // gesture leak through to scroll the page underneath. A real scroll
+  // container fixes both: the browser handles finger-tracking, momentum,
+  // and snap natively, and consumes the touch itself instead of leaking it.
   window.mqPhotoLightbox = function(src, label, images, index) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
@@ -822,7 +833,7 @@
       lb.id = 'mq-lightbox';
       lb.className = 'mq-lightbox';
       lb.innerHTML = `
-        <img id="mq-lightbox-img" src=""/>
+        <div class="mq-lightbox-track-wrap"><div class="mq-lightbox-track" id="mq-lightbox-track"></div></div>
         <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
         <div class="mq-lightbox-hint">Tap anywhere to close</div>
         <button type="button" class="mq-lightbox-nav mq-lightbox-nav-left" id="mq-lightbox-prev" aria-label="Previous image">‹</button>
@@ -831,45 +842,62 @@
       // can't be broken by a transformed ancestor somewhere in the host page —
       // same fix already used for the hover preview.
       document.body.appendChild(lb);
+      // A real drag/swipe never fires a native click afterward (the browser
+      // suppresses it once a touch sequence has scrolled), so this still
+      // closes correctly on a genuine tap without needing to special-case
+      // the track — swiping through images just naturally won't trigger it.
       lb.addEventListener('click', (e) => {
         if (e.target.closest('.mq-lightbox-nav')) return; // nav buttons handle their own clicks
         lb.classList.remove('show');
       });
       document.getElementById('mq-lightbox-prev').addEventListener('click', (e) => {
         e.stopPropagation();
-        mqLightboxStep(-1);
+        mqLightboxScrollBy(-1);
       });
       document.getElementById('mq-lightbox-next').addEventListener('click', (e) => {
         e.stopPropagation();
-        mqLightboxStep(1);
+        mqLightboxScrollBy(1);
       });
-      let touchStartX = null;
-      lb.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
-      lb.addEventListener('touchend', (e) => {
-        if (touchStartX === null) return;
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(dx) > 40) mqLightboxStep(dx > 0 ? -1 : 1);
-        touchStartX = null;
-      }, { passive: true });
+      const trackEl = document.getElementById('mq-lightbox-track');
+      let scrollTimer;
+      trackEl.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(mqLightboxSyncFromScroll, 100);
+      });
     }
-    lb._images = (images && images.length > 1) ? images : null;
-    lb._index = index || 0;
-    mqLightboxRender(src, label, lb._images && lb._images.length > 1);
+    const track = document.getElementById('mq-lightbox-track');
+    const imgList = (images && images.length > 1) ? images : [{ src, label }];
+    track.innerHTML = imgList.map(item => `<div class="mq-lightbox-slide"><img src="${item.src}"/></div>`).join('');
+    lb._images = imgList;
+    document.getElementById('mq-lightbox-prev').classList.toggle('show', imgList.length > 1);
+    document.getElementById('mq-lightbox-next').classList.toggle('show', imgList.length > 1);
+    const startIdx = (images && images.length > 1) ? (index || 0) : 0;
+    track.scrollLeft = startIdx * track.clientWidth; // instant jump to the starting slide, no animation
+    document.getElementById('mq-lightbox-label').textContent = imgList[startIdx] ? imgList[startIdx].label : (label||'');
     lb.classList.add('show');
   };
-  function mqLightboxRender(src, label, showNav) {
-    document.getElementById('mq-lightbox-img').src = src;
-    document.getElementById('mq-lightbox-label').textContent = label || '';
-    document.getElementById('mq-lightbox-prev').classList.toggle('show', !!showNav);
-    document.getElementById('mq-lightbox-next').classList.toggle('show', !!showNav);
-  }
-  function mqLightboxStep(direction) {
+  // Keeps the caption in sync as the person swipes — debounced so it only
+  // updates once the scroll has actually settled, not on every intermediate
+  // frame of the drag.
+  function mqLightboxSyncFromScroll() {
     const lb = document.getElementById('mq-lightbox');
-    if (!lb || !lb._images) return;
+    const track = document.getElementById('mq-lightbox-track');
+    if (!lb || !track || !lb._images) return;
+    const idx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    const item = lb._images[idx];
+    if (item) document.getElementById('mq-lightbox-label').textContent = item.label || '';
+  }
+  // Desktop-click / arrow-tap navigation — only these buttons ever trigger
+  // an image change on their own; everything else is left to natural
+  // swipe/scroll.
+  function mqLightboxScrollBy(direction) {
+    const lb = document.getElementById('mq-lightbox');
+    const track = document.getElementById('mq-lightbox-track');
+    if (!lb || !track || !lb._images) return;
     const total = lb._images.length;
-    lb._index = ((lb._index + direction) % total + total) % total; // wraps both directions
-    const item = lb._images[lb._index];
-    mqLightboxRender(item.src, item.label, true);
+    const curIdx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    const nextIdx = ((curIdx + direction) % total + total) % total; // wraps both directions
+    track.scrollTo({ left: nextIdx * track.clientWidth, behavior: 'smooth' });
   }
   // Any group of photo thumbnails (door styles, materials, specialty items,
   // etc.) can register its image list here under a key, then open the
