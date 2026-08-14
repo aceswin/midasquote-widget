@@ -1036,17 +1036,22 @@
     const maxScroll = row.scrollWidth - row.clientWidth;
 
     setTimeout(() => {
+      let pos = row.scrollLeft; // tracked independently — the DOM's scrollLeft
+                                 // clamps at maxScroll, so it can't hold the
+                                 // "overshoot" needed to wrap seamlessly
       let velocity = 34; // px/frame at the start of the spin
       const friction = 0.955; // <1, decay per frame — lower number brakes faster
 
       function spinFrame() {
-        row.scrollLeft += velocity;
+        pos += velocity;
+        if (pos >= maxScroll) pos -= maxScroll; // loop straight back to the start, mid-spin
+        row.scrollLeft = pos;
         velocity *= friction;
-        if (velocity > 0.4 && row.scrollLeft < maxScroll) {
+        if (velocity > 0.4) {
           requestAnimationFrame(spinFrame);
         } else {
-          // Rests briefly wherever the spin ran out of steam, then glides
-          // back to the start so browsing begins from item one.
+          // Once real speed is gone, pause briefly wherever that landed,
+          // then glide back to the true start for normal browsing.
           setTimeout(() => { row.scrollTo({ left: 0, behavior: 'smooth' }); }, 500);
         }
       }
