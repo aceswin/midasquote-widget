@@ -764,25 +764,30 @@
     const track = document.getElementById('mq-lightbox-track');
     const rawList = (images && images.length > 1) ? images : [{ src, label }];
     const startIdx = (images && images.length > 1) ? (index || 0) : 0;
-    // Rotate the list so whatever was actually tapped is always first, then
-    // just rebuild the track fresh at scrollLeft's natural default of 0 —
-    // no clientWidth-based positioning needed at all. The previous version
-    // computed "startIdx * track.clientWidth" a frame after showing the
-    // lightbox, which left a real async window where a second tap (a fast
-    // double-tap, or two different thumbnails tapped in quick succession)
-    // could land its own innerHTML rebuild in between the first tap's show()
-    // and its still-pending scroll calculation — so the first click's
-    // position math could end up applied to the SECOND click's now-different
-    // track contents. Rotating removes the calculation (and the frame of
-    // delay it needed) entirely, so there's nothing left to race.
+    // Rotate the list so whatever was actually tapped is always first —
+    // avoids ever needing to calculate a pixel scroll position from an
+    // index, which needs an accurate clientWidth and therefore needs the
+    // lightbox to already be visible (see below).
     const imgList = rawList.slice(startIdx).concat(rawList.slice(0, startIdx));
+    // Same lightbox element is reused for every single open, so its scroll
+    // position is a leftover from whatever was viewed last unless something
+    // actively resets it. Setting scrollLeft while still display:none (the
+    // bug in the previous version) doesn't reliably apply — a hidden
+    // element has no real layout to scroll within, so browsers can just
+    // ignore the assignment, leaving the OLD scroll position intact even
+    // after the innerHTML underneath it has been completely replaced. That
+    // stale pixel offset then "coincidentally" lines up with some slide
+    // index in whatever new group opens next (all slides are the same
+    // width), which is exactly the "shows the 3rd image, then that carries
+    // into every other section" behavior. Showing the lightbox FIRST, before
+    // ever touching scrollLeft, makes sure the reset actually takes effect.
+    lb.classList.add('show');
     track.innerHTML = imgList.map(item => `<div class="mq-lightbox-slide"><img src="${item.src}"/></div>`).join('');
+    track.scrollLeft = 0;
     lb._images = imgList; // index 0 is now always "whatever was tapped"
     document.getElementById('mq-lightbox-prev').classList.toggle('show', imgList.length > 1);
     document.getElementById('mq-lightbox-next').classList.toggle('show', imgList.length > 1);
-    track.scrollLeft = 0;
     document.getElementById('mq-lightbox-label').textContent = imgList[0] ? imgList[0].label : (label||'');
-    lb.classList.add('show');
   };
   // Keeps the caption in sync as the person swipes — debounced so it only
   // updates once the scroll has actually settled, not on every intermediate
