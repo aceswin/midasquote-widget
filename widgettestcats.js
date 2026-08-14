@@ -1082,7 +1082,7 @@
     requestAnimationFrame(() => {
       document.querySelectorAll('.mq-vpicker-row[id]').forEach(row => {
         window.mqUpdatePickerArrow(row.id.replace(/^mq-vprow-/, ''));
-        mqBindAutoPeek(row);
+        // mqBindAutoPeek(row); // spin preview disabled for now — code kept intact below in case it's wanted back later
       });
     });
   };
@@ -1113,7 +1113,7 @@
       const wrap = row.parentElement;
       if (!wrap) return;
       const setWidth = row.scrollWidth; // width of exactly one full lap
-      const LAPS = 2; // "spin through all items 2 times fast, then settle"
+      const LAPS = 1; // one gentle pass through, same timeframe as before — less motion, easier on the eyes
 
       const overlay = document.createElement('div');
       overlay.style.cssText = 'position:absolute;inset:0;overflow:hidden;background:#fff;z-index:3;pointer-events:none;border-radius:inherit';
@@ -2513,7 +2513,7 @@
       caption.textContent = `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
       caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-top:6px;margin-bottom:10px';
       outer.appendChild(caption);
-      mqBindAutoPeek(track);
+      // mqBindAutoPeek(track); // spin preview disabled for now — code kept intact below in case it's wanted back later
       return outer;
     }
     window.mqRefreshMeasureGuide=(prefix)=>{
