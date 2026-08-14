@@ -1023,32 +1023,35 @@
   };
   window.addEventListener('resize', () => window.mqUpdateAllPickerArrows());
 
-  // A brief, one-time "spin through and settle" preview — scrolls through a
-  // few of the row's items with gradually lengthening pauses (so it visibly
-  // slows down, not a linear scroll) then glides back to the start. Purely a
+  // A brief, one-time "spin and settle" preview — like giving the row a
+  // flick, not stepping through fixed points. Continuous velocity that
+  // decays a little every frame (real friction, not a series of jumps),
+  // so it genuinely feels like a wheel spinning down to a stop. Purely a
   // "hey, there's more here" cue for anything with overflow the person
   // hasn't discovered yet; never repeats once it's played for a given row.
   function mqAutoPeekRow(row) {
     if (!row) return;
-    const children = Array.from(row.children);
-    if (children.length < 2) return;
     const hasOverflow = row.scrollWidth > row.clientWidth + 4;
     if (!hasOverflow) return;
+    const maxScroll = row.scrollWidth - row.clientWidth;
 
-    const maxSteps = Math.min(children.length, 6);
-    const positions = [];
-    for (let i = 1; i < maxSteps; i++) {
-      positions.push(Math.min(children[i].offsetLeft, row.scrollWidth - row.clientWidth));
-    }
-    if (!positions.length) return;
+    setTimeout(() => {
+      let velocity = 34; // px/frame at the start of the spin
+      const friction = 0.955; // <1, decay per frame — lower number brakes faster
 
-    let delay = 450; // brief pause after coming into view before the peek starts
-    positions.forEach((pos, i) => {
-      delay += 200 + i * 85; // each gap a little longer than the last = slowing down
-      setTimeout(() => { row.scrollTo({ left: pos, behavior: 'smooth' }); }, delay);
-    });
-    delay += 550;
-    setTimeout(() => { row.scrollTo({ left: 0, behavior: 'smooth' }); }, delay);
+      function spinFrame() {
+        row.scrollLeft += velocity;
+        velocity *= friction;
+        if (velocity > 0.4 && row.scrollLeft < maxScroll) {
+          requestAnimationFrame(spinFrame);
+        } else {
+          // Rests briefly wherever the spin ran out of steam, then glides
+          // back to the start so browsing begins from item one.
+          setTimeout(() => { row.scrollTo({ left: 0, behavior: 'smooth' }); }, 500);
+        }
+      }
+      requestAnimationFrame(spinFrame);
+    }, 450); // brief pause after coming into view before the spin starts
   }
   // Only plays once a row actually scrolls into view (no point animating
   // something off-screen the person hasn't reached yet), and only ever
