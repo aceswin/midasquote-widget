@@ -2605,6 +2605,23 @@ window.logoutMember = async function () {
     const files = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
     return files ? files.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f) : [];
   }
+  // For a shop whose measureImage/measureImages already has SOMETHING saved
+  // (even an old single default from before this gallery existed) — the
+  // "blank = auto-track forever" fallback above only works while the field
+  // is genuinely empty, so an already-active shop can get stuck showing
+  // just one old image forever with no way to pick up the rest. This writes
+  // the full current default set as real, editable values instead, so it
+  // shows up immediately and can be trimmed down one image at a time
+  // afterward with the existing ✕ Remove buttons.
+  window.mqUseAllDefaultMeasureImages = function(roomId, idx) {
+    if (idx == null || !window._mqRooms || !window._mqRooms[idx]) return;
+    const urls = mqDefaultMeasureImageUrlsFor(roomId);
+    if (!urls.length) return;
+    if (!confirm(`Load all ${urls.length} default images for this project type? You can remove any you don't want afterward.`)) return;
+    window._mqRooms[idx].measureImage = urls[0];
+    window._mqRooms[idx].measureImages = urls.slice(1);
+    renderRoomsList();
+  };
 
   function defaultRoomTypes() {
     return [
@@ -2696,7 +2713,7 @@ window.logoutMember = async function () {
       const isOpen = _mqExpandedRoomIds.has(r.id);
       return `
       <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
-        <div style="display:grid;grid-template-columns:24px 1fr 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:24px minmax(140px,300px) 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
           <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
           <button type="button" onclick="mqToggleRoomBody(${idx})" title="Show more" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;padding:4px">
@@ -2758,6 +2775,7 @@ window.logoutMember = async function () {
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
                 <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
+                ${mqDefaultMeasureImageUrlsFor(r.id).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id).length} default images</button>` : ''}
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
             </div>
