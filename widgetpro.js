@@ -824,6 +824,31 @@
     if (!item) return;
     mqPhotoLightbox(item.src, item.label, images, index);
   };
+  // Picker rows (doors, materials, crown, valance, etc.) are different from
+  // specialty items: a "collection" filter (e.g. Shaker vs Slab) only ever
+  // hides non-matching chips via style.display — the row itself, and the
+  // registration above, still has every collection's photos together. So
+  // opening straight from that registration let swiping "bleed" from one
+  // collection into another that was merely hidden, not actually gone. This
+  // instead rebuilds the list from whatever chips are ACTUALLY visible on
+  // screen at the moment of the tap, so the lightbox only ever contains
+  // what the person can currently see and pick from.
+  window.mqPhotoLightboxFromPickerChip = function(selectId, itemValue) {
+    const row = document.getElementById(`mq-vprow-${selectId}`);
+    if (!row) return;
+    const images = [];
+    let startIndex = 0;
+    row.querySelectorAll('.mq-vpicker-chip').forEach(chip => {
+      if (chip.style.display === 'none') return; // filtered out by the current collection (or room/door match)
+      const img = chip.querySelector('.mq-vpicker-thumb');
+      if (!img) return; // no photo on this chip (placeholder icon) — nothing to show in the lightbox
+      if (chip.getAttribute('data-value') === itemValue) startIndex = images.length;
+      const labelEl = chip.querySelector('.mq-vpicker-label');
+      images.push({ src: img.src, label: labelEl ? labelEl.textContent : '' });
+    });
+    if (!images.length) return;
+    mqPhotoLightbox(images[startIndex].src, images[startIndex].label, images, startIndex);
+  };
 
   // Desktop-only hover preview — appended to document.body (not inside the
   // widget) so the picker row's horizontal scroll container can't clip it.
@@ -948,13 +973,11 @@
     // this uses that same navy directly rather than a per-shop color.
     const focal = '#0f2a52';
     const focalTint = '#eef2f7';
-    const photoItems = items.filter(it => it.photoUrl);
-    window._mqLightboxGroups[selectId] = photoItems.map(it => ({ src: it.photoUrl, label: it.label }));
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
       const thumb = it.photoUrl
-        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${selectId}',${photoItems.indexOf(it)})" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
+        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightboxFromPickerChip('${selectId}','${(it.value||'').replace(/'/g,"\\'")}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
       const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
       const featuredBadgeHtml = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
