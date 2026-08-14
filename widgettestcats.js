@@ -1023,39 +1023,55 @@
   };
   window.addEventListener('resize', () => window.mqUpdateAllPickerArrows());
 
-  // A brief, one-time "spin and settle" preview — like giving the row a
-  // flick, not stepping through fixed points. Continuous velocity that
-  // decays a little every frame (real friction, not a series of jumps),
-  // so it genuinely feels like a wheel spinning down to a stop. Purely a
-  // "hey, there's more here" cue for anything with overflow the person
-  // hasn't discovered yet; never repeats once it's played for a given row.
+  // A brief, one-time "spin and settle" preview — a genuine multi-lap spin
+  // (fast at first, easing to a stop), not a scrollLeft hack. Manually
+  // driving scrollLeft frame-by-frame fought with the browser's own scroll
+  // handling (especially scroll-snap on the measuring-guide carousel) and
+  // looked glitchy — so instead this clones the row's content a few times
+  // into a purely visual, non-interactive overlay and animates it with one
+  // native CSS transition. No scroll state ever touched, nothing to fight,
+  // and traveling an exact multiple of one full "lap" means it lands back
+  // precisely at the start with no separate return step needed. Purely a
+  // "hey, there's more here" cue; never repeats once played for a given row.
   function mqAutoPeekRow(row) {
     if (!row) return;
     const hasOverflow = row.scrollWidth > row.clientWidth + 4;
     if (!hasOverflow) return;
-    const maxScroll = row.scrollWidth - row.clientWidth;
+    const children = Array.from(row.children);
+    if (!children.length) return;
 
     setTimeout(() => {
-      let pos = row.scrollLeft; // tracked independently — the DOM's scrollLeft
-                                 // clamps at maxScroll, so it can't hold the
-                                 // "overshoot" needed to wrap seamlessly
-      let velocity = 34; // px/frame at the start of the spin
-      const friction = 0.955; // <1, decay per frame — lower number brakes faster
+      const wrap = row.closest('.mq-vpicker-wrap');
+      if (!wrap) return;
+      const setWidth = row.scrollWidth; // width of exactly one full lap
+      const LAPS = 3; // "spin through all items 3 times fast, then settle"
 
-      function spinFrame() {
-        pos += velocity;
-        if (pos >= maxScroll) pos -= maxScroll; // loop straight back to the start, mid-spin
-        row.scrollLeft = pos;
-        velocity *= friction;
-        if (velocity > 0.4) {
-          requestAnimationFrame(spinFrame);
-        } else {
-          // Once real speed is gone, pause briefly wherever that landed,
-          // then glide back to the true start for normal browsing.
-          setTimeout(() => { row.scrollTo({ left: 0, behavior: 'smooth' }); }, 500);
-        }
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:absolute;inset:0;overflow:hidden;background:#fff;z-index:3;pointer-events:none;border-radius:inherit';
+      const track = document.createElement('div');
+      track.style.cssText = 'display:flex;gap:8px;will-change:transform';
+      // One extra copy of the set at the end so there's always real content
+      // sliding into view right up until the moment it stops, then strip
+      // every id from the clones so nothing collides with the real,
+      // interactive row still sitting underneath, untouched.
+      for (let lap = 0; lap <= LAPS; lap++) {
+        children.forEach(child => {
+          const clone = child.cloneNode(true);
+          clone.removeAttribute('id');
+          clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+          track.appendChild(clone);
+        });
       }
-      requestAnimationFrame(spinFrame);
+      overlay.appendChild(track);
+      wrap.appendChild(overlay);
+
+      requestAnimationFrame(() => {
+        track.style.transition = 'transform 2.1s cubic-bezier(0.1,0.7,0.25,1)';
+        requestAnimationFrame(() => {
+          track.style.transform = `translateX(-${setWidth * LAPS}px)`;
+        });
+      });
+      track.addEventListener('transitionend', () => { overlay.remove(); }, { once: true });
     }, 450); // brief pause after coming into view before the spin starts
   }
   // Only plays once a row actually scrolls into view (no point animating
