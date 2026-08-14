@@ -384,7 +384,9 @@
            whole page) gives it noticeably more room without a full custom
            per-viewport reflow. */
         #midasquote-widget .mq-measure-guide-img{width:calc(100% + 32px)!important;max-width:calc(100% + 32px)!important;margin-left:-16px!important;margin-right:-16px!important}
+        #midasquote-widget .mq-measure-carousel{width:calc(100% + 32px)!important;margin-left:-16px!important;margin-right:-16px!important}
       }
+      #midasquote-widget .mq-measure-carousel-track::-webkit-scrollbar{display:none}
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
       /* A real uploaded logo isn't forced into that square anymore — shown
@@ -404,7 +406,7 @@
       #midasquote-widget .mq-tab-sub{font-size:10px;opacity:0.7;line-height:1}
       #midasquote-widget .mq-tab-content{display:none;padding:15px}
       #midasquote-widget .mq-tab-content.active{display:block}
-      #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:15px;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
+      #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:10px;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-sec{border-left:4px solid ${boxBorder}}
       #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:${focalColor};color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
       #midasquote-widget .mq-sec-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;cursor:pointer}
@@ -428,15 +430,15 @@
       #midasquote-widget .mq-label{font-size:15px;color:#374151;margin-bottom:4px}
       #midasquote-widget .mq-hint{font-size:14px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
-      #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:70px!important}
+      #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:73px!important}
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget select,#midasquote-widget input{font-size:16px;font-family:inherit;width:100%}
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
-      #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
-      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
+      #midasquote-widget .mq-spec-grid{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 230px;min-width:0}
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
@@ -444,7 +446,7 @@
       #midasquote-widget .mq-spec-category-heading{color:${bc}}
       #midasquote-widget .mq-spec-category-group{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 14px 14px;background:#fafafa;box-shadow:0 8px 20px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.08)}
       #midasquote-widget .mq-spec-category-heading{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
-      #midasquote-widget .mq-spec-category-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
+      #midasquote-widget .mq-spec-category-items{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:116px;height:116px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
@@ -1163,7 +1165,7 @@
     if (roomId === 'kitchen') {
       return `
         <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
-        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>Don't worry about doing any math yourself.</strong> Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the ${mqCalcIconInlineHTML()} and enter each one as its own section — got <strong>3 separate runs of upper cabinets</strong>? That's 3 sections. We'll add them up and convert everything for you, no matter how many walls you have.</div>
+        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>All cabinet measurements will get converted into linear feet with the ${mqCalcIconInlineHTML()} calculator.</strong> When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.</div>
         <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
         <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
         <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.</div>
@@ -1171,7 +1173,7 @@
     }
     return `
       <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
-      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>Don't worry about doing any math yourself.</strong> Measure each wall separately, in whatever unit is easiest (feet, inches, or mm), then tap the ${mqCalcIconInlineHTML()} and enter each one as its own section. We'll add them up and convert everything for you, no matter how many walls you have.</div>
+      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>All cabinet measurements will get converted into linear feet with the ${mqCalcIconInlineHTML()} calculator.</strong> When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.</div>
       <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
       <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
       <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
@@ -1379,6 +1381,7 @@
       // recalculation as you type), others for 'change'. Covers either.
       targetEl.dispatchEvent(new Event('input', { bubbles: true }));
       targetEl.dispatchEvent(new Event('change', { bubbles: true }));
+      if (targetEl.classList.contains('mq-linft-input') && window.mqAutoSizeLinFtInput) window.mqAutoSizeLinFtInput(targetEl);
     }
     mqCloseMeasureCalc();
     // On mobile, this modal's own text inputs bring up the on-screen
@@ -1536,12 +1539,12 @@
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.1,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.1,event)" ontouchend="mqLinFtHoldStop()">−</button><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.1" onclick="this.select()" style="text-align:center"/><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','u',0.1,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.1,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.1,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.1,event)" ontouchend="mqLinFtHoldStop()">−</button><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.1" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center"/><button class="mq-qty-btn" type="button" onmousedown="mqLinFtHoldStart('${prefix}','b',0.1,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.1,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections.</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
@@ -2255,17 +2258,97 @@
     // Image and text fall back independently of each other, so a shop that's
     // set one but not the other still gets the default for whichever one
     // they haven't touched.
+    // Builds a swipeable image carousel for the measuring guide — only ever
+    // called when there's more than one image, so the plain single-image
+    // path in mqRefreshMeasureGuide is completely untouched for every shop
+    // that hasn't added extra images.
+    function mqBuildMeasureCarousel(images, room) {
+      const outer = document.createElement('div');
+
+      const wrap = document.createElement('div');
+      wrap.className = 'mq-measure-carousel';
+      wrap.style.cssText = 'position:relative;margin-bottom:4px';
+
+      const track = document.createElement('div');
+      track.className = 'mq-measure-carousel-track';
+      track.style.cssText = 'display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;border-radius:6px;scrollbar-width:none';
+
+      images.forEach((src, i) => {
+        const slide = document.createElement('div');
+        slide.style.cssText = 'flex:0 0 100%;scroll-snap-align:center;min-width:0';
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
+        img.onerror = () => { slide.style.display = 'none'; };
+        img.onclick = () => mqPhotoLightbox(src, room && room.name ? `${room.name} — measuring guide (${i+1}/${images.length})` : `Measuring guide (${i+1}/${images.length})`);
+        slide.appendChild(img);
+        track.appendChild(slide);
+      });
+      wrap.appendChild(track);
+
+      const dots = document.createElement('div');
+      dots.style.cssText = 'display:flex;justify-content:center;gap:6px;margin-top:8px';
+      const dotEls = images.map((_, i) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.setAttribute('aria-label', `Go to image ${i+1}`);
+        dot.style.cssText = `width:7px;height:7px;border-radius:50%;border:none;padding:0;cursor:pointer;background:${i===0?'#2563eb':'#d1d5db'};transition:background 0.15s;flex-shrink:0`;
+        dot.onclick = () => { track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' }); };
+        dots.appendChild(dot);
+        return dot;
+      });
+
+      if (images.length > 1) {
+        const arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.92);box-shadow:0 2px 8px rgba(0,0,0,0.22);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#111;z-index:1';
+        const prevBtn = document.createElement('button');
+        prevBtn.type = 'button'; prevBtn.innerHTML = '‹'; prevBtn.setAttribute('aria-label','Previous image');
+        prevBtn.style.cssText = arrowStyle + ';left:6px';
+        prevBtn.onclick = () => { track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' }); };
+        const nextBtn = document.createElement('button');
+        nextBtn.type = 'button'; nextBtn.innerHTML = '›'; nextBtn.setAttribute('aria-label','Next image');
+        nextBtn.style.cssText = arrowStyle + ';right:6px';
+        nextBtn.onclick = () => { track.scrollBy({ left: track.clientWidth, behavior: 'smooth' }); };
+        wrap.appendChild(prevBtn);
+        wrap.appendChild(nextBtn);
+      }
+
+      // Debounced so this fires once per swipe/scroll settle, not on every
+      // intermediate scroll event.
+      let scrollTimer;
+      track.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          const idx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+          dotEls.forEach((d,i) => { d.style.background = i===idx ? '#2563eb' : '#d1d5db'; });
+        }, 80);
+      });
+
+      outer.appendChild(wrap);
+      outer.appendChild(dots);
+      const caption = document.createElement('div');
+      caption.textContent = `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
+      caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-top:6px;margin-bottom:10px';
+      outer.appendChild(caption);
+      return outer;
+    }
     window.mqRefreshMeasureGuide=(prefix)=>{
       const guideEl = document.getElementById(`mq-${prefix}-measure-guide`);
       if (!guideEl) return;
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const customText = room ? (room.measureText||'').trim() : '';
-      const customImg  = room ? ((room.measureImage||'').trim() || MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || '') : '';
+      const primaryImg = room ? ((room.measureImage||'').trim() || MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || '') : '';
+      // Extra images are entirely opt-in — a shop that's never touched this
+      // just has an empty/absent array, so allImages collapses to exactly
+      // the old single-image behavior below with zero visual change.
+      const extraImgs = room && Array.isArray(room.measureImages) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
+      const allImages = primaryImg ? [primaryImg, ...extraImgs] : extraImgs;
       guideEl.innerHTML = ''; // clear before rebuilding
-      if (customImg) {
+      if (allImages.length > 1) {
+        guideEl.appendChild(mqBuildMeasureCarousel(allImages, room));
+      } else if (allImages.length === 1) {
         const img = document.createElement('img');
-        img.src = customImg;
+        img.src = allImages[0];
         img.className = 'mq-measure-guide-img';
         // height:auto + object-fit:contain (not cover) so the whole image
         // always shows, never cropped — a fixed max-height with "cover" was
@@ -2276,7 +2359,7 @@
         // Same tap-to-zoom lightbox already used for every other photo in the
         // widget (materials, doors, specialty items, etc.) — works identically
         // on mobile and desktop.
-        img.onclick = () => mqPhotoLightbox(customImg, room && room.name ? `${room.name} — measuring guide` : 'Measuring guide');
+        img.onclick = () => mqPhotoLightbox(allImages[0], room && room.name ? `${room.name} — measuring guide` : 'Measuring guide');
         guideEl.appendChild(img);
         const caption = document.createElement('div');
         caption.textContent = '🔍 Tap to enlarge';
@@ -3158,7 +3241,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div style="display:flex;align-items:flex-end;gap:2rem;flex-wrap:wrap">
           <div class="mq-field" style="margin-bottom:0">
             <label class="mq-label">Width (inches)</label>
-            <input type="number" id="mq-tc-width-${id}" value="24" min="12" max="48" style="width:100px"/>
+            <input type="number" id="mq-tc-width-${id}" value="24" min="12" max="48" onblur="mqValidateTallCabWidth('${id}')" style="width:100px"/>
+            <div id="mq-tc-width-note-${id}" style="display:none;font-size:11px;font-weight:600;color:#dc2626;margin-top:3px">Must be 12" or wider.</div>
           </div>
           <div>
             <label class="mq-label" style="display:block;margin-bottom:5px">Quantity</label>
@@ -3175,6 +3259,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       mqRefreshSectionVisibility(prefix);
     }
     window.mqAddTallCab=(prefix)=>addTallCabInternal(prefix);
+    // Reverts to 12" and shows a brief note if someone types anything
+    // narrower — the min attribute alone doesn't actually stop manual
+    // typing, it only affects the native spinner arrows.
+    window.mqValidateTallCabWidth = function(id) {
+      const input = document.getElementById(`mq-tc-width-${id}`);
+      const note = document.getElementById(`mq-tc-width-note-${id}`);
+      if (!input) return;
+      const val = parseFloat(input.value);
+      if (isNaN(val) || val < 12) {
+        input.value = 12;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        if (note) {
+          note.style.display = 'block';
+          clearTimeout(note._mqHideTimer);
+          note._mqHideTimer = setTimeout(() => { note.style.display = 'none'; }, 4000);
+        }
+      }
+    };
     window.mqRemoveTallCab=(prefix,id)=>{
       document.getElementById(`mq-tc-card-${id}`)?.remove();
       delete tallCabs[prefix][id];
@@ -3869,13 +3971,38 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (addonEl) addonEl.innerHTML = addonRowsHtml(m, `${addonContainerId}-a`);
       window.mqUpdateAllPickerArrows();
     };
+    // Grows/shrinks the linear feet input to match its current value —
+    // starts small for "0", widens as the number gets longer (two digits,
+    // a decimal point, etc). Sets a CSS variable rather than the width
+    // property directly — the base CSS rule (itself !important, needed to
+    // beat the global qty-ctrl input rule) reads its width FROM this
+    // variable, so there's no cascade/specificity battle to win at all;
+    // the !important rule never changes, just what value it points to.
+    // Exposed on window (not a plain local function) because it's called
+    // from an inline oninput="" HTML attribute, which runs in the global
+    // scope, not inside this closure — a local function here would never
+    // actually be reachable.
+    window.mqAutoSizeLinFtInput = function(input) {
+      if (!input) return;
+      const len = String(input.value ?? '0').length;
+      const width = Math.min(96, Math.max(46, 34 + len * 12));
+      input.style.setProperty('--mq-linft-w', width + 'px');
+      // Some mobile browsers don't reliably re-layout a number input just
+      // from a style/variable change — reading a layout property right
+      // after forces a synchronous reflow instead of leaving it deferred.
+      void input.offsetWidth;
+    };
     window.mqAdjLinFt=(prefix, which, delta)=>{
       const input = document.getElementById(`mq-${prefix}-${which}ft`);
       if (!input) return;
       let next = Math.max(0, Math.min(60, (parseFloat(input.value)||0) + delta));
-      next = Math.round(next * 10) / 10; // keep to one decimal — avoids 0.1+0.1 floating-point drift
+      next = Math.round(next * 10) / 10; // keep to one decimal — avoids floating-point drift
       input.value = next;
       input.dispatchEvent(new Event('input', { bubbles: true }));
+      // Called directly here too, not just left to the dispatched event
+      // reaching the inline oninput="" handler — one less thing that has
+      // to work correctly on every mobile browser for the resize to happen.
+      if (window.mqAutoSizeLinFtInput) window.mqAutoSizeLinFtInput(input);
     };
     // Holding a +/- button down repeats mqAdjLinFt automatically instead of
     // needing dozens of individual taps to reach a bigger number. A normal

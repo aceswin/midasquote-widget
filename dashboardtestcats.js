@@ -2520,7 +2520,9 @@ window.logoutMember = async function () {
   // enough there to be worth the extra line); everything else uses the
   // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`**Upper cabinets:** A section for every place where uppers will go.
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
+
+**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
@@ -2530,12 +2532,12 @@ window.logoutMember = async function () {
 
 **Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
 
-[corner-img]
-
-[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
+[corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`**Upper cabinets:** A section for every place where uppers will go.
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
+
+**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
@@ -2543,18 +2545,16 @@ window.logoutMember = async function () {
 
 **Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
 
-[corner-img]
-
-[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
+[corner-img]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
-`**Upper cabinets:** A section for every place where uppers will go.
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
+
+**Upper cabinets:** A section for every place where uppers will go.
 
 **Base cabinets:** Same idea — a section for every run of base cabinets.
 
-**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
-
-[tip]**When you're ready to measure**, use the [calc]calculator to easily add in multiple sections and automatically convert inches/mm to feet. [/tip]`;
+**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.`;
 
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
@@ -2767,6 +2767,24 @@ window.logoutMember = async function () {
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
             </div>
+            ${(r.measureImages || []).map((imgUrl, exIdx) => `
+              <div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb">
+                <div id="mq-room-measure-img-extra-preview-${idx}-${exIdx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+                  ${imgUrl ? `<img src="${imgUrl.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                </div>
+                <div style="flex:1;min-width:0">
+                  <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Additional image ${exIdx+2} <span style="color:#9ca3af;font-weight:400">— shows as a swipeable carousel with the rest</span></label>
+                  <input type="text" id="mq-room-measure-img-extra-${idx}-${exIdx}" value="${(imgUrl||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure-2.jpg" onchange="mqSaveRooms()" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                  <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                    📤 Upload
+                    <input type="file" id="mq-room-measure-img-extra-file-${idx}-${exIdx}" accept="image/*" style="display:none"/>
+                  </label>
+                  <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" style="font-size:11px" onclick="mqRemoveRoomMeasureImage(${idx},${exIdx})">✕ Remove</button>
+                  <span id="mq-room-measure-img-extra-status-${idx}-${exIdx}" style="font-size:11px;margin-left:6px"></span>
+                </div>
+              </div>
+            `).join('')}
+            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>
           </div>
         </div>
       </div>`;
@@ -2801,6 +2819,21 @@ window.logoutMember = async function () {
           mqSaveRooms();
         }
       );
+      (r.measureImages || []).forEach((_, exIdx) => {
+        mqWireUploadButton(
+          null,
+          `mq-room-measure-img-extra-file-${idx}-${exIdx}`,
+          `mq-room-measure-img-extra-status-${idx}-${exIdx}`,
+          `mq-room-measure-img-extra-${idx}-${exIdx}`,
+          window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
+          'products',
+          (url) => {
+            const preview = document.getElementById(`mq-room-measure-img-extra-preview-${idx}-${exIdx}`);
+            if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+            mqSaveRooms();
+          }
+        );
+      });
     });
 
     // Drag-and-drop reordering — same pattern already used for Specialty
@@ -2904,6 +2937,21 @@ window.logoutMember = async function () {
     renderRoomsList();
   };
 
+  window.mqAddRoomMeasureImage = function(idx) {
+    const room = (window._mqRooms || [])[idx];
+    if (!room) return;
+    if (!Array.isArray(room.measureImages)) room.measureImages = [];
+    room.measureImages.push('');
+    renderRoomsList();
+  };
+
+  window.mqRemoveRoomMeasureImage = function(idx, exIdx) {
+    const room = (window._mqRooms || [])[idx];
+    if (!room || !Array.isArray(room.measureImages)) return;
+    room.measureImages.splice(exIdx, 1);
+    renderRoomsList();
+  };
+
   window.mqSaveRooms = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -2924,6 +2972,7 @@ window.logoutMember = async function () {
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
+        measureImages: (r.measureImages || []).map((_, exIdx) => (el(`mq-room-measure-img-extra-${idx}-${exIdx}`)?.value || '').trim()),
       })).filter(r => r.name); // drop any left with a blank name
 
       if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
@@ -8170,7 +8219,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
