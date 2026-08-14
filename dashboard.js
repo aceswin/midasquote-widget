@@ -2582,7 +2582,7 @@ window.logoutMember = async function () {
       renderRoomsList();
       return; // renderRoomsList already rebuilds the preview with the fresh default
     }
-    const previewUrl = mqDefaultMeasureImageUrlFor(roomId);
+    const previewUrl = mqDefaultMeasureImageUrlFor(roomId, idx != null && window._mqRooms && window._mqRooms[idx] ? window._mqRooms[idx].name : '');
     const preview = document.getElementById(previewId);
     if (preview) preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>';
   };
@@ -2597,12 +2597,33 @@ window.logoutMember = async function () {
   // never written into a shop's own saved data (see defaultRoomTypes below).
   const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'];
   const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bathroom: ['bathroom11.jpg'], laundry: MQ_DEFAULT_MEASURE_IMAGE_SET, garage: MQ_DEFAULT_MEASURE_IMAGE_SET, commercial: MQ_DEFAULT_MEASURE_IMAGE_SET, other: MQ_DEFAULT_MEASURE_IMAGE_SET };
-  function mqDefaultMeasureImageUrlFor(roomId) {
-    const files = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
+  // Matches a room to one of the default-image keys — tries the id first
+  // (the normal, fast path for standard ids), but falls back to matching on
+  // the room's NAME too, same robust logic already used in widget.js's own
+  // mqDefaultImageKey. A room can end up with a mismatched id (renamed from
+  // something else, or added as a custom row that got an auto-generated
+  // room_<timestamp> id) while still clearly being "Garage" or "Commercial"
+  // by name — without this, those rooms silently get no default images.
+  function mqDefaultImageKeyFor(roomId, roomName) {
+    const id = (roomId||'').toLowerCase();
+    if (MQ_DEFAULT_MEASURE_IMAGE_FILES[id]) return id;
+    const name = (roomName||'').toLowerCase();
+    if (name.includes('kitchen')) return 'kitchen';
+    if (name.includes('bathroom')) return 'bathroom';
+    if (name.includes('laundry')) return 'laundry';
+    if (name.includes('garage')) return 'garage';
+    if (name.includes('commercial')) return 'commercial';
+    if (name.includes('other')) return 'other';
+    return null;
+  }
+  function mqDefaultMeasureImageUrlFor(roomId, roomName) {
+    const key = mqDefaultImageKeyFor(roomId, roomName);
+    const files = key ? MQ_DEFAULT_MEASURE_IMAGE_FILES[key] : null;
     return files && files.length ? MQ_DEFAULT_MEASURE_IMAGE_BASE + files[0] : '';
   }
-  function mqDefaultMeasureImageUrlsFor(roomId) {
-    const files = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
+  function mqDefaultMeasureImageUrlsFor(roomId, roomName) {
+    const key = mqDefaultImageKeyFor(roomId, roomName);
+    const files = key ? MQ_DEFAULT_MEASURE_IMAGE_FILES[key] : null;
     return files ? files.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f) : [];
   }
   // For a shop whose measureImage/measureImages already has SOMETHING saved
@@ -2615,7 +2636,7 @@ window.logoutMember = async function () {
   // afterward with the existing ✕ Remove buttons.
   window.mqUseAllDefaultMeasureImages = function(roomId, idx) {
     if (idx == null || !window._mqRooms || !window._mqRooms[idx]) return;
-    const urls = mqDefaultMeasureImageUrlsFor(roomId);
+    const urls = mqDefaultMeasureImageUrlsFor(roomId, window._mqRooms[idx].name);
     if (!urls.length) return;
     if (!confirm(`Load all ${urls.length} default images for this project type? You can remove any you don't want afterward.`)) return;
     window._mqRooms[idx].measureImage = urls[0];
@@ -2765,7 +2786,7 @@ window.logoutMember = async function () {
             </div>
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                ${(r.measureImage || mqDefaultMeasureImageUrlFor(r.id)) ? `<img src="${r.measureImage || mqDefaultMeasureImageUrlFor(r.id)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                ${(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name)) ? `<img src="${r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
               </div>
               <div style="flex:1;min-width:0">
                 <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image (optional)</label>
@@ -2775,7 +2796,7 @@ window.logoutMember = async function () {
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
                 <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
-                ${mqDefaultMeasureImageUrlsFor(r.id).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id).length} default images</button>` : ''}
+                ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
             </div>
