@@ -437,7 +437,7 @@
       #midasquote-widget select,#midasquote-widget input{font-size:16px;font-family:inherit;width:100%}
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
-      #midasquote-widget .mq-spec-grid{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+      #midasquote-widget .mq-spec-grid{display:block}
       #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 230px;min-width:0}
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
@@ -446,14 +446,20 @@
       #midasquote-widget .mq-spec-category-heading{color:${bc}}
       #midasquote-widget .mq-spec-category-group{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 14px 14px;background:#fafafa;box-shadow:0 8px 20px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.08)}
       #midasquote-widget .mq-spec-category-heading{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
-      #midasquote-widget .mq-spec-category-items{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:116px;height:116px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
       #midasquote-widget .mq-vpicker-wrap{position:relative}
-      #midasquote-widget .mq-vpicker-arrow{position:absolute;top:0;right:0;bottom:8px;width:34px;display:none;align-items:center;justify-content:flex-end;padding-right:2px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%);font-size:20px;font-weight:700;color:#374151;pointer-events:none}
+      #midasquote-widget .mq-vpicker-arrow{position:absolute;top:0;right:0;bottom:8px;width:34px;display:none;align-items:center;justify-content:flex-end;padding-right:2px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%);font-size:20px;font-weight:700;color:#374151;border:none;cursor:pointer}
       #midasquote-widget .mq-vpicker-arrow.show{display:flex}
+      #midasquote-widget .mq-vpicker-arrow-left{right:auto;left:0;justify-content:flex-start;padding-left:2px;padding-right:0;background:linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%)}
+      @media (hover:none) and (pointer:coarse){
+        /* Touch devices already scroll great with a thumb — the click
+           arrows are a desktop-only convenience, not needed (and would
+           just sit in the way of the swipe gesture) on phones/tablets. */
+        #midasquote-widget .mq-vpicker-arrow{display:none!important}
+      }
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
@@ -960,7 +966,7 @@
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
       return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-doors="${doorsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    const vpickerWrap = `<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
+    const vpickerWrap = `<div class="mq-vpicker-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${selectId}" onclick="mqScrollPickerRow('${selectId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${selectId}" onclick="mqScrollPickerRow('${selectId}',1)" aria-label="Scroll right">›</button></div>`;
     if (!hasAnyGroup) return vpickerWrap;
     // Trying items nested inside the same collection box, rather than as a
     // separate block below it — reads as one unified "pick your style"
@@ -978,18 +984,29 @@
       </div>`;
   }
 
-  // Shows a "more to scroll" arrow over the right edge of a picker row
-  // whenever its chips overflow the visible width and haven't been
-  // scrolled to the end yet — mainly for mobile, where several chips
-  // routinely don't fit on screen and there's no other visual hint that
-  // more options exist off to the right.
+  // Shows a "more to scroll" arrow over the right (and now left) edge of a
+  // picker row whenever its chips overflow the visible width and haven't
+  // been scrolled all the way in that direction yet. Doubles as the visual
+  // cue for mobile (where several chips routinely don't fit on screen) and
+  // as the show/hide toggle for the clickable desktop arrows below.
   window.mqUpdatePickerArrow = function(selectId) {
     const row = document.getElementById(`mq-vprow-${selectId}`);
     const arrow = document.getElementById(`mq-vparrow-${selectId}`);
+    const leftArrow = document.getElementById(`mq-vparrow-left-${selectId}`);
     if (!row || !arrow) return;
     const hasOverflow = row.scrollWidth > row.clientWidth + 4;
     const nearEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
+    const nearStart = row.scrollLeft <= 4;
     arrow.classList.toggle('show', hasOverflow && !nearEnd);
+    if (leftArrow) leftArrow.classList.toggle('show', hasOverflow && !nearStart);
+  };
+  // Desktop-only click-to-scroll — the row itself still scrolls fine with
+  // a trackpad/mouse-wheel, this is just a faster, more obvious way to
+  // move through a long row of chips without hunting for the scrollbar.
+  window.mqScrollPickerRow = function(selectId, direction) {
+    const row = document.getElementById(`mq-vprow-${selectId}`);
+    if (!row) return;
+    row.scrollBy({ left: row.clientWidth * 0.85 * direction, behavior: 'smooth' });
   };
   window.mqUpdateAllPickerArrows = function() {
     // Deferred a frame — scrollWidth/clientWidth need real layout to have
@@ -1037,6 +1054,13 @@
     btnEl.textContent = '✓ Selected';
   };
 
+  // Wraps any horizontal row of content (not just the main material/door/etc
+  // pickers) in the exact same scroll-row + clickable-arrow structure —
+  // reused here for specialty items so they get the same desktop arrows and
+  // mobile swipe behavior for free, with zero duplicated CSS or JS.
+  function mqHscrollWrap(rowId, extraClass, innerHtml) {
+    return `<div class="mq-vpicker-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
+  }
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
 
@@ -1109,7 +1133,7 @@
     // layout it's always had, nothing changes for anyone who hasn't
     // adopted this.
     const hasAnyCategory = specs.some(s => (s.category||'').trim());
-    if (!hasAnyCategory) return specs.map((s,i)=>buildCard(s,i)).join('');
+    if (!hasAnyCategory) return mqHscrollWrap(`${prefix}-spec-flat`, 'mq-spec-flat-items', specs.map((s,i)=>buildCard(s,i)).join(''));
 
     // Group by category, preserving first-seen order. Anything without a
     // category gets swept into a trailing "Other" group instead of showing
@@ -1136,9 +1160,9 @@
     return order.map((cat, gi) => {
       const label = cat === '__other__' ? 'Other' : cat;
       const cardsHtml = groups[cat].map(i => buildCard(specs[i], i)).join('');
-      return `<div class="mq-spec-category-group" style="grid-column:1/-1;margin:${gi===0?'0':'14px'} 0 0">
+      return `<div class="mq-spec-category-group" style="margin:${gi===0?'0':'14px'} 0 0">
         <div class="mq-spec-category-heading">${label}</div>
-        <div class="mq-spec-category-items">${cardsHtml}</div>
+        ${mqHscrollWrap(`${prefix}-spec-cat-${gi}`, 'mq-spec-category-items', cardsHtml)}
       </div>`;
     }).join('');
   }
