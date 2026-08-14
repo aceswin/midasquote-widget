@@ -1169,9 +1169,11 @@
   // it's nudging, since snap fighting a programmatic scroll mid-flight is
   // exactly what made the full spin glitchy — restored once fully settled.
   function mqNudgeCarousel(track) {
-    if (!track) return;
+    if (!track || track.dataset.nudged) return;
     const hasOverflow = track.scrollWidth > track.clientWidth + 4;
-    if (!hasOverflow) return;
+    if (!hasOverflow) return; // no real layout yet (e.g. still inside a collapsed section) — don't mark
+                              // as done, so a later real attempt (once it's actually visible) can still fire
+    track.dataset.nudged = '1';
     setTimeout(() => {
       const originalSnap = track.style.scrollSnapType;
       track.style.scrollSnapType = 'none';
@@ -2791,6 +2793,16 @@
       // the arrow-overflow check always came back false. Now that it's
       // actually laid out, re-check so the arrows catch up.
       if (opening && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
+      // Same underlying issue for the measuring-guide carousel's nudge — it's
+      // built while "How to measure" is still collapsed, so its
+      // IntersectionObserver has nothing to intersect with yet. Rather than
+      // hope the observer catches the display:none→block transition on its
+      // own, explicitly give it a real chance to fire now that it's visible.
+      if (opening) {
+        requestAnimationFrame(() => {
+          body.querySelectorAll('.mq-measure-carousel-track').forEach(track => mqNudgeCarousel(track));
+        });
+      }
     };
 
     // Clicking anywhere in a closed section opens it (bigger, more forgiving
@@ -4841,7 +4853,6 @@ window.mqTogDrawerConfig=(prefix)=>{
       } catch(e) { /* localStorage unavailable — skip popup */ }
     }
   }
-
 
   init();
   mqInitMobileFontFix();
