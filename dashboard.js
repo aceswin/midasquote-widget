@@ -2520,32 +2520,10 @@ window.logoutMember = async function () {
   // enough there to be worth the extra line); everything else uses the
   // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
-
-**Upper cabinets:** A section for every place where uppers will go.
-
-**Base cabinets:** Same idea — a section for every run of base cabinets.
-
-**Island cabinets:** Add these in with your base cabinets.
-
-**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
-
-**Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
-
-[corner-img]`;
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
-
-**Upper cabinets:** A section for every place where uppers will go.
-
-**Base cabinets:** Same idea — a section for every run of base cabinets.
-
-**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
-
-**Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
-
-[corner-img]`;
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
 `[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
@@ -2587,12 +2565,23 @@ window.logoutMember = async function () {
   // the field rather than writing a concrete URL into it — leaving it
   // blank is what lets the widget's own fallback stay current forever
   // without ever needing this button pressed again, and it also means the
-  // underlying GitHub address never has to be shown in the field.
-  window.mqFillDefaultMeasureImage = function(inputId, previewId, roomId) {
+  // underlying GitHub address never has to be shown in the field. Also
+  // clears any additional images the shop had added, since several default
+  // rooms now ship with a small gallery rather than just one photo — a
+  // partial reset (primary cleared, stale extras left behind) would leave
+  // the widget showing a mismatched mix of default + leftover custom images.
+  window.mqFillDefaultMeasureImage = function(inputId, previewId, roomId, idx) {
     const inp = el(inputId);
     if (!inp) return;
-    if (inp.value.trim() && !confirm('Clear this and use the default measuring guide image instead? (Automatically stays up to date if the default ever changes.)')) return;
+    const hadExtras = idx != null && window._mqRooms && window._mqRooms[idx] && (window._mqRooms[idx].measureImages||[]).length > 0;
+    if ((inp.value.trim() || hadExtras) && !confirm('Clear this and use the default measuring guide images instead? (Automatically stays up to date if the default ever changes.)')) return;
     inp.value = '';
+    if (idx != null && window._mqRooms && window._mqRooms[idx]) {
+      window._mqRooms[idx].measureImage = '';
+      window._mqRooms[idx].measureImages = [];
+      renderRoomsList();
+      return; // renderRoomsList already rebuilds the preview with the fresh default
+    }
     const previewUrl = mqDefaultMeasureImageUrlFor(roomId);
     const preview = document.getElementById(previewId);
     if (preview) preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>';
@@ -2606,10 +2595,15 @@ window.logoutMember = async function () {
   // MQ_DEFAULT_MEASURE_IMAGES in widget.js/widgetpro.js exactly. Used here
   // only for admin-side previewing and the "Use default image" button —
   // never written into a shop's own saved data (see defaultRoomTypes below).
-  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen:'kitchen1.jpg', bathroom:'bathroom1.jpg', laundry:'laundry1.jpg', garage:'garage1.jpg', commercial:'commercial1.jpg', other:'other1.jpg' };
+  const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'];
+  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bathroom: ['bathroom11.jpg'], laundry: MQ_DEFAULT_MEASURE_IMAGE_SET, garage: MQ_DEFAULT_MEASURE_IMAGE_SET, commercial: MQ_DEFAULT_MEASURE_IMAGE_SET, other: MQ_DEFAULT_MEASURE_IMAGE_SET };
   function mqDefaultMeasureImageUrlFor(roomId) {
-    const file = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
-    return file ? MQ_DEFAULT_MEASURE_IMAGE_BASE + file : '';
+    const files = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
+    return files && files.length ? MQ_DEFAULT_MEASURE_IMAGE_BASE + files[0] : '';
+  }
+  function mqDefaultMeasureImageUrlsFor(roomId) {
+    const files = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
+    return files ? files.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f) : [];
   }
 
   function defaultRoomTypes() {
@@ -2763,10 +2757,28 @@ window.logoutMember = async function () {
                   📤 Upload
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
-                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}')">↺ Use default image</button>
+                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
             </div>
+            ${(r.measureImages || []).map((imgUrl, exIdx) => `
+              <div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb">
+                <div id="mq-room-measure-img-extra-preview-${idx}-${exIdx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+                  ${imgUrl ? `<img src="${imgUrl.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                </div>
+                <div style="flex:1;min-width:0">
+                  <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Additional image ${exIdx+2} <span style="color:#9ca3af;font-weight:400">— shows as a swipeable carousel with the rest</span></label>
+                  <input type="text" id="mq-room-measure-img-extra-${idx}-${exIdx}" value="${(imgUrl||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure-2.jpg" onchange="mqSaveRooms()" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                  <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                    📤 Upload
+                    <input type="file" id="mq-room-measure-img-extra-file-${idx}-${exIdx}" accept="image/*" style="display:none"/>
+                  </label>
+                  <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" style="font-size:11px" onclick="mqRemoveRoomMeasureImage(${idx},${exIdx})">✕ Remove</button>
+                  <span id="mq-room-measure-img-extra-status-${idx}-${exIdx}" style="font-size:11px;margin-left:6px"></span>
+                </div>
+              </div>
+            `).join('')}
+            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>
           </div>
         </div>
       </div>`;
@@ -2801,6 +2813,21 @@ window.logoutMember = async function () {
           mqSaveRooms();
         }
       );
+      (r.measureImages || []).forEach((_, exIdx) => {
+        mqWireUploadButton(
+          null,
+          `mq-room-measure-img-extra-file-${idx}-${exIdx}`,
+          `mq-room-measure-img-extra-status-${idx}-${exIdx}`,
+          `mq-room-measure-img-extra-${idx}-${exIdx}`,
+          window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
+          'products',
+          (url) => {
+            const preview = document.getElementById(`mq-room-measure-img-extra-preview-${idx}-${exIdx}`);
+            if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+            mqSaveRooms();
+          }
+        );
+      });
     });
 
     // Drag-and-drop reordering — same pattern already used for Specialty
@@ -2904,6 +2931,21 @@ window.logoutMember = async function () {
     renderRoomsList();
   };
 
+  window.mqAddRoomMeasureImage = function(idx) {
+    const room = (window._mqRooms || [])[idx];
+    if (!room) return;
+    if (!Array.isArray(room.measureImages)) room.measureImages = [];
+    room.measureImages.push('');
+    renderRoomsList();
+  };
+
+  window.mqRemoveRoomMeasureImage = function(idx, exIdx) {
+    const room = (window._mqRooms || [])[idx];
+    if (!room || !Array.isArray(room.measureImages)) return;
+    room.measureImages.splice(exIdx, 1);
+    renderRoomsList();
+  };
+
   window.mqSaveRooms = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -2924,6 +2966,7 @@ window.logoutMember = async function () {
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
+        measureImages: (r.measureImages || []).map((_, exIdx) => (el(`mq-room-measure-img-extra-${idx}-${exIdx}`)?.value || '').trim()),
       })).filter(r => r.name); // drop any left with a blank name
 
       if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
