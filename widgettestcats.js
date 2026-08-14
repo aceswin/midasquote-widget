@@ -1161,6 +1161,44 @@
     observer.observe(target);
   }
 
+  // A much smaller, one-time nudge — just partway toward the 2nd image and
+  // back, not a spin through everything. Used specifically for the
+  // measuring-guide carousel, since it's important people notice there's
+  // more than one image without the fuller spin effect (unplugged above)
+  // being disorienting. Temporarily turns off scroll-snap for the moment
+  // it's nudging, since snap fighting a programmatic scroll mid-flight is
+  // exactly what made the full spin glitchy — restored once fully settled.
+  function mqNudgeCarousel(track) {
+    if (!track) return;
+    const hasOverflow = track.scrollWidth > track.clientWidth + 4;
+    if (!hasOverflow) return;
+    setTimeout(() => {
+      const originalSnap = track.style.scrollSnapType;
+      track.style.scrollSnapType = 'none';
+      const nudgeDistance = track.clientWidth * 0.4; // partway toward the 2nd slide, not all the way
+      track.scrollTo({ left: nudgeDistance, behavior: 'smooth' });
+      setTimeout(() => {
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+        setTimeout(() => {
+          track.style.scrollSnapType = originalSnap || 'x mandatory';
+        }, 500); // enough time for the return scroll to finish before restoring snap
+      }, 550); // brief pause at the nudge point before returning
+    }, 500); // brief pause after coming into view before nudging
+  }
+  function mqBindCarouselNudge(track) {
+    if (!track || track.dataset.nudgeBound) return;
+    track.dataset.nudgeBound = '1';
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          mqNudgeCarousel(track);
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    observer.observe(track);
+  }
+
   // Fires when the "Pick a collection" dropdown changes — updates which
   // collection is active, refreshes its description text, and re-runs the
   // existing room-visibility pass, which also checks this filter (see
@@ -2513,7 +2551,8 @@
       caption.textContent = `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
       caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-top:6px;margin-bottom:10px';
       outer.appendChild(caption);
-      // mqBindAutoPeek(track); // spin preview disabled for now — code kept intact below in case it's wanted back later
+      // mqBindAutoPeek(track); // full spin preview disabled for now — code kept intact above in case it's wanted back later
+      mqBindCarouselNudge(track); // instead: a small one-time nudge, just to make sure people notice there's more than one image
       return outer;
     }
     window.mqRefreshMeasureGuide=(prefix)=>{
@@ -4802,6 +4841,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       } catch(e) { /* localStorage unavailable — skip popup */ }
     }
   }
+
 
   init();
   mqInitMobileFontFix();
