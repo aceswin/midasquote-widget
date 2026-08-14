@@ -953,6 +953,28 @@
     if (!images.length) return;
     mqPhotoLightbox(images[startIndex].src, images[startIndex].label, images, startIndex);
   };
+  // Same underlying issue as the picker-chip fix above, but for specialty
+  // items: a category's items can each be scoped to different room types
+  // (visibleRooms) — an item not eligible for the currently-selected room
+  // gets hidden via style.display, not removed, so the static per-category
+  // registration built at render time still has every room's items mixed
+  // together. Rebuilds from whatever cards are actually visible right now.
+  window.mqPhotoLightboxFromSpecItem = function(groupKey, itemId) {
+    const row = document.getElementById(`mq-vprow-${groupKey}`);
+    if (!row) return;
+    const images = [];
+    let startIndex = 0;
+    row.querySelectorAll('.mq-spec-item').forEach(card => {
+      if (card.style.display === 'none') return; // filtered out by the current room
+      const img = card.querySelector('.mq-spec-thumb');
+      if (!img) return; // no photo on this card (placeholder star icon)
+      if (card.id === itemId) startIndex = images.length;
+      const nameEl = card.querySelector('.mq-spec-name');
+      images.push({ src: img.src, label: nameEl ? nameEl.textContent : '' });
+    });
+    if (!images.length) return;
+    mqPhotoLightbox(images[startIndex].src, images[startIndex].label, images, startIndex);
+  };
 
   // Desktop-only hover preview — appended to document.body (not inside the
   // widget) so the picker row's horizontal scroll container can't clip it.
@@ -1315,7 +1337,7 @@
     const buildCard = (s,i,groupKey,groupIndex) => {
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
-        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${groupKey}',${groupIndex})" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
+        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightboxFromSpecItem('${groupKey}','mq-sp-${prefix}-${i}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
