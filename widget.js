@@ -886,12 +886,31 @@
     // spatial relationship.
     lb.classList.add('show');
     track.innerHTML = imgList.map(item => `<div class="mq-lightbox-slide"><img src="${item.src}"/></div>`).join('');
-    track.scrollLeft = startIdx * track.clientWidth;
+    const targetLeft = startIdx * track.clientWidth;
+    track.scrollLeft = targetLeft;
     lb._images = imgList;
     document.getElementById('mq-lightbox-prev').classList.toggle('show', imgList.length > 1);
     document.getElementById('mq-lightbox-next').classList.toggle('show', imgList.length > 1);
     document.getElementById('mq-lightbox-label').textContent = imgList[startIdx] ? imgList[startIdx].label : (label||'');
+    // Some mobile browsers don't reliably commit a scrollLeft set made in
+    // the same tick as the display:none→flex change above — the box model
+    // reads as laid out (clientWidth is accurate), but the actual scroll
+    // position can still lag and settle back to wherever it was before,
+    // which surfaces as "reopen the first image, it shows the second" after
+    // having swiped around a previous session. Desktop doesn't show this,
+    // which is exactly what made it look fixed there. A token guards the
+    // deferred re-check so it can only ever apply to the MOST RECENT open —
+    // if a second tap happens before this fires, the stale check just no-ops
+    // instead of clobbering the newer call's position (the exact race the
+    // old unconditional requestAnimationFrame version had).
+    const openToken = ++mqLightboxOpenToken;
+    lb._openToken = openToken;
+    requestAnimationFrame(() => {
+      if (lb._openToken !== openToken) return; // a newer open has already taken over
+      if (track.scrollLeft !== targetLeft) track.scrollLeft = targetLeft;
+    });
   };
+  let mqLightboxOpenToken = 0;
   // Keeps the caption in sync as the person swipes — debounced so it only
   // updates once the scroll has actually settled, not on every intermediate
   // frame of the drag.
