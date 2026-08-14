@@ -871,6 +871,19 @@
     const item = lb._images[lb._index];
     mqLightboxRender(item.src, item.label, true);
   }
+  // Any group of photo thumbnails (door styles, materials, specialty items,
+  // etc.) can register its image list here under a key, then open the
+  // lightbox already wired to swipe/click through the rest of that same
+  // group — same mechanism the measuring-guide carousel uses, just reached
+  // via a lookup instead of passing the array through an inline onclick.
+  window._mqLightboxGroups = window._mqLightboxGroups || {};
+  window.mqPhotoLightboxFromGroup = function(groupKey, index) {
+    const images = window._mqLightboxGroups[groupKey];
+    if (!images || !images.length) return;
+    const item = images[index];
+    if (!item) return;
+    mqPhotoLightbox(item.src, item.label, images, index);
+  };
 
   // Desktop-only hover preview — appended to document.body (not inside the
   // widget) so the picker row's horizontal scroll container can't clip it.
@@ -999,11 +1012,13 @@
     const boxBorderColor = window._mqBoxBorder || '#93c5fd';
     const boxBgColor = window._mqBoxBg || '#eff6ff';
     const boxTextColor = window._mqBoxText || '#1e40af';
+    const photoItems = items.filter(it => it.photoUrl);
+    window._mqLightboxGroups[selectId] = photoItems.map(it => ({ src: it.photoUrl, label: it.label }));
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
       const thumb = it.photoUrl
-        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
+        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${selectId}',${photoItems.indexOf(it)})" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
       const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
       const featuredBadgeHtml = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
@@ -1098,7 +1113,7 @@
       const wrap = row.parentElement;
       if (!wrap) return;
       const setWidth = row.scrollWidth; // width of exactly one full lap
-      const LAPS = 3; // "spin through all items 3 times fast, then settle"
+      const LAPS = 2; // "spin through all items 2 times fast, then settle"
 
       const overlay = document.createElement('div');
       overlay.style.cssText = 'position:absolute;inset:0;overflow:hidden;background:#fff;z-index:3;pointer-events:none;border-radius:inherit';
@@ -1120,7 +1135,7 @@
       wrap.appendChild(overlay);
 
       requestAnimationFrame(() => {
-        track.style.transition = 'transform 4.05s cubic-bezier(0.1,0.7,0.25,1)';
+        track.style.transition = 'transform 2.835s cubic-bezier(0.1,0.7,0.25,1)';
         requestAnimationFrame(() => {
           track.style.transform = `translateX(-${setWidth * LAPS}px)`;
         });
@@ -1190,10 +1205,10 @@
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
 
-    const buildCard = (s,i) => {
+    const buildCard = (s,i,groupKey,groupIndex) => {
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
-        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
+        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${groupKey}',${groupIndex})" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
@@ -1259,7 +1274,12 @@
     // layout it's always had, nothing changes for anyone who hasn't
     // adopted this.
     const hasAnyCategory = specs.some(s => (s.category||'').trim());
-    if (!hasAnyCategory) return mqHscrollWrap(`${prefix}-spec-flat`, 'mq-spec-flat-items', specs.map((s,i)=>buildCard(s,i)).join(''));
+    if (!hasAnyCategory) {
+      const flatKey = `${prefix}-spec-flat`;
+      const photoSpecs = specs.filter(s => s.photoUrl);
+      window._mqLightboxGroups[flatKey] = photoSpecs.map(s => ({ src: s.photoUrl, label: s.label }));
+      return mqHscrollWrap(flatKey, 'mq-spec-flat-items', specs.map((s,i)=>buildCard(s,i,flatKey,photoSpecs.indexOf(s))).join(''));
+    }
 
     // Group by category, preserving first-seen order. Anything without a
     // category gets swept into a trailing "Other" group instead of showing
@@ -1285,10 +1305,14 @@
 
     return order.map((cat, gi) => {
       const label = cat === '__other__' ? 'Other' : cat;
-      const cardsHtml = groups[cat].map(i => buildCard(specs[i], i)).join('');
+      const catKey = `${prefix}-spec-cat-${gi}`;
+      const catSpecs = groups[cat].map(i => specs[i]);
+      const photoSpecs = catSpecs.filter(s => s.photoUrl);
+      window._mqLightboxGroups[catKey] = photoSpecs.map(s => ({ src: s.photoUrl, label: s.label }));
+      const cardsHtml = groups[cat].map(i => buildCard(specs[i], i, catKey, photoSpecs.indexOf(specs[i]))).join('');
       return `<div class="mq-spec-category-group" style="margin:${gi===0?'0':'14px'} 0 0">
         <div class="mq-spec-category-heading">${label}</div>
-        ${mqHscrollWrap(`${prefix}-spec-cat-${gi}`, 'mq-spec-category-items', cardsHtml)}
+        ${mqHscrollWrap(catKey, 'mq-spec-category-items', cardsHtml)}
       </div>`;
     }).join('');
   }
@@ -1589,6 +1613,10 @@
 
   function cabinetForm(prefix, specs, data) {
     const { li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
+    window._mqLightboxGroups[`${prefix}-drawer-guide`] = [
+      { src: 'https://widget.midasquote.com/drawer-guide/mostly-drawers.png', label: 'Full drawer bank example' },
+      { src: 'https://widget.midasquote.com/drawer-guide/some-drawers.png', label: 'Standard door with one top drawer example' }
+    ];
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -1755,11 +1783,11 @@
         </div>
         <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;justify-content:flex-start">
           <div style="flex:0 1 150px;text-align:center">
-            <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/mostly-drawers.png','Full drawer bank example')" onerror="this.style.display='none'"/>
+            <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightboxFromGroup('${prefix}-drawer-guide',0)" onerror="this.style.display='none'"/>
             <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Mostly drawers</strong></div>
           </div>
           <div style="flex:0 1 150px;text-align:center">
-            <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/some-drawers.png','Standard door with one top drawer example')" onerror="this.style.display='none'"/>
+            <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightboxFromGroup('${prefix}-drawer-guide',1)" onerror="this.style.display='none'"/>
             <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Some drawers</strong></div>
           </div>
         </div>
@@ -2220,13 +2248,15 @@
     function addonRowsHtml(m, idPrefix) {
       const addons = addonOptionsFor(m);
       if (!addons.length) return '';
+      const photoAddons = addons.filter(a => a.photoUrl);
+      window._mqLightboxGroups[idPrefix] = photoAddons.map(a => ({ src: a.photoUrl, label: a.label }));
       return `<div style="margin-bottom:0.75rem"><label class="mq-label" style="display:block;margin-bottom:6px">Add-ons</label>
         <div style="display:flex;flex-direction:column;gap:8px">
         ${addons.map((a,i)=>{
           const safePhoto = (a.photoUrl||'').replace(/'/g,"\\'");
           const safeLabel = (a.label||'').replace(/'/g,"\\'");
           const thumb = a.photoUrl
-            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0;cursor:zoom-in"/>`
+            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${idPrefix}',${photoAddons.indexOf(a)})" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0;cursor:zoom-in"/>`
             : `<div style="width:56px;height:56px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">➕</div>`;
           return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
             ${thumb}
