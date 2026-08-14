@@ -1041,7 +1041,11 @@
     if (!children.length) return;
 
     setTimeout(() => {
-      const wrap = row.closest('.mq-vpicker-wrap');
+      // Works for both the picker rows (.mq-vpicker-wrap) and the measuring-
+      // guide carousel (.mq-measure-carousel) without needing to know either
+      // class name — in both cases the row/track's direct parent is exactly
+      // the position:relative box the overlay needs to sit inside.
+      const wrap = row.parentElement;
       if (!wrap) return;
       const setWidth = row.scrollWidth; // width of exactly one full lap
       const LAPS = 3; // "spin through all items 3 times fast, then settle"
@@ -1066,7 +1070,7 @@
       wrap.appendChild(overlay);
 
       requestAnimationFrame(() => {
-        track.style.transition = 'transform 2.1s cubic-bezier(0.1,0.7,0.25,1)';
+        track.style.transition = 'transform 2.7s cubic-bezier(0.1,0.7,0.25,1)';
         requestAnimationFrame(() => {
           track.style.transform = `translateX(-${setWidth * LAPS}px)`;
         });
