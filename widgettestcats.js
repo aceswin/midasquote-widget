@@ -449,11 +449,13 @@
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
       #midasquote-widget .mq-spec-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:116px;height:116px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
-      #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+      #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+      #midasquote-widget .mq-vpicker-row::-webkit-scrollbar{display:none}
       #midasquote-widget .mq-vpicker-wrap{position:relative}
-      #midasquote-widget .mq-vpicker-arrow{position:absolute;top:0;right:0;bottom:8px;width:34px;display:none;align-items:center;justify-content:flex-end;padding-right:2px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%);font-size:20px;font-weight:700;color:#374151;border:none;cursor:pointer}
+      #midasquote-widget .mq-vpicker-arrow{position:absolute;top:50%;right:4px;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;display:none;align-items:center;justify-content:center;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,0.28),0 0 0 1px rgba(0,0,0,0.06);font-size:22px;font-weight:700;color:#111;border:none;cursor:pointer;z-index:2}
+      #midasquote-widget .mq-vpicker-arrow:hover{background:#f3f4f6;transform:translateY(-50%) scale(1.06)}
       #midasquote-widget .mq-vpicker-arrow.show{display:flex}
-      #midasquote-widget .mq-vpicker-arrow-left{right:auto;left:0;justify-content:flex-start;padding-left:2px;padding-right:0;background:linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%)}
+      #midasquote-widget .mq-vpicker-arrow-left{right:auto;left:4px}
       @media (hover:none) and (pointer:coarse){
         /* Touch devices already scroll great with a thumb — the click
            arrows are a desktop-only convenience, not needed (and would
