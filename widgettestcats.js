@@ -1070,7 +1070,7 @@
       wrap.appendChild(overlay);
 
       requestAnimationFrame(() => {
-        track.style.transition = 'transform 2.7s cubic-bezier(0.1,0.7,0.25,1)';
+        track.style.transition = 'transform 4.05s cubic-bezier(0.1,0.7,0.25,1)';
         requestAnimationFrame(() => {
           track.style.transform = `translateX(-${setWidth * LAPS}px)`;
         });
