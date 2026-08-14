@@ -291,7 +291,9 @@
            whole page) gives it noticeably more room without a full custom
            per-viewport reflow. */
         #midasquote-widget .mq-measure-guide-img{width:calc(100% + 32px)!important;max-width:calc(100% + 32px)!important;margin-left:-16px!important;margin-right:-16px!important}
+        #midasquote-widget .mq-measure-carousel{width:calc(100% + 32px)!important;margin-left:-16px!important;margin-right:-16px!important}
       }
+      #midasquote-widget .mq-measure-carousel-track::-webkit-scrollbar{display:none}
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-header-actions{display:flex;gap:8px;flex-shrink:0}
       #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
@@ -341,8 +343,8 @@
       #midasquote-widget select,#midasquote-widget input{font-size:16px;font-family:inherit;width:100%}
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
-      #midasquote-widget .mq-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
-      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s}
+      #midasquote-widget .mq-spec-grid{display:block}
+      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 230px;min-width:0}
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#0f2a52;border-color:#d97706}
@@ -350,14 +352,22 @@
       #midasquote-widget .mq-spec-category-heading{color:${bc}}
       #midasquote-widget .mq-spec-category-group{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 14px 14px;background:#fafafa;box-shadow:0 8px 20px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.08)}
       #midasquote-widget .mq-spec-category-heading{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
-      #midasquote-widget .mq-spec-category-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#fbbf24;font-weight:600}
       #midasquote-widget .mq-spec-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
       #midasquote-widget .mq-spec-thumb-placeholder{width:116px;height:116px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
-      #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+      #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+      #midasquote-widget .mq-vpicker-row::-webkit-scrollbar{display:none}
       #midasquote-widget .mq-vpicker-wrap{position:relative}
-      #midasquote-widget .mq-vpicker-arrow{position:absolute;top:0;right:0;bottom:8px;width:34px;display:none;align-items:center;justify-content:flex-end;padding-right:2px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.92) 55%);font-size:20px;font-weight:700;color:#374151;pointer-events:none}
+      #midasquote-widget .mq-vpicker-arrow{position:absolute;top:50%;right:4px;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;display:none;align-items:center;justify-content:center;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,0.28),0 0 0 1px rgba(0,0,0,0.06);font-size:22px;font-weight:700;color:#111;border:none;cursor:pointer;z-index:2}
+      #midasquote-widget .mq-vpicker-arrow:hover{background:#f3f4f6;transform:translateY(-50%) scale(1.06)}
       #midasquote-widget .mq-vpicker-arrow.show{display:flex}
+      #midasquote-widget .mq-vpicker-arrow-left{right:auto;left:4px}
+      @media (hover:none) and (pointer:coarse){
+        /* Touch devices already scroll great with a thumb — the click
+           arrows are a desktop-only convenience, not needed (and would
+           just sit in the way of the swipe gesture) on phones/tablets. */
+        #midasquote-widget .mq-vpicker-arrow{display:none!important}
+      }
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
@@ -512,6 +522,15 @@
       .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
       .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
       .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:12px}
+      .mq-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.95);box-shadow:0 3px 14px rgba(0,0,0,0.35);font-size:26px;font-weight:700;color:#111;border:none;cursor:pointer;z-index:100002}
+      .mq-lightbox-nav.show{display:flex}
+      .mq-lightbox-nav-left{left:18px}
+      .mq-lightbox-nav-right{right:18px}
+      @media (max-width:520px){
+        .mq-lightbox-nav{width:40px;height:40px;font-size:22px}
+        .mq-lightbox-nav-left{left:8px}
+        .mq-lightbox-nav-right{right:8px}
+      }
     `;
     document.head.appendChild(s);
   }
@@ -687,25 +706,79 @@
     wrap.innerHTML = `<span>${firstLetter}</span>`;
   };
 
-  window.mqPhotoLightbox = function(src, label) {
+  // Optional 3rd/4th args let this open as part of a related set (currently
+  // just the measuring-guide carousel) — pass an array of {src,label} plus
+  // the starting index, and the lightbox shows nav arrows/swipe to move
+  // through the rest without closing. Every other call site is untouched:
+  // omit those args and it behaves exactly as a single, non-navigable photo.
+  window.mqPhotoLightbox = function(src, label, images, index) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
       lb = document.createElement('div');
       lb.id = 'mq-lightbox';
       lb.className = 'mq-lightbox';
-      lb.onclick = () => lb.classList.remove('show');
       lb.innerHTML = `
         <img id="mq-lightbox-img" src=""/>
         <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
-        <div class="mq-lightbox-hint">Tap anywhere to close</div>`;
+        <div class="mq-lightbox-hint">Tap anywhere to close</div>
+        <button type="button" class="mq-lightbox-nav mq-lightbox-nav-left" id="mq-lightbox-prev" aria-label="Previous image">‹</button>
+        <button type="button" class="mq-lightbox-nav mq-lightbox-nav-right" id="mq-lightbox-next" aria-label="Next image">›</button>`;
       // Appended to document.body (not the widget container) so position:fixed
       // can't be broken by a transformed ancestor somewhere in the host page —
       // same fix already used for the hover preview.
       document.body.appendChild(lb);
+      lb.addEventListener('click', (e) => {
+        if (e.target.closest('.mq-lightbox-nav')) return; // nav buttons handle their own clicks
+        lb.classList.remove('show');
+      });
+      document.getElementById('mq-lightbox-prev').addEventListener('click', (e) => {
+        e.stopPropagation();
+        mqLightboxStep(-1);
+      });
+      document.getElementById('mq-lightbox-next').addEventListener('click', (e) => {
+        e.stopPropagation();
+        mqLightboxStep(1);
+      });
+      let touchStartX = null;
+      lb.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+      lb.addEventListener('touchend', (e) => {
+        if (touchStartX === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) mqLightboxStep(dx > 0 ? -1 : 1);
+        touchStartX = null;
+      }, { passive: true });
     }
+    lb._images = (images && images.length > 1) ? images : null;
+    lb._index = index || 0;
+    mqLightboxRender(src, label, lb._images && lb._images.length > 1);
+    lb.classList.add('show');
+  };
+  function mqLightboxRender(src, label, showNav) {
     document.getElementById('mq-lightbox-img').src = src;
     document.getElementById('mq-lightbox-label').textContent = label || '';
-    lb.classList.add('show');
+    document.getElementById('mq-lightbox-prev').classList.toggle('show', !!showNav);
+    document.getElementById('mq-lightbox-next').classList.toggle('show', !!showNav);
+  }
+  function mqLightboxStep(direction) {
+    const lb = document.getElementById('mq-lightbox');
+    if (!lb || !lb._images) return;
+    const total = lb._images.length;
+    lb._index = ((lb._index + direction) % total + total) % total; // wraps both directions
+    const item = lb._images[lb._index];
+    mqLightboxRender(item.src, item.label, true);
+  }
+  // Any group of photo thumbnails (door styles, materials, specialty items,
+  // etc.) can register its image list here under a key, then open the
+  // lightbox already wired to swipe/click through the rest of that same
+  // group — same mechanism the measuring-guide carousel uses, just reached
+  // via a lookup instead of passing the array through an inline onclick.
+  window._mqLightboxGroups = window._mqLightboxGroups || {};
+  window.mqPhotoLightboxFromGroup = function(groupKey, index) {
+    const images = window._mqLightboxGroups[groupKey];
+    if (!images || !images.length) return;
+    const item = images[index];
+    if (!item) return;
+    mqPhotoLightbox(item.src, item.label, images, index);
   };
 
   // Desktop-only hover preview — appended to document.body (not inside the
@@ -831,11 +904,13 @@
     // this uses that same navy directly rather than a per-shop color.
     const focal = '#0f2a52';
     const focalTint = '#eef2f7';
+    const photoItems = items.filter(it => it.photoUrl);
+    window._mqLightboxGroups[selectId] = photoItems.map(it => ({ src: it.photoUrl, label: it.label }));
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
       const thumb = it.photoUrl
-        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
+        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${selectId}',${photoItems.indexOf(it)})" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
       const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
       const featuredBadgeHtml = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
@@ -847,7 +922,7 @@
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
       return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-doors="${doorsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
-    const vpickerWrap = `<div class="mq-vpicker-wrap"><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><div class="mq-vpicker-arrow" id="mq-vparrow-${selectId}">›</div></div>`;
+    const vpickerWrap = `<div class="mq-vpicker-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${selectId}" onclick="mqScrollPickerRow('${selectId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${selectId}" onclick="mqScrollPickerRow('${selectId}',1)" aria-label="Scroll right">›</button></div>`;
     if (!hasAnyGroup) return vpickerWrap;
     return `
       <div style="margin-bottom:10px;background:${focalTint};border:1.5px solid ${focal};border-radius:10px;padding:12px 14px">
@@ -865,19 +940,141 @@
   window.mqUpdatePickerArrow = function(selectId) {
     const row = document.getElementById(`mq-vprow-${selectId}`);
     const arrow = document.getElementById(`mq-vparrow-${selectId}`);
+    const leftArrow = document.getElementById(`mq-vparrow-left-${selectId}`);
     if (!row || !arrow) return;
     const hasOverflow = row.scrollWidth > row.clientWidth + 4;
     const nearEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
+    const nearStart = row.scrollLeft <= 4;
     arrow.classList.toggle('show', hasOverflow && !nearEnd);
+    if (leftArrow) leftArrow.classList.toggle('show', hasOverflow && !nearStart);
+  };
+  window.mqScrollPickerRow = function(selectId, direction) {
+    const row = document.getElementById(`mq-vprow-${selectId}`);
+    if (!row) return;
+    row.scrollBy({ left: row.clientWidth * 0.85 * direction, behavior: 'smooth' });
   };
   window.mqUpdateAllPickerArrows = function() {
     requestAnimationFrame(() => {
       document.querySelectorAll('.mq-vpicker-row[id]').forEach(row => {
         window.mqUpdatePickerArrow(row.id.replace(/^mq-vprow-/, ''));
+        // mqBindAutoPeek(row); // spin preview disabled for now — code kept intact below in case it's wanted back later
       });
     });
   };
   window.addEventListener('resize', () => window.mqUpdateAllPickerArrows());
+
+  // A brief, one-time "spin and settle" preview — a genuine multi-lap spin
+  // (fast at first, easing to a stop), not a scrollLeft hack. Manually
+  // driving scrollLeft frame-by-frame fought with the browser's own scroll
+  // handling (especially scroll-snap on the measuring-guide carousel) and
+  // looked glitchy — so instead this clones the row's content a few times
+  // into a purely visual, non-interactive overlay and animates it with one
+  // native CSS transition. No scroll state ever touched, nothing to fight,
+  // and traveling an exact multiple of one full "lap" means it lands back
+  // precisely at the start with no separate return step needed. Purely a
+  // "hey, there's more here" cue; never repeats once played for a given row.
+  function mqAutoPeekRow(row) {
+    if (!row) return;
+    const hasOverflow = row.scrollWidth > row.clientWidth + 4;
+    if (!hasOverflow) return;
+    const children = Array.from(row.children);
+    if (!children.length) return;
+
+    setTimeout(() => {
+      // Works for both the picker rows (.mq-vpicker-wrap) and the measuring-
+      // guide carousel (.mq-measure-carousel) without needing to know either
+      // class name — in both cases the row/track's direct parent is exactly
+      // the position:relative box the overlay needs to sit inside.
+      const wrap = row.parentElement;
+      if (!wrap) return;
+      const setWidth = row.scrollWidth; // width of exactly one full lap
+      const LAPS = 1; // one gentle pass through, same timeframe as before — less motion, easier on the eyes
+
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:absolute;inset:0;overflow:hidden;background:#fff;z-index:3;pointer-events:none;border-radius:inherit';
+      const track = document.createElement('div');
+      track.style.cssText = 'display:flex;gap:8px;will-change:transform';
+      // One extra copy of the set at the end so there's always real content
+      // sliding into view right up until the moment it stops, then strip
+      // every id from the clones so nothing collides with the real,
+      // interactive row still sitting underneath, untouched.
+      for (let lap = 0; lap <= LAPS; lap++) {
+        children.forEach(child => {
+          const clone = child.cloneNode(true);
+          clone.removeAttribute('id');
+          clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+          track.appendChild(clone);
+        });
+      }
+      overlay.appendChild(track);
+      wrap.appendChild(overlay);
+
+      requestAnimationFrame(() => {
+        track.style.transition = 'transform 2.835s cubic-bezier(0.1,0.7,0.25,1)';
+        requestAnimationFrame(() => {
+          track.style.transform = `translateX(-${setWidth * LAPS}px)`;
+        });
+      });
+      track.addEventListener('transitionend', () => { overlay.remove(); }, { once: true });
+    }, 450); // brief pause after coming into view before the spin starts
+  }
+  // Only plays once a row actually scrolls into view (no point animating
+  // something off-screen the person hasn't reached yet), and only ever
+  // once per row — re-renders that touch the same row won't replay it.
+  function mqBindAutoPeek(row) {
+    if (!row || row.dataset.peekBound) return;
+    row.dataset.peekBound = '1';
+    const target = row.closest('.mq-vpicker-wrap') || row;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          mqAutoPeekRow(row);
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    observer.observe(target);
+  }
+
+  // A much smaller, one-time nudge — just partway toward the 2nd image and
+  // back, not a spin through everything. Used specifically for the
+  // measuring-guide carousel, since it's important people notice there's
+  // more than one image without the fuller spin effect (unplugged above)
+  // being disorienting. Temporarily turns off scroll-snap for the moment
+  // it's nudging, since snap fighting a programmatic scroll mid-flight is
+  // exactly what made the full spin glitchy — restored once fully settled.
+  function mqNudgeCarousel(track) {
+    if (!track || track.dataset.nudged) return;
+    const hasOverflow = track.scrollWidth > track.clientWidth + 4;
+    if (!hasOverflow) return; // no real layout yet (e.g. still inside a collapsed section) — don't mark
+                              // as done, so a later real attempt (once it's actually visible) can still fire
+    track.dataset.nudged = '1';
+    setTimeout(() => {
+      const originalSnap = track.style.scrollSnapType;
+      track.style.scrollSnapType = 'none';
+      const nudgeDistance = track.clientWidth * 0.4; // partway toward the 2nd slide, not all the way
+      track.scrollTo({ left: nudgeDistance, behavior: 'smooth' });
+      setTimeout(() => {
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+        setTimeout(() => {
+          track.style.scrollSnapType = originalSnap || 'x mandatory';
+        }, 500); // enough time for the return scroll to finish before restoring snap
+      }, 550); // brief pause at the nudge point before returning
+    }, 500); // brief pause after coming into view before nudging
+  }
+  function mqBindCarouselNudge(track) {
+    if (!track || track.dataset.nudgeBound) return;
+    track.dataset.nudgeBound = '1';
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          mqNudgeCarousel(track);
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    observer.observe(track);
+  }
 
   window.mqFilterPickerByGroup = function(selectId, groupValue, desc, count) {
     window._mqGroupFilter = window._mqGroupFilter || {};
@@ -909,13 +1106,16 @@
     btnEl.textContent = '✓ Selected';
   };
 
+  function mqHscrollWrap(rowId, extraClass, innerHtml) {
+    return `<div class="mq-vpicker-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
+  }
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
 
-    const buildCard = (s,i) => {
+    const buildCard = (s,i,groupKey,groupIndex) => {
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
-        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightbox('${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
+        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${groupKey}',${groupIndex})" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
@@ -964,7 +1164,12 @@
     };
 
     const hasAnyCategory = specs.some(s => (s.category||'').trim());
-    if (!hasAnyCategory) return specs.map((s,i)=>buildCard(s,i)).join('');
+    if (!hasAnyCategory) {
+      const flatKey = `${prefix}-spec-flat`;
+      const photoSpecs = specs.filter(s => s.photoUrl);
+      window._mqLightboxGroups[flatKey] = photoSpecs.map(s => ({ src: s.photoUrl, label: s.label }));
+      return mqHscrollWrap(flatKey, 'mq-spec-flat-items', specs.map((s,i)=>buildCard(s,i,flatKey,photoSpecs.indexOf(s))).join(''));
+    }
 
     const groups = {};
     const order = [];
@@ -986,10 +1191,14 @@
 
     return order.map((cat, gi) => {
       const label = cat === '__other__' ? 'Other' : cat;
-      const cardsHtml = groups[cat].map(i => buildCard(specs[i], i)).join('');
-      return `<div class="mq-spec-category-group" style="grid-column:1/-1;margin:${gi===0?'0':'14px'} 0 0">
+      const catKey = `${prefix}-spec-cat-${gi}`;
+      const catSpecs = groups[cat].map(i => specs[i]);
+      const photoSpecs = catSpecs.filter(s => s.photoUrl);
+      window._mqLightboxGroups[catKey] = photoSpecs.map(s => ({ src: s.photoUrl, label: s.label }));
+      const cardsHtml = groups[cat].map(i => buildCard(specs[i], i, catKey, photoSpecs.indexOf(specs[i]))).join('');
+      return `<div class="mq-spec-category-group" style="margin:${gi===0?'0':'14px'} 0 0">
         <div class="mq-spec-category-heading">${label}</div>
-        <div class="mq-spec-category-items">${cardsHtml}</div>
+        ${mqHscrollWrap(catKey, 'mq-spec-category-items', cardsHtml)}
       </div>`;
     }).join('');
   }
@@ -1273,6 +1482,10 @@
 
   function cabinetForm(prefix, specs, data) {
     const { li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
+    window._mqLightboxGroups[`${prefix}-drawer-guide`] = [
+      { src: 'https://widget.midasquote.com/drawer-guide/mostly-drawers.png', label: 'Full drawer bank example' },
+      { src: 'https://widget.midasquote.com/drawer-guide/some-drawers.png', label: 'Standard door with one top drawer example' }
+    ];
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -1432,11 +1645,11 @@
         </div>
         <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;justify-content:flex-start">
           <div style="flex:0 1 150px;text-align:center">
-            <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/mostly-drawers.png','Full drawer bank example')" onerror="this.style.display='none'"/>
+            <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightboxFromGroup('${prefix}-drawer-guide',0)" onerror="this.style.display='none'"/>
             <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Mostly drawers</strong></div>
           </div>
           <div style="flex:0 1 150px;text-align:center">
-            <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/some-drawers.png','Standard door with one top drawer example')" onerror="this.style.display='none'"/>
+            <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightboxFromGroup('${prefix}-drawer-guide',1)" onerror="this.style.display='none'"/>
             <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Some drawers</strong></div>
           </div>
         </div>
@@ -1910,13 +2123,15 @@
     function addonRowsHtml(m, idPrefix) {
       const addons = addonOptionsFor(m);
       if (!addons.length) return '';
+      const photoAddons = addons.filter(a => a.photoUrl);
+      window._mqLightboxGroups[idPrefix] = photoAddons.map(a => ({ src: a.photoUrl, label: a.label }));
       return `<div style="margin-bottom:0.75rem"><label class="mq-label" style="display:block;margin-bottom:6px">Add-ons</label>
         <div style="display:flex;flex-direction:column;gap:8px">
         ${addons.map((a,i)=>{
           const safePhoto = (a.photoUrl||'').replace(/'/g,"\\'");
           const safeLabel = (a.label||'').replace(/'/g,"\\'");
           const thumb = a.photoUrl
-            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightbox('${safePhoto}','${safeLabel}')" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0;cursor:zoom-in"/>`
+            ? `<img src="${a.photoUrl}" alt="${(a.label||'').replace(/"/g,'&quot;')}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${idPrefix}',${photoAddons.indexOf(a)})" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#f3f4f6;flex-shrink:0;cursor:zoom-in"/>`
             : `<div style="width:56px;height:56px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">➕</div>`;
           return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
             ${thumb}
@@ -2055,13 +2270,15 @@
     commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.png',
     other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.png',
   };
+  const MQ_MEASURE_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/';
+  const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'].map(f => MQ_MEASURE_IMAGE_BASE + f);
   const MQ_DEFAULT_MEASURE_IMAGES = {
-    kitchen: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.jpg',
-    bathroom: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.jpg',
-    laundry: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.jpg',
-    garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.jpg',
-    commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.jpg',
-    other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.jpg',
+    kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    bathroom: [MQ_MEASURE_IMAGE_BASE + 'bathroom11.jpg'],
+    laundry: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    garage: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    commercial: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    other: MQ_DEFAULT_MEASURE_IMAGE_SET,
   };
 
   // Matches a room to one of the 6 default-image keys above. Tries the id
@@ -2119,17 +2336,109 @@
     // Image and text fall back independently of each other, so a shop that's
     // set one but not the other still gets the default for whichever one
     // they haven't touched.
+    // Builds a swipeable image carousel for the measuring guide — only ever
+    // called when there's more than one image, so the plain single-image
+    // path in mqRefreshMeasureGuide is completely untouched for every shop
+    // that hasn't added extra images.
+    function mqBuildMeasureCarousel(images, room) {
+      const outer = document.createElement('div');
+
+      const wrap = document.createElement('div');
+      wrap.className = 'mq-measure-carousel';
+      wrap.style.cssText = 'position:relative;margin-bottom:4px';
+
+      const track = document.createElement('div');
+      track.className = 'mq-measure-carousel-track';
+      track.style.cssText = 'display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;border-radius:6px;scrollbar-width:none';
+
+      const lightboxImages = images.map((src, i) => ({
+        src,
+        label: room && room.name ? `${room.name} — measuring guide (${i+1}/${images.length})` : `Measuring guide (${i+1}/${images.length})`
+      }));
+      images.forEach((src, i) => {
+        const slide = document.createElement('div');
+        slide.style.cssText = 'flex:0 0 100%;scroll-snap-align:center;min-width:0';
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
+        img.onerror = () => { slide.style.display = 'none'; };
+        img.onclick = () => mqPhotoLightbox(lightboxImages[i].src, lightboxImages[i].label, lightboxImages, i);
+        slide.appendChild(img);
+        track.appendChild(slide);
+      });
+      wrap.appendChild(track);
+
+      const dots = document.createElement('div');
+      dots.style.cssText = 'display:flex;justify-content:center;gap:6px;margin-top:8px';
+      const dotEls = images.map((_, i) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.setAttribute('aria-label', `Go to image ${i+1}`);
+        dot.style.cssText = `width:7px;height:7px;border-radius:50%;border:none;padding:0;cursor:pointer;background:${i===0?'#2563eb':'#d1d5db'};transition:background 0.15s;flex-shrink:0`;
+        dot.onclick = () => { track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' }); };
+        dots.appendChild(dot);
+        return dot;
+      });
+
+      if (images.length > 1) {
+        const arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.92);box-shadow:0 2px 8px rgba(0,0,0,0.22);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#111;z-index:1';
+        const prevBtn = document.createElement('button');
+        prevBtn.type = 'button'; prevBtn.innerHTML = '‹'; prevBtn.setAttribute('aria-label','Previous image');
+        prevBtn.style.cssText = arrowStyle + ';left:6px';
+        prevBtn.onclick = () => { track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' }); };
+        const nextBtn = document.createElement('button');
+        nextBtn.type = 'button'; nextBtn.innerHTML = '›'; nextBtn.setAttribute('aria-label','Next image');
+        nextBtn.style.cssText = arrowStyle + ';right:6px';
+        nextBtn.onclick = () => { track.scrollBy({ left: track.clientWidth, behavior: 'smooth' }); };
+        wrap.appendChild(prevBtn);
+        wrap.appendChild(nextBtn);
+      }
+
+      // Debounced so this fires once per swipe/scroll settle, not on every
+      // intermediate scroll event.
+      let scrollTimer;
+      track.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          const idx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+          dotEls.forEach((d,i) => { d.style.background = i===idx ? '#2563eb' : '#d1d5db'; });
+        }, 80);
+      });
+
+      outer.appendChild(wrap);
+      outer.appendChild(dots);
+      const caption = document.createElement('div');
+      caption.textContent = `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
+      caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-top:6px;margin-bottom:10px';
+      outer.appendChild(caption);
+      // mqBindAutoPeek(track); // full spin preview disabled for now — code kept intact above in case it's wanted back later
+      mqBindCarouselNudge(track); // instead: a small one-time nudge, just to make sure people notice there's more than one image
+      return outer;
+    }
     window.mqRefreshMeasureGuide=(prefix)=>{
       const guideEl = document.getElementById(`mq-${prefix}-measure-guide`);
       if (!guideEl) return;
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const customText = room ? (room.measureText||'').trim() : '';
-      const customImg  = room ? ((room.measureImage||'').trim() || MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || '') : '';
+      const customPrimary = room ? (room.measureImage||'').trim() : '';
+      // Extra images are entirely opt-in — a shop that's never touched this
+      // just has an empty/absent array.
+      const customExtra = room && Array.isArray(room.measureImages) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
+      // A shop that's customized ANYTHING (even just adding extra images with
+      // no primary set) gets exactly what they set, no default mixed in. Only
+      // a shop that's never touched either field falls back to the full
+      // default set for that room type — which may be several images, not
+      // just one, now that most rooms ship with a small default gallery.
+      const allImages = customPrimary
+        ? [customPrimary, ...customExtra]
+        : (customExtra.length ? customExtra : (room ? (MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || []) : []));
       guideEl.innerHTML = ''; // clear before rebuilding
-      if (customImg) {
+      if (allImages.length > 1) {
+        guideEl.appendChild(mqBuildMeasureCarousel(allImages, room));
+      } else if (allImages.length === 1) {
         const img = document.createElement('img');
-        img.src = customImg;
+        img.src = allImages[0];
         img.className = 'mq-measure-guide-img';
         // height:auto + object-fit:contain (not cover) so the whole image
         // always shows, never cropped — a fixed max-height with "cover" was
@@ -2140,7 +2449,7 @@
         // Same tap-to-zoom lightbox already used for every other photo in the
         // widget (materials, doors, specialty items, etc.) — works identically
         // on mobile and desktop.
-        img.onclick = () => mqPhotoLightbox(customImg, room && room.name ? `${room.name} — measuring guide` : 'Measuring guide');
+        img.onclick = () => mqPhotoLightbox(allImages[0], room && room.name ? `${room.name} — measuring guide` : 'Measuring guide');
         guideEl.appendChild(img);
         const caption = document.createElement('div');
         caption.textContent = '🔍 Tap to enlarge';
@@ -2335,6 +2644,22 @@
       body.style.display = opening ? 'block' : 'none';
       if (arrow) arrow.classList.toggle('open', opening);
       if (label) label.textContent = opening ? 'Close' : 'Open';
+      // Anything with a scroll-row (specialty items, doors, materials, etc.)
+      // inside a section that was just display:none couldn't have had a real
+      // scrollWidth/clientWidth to measure — both read as 0 while hidden, so
+      // the arrow-overflow check always came back false. Now that it's
+      // actually laid out, re-check so the arrows catch up.
+      if (opening && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
+      // Same underlying issue for the measuring-guide carousel's nudge — it's
+      // built while "How to measure" is still collapsed, so its
+      // IntersectionObserver has nothing to intersect with yet. Rather than
+      // hope the observer catches the display:none→block transition on its
+      // own, explicitly give it a real chance to fire now that it's visible.
+      if (opening) {
+        requestAnimationFrame(() => {
+          body.querySelectorAll('.mq-measure-carousel-track').forEach(track => mqNudgeCarousel(track));
+        });
+      }
     };
 
     // Clicking anywhere in a closed section opens it (bigger, more forgiving
