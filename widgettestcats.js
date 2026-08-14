@@ -620,6 +620,15 @@
       .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
       .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
       .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:12px}
+      .mq-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.95);box-shadow:0 3px 14px rgba(0,0,0,0.35);font-size:26px;font-weight:700;color:#111;border:none;cursor:pointer;z-index:100002}
+      .mq-lightbox-nav.show{display:flex}
+      .mq-lightbox-nav-left{left:18px}
+      .mq-lightbox-nav-right{right:18px}
+      @media (max-width:520px){
+        .mq-lightbox-nav{width:40px;height:40px;font-size:22px}
+        .mq-lightbox-nav-left{left:8px}
+        .mq-lightbox-nav-right{right:8px}
+      }
     `;
     document.head.appendChild(s);
   }
@@ -801,26 +810,67 @@
     wrap.innerHTML = `<span>${firstLetter}</span>`;
   };
 
-  window.mqPhotoLightbox = function(src, label) {
+  // Optional 3rd/4th args let this open as part of a related set (currently
+  // just the measuring-guide carousel) — pass an array of {src,label} plus
+  // the starting index, and the lightbox shows nav arrows/swipe to move
+  // through the rest without closing. Every other call site is untouched:
+  // omit those args and it behaves exactly as a single, non-navigable photo.
+  window.mqPhotoLightbox = function(src, label, images, index) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
       lb = document.createElement('div');
       lb.id = 'mq-lightbox';
       lb.className = 'mq-lightbox';
-      lb.onclick = () => lb.classList.remove('show');
       lb.innerHTML = `
         <img id="mq-lightbox-img" src=""/>
         <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
-        <div class="mq-lightbox-hint">Tap anywhere to close</div>`;
+        <div class="mq-lightbox-hint">Tap anywhere to close</div>
+        <button type="button" class="mq-lightbox-nav mq-lightbox-nav-left" id="mq-lightbox-prev" aria-label="Previous image">‹</button>
+        <button type="button" class="mq-lightbox-nav mq-lightbox-nav-right" id="mq-lightbox-next" aria-label="Next image">›</button>`;
       // Appended to document.body (not the widget container) so position:fixed
       // can't be broken by a transformed ancestor somewhere in the host page —
       // same fix already used for the hover preview.
       document.body.appendChild(lb);
+      lb.addEventListener('click', (e) => {
+        if (e.target.closest('.mq-lightbox-nav')) return; // nav buttons handle their own clicks
+        lb.classList.remove('show');
+      });
+      document.getElementById('mq-lightbox-prev').addEventListener('click', (e) => {
+        e.stopPropagation();
+        mqLightboxStep(-1);
+      });
+      document.getElementById('mq-lightbox-next').addEventListener('click', (e) => {
+        e.stopPropagation();
+        mqLightboxStep(1);
+      });
+      let touchStartX = null;
+      lb.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+      lb.addEventListener('touchend', (e) => {
+        if (touchStartX === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) mqLightboxStep(dx > 0 ? -1 : 1);
+        touchStartX = null;
+      }, { passive: true });
     }
-    document.getElementById('mq-lightbox-img').src = src;
-    document.getElementById('mq-lightbox-label').textContent = label || '';
+    lb._images = (images && images.length > 1) ? images : null;
+    lb._index = index || 0;
+    mqLightboxRender(src, label, lb._images && lb._images.length > 1);
     lb.classList.add('show');
   };
+  function mqLightboxRender(src, label, showNav) {
+    document.getElementById('mq-lightbox-img').src = src;
+    document.getElementById('mq-lightbox-label').textContent = label || '';
+    document.getElementById('mq-lightbox-prev').classList.toggle('show', !!showNav);
+    document.getElementById('mq-lightbox-next').classList.toggle('show', !!showNav);
+  }
+  function mqLightboxStep(direction) {
+    const lb = document.getElementById('mq-lightbox');
+    if (!lb || !lb._images) return;
+    const total = lb._images.length;
+    lb._index = ((lb._index + direction) % total + total) % total; // wraps both directions
+    const item = lb._images[lb._index];
+    mqLightboxRender(item.src, item.label, true);
+  }
 
   // Desktop-only hover preview — appended to document.body (not inside the
   // widget) so the picker row's horizontal scroll container can't clip it.
@@ -2373,6 +2423,10 @@
       track.className = 'mq-measure-carousel-track';
       track.style.cssText = 'display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;border-radius:6px;scrollbar-width:none';
 
+      const lightboxImages = images.map((src, i) => ({
+        src,
+        label: room && room.name ? `${room.name} — measuring guide (${i+1}/${images.length})` : `Measuring guide (${i+1}/${images.length})`
+      }));
       images.forEach((src, i) => {
         const slide = document.createElement('div');
         slide.style.cssText = 'flex:0 0 100%;scroll-snap-align:center;min-width:0';
@@ -2380,7 +2434,7 @@
         img.src = src;
         img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
         img.onerror = () => { slide.style.display = 'none'; };
-        img.onclick = () => mqPhotoLightbox(src, room && room.name ? `${room.name} — measuring guide (${i+1}/${images.length})` : `Measuring guide (${i+1}/${images.length})`);
+        img.onclick = () => mqPhotoLightbox(lightboxImages[i].src, lightboxImages[i].label, lightboxImages, i);
         slide.appendChild(img);
         track.appendChild(slide);
       });
