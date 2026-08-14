@@ -1017,10 +1017,56 @@
     requestAnimationFrame(() => {
       document.querySelectorAll('.mq-vpicker-row[id]').forEach(row => {
         window.mqUpdatePickerArrow(row.id.replace(/^mq-vprow-/, ''));
+        mqBindAutoPeek(row);
       });
     });
   };
   window.addEventListener('resize', () => window.mqUpdateAllPickerArrows());
+
+  // A brief, one-time "spin through and settle" preview — scrolls through a
+  // few of the row's items with gradually lengthening pauses (so it visibly
+  // slows down, not a linear scroll) then glides back to the start. Purely a
+  // "hey, there's more here" cue for anything with overflow the person
+  // hasn't discovered yet; never repeats once it's played for a given row.
+  function mqAutoPeekRow(row) {
+    if (!row) return;
+    const children = Array.from(row.children);
+    if (children.length < 2) return;
+    const hasOverflow = row.scrollWidth > row.clientWidth + 4;
+    if (!hasOverflow) return;
+
+    const maxSteps = Math.min(children.length, 6);
+    const positions = [];
+    for (let i = 1; i < maxSteps; i++) {
+      positions.push(Math.min(children[i].offsetLeft, row.scrollWidth - row.clientWidth));
+    }
+    if (!positions.length) return;
+
+    let delay = 450; // brief pause after coming into view before the peek starts
+    positions.forEach((pos, i) => {
+      delay += 200 + i * 85; // each gap a little longer than the last = slowing down
+      setTimeout(() => { row.scrollTo({ left: pos, behavior: 'smooth' }); }, delay);
+    });
+    delay += 550;
+    setTimeout(() => { row.scrollTo({ left: 0, behavior: 'smooth' }); }, delay);
+  }
+  // Only plays once a row actually scrolls into view (no point animating
+  // something off-screen the person hasn't reached yet), and only ever
+  // once per row — re-renders that touch the same row won't replay it.
+  function mqBindAutoPeek(row) {
+    if (!row || row.dataset.peekBound) return;
+    row.dataset.peekBound = '1';
+    const target = row.closest('.mq-vpicker-wrap') || row;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          mqAutoPeekRow(row);
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    observer.observe(target);
+  }
 
   // Fires when the "Pick a collection" dropdown changes — updates which
   // collection is active, refreshes its description text, and re-runs the
@@ -2355,6 +2401,7 @@
       caption.textContent = `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
       caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-top:6px;margin-bottom:10px';
       outer.appendChild(caption);
+      mqBindAutoPeek(track);
       return outer;
     }
     window.mqRefreshMeasureGuide=(prefix)=>{
@@ -2587,6 +2634,12 @@
       body.style.display = opening ? 'block' : 'none';
       if (arrow) arrow.classList.toggle('open', opening);
       if (label) label.textContent = opening ? 'Close' : 'Open';
+      // Anything with a scroll-row (specialty items, doors, materials, etc.)
+      // inside a section that was just display:none couldn't have had a real
+      // scrollWidth/clientWidth to measure — both read as 0 while hidden, so
+      // the arrow-overflow check always came back false. Now that it's
+      // actually laid out, re-check so the arrows catch up.
+      if (opening && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
     };
 
     // Clicking anywhere in a closed section opens it (bigger, more forgiving
