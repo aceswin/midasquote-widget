@@ -111,15 +111,15 @@
     try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
     if (!Array.isArray(roomTypes) || !roomTypes.length) {
       roomTypes = [
-        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.jpg' },
-        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.jpg' },
-        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.jpg' },
-        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.jpg' },
-        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.jpg' },
-        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.png', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.jpg' },
-        { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
-        { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
-        { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
+        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.jpg' },
+        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.jpg' },
+        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.jpg' },
+        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.jpg' },
+        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.jpg' },
+        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.jpg' },
+        { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
+        { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
+        { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
       ];
     }
     // Draft project types (active:false) never show to customers, no matter
@@ -237,7 +237,7 @@
   // ============================================================
   // EMAIL & LEAD
   // ============================================================
-  async function saveLead(data, lead, quoteType, low, high, lines, roomType) {
+  async function saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix) {
     const { shop } = data;
     try {
       await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-lead`, {
@@ -283,8 +283,8 @@
         `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
           <h2 style="color:#1a1a1a">Your ${quoteType} quote from ${shop['Shop name']}</h2>
           <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-            <div style="font-size:14px;color:#666;margin-bottom:4px">Your estimated range</div>
-            <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
+            <div style="font-size:14px;color:#666;margin-bottom:4px">${mqShouldShowRange(prefix) ? 'Your estimated range' : 'Your estimate'}</div>
+            <div style="font-size:28px;font-weight:700;color:#16a34a">${mqFmtPrice(prefix, low, high, total)}</div>
           </div>
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
             <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What’s included</td></tr>${customerLineRows}
@@ -611,12 +611,16 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
-      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem}
+      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
       .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
       .mq-hover-preview .mq-hp-label{font-size:12px;color:#374151;text-align:center;margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:180px}
       .mq-lightbox.show{display:flex}
+      .mq-lightbox-track-wrap{width:100%;max-width:100%}
+      .mq-lightbox-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;overscroll-behavior-x:contain;touch-action:pan-x}
+      .mq-lightbox-track::-webkit-scrollbar{display:none}
+      .mq-lightbox-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
       .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
       .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
       .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:12px}
@@ -815,6 +819,13 @@
   // the starting index, and the lightbox shows nav arrows/swipe to move
   // through the rest without closing. Every other call site is untouched:
   // omit those args and it behaves exactly as a single, non-navigable photo.
+  // The image(s) sit in a genuine horizontally-scrollable track (same
+  // mechanism as every other scroll row in the widget) rather than a manual
+  // touchstart/touchend measurement — that approach never actually tracked
+  // the finger during the drag, only jumped at the very end, and let the
+  // gesture leak through to scroll the page underneath. A real scroll
+  // container fixes both: the browser handles finger-tracking, momentum,
+  // and snap natively, and consumes the touch itself instead of leaking it.
   window.mqPhotoLightbox = function(src, label, images, index) {
     let lb = document.getElementById('mq-lightbox');
     if (!lb) {
@@ -822,7 +833,7 @@
       lb.id = 'mq-lightbox';
       lb.className = 'mq-lightbox';
       lb.innerHTML = `
-        <img id="mq-lightbox-img" src=""/>
+        <div class="mq-lightbox-track-wrap"><div class="mq-lightbox-track" id="mq-lightbox-track"></div></div>
         <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
         <div class="mq-lightbox-hint">Tap anywhere to close</div>
         <button type="button" class="mq-lightbox-nav mq-lightbox-nav-left" id="mq-lightbox-prev" aria-label="Previous image">‹</button>
@@ -831,45 +842,97 @@
       // can't be broken by a transformed ancestor somewhere in the host page —
       // same fix already used for the hover preview.
       document.body.appendChild(lb);
+      // A real drag/swipe never fires a native click afterward (the browser
+      // suppresses it once a touch sequence has scrolled), so this still
+      // closes correctly on a genuine tap without needing to special-case
+      // the track — swiping through images just naturally won't trigger it.
       lb.addEventListener('click', (e) => {
         if (e.target.closest('.mq-lightbox-nav')) return; // nav buttons handle their own clicks
         lb.classList.remove('show');
       });
       document.getElementById('mq-lightbox-prev').addEventListener('click', (e) => {
         e.stopPropagation();
-        mqLightboxStep(-1);
+        mqLightboxScrollBy(-1);
       });
       document.getElementById('mq-lightbox-next').addEventListener('click', (e) => {
         e.stopPropagation();
-        mqLightboxStep(1);
+        mqLightboxScrollBy(1);
       });
-      let touchStartX = null;
-      lb.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
-      lb.addEventListener('touchend', (e) => {
-        if (touchStartX === null) return;
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(dx) > 40) mqLightboxStep(dx > 0 ? -1 : 1);
-        touchStartX = null;
-      }, { passive: true });
+      const trackEl = document.getElementById('mq-lightbox-track');
+      let scrollTimer;
+      trackEl.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(mqLightboxSyncFromScroll, 100);
+      });
     }
-    lb._images = (images && images.length > 1) ? images : null;
-    lb._index = index || 0;
-    mqLightboxRender(src, label, lb._images && lb._images.length > 1);
+    const track = document.getElementById('mq-lightbox-track');
+    const imgList = (images && images.length > 1) ? images : [{ src, label }];
+    const startIdx = (images && images.length > 1) ? (index || 0) : 0;
+    // Same lightbox element is reused for every single open, so its scroll
+    // position is a leftover from whatever was viewed last unless something
+    // actively resets it. Setting scrollLeft (or reading clientWidth to
+    // compute it) while still display:none doesn't reliably work — a hidden
+    // element has no real layout, so browsers can ignore the read/write
+    // entirely, leaving the OLD scroll position intact even after the
+    // innerHTML underneath it has been replaced. Showing the lightbox FIRST
+    // fixes that: reading a layout property like clientWidth forces the
+    // browser to compute real layout synchronously the moment it's read, so
+    // no requestAnimationFrame delay is needed either — that delay was its
+    // own separate bug (a second tap landing in the gap before the first
+    // tap's deferred position calc had run). Keeps the original image order
+    // intact (no rotation) so swiping right from the 3rd of 5 naturally
+    // reveals the 4th and 5th, with the 1st and 2nd still back to the left —
+    // rotating to put whatever was tapped at index 0 broke that natural
+    // spatial relationship.
     lb.classList.add('show');
+    track.innerHTML = imgList.map(item => `<div class="mq-lightbox-slide"><img src="${item.src}"/></div>`).join('');
+    const targetLeft = startIdx * track.clientWidth;
+    track.scrollLeft = targetLeft;
+    lb._images = imgList;
+    document.getElementById('mq-lightbox-prev').classList.toggle('show', imgList.length > 1);
+    document.getElementById('mq-lightbox-next').classList.toggle('show', imgList.length > 1);
+    document.getElementById('mq-lightbox-label').textContent = imgList[startIdx] ? imgList[startIdx].label : (label||'');
+    // Some mobile browsers don't reliably commit a scrollLeft set made in
+    // the same tick as the display:none→flex change above — the box model
+    // reads as laid out (clientWidth is accurate), but the actual scroll
+    // position can still lag and settle back to wherever it was before,
+    // which surfaces as "reopen the first image, it shows the second" after
+    // having swiped around a previous session. Desktop doesn't show this,
+    // which is exactly what made it look fixed there. A token guards the
+    // deferred re-check so it can only ever apply to the MOST RECENT open —
+    // if a second tap happens before this fires, the stale check just no-ops
+    // instead of clobbering the newer call's position (the exact race the
+    // old unconditional requestAnimationFrame version had).
+    const openToken = ++mqLightboxOpenToken;
+    lb._openToken = openToken;
+    requestAnimationFrame(() => {
+      if (lb._openToken !== openToken) return; // a newer open has already taken over
+      if (track.scrollLeft !== targetLeft) track.scrollLeft = targetLeft;
+    });
   };
-  function mqLightboxRender(src, label, showNav) {
-    document.getElementById('mq-lightbox-img').src = src;
-    document.getElementById('mq-lightbox-label').textContent = label || '';
-    document.getElementById('mq-lightbox-prev').classList.toggle('show', !!showNav);
-    document.getElementById('mq-lightbox-next').classList.toggle('show', !!showNav);
-  }
-  function mqLightboxStep(direction) {
+  let mqLightboxOpenToken = 0;
+  // Keeps the caption in sync as the person swipes — debounced so it only
+  // updates once the scroll has actually settled, not on every intermediate
+  // frame of the drag.
+  function mqLightboxSyncFromScroll() {
     const lb = document.getElementById('mq-lightbox');
-    if (!lb || !lb._images) return;
+    const track = document.getElementById('mq-lightbox-track');
+    if (!lb || !track || !lb._images) return;
+    const idx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    const item = lb._images[idx];
+    if (item) document.getElementById('mq-lightbox-label').textContent = item.label || '';
+  }
+  // Desktop-click / arrow-tap navigation — only these buttons ever trigger
+  // an image change on their own; everything else is left to natural
+  // swipe/scroll.
+  function mqLightboxScrollBy(direction) {
+    const lb = document.getElementById('mq-lightbox');
+    const track = document.getElementById('mq-lightbox-track');
+    if (!lb || !track || !lb._images) return;
     const total = lb._images.length;
-    lb._index = ((lb._index + direction) % total + total) % total; // wraps both directions
-    const item = lb._images[lb._index];
-    mqLightboxRender(item.src, item.label, true);
+    const curIdx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    const nextIdx = ((curIdx + direction) % total + total) % total; // wraps both directions
+    track.scrollTo({ left: nextIdx * track.clientWidth, behavior: 'smooth' });
   }
   // Any group of photo thumbnails (door styles, materials, specialty items,
   // etc.) can register its image list here under a key, then open the
@@ -883,6 +946,53 @@
     const item = images[index];
     if (!item) return;
     mqPhotoLightbox(item.src, item.label, images, index);
+  };
+  // Picker rows (doors, materials, crown, valance, etc.) are different from
+  // specialty items: a "collection" filter (e.g. Shaker vs Slab) only ever
+  // hides non-matching chips via style.display — the row itself, and the
+  // registration above, still has every collection's photos together. So
+  // opening straight from that registration let swiping "bleed" from one
+  // collection into another that was merely hidden, not actually gone. This
+  // instead rebuilds the list from whatever chips are ACTUALLY visible on
+  // screen at the moment of the tap, so the lightbox only ever contains
+  // what the person can currently see and pick from.
+  window.mqPhotoLightboxFromPickerChip = function(selectId, itemValue) {
+    const row = document.getElementById(`mq-vprow-${selectId}`);
+    if (!row) return;
+    const images = [];
+    let startIndex = 0;
+    row.querySelectorAll('.mq-vpicker-chip').forEach(chip => {
+      if (chip.style.display === 'none') return; // filtered out by the current collection (or room/door match)
+      const img = chip.querySelector('.mq-vpicker-thumb');
+      if (!img) return; // no photo on this chip (placeholder icon) — nothing to show in the lightbox
+      if (chip.getAttribute('data-value') === itemValue) startIndex = images.length;
+      const labelEl = chip.querySelector('.mq-vpicker-label');
+      images.push({ src: img.src, label: labelEl ? labelEl.textContent : '' });
+    });
+    if (!images.length) return;
+    mqPhotoLightbox(images[startIndex].src, images[startIndex].label, images, startIndex);
+  };
+  // Same underlying issue as the picker-chip fix above, but for specialty
+  // items: a category's items can each be scoped to different room types
+  // (visibleRooms) — an item not eligible for the currently-selected room
+  // gets hidden via style.display, not removed, so the static per-category
+  // registration built at render time still has every room's items mixed
+  // together. Rebuilds from whatever cards are actually visible right now.
+  window.mqPhotoLightboxFromSpecItem = function(groupKey, itemId) {
+    const row = document.getElementById(`mq-vprow-${groupKey}`);
+    if (!row) return;
+    const images = [];
+    let startIndex = 0;
+    row.querySelectorAll('.mq-spec-item').forEach(card => {
+      if (card.style.display === 'none') return; // filtered out by the current room
+      const img = card.querySelector('.mq-spec-thumb');
+      if (!img) return; // no photo on this card (placeholder star icon)
+      if (card.id === itemId) startIndex = images.length;
+      const nameEl = card.querySelector('.mq-spec-name');
+      images.push({ src: img.src, label: nameEl ? nameEl.textContent : '' });
+    });
+    if (!images.length) return;
+    mqPhotoLightbox(images[startIndex].src, images[startIndex].label, images, startIndex);
   };
 
   // Desktop-only hover preview — appended to document.body (not inside the
@@ -1012,13 +1122,11 @@
     const boxBorderColor = window._mqBoxBorder || '#93c5fd';
     const boxBgColor = window._mqBoxBg || '#eff6ff';
     const boxTextColor = window._mqBoxText || '#1e40af';
-    const photoItems = items.filter(it => it.photoUrl);
-    window._mqLightboxGroups[selectId] = photoItems.map(it => ({ src: it.photoUrl, label: it.label }));
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
       const thumb = it.photoUrl
-        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${selectId}',${photoItems.indexOf(it)})" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
+        ? `<img class="mq-vpicker-thumb" src="${it.photoUrl}" alt="${it.label}" onclick="event.stopPropagation();mqPhotoLightboxFromPickerChip('${selectId}','${(it.value||'').replace(/'/g,"\\'")}')" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>${it.icon||'🎨'}</div>'"/>`
         : `<div class="mq-vpicker-thumb-placeholder">${it.icon||'🎨'}</div>`;
       const badgeHtml = it.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${it.badge.length}">${it.badge}</span>` : '';
       const featuredBadgeHtml = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
@@ -1248,7 +1356,7 @@
     const buildCard = (s,i,groupKey,groupIndex) => {
       const safeLabel = (s.label||'').replace(/'/g,"\\'");
       const thumb = s.photoUrl
-        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightboxFromGroup('${groupKey}',${groupIndex})" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
+        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightboxFromSpecItem('${groupKey}','mq-sp-${prefix}-${i}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
         : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
       const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
       const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
@@ -1653,10 +1761,6 @@
 
   function cabinetForm(prefix, specs, data) {
     const { li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
-    window._mqLightboxGroups[`${prefix}-drawer-guide`] = [
-      { src: 'https://widget.midasquote.com/drawer-guide/mostly-drawers.png', label: 'Full drawer bank example' },
-      { src: 'https://widget.midasquote.com/drawer-guide/some-drawers.png', label: 'Standard door with one top drawer example' }
-    ];
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -1823,11 +1927,11 @@
         </div>
         <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;justify-content:flex-start">
           <div style="flex:0 1 150px;text-align:center">
-            <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightboxFromGroup('${prefix}-drawer-guide',0)" onerror="this.style.display='none'"/>
+            <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/mostly-drawers.png','Full drawer bank example')" onerror="this.style.display='none'"/>
             <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Mostly drawers</strong></div>
           </div>
           <div style="flex:0 1 150px;text-align:center">
-            <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightboxFromGroup('${prefix}-drawer-guide',1)" onerror="this.style.display='none'"/>
+            <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/some-drawers.png','Standard door with one top drawer example')" onerror="this.style.display='none'"/>
             <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Some drawers</strong></div>
           </div>
         </div>
@@ -1968,7 +2072,7 @@
         ${PRICE_LEGEND_HTML}
         ${cabinetForm('c', specs, data)}
         <button class="mq-calc-btn" id="mq-c-calc-btn" onclick="mqCalcCabinets()">Calculate cabinet estimate</button>
-        <div class="mq-empty-calc-msg" id="mq-c-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
+        <div class="mq-empty-calc-msg" id="mq-c-empty-calc-msg" style="display:none">No selections have been made, or no linear feet was entered — please double-check before calculating.</div>
         <div class="mq-loading" id="mq-c-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-c-result">
           <div class="mq-res-hdr">
@@ -1996,7 +2100,7 @@
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <button class="mq-calc-btn" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
-        <div class="mq-empty-calc-msg" id="mq-ct-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
+        <div class="mq-empty-calc-msg" id="mq-ct-empty-calc-msg" style="display:none">No selections have been made, or no linear feet was entered — please double-check before calculating.</div>
         <div class="mq-loading" id="mq-ct-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-ct-result">
           <div class="mq-res-hdr">
@@ -2075,7 +2179,7 @@
         </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
-        <div class="mq-empty-calc-msg" id="mq-b-empty-calc-msg" style="display:none">No selections have been made — please make a selection before calculating.</div>
+        <div class="mq-empty-calc-msg" id="mq-b-empty-calc-msg" style="display:none">No selections have been made, or no linear feet was entered — please double-check before calculating.</div>
         <div class="mq-loading" id="mq-b-loading">Building your full project estimate...</div>
         <div class="mq-combined-result" id="mq-b-result">
           <div class="mq-combined-title">✨ Full project estimate</div>
@@ -2407,20 +2511,34 @@
   // Restaining, or a shop's own custom-named project type) has no fallback
   // and simply shows blank, same as before.
   const MQ_DEFAULT_COVER_IMAGES = {
-    kitchen: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.png',
-    bathroom: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.png',
-    laundry: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.png',
-    garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.png',
-    commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.png',
-    other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.png',
+    kitchen: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.jpg',
+    bathroom: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.jpg',
+    laundry: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.jpg',
+    garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.jpg',
+    commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.jpg',
+    other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.jpg',
+    // These three live on a different domain (aceswin.github.io vs
+    // raw.githubusercontent.com) — a pre-existing inconsistency, kept as-is
+    // and just mirrored here so there's finally a real fallback for them.
+    refacing: 'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg',
+    repainting: 'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg',
+    restaining: 'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg',
   };
+  const MQ_MEASURE_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/';
+  const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'].map(f => MQ_MEASURE_IMAGE_BASE + f);
   const MQ_DEFAULT_MEASURE_IMAGES = {
-    kitchen: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.jpg',
-    bathroom: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.jpg',
-    laundry: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.jpg',
-    garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.jpg',
-    commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.jpg',
-    other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.jpg',
+    kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    bathroom: [MQ_MEASURE_IMAGE_BASE + 'bathroom11.jpg'],
+    laundry: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    garage: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    commercial: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    other: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    // Same domain inconsistency as the cover images above — these three
+    // live on aceswin.github.io, not raw.githubusercontent.com. Kept as-is,
+    // just finally given a real fallback entry here.
+    refacing: ['https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg'],
+    repainting: ['https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg'],
+    restaining: ['https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg'],
   };
 
   // Matches a room to one of the 6 default-image keys above. Tries the id
@@ -2439,6 +2557,9 @@
     if (name.includes('laundry')) return 'laundry';
     if (name.includes('garage')) return 'garage';
     if (name.includes('commercial')) return 'commercial';
+    if (name.includes('refacing')) return 'refacing';
+    if (name.includes('repainting')) return 'repainting';
+    if (name.includes('restaining')) return 'restaining';
     if (name.includes('other')) return 'other';
     return null;
   }
@@ -2563,12 +2684,18 @@
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const customText = room ? (room.measureText||'').trim() : '';
-      const primaryImg = room ? ((room.measureImage||'').trim() || MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || '') : '';
+      const customPrimary = room ? (room.measureImage||'').trim() : '';
       // Extra images are entirely opt-in — a shop that's never touched this
-      // just has an empty/absent array, so allImages collapses to exactly
-      // the old single-image behavior below with zero visual change.
-      const extraImgs = room && Array.isArray(room.measureImages) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
-      const allImages = primaryImg ? [primaryImg, ...extraImgs] : extraImgs;
+      // just has an empty/absent array.
+      const customExtra = room && Array.isArray(room.measureImages) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
+      // A shop that's customized ANYTHING (even just adding extra images with
+      // no primary set) gets exactly what they set, no default mixed in. Only
+      // a shop that's never touched either field falls back to the full
+      // default set for that room type — which may be several images, not
+      // just one, now that most rooms ship with a small default gallery.
+      const allImages = customPrimary
+        ? [customPrimary, ...customExtra]
+        : (customExtra.length ? customExtra : (room ? (MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || []) : []));
       guideEl.innerHTML = ''; // clear before rebuilding
       if (allImages.length > 1) {
         guideEl.appendChild(mqBuildMeasureCarousel(allImages, room));
@@ -3956,8 +4083,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10};
     }
 
-    function renderResult(rangeEl,listEl,result){
-      document.getElementById(rangeEl).textContent=fmt(result.low)+' – '+fmt(result.high);
+    function renderResult(rangeEl,listEl,result,prefix){
+      document.getElementById(rangeEl).textContent=mqFmtPrice(prefix, result.low, result.high, result.total);
       const ul=document.getElementById(listEl);ul.innerHTML='';
       const sorted=[...result.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost);
       sorted.forEach(l=>{
@@ -3982,8 +4109,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (titleEl) titleEl.textContent = r.roomLabel + ' cabinet estimate';
         const subEl = document.getElementById('mq-c-res-sub');
         if (subEl) subEl.textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
-        renderResult('mq-c-res-range','mq-c-line-items', r);
-        return { low: r.low, high: r.high };
+        renderResult('mq-c-res-range','mq-c-line-items', r, 'c');
+        return { low: r.low, high: r.high, total: r.total };
       }
       if (prefix === 'ct') {
         const panel = document.getElementById('mq-ct-result');
@@ -3992,8 +4119,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         const active = Object.keys(surfs['ct']).filter(id => document.getElementById('mqsc-'+id)).length;
         const subEl = document.getElementById('mq-ct-res-sub');
         if (subEl) subEl.textContent = `${active} surface(s)`;
-        renderResult('mq-ct-res-range','mq-ct-line-items', r);
-        return { low: r.low, high: r.high };
+        renderResult('mq-ct-res-range','mq-ct-line-items', r, 'ct');
+        return { low: r.low, high: r.high, total: r.total };
       }
       if (prefix === 'b') {
         const panel = document.getElementById('mq-b-result');
@@ -4010,10 +4137,10 @@ window.mqTogDrawerConfig=(prefix)=>{
           [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
           if (!ctRows.children.length) { const d=document.createElement('div'); d.className='mq-combined-row'; d.innerHTML=`<span class="mq-clbl">None selected</span>`; ctRows.appendChild(d); }
         }
-        const tl = cab.low+ct.low, th = cab.high+ct.high;
+        const tl = cab.low+ct.low, th = cab.high+ct.high, totalB = cab.total+ct.total;
         const grandEl = document.getElementById('mq-b-grand');
-        if (grandEl) grandEl.textContent = fmt(tl)+' – '+fmt(th);
-        return { low: tl, high: th };
+        if (grandEl) grandEl.textContent = mqFmtPrice('b', tl, th, totalB);
+        return { low: tl, high: th, total: totalB };
       }
       return null;
     };
@@ -4034,12 +4161,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         // room adjustment (r.hasRoomAdjustment/r.roomAdjPct), this just
         // stops announcing it in the results panel.
         if (vanityNoteC) vanityNoteC.style.display = 'none';
-        renderResult('mq-c-res-range','mq-c-line-items',r);
-        window.mqShowStickyBar('c', r.low, r.high);
+        renderResult('mq-c-res-range','mq-c-line-items',r,'c');
+        window.mqShowStickyBar('c', r.low, r.high, r.total);
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');mqScrollPoweredByAboveSticky('c');
         document.getElementById('mq-c-calc-btn').disabled=false;
-        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel);
+        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel,r.total,'c');
       });
     };
 
@@ -4056,12 +4183,12 @@ window.mqTogDrawerConfig=(prefix)=>{
           const r=calcCountertop('ct');
           const active=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length;
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
-          renderResult('mq-ct-res-range','mq-ct-line-items',r);
-          window.mqShowStickyBar('ct', r.low, r.high);
+          renderResult('mq-ct-res-range','mq-ct-line-items',r,'ct');
+          window.mqShowStickyBar('ct', r.low, r.high, r.total);
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');mqScrollPoweredByAboveSticky('ct');
           document.getElementById('mq-ct-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines);
+          if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines,'',r.total,'ct');
         },900);
       });
     };
@@ -4087,13 +4214,13 @@ window.mqTogDrawerConfig=(prefix)=>{
           const ctRows=document.getElementById('mq-b-ct-rows');ctRows.innerHTML='';
           [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
           if(!ctRows.children.length){const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">None selected</span>`;ctRows.appendChild(d);}
-          const tl=cab.low+ct.low,th=cab.high+ct.high;
-          document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
-          window.mqShowStickyBar('b', tl, th);
+          const tl=cab.low+ct.low,th=cab.high+ct.high,totalB=cab.total+ct.total;
+          document.getElementById('mq-b-grand').textContent=mqFmtPrice('b', tl, th, totalB);
+          window.mqShowStickyBar('b', tl, th, totalB);
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');mqScrollPoweredByAboveSticky('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel);
+          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel,totalB,'b');
         },1200);
       });
     };
@@ -4370,6 +4497,27 @@ window.mqTogDrawerConfig=(prefix)=>{
     // to — the whole form is effectively empty.
     function mqValidateNotEmpty(prefix, result) {
       if ((result.low||0) > 0 || (result.high||0) > 0) return true;
+      // Distinguish "truly nothing selected" from "picked doors/crown/etc
+      // but never entered linear feet" — the second is a very easy mistake
+      // (measurements are the very last step) and deserves a more specific
+      // nudge than a blanket "nothing selected" message, which reads as
+      // wrong when the person can see their own door/trim choices sitting
+      // right there on screen.
+      const cabSecEl = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
+      const cabSectionActive = !cabSecEl || cabSecEl.style.display !== 'none';
+      const uFt = cabSectionActive ? gn(`mq-${prefix}-uft`,0) : 0;
+      const bFt = cabSectionActive ? gn(`mq-${prefix}-bft`,0) : 0;
+      const manualTrimFt = document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked ? gn(`mq-${prefix}-trim-manual-ft`,0) : 0;
+      const hasAnyLinearFeet = (uFt + bFt + manualTrimFt) > 0;
+      const doorSel = diffOn[prefix]
+        ? (gv(`mq-${prefix}-u-door`) || gv(`mq-${prefix}-b-door`))
+        : gv(`mq-${prefix}-door`);
+      const hasDoorSelection = doorSel && doorSel !== 'none';
+      const crownSel = gv(`mq-${prefix}-trim-crown`);
+      const valanceSel = gv(`mq-${prefix}-trim-valance`);
+      const hasTrimSelection = (crownSel && crownSel !== 'none') || (valanceSel && valanceSel !== 'none');
+      const hasCabinetSelectionButNoFeet = cabSectionActive && !hasAnyLinearFeet && (hasDoorSelection || hasTrimSelection);
+
       const btn = document.getElementById(`mq-${prefix}-calc-btn`);
       if (btn) {
         btn.classList.remove('mq-needs-choice');
@@ -4380,6 +4528,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       const msgEl = document.getElementById(`mq-${prefix}-empty-calc-msg`);
       if (msgEl) {
+        msgEl.textContent = hasCabinetSelectionButNoFeet
+          ? "Looks like you've made selections, but no linear feet was entered for cabinets — please add your measurements before calculating."
+          : "No selections have been made, or no linear feet was entered — please double-check before calculating.";
         msgEl.style.display = 'block';
         clearTimeout(msgEl._mqHideTimer);
         msgEl._mqHideTimer = setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
@@ -4618,17 +4769,17 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (prefix === 'b') {
       const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
       return {
-        low: cab.low + ct.low, high: cab.high + ct.high,
+        prefix, low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total,
         lines: [{label:'Cabinets',header:true}, ...cab.lines.filter(l=>!l.bold), {label:'Countertops',header:true}, ...ct.lines.filter(l=>!l.bold)],
         quoteType: 'Cabinets + Countertops', roomLabel: cab.roomLabel,
       };
     }
     if (prefix === 'ct') {
       const r = window._mqCalcCountertop('ct');
-      return { low: r.low, high: r.high, lines: r.lines, quoteType: 'Countertops', roomLabel: '' };
+      return { prefix, low: r.low, high: r.high, total: r.total, lines: r.lines, quoteType: 'Countertops', roomLabel: '' };
     }
     const r = window._mqCalcCabinet('c');
-    return { low: r.low, high: r.high, lines: r.lines, quoteType: 'Cabinets', roomLabel: r.roomLabel };
+    return { prefix, low: r.low, high: r.high, total: r.total, lines: r.lines, quoteType: 'Cabinets', roomLabel: r.roomLabel };
   }
   // Goes through the exact same saveLead used for the automatic post-
   // Calculate email — creates/updates the Airtable lead record, notifies
@@ -4642,7 +4793,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!result || !data) return;
     if (linkEl) linkEl.textContent = 'Sending...';
     try {
-      await saveLead(data, { name:'', email, phone:'', _isSkip:false }, result.quoteType, result.low, result.high, result.lines, result.roomLabel);
+      await saveLead(data, { name:'', email, phone:'', _isSkip:false }, result.quoteType, result.low, result.high, result.lines, result.roomLabel, result.total, result.prefix);
     } catch(e) { console.error('Email me a copy failed', e); }
     if (linkEl) {
       linkEl.textContent = '✓ Sent!';
@@ -4674,28 +4825,45 @@ window.mqTogDrawerConfig=(prefix)=>{
   // Called right after a real Calculate finishes for any tab — reveals the
   // bar (unless the customer already dismissed it this session) and marks
   // that tab as the one live updates should keep tracking.
-  window.mqShowStickyBar = function(prefix, low, high) {
+  window.mqShowStickyBar = function(prefix, low, high, total) {
     window._mqStickyPrefix = prefix;
     mqSetupStickyBar();
-    mqSetStickyPrice(low, high, false);
+    mqSetStickyPrice(prefix, low, high, total, false);
     if (!window._mqStickyDismissed) {
       const bar = document.getElementById('mq-sticky-bar');
       if (bar) bar.classList.add('show');
     }
     mqAdjustWidgetBottomPadding();
   };
+  // The standalone Countertops tab isn't tied to any project type selection
+  // at all, so there's nothing to check a toggle against — it always shows
+  // a range. Cabinets and Both are both tied to a selected room, so they
+  // respect that room's own showRange setting (defaulting to true/range,
+  // same as it's always behaved, for any room that's never touched this).
+  function mqShouldShowRange(prefix) {
+    if (prefix === 'ct') return true;
+    const roomId = gv(`mq-${prefix}-room`);
+    const room = (window._mqRoomTypes||[]).find(r => r.id === roomId);
+    return !room || room.showRange !== false;
+  }
   function fmtRange(low, high) {
     const f = n => '$' + Math.round(n).toLocaleString();
     return `${f(low)} – ${f(high)}`;
   }
+  // Single entry point for every place a price gets shown to a customer —
+  // shows the usual ballpark range, or the exact clean total with no spread
+  // at all, depending on the selected project type's own preference.
+  function mqFmtPrice(prefix, low, high, total) {
+    return mqShouldShowRange(prefix) ? fmtRange(low, high) : ('$' + Math.round(total).toLocaleString());
+  }
   // animate=true is the "something fun happens" part — a quick pulse on the
   // number plus a floating +/-$ delta, so a customer actually notices their
   // tweak moved the price instead of the number just silently changing.
-  function mqSetStickyPrice(low, high, animate) {
+  function mqSetStickyPrice(prefix, low, high, total, animate) {
     const el = document.getElementById('mq-sticky-price');
     if (!el) return;
     const prev = window._mqStickyLast;
-    el.textContent = fmtRange(low, high);
+    el.textContent = mqFmtPrice(prefix, low, high, total);
     if (animate && prev) {
       const prevMid = (prev.low + prev.high) / 2;
       const newMid = (low + high) / 2;
@@ -4730,14 +4898,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!range && window._mqCalcCabinet && window._mqCalcCountertop) {
         if (prefix === 'b') {
           const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-          range = { low: cab.low + ct.low, high: cab.high + ct.high };
+          range = { low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total };
         } else if (prefix === 'ct') {
           range = window._mqCalcCountertop('ct');
         } else {
           range = window._mqCalcCabinet('c');
         }
       }
-      if (range) mqSetStickyPrice(range.low, range.high, true);
+      if (range) mqSetStickyPrice(prefix, range.low, range.high, range.total, true);
     } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
   }
   let _mqStickyDebounce = null;

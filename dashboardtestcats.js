@@ -2097,9 +2097,9 @@ window.logoutMember = async function () {
   // page instead of being hardcoded here. Bootstraps the master shop's own
   // Room types field once from these starting values if it's never been set.
   const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
-    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
-    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
+    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
+    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
+    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
   };
 
   async function ensureMasterTemplateRoomDefs() {
@@ -2136,6 +2136,7 @@ window.logoutMember = async function () {
               📤 Upload
               <input type="file" id="mq-master-room-cover-file-${idx}" accept="image/*" style="display:none"/>
             </label>
+            ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMasterCoverImage('${r.id}','${(r.name||'').replace(/'/g,"\\'")}',${idx})">↺ Use built-in default</button>` : ''}
             <span id="mq-master-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
           </div>
         </div>
@@ -2157,6 +2158,7 @@ window.logoutMember = async function () {
                 📤 Upload
                 <input type="file" id="mq-master-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
               </label>
+              ${MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(r.id||'').toLowerCase()] ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMasterMeasureImage('${r.id}',${idx})">↺ Use built-in default</button>` : ''}
               <span id="mq-master-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
             </div>
           </div>
@@ -2520,32 +2522,10 @@ window.logoutMember = async function () {
   // enough there to be worth the extra line); everything else uses the
   // general version, which includes it.
   const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
-
-**Upper cabinets:** A section for every place where uppers will go.
-
-**Base cabinets:** Same idea — a section for every run of base cabinets.
-
-**Island cabinets:** Add these in with your base cabinets.
-
-**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
-
-**Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
-
-[corner-img]`;
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
-
-**Upper cabinets:** A section for every place where uppers will go.
-
-**Base cabinets:** Same idea — a section for every run of base cabinets.
-
-**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.
-
-**Corner cabinets:** Measure one run all the way to the corner. Start the next run about 1 ft out for uppers or 2 ft out for bases. Exact measurements aren't necessary—this is just for a ballpark estimate.
-
-[corner-img]`;
+`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
 
   const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
 `[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
@@ -2587,13 +2567,24 @@ window.logoutMember = async function () {
   // the field rather than writing a concrete URL into it — leaving it
   // blank is what lets the widget's own fallback stay current forever
   // without ever needing this button pressed again, and it also means the
-  // underlying GitHub address never has to be shown in the field.
-  window.mqFillDefaultMeasureImage = function(inputId, previewId, roomId) {
+  // underlying GitHub address never has to be shown in the field. Also
+  // clears any additional images the shop had added, since several default
+  // rooms now ship with a small gallery rather than just one photo — a
+  // partial reset (primary cleared, stale extras left behind) would leave
+  // the widget showing a mismatched mix of default + leftover custom images.
+  window.mqFillDefaultMeasureImage = function(inputId, previewId, roomId, idx) {
     const inp = el(inputId);
     if (!inp) return;
-    if (inp.value.trim() && !confirm('Clear this and use the default measuring guide image instead? (Automatically stays up to date if the default ever changes.)')) return;
+    const hadExtras = idx != null && window._mqRooms && window._mqRooms[idx] && (window._mqRooms[idx].measureImages||[]).length > 0;
+    if ((inp.value.trim() || hadExtras) && !confirm('Clear this and use the default measuring guide images instead? (Automatically stays up to date if the default ever changes.)')) return;
     inp.value = '';
-    const previewUrl = mqDefaultMeasureImageUrlFor(roomId);
+    if (idx != null && window._mqRooms && window._mqRooms[idx]) {
+      window._mqRooms[idx].measureImage = '';
+      window._mqRooms[idx].measureImages = [];
+      renderRoomsList();
+      return; // renderRoomsList already rebuilds the preview with the fresh default
+    }
+    const previewUrl = mqDefaultMeasureImageUrlFor(roomId, idx != null && window._mqRooms && window._mqRooms[idx] ? window._mqRooms[idx].name : '');
     const preview = document.getElementById(previewId);
     if (preview) preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>';
   };
@@ -2601,16 +2592,142 @@ window.logoutMember = async function () {
   const MQ_DEFAULT_MEASURE_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/';
   const MQ_DEFAULT_COVER_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/';
 
+  // Unlike measureImage, coverImage is always written as a real URL when a
+  // shop's room types are first created (never left blank) — so an
+  // already-active shop's own saved value permanently overrides whatever
+  // this default points to, even after this default changes. This exists so
+  // a shop can explicitly opt back into "always match the current default"
+  // via the reset button below. refacing/repainting/restaining live on a
+  // different domain (aceswin.github.io vs raw.githubusercontent.com) —
+  // that inconsistency predates this and is left as-is, just kept in sync.
+  const MQ_DEFAULT_COVER_IMAGE_MAP = {
+    kitchen: MQ_DEFAULT_COVER_IMAGE_BASE + 'kitchen.jpg',
+    bathroom: MQ_DEFAULT_COVER_IMAGE_BASE + 'bathroom.jpg',
+    laundry: MQ_DEFAULT_COVER_IMAGE_BASE + 'laundry.jpg',
+    garage: MQ_DEFAULT_COVER_IMAGE_BASE + 'garage.jpg',
+    commercial: MQ_DEFAULT_COVER_IMAGE_BASE + 'commercial.jpg',
+    other: MQ_DEFAULT_COVER_IMAGE_BASE + 'other.jpg',
+    refacing: 'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg',
+    repainting: 'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg',
+    restaining: 'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg',
+  };
+  function mqDefaultCoverImageKeyFor(roomId, roomName) {
+    const id = (roomId||'').toLowerCase();
+    if (MQ_DEFAULT_COVER_IMAGE_MAP[id]) return id;
+    const name = (roomName||'').toLowerCase();
+    if (name.includes('kitchen')) return 'kitchen';
+    if (name.includes('bathroom')) return 'bathroom';
+    if (name.includes('laundry')) return 'laundry';
+    if (name.includes('garage')) return 'garage';
+    if (name.includes('commercial')) return 'commercial';
+    if (name.includes('refacing')) return 'refacing';
+    if (name.includes('repainting')) return 'repainting';
+    if (name.includes('restaining')) return 'restaining';
+    if (name.includes('other')) return 'other';
+    return null;
+  }
+  function mqDefaultCoverImageUrlFor(roomId, roomName) {
+    const key = mqDefaultCoverImageKeyFor(roomId, roomName);
+    return key ? MQ_DEFAULT_COVER_IMAGE_MAP[key] : '';
+  }
+  // Clears the field rather than writing a concrete URL — leaving it blank
+  // is what lets the widget's own fallback stay current forever without
+  // ever needing this button pressed again, matching mqFillDefaultMeasureImage.
+  // Same idea as mqFillDefaultMasterCoverImage below — this field IS the
+  // source of truth for new shops, so this just fills in the current
+  // known-correct built-in URL for review before Save, rather than making
+  // the person type/paste it by hand. Only ever applies to these three,
+  // since they're the only room types actually template-managed here.
+  const MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP = {
+    refacing: 'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg',
+    repainting: 'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg',
+    restaining: 'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg',
+  };
+  window.mqFillDefaultMasterMeasureImage = function(roomId, idx) {
+    const defaultUrl = MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(roomId||'').toLowerCase()];
+    if (!defaultUrl) return;
+    const inp = document.getElementById(`mq-master-room-measure-img-${idx}`);
+    if (inp) inp.value = defaultUrl;
+    const preview = document.getElementById(`mq-master-room-measure-img-preview-${idx}`);
+    if (preview) preview.innerHTML = `<img src="${defaultUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+  };
+
+  window.mqUseDefaultCoverImage = function(roomId, idx) {
+    if (idx == null || !window._mqRooms || !window._mqRooms[idx]) return;
+    const room = window._mqRooms[idx];
+    const defaultUrl = mqDefaultCoverImageUrlFor(roomId, room.name);
+    if (!defaultUrl) return;
+    if (room.coverImage && !confirm('Clear this and use the default cover image instead? (Automatically stays up to date if the default ever changes.)')) return;
+    window._mqRooms[idx].coverImage = '';
+    renderRoomsList();
+  };
+  // Unlike the shop-level version above, this field IS the default (new
+  // shops start from whatever's saved here), so there's nothing to "fall
+  // back to" — this just fills in the current known-correct built-in URL
+  // directly so it can be reviewed and saved via the normal Save button,
+  // rather than needing to type/paste it by hand.
+  window.mqFillDefaultMasterCoverImage = function(roomId, roomName, idx) {
+    const defaultUrl = mqDefaultCoverImageUrlFor(roomId, roomName);
+    if (!defaultUrl) return;
+    const inp = document.getElementById(`mq-master-room-cover-${idx}`);
+    if (inp) inp.value = defaultUrl;
+    const preview = document.getElementById(`mq-master-room-cover-preview-${idx}`);
+    if (preview) preview.innerHTML = `<img src="${defaultUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+  };
+
   // Which filename the widget itself falls back to for each standard room
   // when a shop's own measureImage is blank — this list must always match
   // MQ_DEFAULT_MEASURE_IMAGES in widget.js/widgetpro.js exactly. Used here
   // only for admin-side previewing and the "Use default image" button —
   // never written into a shop's own saved data (see defaultRoomTypes below).
-  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen:'kitchen1.jpg', bathroom:'bathroom1.jpg', laundry:'laundry1.jpg', garage:'garage1.jpg', commercial:'commercial1.jpg', other:'other1.jpg' };
-  function mqDefaultMeasureImageUrlFor(roomId) {
-    const file = MQ_DEFAULT_MEASURE_IMAGE_FILES[roomId];
-    return file ? MQ_DEFAULT_MEASURE_IMAGE_BASE + file : '';
+  const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'];
+  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bathroom: ['bathroom11.jpg'], laundry: MQ_DEFAULT_MEASURE_IMAGE_SET, garage: MQ_DEFAULT_MEASURE_IMAGE_SET, commercial: MQ_DEFAULT_MEASURE_IMAGE_SET, other: MQ_DEFAULT_MEASURE_IMAGE_SET };
+  // Matches a room to one of the default-image keys — tries the id first
+  // (the normal, fast path for standard ids), but falls back to matching on
+  // the room's NAME too, same robust logic already used in widget.js's own
+  // mqDefaultImageKey. A room can end up with a mismatched id (renamed from
+  // something else, or added as a custom row that got an auto-generated
+  // room_<timestamp> id) while still clearly being "Garage" or "Commercial"
+  // by name — without this, those rooms silently get no default images.
+  function mqDefaultImageKeyFor(roomId, roomName) {
+    const id = (roomId||'').toLowerCase();
+    if (MQ_DEFAULT_MEASURE_IMAGE_FILES[id]) return id;
+    const name = (roomName||'').toLowerCase();
+    if (name.includes('kitchen')) return 'kitchen';
+    if (name.includes('bathroom')) return 'bathroom';
+    if (name.includes('laundry')) return 'laundry';
+    if (name.includes('garage')) return 'garage';
+    if (name.includes('commercial')) return 'commercial';
+    if (name.includes('other')) return 'other';
+    return null;
   }
+  function mqDefaultMeasureImageUrlFor(roomId, roomName) {
+    const key = mqDefaultImageKeyFor(roomId, roomName);
+    const files = key ? MQ_DEFAULT_MEASURE_IMAGE_FILES[key] : null;
+    return files && files.length ? MQ_DEFAULT_MEASURE_IMAGE_BASE + files[0] : '';
+  }
+  function mqDefaultMeasureImageUrlsFor(roomId, roomName) {
+    const key = mqDefaultImageKeyFor(roomId, roomName);
+    const files = key ? MQ_DEFAULT_MEASURE_IMAGE_FILES[key] : null;
+    return files ? files.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f) : [];
+  }
+  // For a shop whose measureImage/measureImages already has SOMETHING saved
+  // (even an old single default from before this gallery existed) — the
+  // "blank = auto-track forever" fallback above only works while the field
+  // is genuinely empty, so an already-active shop can get stuck showing
+  // just one old image forever with no way to pick up the rest. This writes
+  // the full current default set as real, editable values instead, so it
+  // shows up immediately and can be trimmed down one image at a time
+  // afterward with the existing ✕ Remove buttons.
+  window.mqUseAllDefaultMeasureImages = function(roomId, idx) {
+    if (idx == null || !window._mqRooms || !window._mqRooms[idx]) return;
+    const urls = mqDefaultMeasureImageUrlsFor(roomId, window._mqRooms[idx].name);
+    if (!urls.length) return;
+    if (!confirm(`Load all ${urls.length} default images for this project type? You can remove any you don't want afterward.`)) return;
+    window._mqRooms[idx].measureImage = urls[0];
+    window._mqRooms[idx].measureImages = urls.slice(1);
+    renderRoomsList();
+  };
 
   function defaultRoomTypes() {
     return [
@@ -2622,15 +2739,15 @@ window.logoutMember = async function () {
       // again. Baking a concrete URL in here would instead permanently
       // freeze a shop at whatever the default happened to be the moment
       // they first saved their Project Types page.
-      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.png', measureText:'', measureImage:'' },
-      { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.png', measureText:'', measureImage:'' },
-      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.png', measureText:'', measureImage:'' },
-      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.png', measureText:'', measureImage:'' },
-      { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.png', measureText:'', measureImage:'' },
-      { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.png', measureText:'', measureImage:'' },
-      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
-      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
-      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.png', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
+      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:'' },
+      { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.jpg', measureText:'', measureImage:'' },
+      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.jpg', measureText:'', measureImage:'' },
+      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.jpg', measureText:'', measureImage:'' },
+      { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.jpg', measureText:'', measureImage:'' },
+      { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.jpg', measureText:'', measureImage:'' },
+      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
+      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
+      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
     ];
   }
 
@@ -2702,7 +2819,7 @@ window.logoutMember = async function () {
       const isOpen = _mqExpandedRoomIds.has(r.id);
       return `
       <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
-        <div style="display:grid;grid-template-columns:24px 1fr 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:24px minmax(140px,300px) 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
           <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
           <button type="button" onclick="mqToggleRoomBody(${idx})" title="Show more" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;padding:4px">
@@ -2723,6 +2840,10 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
             📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
           </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:auto"/>
+            💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "$2,600" instead of "$2,375 – $3,000")</span>
+          </label>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
@@ -2733,7 +2854,7 @@ window.logoutMember = async function () {
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
             <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-              ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
+              ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? `<img src="${r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
             </div>
             <div style="flex:1;min-width:0">
               <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
@@ -2742,6 +2863,7 @@ window.logoutMember = async function () {
                 📤 Upload
                 <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
               </label>
+              ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseDefaultCoverImage('${r.id}',${idx})">↺ Use default image</button>` : ''}
               <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
             </div>
           </div>
@@ -2754,7 +2876,7 @@ window.logoutMember = async function () {
             </div>
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                ${(r.measureImage || mqDefaultMeasureImageUrlFor(r.id)) ? `<img src="${r.measureImage || mqDefaultMeasureImageUrlFor(r.id)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                ${(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name)) ? `<img src="${r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
               </div>
               <div style="flex:1;min-width:0">
                 <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image (optional)</label>
@@ -2763,7 +2885,8 @@ window.logoutMember = async function () {
                   📤 Upload
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
-                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}')">↺ Use default image</button>
+                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
+                ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
             </div>
@@ -2870,6 +2993,7 @@ window.logoutMember = async function () {
             active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
             proOnly: document.getElementById(`mq-room-proonly-${oldIdx}`)?.checked === true,
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
+            showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
@@ -2969,6 +3093,7 @@ window.logoutMember = async function () {
         active: el(`mq-room-active-${idx}`)?.checked !== false,
         proOnly: el(`mq-room-proonly-${idx}`)?.checked === true,
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
+        showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
