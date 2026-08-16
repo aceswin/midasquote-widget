@@ -5071,11 +5071,26 @@ window.mqTogDrawerConfig=(prefix)=>{
   function mqSetStickyPrice(prefix, low, high, total, animate) {
     const el = document.getElementById('mq-sticky-price');
     if (!el) return;
+    // The sticky bar should reflect the customer's WHOLE quote, not just
+    // whatever's live on the currently active tab — otherwise switching
+    // project types (which commits the old config to the cart, then resets
+    // the form to blank) makes the price look like it dropped to zero,
+    // even though nothing was actually lost. Combine the cart's running
+    // total with whatever's live right now before ever displaying it.
+    const cart = window._mqQuoteCart || [];
+    const cartLow = cart.reduce((s,e) => s + (e.low||0), 0);
+    const cartHigh = cart.reduce((s,e) => s + (e.high||0), 0);
+    const cartTotal = cart.reduce((s,e) => s + (e.total||0), 0);
+    const combinedLow = cartLow + low, combinedHigh = cartHigh + high, combinedTotal = cartTotal + total;
+    // Range display follows the same rule the cart panel itself uses: only
+    // collapse to one clean number if EVERY contributor — every committed
+    // cart entry plus whatever's live now — is actually set to no-range.
+    const allNoRange = cart.every(e => !e.showRange) && !mqShouldShowRange(prefix);
     const prev = window._mqStickyLast;
-    el.textContent = mqFmtPrice(prefix, low, high, total);
+    el.textContent = allNoRange ? ('$' + Math.round(combinedTotal).toLocaleString()) : fmtRange(combinedLow, combinedHigh);
     if (animate && prev) {
       const prevMid = (prev.low + prev.high) / 2;
-      const newMid = (low + high) / 2;
+      const newMid = (combinedLow + combinedHigh) / 2;
       const delta = Math.round(newMid - prevMid);
       if (Math.abs(delta) >= 1) {
         el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
@@ -5090,7 +5105,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         }
       }
     }
-    window._mqStickyLast = { low, high };
+    window._mqStickyLast = { low: combinedLow, high: combinedHigh };
   }
   // Silently re-runs the same math Calculate uses, for whichever tab is
   // currently being tracked — no lead popup, no scrolling, no saving
