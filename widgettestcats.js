@@ -4842,7 +4842,12 @@ window.mqTogDrawerConfig=(prefix)=>{
   // same as it's always behaved, for any room that's never touched this).
   function mqShouldShowRange(prefix) {
     if (prefix === 'ct') return true;
-    const roomId = gv(`mq-${prefix}-room`);
+    // Inlined rather than calling gv() — gv is scoped inside a different,
+    // inner function and isn't reachable from every place this needs to
+    // run (this is exactly what threw "gv is not defined" from inside the
+    // saveLead email-building code, which lives outside that scope).
+    const roomEl = document.getElementById(`mq-${prefix}-room`);
+    const roomId = roomEl ? roomEl.value : '';
     const room = (window._mqRoomTypes||[]).find(r => r.id === roomId);
     return !room || room.showRange !== false;
   }
