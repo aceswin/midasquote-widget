@@ -289,7 +289,7 @@
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
             <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What’s included</td></tr>${customerLineRows}
           </table>
-          <p style="color:#666;font-size:14px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
+          <p style="color:#666;font-size:14px">${shop['Disclaimer text'] || (mqShouldShowRange(prefix) ? 'Ballpark estimate only. Contact us for a full quote.' : 'This quote is not final — please contact us for final numbers.')}</p>
           <p style="color:#666;font-size:14px;margin-top:8px">⚠ Jobs outside our local delivery area may be subject to additional travel charges — your final quote will confirm the exact amount.</p>
           <p style="color:#666;font-size:14px"><strong>${shop['Shop name']}</strong><br/>${shop['Phone']||''}</p>
         </div>`);
@@ -2031,6 +2031,10 @@
     const letterSafe = ((shop['Shop name']||'S').charAt(0)||'S').replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const logoHTML = shop['Logo URL'] ? `<div class="mq-logo-real"><img src="${shop['Logo URL']}" alt="${shop['Shop name']}" onerror="mqHandleLogoError(this,'${bcSafe}','${letterSafe}')"/></div>` : `<div class="mq-logo"><span>${(shop['Shop name']||'S').charAt(0)}</span></div>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
+    // Only the default wording gets swapped out for project types with the
+    // range toggled off — a shop's own custom disclaimer is left exactly as
+    // they wrote it, regardless of that setting.
+    window._mqUsingDefaultDisclaimer = !(shop['Disclaimer text']||'').trim();
     const financingOn = shop['Offers financing'] === 'Yes';
     const financingHTML = financingOn
       ? `<div class="mq-financing-note">💳 Financing available</div>`
@@ -2077,10 +2081,10 @@
         <div class="mq-result" id="mq-c-result">
           <div class="mq-res-hdr">
             <div><p class="mq-res-title" id="mq-c-res-title">Cabinet estimate</p><p class="mq-res-sub" id="mq-c-res-sub">—</p><p class="mq-hint" id="mq-c-vanity-note" style="display:none;color:#1d4ed8"></p></div>
-            <div><div class="mq-res-range-lbl">Estimated range</div><div class="mq-res-range" id="mq-c-res-range">—</div></div>
+            <div><div class="mq-res-range-lbl" id="mq-c-res-range-lbl">Estimated range</div><div class="mq-res-range" id="mq-c-res-range">—</div></div>
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
-          <div class="mq-disclaimer">⚠ ${disc}</div>
+          <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
@@ -2193,10 +2197,10 @@
             <div id="mq-b-ct-rows"></div>
           </div>
           <div class="mq-grand-total">
-            <div><div class="mq-grand-label">Total project estimate</div><div class="mq-grand-sub">Before tax · Ballpark estimate only</div></div>
+            <div><div class="mq-grand-label">Total project estimate</div><div class="mq-grand-sub" id="mq-b-grand-sub">Before tax · Ballpark estimate only</div></div>
             <div class="mq-grand-val" id="mq-b-grand">—</div>
           </div>
-          <div class="mq-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
+          <div class="mq-disclaimer" id="mq-b-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
@@ -3422,6 +3426,7 @@
         });
       }
       mqRefreshSectionVisibility(prefix);
+      mqRefreshBallparkWording(prefix);
     };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
@@ -4084,6 +4089,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function renderResult(rangeEl,listEl,result,prefix){
+      mqRefreshBallparkWording(prefix);
       document.getElementById(rangeEl).textContent=mqFmtPrice(prefix, result.low, result.high, result.total);
       const ul=document.getElementById(listEl);ul.innerHTML='';
       const sorted=[...result.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost);
@@ -4139,7 +4145,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         }
         const tl = cab.low+ct.low, th = cab.high+ct.high, totalB = cab.total+ct.total;
         const grandEl = document.getElementById('mq-b-grand');
-        if (grandEl) grandEl.textContent = mqFmtPrice('b', tl, th, totalB);
+        if (grandEl) { mqRefreshBallparkWording('b'); grandEl.textContent = mqFmtPrice('b', tl, th, totalB); }
         return { low: tl, high: th, total: totalB };
       }
       return null;
@@ -4215,6 +4221,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
           if(!ctRows.children.length){const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">None selected</span>`;ctRows.appendChild(d);}
           const tl=cab.low+ct.low,th=cab.high+ct.high,totalB=cab.total+ct.total;
+          mqRefreshBallparkWording('b');
           document.getElementById('mq-b-grand').textContent=mqFmtPrice('b', tl, th, totalB);
           window.mqShowStickyBar('b', tl, th, totalB);
           document.getElementById('mq-b-loading').classList.remove('show');
@@ -4861,6 +4868,25 @@ window.mqTogDrawerConfig=(prefix)=>{
   function mqFmtPrice(prefix, low, high, total) {
     return mqShouldShowRange(prefix) ? fmtRange(low, high) : ('$' + Math.round(total).toLocaleString());
   }
+  // Swaps out every "ballpark"/"estimated range" phrase for wording that's
+  // actually true once a project type has the range toggled off — saying
+  // "estimated range" or "ballpark estimate only" next to a single clean
+  // number would be misleading, since there's no range being shown at all.
+  // Only ever touches the DEFAULT disclaimer text — a shop's own custom
+  // disclaimer is left exactly as they wrote it either way.
+  window.mqRefreshBallparkWording = function(prefix) {
+    const showRange = mqShouldShowRange(prefix);
+    const rangeLbl = document.getElementById(`mq-${prefix}-res-range-lbl`);
+    if (rangeLbl) rangeLbl.textContent = showRange ? 'Estimated range' : 'Your quote';
+    const grandSub = document.getElementById(`mq-${prefix}-grand-sub`);
+    if (grandSub) grandSub.textContent = showRange ? 'Before tax · Ballpark estimate only' : 'Before tax · This quote is not final';
+    if (window._mqUsingDefaultDisclaimer) {
+      const discEl = document.getElementById(`mq-${prefix}-disclaimer`);
+      if (discEl) discEl.textContent = '⚠ ' + (showRange
+        ? 'Ballpark estimate only. Contact us for a full quote.'
+        : 'This quote is not final — please contact us for final numbers.');
+    }
+  };
   // animate=true is the "something fun happens" part — a quick pulse on the
   // number plus a floating +/-$ delta, so a customer actually notices their
   // tweak moved the price instead of the number just silently changing.
