@@ -1321,14 +1321,14 @@ window.logoutMember = async function () {
                       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                         <input type="color" id="mq-pd-bg-color" value="#ffffff" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
                         <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
-                          <input type="checkbox" id="mq-pd-bg-gradient" onchange="mqPdToggleGradientColor2('mq-pd-bg-color2-wrap',this.checked)" style="width:auto"/> Gradient
+                          <input type="checkbox" id="mq-pd-bg-gradient" onchange="mqPdToggleGradientColor2('mq-pd-bg-color2-wrap',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Gradient
                         </label>
                         <span id="mq-pd-bg-color2-wrap" style="display:none">
                           <input type="color" id="mq-pd-bg-color2" value="#f0f0f0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
                         </span>
                       </div>
                       <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;margin-top:8px;cursor:pointer">
-                        <input type="checkbox" id="mq-pd-bg-image-enabled" onchange="mqPdBgImageToggled()" style="width:auto"/> Use an image instead
+                        <input type="checkbox" id="mq-pd-bg-image-enabled" onchange="mqPdBgImageToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Use an image instead
                       </label>
                       <div id="mq-pd-bg-image-upload-wrap" style="display:none;margin-top:6px">
                         <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-bg-image-input').click()">📤 Upload background image</button>
@@ -1352,7 +1352,7 @@ window.logoutMember = async function () {
                       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                         <input type="color" id="mq-pd-shape-color" value="#1a3a6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
                         <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
-                          <input type="checkbox" id="mq-pd-shape-gradient" onchange="mqPdToggleGradientColor2('mq-pd-shape-color2-wrap',this.checked)" style="width:auto"/> Gradient
+                          <input type="checkbox" id="mq-pd-shape-gradient" onchange="mqPdToggleGradientColor2('mq-pd-shape-color2-wrap',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Gradient
                         </label>
                         <span id="mq-pd-shape-color2-wrap" style="display:none">
                           <input type="color" id="mq-pd-shape-color2" value="#378ADD" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
@@ -1386,7 +1386,7 @@ window.logoutMember = async function () {
                       </div>
                     </div>
                     <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:10px;cursor:pointer">
-                      <input type="checkbox" id="mq-pd-text-shadow" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:auto"/> Add drop shadow to all text
+                      <input type="checkbox" id="mq-pd-text-shadow" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add drop shadow to all text
                     </label>
                   </div>
                 </div>
@@ -1423,7 +1423,7 @@ window.logoutMember = async function () {
               <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
                 <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">QR code &amp; quote button <span style="font-weight:400;text-transform:none;color:#9ca3af">(both optional)</span></div>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:10px;cursor:pointer">
-                  <input type="checkbox" id="mq-pd-qr-enabled" onchange="mqPdQrToggled()" style="width:auto"/> Add a QR code onto the photo
+                  <input type="checkbox" id="mq-pd-qr-enabled" onchange="mqPdQrToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add a QR code onto the photo
                 </label>
                 <div id="mq-pd-qr-controls-wrap" style="display:none;margin-bottom:12px">
                   <div class="mq-grid2">
@@ -1438,7 +1438,7 @@ window.logoutMember = async function () {
                   </div>
                 </div>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-                  <input type="checkbox" id="mq-pd-btn-enabled" onchange="mqPdBtnToggled()" style="width:auto"/> Add a "Get a Free Quote" button
+                  <input type="checkbox" id="mq-pd-btn-enabled" onchange="mqPdBtnToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add a "Get a Free Quote" button
                 </label>
                 <div id="mq-pd-btn-controls-wrap" style="display:none;margin-top:10px">
                   <div class="mq-field">
@@ -2801,7 +2801,7 @@ window.logoutMember = async function () {
     const checked = parseFloat(value) !== 0;
     return `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:auto;flex-shrink:0"/>
+        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
         <label for="${inputId}" style="font-size:12px;color:#374151;flex:1;min-width:0">${label} <span style="color:#9ca3af">— ${hint}</span></label>
         <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center;flex-shrink:0"/>
         <span style="font-size:12px;color:#6b7280;flex-shrink:0">%</span>
@@ -2834,19 +2834,19 @@ window.logoutMember = async function () {
         </div>
         <div id="mq-room-body-${idx}" style="padding-left:34px;display:${isOpen?'block':'none'}">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:${r.active===false?'#92400e':'#166534'};font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
+            <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
           </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-proonly-${idx}" ${r.proOnly?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
+            <input type="checkbox" id="mq-room-proonly-${idx}" ${r.proOnly?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             ⚡ Only show in MidasQuote Pro <span style="font-weight:400;color:#9ca3af">(hidden from the customer-facing widget entirely)</span>
           </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:auto"/>
+            <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
           </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:auto"/>
+            <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "$2,600" instead of "$2,375 – $3,000")</span>
           </label>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
@@ -3545,7 +3545,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
         <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
           <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
-            <input type="checkbox" ${f['Show item prices']!==false?'checked':''} onchange="mqSaveProposalField('${t.id}','Show item prices',this.checked)" style="width:auto"/> Show individual item prices <span style="font-weight:400;color:#9ca3af">(default — overridable per proposal in Pro)</span>
+            <input type="checkbox" ${f['Show item prices']!==false?'checked':''} onchange="mqSaveProposalField('${t.id}','Show item prices',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Show individual item prices <span style="font-weight:400;color:#9ca3af">(default — overridable per proposal in Pro)</span>
           </label>
           <div style="display:flex;align-items:center;gap:6px">
             <label style="font-size:13px;color:#374151">Deposit:</label>
@@ -3969,13 +3969,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
               <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
-              <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)"/></td>
-              <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)"/></td>
-              <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item"/></td>
+              <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
+              <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
+              <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
-              <td><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" title="Hide this item from the customer-facing widget entirely — still shows in MidasQuote Pro, for every project type it's tagged to"/></td>
-              <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)"/></td>
+              <td><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" title="Hide this item from the customer-facing widget entirely — still shows in MidasQuote Pro, for every project type it's tagged to" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
+              <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -4903,7 +4903,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!list) return;
       list.innerHTML = items.length ? items.map(item => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer;padding:5px 4px;border-radius:6px">
-          <input type="checkbox" onchange="mqGroupManagerToggleItem('${item.id}')" ${_gmCheckedIds.has(item.id) ? 'checked' : ''} style="width:auto;flex-shrink:0"/>
+          <input type="checkbox" onchange="mqGroupManagerToggleItem('${item.id}')" ${_gmCheckedIds.has(item.id) ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
           <span>${item.baseName}</span>
           <span style="font-size:11px;color:#9ca3af">$${(item.price||0).toFixed(2)}</span>
           ${item.groupName && item.groupName !== groupName ? `<span style="font-size:10px;color:#9ca3af;margin-left:auto">in "${item.groupName}"</span>` : ''}
@@ -5200,8 +5200,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
         <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:auto"/> per lin ft</label>
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:auto"/> per sq ft</label>
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per lin ft</label>
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per sq ft</label>
           <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
         <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
@@ -5348,7 +5348,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const summary = roomLinkSummaryText(visibleRooms, rooms);
     const checkboxes = rooms.map(r => `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:auto"/> ${r.name}
+        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
       </label>`).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
@@ -5379,7 +5379,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const featuredHtml = savedFeatured ? (() => {
       const isFeatured = savedFeatured[key] || false;
       return `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:auto" onchange="mqMarkProductsDirty()"/>
+        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a" onchange="mqMarkProductsDirty()"/>
         🏆 Mark as "${(badgeLabel||'Best seller').replace(/"/g,'&quot;')}"
       </label>`;
     })() : '';
@@ -5393,7 +5393,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       ${roomLinkHtml}
       ${featuredHtml}
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:auto"
+        <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"
           onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
         Hide from showroom
       </label>
@@ -5425,12 +5425,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <input type="text" value="${(r.fields['Description']||'').replace(/"/g,'&quot;')}" id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;color:#6b7280" onblur="mqSaveSpecField('${r.id}','Description',this.value)"/>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <input type="number" value="${r.fields['Price']||''}" id="mq-spec-price-${r.id}" placeholder="Price" style="font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:70px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:auto"/> lin ft</label>
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:auto"/> sq ft</label>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> lin ft</label>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> sq ft</label>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:auto"/> Offer supply/install choice</label>
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" style="width:auto"/> ⚡ Pro only</label>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Offer supply/install choice</label>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ⚡ Pro only</label>
       </div>
       <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
       ${photoHtml}
@@ -5851,7 +5851,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const idsAttr = (ids||[]).join(',');
     const checkboxes = rooms.map(r => `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:auto"/> ${r.name}
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
       </label>`).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
@@ -5921,7 +5921,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const summary = categorySummaryText(hiddenIds, rooms);
     const checkboxes = rooms.map(r => `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}','${r.id}',this.checked)" style="width:auto"/> ${r.name}
+        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}','${r.id}',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
       </label>`).join('');
     const linkedWarning = LINKED_CABINET_CATS.includes(cat) ? `
       <div style="font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:8px;line-height:1.4">
