@@ -2517,6 +2517,12 @@
     garage: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.jpg',
     commercial: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.jpg',
     other: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.jpg',
+    // These three live on a different domain (aceswin.github.io vs
+    // raw.githubusercontent.com) — a pre-existing inconsistency, kept as-is
+    // and just mirrored here so there's finally a real fallback for them.
+    refacing: 'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg',
+    repainting: 'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg',
+    restaining: 'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg',
   };
   const MQ_MEASURE_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/';
   const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'].map(f => MQ_MEASURE_IMAGE_BASE + f);
@@ -2545,6 +2551,9 @@
     if (name.includes('laundry')) return 'laundry';
     if (name.includes('garage')) return 'garage';
     if (name.includes('commercial')) return 'commercial';
+    if (name.includes('refacing')) return 'refacing';
+    if (name.includes('repainting')) return 'repainting';
+    if (name.includes('restaining')) return 'restaining';
     if (name.includes('other')) return 'other';
     return null;
   }
