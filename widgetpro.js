@@ -235,7 +235,7 @@
   // one else who needs telling. All that's left is optionally emailing a
   // copy of the quote to whatever address they enter, including the real
   // total (not just the customer ballpark range).
-  async function saveLead(data, lead, quoteType, low, high, lines, realTotal) {
+  async function saveLead(data, lead, quoteType, low, high, lines, realTotal, prefix) {
     const { shop } = data;
     if (lead._isSkip || !lead.email) return;
 
@@ -254,7 +254,7 @@
           <div style="font-size:28px;font-weight:700;color:#fff">$${Math.round(realTotal||0).toLocaleString()}</div>
         </div>
         <div style="background:#f9fafb;border-radius:8px;padding:12px;text-align:center;margin-bottom:16px;color:#666;font-size:14px">
-          Customer sees this range: $${low.toLocaleString()} – $${high.toLocaleString()}
+          Customer sees${mqShouldShowRange(prefix) ? ' this range' : ''}: ${mqFmtPrice(prefix, low, high, realTotal)}
         </div>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Full breakdown</td></tr>${lineRows}
@@ -1873,6 +1873,10 @@
     const letterSafe = ((shop['Shop name']||'S').charAt(0)||'S').replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const logoHTML = shop['Logo URL'] ? `<div class="mq-logo-real"><img src="${shop['Logo URL']}" alt="${shop['Shop name']}" onerror="mqHandleLogoError(this,'${bcSafe}','${letterSafe}')"/></div>` : `<div class="mq-logo"><span>${(shop['Shop name']||'S').charAt(0)}</span></div>`;
     const disc = shop['Disclaimer text'] || 'Ballpark estimate only. Contact us for a full quote.';
+    // Only the default wording gets swapped out for project types with the
+    // range toggled off — a shop's own custom disclaimer is left exactly as
+    // they wrote it, regardless of that setting.
+    window._mqUsingDefaultDisclaimer = !(shop['Disclaimer text']||'').trim();
     const financingOn = shop['Offers financing'] === 'Yes';
     const financingHTML = financingOn
       ? `<div class="mq-financing-note">💳 Financing available</div>`
@@ -1926,12 +1930,12 @@
         <div class="mq-result" id="mq-c-result">
           <div class="mq-res-hdr">
             <div><p class="mq-res-title" id="mq-c-res-title">Cabinet estimate</p><p class="mq-res-sub" id="mq-c-res-sub">—</p><p class="mq-hint" id="mq-c-vanity-note" style="display:none;color:#1d4ed8"></p></div>
-            <div><div class="mq-res-range-lbl">Customer sees this range</div><div class="mq-res-range" id="mq-c-res-range">—</div>
+            <div><div class="mq-res-range-lbl" id="mq-c-res-range-lbl">Customer sees this range</div><div class="mq-res-range" id="mq-c-res-range">—</div>
               <div style="display:inline-block;margin-top:8px;background:linear-gradient(135deg,#111,#1f1f1f);border:1px solid #fbbf24;border-radius:8px;padding:6px 12px;font-size:14px;font-weight:700;color:#fbbf24">💰 Your real total: <span id="mq-c-res-real" style="color:#fff">—</span></div>
             </div>
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
-          <div class="mq-disclaimer">⚠ ${disc}</div>
+          <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
@@ -2064,11 +2068,11 @@
             <div id="mq-b-ct-rows"></div>
           </div>
           <div class="mq-grand-total">
-            <div><div class="mq-grand-label">Total project estimate</div><div class="mq-grand-sub">Before tax · Customer sees this range</div></div>
+            <div><div class="mq-grand-label">Total project estimate</div><div class="mq-grand-sub" id="mq-b-grand-sub">Before tax · Customer sees this range</div></div>
             <div class="mq-grand-val" id="mq-b-grand">—</div>
           </div>
           <div style="text-align:right;margin-top:8px"><span style="display:inline-block;background:linear-gradient(135deg,#111,#1f1f1f);border:1px solid #fbbf24;border-radius:8px;padding:7px 14px;font-size:14px;font-weight:700;color:#fbbf24">💰 Your real total: <span id="mq-b-grand-real" style="color:#fff">—</span></span></div>
-          <div class="mq-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
+          <div class="mq-disclaimer" id="mq-b-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
@@ -3230,6 +3234,7 @@
         });
       }
       mqRefreshSectionVisibility(prefix);
+      mqRefreshBallparkWording(prefix);
     };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
@@ -3874,8 +3879,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10};
     }
 
-    function renderResult(rangeEl,listEl,result){
-      document.getElementById(rangeEl).textContent=fmt(result.low)+' – '+fmt(result.high);
+    function renderResult(rangeEl,listEl,result,prefix){
+      mqRefreshBallparkWording(prefix);
+      document.getElementById(rangeEl).textContent=mqFmtPrice(prefix, result.low, result.high, result.total);
       // Real total lives right next to the range element — same id with
       // "-range" swapped for "-real" everywhere this gets called.
       const realEl = document.getElementById(rangeEl.replace('-range','-real'));
@@ -3903,9 +3909,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (titleEl) titleEl.textContent = r.roomLabel + ' cabinet estimate';
         const subEl = document.getElementById('mq-c-res-sub');
         if (subEl) subEl.textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
-        renderResult('mq-c-res-range','mq-c-line-items', r);
+        renderResult('mq-c-res-range','mq-c-line-items', r, 'c');
         window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
-        return { low: r.low, high: r.high };
+        return { low: r.low, high: r.high, total: r.total };
       }
       if (prefix === 'ct') {
         const panel = document.getElementById('mq-ct-result');
@@ -3914,9 +3920,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         const active = Object.keys(surfs['ct']).filter(id => document.getElementById('mqsc-'+id)).length;
         const subEl = document.getElementById('mq-ct-res-sub');
         if (subEl) subEl.textContent = `${active} surface(s)`;
-        renderResult('mq-ct-res-range','mq-ct-line-items', r);
+        renderResult('mq-ct-res-range','mq-ct-line-items', r, 'ct');
         window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
-        return { low: r.low, high: r.high };
+        return { low: r.low, high: r.high, total: r.total };
       }
       if (prefix === 'b') {
         const panel = document.getElementById('mq-b-result');
@@ -3933,13 +3939,13 @@ window.mqTogDrawerConfig=(prefix)=>{
           [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span><span style="float:right;font-weight:600;color:#166534">${fmt(l.cost)}</span>`;ctRows.appendChild(d);});
           if (!ctRows.children.length) { const d=document.createElement('div'); d.className='mq-combined-row'; d.innerHTML=`<span class="mq-clbl">None selected</span>`; ctRows.appendChild(d); }
         }
-        const tl = cab.low+ct.low, th = cab.high+ct.high;
+        const tl = cab.low+ct.low, th = cab.high+ct.high, totalB = cab.total + ct.total;
         const grandEl = document.getElementById('mq-b-grand');
-        if (grandEl) grandEl.textContent = fmt(tl)+' – '+fmt(th);
+        if (grandEl) { mqRefreshBallparkWording('b'); grandEl.textContent = mqFmtPrice('b', tl, th, totalB); }
         const realTotalEl = document.getElementById('mq-b-grand-real');
-        if (realTotalEl) realTotalEl.textContent = fmt(cab.total + ct.total);
-        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: cab.total + ct.total } });
-        return { low: tl, high: th };
+        if (realTotalEl) realTotalEl.textContent = fmt(totalB);
+        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: totalB } });
+        return { low: tl, high: th, total: totalB };
       }
       return null;
     };
@@ -3960,13 +3966,13 @@ window.mqTogDrawerConfig=(prefix)=>{
         // room adjustment (r.hasRoomAdjustment/r.roomAdjPct), this just
         // stops announcing it in the results panel.
         if (vanityNoteC) vanityNoteC.style.display = 'none';
-        renderResult('mq-c-res-range','mq-c-line-items',r);
+        renderResult('mq-c-res-range','mq-c-line-items',r,'c');
         window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
-        window.mqShowStickyBar('c', r.low, r.high);
+        window.mqShowStickyBar('c', r.low, r.high, r.total);
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');mqScrollPoweredByAboveSticky('c');
         document.getElementById('mq-c-calc-btn').disabled=false;
-        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.total);
+        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.total,'c');
       });
     };
 
@@ -3983,13 +3989,13 @@ window.mqTogDrawerConfig=(prefix)=>{
           const r=calcCountertop('ct');
           const active=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length;
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
-          renderResult('mq-ct-res-range','mq-ct-line-items',r);
+          renderResult('mq-ct-res-range','mq-ct-line-items',r,'ct');
           window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
-          window.mqShowStickyBar('ct', r.low, r.high);
+          window.mqShowStickyBar('ct', r.low, r.high, r.total);
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');mqScrollPoweredByAboveSticky('ct');
           document.getElementById('mq-ct-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines,r.total);
+          if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines,r.total,'ct');
         },900);
       });
     };
@@ -4015,16 +4021,17 @@ window.mqTogDrawerConfig=(prefix)=>{
           const ctRows=document.getElementById('mq-b-ct-rows');ctRows.innerHTML='';
           [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span><span style="float:right;font-weight:600;color:#166534">${fmt(l.cost)}</span>`;ctRows.appendChild(d);});
           if(!ctRows.children.length){const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">None selected</span>`;ctRows.appendChild(d);}
-          const tl=cab.low+ct.low,th=cab.high+ct.high;
-          document.getElementById('mq-b-grand').textContent=fmt(tl)+' – '+fmt(th);
+          const tl=cab.low+ct.low,th=cab.high+ct.high,totalB=cab.total+ct.total;
+          mqRefreshBallparkWording('b');
+          document.getElementById('mq-b-grand').textContent=mqFmtPrice('b', tl, th, totalB);
           const realTotalEl = document.getElementById('mq-b-grand-real');
-          if (realTotalEl) realTotalEl.textContent = fmt(cab.total + ct.total);
-          window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: cab.total + ct.total } });
-          window.mqShowStickyBar('b', tl, th);
+          if (realTotalEl) realTotalEl.textContent = fmt(totalB);
+          window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: totalB } });
+          window.mqShowStickyBar('b', tl, th, totalB);
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');mqScrollPoweredByAboveSticky('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.total+ct.total);
+          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],totalB,'b');
         },1200);
       });
     };
@@ -4560,14 +4567,14 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!prefix || !window._mqCalcCabinet || !window._mqCalcCountertop) return null;
     if (prefix === 'b') {
       const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-      return { low: cab.low + ct.low, high: cab.high + ct.high, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
+      return { prefix, low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
     }
     if (prefix === 'ct') {
       const r = window._mqCalcCountertop('ct');
-      return { low: r.low, high: r.high, lines: r.lines };
+      return { prefix, low: r.low, high: r.high, total: r.total, lines: r.lines };
     }
     const r = window._mqCalcCabinet('c');
-    return { low: r.low, high: r.high, lines: r.lines };
+    return { prefix, low: r.low, high: r.high, total: r.total, lines: r.lines };
   }
   async function mqSendQuoteCopy(email) {
     const linkEl = document.getElementById('mq-sticky-email-link');
@@ -4582,13 +4589,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#1a1a1a">Your updated quote from ${shop['Shop name']||''}</h2>
         <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-          <div style="font-size:14px;color:#666;margin-bottom:4px">Your estimated range</div>
-          <div style="font-size:28px;font-weight:700;color:#16a34a">$${Math.round(result.low).toLocaleString()} – $${Math.round(result.high).toLocaleString()}</div>
+          <div style="font-size:14px;color:#666;margin-bottom:4px">${mqShouldShowRange(result.prefix) ? 'Your estimated range' : 'Your estimate'}</div>
+          <div style="font-size:28px;font-weight:700;color:#16a34a">${mqFmtPrice(result.prefix, result.low, result.high, result.total)}</div>
         </div>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What's included</td></tr>${customerLineRows}
         </table>
-        <p style="color:#666;font-size:14px">${shop['Disclaimer text']||'Ballpark estimate only. Contact us for a full quote.'}</p>
+        <p style="color:#666;font-size:14px">${shop['Disclaimer text'] || (mqShouldShowRange(result.prefix) ? 'Ballpark estimate only. Contact us for a full quote.' : 'This quote is not final — please contact us for final numbers.')}</p>
         <p style="color:#666;font-size:14px"><strong>${shop['Shop name']||''}</strong><br/>${shop['Phone']||''}</p>
       </div>`);
     if (linkEl) {
@@ -4621,28 +4628,69 @@ window.mqTogDrawerConfig=(prefix)=>{
   // Called right after a real Calculate finishes for any tab — reveals the
   // bar (unless the customer already dismissed it this session) and marks
   // that tab as the one live updates should keep tracking.
-  window.mqShowStickyBar = function(prefix, low, high) {
+  window.mqShowStickyBar = function(prefix, low, high, total) {
     window._mqStickyPrefix = prefix;
     mqSetupStickyBar();
-    mqSetStickyPrice(low, high, false);
+    mqSetStickyPrice(prefix, low, high, total, false);
     if (!window._mqStickyDismissed) {
       const bar = document.getElementById('mq-sticky-bar');
       if (bar) bar.classList.add('show');
     }
     mqAdjustWidgetBottomPadding();
   };
+  // The standalone Countertops tab isn't tied to any project type selection
+  // at all, so there's nothing to check a toggle against — it always shows
+  // a range. Cabinets and Both are both tied to a selected room, so they
+  // respect that room's own showRange setting (defaulting to true/range,
+  // same as it's always behaved, for any room that's never touched this).
+  function mqShouldShowRange(prefix) {
+    if (prefix === 'ct') return true;
+    // Inlined rather than calling gv() — gv is scoped inside a different,
+    // inner function and isn't reachable from every place this needs to
+    // run (this is exactly what threw "gv is not defined" from inside the
+    // saveLead email-building code, which lives outside that scope).
+    const roomEl = document.getElementById(`mq-${prefix}-room`);
+    const roomId = roomEl ? roomEl.value : '';
+    const room = (window._mqRoomTypes||[]).find(r => r.id === roomId);
+    return !room || room.showRange !== false;
+  }
   function fmtRange(low, high) {
     const f = n => '$' + Math.round(n).toLocaleString();
     return `${f(low)} – ${f(high)}`;
   }
+  // Single entry point for every place a price gets shown to a customer —
+  // shows the usual ballpark range, or the exact clean total with no spread
+  // at all, depending on the selected project type's own preference.
+  function mqFmtPrice(prefix, low, high, total) {
+    return mqShouldShowRange(prefix) ? fmtRange(low, high) : ('$' + Math.round(total).toLocaleString());
+  }
+  // Swaps out every "ballpark"/"customer sees this range" phrase for wording
+  // that's actually true once a project type has the range toggled off —
+  // this tool always shows the shop owner their own real total regardless,
+  // but the label describing what the CUSTOMER sees needs to stay accurate.
+  // Only ever touches the DEFAULT disclaimer text — a shop's own custom
+  // disclaimer is left exactly as they wrote it either way.
+  window.mqRefreshBallparkWording = function(prefix) {
+    const showRange = mqShouldShowRange(prefix);
+    const rangeLbl = document.getElementById(`mq-${prefix}-res-range-lbl`);
+    if (rangeLbl) rangeLbl.textContent = showRange ? 'Customer sees this range' : 'Customer sees this quote';
+    const grandSub = document.getElementById(`mq-${prefix}-grand-sub`);
+    if (grandSub) grandSub.textContent = showRange ? 'Before tax · Customer sees this range' : 'Before tax · Customer sees this quote';
+    if (window._mqUsingDefaultDisclaimer) {
+      const discEl = document.getElementById(`mq-${prefix}-disclaimer`);
+      if (discEl) discEl.textContent = '⚠ ' + (showRange
+        ? 'Ballpark estimate only. Contact us for a full quote.'
+        : 'This quote is not final — please contact us for final numbers.');
+    }
+  };
   // animate=true is the "something fun happens" part — a quick pulse on the
   // number plus a floating +/-$ delta, so a customer actually notices their
   // tweak moved the price instead of the number just silently changing.
-  function mqSetStickyPrice(low, high, animate) {
+  function mqSetStickyPrice(prefix, low, high, total, animate) {
     const el = document.getElementById('mq-sticky-price');
     if (!el) return;
     const prev = window._mqStickyLast;
-    el.textContent = fmtRange(low, high);
+    el.textContent = mqFmtPrice(prefix, low, high, total);
     if (animate && prev) {
       const prevMid = (prev.low + prev.high) / 2;
       const newMid = (low + high) / 2;
@@ -4673,14 +4721,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!range && window._mqCalcCabinet && window._mqCalcCountertop) {
         if (prefix === 'b') {
           const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-          range = { low: cab.low + ct.low, high: cab.high + ct.high };
+          range = { low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total };
         } else if (prefix === 'ct') {
           range = window._mqCalcCountertop('ct');
         } else {
           range = window._mqCalcCabinet('c');
         }
       }
-      if (range) mqSetStickyPrice(range.low, range.high, true);
+      if (range) mqSetStickyPrice(prefix, range.low, range.high, range.total, true);
     } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
   }
   let _mqStickyDebounce = null;
