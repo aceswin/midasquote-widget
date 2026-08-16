@@ -296,6 +296,34 @@
     }
   }
 
+  // Wraps saveLead so the lead actually saved reflects the customer's WHOLE
+  // quote — everything already committed to the multi-project-type cart,
+  // plus whatever's currently on the tab they just hit Calculate on —
+  // instead of only ever saving that one tab's result and silently
+  // dropping everything built before it. Same signature as saveLead
+  // itself, so every call site only needs the function name swapped.
+  async function mqSaveLeadWithCart(data, lead, quoteType, low, high, lines, roomType, total, prefix) {
+    const cart = window._mqQuoteCart || [];
+    if (!cart.length) {
+      return saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix);
+    }
+    const cartLow = cart.reduce((s,e) => s + (e.low||0), 0);
+    const cartHigh = cart.reduce((s,e) => s + (e.high||0), 0);
+    const cartTotal = cart.reduce((s,e) => s + (e.total||0), 0);
+    const combinedLines = [
+      ...cart.flatMap(e => [{label: e.label, header: true}, ...e.lines.filter(l => !l.bold)]),
+      {label: quoteType, header: true},
+      ...lines.filter(l => !l.bold),
+    ];
+    const combinedLabel = [...cart.map(e => e.label), roomType || quoteType].join(' + ');
+    return saveLead(
+      data, lead, combinedLabel,
+      cartLow + low, cartHigh + high,
+      combinedLines, combinedLabel,
+      cartTotal + total, prefix
+    );
+  }
+
   async function sendEmail(to, subject, html) {
     if (!CONFIG.EMAIL_WORKER||!to) return;
     try { await fetch(CONFIG.EMAIL_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,subject,html})}); }
@@ -1149,7 +1177,7 @@
     return `
       <div style="margin-bottom:10px;background:${boxBgColor};border:1.5px solid ${boxBorderColor};border-radius:10px;padding:12px 14px">
         <label style="font-size:14px;font-weight:700;color:${boxTextColor};display:flex;align-items:center;gap:6px;margin-bottom:8px">🗂️ ${pickerLabel}</label>
-        <select id="mq-groupselect-${selectId}" onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="font-size:14px;font-weight:600;padding:8px 30px 8px 12px;border:1.5px solid ${boxBorderColor};border-radius:6px;width:auto;max-width:100%;display:inline-block;color:#111;background:#fff">
+        <select id="mq-groupselect-${selectId}" onchange="mqFilterPickerByGroup('${selectId}',this.value,this.selectedOptions[0]?this.selectedOptions[0].dataset.desc:'',this.selectedOptions[0]?this.selectedOptions[0].dataset.count:'')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a">
           ${groupNames.map(g=>`<option value="${g.replace(/"/g,'&quot;')}" data-desc="${groupDescOf(g).replace(/"/g,'&quot;')}" data-count="${countOf(g)}">${g}</option>`).join('')}
           ${hasOtherBucket ? `<option value="__other__" data-desc="" data-count="${countOf('__other__')}">Other</option>` : ''}
         </select>
@@ -1958,12 +1986,12 @@
         <div id="mq-${prefix}-trim-noauto-explainer" style="display:none;font-size:12px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 This project type doesn't include cabinet measurements, so enter your crown/valance linear footage directly below.</div>
         <div id="mq-${prefix}-trim-auto-note" style="display:none;font-size:13px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:8px"></div>
         <label id="mq-${prefix}-trim-use-cab-wrap" style="display:none;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer">
-          <input type="checkbox" id="mq-${prefix}-trim-use-cab" onchange="mqTogTrimUseCab('${prefix}')" style="margin-top:2px;flex-shrink:0;width:auto"/>
+          <input type="checkbox" id="mq-${prefix}-trim-use-cab" onchange="mqTogTrimUseCab('${prefix}')" style="margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
           <span style="font-size:14px;font-weight:500;line-height:1.4">Use my upper cabinet measurements</span>
         </label>
         <div id="mq-${prefix}-trim-body" style="display:none">
         <label id="mq-${prefix}-trim-manual-toggle-wrap" style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-bottom:10px;background:#f9fafb;border-radius:6px;padding:8px 10px">
-          <input type="checkbox" id="mq-${prefix}-trim-manual-toggle" onchange="mqTogTrimManualFt('${prefix}')" style="width:auto;flex-shrink:0"/>
+          <input type="checkbox" id="mq-${prefix}-trim-manual-toggle" onchange="mqTogTrimManualFt('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
           Don't use upper cabinet linear footage — enter it myself
         </label>
         <div id="mq-${prefix}-trim-manual-wrap" style="display:none;margin-bottom:10px;align-items:center;gap:8px">
@@ -2071,6 +2099,18 @@
         </button>
       </div>
 
+      <div id="mq-quote-cart" style="display:none;margin:14px 1.5rem 0;padding:14px 16px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+          <div style="font-size:13px;font-weight:700;color:#166534">🧾 Your quote so far</div>
+          <button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:12px;color:#6b7280;text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button>
+        </div>
+        <div id="mq-cart-items"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px dashed #86efac">
+          <span style="font-size:13.5px;font-weight:700;color:#166534">Running total</span>
+          <span id="mq-cart-total" style="font-size:19px;font-weight:800;color:#166534">—</span>
+        </div>
+      </div>
+
       <!-- CABINET TAB -->
       <div class="mq-tab-content" id="mq-tab-cabinets">
         ${PRICE_LEGEND_HTML}
@@ -2135,7 +2175,7 @@
               <select id="mq-b-ct-si">${hasCtInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
           </div>
           <label id="mq-b-use-cab-wrap" style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
-            <input type="checkbox" id="mq-b-use-cab" checked onchange="mqTogUseCab('b')" style="margin-top:2px;flex-shrink:0;width:auto"/>
+            <input type="checkbox" id="mq-b-use-cab" checked onchange="mqTogUseCab('b')" style="margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             <span style="font-size:14px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#6b7280">(assumes standard depth counter)</span></span>
           </label>
           <div id="mq-b-cab-mat" style="display:block;margin-top:0.75rem">
@@ -2147,18 +2187,18 @@
             <div style="background:#f9fafb;border-radius:6px;padding:10px 12px;margin-bottom:0.75rem">
             <div id="mq-b-cab-dw-wrap">
                 <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-bottom:8px">
-                  <input type="checkbox" id="mq-b-cab-dw" onchange="mqRefreshBsFt('b')" style="width:auto;flex-shrink:0"/> Add extra space for a dishwasher <span style="color:#6b7280;font-weight:400">(+24")</span>
+                  <input type="checkbox" id="mq-b-cab-dw" onchange="mqRefreshBsFt('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add extra space for a dishwasher <span style="color:#6b7280;font-weight:400">(+24")</span>
                 </label>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:auto;flex-shrink:0"/> Add additional counter space
+                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add additional counter space
               </label>
               <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px">
                 <label style="font-size:14px;color:#374151">Additional space (feet)</label>
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-top:8px">
-                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:auto;flex-shrink:0"/> Cutouts needed (sink, etc.)
+                <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Cutouts needed (sink, etc.)
               </label>
               <div id="mq-b-cab-cuts" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border-radius:6px"></div>
               <div style="font-size:14px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
@@ -2410,7 +2450,7 @@
             ${thumb}
             <div style="flex:1;min-width:0">
               <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;font-weight:600;cursor:pointer">
-                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none'" style="width:auto"/>
+                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none'" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
                 ${(a.label||'Addon').replace(/"/g,'&quot;')}
               </label>
               <div class="mq-qty-ctrl" id="${idPrefix}-qtywrap-${i}" style="display:none;margin-top:6px">
@@ -2441,7 +2481,20 @@
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
     function gn(id,d=0){const v=parseFloat(gv(id));return isNaN(v)?d:v;}
 
+    window._mqActiveTabPrefix = window._mqActiveTabPrefix || 'b';
     window.mqSwitchTab=(id,el)=>{
+      const newPrefix = id === 'both' ? 'b' : (id === 'countertops' ? 'ct' : 'c');
+      if (newPrefix !== window._mqActiveTabPrefix) {
+        const committed = mqCommitCurrentConfig(window._mqActiveTabPrefix);
+        if (committed) {
+          // Reset the tab being left too, since it's now folded into the
+          // cart — otherwise switching back to it later would show stale,
+          // already-counted selections still sitting in the form.
+          if (window._mqActiveTabPrefix === 'ct') mqResetCountertopStandalone('ct');
+          else mqResetCabinetForm(window._mqActiveTabPrefix);
+        }
+      }
+      window._mqActiveTabPrefix = newPrefix;
       document.querySelectorAll('.mq-tab-content').forEach(t=>t.classList.remove('active'));
       document.querySelectorAll('.mq-tab').forEach(t=>t.classList.remove('active'));
       document.getElementById('mq-tab-'+id).classList.add('active');
@@ -3397,11 +3450,136 @@
       window.mqRefreshBsFt(prefix);
     }
 
+    // Countertop-specific fields the function above doesn't already cover
+    // for the STANDALONE Countertops tab — its cabinet-measurement fields
+    // (like uft/bft) are shared with the cabinet form by id and so already
+    // get reset there; these are unique to the "use cabinet measurements"
+    // countertop path plus any added surfaces (islands, peninsulas, etc.).
+    function mqResetCountertopStandalone(prefix) {
+      const siEl = document.getElementById(`mq-${prefix}-si`);
+      if (siEl) siEl.selectedIndex = 0;
+      mqResetPicker(`mq-${prefix}-ct-mat-cab`);
+      const bsEl = document.getElementById(`mq-${prefix}-cab-bs`);
+      if (bsEl) bsEl.selectedIndex = 0;
+      const coEl = document.getElementById(`mq-${prefix}-cab-co`);
+      if (coEl && coEl.checked) { coEl.checked = false; coEl.dispatchEvent(new Event('change')); }
+      const dwEl = document.getElementById(`mq-${prefix}-cab-dw`);
+      if (dwEl) dwEl.checked = false;
+      const extraToggleEl = document.getElementById(`mq-${prefix}-cab-extra-toggle`);
+      if (extraToggleEl && extraToggleEl.checked) { extraToggleEl.checked = false; extraToggleEl.dispatchEvent(new Event('change')); }
+      const extraFtEl = document.getElementById(`mq-${prefix}-cab-extra-ft`);
+      if (extraFtEl) extraFtEl.value = 0;
+      const edgeSelEl = document.getElementById(`mq-${prefix}-cab-edge-sel`);
+      if (edgeSelEl) edgeSelEl.selectedIndex = 0;
+      const surfacesContainer = document.getElementById(`mq-${prefix}-surfaces`);
+      if (surfacesContainer) { surfacesContainer.innerHTML = ''; surfacesContainer.dataset.autoAdded = 'false'; }
+      if (surfs[prefix]) surfs[prefix] = {};
+    }
+
+    // ===================== Multi-project-type quote cart =====================
+    // Lets a customer configure one project type, then switch to a totally
+    // different one (or a different tab entirely) and keep building toward
+    // one combined quote, instead of losing what they already priced out.
+    window._mqQuoteCart = window._mqQuoteCart || [];
+
+    // Captures whatever is currently configured on `prefix` into the running
+    // cart, if it amounts to anything real — called right before that tab's
+    // form gets reset, whether that's from switching project type within it
+    // or switching away to a different tab. Returns true if it committed
+    // something, so callers can tell whether the cart actually changed.
+    function mqCommitCurrentConfig(prefix) {
+      if (!window._mqCalcCabinet || !window._mqCalcCountertop) return false;
+      let result, label;
+      if (prefix === 'b') {
+        const cab = window._mqCalcCabinet('b');
+        const ct = window._mqCalcCountertop('b');
+        const low = (cab.low||0) + (ct.low||0), high = (cab.high||0) + (ct.high||0), total = (cab.total||0) + (ct.total||0);
+        if (low <= 0 && high <= 0 && total <= 0) return false;
+        result = { low, high, total, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
+        label = cab.roomLabel || 'Cabinets + Countertops';
+      } else if (prefix === 'ct') {
+        const r = window._mqCalcCountertop('ct');
+        if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
+        result = r;
+        label = 'Countertops';
+      } else {
+        const r = window._mqCalcCabinet('c');
+        if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
+        result = r;
+        label = r.roomLabel || 'Cabinets';
+      }
+      window._mqQuoteCart.push({
+        id: 'cart_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        label, prefix,
+        // Captured NOW, not re-derived later — by the time this entry gets
+        // re-rendered, the room dropdown for this same prefix may already
+        // show a totally different project type (that's the whole point of
+        // this cart), so mqShouldShowRange(prefix) would silently answer
+        // for whatever's selected THEN, not what was actually true when
+        // this specific entry was committed.
+        showRange: mqShouldShowRange(prefix),
+        low: result.low, high: result.high, total: result.total,
+        lines: result.lines,
+      });
+      mqRenderQuoteCart();
+      return true;
+    }
+
+    window.mqRemoveFromQuoteCart = function(cartId) {
+      window._mqQuoteCart = (window._mqQuoteCart || []).filter(e => e.id !== cartId);
+      mqRenderQuoteCart();
+    };
+
+    function mqRenderQuoteCart() {
+      const panel = document.getElementById('mq-quote-cart');
+      const itemsEl = document.getElementById('mq-cart-items');
+      const totalEl = document.getElementById('mq-cart-total');
+      if (!panel || !itemsEl || !totalEl) return;
+      const cart = window._mqQuoteCart || [];
+      if (!cart.length) { panel.style.display = 'none'; return; }
+      panel.style.display = 'block';
+      itemsEl.innerHTML = cart.map(entry => {
+        const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : ('$' + Math.round(entry.total).toLocaleString());
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:#1c3a28">
+          <span>${entry.label}</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <strong>${priceText}</strong>
+            <button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>
+          </span>
+        </div>`;
+      }).join('');
+      const totalLow = cart.reduce((s,e) => s + (e.low||0), 0);
+      const totalHigh = cart.reduce((s,e) => s + (e.high||0), 0);
+      const totalExact = cart.reduce((s,e) => s + (e.total||0), 0);
+      // If every committed entry is on a no-range project type, show one
+      // clean combined number. If even one entry has a range, fall back to
+      // a combined range — mixing a bare number with ranged entries would
+      // be misleading either way, so a combined range is the safer default
+      // once more than one project type is actually involved.
+      const allNoRange = cart.every(e => !e.showRange);
+      totalEl.textContent = allNoRange ? ('$' + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
+    }
+
+    // Clears the whole running quote and resets every tab's form back to
+    // its starting state, so the customer can start completely over.
+    window.mqResetEntireQuote = function() {
+      if ((window._mqQuoteCart||[]).length && !confirm('Clear your whole quote and start over?')) return;
+      window._mqQuoteCart = [];
+      mqRenderQuoteCart();
+      mqResetCabinetForm('c');
+      mqResetCabinetForm('b');
+      mqResetCountertopStandalone('ct');
+      const sticky = document.getElementById('mq-sticky-bar');
+      if (sticky) sticky.classList.remove('show');
+    };
+    // ===================== end quote cart =====================
+
     // Only an actual project type change restarts the guided flow at step 1
     // — mqRefreshSectionVisibility itself gets called from other places too
     // (like adding a tall cabinet card), which should refresh what's showing
     // without yanking someone back to the beginning of the flow.
     window.mqOnProjectTypeChange = function(prefix) {
+      mqCommitCurrentConfig(prefix);
       _mqStepIndex[prefix] = 0;
       mqResetCabinetForm(prefix);
       // Reset every specialty item on an actual project type change — not
@@ -4172,7 +4350,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');mqScrollPoweredByAboveSticky('c');
         document.getElementById('mq-c-calc-btn').disabled=false;
-        if(lead) await saveLead(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel,r.total,'c');
+        if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel,r.total,'c');
       });
     };
 
@@ -4194,7 +4372,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');mqScrollPoweredByAboveSticky('ct');
           document.getElementById('mq-ct-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Countertops',r.low,r.high,r.lines,'',r.total,'ct');
+          if(lead) await mqSaveLeadWithCart(data,lead,'Countertops',r.low,r.high,r.lines,'',r.total,'ct');
         },900);
       });
     };
@@ -4227,7 +4405,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');mqScrollPoweredByAboveSticky('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
-          if(lead) await saveLead(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel,totalB,'b');
+          if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel,totalB,'b');
         },1200);
       });
     };
@@ -4254,14 +4432,14 @@ window.mqTogDrawerConfig=(prefix)=>{
             <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
         </div>
         <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
-          <select id="mqssi-${id}" style="width:auto;display:inline-block">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
+          <select id="mqssi-${id}" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
         <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
           ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
           <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
-        <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:auto;flex-shrink:0"/> Cutouts needed (sink, etc.)</label>
+        <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Cutouts needed (sink, etc.)</label>
         <div id="mqscuts-${id}" style="display:none;margin-top:8px;margin-bottom:0.75rem;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Backsplash</label>
@@ -4800,7 +4978,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!result || !data) return;
     if (linkEl) linkEl.textContent = 'Sending...';
     try {
-      await saveLead(data, { name:'', email, phone:'', _isSkip:false }, result.quoteType, result.low, result.high, result.lines, result.roomLabel, result.total, result.prefix);
+      await mqSaveLeadWithCart(data, { name:'', email, phone:'', _isSkip:false }, result.quoteType, result.low, result.high, result.lines, result.roomLabel, result.total, result.prefix);
     } catch(e) { console.error('Email me a copy failed', e); }
     if (linkEl) {
       linkEl.textContent = '✓ Sent!';
