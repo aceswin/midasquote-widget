@@ -1860,7 +1860,7 @@
             <span class="mq-step-badge" style="width:26px;height:26px;font-size:14px">1</span>
             Start here — choose your project type
           </label>
-          <select id="mq-${prefix}-room" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>!r.proOnly).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+          <select id="mq-${prefix}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${prefix}']=this.value" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>!r.proOnly).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
           <p class="mq-hint mq-focal-box-label" id="mq-${prefix}-room-vanity-note" style="display:none;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:13px;color:#92400e;line-height:1.5"></div>
         </div>
@@ -3489,35 +3489,53 @@
     // something, so callers can tell whether the cart actually changed.
     function mqCommitCurrentConfig(prefix) {
       if (!window._mqCalcCabinet || !window._mqCalcCountertop) return false;
-      let result, label;
-      if (prefix === 'b') {
-        const cab = window._mqCalcCabinet('b');
-        const ct = window._mqCalcCountertop('b');
-        const low = (cab.low||0) + (ct.low||0), high = (cab.high||0) + (ct.high||0), total = (cab.total||0) + (ct.total||0);
-        if (low <= 0 && high <= 0 && total <= 0) return false;
-        result = { low, high, total, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
-        label = cab.roomLabel || 'Cabinets + Countertops';
-      } else if (prefix === 'ct') {
-        const r = window._mqCalcCountertop('ct');
-        if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
-        result = r;
-        label = 'Countertops';
-      } else {
-        const r = window._mqCalcCabinet('c');
-        if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
-        result = r;
-        label = r.roomLabel || 'Cabinets';
+
+      // calcCabinet/calcCountertop and mqShouldShowRange all read the room
+      // dropdown's CURRENT live value to decide which project type's price
+      // adjustments (and range/no-range setting) apply — but by the time
+      // this runs (called from inside the room dropdown's own onchange),
+      // the dropdown has already switched to the NEW room. Without
+      // correcting for this, whatever's being committed would silently get
+      // priced using the NEW project type's percentages instead of the one
+      // actually being left. Temporarily rewind the dropdown to its
+      // previous value (captured on focus, before this switch happened)
+      // for the whole calculation, then restore it to the actual new
+      // selection once done.
+      const roomEl = (prefix === 'b' || prefix === 'c') ? document.getElementById(`mq-${prefix}-room`) : null;
+      const actualValue = roomEl ? roomEl.value : null;
+      const prevRoomId = (window._mqPrevRoomId || {})[prefix];
+      const needsRewind = !!(roomEl && prevRoomId != null && prevRoomId !== actualValue);
+      if (needsRewind) roomEl.value = prevRoomId;
+
+      let result, label, showRange;
+      try {
+        if (prefix === 'b') {
+          const cab = window._mqCalcCabinet('b');
+          const ct = window._mqCalcCountertop('b');
+          const low = (cab.low||0) + (ct.low||0), high = (cab.high||0) + (ct.high||0), total = (cab.total||0) + (ct.total||0);
+          if (low <= 0 && high <= 0 && total <= 0) return false;
+          result = { low, high, total, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
+          label = cab.roomLabel || 'Cabinets + Countertops';
+        } else if (prefix === 'ct') {
+          const r = window._mqCalcCountertop('ct');
+          if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
+          result = r;
+          label = 'Countertops';
+        } else {
+          const r = window._mqCalcCabinet('c');
+          if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
+          result = r;
+          label = r.roomLabel || 'Cabinets';
+        }
+        showRange = mqShouldShowRange(prefix);
+      } finally {
+        if (needsRewind) roomEl.value = actualValue;
       }
+
       window._mqQuoteCart.push({
         id: 'cart_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
         label, prefix,
-        // Captured NOW, not re-derived later — by the time this entry gets
-        // re-rendered, the room dropdown for this same prefix may already
-        // show a totally different project type (that's the whole point of
-        // this cart), so mqShouldShowRange(prefix) would silently answer
-        // for whatever's selected THEN, not what was actually true when
-        // this specific entry was committed.
-        showRange: mqShouldShowRange(prefix),
+        showRange,
         low: result.low, high: result.high, total: result.total,
         lines: result.lines,
       });
