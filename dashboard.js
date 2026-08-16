@@ -2097,9 +2097,9 @@ window.logoutMember = async function () {
   // page instead of being hardcoded here. Bootstraps the master shop's own
   // Room types field once from these starting values if it's never been set.
   const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
-    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
-    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
+    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
+    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
+    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
   };
 
   async function ensureMasterTemplateRoomDefs() {
@@ -2136,6 +2136,7 @@ window.logoutMember = async function () {
               📤 Upload
               <input type="file" id="mq-master-room-cover-file-${idx}" accept="image/*" style="display:none"/>
             </label>
+            ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMasterCoverImage('${r.id}','${(r.name||'').replace(/'/g,"\\'")}',${idx})">↺ Use built-in default</button>` : ''}
             <span id="mq-master-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
           </div>
         </div>
@@ -2157,6 +2158,7 @@ window.logoutMember = async function () {
                 📤 Upload
                 <input type="file" id="mq-master-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
               </label>
+              ${MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(r.id||'').toLowerCase()] ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMasterMeasureImage('${r.id}',${idx})">↺ Use built-in default</button>` : ''}
               <span id="mq-master-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
             </div>
           </div>
@@ -2590,6 +2592,89 @@ window.logoutMember = async function () {
   const MQ_DEFAULT_MEASURE_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/';
   const MQ_DEFAULT_COVER_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/';
 
+  // Unlike measureImage, coverImage is always written as a real URL when a
+  // shop's room types are first created (never left blank) — so an
+  // already-active shop's own saved value permanently overrides whatever
+  // this default points to, even after this default changes. This exists so
+  // a shop can explicitly opt back into "always match the current default"
+  // via the reset button below. refacing/repainting/restaining live on a
+  // different domain (aceswin.github.io vs raw.githubusercontent.com) —
+  // that inconsistency predates this and is left as-is, just kept in sync.
+  const MQ_DEFAULT_COVER_IMAGE_MAP = {
+    kitchen: MQ_DEFAULT_COVER_IMAGE_BASE + 'kitchen.jpg',
+    bathroom: MQ_DEFAULT_COVER_IMAGE_BASE + 'bathroom.jpg',
+    laundry: MQ_DEFAULT_COVER_IMAGE_BASE + 'laundry.jpg',
+    garage: MQ_DEFAULT_COVER_IMAGE_BASE + 'garage.jpg',
+    commercial: MQ_DEFAULT_COVER_IMAGE_BASE + 'commercial.jpg',
+    other: MQ_DEFAULT_COVER_IMAGE_BASE + 'other.jpg',
+    refacing: 'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg',
+    repainting: 'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg',
+    restaining: 'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg',
+  };
+  function mqDefaultCoverImageKeyFor(roomId, roomName) {
+    const id = (roomId||'').toLowerCase();
+    if (MQ_DEFAULT_COVER_IMAGE_MAP[id]) return id;
+    const name = (roomName||'').toLowerCase();
+    if (name.includes('kitchen')) return 'kitchen';
+    if (name.includes('bathroom')) return 'bathroom';
+    if (name.includes('laundry')) return 'laundry';
+    if (name.includes('garage')) return 'garage';
+    if (name.includes('commercial')) return 'commercial';
+    if (name.includes('refacing')) return 'refacing';
+    if (name.includes('repainting')) return 'repainting';
+    if (name.includes('restaining')) return 'restaining';
+    if (name.includes('other')) return 'other';
+    return null;
+  }
+  function mqDefaultCoverImageUrlFor(roomId, roomName) {
+    const key = mqDefaultCoverImageKeyFor(roomId, roomName);
+    return key ? MQ_DEFAULT_COVER_IMAGE_MAP[key] : '';
+  }
+  // Clears the field rather than writing a concrete URL — leaving it blank
+  // is what lets the widget's own fallback stay current forever without
+  // ever needing this button pressed again, matching mqFillDefaultMeasureImage.
+  // Same idea as mqFillDefaultMasterCoverImage below — this field IS the
+  // source of truth for new shops, so this just fills in the current
+  // known-correct built-in URL for review before Save, rather than making
+  // the person type/paste it by hand. Only ever applies to these three,
+  // since they're the only room types actually template-managed here.
+  const MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP = {
+    refacing: 'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg',
+    repainting: 'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg',
+    restaining: 'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg',
+  };
+  window.mqFillDefaultMasterMeasureImage = function(roomId, idx) {
+    const defaultUrl = MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(roomId||'').toLowerCase()];
+    if (!defaultUrl) return;
+    const inp = document.getElementById(`mq-master-room-measure-img-${idx}`);
+    if (inp) inp.value = defaultUrl;
+    const preview = document.getElementById(`mq-master-room-measure-img-preview-${idx}`);
+    if (preview) preview.innerHTML = `<img src="${defaultUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+  };
+
+  window.mqUseDefaultCoverImage = function(roomId, idx) {
+    if (idx == null || !window._mqRooms || !window._mqRooms[idx]) return;
+    const room = window._mqRooms[idx];
+    const defaultUrl = mqDefaultCoverImageUrlFor(roomId, room.name);
+    if (!defaultUrl) return;
+    if (room.coverImage && !confirm('Clear this and use the default cover image instead? (Automatically stays up to date if the default ever changes.)')) return;
+    window._mqRooms[idx].coverImage = '';
+    renderRoomsList();
+  };
+  // Unlike the shop-level version above, this field IS the default (new
+  // shops start from whatever's saved here), so there's nothing to "fall
+  // back to" — this just fills in the current known-correct built-in URL
+  // directly so it can be reviewed and saved via the normal Save button,
+  // rather than needing to type/paste it by hand.
+  window.mqFillDefaultMasterCoverImage = function(roomId, roomName, idx) {
+    const defaultUrl = mqDefaultCoverImageUrlFor(roomId, roomName);
+    if (!defaultUrl) return;
+    const inp = document.getElementById(`mq-master-room-cover-${idx}`);
+    if (inp) inp.value = defaultUrl;
+    const preview = document.getElementById(`mq-master-room-cover-preview-${idx}`);
+    if (preview) preview.innerHTML = `<img src="${defaultUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+  };
+
   // Which filename the widget itself falls back to for each standard room
   // when a shop's own measureImage is blank — this list must always match
   // MQ_DEFAULT_MEASURE_IMAGES in widget.js/widgetpro.js exactly. Used here
@@ -2660,9 +2745,9 @@ window.logoutMember = async function () {
       { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.jpg', measureText:'', measureImage:'' },
       { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.jpg', measureText:'', measureImage:'' },
       { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.jpg', measureText:'', measureImage:'' },
-      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.png' },
-      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.png' },
-      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.png' },
+      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
+      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
+      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
     ];
   }
 
@@ -2765,7 +2850,7 @@ window.logoutMember = async function () {
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
             <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-              ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
+              ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? `<img src="${r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
             </div>
             <div style="flex:1;min-width:0">
               <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
@@ -2774,6 +2859,7 @@ window.logoutMember = async function () {
                 📤 Upload
                 <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
               </label>
+              ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseDefaultCoverImage('${r.id}',${idx})">↺ Use default image</button>` : ''}
               <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
             </div>
           </div>
