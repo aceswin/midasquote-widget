@@ -2099,18 +2099,6 @@
         </button>
       </div>
 
-      <div id="mq-quote-cart" style="display:none;margin:14px 1.5rem 0;padding:14px 16px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-          <div style="font-size:13px;font-weight:700;color:#166534">🧾 Your quote so far</div>
-          <button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:12px;color:#6b7280;text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button>
-        </div>
-        <div id="mq-cart-items"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px dashed #86efac">
-          <span style="font-size:13.5px;font-weight:700;color:#166534">Running total</span>
-          <span id="mq-cart-total" style="font-size:19px;font-weight:800;color:#166534">—</span>
-        </div>
-      </div>
-
       <!-- CABINET TAB -->
       <div class="mq-tab-content" id="mq-tab-cabinets">
         ${PRICE_LEGEND_HTML}
@@ -3681,9 +3669,6 @@
     };
 
     window.mqRenderQuoteCart = function() {
-      const panel = document.getElementById('mq-quote-cart');
-      const itemsEl = document.getElementById('mq-cart-items');
-      const totalEl = document.getElementById('mq-cart-total');
       const cart = window._mqQuoteCart || [];
       const preview = window._mqLivePreview || null;
       // Combined for display/total purposes only — the live preview is
@@ -3692,10 +3677,6 @@
       // at, and switching away from an empty tab correctly commits nothing.
       const allEntries = preview ? [...cart, preview] : cart;
 
-      // Same itemized rows, reused for both the panel at the top of the
-      // widget and the always-visible sticky bar's breakdown — just with a
-      // text color that fits each background (dark text on the panel's
-      // light green, light text on the sticky bar's dark background).
       const buildRows = (textColor, mutedColor) => allEntries.map(entry => {
         const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : ('$' + Math.round(entry.total).toLocaleString());
         const isPreview = !entry.id; // committed entries always have an id; the live preview never does
@@ -3720,16 +3701,6 @@
       const allNoRange = allEntries.length > 0 && allEntries.every(e => !e.showRange);
       const totalText = allNoRange ? ('$' + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
 
-      if (panel && itemsEl && totalEl) {
-        if (!allEntries.length) {
-          panel.style.display = 'none';
-        } else {
-          panel.style.display = 'block';
-          itemsEl.innerHTML = buildRows('#1c3a28', '#9ca3af');
-          totalEl.textContent = totalText;
-        }
-      }
-
       // The sticky bar is created lazily (only once a Calculate has ever
       // run), so these elements may not exist yet the first time this runs
       // — that's fine, mqShowStickyBar re-triggers this once they do.
@@ -3744,7 +3715,8 @@
           stickyBreakdown.style.display = 'block';
           if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
-            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`;
+            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`
+            + `<div style="text-align:right;padding-top:6px"><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
         }
         mqAdjustWidgetBottomPadding();
       }
@@ -3816,6 +3788,7 @@
       mqRefreshSectionVisibility(prefix);
       if (restoreSnapshot) mqRestoreFormState(prefix, restoreSnapshot);
       mqRefreshBallparkWording(prefix);
+      if (window._mqStickyPrefix === prefix) mqUpdateLivePreview(prefix);
     };
     window.mqTogDwOption=(prefix)=>{
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
@@ -5234,7 +5207,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   window.mqShowStickyBar = function(prefix, low, high, total) {
     window._mqStickyPrefix = prefix;
     mqSetupStickyBar();
-    mqRenderQuoteCart();
+    mqUpdateLivePreview(prefix);
     mqSetStickyPrice(prefix, low, high, total, false);
     if (!window._mqStickyDismissed) {
       const bar = document.getElementById('mq-sticky-bar');
@@ -5332,6 +5305,31 @@ window.mqTogDrawerConfig=(prefix)=>{
   // Silently re-runs the same math Calculate uses, for whichever tab is
   // currently being tracked — no lead popup, no scrolling, no saving
   // anything, just fresh numbers.
+  // Shows whichever project type is CURRENTLY active as its own live line
+  // in the breakdown — even at $0 right after switching to it — updating
+  // as the customer types. Never added to the real cart array itself; this
+  // is purely a display-layer preview of what WOULD get committed if they
+  // switched away right now. Accepts an already-computed range to avoid a
+  // redundant recalculation when the caller already has one on hand.
+  function mqUpdateLivePreview(prefix, precomputedRange) {
+    let range = precomputedRange;
+    if (!range) {
+      if (!window._mqCalcCabinet || !window._mqCalcCountertop) return;
+      if (prefix === 'b') {
+        const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
+        range = { low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total, label: cab.roomLabel || 'Cabinets + Countertops' };
+      } else if (prefix === 'ct') {
+        const r = window._mqCalcCountertop('ct');
+        range = { low: r.low, high: r.high, total: r.total, label: 'Countertops' };
+      } else {
+        const r = window._mqCalcCabinet('c');
+        range = { low: r.low, high: r.high, total: r.total, label: r.roomLabel };
+      }
+    }
+    window._mqLivePreview = { label: range.label, prefix, low: range.low, high: range.high, total: range.total, showRange: mqShouldShowRange(prefix) };
+    mqRenderQuoteCart();
+  }
+
   function mqLiveRecalcSticky() {
     const prefix = window._mqStickyPrefix;
     if (!prefix || window._mqStickyDismissed) return;
@@ -5355,17 +5353,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       if (range) {
         mqSetStickyPrice(prefix, range.low, range.high, range.total, true);
-        // Shows what's CURRENTLY being configured as its own live line in
-        // the breakdown — labeled with whichever project type is active —
-        // updating as the customer types, rather than only appearing once
-        // they actually commit by switching away. Not added to the real
-        // cart array itself; this is purely a display-layer preview of
-        // what WOULD get committed if they switched away right now.
-        const hasValue = (range.low||0) > 0 || (range.high||0) > 0 || (range.total||0) > 0;
-        window._mqLivePreview = hasValue
-          ? { label: range.label, prefix, low: range.low, high: range.high, total: range.total, showRange: mqShouldShowRange(prefix) }
-          : null;
-        mqRenderQuoteCart();
+        mqUpdateLivePreview(prefix, range);
       }
     } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
   }
