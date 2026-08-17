@@ -3548,24 +3548,27 @@
       mqRenderQuoteCart();
     };
 
-    function mqRenderQuoteCart() {
+    window.mqRenderQuoteCart = function() {
       const panel = document.getElementById('mq-quote-cart');
       const itemsEl = document.getElementById('mq-cart-items');
       const totalEl = document.getElementById('mq-cart-total');
-      if (!panel || !itemsEl || !totalEl) return;
       const cart = window._mqQuoteCart || [];
-      if (!cart.length) { panel.style.display = 'none'; return; }
-      panel.style.display = 'block';
-      itemsEl.innerHTML = cart.map(entry => {
+
+      // Same itemized rows, reused for both the panel at the top of the
+      // widget and the always-visible sticky bar's breakdown — just with a
+      // text color that fits each background (dark text on the panel's
+      // light green, light text on the sticky bar's dark background).
+      const buildRows = (textColor, mutedColor) => cart.map(entry => {
         const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : ('$' + Math.round(entry.total).toLocaleString());
-        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:#1c3a28">
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:${textColor}">
           <span>${entry.label}</span>
           <span style="display:flex;align-items:center;gap:8px">
             <strong>${priceText}</strong>
-            <button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>
+            <button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:${mutedColor};cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>
           </span>
         </div>`;
       }).join('');
+
       const totalLow = cart.reduce((s,e) => s + (e.low||0), 0);
       const totalHigh = cart.reduce((s,e) => s + (e.high||0), 0);
       const totalExact = cart.reduce((s,e) => s + (e.total||0), 0);
@@ -3574,8 +3577,35 @@
       // a combined range — mixing a bare number with ranged entries would
       // be misleading either way, so a combined range is the safer default
       // once more than one project type is actually involved.
-      const allNoRange = cart.every(e => !e.showRange);
-      totalEl.textContent = allNoRange ? ('$' + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
+      const allNoRange = cart.length > 0 && cart.every(e => !e.showRange);
+      const totalText = allNoRange ? ('$' + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
+
+      if (panel && itemsEl && totalEl) {
+        if (!cart.length) {
+          panel.style.display = 'none';
+        } else {
+          panel.style.display = 'block';
+          itemsEl.innerHTML = buildRows('#1c3a28', '#9ca3af');
+          totalEl.textContent = totalText;
+        }
+      }
+
+      // The sticky bar is created lazily (only once a Calculate has ever
+      // run), so these elements may not exist yet the first time this runs
+      // — that's fine, mqShowStickyBar re-triggers this once they do.
+      const stickyToggle = document.getElementById('mq-sticky-breakdown-toggle');
+      const stickyBreakdown = document.getElementById('mq-sticky-breakdown');
+      if (stickyToggle) stickyToggle.style.display = cart.length ? 'inline' : 'none';
+      if (stickyBreakdown) {
+        if (!cart.length) {
+          stickyBreakdown.style.display = 'none';
+          stickyBreakdown.innerHTML = '';
+        } else {
+          stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
+            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`;
+        }
+        mqAdjustWidgetBottomPadding();
+      }
     }
 
     // Clears the whole running quote and resets every tab's form back to
@@ -4925,18 +4955,28 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
             <button class="mq-pri" style="background:${accent};color:#fff" onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
         </div>
+        <div id="mq-sticky-breakdown" style="display:none;padding:0 16px 12px;font-size:12.5px;color:rgba(255,255,255,0.9)"></div>
         ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available</div>` : ''}
       </div>`;
     document.body.appendChild(bar);
     window.addEventListener('resize', mqAdjustWidgetBottomPadding);
   }
+  window.mqToggleStickyBreakdown = function() {
+    const panel = document.getElementById('mq-sticky-breakdown');
+    const toggle = document.getElementById('mq-sticky-breakdown-toggle');
+    if (!panel) return;
+    const opening = panel.style.display === 'none';
+    panel.style.display = opening ? 'block' : 'none';
+    if (toggle) toggle.textContent = opening ? '▴ Hide breakdown' : '▾ Breakdown';
+    mqAdjustWidgetBottomPadding();
+  };
   // The bar is position:fixed, so it never pushes page content out of the
   // way on its own — without this, it silently sits on top of whatever's
   // scrolled to the bottom (financing note, "Powered by" footer, etc.),
@@ -5031,6 +5071,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   window.mqShowStickyBar = function(prefix, low, high, total) {
     window._mqStickyPrefix = prefix;
     mqSetupStickyBar();
+    mqRenderQuoteCart();
     mqSetStickyPrice(prefix, low, high, total, false);
     if (!window._mqStickyDismissed) {
       const bar = document.getElementById('mq-sticky-bar');
