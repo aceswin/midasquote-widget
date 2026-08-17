@@ -3597,61 +3597,82 @@
     // or switching away to a different tab. Returns true if it committed
     // something, so callers can tell whether the cart actually changed.
     window.mqCommitCurrentConfig = function(prefix) {
-      if (!window._mqCalcCabinet || !window._mqCalcCountertop) return false;
-
-      // calcCabinet/calcCountertop and mqShouldShowRange all read the room
-      // dropdown's CURRENT live value to decide which project type's price
-      // adjustments (and range/no-range setting) apply — but by the time
-      // this runs (called from inside the room dropdown's own onchange),
-      // the dropdown has already switched to the NEW room. Without
-      // correcting for this, whatever's being committed would silently get
-      // priced using the NEW project type's percentages instead of the one
-      // actually being left. Temporarily rewind the dropdown to its
-      // previous value (captured on focus, before this switch happened)
-      // for the whole calculation, then restore it to the actual new
-      // selection once done.
       const roomEl = (prefix === 'b' || prefix === 'c') ? document.getElementById(`mq-${prefix}-room`) : null;
       const actualValue = roomEl ? roomEl.value : null;
-      const prevRoomId = (window._mqPrevRoomId || {})[prefix];
-      const needsRewind = !!(roomEl && prevRoomId != null && prevRoomId !== actualValue);
-      if (needsRewind) roomEl.value = prevRoomId;
 
-      let result, label, showRange, formSnapshot, roomId;
       try {
-        if (prefix === 'b') {
-          const cab = window._mqCalcCabinet('b');
-          const ct = window._mqCalcCountertop('b');
-          const low = (cab.low||0) + (ct.low||0), high = (cab.high||0) + (ct.high||0), total = (cab.total||0) + (ct.total||0);
-          if (low <= 0 && high <= 0 && total <= 0) return false;
-          result = { low, high, total, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
-          label = cab.roomLabel || 'Cabinets + Countertops';
-        } else if (prefix === 'ct') {
-          const r = window._mqCalcCountertop('ct');
-          if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
-          result = r;
-          label = 'Countertops';
-        } else {
-          const r = window._mqCalcCabinet('c');
-          if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
-          result = r;
-          label = r.roomLabel || 'Cabinets';
-        }
-        showRange = mqShouldShowRange(prefix);
-        roomId = roomEl ? roomEl.value : null;
-        formSnapshot = mqSnapshotFormState(prefix);
-      } finally {
-        if (needsRewind) roomEl.value = actualValue;
-      }
+        if (!window._mqCalcCabinet || !window._mqCalcCountertop) return false;
 
-      window._mqQuoteCart.push({
-        id: 'cart_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-        label, prefix, roomId, formSnapshot,
-        showRange,
-        low: result.low, high: result.high, total: result.total,
-        lines: result.lines,
-      });
-      mqRenderQuoteCart();
-      return true;
+        // calcCabinet/calcCountertop and mqShouldShowRange all read the room
+        // dropdown's CURRENT live value to decide which project type's price
+        // adjustments (and range/no-range setting) apply — but by the time
+        // this runs (called from inside the room dropdown's own onchange),
+        // the dropdown has already switched to the NEW room. Without
+        // correcting for this, whatever's being committed would silently get
+        // priced using the NEW project type's percentages instead of the one
+        // actually being left. Temporarily rewind the dropdown to its
+        // previous value for the whole calculation, then restore it to the
+        // actual new selection once done.
+        const prevRoomId = (window._mqPrevRoomId || {})[prefix];
+        const needsRewind = !!(roomEl && prevRoomId != null && prevRoomId !== actualValue);
+        if (needsRewind) roomEl.value = prevRoomId;
+
+        let result, label, showRange, formSnapshot, roomId;
+        try {
+          if (prefix === 'b') {
+            const cab = window._mqCalcCabinet('b');
+            const ct = window._mqCalcCountertop('b');
+            const low = (cab.low||0) + (ct.low||0), high = (cab.high||0) + (ct.high||0), total = (cab.total||0) + (ct.total||0);
+            if (low <= 0 && high <= 0 && total <= 0) return false;
+            result = { low, high, total, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
+            label = cab.roomLabel || 'Cabinets + Countertops';
+          } else if (prefix === 'ct') {
+            const r = window._mqCalcCountertop('ct');
+            if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
+            result = r;
+            label = 'Countertops';
+          } else {
+            const r = window._mqCalcCabinet('c');
+            if ((r.low||0) <= 0 && (r.high||0) <= 0 && (r.total||0) <= 0) return false;
+            result = r;
+            label = r.roomLabel || 'Cabinets';
+          }
+          showRange = mqShouldShowRange(prefix);
+          roomId = roomEl ? roomEl.value : null;
+          formSnapshot = mqSnapshotFormState(prefix);
+        } finally {
+          if (needsRewind) roomEl.value = actualValue;
+        }
+
+        window._mqQuoteCart.push({
+          id: 'cart_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          label, prefix, roomId, formSnapshot,
+          showRange,
+          low: result.low, high: result.high, total: result.total,
+          lines: result.lines,
+        });
+        // The value just committed above is now a real cart entry — clear
+        // the live preview immediately rather than waiting for the next
+        // debounced recalc, or the breakdown would briefly double-count it
+        // as both the new entry AND the stale still-showing preview.
+        window._mqLivePreview = null;
+        mqRenderQuoteCart();
+        return true;
+      } finally {
+        // ALWAYS keep this in sync with the dropdown's actual current value,
+        // regardless of whether a commit happened — this is what the NEXT
+        // switch rewinds to, so it must reflect reality even on a switch
+        // that had nothing to commit. A native <select> that already has
+        // focus does NOT refire the 'focus' event on later selections, so
+        // relying on that alone (the original approach) went stale after
+        // the very first switch — every switch after that would silently
+        // rewind to the wrong room, corrupting both the price (wrong
+        // room's adjustment %) and the label on every entry from then on.
+        if (roomEl) {
+          window._mqPrevRoomId = window._mqPrevRoomId || {};
+          window._mqPrevRoomId[prefix] = actualValue;
+        }
+      }
     }
 
     window.mqRemoveFromQuoteCart = function(cartId) {
@@ -3664,35 +3685,43 @@
       const itemsEl = document.getElementById('mq-cart-items');
       const totalEl = document.getElementById('mq-cart-total');
       const cart = window._mqQuoteCart || [];
+      const preview = window._mqLivePreview || null;
+      // Combined for display/total purposes only — the live preview is
+      // never added to the real cart array itself, so a room that never
+      // ends up with any value never gets committed just for being looked
+      // at, and switching away from an empty tab correctly commits nothing.
+      const allEntries = preview ? [...cart, preview] : cart;
 
       // Same itemized rows, reused for both the panel at the top of the
       // widget and the always-visible sticky bar's breakdown — just with a
       // text color that fits each background (dark text on the panel's
       // light green, light text on the sticky bar's dark background).
-      const buildRows = (textColor, mutedColor) => cart.map(entry => {
+      const buildRows = (textColor, mutedColor) => allEntries.map(entry => {
         const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : ('$' + Math.round(entry.total).toLocaleString());
-        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:${textColor}">
-          <span>${entry.label}</span>
+        const isPreview = !entry.id; // committed entries always have an id; the live preview never does
+        const removeBtn = isPreview ? '' : `<button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:${mutedColor};cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>`;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:${textColor}${isPreview ? ';font-style:italic;opacity:0.85' : ''}">
+          <span>${entry.label}${isPreview ? ' <span style="font-style:normal;font-size:11px">(editing…)</span>' : ''}</span>
           <span style="display:flex;align-items:center;gap:8px">
             <strong>${priceText}</strong>
-            <button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:${mutedColor};cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>
+            ${removeBtn}
           </span>
         </div>`;
       }).join('');
 
-      const totalLow = cart.reduce((s,e) => s + (e.low||0), 0);
-      const totalHigh = cart.reduce((s,e) => s + (e.high||0), 0);
-      const totalExact = cart.reduce((s,e) => s + (e.total||0), 0);
-      // If every committed entry is on a no-range project type, show one
-      // clean combined number. If even one entry has a range, fall back to
-      // a combined range — mixing a bare number with ranged entries would
-      // be misleading either way, so a combined range is the safer default
-      // once more than one project type is actually involved.
-      const allNoRange = cart.length > 0 && cart.every(e => !e.showRange);
+      const totalLow = allEntries.reduce((s,e) => s + (e.low||0), 0);
+      const totalHigh = allEntries.reduce((s,e) => s + (e.high||0), 0);
+      const totalExact = allEntries.reduce((s,e) => s + (e.total||0), 0);
+      // If every entry (committed AND the live preview) is on a no-range
+      // project type, show one clean combined number. If even one has a
+      // range, fall back to a combined range — mixing a bare number with
+      // ranged entries would be misleading either way, so a combined range
+      // is the safer default once more than one project type is involved.
+      const allNoRange = allEntries.length > 0 && allEntries.every(e => !e.showRange);
       const totalText = allNoRange ? ('$' + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
 
       if (panel && itemsEl && totalEl) {
-        if (!cart.length) {
+        if (!allEntries.length) {
           panel.style.display = 'none';
         } else {
           panel.style.display = 'block';
@@ -3706,9 +3735,9 @@
       // — that's fine, mqShowStickyBar re-triggers this once they do.
       const stickyToggle = document.getElementById('mq-sticky-breakdown-toggle');
       const stickyBreakdown = document.getElementById('mq-sticky-breakdown');
-      if (stickyToggle) stickyToggle.style.display = cart.length ? 'inline' : 'none';
+      if (stickyToggle) stickyToggle.style.display = allEntries.length ? 'inline' : 'none';
       if (stickyBreakdown) {
-        if (!cart.length) {
+        if (!allEntries.length) {
           stickyBreakdown.style.display = 'none';
           stickyBreakdown.innerHTML = '';
         } else {
@@ -3726,6 +3755,7 @@
     window.mqResetEntireQuote = function() {
       if ((window._mqQuoteCart||[]).length && !confirm('Clear your whole quote and start over?')) return;
       window._mqQuoteCart = [];
+      window._mqLivePreview = null;
       mqRenderQuoteCart();
       mqResetCabinetForm('c');
       mqResetCabinetForm('b');
@@ -4475,7 +4505,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const subEl = document.getElementById('mq-c-res-sub');
         if (subEl) subEl.textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
         renderResult('mq-c-res-range','mq-c-line-items', r, 'c');
-        return { low: r.low, high: r.high, total: r.total };
+        return { low: r.low, high: r.high, total: r.total, label: r.roomLabel };
       }
       if (prefix === 'ct') {
         const panel = document.getElementById('mq-ct-result');
@@ -4485,7 +4515,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const subEl = document.getElementById('mq-ct-res-sub');
         if (subEl) subEl.textContent = `${active} surface(s)`;
         renderResult('mq-ct-res-range','mq-ct-line-items', r, 'ct');
-        return { low: r.low, high: r.high, total: r.total };
+        return { low: r.low, high: r.high, total: r.total, label: 'Countertops' };
       }
       if (prefix === 'b') {
         const panel = document.getElementById('mq-b-result');
@@ -4505,7 +4535,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const tl = cab.low+ct.low, th = cab.high+ct.high, totalB = cab.total+ct.total;
         const grandEl = document.getElementById('mq-b-grand');
         if (grandEl) { mqRefreshBallparkWording('b'); grandEl.textContent = mqFmtPrice('b', tl, th, totalB); }
-        return { low: tl, high: th, total: totalB };
+        return { low: tl, high: th, total: totalB, label: cab.roomLabel || 'Cabinets + Countertops' };
       }
       return null;
     };
@@ -5314,14 +5344,29 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!range && window._mqCalcCabinet && window._mqCalcCountertop) {
         if (prefix === 'b') {
           const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-          range = { low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total };
+          range = { low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total, label: cab.roomLabel || 'Cabinets + Countertops' };
         } else if (prefix === 'ct') {
-          range = window._mqCalcCountertop('ct');
+          const r = window._mqCalcCountertop('ct');
+          range = { low: r.low, high: r.high, total: r.total, label: 'Countertops' };
         } else {
-          range = window._mqCalcCabinet('c');
+          const r = window._mqCalcCabinet('c');
+          range = { low: r.low, high: r.high, total: r.total, label: r.roomLabel };
         }
       }
-      if (range) mqSetStickyPrice(prefix, range.low, range.high, range.total, true);
+      if (range) {
+        mqSetStickyPrice(prefix, range.low, range.high, range.total, true);
+        // Shows what's CURRENTLY being configured as its own live line in
+        // the breakdown — labeled with whichever project type is active —
+        // updating as the customer types, rather than only appearing once
+        // they actually commit by switching away. Not added to the real
+        // cart array itself; this is purely a display-layer preview of
+        // what WOULD get committed if they switched away right now.
+        const hasValue = (range.low||0) > 0 || (range.high||0) > 0 || (range.total||0) > 0;
+        window._mqLivePreview = hasValue
+          ? { label: range.label, prefix, low: range.low, high: range.high, total: range.total, showRange: mqShouldShowRange(prefix) }
+          : null;
+        mqRenderQuoteCart();
+      }
     } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
   }
   let _mqStickyDebounce = null;
