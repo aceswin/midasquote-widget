@@ -1633,6 +1633,16 @@
     }
     mqEnsureCalcModal().style.display = 'flex';
     mqRenderCalc();
+
+    // The sticky bar's expanded breakdown can be tall enough to cover part
+    // of this modal at the bottom of the screen once there's more than one
+    // room in it. Temporarily collapse it while the calculator is open,
+    // and only if it was actually showing — nothing to undo later if it
+    // was already collapsed to begin with.
+    const breakdown = document.getElementById('mq-sticky-breakdown');
+    const entryCount = (window._mqQuoteCart || []).length + (window._mqLivePreview ? 1 : 0);
+    window._mqCalcAutoHidBreakdown = !!(breakdown && breakdown.style.display === 'block' && entryCount > 1);
+    if (window._mqCalcAutoHidBreakdown) window.mqToggleStickyBreakdown();
   };
 
   window.mqCloseMeasureCalc = function() {
@@ -1641,6 +1651,10 @@
     }
     const modal = document.getElementById('mq-measure-calc');
     if (modal) modal.style.display = 'none';
+    if (window._mqCalcAutoHidBreakdown) {
+      window._mqCalcAutoHidBreakdown = false;
+      window.mqToggleStickyBreakdown();
+    }
   };
 
   window.mqCalcSetUnit = function(unit) {
@@ -3682,7 +3696,7 @@
         const isPreview = !entry.id; // committed entries always have an id; the live preview never does
         const removeBtn = isPreview ? '' : `<button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:${mutedColor};cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>`;
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:${textColor}${isPreview ? ';font-style:italic;opacity:0.85' : ''}">
-          <span>${entry.label}${isPreview ? ' <span style="font-style:normal;font-size:11px">(editing…)</span>' : ''}</span>
+          <span>${entry.label}</span>
           <span style="display:flex;align-items:center;gap:8px">
             <strong>${priceText}</strong>
             ${removeBtn}
@@ -3712,8 +3726,13 @@
           stickyBreakdown.style.display = 'none';
           stickyBreakdown.innerHTML = '';
         } else {
-          stickyBreakdown.style.display = 'block';
-          if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
+          // Keep the content fresh regardless, but don't fight the
+          // calculator modal's auto-hide by forcing this back open while
+          // it's active — it gets restored once the modal closes.
+          if (!window._mqCalcAutoHidBreakdown) {
+            stickyBreakdown.style.display = 'block';
+            if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
+          }
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
             + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`
             + `<div style="text-align:right;padding-top:6px"><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
