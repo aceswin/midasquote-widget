@@ -3476,6 +3476,115 @@
       if (surfs[prefix]) surfs[prefix] = {};
     }
 
+    // ===================== Snapshot / restore a project type's form state =====================
+    // Lets someone switch BACK to a project type they already committed to
+    // the cart and pick up exactly where they left off, instead of it
+    // resetting to blank and any new number just tacking on as a second,
+    // duplicate entry alongside the original.
+
+    // Restores one field's value — using the same visual-chip mechanism a
+    // real click on a picker row uses (so the visible selection AND any
+    // onchange-triggered follow-up logic both stay correct), or a direct
+    // value/checked assignment for plain inputs that have no picker UI.
+    function mqRestoreFieldValue(id, value) {
+      const el = document.getElementById(id);
+      if (!el || value === undefined) return;
+      if (el.tagName === 'SELECT') {
+        const chips = document.querySelectorAll(`[data-vpicker-for="${id}"]`);
+        const chip = [...chips].find(c => c.getAttribute('data-value') === value);
+        const btn = chip ? chip.querySelector('.mq-vpicker-select-btn') : null;
+        if (btn) { window.mqPickVisual(id, btn); return; }
+        el.value = value;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (el.type === 'checkbox') {
+        if (el.checked !== value) { el.checked = value; el.dispatchEvent(new Event('change', { bubbles: true })); }
+      } else {
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+
+    // Captures everything about the CURRENT form for `prefix` needed to put
+    // it back exactly as it was later — every plain input/select value,
+    // whether upper/base are split, every specialty item's quantity, and
+    // each tall cabinet card's type/width/quantity (those are dynamically
+    // built elements, not simple fields, so they need their own handling
+    // rather than falling out of the generic field capture below).
+    function mqSnapshotFormState(prefix) {
+      const fields = {};
+      document.querySelectorAll(`[id^="mq-${prefix}-"]`).forEach(el => {
+        if (el.id === `mq-${prefix}-room`) return; // being switched away from — not part of "the config"
+        if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          fields[el.id] = (el.type === 'checkbox') ? el.checked : el.value;
+        }
+      });
+      // Specialty items' supply/install mode selector uses a different id
+      // shape (mq-spec-mode-PREFIX-i, not mq-PREFIX-spec-mode-i) so it
+      // doesn't fall under the generic query above — captured separately.
+      document.querySelectorAll(`[id^="mq-spec-mode-${prefix}-"]`).forEach(el => {
+        fields[el.id] = el.value;
+      });
+      const tallCabSnaps = [];
+      Object.keys(tallCabs[prefix] || {}).forEach(id => {
+        const qty = tallCabs[prefix][id];
+        if (!qty) return; // an empty, just-added card isn't worth restoring
+        const typeEl = document.getElementById(`mq-tc-type-${id}`);
+        const widthEl = document.getElementById(`mq-tc-width-${id}`);
+        tallCabSnaps.push({ type: typeEl ? typeEl.value : 'none', width: widthEl ? widthEl.value : '24', qty });
+      });
+      return {
+        fields,
+        diffOn: !!diffOn[prefix],
+        specQty: [...(specQty[prefix] || [])],
+        installQty: [...(installQty[prefix] || [])],
+        tallCabs: tallCabSnaps,
+      };
+    }
+
+    // Applies a snapshot captured above back onto the (already freshly
+    // reset) form for `prefix`.
+    function mqRestoreFormState(prefix, snapshot) {
+      if (!snapshot) return;
+      // Split upper/base first — it changes which fields are even visible
+      // before the rest of the values get restored into them.
+      if (!!diffOn[prefix] !== !!snapshot.diffOn) window.mqTogDiff(prefix);
+      Object.keys(snapshot.fields).forEach(id => mqRestoreFieldValue(id, snapshot.fields[id]));
+      // Specialty items: restore the underlying tracking data directly,
+      // bypassing mqSetQty's "a mode must already be chosen" guard — this
+      // is known-valid prior state being put back, not new input that
+      // still needs validating — then keep the visible quantity box and
+      // "on" highlight in sync by hand.
+      (snapshot.specQty || []).forEach((qty, i) => {
+        if (!qty || !specQty[prefix]) return;
+        specQty[prefix][i] = qty;
+        const el = document.getElementById(`mq-qty-${prefix}-${i}`);
+        if (el) el.value = qty;
+        document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on', qty > 0);
+      });
+      (snapshot.installQty || []).forEach((qty, i) => {
+        if (!qty || !installQty[prefix]) return;
+        installQty[prefix][i] = qty;
+        const el = document.getElementById(`mq-installqty-${prefix}-${i}`);
+        if (el) el.value = qty;
+      });
+      // Tall cabinets are dynamically-created cards, not simple fields —
+      // the reset that already ran before this cleared any old ones, so
+      // recreate one fresh card per saved cabinet, then set it to match.
+      (snapshot.tallCabs || []).forEach(tc => {
+        addTallCabInternal(prefix);
+        const newId = `tc${prefix}${tallCabCounts[prefix]}`;
+        mqRestoreFieldValue(`mq-tc-type-${newId}`, tc.type);
+        const widthEl = document.getElementById(`mq-tc-width-${newId}`);
+        if (widthEl) widthEl.value = tc.width;
+        tallCabs[prefix][newId] = tc.qty;
+        const qtyEl = document.getElementById(`mq-tc-qty-${newId}`);
+        if (qtyEl) qtyEl.textContent = tc.qty;
+      });
+      mqRefreshAllPickerVisibility(prefix);
+      mqRefreshBsFt(prefix);
+    }
+    // ===================== end snapshot / restore =====================
+
     // ===================== Multi-project-type quote cart =====================
     // Lets a customer configure one project type, then switch to a totally
     // different one (or a different tab entirely) and keep building toward
@@ -3507,7 +3616,7 @@
       const needsRewind = !!(roomEl && prevRoomId != null && prevRoomId !== actualValue);
       if (needsRewind) roomEl.value = prevRoomId;
 
-      let result, label, showRange;
+      let result, label, showRange, formSnapshot, roomId;
       try {
         if (prefix === 'b') {
           const cab = window._mqCalcCabinet('b');
@@ -3528,13 +3637,15 @@
           label = r.roomLabel || 'Cabinets';
         }
         showRange = mqShouldShowRange(prefix);
+        roomId = roomEl ? roomEl.value : null;
+        formSnapshot = mqSnapshotFormState(prefix);
       } finally {
         if (needsRewind) roomEl.value = actualValue;
       }
 
       window._mqQuoteCart.push({
         id: 'cart_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-        label, prefix,
+        label, prefix, roomId, formSnapshot,
         showRange,
         low: result.low, high: result.high, total: result.total,
         lines: result.lines,
@@ -3636,6 +3747,20 @@
       // visible in the new room. Calling it again here would just find an
       // already-reset form with nothing left to commit.
       _mqStepIndex[prefix] = 0;
+
+      // If the project type being switched TO already has a committed cart
+      // entry, pull it back out and restore exactly what was configured
+      // instead of resetting to blank — otherwise typing in a new number
+      // here would just tack on as a second, duplicate entry rather than
+      // actually editing the original one.
+      const newRoomId = gv(`mq-${prefix}-room`);
+      const existingIdx = (window._mqQuoteCart||[]).findIndex(e => e.prefix === prefix && e.roomId != null && e.roomId === newRoomId);
+      const restoreSnapshot = existingIdx >= 0 ? window._mqQuoteCart[existingIdx].formSnapshot : null;
+      if (existingIdx >= 0) {
+        window._mqQuoteCart.splice(existingIdx, 1);
+        mqRenderQuoteCart();
+      }
+
       mqResetCabinetForm(prefix);
       // Reset every specialty item on an actual project type change — not
       // just the ones that become hidden by the room switch. An item that
@@ -3659,6 +3784,7 @@
         });
       }
       mqRefreshSectionVisibility(prefix);
+      if (restoreSnapshot) mqRestoreFormState(prefix, restoreSnapshot);
       mqRefreshBallparkWording(prefix);
     };
     window.mqTogDwOption=(prefix)=>{
