@@ -1860,7 +1860,7 @@
             <span class="mq-step-badge" style="width:26px;height:26px;font-size:14px">1</span>
             Start here — choose your project type
           </label>
-          <select id="mq-${prefix}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${prefix}']=this.value" onchange="mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>!r.proOnly).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+          <select id="mq-${prefix}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${prefix}']=this.value" onchange="mqCommitCurrentConfig('${prefix}');mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>!r.proOnly).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
           <p class="mq-hint mq-focal-box-label" id="mq-${prefix}-room-vanity-note" style="display:none;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:13px;color:#92400e;line-height:1.5"></div>
         </div>
@@ -3487,7 +3487,7 @@
     // form gets reset, whether that's from switching project type within it
     // or switching away to a different tab. Returns true if it committed
     // something, so callers can tell whether the cart actually changed.
-    function mqCommitCurrentConfig(prefix) {
+    window.mqCommitCurrentConfig = function(prefix) {
       if (!window._mqCalcCabinet || !window._mqCalcCountertop) return false;
 
       // calcCabinet/calcCountertop and mqShouldShowRange all read the room
@@ -3601,6 +3601,8 @@
           stickyBreakdown.style.display = 'none';
           stickyBreakdown.innerHTML = '';
         } else {
+          stickyBreakdown.style.display = 'block';
+          if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
             + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`;
         }
@@ -3627,7 +3629,12 @@
     // (like adding a tall cabinet card), which should refresh what's showing
     // without yanking someone back to the beginning of the flow.
     window.mqOnProjectTypeChange = function(prefix) {
-      mqCommitCurrentConfig(prefix);
+      // mqCommitCurrentConfig already ran for this switch — it's the FIRST
+      // thing in the room dropdown's onchange, specifically so it captures
+      // the old room's full state (including specialty items) before
+      // mqRefreshRoomVisibility gets a chance to zero out anything not
+      // visible in the new room. Calling it again here would just find an
+      // already-reset form with nothing left to commit.
       _mqStepIndex[prefix] = 0;
       mqResetCabinetForm(prefix);
       // Reset every specialty item on an actual project type change — not
