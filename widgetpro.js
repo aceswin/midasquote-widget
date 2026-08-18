@@ -1694,9 +1694,10 @@
         <div style="background:#F0E9DA;border:2px solid #0f2a52;border-radius:12px;padding:16px 18px">
           <label style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#0f2a52;margin-bottom:8px">
             <span style="background:#0f2a52;color:#fbbf24;border-radius:50%;width:26px;height:26px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">1</span>
-            Start here — choose your project type
+            ${data.shop['Project type title'] || 'Start here — choose your project type'}
           </label>
           <select id="mq-${prefix}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${prefix}']=this.value" onchange="mqCommitCurrentConfig('${prefix}');mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+          <p style="display:block;margin-top:8px;font-weight:500;color:#0f2a52;font-size:13px">${data.shop['Project type hint'] || 'After calculating your first quote, you can continue adding other project types.'}</p>
           <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#0f2a52;font-weight:600;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border:1px solid #0f2a52;border-radius:6px;font-size:13px;color:#1f2937;line-height:1.5"></div>
         </div>
@@ -4427,7 +4428,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
         </div>
         <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
-          <select id="mqssi-${id}" style="min-width:160px">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
+          <select id="mqssi-${id}" style="width:100%;min-width:160px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
         <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
           ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
           <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>

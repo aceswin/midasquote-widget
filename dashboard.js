@@ -202,6 +202,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Brand colour</strong> — used for your widget's tab bar, buttons, and logo placeholder.</p>
         <p><strong>MidasQuote default color scheme</strong> — a collapsed section further down with four optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Left alone, it's the same polished blue scheme every shop starts with — click to expand it only if you want to customize any piece, like a dark background with light text.</p>
         <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
+        <p><strong>Project type section title/hint</strong> — the heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
         <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
         <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific.</p>
@@ -819,6 +820,16 @@ window.logoutMember = async function () {
                 <label class="mq-label">Disclaimer text</label>
                 <textarea id="mq-shop-disclaimer" placeholder="Ballpark estimate only. Contact us for a full quote."></textarea>
                 <span class="mq-hint">Shown at the bottom of every quote</span>
+              </div>
+              <div class="mq-field" style="margin-bottom:1.5rem">
+                <label class="mq-label">Project type section title</label>
+                <input type="text" id="mq-shop-projecttype-title" placeholder="Start here — choose your project type"/>
+                <span class="mq-hint">The heading above the project type dropdown — change the wording to fit your business (e.g. "Choose your job type")</span>
+              </div>
+              <div class="mq-field" style="margin-bottom:1.5rem">
+                <label class="mq-label">Project type section hint</label>
+                <input type="text" id="mq-shop-projecttype-hint" placeholder="After calculating your first quote, you can continue adding other project types."/>
+                <span class="mq-hint">A short line under the dropdown letting customers know they can build one combined quote across multiple project types</span>
               </div>
               <div id="mq-shop-consult-warning" class="mq-msg-error" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px">
                 ⚠️ Please fill in at least one — a consultation link or a consultation email. Without one, customers just get sent to your quote form instead when they click "Ask a question" or "Book a consultation."
@@ -2437,6 +2448,8 @@ window.logoutMember = async function () {
       }
     );
     set('mq-shop-disclaimer', f['Disclaimer text']);
+    set('mq-shop-projecttype-title', f['Project type title']);
+    set('mq-shop-projecttype-hint', f['Project type hint']);
     set('mq-shop-consult-link', f['Consultation link']);
     set('mq-shop-consult-email', f['Consultation email']);
     window.mqCheckConsultFields = function() {
@@ -2481,7 +2494,7 @@ window.logoutMember = async function () {
     const shopFieldIds = [
       'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
       'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
-      'mq-shop-logo','mq-shop-disclaimer','mq-shop-consult-link',
+      'mq-shop-logo','mq-shop-disclaimer','mq-shop-projecttype-title','mq-shop-projecttype-hint','mq-shop-consult-link',
       'mq-shop-consult-email','mq-financing-link',
       'mq-shop-focalcolor','mq-shop-boxbordercolor','mq-shop-boxbgcolor','mq-shop-boxtextcolor'
     ];
@@ -4083,6 +4096,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Quote range high':  gn('mq-shop-range-high', 20),
         'Logo URL':          gv('mq-shop-logo'),
         'Disclaimer text':   gv('mq-shop-disclaimer'),
+        'Project type title': gv('mq-shop-projecttype-title'),
+        'Project type hint': gv('mq-shop-projecttype-hint'),
         'Consultation link': gv('mq-shop-consult-link'),
         'Consultation email': gv('mq-shop-consult-email'),
         'Financing link':    gv('mq-financing-link'),
