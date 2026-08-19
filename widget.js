@@ -466,7 +466,7 @@
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:block}
-      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 300px;min-width:0}
+      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
@@ -489,6 +489,13 @@
            arrows are a desktop-only convenience, not needed (and would
            just sit in the way of the swipe gesture) on phones/tablets. */
         #midasquote-widget .mq-vpicker-arrow{display:none!important}
+        /* Specialty items are the exception — their cards don't give as
+           obvious a "there's more" visual hint as the photo picker chips
+           do, so customers on mobile had no way to tell more items were
+           off-screen. Re-enable just the "more to scroll" arrow (still only
+           shown via .show, exactly like desktop — i.e. only when there's
+           real overflow left to scroll to) for specialty item rows only. */
+        #midasquote-widget .mq-spec-scroll-wrap .mq-vpicker-arrow.show{display:flex!important}
       }
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
@@ -1376,7 +1383,10 @@
   // reused here for specialty items so they get the same desktop arrows and
   // mobile swipe behavior for free, with zero duplicated CSS or JS.
   function mqHscrollWrap(rowId, extraClass, innerHtml) {
-    return `<div class="mq-vpicker-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
+    // mq-spec-scroll-wrap marks this as a specialty-items row specifically
+    // (the only caller of this helper) — see the touch-device media query
+    // below, which re-enables the "more items" arrow just for these rows.
+    return `<div class="mq-vpicker-wrap mq-spec-scroll-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
   }
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
