@@ -216,7 +216,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Each project type (Kitchen, Bathroom, Refacing, or anything custom you add) is its own self-contained setup: its own description, cover photo, "how to measure" guide, and pricing behavior.</p>
         <p><strong>Price adjustments</strong> — four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
         <p><strong>Live on widget / Draft</strong> — uncheck this while you're still setting a project type up, so customers don't see it half-finished.</p>
-        <p><strong>Only show in MidasQuote Pro</strong> — hides this project type from the customer-facing widget completely, while still showing it in your own MidasQuote Pro link. Good for anything you only ever quote yourself.</p>
+        <p><strong>Visibility</strong> — choose where a project type appears: in both the customer widget and MidasQuote Pro, only in MidasQuote Pro (good for anything you only ever quote yourself), or everywhere except MidasQuote Pro (for something you only want offered publicly, not used for your own internal quoting).</p>
         <p><strong>Hide "How to measure" section</strong> — for a project type that's entirely flat-rate items with nothing to actually measure (like a general "Odd jobs" type), this removes that whole section from the widget for that type only.</p>
         <p><strong>Show price as a range</strong> — on by default, shows the usual ballpark spread (e.g. "$2,375 – $3,000"). Uncheck it for a project type where a single clean number makes more sense instead (e.g. "$2,600") — useful for flat-rate or fixed-price project types where a range wouldn't really apply. This also updates the wording around it automatically — "Estimated range" becomes "Your quote," and the ballpark disclaimer text adjusts to match, in every place the price shows up including the confirmation email.</p>
         <p><strong>Cover image</strong> and <strong>Measuring guide image</strong> — upload your own, or click "↺ Use default image" to fall back to MidasQuote's own default photo for that project type. Leaving it on the default means it automatically stays current if that default photo is ever updated — nothing to re-upload later.</p>
@@ -2850,10 +2850,14 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
           </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-proonly-${idx}" ${r.proOnly?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-            ⚡ Only show in MidasQuote Pro <span style="font-weight:400;color:#9ca3af">(hidden from the customer-facing widget entirely)</span>
-          </label>
+          <div style="margin-bottom:8px">
+            <label style="display:block;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:4px">👁️ Visibility</label>
+            <select id="mq-room-visibility-${idx}" onchange="mqSaveRooms()" style="width:100%;max-width:320px;padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:12px;font-family:inherit;background:#fff">
+              <option value="both" ${!r.proOnly && !r.hideFromPro ? 'selected' : ''}>Show in both the widget & MidasQuote Pro</option>
+              <option value="proOnly" ${r.proOnly ? 'selected' : ''}>Only show in MidasQuote Pro (hidden from the customer widget)</option>
+              <option value="hideFromPro" ${r.hideFromPro ? 'selected' : ''}>Don't show in MidasQuote Pro (widget only)</option>
+            </select>
+          </div>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
             <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
@@ -3009,7 +3013,8 @@ window.logoutMember = async function () {
             totalAdjPct: parseFloat(document.getElementById(`mq-room-adj-total-${oldIdx}`)?.value) || 0,
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
             active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
-            proOnly: document.getElementById(`mq-room-proonly-${oldIdx}`)?.checked === true,
+            proOnly: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'proOnly',
+            hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
@@ -3065,7 +3070,7 @@ window.logoutMember = async function () {
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
     const newId = 'room_' + Date.now();
-    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, coverImage: '', measureText: '', measureImage: '' });
+    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' });
     _mqExpandedRoomIds.add(newId);
     renderRoomsList();
   };
@@ -3109,7 +3114,8 @@ window.logoutMember = async function () {
         totalAdjPct: parseFloat(el(`mq-room-adj-total-${idx}`)?.value) || 0,
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
         active: el(`mq-room-active-${idx}`)?.checked !== false,
-        proOnly: el(`mq-room-proonly-${idx}`)?.checked === true,
+        proOnly: el(`mq-room-visibility-${idx}`)?.value === 'proOnly',
+        hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
