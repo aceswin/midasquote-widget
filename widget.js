@@ -3005,6 +3005,13 @@
       body.style.display = opening ? 'block' : 'none';
       if (arrow) arrow.classList.toggle('open', opening);
       if (label) label.textContent = opening ? 'Close' : 'Open';
+      // Marks that this section has been opened at least once — lets the
+      // bottom-of-page auto-open below (mqInitBottomBounceAutoOpen) tell
+      // "still closed because it's never been looked at" apart from "was
+      // opened, then deliberately closed again," so it only ever forces
+      // open a section nobody has seen yet, never one someone chose to
+      // close back up.
+      if (opening) body.dataset.mqEverOpened = '1';
       // Anything with a scroll-row (specialty items, doors, materials, etc.)
       // inside a section that was just display:none couldn't have had a real
       // scrollWidth/clientWidth to measure — both read as 0 while hidden, so
@@ -5113,6 +5120,52 @@ window.mqTogDrawerConfig=(prefix)=>{
     });
   }
 
+  // ── Auto-open sections that scrolling alone never reaches ──
+  // The guided-flow scroll-spy (mqObserveSectionsForScrollSpy, inside
+  // wireWidget) opens each section as it crosses the exact vertical center
+  // of the screen while scrolling. That works for most sections, but one
+  // sitting near the very bottom of the page can end up parked in the
+  // lower half of the viewport WITHOUT ever actually crossing that center
+  // line, if the page runs out of room to scroll before it gets there —
+  // there's nothing further to scroll to, so the trigger line never
+  // reaches it. Left alone, that section just stays closed with no way for
+  // scrolling to open it.
+  //
+  // This catches that specific case: whenever the page hits the bottom of
+  // its scrollable range, look for a section that's (a) still collapsed,
+  // (b) has never been opened before — mqToggleCollapse marks that, so a
+  // section someone deliberately closed again is left alone — and (c) is
+  // currently sitting in the bottom half of the viewport. Opens just the
+  // first (topmost) one that matches, one at a time. If opening it reveals
+  // another lower down, the same check runs again the next time scrolling
+  // reaches the (now taller) bottom of the page, so it can cascade through
+  // several in a row without ever opening more than one at once.
+  function mqCheckBottomBounceAutoOpen() {
+    const doc = document.documentElement;
+    const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 4;
+    if (!atBottom) return;
+    const midpoint = window.innerHeight / 2;
+    const sections = document.querySelectorAll('#midasquote-widget .mq-sec');
+    for (const sec of sections) {
+      const body = sec.querySelector('[id$="-body"]');
+      if (!body || body.style.display !== 'none') continue; // already open, nothing to do
+      if (body.dataset.mqEverOpened) continue; // was opened before, closed on purpose — leave it
+      const rect = sec.getBoundingClientRect();
+      if (rect.bottom <= 0 || rect.top >= window.innerHeight) continue; // not actually on screen
+      if (rect.top < midpoint) continue; // only ones sitting below the middle of the screen
+      const key = body.id.replace(/^mq-/, '').replace(/-body$/, '');
+      window.mqToggleCollapse(key);
+      return; // one at a time — the next bottom-bounce picks up any further ones
+    }
+  }
+  function mqInitBottomBounceAutoOpen() {
+    let scrollTimer;
+    window.addEventListener('scroll', () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(mqCheckBottomBounceAutoOpen, 150);
+    }, { passive: true });
+  }
+
   // ── Sticky estimate bar ──
   // Appears the first time a real Calculate completes (lead capture and
   // all — this never re-triggers that, it only reads the already-computed
@@ -5561,8 +5614,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
   }
 
+
   init();
   mqInitMobileFontFix();
+  mqInitBottomBounceAutoOpen();
 
 
 })();
