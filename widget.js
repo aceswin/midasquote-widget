@@ -2690,10 +2690,62 @@
     // Image and text fall back independently of each other, so a shop that's
     // set one but not the other still gets the default for whichever one
     // they haven't touched.
+    // Lets a shop drop a video link into the exact same "measure guide
+    // image" field(s) they already use for photos, in whatever order they
+    // like — no separate upload path, no separate field, nothing new in
+    // the dashboard. Returns null for a plain image URL; otherwise
+    // {embedSrc} for a provider embeddable via iframe, or {directFile:true}
+    // for a direct video file link (rendered with a native <video> tag
+    // instead). Deliberately only recognizes a handful of well-known
+    // providers with clean, stable embed URLs — anything else just stays a
+    // plain image URL (and if it isn't actually one, the existing
+    // onerror-hide behavior already covers that failure gracefully).
+    function mqVideoEmbedInfo(url) {
+      if (!url) return null;
+      const u = String(url).trim();
+      let m;
+      if ((m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/i))) {
+        return { embedSrc: `https://www.youtube.com/embed/${m[1]}` };
+      }
+      if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i))) {
+        return { embedSrc: `https://player.vimeo.com/video/${m[1]}` };
+      }
+      if ((m = u.match(/loom\.com\/share\/([a-zA-Z0-9]+)/i))) {
+        return { embedSrc: `https://www.loom.com/embed/${m[1]}` };
+      }
+      if (/\.(mp4|webm|mov|m4v)(\?.*)?(#.*)?$/i.test(u)) {
+        return { directFile: true };
+      }
+      return null;
+    }
+    // Builds a 16:9 video slide — an iframe for an embeddable provider, or
+    // a native <video> for a direct file link. Used both inside the
+    // carousel and for the single-item (no-carousel) case.
+    function mqBuildVideoEmbedEl(video, originalUrl) {
+      const holder = document.createElement('div');
+      holder.style.cssText = 'position:relative;width:100%;padding-top:56.25%;background:#000;border-radius:6px;overflow:hidden';
+      if (video.directFile) {
+        const v = document.createElement('video');
+        v.src = originalUrl;
+        v.controls = true;
+        v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000';
+        holder.appendChild(v);
+      } else {
+        const iframe = document.createElement('iframe');
+        iframe.src = video.embedSrc;
+        iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0';
+        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.loading = 'lazy';
+        holder.appendChild(iframe);
+      }
+      return holder;
+    }
     // Builds a swipeable image carousel for the measuring guide — only ever
     // called when there's more than one image, so the plain single-image
     // path in mqRefreshMeasureGuide is completely untouched for every shop
-    // that hasn't added extra images.
+    // that hasn't added extra images. A video URL in the mix gets its own
+    // embedded-player slide instead of an <img> — see mqVideoEmbedInfo.
     function mqBuildMeasureCarousel(images, room) {
       const outer = document.createElement('div');
 
@@ -2705,19 +2757,36 @@
       track.className = 'mq-measure-carousel-track';
       track.style.cssText = 'display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;border-radius:6px;scrollbar-width:none';
 
-      const lightboxImages = images.map((src, i) => ({
-        src,
-        label: room && room.name ? `${room.name} — measuring guide (${i+1}/${images.length})` : `Measuring guide (${i+1}/${images.length})`
-      }));
+      // Each slide may be a photo or a video link — classify once up front so
+      // the lightbox (which only ever makes sense for photos) gets a
+      // photos-only array with correctly remapped indices.
+      const videoInfos = images.map(src => mqVideoEmbedInfo(src));
+      const hasVideo = videoInfos.some(Boolean);
+      const photoIndexMap = {}; // slide index -> index within lightboxImages
+      const lightboxImages = [];
+      images.forEach((src, i) => {
+        if (videoInfos[i]) return;
+        photoIndexMap[i] = lightboxImages.length;
+        lightboxImages.push({
+          src,
+          label: room && room.name ? `${room.name} — measuring guide (${i+1}/${images.length})` : `Measuring guide (${i+1}/${images.length})`
+        });
+      });
       images.forEach((src, i) => {
         const slide = document.createElement('div');
         slide.style.cssText = 'flex:0 0 100%;scroll-snap-align:center;min-width:0';
-        const img = document.createElement('img');
-        img.src = src;
-        img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
-        img.onerror = () => { slide.style.display = 'none'; };
-        img.onclick = () => mqPhotoLightbox(lightboxImages[i].src, lightboxImages[i].label, lightboxImages, i);
-        slide.appendChild(img);
+        const video = videoInfos[i];
+        if (video) {
+          slide.appendChild(mqBuildVideoEmbedEl(video, src));
+        } else {
+          const img = document.createElement('img');
+          img.src = src;
+          img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
+          img.onerror = () => { slide.style.display = 'none'; };
+          const lbIdx = photoIndexMap[i];
+          img.onclick = () => mqPhotoLightbox(lightboxImages[lbIdx].src, lightboxImages[lbIdx].label, lightboxImages, lbIdx);
+          slide.appendChild(img);
+        }
         track.appendChild(slide);
       });
       wrap.appendChild(track);
@@ -2762,7 +2831,9 @@
       outer.appendChild(wrap);
       outer.appendChild(dots);
       const caption = document.createElement('div');
-      caption.textContent = `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
+      caption.textContent = hasVideo
+        ? `Swipe for more (${images.length})`
+        : `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
       caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-top:6px;margin-bottom:10px';
       outer.appendChild(caption);
       // mqBindAutoPeek(track); // full spin preview disabled for now — code kept intact above in case it's wanted back later
@@ -2791,6 +2862,12 @@
       if (allImages.length > 1) {
         guideEl.appendChild(mqBuildMeasureCarousel(allImages, room));
       } else if (allImages.length === 1) {
+        const singleVideo = mqVideoEmbedInfo(allImages[0]);
+        if (singleVideo) {
+          // A lone video link gets the embedded player directly — no
+          // lightbox/zoom affordance, since there's nothing to zoom into.
+          guideEl.appendChild(mqBuildVideoEmbedEl(singleVideo, allImages[0]));
+        } else {
         const img = document.createElement('img');
         img.src = allImages[0];
         img.className = 'mq-measure-guide-img';
@@ -2809,6 +2886,7 @@
         caption.textContent = '🔍 Tap to enlarge';
         caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-bottom:10px';
         guideEl.appendChild(caption);
+        }
       }
       if (!customText) {
         const defaultBody = document.createElement('div');
@@ -5613,7 +5691,6 @@ window.mqTogDrawerConfig=(prefix)=>{
       } catch(e) { /* localStorage unavailable — skip popup */ }
     }
   }
-
 
   init();
   mqInitMobileFontFix();

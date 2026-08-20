@@ -221,6 +221,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Show price as a range</strong> — on by default, shows the usual ballpark spread (e.g. "$2,375 – $3,000"). Uncheck it for a project type where a single clean number makes more sense instead (e.g. "$2,600") — useful for flat-rate or fixed-price project types where a range wouldn't really apply. This also updates the wording around it automatically — "Estimated range" becomes "Your quote," and the ballpark disclaimer text adjusts to match, in every place the price shows up including the confirmation email.</p>
         <p><strong>Cover image</strong> and <strong>Measuring guide image</strong> — upload your own, or click "↺ Use default image" to fall back to MidasQuote's own default photo for that project type. Leaving it on the default means it automatically stays current if that default photo is ever updated — nothing to re-upload later.</p>
         <p><strong>More than one measuring guide image?</strong> Click "+ Add another image" as many times as needed — once there's more than one, the widget automatically turns it into a swipeable carousel instead of a single static photo, and gives it a brief one-time "nudge" animation so customers notice there's more than one image to see.</p>
+        <p><strong>Want a video instead of (or alongside) photos?</strong> Paste a YouTube, Vimeo, or Loom link — or a direct link to a video file — into any of the measuring guide image fields instead of a photo URL. It plays right there in the carousel with your other images, in whatever order you place it. There's no upload for video, only a link, since videos need to live somewhere that can actually stream them (YouTube, Vimeo, your own site) rather than something MidasQuote hosts for you.</p>
         <p>Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
       `
     },
@@ -2165,16 +2166,17 @@ window.logoutMember = async function () {
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start">
             <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-              ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+              ${mqMeasureImgPreviewHTML(r.measureImage)}
             </div>
             <div style="flex:1;min-width:0">
-              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default measuring guide image (optional)</label>
-              <input type="text" id="mq-master-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default measuring guide image or video (optional)</label>
+              <input type="text" id="mq-master-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg — or a YouTube/Vimeo/Loom link" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
               <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                📤 Upload
+                📤 Upload photo
                 <input type="file" id="mq-master-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
               </label>
-              ${MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(r.id||'').toLowerCase()] ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMasterMeasureImage('${r.id}',${idx})">↺ Use built-in default</button>` : ''}
+              <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
+              ${MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(r.id||'').toLowerCase()] ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMasterMeasureImage('${r.id}',${idx})">↺ Use built-in default</button>` : ''}
               <span id="mq-master-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
             </div>
           </div>
@@ -2707,6 +2709,30 @@ window.logoutMember = async function () {
   // something else, or added as a custom row that got an auto-generated
   // room_<timestamp> id) while still clearly being "Garage" or "Commercial"
   // by name — without this, those rooms silently get no default images.
+  // Matches widget.js's own mqVideoEmbedInfo detection (YouTube/Vimeo/Loom
+  // links, or a direct .mp4/.webm/.mov/.m4v file) — used here just to swap
+  // the little thumbnail preview for a 🎥 badge instead of attempting an
+  // <img> tag that would silently fail to load and leave a blank box, since
+  // a shop owner pasting a video link in has no other way to confirm it was
+  // recognized.
+  function mqIsVideoUrl(url) {
+    const u = (url || '').trim();
+    if (!u) return false;
+    if (/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)/i.test(u)) return true;
+    if (/vimeo\.com\//i.test(u)) return true;
+    if (/loom\.com\/share\//i.test(u)) return true;
+    if (/\.(mp4|webm|mov|m4v)(\?.*)?(#.*)?$/i.test(u)) return true;
+    return false;
+  }
+  // Renders the little 56x56 preview box's inner content for a measure-guide
+  // image/video field: the 📏 placeholder when empty, a 🎥 badge for a
+  // recognized video link, or the actual photo otherwise.
+  function mqMeasureImgPreviewHTML(url) {
+    const u = (url || '').trim();
+    if (!u) return '<span style="font-size:20px">📏</span>';
+    if (mqIsVideoUrl(u)) return '<span style="font-size:22px" title="Video link">🎥</span>';
+    return `<img src="${u.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+  }
   function mqDefaultImageKeyFor(roomId, roomName) {
     const id = (roomId||'').toLowerCase();
     if (MQ_DEFAULT_MEASURE_IMAGE_FILES[id]) return id;
@@ -2898,16 +2924,17 @@ window.logoutMember = async function () {
             </div>
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                ${(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name)) ? `<img src="${r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                ${mqMeasureImgPreviewHTML(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name))}
               </div>
               <div style="flex:1;min-width:0">
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image (optional)</label>
-                <input type="text" id="mq-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image or video (optional)</label>
+                <input type="text" id="mq-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg — or a YouTube/Vimeo/Loom link" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
                 <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                  📤 Upload
+                  📤 Upload photo
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
-                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
+                <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
+                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
                 ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
@@ -2915,13 +2942,13 @@ window.logoutMember = async function () {
             ${(r.measureImages || []).map((imgUrl, exIdx) => `
               <div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb">
                 <div id="mq-room-measure-img-extra-preview-${idx}-${exIdx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                  ${imgUrl ? `<img src="${imgUrl.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                  ${mqMeasureImgPreviewHTML(imgUrl)}
                 </div>
                 <div style="flex:1;min-width:0">
-                  <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Additional image ${exIdx+2} <span style="color:#9ca3af;font-weight:400">— shows as a swipeable carousel with the rest</span></label>
-                  <input type="text" id="mq-room-measure-img-extra-${idx}-${exIdx}" value="${(imgUrl||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure-2.jpg" onchange="mqSaveRooms()" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                  <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Additional image or video ${exIdx+2} <span style="color:#9ca3af;font-weight:400">— shows as a swipeable carousel with the rest</span></label>
+                  <input type="text" id="mq-room-measure-img-extra-${idx}-${exIdx}" value="${(imgUrl||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure-2.jpg — or a video link" onchange="mqSaveRooms()" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
                   <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                    📤 Upload
+                    📤 Upload photo
                     <input type="file" id="mq-room-measure-img-extra-file-${idx}-${exIdx}" accept="image/*" style="display:none"/>
                   </label>
                   <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" style="font-size:11px" onclick="mqRemoveRoomMeasureImage(${idx},${exIdx})">✕ Remove</button>
