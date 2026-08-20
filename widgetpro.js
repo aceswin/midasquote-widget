@@ -2151,6 +2151,27 @@
     window._mqCalcCabinet = calcCabinet;
     window._mqCalcCountertop = calcCountertop;
 
+    // Seed the "room being left" tracker from each room dropdown's actual
+    // starting value, right after it's in the DOM — don't rely solely on the
+    // dropdown's onfocus handler to populate this. mqCommitCurrentConfig
+    // needs to know the PREVIOUS room whenever the dropdown changes, so it
+    // can price the project type being left correctly instead of the one
+    // just switched to. Normally onfocus (which always fires before a real
+    // click/tap opens a native select) sets this in time. But if the very
+    // first project-type switch of a session ever happens without a prior
+    // focus event on the dropdown, this would otherwise still be undefined,
+    // mqCommitCurrentConfig would skip the rewind, and the committed entry
+    // would silently get tagged with the NEW room's id instead of the old
+    // one — which mqOnProjectTypeChange then mistakes for an existing cart
+    // entry for the new room and deletes, dropping the first project type
+    // from the cart with no error. Seeding it here (re-run on every full
+    // widget render, including mqStartNewEstimate) closes that gap.
+    window._mqPrevRoomId = window._mqPrevRoomId || {};
+    ['b', 'c'].forEach(p => {
+      const roomEl = document.getElementById(`mq-${p}-room`);
+      if (roomEl) window._mqPrevRoomId[p] = roomEl.value;
+    });
+
     const drawerConfigNames = [...new Set(
       li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
     )];
@@ -3360,12 +3381,36 @@
         const widthEl = document.getElementById(`mq-tc-width-${id}`);
         tallCabSnaps.push({ type: typeEl ? typeEl.value : 'none', width: widthEl ? widthEl.value : '24', qty });
       });
+      // Additional countertop surface cards ("+ Add another surface") are
+      // also dynamically built, not simple fields — same reason as tall
+      // cabinets above. Each card's every input/select is captured, scoped
+      // to that card's own DOM subtree (#mqsc-ID) so there's no risk of
+      // pulling in another surface's fields. The card's own id (e.g. "sb2")
+      // gets swapped out for a placeholder in each field's id so the
+      // captured shape can be replayed onto whatever NEW id the card gets
+      // when it's recreated on restore (surface ids are a running counter,
+      // so a restored card never reuses its original id).
+      const surfaceSnaps = [];
+      Object.keys(surfs[prefix] || {}).forEach(id => {
+        const card = document.getElementById(`mqsc-${id}`);
+        if (!card) return;
+        const surfFields = [];
+        card.querySelectorAll('input, select').forEach(el => {
+          if (!el.id) return;
+          surfFields.push({
+            template: el.id.split(id).join('§'),
+            value: (el.type === 'checkbox') ? el.checked : el.value,
+          });
+        });
+        surfaceSnaps.push(surfFields);
+      });
       return {
         fields,
         diffOn: !!diffOn[prefix],
         specQty: [...(specQty[prefix] || [])],
         installQty: [...(installQty[prefix] || [])],
         tallCabs: tallCabSnaps,
+        surfaces: surfaceSnaps,
       };
     }
 
@@ -3407,6 +3452,21 @@
         tallCabs[prefix][newId] = tc.qty;
         const qtyEl = document.getElementById(`mq-tc-qty-${newId}`);
         if (qtyEl) qtyEl.textContent = tc.qty;
+      });
+      // Additional countertop surfaces: recreate one fresh card per saved
+      // surface, then replay its captured fields onto the new card's own
+      // id. The material field has to go first — its onchange cascade is
+      // what (re)builds the edge/addon/cutout sub-fields inside the card,
+      // so every other captured field for those needs that structure to
+      // already exist before it can find its element by id.
+      (snapshot.surfaces || []).forEach(surfFields => {
+        addSurfaceInternal(prefix);
+        const newId = `s${prefix}${surfCounts[prefix]}`;
+        const matField = surfFields.find(f => f.template.startsWith('mqsm-'));
+        const restoreOne = f => mqRestoreFieldValue(f.template.split('§').join(newId), f.value);
+        if (matField) restoreOne(matField);
+        surfFields.filter(f => f !== matField).forEach(restoreOne);
+        window.mqRefreshSurfBsFt(newId);
       });
       mqRefreshAllPickerVisibility(prefix);
       mqRefreshBsFt(prefix);
