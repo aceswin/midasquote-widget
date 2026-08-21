@@ -461,7 +461,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to pre-populate items for shops that offer refacing, restaining, or repainting services.
           <br><br>
-          Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info.
+          A quick heads-up: specialty item lists get messy fast once you start adding a lot of them. It's worth organizing items into <strong>categories</strong> (using the Category column) right from the start — categorized items group together neatly instead of turning into one long, hard-to-scan list.
+          <br><br>
+          Once you've got more than a few, the easiest way to find one again is with the tools above the table: <strong>Filter by project type</strong>, <strong>Filter by category</strong>, or <strong>Search by name</strong>.
+          <br><br>
+          If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
         </div>
         <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
