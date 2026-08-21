@@ -5405,6 +5405,21 @@ window.mqTogDrawerConfig=(prefix)=>{
       return;
     }
 
+    // ── Free Demo tier gate ──
+    // Unlike the regular widget (which stays usable but watermarked/limited
+    // on the Demo plan), MidasQuote Pro isn't included in the free tier at
+    // all — a Demo shop never gets past this screen, since there's no
+    // limited version of Pro to show them, only a full block plus an
+    // upgrade prompt.
+    if ((shop['Plan']||'') === 'Demo') {
+      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
+        <div style="font-size:2rem;margin-bottom:0.75rem">⚡</div>
+        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">MidasQuote Pro isn't included in the free Demo</div>
+        <div>Upgrade to a paid plan from your dashboard to unlock the real-numbers Pro quoting tool.</div>
+      </div>`;
+      return;
+    }
+
     window._mqShopData=shop;
     window._mqFullData=data; // cached so mqStartNewEstimate can rebuild without refetching
     // Pro Quoter deliberately ignores each shop's own brand color — this is

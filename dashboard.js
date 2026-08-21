@@ -2855,10 +2855,21 @@ window.logoutMember = async function () {
     mqSaveRooms();
   };
 
+  // Free Demo tier: no custom cover/measure images or video links — always
+  // MidasQuote's own library photo instead. Renders in place of the normal
+  // editable image block wherever a Demo shop would otherwise see an
+  // upload button or a URL field for one of these.
+  function mqDemoImageLockedHTML(whatLabel) {
+    return `<div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 12px;font-size:12px;color:#6b7280;line-height:1.6">
+      🔒 Custom ${whatLabel} is a paid feature. Your free Demo always shows MidasQuote's standard library photo here — upgrade from the Billing tab to use your own photos or video links.
+    </div>`;
+  }
+
   function renderRoomsList() {
     const container = el('mq-rooms-list');
     if (!container) return;
     const rooms = window._mqRooms || [];
+    const isDemo = (window._mqShopRecord?.fields?.['Plan']||'') === 'Demo';
     container.innerHTML = rooms.map((r, idx) => {
       const isOpen = _mqExpandedRoomIds.has(r.id);
       return `
@@ -2900,20 +2911,23 @@ window.logoutMember = async function () {
             ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
           </div>
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
-          <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
-            <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-              ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? `<img src="${r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
-            </div>
-            <div style="flex:1;min-width:0">
-              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
-              <input type="text" id="mq-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
-              <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                📤 Upload
-                <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
-              </label>
-              ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseDefaultCoverImage('${r.id}',${idx})">↺ Use default image</button>` : ''}
-              <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
-            </div>
+          <div style="margin-bottom:10px">
+            ${isDemo ? mqDemoImageLockedHTML('cover images') : `
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+                ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? `<img src="${r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
+              </div>
+              <div style="flex:1;min-width:0">
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
+                <input type="text" id="mq-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                  📤 Upload
+                  <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
+                </label>
+                ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseDefaultCoverImage('${r.id}',${idx})">↺ Use default image</button>` : ''}
+                <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+              </div>
+            </div>`}
           </div>
           <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
@@ -2922,6 +2936,7 @@ window.logoutMember = async function () {
               <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
               <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo, [tip]text[/tip] wraps it in a yellow callout box</span>
             </div>
+            ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos') : `
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
                 ${mqMeasureImgPreviewHTML(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name))}
@@ -2956,7 +2971,7 @@ window.logoutMember = async function () {
                 </div>
               </div>
             `).join('')}
-            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>
+            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>`}
           </div>
         </div>
       </div>`;
@@ -4647,8 +4662,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const badgeLabel = (shopRecord.fields['Badge label'] || '').trim() || 'Best seller';
     const badgeColor = /^#[0-9a-fA-F]{6}$/.test(shopRecord.fields['Badge color']) ? shopRecord.fields['Badge color'] : '#f59e0b';
 
+    // Free Demo tier: existing product photos (however they got there —
+    // library pick, upload, or a pasted link) stay exactly as-is and keep
+    // showing, per Jordan's call — only NEW uploads/links/library picks are
+    // locked, not what a shop already has.
+    const isDemoShop = (shopRecord.fields['Plan']||'') === 'Demo';
     function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
-      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel);
+      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemoShop);
     }
 
     // Groups only make sense for categories customers actually pick a
@@ -5417,7 +5437,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Module-level so both initProductsTab (My Products) and renderTemplates
   // (admin Templates tab) can share it, instead of it being locked inside one
   // function's closure over a specific shop's savedPhotos/savedHidden.
-  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel) {
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo) {
     const savedUrl = savedPhotos[key] || '';
     const isHidden = savedHidden[key] || false;
     // savedFeatured is only ever passed in from My Products — every other
@@ -5445,6 +5465,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
         Hide from showroom
       </label>
+      ${isDemo ? `
+      <div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:8px 10px;font-size:11px;color:#6b7280;line-height:1.5">
+        🔒 Adding or changing a photo here is a paid feature. Whatever photo this item already has stays showing — upgrade from the Billing tab to upload new ones or pick from the library.
+      </div>
+      <!-- Hidden, not removed: mqSaveProducts rebuilds its whole photo map
+           from every [id^="mq-photo-"] input still in the DOM on every save,
+           so this has to keep carrying the existing URL forward — otherwise
+           saving anything else on this tab (e.g. toggling "Hide from
+           showroom") would silently wipe photos this shop already has. -->
+      <input type="hidden" id="mq-photo-${key}" value="${savedUrl}"/>` : `
       <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
         📤 Upload a photo
         <input type="file" id="mq-upload-file-${key}" accept="image/*" style="display:none"/>
@@ -5455,7 +5485,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
         oninput="mqMarkProductsDirty()"/>
       <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>`}
     </div>`;
   }
 

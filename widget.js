@@ -2661,7 +2661,9 @@
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const desc = room ? (room.description||'').trim() : '';
-      const coverImg = room ? ((room.coverImage||'').trim() || MQ_DEFAULT_COVER_IMAGES[mqDefaultImageKey(room)] || '') : '';
+      // Free Demo tier never shows a shop's own cover photo, even if one is
+      // still saved on the room — always the standard library image instead.
+      const coverImg = room ? ((!window._mqIsDemoPlan && (room.coverImage||'').trim()) || MQ_DEFAULT_COVER_IMAGES[mqDefaultImageKey(room)] || '') : '';
       if (!desc && !coverImg) { descEl.style.display = 'none'; return; }
       descEl.innerHTML = ''; // clear previous content before rebuilding
       if (coverImg) {
@@ -2846,10 +2848,15 @@
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const customText = room ? (room.measureText||'').trim() : '';
-      const customPrimary = room ? (room.measureImage||'').trim() : '';
+      // Free Demo tier: same rule as the cover image above — a Demo shop's
+      // own measure-guide photos/videos, even if still saved, never show;
+      // this forces the library-default fallback below unconditionally.
+      // Custom measuring TEXT still works (it's typed, not an upload, so it
+      // costs nothing and isn't part of what Demo restricts).
+      const customPrimary = (room && !window._mqIsDemoPlan) ? (room.measureImage||'').trim() : '';
       // Extra images are entirely opt-in — a shop that's never touched this
       // just has an empty/absent array.
-      const customExtra = room && Array.isArray(room.measureImages) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
+      const customExtra = (room && !window._mqIsDemoPlan && Array.isArray(room.measureImages)) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
       // A shop that's customized ANYTHING (even just adding extra images with
       // no primary set) gets exactly what they set, no default mixed in. Only
       // a shop that's never touched either field falls back to the full
@@ -5140,6 +5147,23 @@ window.mqTogDrawerConfig=(prefix)=>{
   // field if this tried to reset values one at a time by hand.
   // Standalone panel below the widget (not inside it, so it survives
   // mqStartNewEstimate's full rebuild) — deliberately much more visible than
+  // Free-Demo-tier watermark — a faint repeating "DEMO" pattern stamped over
+  // the whole widget, non-interactive (pointer-events:none, so it never
+  // blocks clicks) and kept well below the lightbox/modal z-index range
+  // (100000+) so it never bleeds into an enlarged photo. Re-injected after
+  // every full container rebuild (initial load and mqStartNewEstimate both
+  // wipe the container's innerHTML, which would otherwise remove it).
+  function mqInjectDemoWatermark(container) {
+    if (!container || container.querySelector('.mq-demo-watermark')) return;
+    if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
+    const wm = document.createElement('div');
+    wm.className = 'mq-demo-watermark';
+    wm.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:9000;overflow:hidden;" +
+      "background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Ctext x='0' y='110' font-family='Arial,sans-serif' font-size='32' font-weight='800' letter-spacing='2' fill='rgba(17,17,17,0.07)' transform='rotate(-28 95 95)'%3EDEMO%3C/text%3E%3C/svg%3E\");" +
+      "background-repeat:repeat";
+    container.appendChild(wm);
+  }
+
   window.mqStartNewEstimate = function() {
     const data = window._mqFullData;
     const container = document.getElementById('midasquote-widget');
@@ -5150,6 +5174,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
+    if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
     // bar from before and let it re-earn its spot once they Calculate again.
     window._mqStickyPrefix = null;
@@ -5630,6 +5655,11 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window._mqShopData=shop;
     window._mqFullData=data; // cached so mqStartNewEstimate can rebuild without refetching
+    // Free Demo tier: full quoting still works, but the widget carries a
+    // visible watermark and always shows MidasQuote's own library photos
+    // instead of any the shop uploaded/linked — see mqInjectDemoWatermark,
+    // mqShowRoomDescription, and mqRefreshMeasureGuide.
+    window._mqIsDemoPlan = (shop['Plan']||'') === 'Demo';
     injectStyles(
       shop['Brand colour']||'#1a1a1a',
       shop['Focal colour'],
@@ -5642,6 +5672,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
+    if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
     mqSetupModalOverlays();
     mqSetupStickyBar();
     // Delegated so it automatically covers every input/select/checkbox in
