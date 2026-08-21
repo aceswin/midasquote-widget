@@ -562,18 +562,19 @@
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
       #midasquote-widget .mq-vpicker-featured-badge{position:absolute;top:-6px;left:-6px;font-size:8px;font-weight:700;padding:2px 5px;border-radius:8px;background:#f59e0b;color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
       /* A specialty item's own variant picker (e.g. Maple/Oak/MDF under one
-         "Crown Molding" item) reuses the exact same mq-vpicker-chip
-         component as the door/material picker, just scaled down — it lives
-         inside a 280px-wide mq-spec-item card, not the full-width picker
-         area, so the normal 130px chip/116px thumb would barely fit two at
-         once. Everything else (badges, selected state, arrows) is identical. */
+         "Crown Molding" item) is a row of plain text pill buttons, NOT photo
+         chips — the card already shows one big photo up top (.mq-spec-thumb)
+         that swaps to match whichever variant is picked, so giving each pill
+         its own smaller photo too was pure visual duplication (and cramped,
+         inside a 280px-wide card). A pill is directly clickable to select it
+         — no separate photo + name + "Select" button stack needed when
+         there's no photo on the pill itself. */
       #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 6px}
-      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-chip{width:74px;padding:4px;border-radius:8px}
-      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-thumb,
-      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-thumb-placeholder{width:62px;height:62px;font-size:15px}
-      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-label{font-size:9.5px}
-      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-select-btn{font-size:9px;padding:3px 7px;margin-top:3px}
-      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-featured-badge{font-size:7px;max-width:70px}
+      #midasquote-widget .mq-vpicker-variant-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-family:inherit;font-size:12px;color:#374151;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+      #midasquote-widget .mq-vpicker-variant-chip:hover{border-color:#d1d5db;background:#f9fafb}
+      #midasquote-widget .mq-vpicker-variant-chip.selected{border-color:${bc};background:${bc};color:#fff}
+      #midasquote-widget .mq-vpicker-variant-star{font-size:10px}
+      #midasquote-widget .mq-vpicker-variant-tier{font-size:10px;opacity:0.7}
       /* Sticky estimate bar — appears after the first real Calculate, then
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
@@ -1463,20 +1464,21 @@
     const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
     return `${thumb}${badgeHtml}${featuredBadgeHtml}`;
   }
-  // Builds one chip in a specialty item's variant picker (e.g. Maple/Oak/MDF
-  // under one "Crown Molding" item) — deliberately much simpler than the
-  // full material/door mq-vpicker-chip (no room/collection filtering, no
-  // hidden <select> to keep in sync), but reuses the exact same visual
-  // classes so it looks and slides identically.
+  // Builds one pill in a specialty item's variant picker (e.g. Maple/Oak/MDF
+  // under one "Crown Molding" item) — plain text buttons, deliberately with
+  // NO photo of their own. The card already has one big photo up top
+  // (mqSpecVisualHTML's output, in the #mq-spec-visual-${prefix}-${i} node)
+  // that mqPickSpecVariant swaps to match whichever variant is active — a
+  // second, smaller photo per pill was pure duplication of that same image,
+  // made the card feel cramped, and (since it reused .mq-vpicker-thumb's
+  // cursor:zoom-in styling despite having no lightbox wired to it) looked
+  // tappable/zoomable without actually doing anything. Each pill is
+  // directly clickable to select it — no separate "photo + name + Select
+  // button" stack needed once there's no photo on the pill itself.
   function mqSpecVariantChipHTML(s, prefix, i, v, vi, selected) {
-    const safePhoto = (v.photoUrl||'').replace(/'/g,"\\'");
-    const safeLabel = (v.label||'').replace(/'/g,"\\'");
-    const thumb = v.photoUrl
-      ? `<img class="mq-vpicker-thumb" src="${v.photoUrl}" alt="${v.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>⭐</div>'"/>`
-      : `<div class="mq-vpicker-thumb-placeholder">⭐</div>`;
-    const badgeHtml = v.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${v.badge.length}">${v.badge}</span>` : '';
-    const featuredBadgeHtml = v.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
-    return `<div class="mq-vpicker-chip${selected?' selected':''}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${v.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickSpecVariant('${prefix}',${i},${vi})">${selected?'✓ Selected':'Select'}</button></div>`;
+    const safeLabel = (v.label||'').replace(/</g,'&lt;');
+    const starHtml = v.featured ? `<span class="mq-vpicker-variant-star" title="${(window._mqBadgeLabel||'Best seller').replace(/"/g,'&quot;')}">🏆</span>` : '';
+    return `<button type="button" class="mq-vpicker-variant-chip${selected?' selected':''}" onclick="mqPickSpecVariant('${prefix}',${i},${vi})">${starHtml}${safeLabel}</button>`;
   }
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
@@ -4246,11 +4248,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (visual) visual.innerHTML = mqSpecVisualHTML(s, visual.dataset.groupKey || '', `mq-sp-${prefix}-${i}`);
       const row = document.getElementById(`mq-spec-variants-${prefix}-${i}`);
       if (row) {
-        row.querySelectorAll('.mq-vpicker-chip').forEach((chip, idx) => {
-          const selected = idx === vi;
-          chip.classList.toggle('selected', selected);
-          const btn = chip.querySelector('.mq-vpicker-select-btn');
-          if (btn) btn.textContent = selected ? '✓ Selected' : 'Select';
+        row.querySelectorAll('.mq-vpicker-variant-chip').forEach((chip, idx) => {
+          chip.classList.toggle('selected', idx === vi);
         });
       }
     };
