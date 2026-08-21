@@ -8346,17 +8346,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const paymentCard = document.getElementById('mq-billing-payment-card');
         const invoicesCard = document.getElementById('mq-billing-invoices-card');
         const cancelCard = document.getElementById('mq-billing-cancel-card');
-        // Airtable's Status field is updated instantly by the Stripe webhook
-        // and is the source of truth for billing state — Memberstack's own
-        // planConnections data lags behind real cancellations, so we don't
-        // use it here.
+        // Airtable's Status field is updated by the onboarding Worker
+        // (member.created / member.plan.added / member.plan.canceled /
+        // member.deleted) and is the source of truth for real billing
+        // lifecycle — Memberstack's own planConnections data lags behind
+        // real cancellations, so we don't use it here.
+        //
+        // IMPORTANT: that onboarding Worker sets Status = 'Active' for
+        // EVERY new signup, free or paid — it doesn't know about the Plan
+        // field at all. So Status alone can't distinguish a real paying
+        // customer from a Free Trial/Demo shop; Plan must be checked
+        // FIRST, and Status is only meaningful once Plan has already
+        // ruled out the free tier.
         const status = window._mqShopRecord?.fields?.['Status'] || '';
         const plan = window._mqShopRecord?.fields?.['Plan'] || '';
-        const isActive = status === 'Active' || status === 'Trial';
-        // A Free Trial / Demo shop never touches Stripe, so Status stays
-        // blank for them — checked only once Status has already ruled out
-        // "this is a real paying (or once-paying) shop" above.
-        const isFreeTier = !status && (plan === 'Free Trial' || plan === 'Demo');
+        const isFreeTier = plan === 'Free Trial' || plan === 'Demo';
+        const isActive = !isFreeTier && (status === 'Active' || status === 'Trial');
         if (isActive) {
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
