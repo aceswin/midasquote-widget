@@ -1130,8 +1130,15 @@ window.logoutMember = async function () {
                 <button class="mq-btn" onclick="mqUpgradeToAnnual()">Upgrade to annual</button>
               </div>
               <div id="mq-billing-reactivate-actions" style="display:none;gap:10px;flex-wrap:wrap">
-                <button class="mq-btn mq-btn-primary" onclick="mqReactivate('prc_midasquote-monthly-plan-i7d0ryx')">Reactivate — Monthly</button>
-                <button class="mq-btn" onclick="mqReactivate('prc_midasquote-annual-plan-hui0rv4')">Reactivate — Annual</button>
+                <button class="mq-btn mq-btn-primary" onclick="mqReactivate('prc_monthly-midasquote-o01n50jov')">Reactivate — Monthly</button>
+                <button class="mq-btn" onclick="mqReactivate('prc_annual-midasquote-2c1n80jbq')">Reactivate — Annual</button>
+              </div>
+              <div id="mq-billing-free-actions" style="display:none;gap:10px;flex-wrap:wrap">
+                <!-- New no-trial Monthly/Annual prices — a Free Trial/Demo shop
+                     already had 30 free days on the house, so upgrading from here
+                     goes straight to a real paid subscription, no second trial. -->
+                <button class="mq-btn mq-btn-primary" onclick="mqUpgradeFromFree('prc_monthly-midasquote-o01n50jov')">Upgrade — Monthly</button>
+                <button class="mq-btn" onclick="mqUpgradeFromFree('prc_annual-midasquote-2c1n80jbq')">Upgrade — Annual</button>
               </div>
             </div>
 
@@ -1592,10 +1599,29 @@ window.logoutMember = async function () {
   // ============================================================
   // NAVIGATION
   // ============================================================
+  // Opens checkout for a Free Trial / Demo shop upgrading to a real paid
+  // plan. The price IDs passed in from the HTML buttons above (search
+  // "mq-billing-free-actions") are the new no-trial Monthly/Annual prices —
+  // deliberately different from mqReactivate's below, since a Free
+  // Trial/Demo shop already had its 30 free days and shouldn't get a second
+  // trial. Same checkout mechanism as mqReactivate — a Free Trial/Demo shop
+  // has never had a Stripe subscription, so this is just opening checkout
+  // for the first time, kept as its own named function so the intent at
+  // each call site (upgrade-from-free vs. reactivate-a-lapsed-sub) stays
+  // clear even though the underlying call is identical.
+  window.mqUpgradeFromFree = async function(priceId) {
+    try {
+      await window.$memberstackDom.purchasePlansWithCheckout({ priceId });
+    } catch(e) {
+      console.error('Upgrade-from-free error:', e);
+      alert('Unable to open upgrade checkout. Please email support@midasquote.com to upgrade your plan.');
+    }
+  };
+
   window.mqUpgradeToAnnual = async function() {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: 'prc_midasquote-annual-plan-hui0rv4',
+        priceId: 'prc_annual-midasquote-2c1n80jbq',
       });
     } catch(e) {
       console.error('Upgrade error:', e);
@@ -1609,7 +1635,7 @@ window.logoutMember = async function () {
   window.mqReactivate = async function(priceId) {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: priceId || 'prc_midasquote-monthly-plan-i7d0ryx',
+        priceId: priceId || 'prc_monthly-midasquote-o01n50jov',
       });
     } catch(e) {
       console.error('Reactivate error:', e);
@@ -8316,6 +8342,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (planEl && planEl.textContent === 'Loading plan info...') {
         const activeActions = document.getElementById('mq-billing-active-actions');
         const reactivateActions = document.getElementById('mq-billing-reactivate-actions');
+        const freeActions = document.getElementById('mq-billing-free-actions');
         const paymentCard = document.getElementById('mq-billing-payment-card');
         const invoicesCard = document.getElementById('mq-billing-invoices-card');
         const cancelCard = document.getElementById('mq-billing-cancel-card');
@@ -8324,7 +8351,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         // planConnections data lags behind real cancellations, so we don't
         // use it here.
         const status = window._mqShopRecord?.fields?.['Status'] || '';
+        const plan = window._mqShopRecord?.fields?.['Plan'] || '';
         const isActive = status === 'Active' || status === 'Trial';
+        // A Free Trial / Demo shop never touches Stripe, so Status stays
+        // blank for them — checked only once Status has already ruled out
+        // "this is a real paying (or once-paying) shop" above.
+        const isFreeTier = !status && (plan === 'Free Trial' || plan === 'Demo');
         if (isActive) {
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -8334,9 +8366,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <p style="font-size:13px;color:#6b7280">Your subscription is active. Manage it using the buttons below.</p>`;
           if (activeActions) activeActions.style.display = 'flex';
           if (reactivateActions) reactivateActions.style.display = 'none';
+          if (freeActions) freeActions.style.display = 'none';
           if (paymentCard) paymentCard.style.display = 'block';
           if (invoicesCard) invoicesCard.style.display = 'block';
           if (cancelCard) cancelCard.style.display = 'block';
+        } else if (isFreeTier) {
+          const demoNote = plan === 'Demo'
+            ? 'your free trial has ended and you\'re on the limited free Demo tier (DEMO watermark, no MidasQuote Pro, no custom photos)'
+            : 'you\'re on the free trial — full access, no card on file';
+          planEl.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan}</span>
+              <span style="font-size:14px;font-weight:500;color:#111">Free plan</span>
+            </div>
+            <p style="font-size:13px;color:#6b7280">You're not on a paid plan — ${demoNote}. Upgrade any time below, no interruption to your widget.</p>`;
+          if (activeActions) activeActions.style.display = 'none';
+          if (reactivateActions) reactivateActions.style.display = 'none';
+          if (freeActions) freeActions.style.display = 'flex';
+          if (paymentCard) paymentCard.style.display = 'none';
+          if (invoicesCard) invoicesCard.style.display = 'none';
+          if (cancelCard) cancelCard.style.display = 'none'; // nothing to cancel — never was a subscription
         } else {
           // Status is Cancelled, Paused, or unknown — subscription isn't
           // active. The Stripe Customer Portal can't resubscribe a fully
@@ -8350,6 +8399,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <p style="font-size:13px;color:#6b7280">Your subscription has ended. You still have dashboard access for now — pick a plan below to reactivate your widget.</p>`;
           if (activeActions) activeActions.style.display = 'none';
           if (reactivateActions) reactivateActions.style.display = 'flex';
+          if (freeActions) freeActions.style.display = 'none';
           if (paymentCard) paymentCard.style.display = 'none';
           if (invoicesCard) invoicesCard.style.display = 'none';
           if (cancelCard) cancelCard.style.display = 'none';
