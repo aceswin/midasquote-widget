@@ -5116,12 +5116,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>
       <div id="mq-spec-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px" id="mq-spec-cards-grid">
-        ${specItems.map(r => {
+        ${specItems.flatMap(r => {
           const itemName = r.fields['Item name'] || '';
           const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
-          return `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
-            ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
-          </div>`;
+          const dataName = itemName.toLowerCase().replace(/"/g,'&quot;');
+          const variants = mqParseVariants(r);
+          // An item with variants (e.g. Maple/Oak/Painted MDF) doesn't have
+          // one photo anymore — each variant gets its own, so it gets its
+          // own card here instead, clearly labeled "Item — Variant" so it's
+          // obvious which option each photo belongs to. Variants themselves
+          // are still added/renamed/priced on the Specialty Items tab, not
+          // here — this is photos only, same as every other item on this tab.
+          if (!variants.length) {
+            return [`<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}">
+              ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
+            </div>`];
+          }
+          return variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}">
+            ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
+          </div>`);
         }).join('')}
       </div>
       </div>
@@ -5271,26 +5284,39 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqParseVariants(r) {
     try {
       const v = JSON.parse(r?.fields?.['Variants'] || '[]');
-      return Array.isArray(v) ? v : [];
+      const arr = Array.isArray(v) ? v : [];
+      // Every variant needs a stable id (not its array position) so its
+      // photo — managed separately in the Products tab, keyed by this id —
+      // stays correctly matched to it even after some other variant earlier
+      // in the list gets removed and everything after it shifts down.
+      // Existing variants keep whatever id they already have; this only
+      // fills one in for older data that predates ids.
+      return arr.map((variant, vi) => ({ ...variant, id: variant.id || ('i' + vi) }));
     } catch(e) { return []; }
   }
 
   function mqVariantsPanelHTML(r) {
     const variants = mqParseVariants(r);
+    const itemName = (r.fields['Item name'] || 'this item').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const rows = variants.map((v, vi) => `
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
-        <div style="width:32px;height:32px;border-radius:6px;flex-shrink:0;background:#f3f4f6;background-image:url('${(v.photoUrl||'').replace(/'/g,"%27")}');background-size:cover;background-position:center"></div>
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
-        <input type="text" value="${(v.photoUrl||'').replace(/"/g,'&quot;')}" placeholder="Photo URL (optional)" style="flex:1;min-width:140px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'photoUrl',this.value)"/>
         <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;white-space:nowrap;cursor:pointer"><input type="checkbox" ${v.featured?'checked':''} onchange="mqSaveVariantField('${r.id}',${vi},'featured',this.checked)" style="width:14px;height:14px;accent-color:#f59e0b"/> 🏆 Best seller</label>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
       </div>`).join('');
+    // Boxed with a colored left border and the item's own name repeated in
+    // the header — this panel can end up sitting visually next to a
+    // DIFFERENT row once you scroll (it's a collapsible detail row that
+    // opens directly under whichever item's pill you click), so it needs to
+    // be unmistakable which item's variants you're looking at rather than
+    // just trusting position on the page.
     return `
-      <div>
+      <div style="border-left:3px solid #c7d2fe;padding-left:10px">
+        <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
         ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
-        <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add variant</button>
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+        <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
       </div>`;
   }
 
@@ -5333,7 +5359,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
     const variants = mqParseVariants(r);
-    variants.push({ label: '', price: 0, photoUrl: '', featured: false });
+    // A stable id, not the variant's array position — its photo (added
+    // separately in the Products tab) is keyed by this id, so it has to
+    // survive other variants being added/removed/reordered later.
+    const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    variants.push({ id: newId, label: '', price: 0, featured: false });
     r.fields['Variants'] = JSON.stringify(variants);
     mqRefreshVariantsPanel(id);
     mqRefreshSpecVariantUI(id);
@@ -5358,7 +5388,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!variants[vi]) return;
     variants[vi][field] = value;
     r.fields['Variants'] = JSON.stringify(variants);
-    if (field === 'photoUrl') mqRefreshVariantsPanel(id); // updates the little swatch preview
     await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
   };
   // =================== end specialty item variants ===================

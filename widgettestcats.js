@@ -196,12 +196,24 @@
         let variants = [];
         try { variants = r.fields['Variants'] ? JSON.parse(r.fields['Variants']) : []; } catch(e) { variants = []; }
         if (!Array.isArray(variants)) variants = [];
-        variants = variants.filter(v => v && (v.label||'').trim()).map(v => ({
-          label: (v.label||'').trim(),
-          price: v.price||0,
-          photoUrl: v.photoUrl||'',
-          featured: !!v.featured,
-        }));
+        // Variant photos are NOT stored in the Variants JSON itself — they're
+        // managed in the dashboard's Products tab (My Products → Specialty
+        // Items), using the exact same shop-wide photo map every other
+        // product photo already uses, keyed 'spec_<itemId>_v<variantId>'.
+        // Each variant carries its own stable `id` (assigned by the
+        // dashboard the moment it's created) rather than relying on its
+        // position in the array, so a variant's photo stays correctly
+        // matched to it even after some other variant earlier in the list
+        // gets removed and everything after it shifts down.
+        variants = variants.map((v, vi) => {
+          const vid = (v && v.id) || ('i' + vi);
+          return {
+            label: ((v && v.label) || '').trim(),
+            price: (v && v.price) || 0,
+            photoUrl: shopPhotos['spec_' + r.id + '_v' + vid] || '',
+            featured: !!(v && v.featured),
+          };
+        }).filter(v => v.label);
         // $/$$/$$$ badges assigned per-item across just that item's own
         // variants — reuses the exact same ranking function used for the
         // door/material picker and the main specialty-item badges below,
