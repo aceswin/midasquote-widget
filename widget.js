@@ -4261,6 +4261,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.getElementById('mq-lead-overlay').classList.remove('show');
       if(pendingCb){pendingCb(lead);pendingCb=null;}
     };
+    // Free Demo tier: quoting itself is now locked (not just watermarked) —
+    // an expired-trial shop can still be browsed/configured so the widget
+    // doesn't look broken on the shop's site, but hitting any Calculate
+    // button shows this instead of the lead-capture step, so no lead is
+    // ever captured and no numbers are ever revealed for a Demo shop.
+    window.mqShowDemoLockedModal=()=>{
+      document.getElementById('mq-demo-locked-overlay')?.classList.add('show');
+    };
     window.mqShowConsultModal=()=>{
       const shop=window._mqShopData||{};
       const consultUrl=(shop['Consultation link']||'').trim();
@@ -4696,6 +4704,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcCabinets=()=>{
+      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       if (!mqValidateInstallQty('c')) return;
       if (!mqValidateNotEmpty('c', calcCabinet('c'))) return;
       window.mqShowLead(async lead=>{
@@ -4721,6 +4730,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcCountertops=()=>{
+      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       const hasSurfaces=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length>0;
       if(!hasSurfaces){alert('Please add at least one surface.');return;}
       if (!mqValidateNotEmpty('ct', calcCountertop('ct'))) return;
@@ -4744,6 +4754,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcBoth=()=>{
+      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       if (!mqValidateInstallQty('b')) return;
       const dryCab=calcCabinet('b'), dryCt=calcCountertop('b');
       if (!mqValidateNotEmpty('b', { low: dryCab.low+dryCt.low, high: dryCab.high+dryCt.high })) return;
@@ -5322,6 +5333,13 @@ window.mqTogDrawerConfig=(prefix)=>{
           </div>
           <button class="mq-modal-btn" onclick="mqSubmitQuickEmail()">Send it →</button>
           <button class="mq-modal-skip" onclick="document.getElementById('mq-quick-email-overlay').classList.remove('show')">Cancel</button>
+        </div>
+      </div>
+      <div class="mq-overlay" id="mq-demo-locked-overlay">
+        <div class="mq-modal">
+          <p class="mq-modal-title">⚡ Quoting isn't available right now</p>
+          <p class="mq-modal-sub">This shop's free trial has ended, so this tool can't generate estimates at the moment. If this is your business, upgrade to a paid plan from your dashboard to turn quoting back on.</p>
+          <button class="mq-modal-skip" onclick="document.getElementById('mq-demo-locked-overlay').classList.remove('show')">Close</button>
         </div>
       </div>`;
     while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
