@@ -4445,7 +4445,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const tbody = document.getElementById('mq-spec-tbody');
     if (!tbody) return;
     let visibleCount = 0;
-    tbody.querySelectorAll('tr').forEach(row => {
+    // Only the item's own row carries data-id/data-rooms/data-category/
+    // data-name — its variants-editor row is a separate sibling <tr> with
+    // none of those, so "tr[data-id]" here (instead of every <tr>) is what
+    // excludes it from this pass. Selecting every <tr> used to run this same
+    // room/category/search check against the attribute-less panel row too:
+    // with no data-rooms it trivially satisfied the room filter, with no
+    // data-category it trivially satisfied the category filter, so it
+    // "matched" almost any filter and got set back to visible — silently
+    // re-opening any variant panel (even an empty one on an item the filter
+    // just hid) the moment a filter changed, regardless of whether the shop
+    // owner had ever clicked to open it.
+    tbody.querySelectorAll('tr[data-id]').forEach(row => {
       let rooms = [];
       try { rooms = JSON.parse(row.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
       const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
@@ -4456,6 +4467,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const show = roomMatch && categoryMatch && searchMatch;
       row.style.display = show ? '' : 'none';
       if (show) visibleCount++;
+    });
+    // Belt and suspenders on top of the fix above: any variant panel that
+    // happened to be open closes on every filter change, and its pill's
+    // arrow resets to closed (▾) to match. A panel that stayed open under an
+    // item the filter just hid (or scrolled away from) is exactly the
+    // "dead variant panel followed me to a different project type" bug —
+    // always resetting closed here avoids it rather than trying to track
+    // which open panels should or shouldn't survive a re-filter.
+    tbody.querySelectorAll('tr[id^="mq-spec-variants-row-"]').forEach(row => {
+      row.style.display = 'none';
+    });
+    tbody.querySelectorAll('.mq-spec-variant-pill').forEach(pill => {
+      pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, '▾');
     });
     const emptyMsg = document.getElementById('mq-spec-tab-filter-empty');
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
