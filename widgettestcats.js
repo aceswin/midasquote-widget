@@ -186,21 +186,54 @@
       .filter(r => !r.fields['Pro only'])
       .map(r=>{
         const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty');
+        // Optional variants (e.g. a "Crown Molding" item offered in
+        // Maple/Oak/MDF) — each variant carries its own label/price/photo/
+        // featured flag, but shares everything else on the parent item
+        // (category, project-type visibility, per-linear/sq-ft pricing
+        // method, supply/install choice). An item with no Variants field
+        // or an empty array behaves exactly as it always has — this is
+        // fully backward compatible with every existing specialty item.
+        let variants = [];
+        try { variants = r.fields['Variants'] ? JSON.parse(r.fields['Variants']) : []; } catch(e) { variants = []; }
+        if (!Array.isArray(variants)) variants = [];
+        variants = variants.filter(v => v && (v.label||'').trim()).map(v => ({
+          label: (v.label||'').trim(),
+          price: v.price||0,
+          photoUrl: v.photoUrl||'',
+          featured: !!v.featured,
+        }));
+        // $/$$/$$$ badges assigned per-item across just that item's own
+        // variants — reuses the exact same ranking function used for the
+        // door/material picker and the main specialty-item badges below,
+        // just scoped to one item's variant list instead of a category.
+        if (variants.length) assignBadges(variants);
+        // Before any variant is explicitly picked, the card shows the
+        // first variant's price/photo — same convention the door/material
+        // picker already uses (defaults to index 0, customer can change it).
+        const defaultVariant = variants[0] || null;
         return {
           id:r.id,
           label:r.fields['Item name']||r.fields['Special Items'],
-          price:r.fields['Price']||0,
+          price: defaultVariant ? defaultVariant.price : (r.fields['Price']||0),
           // Badges reflect the item's real total cost (supply + install
           // combined), not just the supply price — otherwise two items with
           // identical install pricing but very different supply costs (e.g.
           // an MDF vs. a rift oak refacing door) end up looking like the
           // same price tier. This never touches the actual `price` field
           // used for real math above — it's purely for sorting into $/$$/$$$.
-          badgePrice:(r.fields['Price']||0)+(r.fields['Install price']||0),
+          badgePrice:(defaultVariant ? defaultVariant.price : (r.fields['Price']||0))+(r.fields['Install price']||0),
           perFt:r.fields['Per linear foot']||false,
           perSqFt:r.fields['Per square foot']||false,
-          photoUrl: shopPhotos['spec_' + r.id] || '',
-          featured: shopFeatured['spec_' + r.id] || false,
+          photoUrl: defaultVariant ? defaultVariant.photoUrl : (shopPhotos['spec_' + r.id] || ''),
+          featured: defaultVariant ? defaultVariant.featured : (shopFeatured['spec_' + r.id] || false),
+          // The currently-active variant's own name (e.g. "Oak") — kept
+          // separate from `label` (which stays the parent item's name, e.g.
+          // "Crown Molding", so the card heading/lightbox/hover-preview
+          // never changes) but folded into the line-item text at quote time
+          // below so the final estimate/lead actually says which option was
+          // picked, not just the generic item name.
+          variantLabel: defaultVariant ? defaultVariant.label : '',
+          variants,
           visibleRooms, // empty array = visible for every room (backward compatible default)
           // Per-item supply/install choice — lets a shop offer some items
           // (e.g. refacing doors) supply-only even while installing
@@ -466,7 +499,7 @@
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:block}
-      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 230px;min-width:0}
+      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
       #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
@@ -489,6 +522,13 @@
            arrows are a desktop-only convenience, not needed (and would
            just sit in the way of the swipe gesture) on phones/tablets. */
         #midasquote-widget .mq-vpicker-arrow{display:none!important}
+        /* Specialty items are the exception — their cards don't give as
+           obvious a "there's more" visual hint as the photo picker chips
+           do, so customers on mobile had no way to tell more items were
+           off-screen. Re-enable just the "more to scroll" arrow (still only
+           shown via .show, exactly like desktop — i.e. only when there's
+           real overflow left to scroll to) for specialty item rows only. */
+        #midasquote-widget .mq-spec-scroll-wrap .mq-vpicker-arrow.show{display:flex!important}
       }
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
@@ -509,6 +549,19 @@
       #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
       #midasquote-widget .mq-vpicker-featured-badge{position:absolute;top:-6px;left:-6px;font-size:8px;font-weight:700;padding:2px 5px;border-radius:8px;background:#f59e0b;color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+      /* A specialty item's own variant picker (e.g. Maple/Oak/MDF under one
+         "Crown Molding" item) reuses the exact same mq-vpicker-chip
+         component as the door/material picker, just scaled down — it lives
+         inside a 280px-wide mq-spec-item card, not the full-width picker
+         area, so the normal 130px chip/116px thumb would barely fit two at
+         once. Everything else (badges, selected state, arrows) is identical. */
+      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 6px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-chip{width:74px;padding:4px;border-radius:8px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-thumb,
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-thumb-placeholder{width:62px;height:62px;font-size:15px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-label{font-size:9.5px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-select-btn{font-size:9px;padding:3px 7px;margin-top:3px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-featured-badge{font-size:7px;max-width:70px}
       /* Sticky estimate bar — appears after the first real Calculate, then
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
@@ -1373,22 +1426,66 @@
 
   // Wraps any horizontal row of content (not just the main material/door/etc
   // pickers) in the exact same scroll-row + clickable-arrow structure —
-  // reused here for specialty items so they get the same desktop arrows and
-  // mobile swipe behavior for free, with zero duplicated CSS or JS.
+  // reused here for specialty items (and for a specialty item's own variant
+  // picker, when it has one) so they get the same desktop arrows and mobile
+  // swipe behavior for free, with zero duplicated CSS or JS.
   function mqHscrollWrap(rowId, extraClass, innerHtml) {
-    return `<div class="mq-vpicker-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
+    // mq-spec-scroll-wrap marks this as a specialty-items-style row — see
+    // the touch-device media query below, which re-enables the "more
+    // items" arrow just for these rows.
+    return `<div class="mq-vpicker-wrap mq-spec-scroll-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
+  }
+  // Builds the thumbnail+badges markup for one specialty item's current
+  // "active" photo/badge/featured state — shared between specHTML's initial
+  // render and mqPickSpecVariant's live update after the customer picks a
+  // different variant, so there's only ever one implementation of this to
+  // keep in sync. groupKey/itemDomId are only used to wire up the
+  // tap-to-enlarge lightbox click handler.
+  function mqSpecVisualHTML(s, groupKey, itemDomId) {
+    const safePhoto = (s.photoUrl||'').replace(/'/g,"\\'");
+    const safeLabel = (s.label||'').replace(/'/g,"\\'");
+    const thumb = s.photoUrl
+      ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightboxFromSpecItem('${groupKey}','${itemDomId}')" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
+      : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
+    const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
+    const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+    return `${thumb}${badgeHtml}${featuredBadgeHtml}`;
+  }
+  // Builds one chip in a specialty item's variant picker (e.g. Maple/Oak/MDF
+  // under one "Crown Molding" item) — deliberately much simpler than the
+  // full material/door mq-vpicker-chip (no room/collection filtering, no
+  // hidden <select> to keep in sync), but reuses the exact same visual
+  // classes so it looks and slides identically.
+  function mqSpecVariantChipHTML(s, prefix, i, v, vi, selected) {
+    const safePhoto = (v.photoUrl||'').replace(/'/g,"\\'");
+    const safeLabel = (v.label||'').replace(/'/g,"\\'");
+    const thumb = v.photoUrl
+      ? `<img class="mq-vpicker-thumb" src="${v.photoUrl}" alt="${v.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>⭐</div>'"/>`
+      : `<div class="mq-vpicker-thumb-placeholder">⭐</div>`;
+    const badgeHtml = v.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${v.badge.length}">${v.badge}</span>` : '';
+    const featuredBadgeHtml = v.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+    return `<div class="mq-vpicker-chip${selected?' selected':''}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${v.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickSpecVariant('${prefix}',${i},${vi})">${selected?'✓ Selected':'Select'}</button></div>`;
   }
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
 
     const buildCard = (s,i,groupKey,groupIndex) => {
-      const safeLabel = (s.label||'').replace(/'/g,"\\'");
-      const thumb = s.photoUrl
-        ? `<img class="mq-spec-thumb" src="${s.photoUrl}" alt="${s.label}" onclick="event.stopPropagation();mqPhotoLightboxFromSpecItem('${groupKey}','mq-sp-${prefix}-${i}')" onmouseenter="mqHoverPreviewShow(this,'${s.photoUrl.replace(/'/g,"\\'")}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>⭐</div>'"/>`
-        : `<div class="mq-spec-thumb-placeholder">⭐</div>`;
-      const badgeHtml = s.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${s.badge.length}" style="position:absolute;top:-6px;right:-6px">${s.badge}</span>` : '';
-      const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+      const itemDomId = `mq-sp-${prefix}-${i}`;
       const roomsAttr = JSON.stringify(s.visibleRooms||[]).replace(/"/g,'&quot;');
+      // Variant picker (e.g. Maple/Oak/MDF under one "Crown Molding" item) —
+      // renders as a scrollable chip row (same as the door/material picker,
+      // arrows only appear once it actually overflows) and defaults to the
+      // first variant, same convention as every other picker in the widget.
+      // Selecting a different chip is handled entirely by mqPickSpecVariant,
+      // which mutates this same `s` object's price/photo/badge in place —
+      // so the existing quantity controls and calcCabinet's pricing loop
+      // below need zero changes to work correctly with whichever variant is
+      // currently active.
+      const variantPickerHtml = (s.variants && s.variants.length) ? `
+        <div class="mq-spec-variant-row" id="mq-spec-variants-${prefix}-${i}" style="margin-top:8px">
+          ${mqHscrollWrap(`${prefix}-specvariant-${i}`, 'mq-spec-variant-picker',
+            s.variants.map((v,vi) => mqSpecVariantChipHTML(s, prefix, i, v, vi, vi===0)).join(''))}
+        </div>` : '';
       // Items offering a choice get a dropdown that starts on a
       // non-selectable "Choose one" placeholder — not defaulted to match
       // the project's overall setting, since the whole point here is
@@ -1424,13 +1521,14 @@
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : 'quantity')}</span>
         </div>` : '';
       return `
-      <div class="mq-spec-item" id="mq-sp-${prefix}-${i}" data-rooms="${roomsAttr}">
+      <div class="mq-spec-item" id="${itemDomId}" data-rooms="${roomsAttr}">
         <div class="mq-spec-top">
-          <div style="position:relative;flex-shrink:0">${thumb}${badgeHtml}${featuredBadgeHtml}</div>
+          <div style="position:relative;flex-shrink:0" id="mq-spec-visual-${prefix}-${i}" data-group-key="${groupKey}">${mqSpecVisualHTML(s, groupKey, itemDomId)}</div>
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
             ${installModeHtml}
+            ${variantPickerHtml}
           </div>
         </div>
         <div class="mq-spec-bottom">
@@ -2266,6 +2364,27 @@
     window._mqCalcCabinet = calcCabinet;
     window._mqCalcCountertop = calcCountertop;
 
+    // Seed the "room being left" tracker from each room dropdown's actual
+    // starting value, right after it's in the DOM — don't rely solely on the
+    // dropdown's onfocus handler to populate this. mqCommitCurrentConfig
+    // needs to know the PREVIOUS room whenever the dropdown changes, so it
+    // can price the project type being left correctly instead of the one
+    // just switched to. Normally onfocus (which always fires before a real
+    // click/tap opens a native select) sets this in time. But if the very
+    // first project-type switch of a session ever happens without a prior
+    // focus event on the dropdown, this would otherwise still be undefined,
+    // mqCommitCurrentConfig would skip the rewind, and the committed entry
+    // would silently get tagged with the NEW room's id instead of the old
+    // one — which mqOnProjectTypeChange then mistakes for an existing cart
+    // entry for the new room and deletes, dropping the first project type
+    // from the cart with no error. Seeding it here (re-run on every full
+    // widget render, including mqStartNewEstimate) closes that gap.
+    window._mqPrevRoomId = window._mqPrevRoomId || {};
+    ['b', 'c'].forEach(p => {
+      const roomEl = document.getElementById(`mq-${p}-room`);
+      if (roomEl) window._mqPrevRoomId[p] = roomEl.value;
+    });
+
     const drawerConfigNames = [...new Set(
       li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim())
     )];
@@ -2476,9 +2595,13 @@
 
     const ctDepth  = 25.5;
 
-    const diffOn={},specQty={},installQty={},surfCounts={},surfs={},tallCabs={},tallCabCounts={};
+    const diffOn={},specQty={},installQty={},specVariant={},surfCounts={},surfs={},tallCabs={},tallCabCounts={};
     let pendingCb=null;
-    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);installQty[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
+    // specVariant tracks which variant index is currently active for each
+    // specialty item with variants (0 = the default, same convention as
+    // every other picker in the widget). Positional, same as specQty/
+    // installQty above — index i lines up with specs[i].
+    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);installQty[p]=new Array(specs.length).fill(0);specVariant[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
 
     function fmt(n){return '$'+Math.round(n).toLocaleString();}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
@@ -2630,7 +2753,9 @@
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const desc = room ? (room.description||'').trim() : '';
-      const coverImg = room ? ((room.coverImage||'').trim() || MQ_DEFAULT_COVER_IMAGES[mqDefaultImageKey(room)] || '') : '';
+      // Free Demo tier never shows a shop's own cover photo, even if one is
+      // still saved on the room — always the standard library image instead.
+      const coverImg = room ? ((!window._mqIsDemoPlan && (room.coverImage||'').trim()) || MQ_DEFAULT_COVER_IMAGES[mqDefaultImageKey(room)] || '') : '';
       if (!desc && !coverImg) { descEl.style.display = 'none'; return; }
       descEl.innerHTML = ''; // clear previous content before rebuilding
       if (coverImg) {
@@ -2659,10 +2784,62 @@
     // Image and text fall back independently of each other, so a shop that's
     // set one but not the other still gets the default for whichever one
     // they haven't touched.
+    // Lets a shop drop a video link into the exact same "measure guide
+    // image" field(s) they already use for photos, in whatever order they
+    // like — no separate upload path, no separate field, nothing new in
+    // the dashboard. Returns null for a plain image URL; otherwise
+    // {embedSrc} for a provider embeddable via iframe, or {directFile:true}
+    // for a direct video file link (rendered with a native <video> tag
+    // instead). Deliberately only recognizes a handful of well-known
+    // providers with clean, stable embed URLs — anything else just stays a
+    // plain image URL (and if it isn't actually one, the existing
+    // onerror-hide behavior already covers that failure gracefully).
+    function mqVideoEmbedInfo(url) {
+      if (!url) return null;
+      const u = String(url).trim();
+      let m;
+      if ((m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/i))) {
+        return { embedSrc: `https://www.youtube.com/embed/${m[1]}` };
+      }
+      if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i))) {
+        return { embedSrc: `https://player.vimeo.com/video/${m[1]}` };
+      }
+      if ((m = u.match(/loom\.com\/share\/([a-zA-Z0-9]+)/i))) {
+        return { embedSrc: `https://www.loom.com/embed/${m[1]}` };
+      }
+      if (/\.(mp4|webm|mov|m4v)(\?.*)?(#.*)?$/i.test(u)) {
+        return { directFile: true };
+      }
+      return null;
+    }
+    // Builds a 16:9 video slide — an iframe for an embeddable provider, or
+    // a native <video> for a direct file link. Used both inside the
+    // carousel and for the single-item (no-carousel) case.
+    function mqBuildVideoEmbedEl(video, originalUrl) {
+      const holder = document.createElement('div');
+      holder.style.cssText = 'position:relative;width:100%;padding-top:56.25%;background:#000;border-radius:6px;overflow:hidden';
+      if (video.directFile) {
+        const v = document.createElement('video');
+        v.src = originalUrl;
+        v.controls = true;
+        v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000';
+        holder.appendChild(v);
+      } else {
+        const iframe = document.createElement('iframe');
+        iframe.src = video.embedSrc;
+        iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0';
+        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.loading = 'lazy';
+        holder.appendChild(iframe);
+      }
+      return holder;
+    }
     // Builds a swipeable image carousel for the measuring guide — only ever
     // called when there's more than one image, so the plain single-image
     // path in mqRefreshMeasureGuide is completely untouched for every shop
-    // that hasn't added extra images.
+    // that hasn't added extra images. A video URL in the mix gets its own
+    // embedded-player slide instead of an <img> — see mqVideoEmbedInfo.
     function mqBuildMeasureCarousel(images, room) {
       const outer = document.createElement('div');
 
@@ -2674,19 +2851,36 @@
       track.className = 'mq-measure-carousel-track';
       track.style.cssText = 'display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;border-radius:6px;scrollbar-width:none';
 
-      const lightboxImages = images.map((src, i) => ({
-        src,
-        label: room && room.name ? `${room.name} — measuring guide (${i+1}/${images.length})` : `Measuring guide (${i+1}/${images.length})`
-      }));
+      // Each slide may be a photo or a video link — classify once up front so
+      // the lightbox (which only ever makes sense for photos) gets a
+      // photos-only array with correctly remapped indices.
+      const videoInfos = images.map(src => mqVideoEmbedInfo(src));
+      const hasVideo = videoInfos.some(Boolean);
+      const photoIndexMap = {}; // slide index -> index within lightboxImages
+      const lightboxImages = [];
+      images.forEach((src, i) => {
+        if (videoInfos[i]) return;
+        photoIndexMap[i] = lightboxImages.length;
+        lightboxImages.push({
+          src,
+          label: room && room.name ? `${room.name} — measuring guide (${i+1}/${images.length})` : `Measuring guide (${i+1}/${images.length})`
+        });
+      });
       images.forEach((src, i) => {
         const slide = document.createElement('div');
         slide.style.cssText = 'flex:0 0 100%;scroll-snap-align:center;min-width:0';
-        const img = document.createElement('img');
-        img.src = src;
-        img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
-        img.onerror = () => { slide.style.display = 'none'; };
-        img.onclick = () => mqPhotoLightbox(lightboxImages[i].src, lightboxImages[i].label, lightboxImages, i);
-        slide.appendChild(img);
+        const video = videoInfos[i];
+        if (video) {
+          slide.appendChild(mqBuildVideoEmbedEl(video, src));
+        } else {
+          const img = document.createElement('img');
+          img.src = src;
+          img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
+          img.onerror = () => { slide.style.display = 'none'; };
+          const lbIdx = photoIndexMap[i];
+          img.onclick = () => mqPhotoLightbox(lightboxImages[lbIdx].src, lightboxImages[lbIdx].label, lightboxImages, lbIdx);
+          slide.appendChild(img);
+        }
         track.appendChild(slide);
       });
       wrap.appendChild(track);
@@ -2731,7 +2925,9 @@
       outer.appendChild(wrap);
       outer.appendChild(dots);
       const caption = document.createElement('div');
-      caption.textContent = `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
+      caption.textContent = hasVideo
+        ? `Swipe for more (${images.length})`
+        : `🔍 Tap to enlarge · Swipe for more (${images.length} photos)`;
       caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-top:6px;margin-bottom:10px';
       outer.appendChild(caption);
       // mqBindAutoPeek(track); // full spin preview disabled for now — code kept intact above in case it's wanted back later
@@ -2744,10 +2940,15 @@
       const roomId = gv(`mq-${prefix}-room`);
       const room = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const customText = room ? (room.measureText||'').trim() : '';
-      const customPrimary = room ? (room.measureImage||'').trim() : '';
+      // Free Demo tier: same rule as the cover image above — a Demo shop's
+      // own measure-guide photos/videos, even if still saved, never show;
+      // this forces the library-default fallback below unconditionally.
+      // Custom measuring TEXT still works (it's typed, not an upload, so it
+      // costs nothing and isn't part of what Demo restricts).
+      const customPrimary = (room && !window._mqIsDemoPlan) ? (room.measureImage||'').trim() : '';
       // Extra images are entirely opt-in — a shop that's never touched this
       // just has an empty/absent array.
-      const customExtra = room && Array.isArray(room.measureImages) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
+      const customExtra = (room && !window._mqIsDemoPlan && Array.isArray(room.measureImages)) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
       // A shop that's customized ANYTHING (even just adding extra images with
       // no primary set) gets exactly what they set, no default mixed in. Only
       // a shop that's never touched either field falls back to the full
@@ -2760,6 +2961,12 @@
       if (allImages.length > 1) {
         guideEl.appendChild(mqBuildMeasureCarousel(allImages, room));
       } else if (allImages.length === 1) {
+        const singleVideo = mqVideoEmbedInfo(allImages[0]);
+        if (singleVideo) {
+          // A lone video link gets the embedded player directly — no
+          // lightbox/zoom affordance, since there's nothing to zoom into.
+          guideEl.appendChild(mqBuildVideoEmbedEl(singleVideo, allImages[0]));
+        } else {
         const img = document.createElement('img');
         img.src = allImages[0];
         img.className = 'mq-measure-guide-img';
@@ -2778,6 +2985,7 @@
         caption.textContent = '🔍 Tap to enlarge';
         caption.style.cssText = 'text-align:center;font-size:12px;font-weight:700;color:#2563eb;margin-bottom:10px';
         guideEl.appendChild(caption);
+        }
       }
       if (!customText) {
         const defaultBody = document.createElement('div');
@@ -2974,6 +3182,13 @@
       body.style.display = opening ? 'block' : 'none';
       if (arrow) arrow.classList.toggle('open', opening);
       if (label) label.textContent = opening ? 'Close' : 'Open';
+      // Marks that this section has been opened at least once — lets the
+      // bottom-of-page auto-open below (mqInitBottomBounceAutoOpen) tell
+      // "still closed because it's never been looked at" apart from "was
+      // opened, then deliberately closed again," so it only ever forces
+      // open a section nobody has seen yet, never one someone chose to
+      // close back up.
+      if (opening) body.dataset.mqEverOpened = '1';
       // Anything with a scroll-row (specialty items, doors, materials, etc.)
       // inside a section that was just display:none couldn't have had a real
       // scrollWidth/clientWidth to measure — both read as 0 while hidden, so
@@ -3535,12 +3750,37 @@
         const widthEl = document.getElementById(`mq-tc-width-${id}`);
         tallCabSnaps.push({ type: typeEl ? typeEl.value : 'none', width: widthEl ? widthEl.value : '24', qty });
       });
+      // Additional countertop surface cards ("+ Add another surface") are
+      // also dynamically built, not simple fields — same reason as tall
+      // cabinets above. Each card's every input/select is captured, scoped
+      // to that card's own DOM subtree (#mqsc-ID) so there's no risk of
+      // pulling in another surface's fields. The card's own id (e.g. "sb2")
+      // gets swapped out for a placeholder in each field's id so the
+      // captured shape can be replayed onto whatever NEW id the card gets
+      // when it's recreated on restore (surface ids are a running counter,
+      // so a restored card never reuses its original id).
+      const surfaceSnaps = [];
+      Object.keys(surfs[prefix] || {}).forEach(id => {
+        const card = document.getElementById(`mqsc-${id}`);
+        if (!card) return;
+        const surfFields = [];
+        card.querySelectorAll('input, select').forEach(el => {
+          if (!el.id) return;
+          surfFields.push({
+            template: el.id.split(id).join('§'),
+            value: (el.type === 'checkbox') ? el.checked : el.value,
+          });
+        });
+        surfaceSnaps.push(surfFields);
+      });
       return {
         fields,
         diffOn: !!diffOn[prefix],
         specQty: [...(specQty[prefix] || [])],
         installQty: [...(installQty[prefix] || [])],
+        specVariant: [...(specVariant[prefix] || [])],
         tallCabs: tallCabSnaps,
+        surfaces: surfaceSnaps,
       };
     }
 
@@ -3570,6 +3810,14 @@
         const el = document.getElementById(`mq-installqty-${prefix}-${i}`);
         if (el) el.value = qty;
       });
+      // Specialty item variants: only worth restoring anything other than
+      // the default (index 0), since mqPickSpecVariant already applies the
+      // full price/photo/badge/UI update in one call — no separate manual
+      // sync needed like specQty/installQty above.
+      (snapshot.specVariant || []).forEach((vi, i) => {
+        if (!vi || !specs[i] || !specs[i].variants || !specs[i].variants[vi]) return;
+        window.mqPickSpecVariant(prefix, i, vi);
+      });
       // Tall cabinets are dynamically-created cards, not simple fields —
       // the reset that already ran before this cleared any old ones, so
       // recreate one fresh card per saved cabinet, then set it to match.
@@ -3582,6 +3830,21 @@
         tallCabs[prefix][newId] = tc.qty;
         const qtyEl = document.getElementById(`mq-tc-qty-${newId}`);
         if (qtyEl) qtyEl.textContent = tc.qty;
+      });
+      // Additional countertop surfaces: recreate one fresh card per saved
+      // surface, then replay its captured fields onto the new card's own
+      // id. The material field has to go first — its onchange cascade is
+      // what (re)builds the edge/addon/cutout sub-fields inside the card,
+      // so every other captured field for those needs that structure to
+      // already exist before it can find its element by id.
+      (snapshot.surfaces || []).forEach(surfFields => {
+        addSurfaceInternal(prefix);
+        const newId = `s${prefix}${surfCounts[prefix]}`;
+        const matField = surfFields.find(f => f.template.startsWith('mqsm-'));
+        const restoreOne = f => mqRestoreFieldValue(f.template.split('§').join(newId), f.value);
+        if (matField) restoreOne(matField);
+        surfFields.filter(f => f !== matField).forEach(restoreOne);
+        window.mqRefreshSurfBsFt(newId);
       });
       mqRefreshAllPickerVisibility(prefix);
       mqRefreshBsFt(prefix);
@@ -3803,6 +4066,12 @@
           if (installQtyInput) installQtyInput.value = 0;
           const installQtyRow = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
           if (installQtyRow) installQtyRow.style.display = 'none';
+          // A variant choice made under a completely different, unrelated
+          // project type shouldn't silently carry over either — back to
+          // the default (first) variant, same reasoning as qty/mode above.
+          if (specVariant[prefix] && specVariant[prefix][i] !== 0 && specs[i] && specs[i].variants && specs[i].variants.length) {
+            window.mqPickSpecVariant(prefix, i, 0);
+          }
         });
       }
       mqRefreshSectionVisibility(prefix);
@@ -3942,6 +4211,36 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       specQty[prefix][i]=n;
       document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
+    };
+
+    // Handles a click on one variant chip (e.g. picking "Oak" under a
+    // "Crown Molding" item). Mutates the same `s` object specs[i] already
+    // points at — its price/photoUrl/badge/featured now reflect the chosen
+    // variant — so calcCabinet's pricing loop and the quantity controls
+    // below need no awareness that variants exist at all; they just keep
+    // reading s.price like they always have. Only the visual thumb/badge
+    // block and the picker's own selected-chip highlight need a DOM update.
+    window.mqPickSpecVariant = function(prefix, i, vi) {
+      const s = specs[i];
+      const v = s && s.variants && s.variants[vi];
+      if (!v) return;
+      specVariant[prefix][i] = vi;
+      s.price = v.price || 0;
+      s.photoUrl = v.photoUrl || '';
+      s.featured = !!v.featured;
+      s.badge = v.badge || '';
+      s.variantLabel = v.label || '';
+      const visual = document.getElementById(`mq-spec-visual-${prefix}-${i}`);
+      if (visual) visual.innerHTML = mqSpecVisualHTML(s, visual.dataset.groupKey || '', `mq-sp-${prefix}-${i}`);
+      const row = document.getElementById(`mq-spec-variants-${prefix}-${i}`);
+      if (row) {
+        row.querySelectorAll('.mq-vpicker-chip').forEach((chip, idx) => {
+          const selected = idx === vi;
+          chip.classList.toggle('selected', selected);
+          const btn = chip.querySelector('.mq-vpicker-select-btn');
+          if (btn) btn.textContent = selected ? '✓ Selected' : 'Select';
+        });
+      }
     };
 
     // Shows/hides the extra install-quantity row (only rendered at all when
@@ -4098,6 +4397,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       try{localStorage.setItem('mq_lead_info',JSON.stringify(lead));}catch(e){}
       document.getElementById('mq-lead-overlay').classList.remove('show');
       if(pendingCb){pendingCb(lead);pendingCb=null;}
+    };
+    // Free Demo tier: quoting itself is now locked (not just watermarked) —
+    // an expired-trial shop can still be browsed/configured so the widget
+    // doesn't look broken on the shop's site, but hitting any Calculate
+    // button shows this instead of the lead-capture step, so no lead is
+    // ever captured and no numbers are ever revealed for a Demo shop.
+    window.mqShowDemoLockedModal=()=>{
+      document.getElementById('mq-demo-locked-overlay')?.classList.add('show');
     };
     window.mqShowConsultModal=()=>{
       const shop=window._mqShopData||{};
@@ -4321,10 +4628,15 @@ window.mqTogDrawerConfig=(prefix)=>{
         const supplyQty = specQty[prefix][i];
         const supplyCost = s.price * supplyQty;
         const supplyQtyLabel = s.perSqFt?`${supplyQty} sqft`:(s.perFt?`${supplyQty} ft`:(supplyQty>1?`× ${supplyQty}`:''));
+        // Fold the currently-picked variant's own name into the line-item
+        // text (e.g. "Crown Molding — Oak") so the actual quote/lead always
+        // says which option was chosen — items with no variants are
+        // completely unaffected (itemLabel === s.label).
+        const itemLabel = s.variantLabel ? `${s.label} — ${s.variantLabel}` : s.label;
 
         if (!s.offersInstallChoice) {
           specTotal += supplyCost;
-          lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel})`:s.label,cost:Math.round(supplyCost)});
+          lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel})`:itemLabel,cost:Math.round(supplyCost)});
           return;
         }
 
@@ -4332,7 +4644,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const mode = modeSel ? modeSel.value : 'supply';
         if (mode !== 'install') {
           specTotal += supplyCost;
-          lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel}) — Supply only`:`${s.label} — Supply only`,cost:Math.round(supplyCost)});
+          lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel}) — Supply only`:`${itemLabel} — Supply only`,cost:Math.round(supplyCost)});
           return;
         }
 
@@ -4347,8 +4659,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         const installCost = s.installPrice * installQtyVal;
         const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
         specTotal += supplyCost + installCost;
-        lines.push({label:supplyQtyLabel?`${s.label} (${supplyQtyLabel}) — Supply`:`${s.label} — Supply`,cost:Math.round(supplyCost)});
-        lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
+        lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel}) — Supply`:`${itemLabel} — Supply`,cost:Math.round(supplyCost)});
+        lines.push({label:installQtyLabel?`${itemLabel} (${installQtyLabel}) — Install`:`${itemLabel} — Install`,cost:Math.round(installCost)});
       });
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
@@ -4534,6 +4846,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcCabinets=()=>{
+      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       if (!mqValidateInstallQty('c')) return;
       if (!mqValidateNotEmpty('c', calcCabinet('c'))) return;
       window.mqShowLead(async lead=>{
@@ -4559,6 +4872,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcCountertops=()=>{
+      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       const hasSurfaces=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length>0;
       if(!hasSurfaces){alert('Please add at least one surface.');return;}
       if (!mqValidateNotEmpty('ct', calcCountertop('ct'))) return;
@@ -4582,6 +4896,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcBoth=()=>{
+      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       if (!mqValidateInstallQty('b')) return;
       const dryCab=calcCabinet('b'), dryCt=calcCountertop('b');
       if (!mqValidateNotEmpty('b', { low: dryCab.low+dryCt.low, high: dryCab.high+dryCt.high })) return;
@@ -4985,6 +5300,23 @@ window.mqTogDrawerConfig=(prefix)=>{
   // field if this tried to reset values one at a time by hand.
   // Standalone panel below the widget (not inside it, so it survives
   // mqStartNewEstimate's full rebuild) — deliberately much more visible than
+  // Free-Demo-tier watermark — a faint repeating "DEMO" pattern stamped over
+  // the whole widget, non-interactive (pointer-events:none, so it never
+  // blocks clicks) and kept well below the lightbox/modal z-index range
+  // (100000+) so it never bleeds into an enlarged photo. Re-injected after
+  // every full container rebuild (initial load and mqStartNewEstimate both
+  // wipe the container's innerHTML, which would otherwise remove it).
+  function mqInjectDemoWatermark(container) {
+    if (!container || container.querySelector('.mq-demo-watermark')) return;
+    if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
+    const wm = document.createElement('div');
+    wm.className = 'mq-demo-watermark';
+    wm.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:9000;overflow:hidden;" +
+      "background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Ctext x='0' y='110' font-family='Arial,sans-serif' font-size='32' font-weight='800' letter-spacing='2' fill='rgba(17,17,17,0.07)' transform='rotate(-28 95 95)'%3EDEMO%3C/text%3E%3C/svg%3E\");" +
+      "background-repeat:repeat";
+    container.appendChild(wm);
+  }
+
   window.mqStartNewEstimate = function() {
     const data = window._mqFullData;
     const container = document.getElementById('midasquote-widget');
@@ -4995,6 +5327,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
+    if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
     // bar from before and let it re-earn its spot once they Calculate again.
     window._mqStickyPrefix = null;
@@ -5041,6 +5374,52 @@ window.mqTogDrawerConfig=(prefix)=>{
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => mqBumpMobileFontSizes(document.body), 200);
     });
+  }
+
+  // ── Auto-open sections that scrolling alone never reaches ──
+  // The guided-flow scroll-spy (mqObserveSectionsForScrollSpy, inside
+  // wireWidget) opens each section as it crosses the exact vertical center
+  // of the screen while scrolling. That works for most sections, but one
+  // sitting near the very bottom of the page can end up parked in the
+  // lower half of the viewport WITHOUT ever actually crossing that center
+  // line, if the page runs out of room to scroll before it gets there —
+  // there's nothing further to scroll to, so the trigger line never
+  // reaches it. Left alone, that section just stays closed with no way for
+  // scrolling to open it.
+  //
+  // This catches that specific case: whenever the page hits the bottom of
+  // its scrollable range, look for a section that's (a) still collapsed,
+  // (b) has never been opened before — mqToggleCollapse marks that, so a
+  // section someone deliberately closed again is left alone — and (c) is
+  // currently sitting in the bottom half of the viewport. Opens just the
+  // first (topmost) one that matches, one at a time. If opening it reveals
+  // another lower down, the same check runs again the next time scrolling
+  // reaches the (now taller) bottom of the page, so it can cascade through
+  // several in a row without ever opening more than one at once.
+  function mqCheckBottomBounceAutoOpen() {
+    const doc = document.documentElement;
+    const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 4;
+    if (!atBottom) return;
+    const midpoint = window.innerHeight / 2;
+    const sections = document.querySelectorAll('#midasquote-widget .mq-sec');
+    for (const sec of sections) {
+      const body = sec.querySelector('[id$="-body"]');
+      if (!body || body.style.display !== 'none') continue; // already open, nothing to do
+      if (body.dataset.mqEverOpened) continue; // was opened before, closed on purpose — leave it
+      const rect = sec.getBoundingClientRect();
+      if (rect.bottom <= 0 || rect.top >= window.innerHeight) continue; // not actually on screen
+      if (rect.top < midpoint) continue; // only ones sitting below the middle of the screen
+      const key = body.id.replace(/^mq-/, '').replace(/-body$/, '');
+      window.mqToggleCollapse(key);
+      return; // one at a time — the next bottom-bounce picks up any further ones
+    }
+  }
+  function mqInitBottomBounceAutoOpen() {
+    let scrollTimer;
+    window.addEventListener('scroll', () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(mqCheckBottomBounceAutoOpen, 150);
+    }, { passive: true });
   }
 
   // ── Sticky estimate bar ──
@@ -5096,6 +5475,13 @@ window.mqTogDrawerConfig=(prefix)=>{
           </div>
           <button class="mq-modal-btn" onclick="mqSubmitQuickEmail()">Send it →</button>
           <button class="mq-modal-skip" onclick="document.getElementById('mq-quick-email-overlay').classList.remove('show')">Cancel</button>
+        </div>
+      </div>
+      <div class="mq-overlay" id="mq-demo-locked-overlay">
+        <div class="mq-modal">
+          <p class="mq-modal-title">⚡ Quoting isn't available right now</p>
+          <p class="mq-modal-sub">This shop's free trial has ended, so this tool can't generate estimates at the moment. If this is your business, upgrade to a paid plan from your dashboard to turn quoting back on.</p>
+          <button class="mq-modal-skip" onclick="document.getElementById('mq-demo-locked-overlay').classList.remove('show')">Close</button>
         </div>
       </div>`;
     while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
@@ -5429,6 +5815,11 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window._mqShopData=shop;
     window._mqFullData=data; // cached so mqStartNewEstimate can rebuild without refetching
+    // Free Demo tier: full quoting still works, but the widget carries a
+    // visible watermark and always shows MidasQuote's own library photos
+    // instead of any the shop uploaded/linked — see mqInjectDemoWatermark,
+    // mqShowRoomDescription, and mqRefreshMeasureGuide.
+    window._mqIsDemoPlan = (shop['Plan']||'') === 'Demo';
     injectStyles(
       shop['Brand colour']||'#1a1a1a',
       shop['Focal colour'],
@@ -5441,6 +5832,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
+    if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
     mqSetupModalOverlays();
     mqSetupStickyBar();
     // Delegated so it automatically covers every input/select/checkbox in
@@ -5493,5 +5885,7 @@ window.mqTogDrawerConfig=(prefix)=>{
 
   init();
   mqInitMobileFontFix();
+  mqInitBottomBounceAutoOpen();
+
 
 })();

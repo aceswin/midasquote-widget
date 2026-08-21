@@ -216,11 +216,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Each project type (Kitchen, Bathroom, Refacing, or anything custom you add) is its own self-contained setup: its own description, cover photo, "how to measure" guide, and pricing behavior.</p>
         <p><strong>Price adjustments</strong> — four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
         <p><strong>Live on widget / Draft</strong> — uncheck this while you're still setting a project type up, so customers don't see it half-finished.</p>
-        <p><strong>Only show in MidasQuote Pro</strong> — hides this project type from the customer-facing widget completely, while still showing it in your own MidasQuote Pro link. Good for anything you only ever quote yourself.</p>
+        <p><strong>Visibility</strong> — choose where a project type appears: in both the customer widget and MidasQuote Pro, only in MidasQuote Pro (good for anything you only ever quote yourself), or everywhere except MidasQuote Pro (for something you only want offered publicly, not used for your own internal quoting).</p>
         <p><strong>Hide "How to measure" section</strong> — for a project type that's entirely flat-rate items with nothing to actually measure (like a general "Odd jobs" type), this removes that whole section from the widget for that type only.</p>
         <p><strong>Show price as a range</strong> — on by default, shows the usual ballpark spread (e.g. "$2,375 – $3,000"). Uncheck it for a project type where a single clean number makes more sense instead (e.g. "$2,600") — useful for flat-rate or fixed-price project types where a range wouldn't really apply. This also updates the wording around it automatically — "Estimated range" becomes "Your quote," and the ballpark disclaimer text adjusts to match, in every place the price shows up including the confirmation email.</p>
         <p><strong>Cover image</strong> and <strong>Measuring guide image</strong> — upload your own, or click "↺ Use default image" to fall back to MidasQuote's own default photo for that project type. Leaving it on the default means it automatically stays current if that default photo is ever updated — nothing to re-upload later.</p>
         <p><strong>More than one measuring guide image?</strong> Click "+ Add another image" as many times as needed — once there's more than one, the widget automatically turns it into a swipeable carousel instead of a single static photo, and gives it a brief one-time "nudge" animation so customers notice there's more than one image to see.</p>
+        <p><strong>Want a video instead of (or alongside) photos?</strong> Paste a YouTube, Vimeo, or Loom link — or a direct link to a video file — into any of the measuring guide image fields instead of a photo URL. It plays right there in the carousel with your other images, in whatever order you place it. There's no upload for video, only a link, since videos need to live somewhere that can actually stream them (YouTube, Vimeo, your own site) rather than something MidasQuote hosts for you.</p>
         <p>Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
       `
     },
@@ -460,7 +461,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to pre-populate items for shops that offer refacing, restaining, or repainting services.
           <br><br>
-          Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info.
+          A quick heads-up: specialty item lists get messy fast once you start adding a lot of them. It's worth organizing items into <strong>categories</strong> (using the Category column) right from the start — categorized items group together neatly instead of turning into one long, hard-to-scan list.
+          <br><br>
+          Once you've got more than a few, the easiest way to find one again is with the tools above the table: <strong>Filter by project type</strong>, <strong>Filter by category</strong>, or <strong>Search by name</strong>.
+          <br><br>
+          If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
         </div>
         <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
@@ -1129,8 +1134,15 @@ window.logoutMember = async function () {
                 <button class="mq-btn" onclick="mqUpgradeToAnnual()">Upgrade to annual</button>
               </div>
               <div id="mq-billing-reactivate-actions" style="display:none;gap:10px;flex-wrap:wrap">
-                <button class="mq-btn mq-btn-primary" onclick="mqReactivate('prc_midasquote-monthly-plan-i7d0ryx')">Reactivate — Monthly</button>
-                <button class="mq-btn" onclick="mqReactivate('prc_midasquote-annual-plan-hui0rv4')">Reactivate — Annual</button>
+                <button class="mq-btn mq-btn-primary" onclick="mqReactivate('prc_monthly-midasquote-o01n50jov')">Reactivate — Monthly</button>
+                <button class="mq-btn" onclick="mqReactivate('prc_annual-midasquote-2c1n80jbq')">Reactivate — Annual</button>
+              </div>
+              <div id="mq-billing-free-actions" style="display:none;gap:10px;flex-wrap:wrap">
+                <!-- New no-trial Monthly/Annual prices — a Free Trial/Demo shop
+                     already had 30 free days on the house, so upgrading from here
+                     goes straight to a real paid subscription, no second trial. -->
+                <button class="mq-btn mq-btn-primary" onclick="mqUpgradeFromFree('prc_monthly-midasquote-o01n50jov')">Upgrade — Monthly</button>
+                <button class="mq-btn" onclick="mqUpgradeFromFree('prc_annual-midasquote-2c1n80jbq')">Upgrade — Annual</button>
               </div>
             </div>
 
@@ -1591,10 +1603,29 @@ window.logoutMember = async function () {
   // ============================================================
   // NAVIGATION
   // ============================================================
+  // Opens checkout for a Free Trial / Demo shop upgrading to a real paid
+  // plan. The price IDs passed in from the HTML buttons above (search
+  // "mq-billing-free-actions") are the new no-trial Monthly/Annual prices —
+  // deliberately different from mqReactivate's below, since a Free
+  // Trial/Demo shop already had its 30 free days and shouldn't get a second
+  // trial. Same checkout mechanism as mqReactivate — a Free Trial/Demo shop
+  // has never had a Stripe subscription, so this is just opening checkout
+  // for the first time, kept as its own named function so the intent at
+  // each call site (upgrade-from-free vs. reactivate-a-lapsed-sub) stays
+  // clear even though the underlying call is identical.
+  window.mqUpgradeFromFree = async function(priceId) {
+    try {
+      await window.$memberstackDom.purchasePlansWithCheckout({ priceId });
+    } catch(e) {
+      console.error('Upgrade-from-free error:', e);
+      alert('Unable to open upgrade checkout. Please email support@midasquote.com to upgrade your plan.');
+    }
+  };
+
   window.mqUpgradeToAnnual = async function() {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: 'prc_midasquote-annual-plan-hui0rv4',
+        priceId: 'prc_annual-midasquote-2c1n80jbq',
       });
     } catch(e) {
       console.error('Upgrade error:', e);
@@ -1608,7 +1639,7 @@ window.logoutMember = async function () {
   window.mqReactivate = async function(priceId) {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: priceId || 'prc_midasquote-monthly-plan-i7d0ryx',
+        priceId: priceId || 'prc_monthly-midasquote-o01n50jov',
       });
     } catch(e) {
       console.error('Reactivate error:', e);
@@ -2165,16 +2196,17 @@ window.logoutMember = async function () {
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start">
             <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-              ${r.measureImage ? `<img src="${r.measureImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+              ${mqMeasureImgPreviewHTML(r.measureImage)}
             </div>
             <div style="flex:1;min-width:0">
-              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default measuring guide image (optional)</label>
-              <input type="text" id="mq-master-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default measuring guide image or video (optional)</label>
+              <input type="text" id="mq-master-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg — or a YouTube/Vimeo/Loom link" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
               <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                📤 Upload
+                📤 Upload photo
                 <input type="file" id="mq-master-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
               </label>
-              ${MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(r.id||'').toLowerCase()] ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMasterMeasureImage('${r.id}',${idx})">↺ Use built-in default</button>` : ''}
+              <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
+              ${MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(r.id||'').toLowerCase()] ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMasterMeasureImage('${r.id}',${idx})">↺ Use built-in default</button>` : ''}
               <span id="mq-master-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
             </div>
           </div>
@@ -2707,6 +2739,30 @@ window.logoutMember = async function () {
   // something else, or added as a custom row that got an auto-generated
   // room_<timestamp> id) while still clearly being "Garage" or "Commercial"
   // by name — without this, those rooms silently get no default images.
+  // Matches widget.js's own mqVideoEmbedInfo detection (YouTube/Vimeo/Loom
+  // links, or a direct .mp4/.webm/.mov/.m4v file) — used here just to swap
+  // the little thumbnail preview for a 🎥 badge instead of attempting an
+  // <img> tag that would silently fail to load and leave a blank box, since
+  // a shop owner pasting a video link in has no other way to confirm it was
+  // recognized.
+  function mqIsVideoUrl(url) {
+    const u = (url || '').trim();
+    if (!u) return false;
+    if (/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)/i.test(u)) return true;
+    if (/vimeo\.com\//i.test(u)) return true;
+    if (/loom\.com\/share\//i.test(u)) return true;
+    if (/\.(mp4|webm|mov|m4v)(\?.*)?(#.*)?$/i.test(u)) return true;
+    return false;
+  }
+  // Renders the little 56x56 preview box's inner content for a measure-guide
+  // image/video field: the 📏 placeholder when empty, a 🎥 badge for a
+  // recognized video link, or the actual photo otherwise.
+  function mqMeasureImgPreviewHTML(url) {
+    const u = (url || '').trim();
+    if (!u) return '<span style="font-size:20px">📏</span>';
+    if (mqIsVideoUrl(u)) return '<span style="font-size:22px" title="Video link">🎥</span>';
+    return `<img src="${u.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
+  }
   function mqDefaultImageKeyFor(roomId, roomName) {
     const id = (roomId||'').toLowerCase();
     if (MQ_DEFAULT_MEASURE_IMAGE_FILES[id]) return id;
@@ -2829,10 +2885,21 @@ window.logoutMember = async function () {
     mqSaveRooms();
   };
 
+  // Free Demo tier: no custom cover/measure images or video links — always
+  // MidasQuote's own library photo instead. Renders in place of the normal
+  // editable image block wherever a Demo shop would otherwise see an
+  // upload button or a URL field for one of these.
+  function mqDemoImageLockedHTML(whatLabel) {
+    return `<div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 12px;font-size:12px;color:#6b7280;line-height:1.6">
+      🔒 Custom ${whatLabel} is a paid feature. Your free Demo always shows MidasQuote's standard library photo here — upgrade from the Billing tab to use your own photos or video links.
+    </div>`;
+  }
+
   function renderRoomsList() {
     const container = el('mq-rooms-list');
     if (!container) return;
     const rooms = window._mqRooms || [];
+    const isDemo = (window._mqShopRecord?.fields?.['Plan']||'') === 'Demo';
     container.innerHTML = rooms.map((r, idx) => {
       const isOpen = _mqExpandedRoomIds.has(r.id);
       return `
@@ -2850,10 +2917,14 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
           </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-proonly-${idx}" ${r.proOnly?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-            ⚡ Only show in MidasQuote Pro <span style="font-weight:400;color:#9ca3af">(hidden from the customer-facing widget entirely)</span>
-          </label>
+          <div style="margin-bottom:8px">
+            <label style="display:block;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:4px">👁️ Visibility</label>
+            <select id="mq-room-visibility-${idx}" onchange="mqSaveRooms()" style="width:100%;max-width:320px;padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:12px;font-family:inherit;background:#fff">
+              <option value="both" ${!r.proOnly && !r.hideFromPro ? 'selected' : ''}>Show in both the widget & MidasQuote Pro</option>
+              <option value="proOnly" ${r.proOnly ? 'selected' : ''}>Only show in MidasQuote Pro (hidden from the customer widget)</option>
+              <option value="hideFromPro" ${r.hideFromPro ? 'selected' : ''}>Don't show in MidasQuote Pro (widget only)</option>
+            </select>
+          </div>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
             <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
@@ -2870,20 +2941,23 @@ window.logoutMember = async function () {
             ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
           </div>
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
-          <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
-            <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-              ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? `<img src="${r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
-            </div>
-            <div style="flex:1;min-width:0">
-              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
-              <input type="text" id="mq-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
-              <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                📤 Upload
-                <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
-              </label>
-              ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseDefaultCoverImage('${r.id}',${idx})">↺ Use default image</button>` : ''}
-              <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
-            </div>
+          <div style="margin-bottom:10px">
+            ${isDemo ? mqDemoImageLockedHTML('cover images') : `
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
+                ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? `<img src="${r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
+              </div>
+              <div style="flex:1;min-width:0">
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
+                <input type="text" id="mq-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
+                  📤 Upload
+                  <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
+                </label>
+                ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseDefaultCoverImage('${r.id}',${idx})">↺ Use default image</button>` : ''}
+                <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
+              </div>
+            </div>`}
           </div>
           <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
@@ -2892,18 +2966,20 @@ window.logoutMember = async function () {
               <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
               <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo, [tip]text[/tip] wraps it in a yellow callout box</span>
             </div>
+            ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos') : `
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                ${(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name)) ? `<img src="${r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                ${mqMeasureImgPreviewHTML(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name))}
               </div>
               <div style="flex:1;min-width:0">
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image (optional)</label>
-                <input type="text" id="mq-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image or video (optional)</label>
+                <input type="text" id="mq-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg — or a YouTube/Vimeo/Loom link" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
                 <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                  📤 Upload
+                  📤 Upload photo
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
-                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
+                <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
+                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
                 ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
@@ -2911,13 +2987,13 @@ window.logoutMember = async function () {
             ${(r.measureImages || []).map((imgUrl, exIdx) => `
               <div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb">
                 <div id="mq-room-measure-img-extra-preview-${idx}-${exIdx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                  ${imgUrl ? `<img src="${imgUrl.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>'}
+                  ${mqMeasureImgPreviewHTML(imgUrl)}
                 </div>
                 <div style="flex:1;min-width:0">
-                  <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Additional image ${exIdx+2} <span style="color:#9ca3af;font-weight:400">— shows as a swipeable carousel with the rest</span></label>
-                  <input type="text" id="mq-room-measure-img-extra-${idx}-${exIdx}" value="${(imgUrl||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure-2.jpg" onchange="mqSaveRooms()" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
+                  <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Additional image or video ${exIdx+2} <span style="color:#9ca3af;font-weight:400">— shows as a swipeable carousel with the rest</span></label>
+                  <input type="text" id="mq-room-measure-img-extra-${idx}-${exIdx}" value="${(imgUrl||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure-2.jpg — or a video link" onchange="mqSaveRooms()" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
                   <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                    📤 Upload
+                    📤 Upload photo
                     <input type="file" id="mq-room-measure-img-extra-file-${idx}-${exIdx}" accept="image/*" style="display:none"/>
                   </label>
                   <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" style="font-size:11px" onclick="mqRemoveRoomMeasureImage(${idx},${exIdx})">✕ Remove</button>
@@ -2925,7 +3001,7 @@ window.logoutMember = async function () {
                 </div>
               </div>
             `).join('')}
-            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>
+            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>`}
           </div>
         </div>
       </div>`;
@@ -3009,7 +3085,8 @@ window.logoutMember = async function () {
             totalAdjPct: parseFloat(document.getElementById(`mq-room-adj-total-${oldIdx}`)?.value) || 0,
             description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
             active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
-            proOnly: document.getElementById(`mq-room-proonly-${oldIdx}`)?.checked === true,
+            proOnly: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'proOnly',
+            hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
@@ -3065,7 +3142,7 @@ window.logoutMember = async function () {
   window.mqAddRoom = function() {
     if (!window._mqRooms) window._mqRooms = [];
     const newId = 'room_' + Date.now();
-    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, coverImage: '', measureText: '', measureImage: '' });
+    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' });
     _mqExpandedRoomIds.add(newId);
     renderRoomsList();
   };
@@ -3109,7 +3186,8 @@ window.logoutMember = async function () {
         totalAdjPct: parseFloat(el(`mq-room-adj-total-${idx}`)?.value) || 0,
         description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
         active: el(`mq-room-active-${idx}`)?.checked !== false,
-        proOnly: el(`mq-room-proonly-${idx}`)?.checked === true,
+        proOnly: el(`mq-room-visibility-${idx}`)?.value === 'proOnly',
+        hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
@@ -3932,6 +4010,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function renderSpecialty(specs, shopRecord) {
     const container = el('mq-spec-list');
     if (!container) return;
+    // Kept in sync so mqAddVariant/mqRemoveVariant/mqSaveVariantField below
+    // can find and mutate the right record's Variants JSON in memory
+    // without a full reload — renderSpecialty always runs again after any
+    // add/delete, so this never goes stale.
+    window._mqSpecRecords = specs;
     if (!specs.length) {
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
       return;
@@ -3962,7 +4045,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Variants</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -3970,6 +4053,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
             const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
             const catAttr = (r.fields['Category'] || '').replace(/"/g,'&quot;');
+            const variantCount = mqParseVariants(r).length;
             return `
             <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" data-category="${catAttr}" style="cursor:grab">
               <td class="mq-spec-drag-handle" style="color:#9ca3af;font-size:16px;padding:8px 12px;cursor:grab">⠿</td>
@@ -3981,7 +4065,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
+              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants column"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
+              <td>
+                <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
+              </td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
@@ -3989,6 +4076,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
               <td><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" title="Hide this item from the customer-facing widget entirely — still shows in MidasQuote Pro, for every project type it's tagged to" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
+            </tr>
+            <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
+              <td></td>
+              <td colspan="11" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -4614,8 +4705,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const badgeLabel = (shopRecord.fields['Badge label'] || '').trim() || 'Best seller';
     const badgeColor = /^#[0-9a-fA-F]{6}$/.test(shopRecord.fields['Badge color']) ? shopRecord.fields['Badge color'] : '#f59e0b';
 
+    // Free Demo tier: existing product photos (however they got there —
+    // library pick, upload, or a pasted link) stay exactly as-is and keep
+    // showing, per Jordan's call — only NEW uploads/links/library picks are
+    // locked, not what a shop already has.
+    const isDemoShop = (shopRecord.fields['Plan']||'') === 'Demo';
     function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
-      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel);
+      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemoShop);
     }
 
     // Groups only make sense for categories customers actually pick a
@@ -5164,6 +5260,109 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
+  // ===================== Specialty item variants =====================
+  // A specialty item can optionally have variants (e.g. a "Crown Molding"
+  // item offered in Maple/Oak/MDF) — each with its own label/price/photo/
+  // best-seller flag, everything else (category, project types, pricing
+  // method, Active, Pro only) staying shared on the parent item. Stored as
+  // one JSON field ('Variants') on the Specialty Items table, the same
+  // pattern already used for 'Visible rooms' — no new Airtable table, no
+  // separate relational linking, just an array on the record itself.
+  function mqParseVariants(r) {
+    try {
+      const v = JSON.parse(r?.fields?.['Variants'] || '[]');
+      return Array.isArray(v) ? v : [];
+    } catch(e) { return []; }
+  }
+
+  function mqVariantsPanelHTML(r) {
+    const variants = mqParseVariants(r);
+    const rows = variants.map((v, vi) => `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
+        <div style="width:32px;height:32px;border-radius:6px;flex-shrink:0;background:#f3f4f6;background-image:url('${(v.photoUrl||'').replace(/'/g,"%27")}');background-size:cover;background-position:center"></div>
+        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
+        <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+        <input type="text" value="${(v.photoUrl||'').replace(/"/g,'&quot;')}" placeholder="Photo URL (optional)" style="flex:1;min-width:140px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'photoUrl',this.value)"/>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;white-space:nowrap;cursor:pointer"><input type="checkbox" ${v.featured?'checked':''} onchange="mqSaveVariantField('${r.id}',${vi},'featured',this.checked)" style="width:14px;height:14px;accent-color:#f59e0b"/> 🏆 Best seller</label>
+        <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
+      </div>`).join('');
+    return `
+      <div>
+        ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
+        <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add variant</button>
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+      </div>`;
+  }
+
+  function mqRefreshVariantsPanel(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const panel = document.getElementById(`mq-spec-variants-panel-${id}`);
+    if (r && panel) panel.innerHTML = mqVariantsPanelHTML(r);
+  }
+
+  function mqRefreshSpecVariantUI(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const n = mqParseVariants(r).length;
+    const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
+    if (pill) {
+      const isOpen = pill.textContent.trim().endsWith('▴');
+      pill.textContent = (n ? `${n} variant${n===1?'':'s'}` : 'No variants') + (isOpen ? ' ▴' : ' ▾');
+      pill.style.background = n ? '#eef2ff' : '#f3f4f6';
+      pill.style.color = n ? '#4338ca' : '#6b7280';
+    }
+    // Price field is meaningless once variants exist — disable it in place
+    // rather than making the shop owner guess why it's not being used.
+    const priceInput = document.getElementById(`mq-spec-price-${id}`);
+    if (priceInput) {
+      priceInput.disabled = n > 0;
+      priceInput.title = n > 0 ? 'Priced per variant — see the Variants column' : '';
+    }
+  }
+
+  window.mqToggleVariantsPanel = function(id) {
+    const row = document.getElementById(`mq-spec-variants-row-${id}`);
+    const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
+    if (!row) return;
+    const opening = row.style.display === 'none' || !row.style.display;
+    row.style.display = opening ? 'table-row' : 'none';
+    if (pill) pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, opening ? '▴' : '▾');
+  };
+
+  window.mqAddVariant = async function(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    variants.push({ label: '', price: 0, photoUrl: '', featured: false });
+    r.fields['Variants'] = JSON.stringify(variants);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  window.mqRemoveVariant = async function(id, vi) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    variants.splice(vi, 1);
+    r.fields['Variants'] = JSON.stringify(variants);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  window.mqSaveVariantField = async function(id, vi, field, value) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    if (!variants[vi]) return;
+    variants[vi][field] = value;
+    r.fields['Variants'] = JSON.stringify(variants);
+    if (field === 'photoUrl') mqRefreshVariantsPanel(id); // updates the little swatch preview
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+  // =================== end specialty item variants ===================
+
   // Per lin ft and Per sq ft are mutually exclusive — checking one unchecks
   // the other, both in the UI and in what gets saved, so an item never ends
   // up with both pricing units on at once.
@@ -5384,7 +5583,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Module-level so both initProductsTab (My Products) and renderTemplates
   // (admin Templates tab) can share it, instead of it being locked inside one
   // function's closure over a specific shop's savedPhotos/savedHidden.
-  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel) {
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo) {
     const savedUrl = savedPhotos[key] || '';
     const isHidden = savedHidden[key] || false;
     // savedFeatured is only ever passed in from My Products — every other
@@ -5412,6 +5611,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
         Hide from showroom
       </label>
+      ${isDemo ? `
+      <div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:8px 10px;font-size:11px;color:#6b7280;line-height:1.5">
+        🔒 Adding or changing a photo here is a paid feature. Whatever photo this item already has stays showing — upgrade from the Billing tab to upload new ones or pick from the library.
+      </div>
+      <!-- Hidden, not removed: mqSaveProducts rebuilds its whole photo map
+           from every [id^="mq-photo-"] input still in the DOM on every save,
+           so this has to keep carrying the existing URL forward — otherwise
+           saving anything else on this tab (e.g. toggling "Hide from
+           showroom") would silently wipe photos this shop already has. -->
+      <input type="hidden" id="mq-photo-${key}" value="${savedUrl}"/>` : `
       <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
         📤 Upload a photo
         <input type="file" id="mq-upload-file-${key}" accept="image/*" style="display:none"/>
@@ -5422,7 +5631,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
         oninput="mqMarkProductsDirty()"/>
       <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>`}
     </div>`;
   }
 
@@ -8253,15 +8462,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (planEl && planEl.textContent === 'Loading plan info...') {
         const activeActions = document.getElementById('mq-billing-active-actions');
         const reactivateActions = document.getElementById('mq-billing-reactivate-actions');
+        const freeActions = document.getElementById('mq-billing-free-actions');
         const paymentCard = document.getElementById('mq-billing-payment-card');
         const invoicesCard = document.getElementById('mq-billing-invoices-card');
         const cancelCard = document.getElementById('mq-billing-cancel-card');
-        // Airtable's Status field is updated instantly by the Stripe webhook
-        // and is the source of truth for billing state — Memberstack's own
-        // planConnections data lags behind real cancellations, so we don't
-        // use it here.
+        // Airtable's Status field is updated by the onboarding Worker
+        // (member.created / member.plan.added / member.plan.canceled /
+        // member.deleted) and is the source of truth for real billing
+        // lifecycle — Memberstack's own planConnections data lags behind
+        // real cancellations, so we don't use it here.
+        //
+        // IMPORTANT: that onboarding Worker sets Status = 'Active' for
+        // EVERY new signup, free or paid — it doesn't know about the Plan
+        // field at all. So Status alone can't distinguish a real paying
+        // customer from a Free Trial/Demo shop; Plan must be checked
+        // FIRST, and Status is only meaningful once Plan has already
+        // ruled out the free tier.
         const status = window._mqShopRecord?.fields?.['Status'] || '';
-        const isActive = status === 'Active' || status === 'Trial';
+        const plan = window._mqShopRecord?.fields?.['Plan'] || '';
+        const isFreeTier = plan === 'Free Trial' || plan === 'Demo';
+        const isActive = !isFreeTier && (status === 'Active' || status === 'Trial');
         if (isActive) {
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -8271,9 +8491,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <p style="font-size:13px;color:#6b7280">Your subscription is active. Manage it using the buttons below.</p>`;
           if (activeActions) activeActions.style.display = 'flex';
           if (reactivateActions) reactivateActions.style.display = 'none';
+          if (freeActions) freeActions.style.display = 'none';
           if (paymentCard) paymentCard.style.display = 'block';
           if (invoicesCard) invoicesCard.style.display = 'block';
           if (cancelCard) cancelCard.style.display = 'block';
+        } else if (isFreeTier) {
+          const demoNote = plan === 'Demo'
+            ? 'your free trial has ended and you\'re on the limited free Demo tier (DEMO watermark, no MidasQuote Pro, no custom photos)'
+            : 'you\'re on the free trial — full access, no card on file';
+          planEl.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan}</span>
+              <span style="font-size:14px;font-weight:500;color:#111">Free plan</span>
+            </div>
+            <p style="font-size:13px;color:#6b7280">You're not on a paid plan — ${demoNote}. Upgrade any time below, no interruption to your widget.</p>`;
+          if (activeActions) activeActions.style.display = 'none';
+          if (reactivateActions) reactivateActions.style.display = 'none';
+          if (freeActions) freeActions.style.display = 'flex';
+          if (paymentCard) paymentCard.style.display = 'none';
+          if (invoicesCard) invoicesCard.style.display = 'none';
+          if (cancelCard) cancelCard.style.display = 'none'; // nothing to cancel — never was a subscription
         } else {
           // Status is Cancelled, Paused, or unknown — subscription isn't
           // active. The Stripe Customer Portal can't resubscribe a fully
@@ -8287,6 +8524,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <p style="font-size:13px;color:#6b7280">Your subscription has ended. You still have dashboard access for now — pick a plan below to reactivate your widget.</p>`;
           if (activeActions) activeActions.style.display = 'none';
           if (reactivateActions) reactivateActions.style.display = 'flex';
+          if (freeActions) freeActions.style.display = 'none';
           if (paymentCard) paymentCard.style.display = 'none';
           if (invoicesCard) invoicesCard.style.display = 'none';
           if (cancelCard) cancelCard.style.display = 'none';
