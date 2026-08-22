@@ -1304,7 +1304,17 @@
   window.mqScrollPickerRow = function(selectId, direction) {
     const row = document.getElementById(`mq-vprow-${selectId}`);
     if (!row) return;
-    row.scrollBy({ left: row.clientWidth * 0.85 * direction, behavior: 'smooth' });
+    // Explicit clamped absolute target instead of scrollBy's relative delta —
+    // on mobile, tapping an arrow repeatedly while the previous smooth scroll
+    // is still animating let scrollBy's relative math stack past the row's
+    // real end (or start), landing on blank space beyond the last/first
+    // pill and needing the same number of taps in reverse to undo. Reading
+    // scrollLeft fresh on every tap and clamping the target to
+    // [0, scrollWidth - clientWidth] means the row can never be pushed past
+    // its actual content no matter how fast or how many times it's tapped.
+    const maxScroll = Math.max(0, row.scrollWidth - row.clientWidth);
+    const target = Math.min(maxScroll, Math.max(0, row.scrollLeft + row.clientWidth * 0.85 * direction));
+    row.scrollTo({ left: target, behavior: 'smooth' });
   };
   window.mqUpdateAllPickerArrows = function() {
     // Deferred a frame — scrollWidth/clientWidth need real layout to have
