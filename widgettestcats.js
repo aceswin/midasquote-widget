@@ -513,7 +513,7 @@
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:block}
       #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
-      #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
+      #midasquote-widget .mq-spec-top{display:flex;align-items:flex-start;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
       #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;display:block}
@@ -1281,6 +1281,18 @@
     const leftArrow = document.getElementById(`mq-vparrow-left-${selectId}`);
     if (!row || !arrow) return;
     const hasOverflow = row.scrollWidth > row.clientWidth + 4;
+    // The variant picker's arrows live in their own row below the pills
+    // (see mqVariantScrollWrap) instead of floating over the edges, so
+    // there's no overlap risk in keeping both visible the whole time —
+    // and doing so is what Jordan asked for, since a lone right arrow
+    // gave no hint that scrolling left was ever possible once you'd
+    // scrolled part-way. Every other picker (photo rows, etc.) keeps the
+    // original near-start/near-end hiding behavior.
+    if (row.classList.contains('mq-spec-variant-picker')) {
+      arrow.classList.toggle('show', hasOverflow);
+      if (leftArrow) leftArrow.classList.toggle('show', hasOverflow);
+      return;
+    }
     const nearEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
     const nearStart = row.scrollLeft <= 4;
     arrow.classList.toggle('show', hasOverflow && !nearEnd);

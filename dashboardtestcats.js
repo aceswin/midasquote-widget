@@ -543,7 +543,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
-      #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
+      /* min-width:0 overrides the flex-item default of min-width:auto,
+         which otherwise refuses to let this panel shrink below the
+         intrinsic (unwrapped) width of whatever's inside it — a wide
+         table (like Specialty Items, 11 columns plus a long variants
+         explanation) would silently push .mq-content, and with it the
+         whole page, wider than the viewport instead of scrolling within
+         its own .mq-table-wrap as intended. This is what was actually
+         causing the page-wide horizontal bleed Jordan saw. */
+      #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
