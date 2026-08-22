@@ -196,22 +196,23 @@
         let variants = [];
         try { variants = r.fields['Variants'] ? JSON.parse(r.fields['Variants']) : []; } catch(e) { variants = []; }
         if (!Array.isArray(variants)) variants = [];
-        // Variant photos are NOT stored in the Variants JSON itself — they're
-        // managed in the dashboard's Products tab (My Products → Specialty
-        // Items), using the exact same shop-wide photo map every other
-        // product photo already uses, keyed 'spec_<itemId>_v<variantId>'.
+        // Variant photos AND best-seller flags are NOT stored in the
+        // Variants JSON itself — they're managed in the dashboard's
+        // Products tab (My Products → Specialty Items), using the exact
+        // same shop-wide photo/featured maps every other product already
+        // uses, both keyed 'spec_<itemId>_v<variantId>'.
         // Each variant carries its own stable `id` (assigned by the
         // dashboard the moment it's created) rather than relying on its
-        // position in the array, so a variant's photo stays correctly
-        // matched to it even after some other variant earlier in the list
-        // gets removed and everything after it shifts down.
+        // position in the array, so a variant's photo/badge stays
+        // correctly matched to it even after some other variant earlier in
+        // the list gets removed and everything after it shifts down.
         variants = variants.map((v, vi) => {
           const vid = (v && v.id) || ('i' + vi);
           return {
             label: ((v && v.label) || '').trim(),
             price: (v && v.price) || 0,
             photoUrl: shopPhotos['spec_' + r.id + '_v' + vid] || '',
-            featured: !!(v && v.featured),
+            featured: !!shopFeatured['spec_' + r.id + '_v' + vid],
           };
         }).filter(v => v.label);
         // $/$$/$$$ badges assigned per-item across just that item's own
@@ -569,7 +570,16 @@
          inside a 280px-wide card). A pill is directly clickable to select it
          — no separate photo + name + "Select" button stack needed when
          there's no photo on the pill itself. */
-      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 6px}
+      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 30px 6px}
+      /* The round scroll arrows are absolutely positioned over the row's own
+         edge, which is fine for wide photo chips but was landing right on
+         top of short pill text (e.g. covering "Oak" mid-word) in this
+         slimmer picker — reserve real gutter space on both ends (the
+         padding above) so a pill never renders underneath either arrow,
+         and shrink the arrow itself so it reads as a control floating in
+         that gutter instead of a disc sitting on the text. */
+      #midasquote-widget .mq-vpicker-wrap.mq-spec-variant-picker .mq-vpicker-arrow{width:28px;height:28px;font-size:15px;right:2px}
+      #midasquote-widget .mq-vpicker-wrap.mq-spec-variant-picker .mq-vpicker-arrow-left{left:2px}
       #midasquote-widget .mq-vpicker-variant-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-family:inherit;font-size:12px;color:#374151;cursor:pointer;transition:all 0.15s;white-space:nowrap}
       #midasquote-widget .mq-vpicker-variant-chip:hover{border-color:#d1d5db;background:#f9fafb}
       #midasquote-widget .mq-vpicker-variant-chip.selected{border-color:${bc};background:${bc};color:#fff}
@@ -1446,7 +1456,13 @@
     // mq-spec-scroll-wrap marks this as a specialty-items-style row — see
     // the touch-device media query below, which re-enables the "more
     // items" arrow just for these rows.
-    return `<div class="mq-vpicker-wrap mq-spec-scroll-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
+    // extraClass goes on BOTH the outer wrap and the inner scrolling row —
+    // the row needs it for row-only rules (like the tighter chip gap for
+    // variant pills), and the wrap needs it too so CSS can scope the
+    // arrow button itself (size/position) to just one kind of row, e.g.
+    // shrinking it for the slim variant-pill picker without touching the
+    // door/material photo pickers that reuse this same wrapper.
+    return `<div class="mq-vpicker-wrap mq-spec-scroll-wrap${extraClass?' '+extraClass:''}"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
   }
   // Builds the thumbnail+badges markup for one specialty item's current
   // "active" photo/badge/featured state — shared between specHTML's initial

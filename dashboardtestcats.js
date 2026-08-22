@@ -5150,7 +5150,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           // own card here instead, clearly labeled "Item — Variant" so it's
           // obvious which option each photo belongs to. Variants themselves
           // are still added/renamed/priced on the Specialty Items tab, not
-          // here — this is photos only, same as every other item on this tab.
+          // here — this is photos and best-seller badges only, same as
+          // every other item on this tab (photoCard already wires up the
+          // "Mark as Best seller" checkbox generically via savedFeatured,
+          // so nothing extra was needed to support it per-variant).
           if (!variants.length) {
             return [`<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}">
               ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
@@ -5293,18 +5296,32 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // keep it in sync whenever the name changes, or it's left showing a
       // stale label (like "New template item") forever after a rename.
       if (field === 'Item name') updates['Special Items'] = value;
+      // Keep the in-memory record in sync too, not just Airtable — the
+      // variants panel's header ("Variants for '<name>'") and its
+      // "+ Add a variant to '<name>'" button both read r.fields['Item name']
+      // fresh every time they re-render. Without this, renaming an item kept
+      // showing its old name (e.g. the default "New item") on that panel
+      // forever, even though the rename itself saved fine.
+      const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+      if (r) Object.assign(r.fields, updates);
+      if (field === 'Item name') mqRefreshVariantsPanel(id);
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
   // ===================== Specialty item variants =====================
   // A specialty item can optionally have variants (e.g. a "Crown Molding"
-  // item offered in Maple/Oak/MDF) — each with its own label/price/photo/
-  // best-seller flag, everything else (category, project types, pricing
-  // method, Active, Pro only) staying shared on the parent item. Stored as
-  // one JSON field ('Variants') on the Specialty Items table, the same
-  // pattern already used for 'Visible rooms' — no new Airtable table, no
-  // separate relational linking, just an array on the record itself.
+  // item offered in Maple/Oak/MDF) — each with its own label/price,
+  // everything else (category, project types, pricing method, Active, Pro
+  // only) staying shared on the parent item. Stored as one JSON field
+  // ('Variants') on the Specialty Items table, the same pattern already
+  // used for 'Visible rooms' — no new Airtable table, no separate
+  // relational linking, just an array on the record itself.
+  // Photos and best-seller badges for each variant are NOT part of this
+  // JSON at all — same as every other product's photo/badge, they live in
+  // the shop-wide Photos/Featured items maps, edited from the Products tab
+  // and keyed 'spec_<itemId>_v<variantId>' so they survive a variant being
+  // reordered or another variant being removed.
   function mqParseVariants(r) {
     try {
       const v = JSON.parse(r?.fields?.['Variants'] || '[]');
@@ -5326,7 +5343,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;white-space:nowrap;cursor:pointer"><input type="checkbox" ${v.featured?'checked':''} onchange="mqSaveVariantField('${r.id}',${vi},'featured',this.checked)" style="width:14px;height:14px;accent-color:#f59e0b"/> 🏆 Best seller</label>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
       </div>`).join('');
     // Boxed with a colored left border and the item's own name repeated in
@@ -5340,7 +5356,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
         ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos and best-seller badges for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
       </div>`;
   }
 
@@ -5387,7 +5403,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // separately in the Products tab) is keyed by this id, so it has to
     // survive other variants being added/removed/reordered later.
     const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    variants.push({ id: newId, label: '', price: 0, featured: false });
+    variants.push({ id: newId, label: '', price: null });
     r.fields['Variants'] = JSON.stringify(variants);
     mqRefreshVariantsPanel(id);
     mqRefreshSpecVariantUI(id);
