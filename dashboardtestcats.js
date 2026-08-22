@@ -4065,7 +4065,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants column"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
+              <td>
+                <div style="position:relative;display:inline-block;width:80px">
+                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants column"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+                  <span id="mq-spec-pricex-${r.id}" style="display:${variantCount ? 'flex' : 'none'};position:absolute;inset:0;align-items:center;justify-content:center;pointer-events:none;color:#dc2626;font-size:20px;font-weight:800;line-height:1">✕</span>
+                </div>
+              </td>
               <td>
                 <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
               </td>
@@ -5356,7 +5361,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
         ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos and best-seller badges for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5"><span style="color:#dc2626;font-weight:800;margin-right:4px">✕</span>That's the red X on the Price field in the main row above — it's ignored once at least one variant exists, since each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos and best-seller badges for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
       </div>`;
   }
 
@@ -5378,11 +5383,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.style.color = n ? '#4338ca' : '#6b7280';
     }
     // Price field is meaningless once variants exist — disable it in place
-    // rather than making the shop owner guess why it's not being used.
+    // rather than making the shop owner guess why it's not being used, and
+    // stamp a red X right over it as a visual flag pointing at exactly
+    // which field just went dead — the "why" is spelled out in the
+    // variants panel below, which opens with the same red X so the two
+    // connect at a glance instead of the shop owner having to piece it
+    // together from a disabled input alone.
     const priceInput = document.getElementById(`mq-spec-price-${id}`);
     if (priceInput) {
       priceInput.disabled = n > 0;
       priceInput.title = n > 0 ? 'Priced per variant — see the Variants column' : '';
+      const priceX = document.getElementById(`mq-spec-pricex-${id}`);
+      if (priceX) priceX.style.display = n > 0 ? 'flex' : 'none';
     }
   }
 

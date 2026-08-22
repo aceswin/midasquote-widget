@@ -570,21 +570,28 @@
          inside a 280px-wide card). A pill is directly clickable to select it
          — no separate photo + name + "Select" button stack needed when
          there's no photo on the pill itself. */
-      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 30px 6px}
-      /* The round scroll arrows are absolutely positioned over the row's own
-         edge, which is fine for wide photo chips but was landing right on
-         top of short pill text (e.g. covering "Oak" mid-word) in this
-         slimmer picker — reserve real gutter space on both ends (the
-         padding above) so a pill never renders underneath either arrow,
-         and shrink the arrow itself so it reads as a control floating in
-         that gutter instead of a disc sitting on the text. */
-      #midasquote-widget .mq-vpicker-wrap.mq-spec-variant-picker .mq-vpicker-arrow{width:28px;height:28px;font-size:15px;right:2px}
-      #midasquote-widget .mq-vpicker-wrap.mq-spec-variant-picker .mq-vpicker-arrow-left{left:2px}
+      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 4px}
       #midasquote-widget .mq-vpicker-variant-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-family:inherit;font-size:12px;color:#374151;cursor:pointer;transition:all 0.15s;white-space:nowrap}
       #midasquote-widget .mq-vpicker-variant-chip:hover{border-color:#d1d5db;background:#f9fafb}
       #midasquote-widget .mq-vpicker-variant-chip.selected{border-color:${bc};background:${bc};color:#fff}
       #midasquote-widget .mq-vpicker-variant-star{font-size:10px}
       #midasquote-widget .mq-vpicker-variant-tier{font-size:10px;opacity:0.7}
+      /* The round scroll arrows every other picker uses are absolutely
+         positioned right over the row's own edge — fine for wide photo
+         chips, but there's no scroll position where that doesn't land on
+         top of SOME pill's text in this slimmer picker (padding out a
+         gutter only helped at the very start/end of the scrollable range,
+         not mid-scroll, where the arrow still floats over whatever pill
+         happens to be at the edge). Simplest real fix: for variant pickers
+         specifically, arrows live in their own small row underneath the
+         pills instead of overlapping them at all — see
+         mqVariantScrollWrap, which reuses the exact same ids/classes
+         mqUpdatePickerArrow/mqScrollPickerRow already toggle and click, so
+         no JS changes were needed, only where the buttons render. */
+      #midasquote-widget .mq-vpicker-underarrows{display:flex;justify-content:center;gap:10px;margin-top:2px}
+      #midasquote-widget .mq-vpicker-arrow-under{display:none;align-items:center;justify-content:center;width:26px;height:22px;border-radius:6px;border:1px solid #d1d5db;background:#fff;font-size:14px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit;padding:0}
+      #midasquote-widget .mq-vpicker-arrow-under.show{display:inline-flex}
+      #midasquote-widget .mq-vpicker-arrow-under:hover{background:#f3f4f6}
       /* Sticky estimate bar — appears after the first real Calculate, then
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
@@ -1464,6 +1471,25 @@
     // door/material photo pickers that reuse this same wrapper.
     return `<div class="mq-vpicker-wrap mq-spec-scroll-wrap${extraClass?' '+extraClass:''}"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
   }
+  // Same scroll-row mechanism as mqHscrollWrap, but for the specialty item
+  // variant picker specifically — its arrows render in their own small row
+  // UNDER the pills instead of absolutely-positioned on top of them, since
+  // any position that overlaps the row will inevitably land on top of some
+  // pill's text at some scroll offset (a padding gutter only protects the
+  // very start/end of the scrollable range, not mid-scroll). Reuses the
+  // exact same ids/classes mqUpdatePickerArrow and mqScrollPickerRow
+  // already operate on — those functions don't know or care where the
+  // buttons are drawn, only their ids — so no JS logic needed changing,
+  // only where the two arrow buttons live in the markup.
+  function mqVariantScrollWrap(rowId, innerHtml) {
+    return `<div class="mq-vpicker-wrap mq-spec-variant-picker">
+      <div class="mq-vpicker-row mq-spec-variant-picker" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div>
+      <div class="mq-vpicker-underarrows">
+        <button type="button" class="mq-vpicker-arrow-under mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button>
+        <button type="button" class="mq-vpicker-arrow-under" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button>
+      </div>
+    </div>`;
+  }
   // Builds the thumbnail+badges markup for one specialty item's current
   // "active" photo/badge/featured state — shared between specHTML's initial
   // render and mqPickSpecVariant's live update after the customer picks a
@@ -1513,7 +1539,7 @@
       // currently active.
       const variantPickerHtml = (s.variants && s.variants.length) ? `
         <div class="mq-spec-variant-row" id="mq-spec-variants-${prefix}-${i}" style="margin-top:8px">
-          ${mqHscrollWrap(`${prefix}-specvariant-${i}`, 'mq-spec-variant-picker',
+          ${mqVariantScrollWrap(`${prefix}-specvariant-${i}`,
             s.variants.map((v,vi) => mqSpecVariantChipHTML(s, prefix, i, v, vi, vi===0)).join(''))}
         </div>` : '';
       // Items offering a choice get a dropdown that starts on a
