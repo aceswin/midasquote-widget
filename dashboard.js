@@ -543,7 +543,26 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
-      #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
+      /* min-width:0 overrides the flex-item default of min-width:auto,
+         which otherwise refuses to let this panel shrink below the
+         intrinsic (unwrapped) width of whatever's inside it — a wide
+         table (like Specialty Items, 11 columns plus a long variants
+         explanation) would silently push .mq-content, and with it the
+         whole page, wider than the viewport instead of scrolling within
+         its own .mq-table-wrap as intended. This is what was actually
+         causing the page-wide horizontal bleed Jordan saw. */
+      #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
+      /* Previously this only existed inside the @media(max-width:768px)
+         block below, so on any normal desktop-width window a wide table
+         (like Specialty Items, 11 columns plus the Install price/mode
+         column's own wide inputs) had NO horizontal scroll container at
+         all — it just visually overflowed .mq-table-wrap and bled into
+         the rest of the page, even after .mq-content got min-width:0
+         above. That min-width:0 fix let .mq-content shrink to the
+         viewport, but something still has to absorb the table's real
+         width once it's shrunk past that — this is the rule that does it,
+         at every width, not just mobile ones. */
+      #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
@@ -569,6 +588,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-stat-purple .mq-stat-val{color:#6366f1}
       #midasquote-dashboard .mq-table{width:100%;border-collapse:collapse}
       #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:left}
+      /* The Specialty Items table specifically has more columns than any
+         other table in the dashboard (11, plus the Install price/mode
+         column's own wide inputs) — tighter cell padding here buys back
+         real width without touching every other table's spacing. */
+      #midasquote-dashboard #mq-spec-table th{padding:10px 9px}
+      #midasquote-dashboard #mq-spec-table td{padding:12px 9px}
       #midasquote-dashboard .mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:#111}
       #midasquote-dashboard #mq-spec-table td{vertical-align:top;padding-top:14px}
       #midasquote-dashboard #mq-spec-table{border-collapse:separate;border-spacing:0 10px}
@@ -4010,6 +4035,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function renderSpecialty(specs, shopRecord) {
     const container = el('mq-spec-list');
     if (!container) return;
+    // Kept in sync so mqAddVariant/mqRemoveVariant/mqSaveVariantField below
+    // can find and mutate the right record's Variants JSON in memory
+    // without a full reload — renderSpecialty always runs again after any
+    // add/delete, so this never goes stale.
+    window._mqSpecRecords = specs;
     if (!specs.length) {
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
       return;
@@ -4048,18 +4078,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
             const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
             const catAttr = (r.fields['Category'] || '').replace(/"/g,'&quot;');
+            const variantCount = mqParseVariants(r).length;
             return `
             <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" data-category="${catAttr}" style="cursor:grab">
               <td class="mq-spec-drag-handle" style="color:#9ca3af;font-size:16px;padding:8px 12px;cursor:grab">⠿</td>
               <td>
                 <div style="display:flex;flex-direction:column;gap:2px">
-                  <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:180px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <button class="mq-btn mq-btn-danger mq-btn-sm" style="align-self:flex-start;margin-top:2px" onclick="mqDeleteSpec('${r.id}')">Delete</button>
+                  <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:150px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                  <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:150px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+                    <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
+                    <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
+                  </div>
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
+              <td>
+                <div style="position:relative;display:inline-block;width:80px">
+                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+                  <span id="mq-spec-pricex-${r.id}" style="display:${variantCount ? 'flex' : 'none'};position:absolute;inset:0;align-items:center;justify-content:center;pointer-events:none;color:#dc2626;font-size:20px;font-weight:800;line-height:1">✕</span>
+                </div>
+              </td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
@@ -4067,6 +4106,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
               <td><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" title="Hide this item from the customer-facing widget entirely — still shows in MidasQuote Pro, for every project type it's tagged to" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
+            </tr>
+            <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
+              <td></td>
+              <td colspan="10" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -4432,7 +4475,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const tbody = document.getElementById('mq-spec-tbody');
     if (!tbody) return;
     let visibleCount = 0;
-    tbody.querySelectorAll('tr').forEach(row => {
+    // Only the item's own row carries data-id/data-rooms/data-category/
+    // data-name — its variants-editor row is a separate sibling <tr> with
+    // none of those, so "tr[data-id]" here (instead of every <tr>) is what
+    // excludes it from this pass. Selecting every <tr> used to run this same
+    // room/category/search check against the attribute-less panel row too:
+    // with no data-rooms it trivially satisfied the room filter, with no
+    // data-category it trivially satisfied the category filter, so it
+    // "matched" almost any filter and got set back to visible — silently
+    // re-opening any variant panel (even an empty one on an item the filter
+    // just hid) the moment a filter changed, regardless of whether the shop
+    // owner had ever clicked to open it.
+    tbody.querySelectorAll('tr[data-id]').forEach(row => {
       let rooms = [];
       try { rooms = JSON.parse(row.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
       const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
@@ -4443,6 +4497,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const show = roomMatch && categoryMatch && searchMatch;
       row.style.display = show ? '' : 'none';
       if (show) visibleCount++;
+    });
+    // Belt and suspenders on top of the fix above: any variant panel that
+    // happened to be open closes on every filter change, and its pill's
+    // arrow resets to closed (▾) to match. A panel that stayed open under an
+    // item the filter just hid (or scrolled away from) is exactly the
+    // "dead variant panel followed me to a different project type" bug —
+    // always resetting closed here avoids it rather than trying to track
+    // which open panels should or shouldn't survive a re-filter.
+    tbody.querySelectorAll('tr[id^="mq-spec-variants-row-"]').forEach(row => {
+      row.style.display = 'none';
+    });
+    tbody.querySelectorAll('.mq-spec-variant-pill').forEach(pill => {
+      pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, '▾');
     });
     const emptyMsg = document.getElementById('mq-spec-tab-filter-empty');
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
@@ -5103,12 +5170,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>
       <div id="mq-spec-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px" id="mq-spec-cards-grid">
-        ${specItems.map(r => {
+        ${specItems.flatMap(r => {
           const itemName = r.fields['Item name'] || '';
           const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
-          return `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
-            ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
-          </div>`;
+          const dataName = itemName.toLowerCase().replace(/"/g,'&quot;');
+          const variants = mqParseVariants(r);
+          // An item with variants (e.g. Maple/Oak/Painted MDF) doesn't have
+          // one photo anymore — each variant gets its own, so it gets its
+          // own card here instead, clearly labeled "Item — Variant" so it's
+          // obvious which option each photo belongs to. Variants themselves
+          // are still added/renamed/priced on the Specialty Items tab, not
+          // here — this is photos and best-seller badges only, same as
+          // every other item on this tab (photoCard already wires up the
+          // "Mark as Best seller" checkbox generically via savedFeatured,
+          // so nothing extra was needed to support it per-variant).
+          if (!variants.length) {
+            return [`<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}">
+              ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
+            </div>`];
+          }
+          return variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}">
+            ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
+          </div>`);
         }).join('')}
       </div>
       </div>
@@ -5243,9 +5326,148 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // keep it in sync whenever the name changes, or it's left showing a
       // stale label (like "New template item") forever after a rename.
       if (field === 'Item name') updates['Special Items'] = value;
+      // Keep the in-memory record in sync too, not just Airtable — the
+      // variants panel's header ("Variants for '<name>'") and its
+      // "+ Add a variant to '<name>'" button both read r.fields['Item name']
+      // fresh every time they re-render. Without this, renaming an item kept
+      // showing its old name (e.g. the default "New item") on that panel
+      // forever, even though the rename itself saved fine.
+      const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+      if (r) Object.assign(r.fields, updates);
+      if (field === 'Item name') mqRefreshVariantsPanel(id);
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
+
+  // ===================== Specialty item variants =====================
+  // A specialty item can optionally have variants (e.g. a "Crown Molding"
+  // item offered in Maple/Oak/MDF) — each with its own label/price,
+  // everything else (category, project types, pricing method, Active, Pro
+  // only) staying shared on the parent item. Stored as one JSON field
+  // ('Variants') on the Specialty Items table, the same pattern already
+  // used for 'Visible rooms' — no new Airtable table, no separate
+  // relational linking, just an array on the record itself.
+  // Photos and best-seller badges for each variant are NOT part of this
+  // JSON at all — same as every other product's photo/badge, they live in
+  // the shop-wide Photos/Featured items maps, edited from the Products tab
+  // and keyed 'spec_<itemId>_v<variantId>' so they survive a variant being
+  // reordered or another variant being removed.
+  function mqParseVariants(r) {
+    try {
+      const v = JSON.parse(r?.fields?.['Variants'] || '[]');
+      const arr = Array.isArray(v) ? v : [];
+      // Every variant needs a stable id (not its array position) so its
+      // photo — managed separately in the Products tab, keyed by this id —
+      // stays correctly matched to it even after some other variant earlier
+      // in the list gets removed and everything after it shifts down.
+      // Existing variants keep whatever id they already have; this only
+      // fills one in for older data that predates ids.
+      return arr.map((variant, vi) => ({ ...variant, id: variant.id || ('i' + vi) }));
+    } catch(e) { return []; }
+  }
+
+  function mqVariantsPanelHTML(r) {
+    const variants = mqParseVariants(r);
+    const itemName = (r.fields['Item name'] || 'this item').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const rows = variants.map((v, vi) => `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
+        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
+        <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+        <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
+      </div>`).join('');
+    // Boxed with a colored left border and the item's own name repeated in
+    // the header — this panel can end up sitting visually next to a
+    // DIFFERENT row once you scroll (it's a collapsible detail row that
+    // opens directly under whichever item's pill you click), so it needs to
+    // be unmistakable which item's variants you're looking at rather than
+    // just trusting position on the page.
+    return `
+      <div style="border-left:3px solid #c7d2fe;padding-left:10px">
+        <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
+        ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
+        <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5"><span style="color:#dc2626;font-weight:800;margin-right:4px">✕</span>That's the red X on the Price field in the main row above — it's ignored once at least one variant exists, since each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos and best-seller badges for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+      </div>`;
+  }
+
+  function mqRefreshVariantsPanel(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const panel = document.getElementById(`mq-spec-variants-panel-${id}`);
+    if (r && panel) panel.innerHTML = mqVariantsPanelHTML(r);
+  }
+
+  function mqRefreshSpecVariantUI(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const n = mqParseVariants(r).length;
+    const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
+    if (pill) {
+      const isOpen = pill.textContent.trim().endsWith('▴');
+      pill.textContent = (n ? `${n} variant${n===1?'':'s'}` : 'No variants') + (isOpen ? ' ▴' : ' ▾');
+      pill.style.background = n ? '#eef2ff' : '#f3f4f6';
+      pill.style.color = n ? '#4338ca' : '#6b7280';
+    }
+    // Price field is meaningless once variants exist — disable it in place
+    // rather than making the shop owner guess why it's not being used, and
+    // stamp a red X right over it as a visual flag pointing at exactly
+    // which field just went dead — the "why" is spelled out in the
+    // variants panel below, which opens with the same red X so the two
+    // connect at a glance instead of the shop owner having to piece it
+    // together from a disabled input alone.
+    const priceInput = document.getElementById(`mq-spec-price-${id}`);
+    if (priceInput) {
+      priceInput.disabled = n > 0;
+      priceInput.title = n > 0 ? 'Priced per variant — see the Variants column' : '';
+      const priceX = document.getElementById(`mq-spec-pricex-${id}`);
+      if (priceX) priceX.style.display = n > 0 ? 'flex' : 'none';
+    }
+  }
+
+  window.mqToggleVariantsPanel = function(id) {
+    const row = document.getElementById(`mq-spec-variants-row-${id}`);
+    const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
+    if (!row) return;
+    const opening = row.style.display === 'none' || !row.style.display;
+    row.style.display = opening ? 'table-row' : 'none';
+    if (pill) pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, opening ? '▴' : '▾');
+  };
+
+  window.mqAddVariant = async function(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    // A stable id, not the variant's array position — its photo (added
+    // separately in the Products tab) is keyed by this id, so it has to
+    // survive other variants being added/removed/reordered later.
+    const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    variants.push({ id: newId, label: '', price: null });
+    r.fields['Variants'] = JSON.stringify(variants);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  window.mqRemoveVariant = async function(id, vi) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    variants.splice(vi, 1);
+    r.fields['Variants'] = JSON.stringify(variants);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  window.mqSaveVariantField = async function(id, vi, field, value) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    if (!variants[vi]) return;
+    variants[vi][field] = value;
+    r.fields['Variants'] = JSON.stringify(variants);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+  // =================== end specialty item variants ===================
 
   // Per lin ft and Per sq ft are mutually exclusive — checking one unchecks
   // the other, both in the UI and in what gets saved, so an item never ends
@@ -5306,7 +5528,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
           <span onclick="mqShowSpecHelpPopover(this,'This only shows to customers when install is priced differently than supply. Type your own question to customize it, or leave blank to use the placeholder text shown below as the default.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
+        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:175px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
     }
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
