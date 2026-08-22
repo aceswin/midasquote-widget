@@ -1583,13 +1583,25 @@
       // 'linear' | 'sqft' | 'item' so they're comparable.
       const specUnitKind = (perFt, perSqFt) => perFt ? 'linear' : (perSqFt ? 'sqft' : 'item');
       const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt) !== specUnitKind(s.installPerFt, s.installPerSqFt);
-      const installModeHtml = s.offersInstallChoice
-        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;margin-top:10px;width:100%;background:#fff;color:#111;font-weight:600" onchange="mqSpecModeChanged('${prefix}',${i})">
+      // The actual supply/install CHOICE control (a real decision the
+      // customer has to make) sits under the photo, left-aligned to match
+      // the image's own width, above the variant pills — its own visually
+      // distinct row rather than crammed into the description column, per
+      // Jordan's request so the image/dropdown/pills all line up cleanly
+      // down the left side of the card. An item that only ever has ONE
+      // install mode (nothing to choose) keeps its plain-text label inline
+      // with the description instead — there's no decision to make, so it
+      // doesn't need the same visual prominence.
+      const installChoiceDropdownHtml = s.offersInstallChoice
+        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;width:100%;background:#fff;color:#111;font-weight:600" onchange="mqSpecModeChanged('${prefix}',${i})">
             <option value="" selected disabled>Choose one</option>
             <option value="supply">Supply only</option>
             <option value="install">Supplied &amp; Installed</option>
           </select>`
-        : (s.installMode === 'na' ? '' : `<div style="font-size:11px;color:#6b7280;margin-top:10px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`);
+        : '';
+      const installModeLabelHtml = (!s.offersInstallChoice && s.installMode !== 'na')
+        ? `<div style="font-size:11px;color:#6b7280;margin-top:10px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`
+        : '';
       const installQtyRowHtml = installDiffers ? `
         <div id="mq-spec-installqty-${prefix}-${i}" style="display:none;margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb">
           <div style="font-size:11px;color:#6b7280;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
@@ -1608,9 +1620,10 @@
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
-            ${installModeHtml}
+            ${installModeLabelHtml}
           </div>
         </div>
+        ${installChoiceDropdownHtml ? `<div style="width:92px;align-self:flex-start" id="mq-spec-modewrap-${prefix}-${i}">${installChoiceDropdownHtml}</div>` : ''}
         ${variantPickerHtml}
         <div class="mq-spec-bottom">
           <div class="mq-qty-ctrl">
