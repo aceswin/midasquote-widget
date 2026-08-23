@@ -456,7 +456,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25);max-height:85vh;overflow-y:auto">
         <div style="font-size:40px;margin-bottom:12px">⭐</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
@@ -467,6 +467,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           Once you've got more than a few, the easiest way to find one again is with the tools above the table: <strong>Filter by project type</strong>, <strong>Filter by category</strong>, or <strong>Search by name</strong>.
           <br><br>
           📸 <strong>Add product images in the "My Products" tab</strong> — that's where photos get attached to each specialty item so customers see a real picture instead of a generic icon on the widget.
+          <br><br>
+          🎯 <strong>MidasQuote Pro tip:</strong> Some details are best left off the customer-facing widget to avoid confusion — asking a customer to account for crown returns, side splashes, or finished ends is more than most can reasonably answer, and that's exactly what the ballpark range is there to cover. But when you're quoting from <strong>MidasQuote Pro</strong> yourself, you can add these details back in to sharpen up the number and hand a customer an accurate, itemized quote. Crown, valance, and side splashes are already built into Pro's inputs by default — something like finished ends just needs its own specialty item, tagged <strong>Pro only</strong> and priced accordingly, so it only ever shows up on your side.
           <br><br>
           If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
         </div>
@@ -553,7 +555,20 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
          whole page — past the viewport. This has to be a base rule, not just
          inside the mobile media query below, since desktop windows can be
          narrower than the table's natural width too. */
-      #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+      #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;scrollbar-width:auto;scrollbar-color:#9ca3af #f3f4f6}
+      /* overflow-x:auto alone works for a touch swipe on mobile, but on a
+         narrow desktop window it can leave a table's right-hand columns
+         genuinely unreachable — most browsers/OSes only show a thin
+         auto-hiding "overlay" scrollbar there (invisible until you're
+         already mid-scroll), so there's no visible cue that the table
+         scrolls at all, let alone a bar a mouse user can actually grab and
+         drag. Styling it explicitly forces a real, always-visible,
+         click-and-drag scrollbar in Chrome/Edge/Safari (scrollbar-width/
+         -color above cover Firefox the same way). */
+      #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar{height:12px}
+      #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-track{background:#f3f4f6;border-radius:6px}
+      #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:6px;border:2px solid #f3f4f6}
+      #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb:hover{background:#6b7280}
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
