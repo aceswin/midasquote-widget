@@ -2281,7 +2281,7 @@ window.mqphGoToWizard = function() {
       <div class="mqph-input-row" style="margin-bottom:8px">
         <label>${f.label}</label>
         <div style="display:flex;align-items:center;gap:6px">
-          <span style="color:#6b7280">$</span>
+          <span style="color:#6b7280">${CUR()}</span>
           <input type="number" id="mqph-bulk-newprice-${i}" step="0.01" style="width:120px" placeholder="New price"/>
         </div>
       </div>`).join('');
@@ -2651,24 +2651,26 @@ window.mqphGoToWizard = function() {
 
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate</div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:13px;color:#6b7280">$</span>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsSupplyRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
                 <select id="mqph-ct-supply-unit" onchange="mqphSyncBsSupplyRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
                 </select>
+                ${mqphRateCalcIconHTML('mqph-ct-supply-rate', 'mqph-ct-supply-unit')}
               </div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate</div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:13px;color:#6b7280">$</span>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsInstallRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
                 <select id="mqph-ct-install-unit" onchange="mqphSyncBsInstallRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
                 </select>
+                ${mqphRateCalcIconHTML('mqph-ct-install-rate', 'mqph-ct-install-unit')}
               </div>
             </div>
 
@@ -2831,7 +2833,7 @@ window.mqphGoToWizard = function() {
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
               <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:13px;color:#6b7280">$</span>
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-trim-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">/ lin ft</span>
               </div>
@@ -2839,7 +2841,7 @@ window.mqphGoToWizard = function() {
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate (per linear foot)</div>
               <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:13px;color:#6b7280">$</span>
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-trim-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">/ lin ft</span>
               </div>
@@ -3079,6 +3081,101 @@ window.mqphGoToWizard = function() {
     mqphRenderBsList();
   };
 
+  // A shop owner thinking in metric shouldn't have to do the sqft/linft
+  // math themselves just to set a countertop rate — this "Use metric?"
+  // calculator (same idea as the one on the dashboard's Specialty Items
+  // tab) opens a tiny popover where they type their rate per square metre
+  // or per linear metre — whichever matches the field's current "per"
+  // dropdown — and it converts and drops the equivalent rate straight into
+  // the Supply/Install rate field. The stored rate and the widget's own
+  // pricing math never change — this is purely a friendlier way to type
+  // the same number.
+  function mqphRateCalcIconHTML(targetInputId, targetUnitSelectId) {
+    const svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
+    return `<span style="display:inline-flex;align-items:center;gap:7px;margin-left:6px">
+      <span style="font-size:11px;color:#2563eb;font-weight:600;white-space:nowrap">Use metric?</span>
+      <button type="button" onclick="mqphShowRateCalc(this,'${targetInputId}','${targetUnitSelectId}',event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
+    </span>`;
+  }
+
+  window.mqphShowRateCalc = function(triggerEl, targetInputId, targetUnitSelectId, event) {
+    if (event) event.stopPropagation();
+    const unitSelect = document.getElementById(targetUnitSelectId);
+    const mode = (unitSelect?.value === 'lin ft') ? 'linear' : 'sqft';
+    let pop = document.getElementById('mqph-rate-calc-popover');
+    const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'mqph-rate-calc-popover';
+      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#fff;color:#111;font-size:13px;line-height:1.5;padding:14px;border-radius:10px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid #e5e7eb';
+      pop.addEventListener('click', (e) => e.stopPropagation());
+      document.body.appendChild(pop);
+      // Only need to wire this once — closes the popover on any outside
+      // click, same pattern as the dashboard's Specialty Items version.
+      document.addEventListener('click', () => { pop.style.display = 'none'; });
+    }
+    if (alreadyOpenForThis) { pop.style.display = 'none'; return; }
+    pop._trigger = triggerEl;
+    pop._targetInputId = targetInputId;
+    pop._mode = mode;
+    const unitLabel = mode === 'linear' ? 'linear metre' : 'square metre (m²)';
+    const targetUnitLabel = mode === 'linear' ? 'lin ft' : 'sq ft';
+    pop.innerHTML = `
+      <div style="font-weight:700;margin-bottom:8px;font-size:13px">🧮 Enter rate per ${unitLabel}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="color:#6b7280">${CUR()}</span>
+        <input type="number" id="mqph-rate-calc-input" placeholder="0.00" style="flex:1;min-width:0;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" oninput="mqphRateCalcUpdate()"/>
+      </div>
+      <div style="background:#f0fdf4;border-radius:6px;padding:8px 10px;margin-bottom:10px;text-align:center">
+        <div style="font-size:11px;color:#6b7280">= per ${targetUnitLabel}</div>
+        <div id="mqph-rate-calc-result" style="font-size:15px;font-weight:700;color:#166534">${CUR()}0.00</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button type="button" onclick="mqphCloseRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+        <button type="button" onclick="mqphApplyRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:none;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Use this</button>
+      </div>`;
+    const rect = triggerEl.getBoundingClientRect();
+    pop.style.display = 'block';
+    pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    pop.style.left = Math.max(8, window.scrollX + rect.left - 100) + 'px';
+    setTimeout(() => document.getElementById('mqph-rate-calc-input')?.focus(), 50);
+  };
+
+  window.mqphRateCalcUpdate = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
+    const input = document.getElementById('mqph-rate-calc-input');
+    const resultEl = document.getElementById('mqph-rate-calc-result');
+    if (!pop || !input || !resultEl) return;
+    const val = parseFloat(input.value) || 0;
+    // 1 sqft = 0.092903 sqm, 1 ft = 0.3048 m — same conversion the
+    // Specialty Items calculator uses.
+    const converted = pop._mode === 'linear' ? val * 0.3048 : val * 0.092903;
+    resultEl.textContent = CUR() + converted.toFixed(2);
+  };
+
+  window.mqphApplyRateCalc = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
+    const input = document.getElementById('mqph-rate-calc-input');
+    if (!pop || !input || !pop._targetInputId) return;
+    const val = parseFloat(input.value) || 0;
+    const converted = pop._mode === 'linear' ? val * 0.3048 : val * 0.092903;
+    const rounded = Math.round(converted * 100) / 100;
+    const targetEl = document.getElementById(pop._targetInputId);
+    if (targetEl) {
+      targetEl.value = rounded;
+      // Programmatic value changes don't fire input events on their own —
+      // dispatch one so mqphSyncBsSupplyRate/InstallRate (which keep the
+      // backsplash height options' auto-synced rates in step) actually run.
+      targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    mqphCloseRateCalc();
+  };
+
+  window.mqphCloseRateCalc = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
+    if (pop) pop.style.display = 'none';
+  };
+
   function mqphRenderBsList() {
     const list = document.getElementById('mqph-ct-bs-list');
     if (!list) return;
@@ -3101,14 +3198,14 @@ window.mqphGoToWizard = function() {
             <input type="number" value="${o.heightIn!=null?o.heightIn:''}" placeholder="4" oninput="mqphUpdateBsOption(${i},'heightIn',this.value,false)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%;text-align:right"/>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;min-width:90px">
-            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Supply $</span>
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Supply ${CUR()}</span>
             <div style="display:flex;gap:4px;align-items:center">
               <input type="number" value="${o.supplyRate!=null?o.supplyRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'supplyRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:80px;text-align:right"/>
               <select onchange="mqphUpdateBsOption(${i},'supplyUnit',this.value,false)" style="font-family:inherit;font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 6px;min-width:60px">${unitOpts(o.supplyUnit||matSupplyUnit)}</select>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;min-width:90px">
-            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Install $</span>
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Install ${CUR()}</span>
             <div style="display:flex;gap:4px;align-items:center">
               <input type="number" value="${o.installRate!=null?o.installRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'installRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:80px;text-align:right"/>
               <select onchange="mqphUpdateBsOption(${i},'installUnit',this.value,false)" style="font-family:inherit;font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 6px;min-width:60px">${unitOpts(o.installUnit||matInstallUnit)}</select>
@@ -3143,7 +3240,7 @@ window.mqphGoToWizard = function() {
     list.innerHTML = currentCutoutOptions.map((o,i) => `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
         <input type="text" value="${(o.label||'').replace(/"/g,'&quot;')}" placeholder="Label, e.g. Sink cutout" oninput="mqphUpdateCutoutOption(${i},'label',this.value)" style="flex:1;min-width:120px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-        <span style="font-size:11px;color:#9ca3af">$</span>
+        <span style="font-size:11px;color:#9ca3af">${CUR()}</span>
         <input type="number" value="${o.rate!=null?o.rate:''}" placeholder="Rate" step="0.01" oninput="mqphUpdateCutoutOption(${i},'rate',this.value)" style="width:100px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
         <span style="font-size:11px;color:#9ca3af">each</span>
         <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveCutoutOption(${i})">✕</button>
@@ -3433,7 +3530,7 @@ window.mqphGoToWizard = function() {
           <span>${m.fields['Name']||'—'}</span>
         </label>
         <div style="display:flex;align-items:center;gap:4px;visibility:${existing?'visible':'hidden'}" id="mqph-addon-ratewrap-${m.id}">
-          <span style="font-size:12px;color:#6b7280">$</span>
+          <span style="font-size:12px;color:#6b7280">${CUR()}</span>
           <input type="number" id="mqph-addon-rate-${m.id}" value="${rateVal}" placeholder="0.00" step="0.01" style="width:70px;font-size:12px;padding:4px 6px;border:1px solid #d1d5db;border-radius:5px"/>
         </div>
       </div>`;

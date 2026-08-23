@@ -257,6 +257,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
         <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
+        <p><strong>🌍 Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
       `
     },
     proposals: {
@@ -474,6 +475,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           A quick heads-up: specialty item lists get messy fast once you start adding a lot of them. It's worth organizing items into <strong>categories</strong> (using the Category column) right from the start — categorized items group together neatly instead of turning into one long, hard-to-scan list.
           <br><br>
           Once you've got more than a few, the easiest way to find one again is with the tools above the table: <strong>Filter by project type</strong>, <strong>Filter by category</strong>, or <strong>Search by name</strong>.
+          <br><br>
+          Thinking in metric? Once an item is priced per lin ft or per sq ft, a <strong>"Use metric?"</strong> calculator appears right beside the price — type your rate per linear or square metre and it converts automatically.
           <br><br>
           If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
         </div>
@@ -950,6 +953,8 @@ window.logoutMember = async function () {
               🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
               <br><br>
               🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
+              <br><br>
+              🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
             </div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
@@ -3667,7 +3672,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <label style="font-size:13px;color:#374151">Deposit:</label>
             <select onchange="mqSaveProposalField('${t.id}','Deposit type',this.value)" style="width:auto">
               <option value="Percent" ${f['Deposit type']!=='Flat amount'?'selected':''}>%</option>
-              <option value="Flat amount" ${f['Deposit type']==='Flat amount'?'selected':''}>$ flat</option>
+              <option value="Flat amount" ${f['Deposit type']==='Flat amount'?'selected':''}>${CUR()} flat</option>
             </select>
             <input type="number" value="${f['Deposit value']||''}" placeholder="0" style="width:70px" onblur="mqSaveProposalField('${t.id}','Deposit value',parseFloat(this.value)||0)"/>
           </div>
@@ -5471,13 +5476,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty unit field', e); }
-    // The metric rate-calculator icon only makes sense once this item has
-    // an actual per-unit price — show/hide it in step with the checkboxes.
-    const iconWrap = document.getElementById(`mq-spec-price-calcwrap-${id}`);
-    if (iconWrap) {
+    // The metric rate-calculator only makes sense once this item has an
+    // actual per-unit price — live-swap between the "Flat rate" label and
+    // the "Use metric?" calculator in step with the checkboxes.
+    const flatLabel = document.getElementById(`mq-spec-price-calcwrap-${id}-flat`);
+    const metricGroup = document.getElementById(`mq-spec-price-calcwrap-${id}-metric`);
+    if (flatLabel && metricGroup) {
       const ftBox = document.getElementById(`mq-spec-perft-${id}`);
       const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
-      iconWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'inline-flex' : 'none';
+      const showMetric = !!(ftBox?.checked || sqftBox?.checked);
+      flatLabel.style.display = showMetric ? 'none' : 'inline-flex';
+      metricGroup.style.display = showMetric ? 'inline-flex' : 'none';
     }
   };
 
@@ -5498,11 +5507,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty install unit field', e); }
-    const iconWrap = document.getElementById(`mq-spec-installprice-calcwrap-${id}`);
-    if (iconWrap) {
+    const flatLabel = document.getElementById(`mq-spec-installprice-calcwrap-${id}-flat`);
+    const metricGroup = document.getElementById(`mq-spec-installprice-calcwrap-${id}-metric`);
+    if (flatLabel && metricGroup) {
       const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
       const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
-      iconWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'inline-flex' : 'none';
+      const showMetric = !!(ftBox?.checked || sqftBox?.checked);
+      flatLabel.style.display = showMetric ? 'none' : 'inline-flex';
+      metricGroup.style.display = showMetric ? 'inline-flex' : 'none';
     }
   };
 
@@ -5516,8 +5528,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // — this is purely a friendlier way to type the same number.
   function mqSpecRateCalcIconHTML(id, isInstall, visible) {
     const wrapId = isInstall ? `mq-spec-installprice-calcwrap-${id}` : `mq-spec-price-calcwrap-${id}`;
-    const svg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
-    return `<button type="button" id="${wrapId}" onclick="mqShowSpecRateCalc(this,'${id}',${isInstall ? 'true' : 'false'},event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:${visible ? 'inline-flex' : 'none'};align-items:center;justify-content:center;width:22px;height:22px;background:#eff6ff;border:1px solid #93c5fd;border-radius:5px;cursor:pointer;padding:0;margin-left:5px;vertical-align:middle">${svg}</button>`;
+    const svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
+    // Flat-rate items (neither per-unit box checked) show a plain "Flat
+    // rate" label in this same spot instead of nothing — so a shop owner
+    // sees right away that this item just isn't eligible for the metric
+    // calculator yet, and understands why the moment they check Per lin ft
+    // / Per sq ft, this label live-swaps for the actual calculator button
+    // (see mqSaveSpecUnit / mqSaveSpecInstallUnit).
+    return `<span id="${wrapId}" style="display:inline-flex;align-items:center;margin-left:14px;vertical-align:middle">
+      <span id="${wrapId}-flat" style="display:${visible ? 'none' : 'inline-flex'};font-size:11px;color:#9ca3af;font-style:italic;white-space:nowrap">Flat rate</span>
+      <span id="${wrapId}-metric" style="display:${visible ? 'inline-flex' : 'none'};align-items:center;gap:7px">
+        <span style="font-size:11px;color:#2563eb;font-weight:600;white-space:nowrap">Use metric?</span>
+        <button type="button" onclick="mqShowSpecRateCalc(this,'${id}',${isInstall ? 'true' : 'false'},event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
+      </span>
+    </span>`;
   }
 
   window.mqShowSpecRateCalc = function(triggerEl, id, isInstall, event) {
