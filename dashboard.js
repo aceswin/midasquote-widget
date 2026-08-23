@@ -546,7 +546,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
-      #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
+      #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
+      /* Any table wider than the available content area (Specialty items,
+         with its 11+ columns, is the usual culprit) needs to scroll within
+         its own box instead of stretching .mq-content — and therefore the
+         whole page — past the viewport. This has to be a base rule, not just
+         inside the mobile media query below, since desktop windows can be
+         narrower than the table's natural width too. */
+      #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
@@ -4111,7 +4118,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </select>
         </div>
         <div style="flex:1;min-width:160px">
-          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#6b7280;margin-bottom:4px">
+          <label style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;font-size:11px;color:#6b7280;margin-bottom:4px">
             <span>Filter by category</span>
             <span onclick="mqShowManageCategoriesModal()" style="color:#2563eb;cursor:pointer;font-weight:600;white-space:nowrap">Manage categories</span>
           </label>
