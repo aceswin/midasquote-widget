@@ -243,12 +243,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
         <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
-        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this.</p>
+        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Manage categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
         <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, $54.95/sqft to supply a door + $16.80/door to install it: enter 16.80 as the install price, not $71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
         <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
         <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
-        <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
+        <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, <strong>Search by name</strong>, and the <strong>⭐ Pro only</strong> checkbox together to quickly find one item out of a long list — the Pro only checkbox narrows the list down to just the items hidden from the public widget.</p>
       `
     },
     proposals: {
@@ -282,6 +282,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Every category starts collapsed — click any category's header to open just that one. With a lot of items configured, this keeps the page manageable.</p>
         <p>When a customer taps a photo to zoom in on the widget, they can swipe left/right to move through the rest of that same group (e.g. every door style, or every item in one specialty category) without closing and reopening — no setup needed here, it just works automatically for any photo uploaded on this tab.</p>
         <p>You can also control which project types each item shows up for right from here — the same setting as on the Specialty Items tab, just accessible from both places.</p>
+        <p>In the Specialty Items section here, use <strong>Filter by project type</strong>, <strong>Filter by category</strong>, <strong>Search by name</strong>, and the <strong>⭐ Pro only</strong> checkbox together to quickly find one item's photo out of a long list.</p>
         <p><strong>Groups</strong> — in Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
       `
     },
@@ -465,6 +466,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           Once you've got more than a few, the easiest way to find one again is with the tools above the table: <strong>Filter by project type</strong>, <strong>Filter by category</strong>, or <strong>Search by name</strong>.
           <br><br>
+          📸 <strong>Add product images in the "My Products" tab</strong> — that's where photos get attached to each specialty item so customers see a real picture instead of a generic icon on the widget.
+          <br><br>
           If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
         </div>
         <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
@@ -543,26 +546,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
-      /* min-width:0 overrides the flex-item default of min-width:auto,
-         which otherwise refuses to let this panel shrink below the
-         intrinsic (unwrapped) width of whatever's inside it — a wide
-         table (like Specialty Items, 11 columns plus a long variants
-         explanation) would silently push .mq-content, and with it the
-         whole page, wider than the viewport instead of scrolling within
-         its own .mq-table-wrap as intended. This is what was actually
-         causing the page-wide horizontal bleed Jordan saw. */
-      #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
-      /* Previously this only existed inside the @media(max-width:768px)
-         block below, so on any normal desktop-width window a wide table
-         (like Specialty Items, 11 columns plus the Install price/mode
-         column's own wide inputs) had NO horizontal scroll container at
-         all — it just visually overflowed .mq-table-wrap and bled into
-         the rest of the page, even after .mq-content got min-width:0
-         above. That min-width:0 fix let .mq-content shrink to the
-         viewport, but something still has to absorb the table's real
-         width once it's shrunk past that — this is the rule that does it,
-         at every width, not just mobile ones. */
-      #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
@@ -588,12 +572,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-stat-purple .mq-stat-val{color:#6366f1}
       #midasquote-dashboard .mq-table{width:100%;border-collapse:collapse}
       #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:left}
-      /* The Specialty Items table specifically has more columns than any
-         other table in the dashboard (11, plus the Install price/mode
-         column's own wide inputs) — tighter cell padding here buys back
-         real width without touching every other table's spacing. */
-      #midasquote-dashboard #mq-spec-table th{padding:10px 9px}
-      #midasquote-dashboard #mq-spec-table td{padding:12px 9px}
       #midasquote-dashboard .mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:#111}
       #midasquote-dashboard #mq-spec-table td{vertical-align:top;padding-top:14px}
       #midasquote-dashboard #mq-spec-table{border-collapse:separate;border-spacing:0 10px}
@@ -3457,6 +3435,83 @@ window.logoutMember = async function () {
     if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
   };
 
+  // Categories aren't a real Airtable table — they only exist as whatever
+  // string value shows up in specialty items' own Category field. So
+  // "renaming" or "deleting" a category really means bulk-editing every
+  // item currently tagged with that string. window._mqSpecRecords (kept in
+  // sync by renderSpecialty) is the source of truth for which items belong
+  // to which category right now.
+  window.mqShowManageCategoriesModal = function() {
+    const specs = window._mqSpecRecords || [];
+    const catCounts = {};
+    specs.forEach(r => {
+      const c = (r.fields['Category'] || '').trim();
+      if (c) catCounts[c] = (catCounts[c] || 0) + 1;
+    });
+    const categories = Object.keys(catCounts).sort((a, b) => a.localeCompare(b));
+    let modal = document.getElementById('mq-manage-categories-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-manage-categories-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.25);max-height:80vh;overflow-y:auto">
+        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px">Manage categories</div>
+        <div style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.5">Rename a category to update it everywhere at once, or delete one — deleting a category never deletes its items, they just become uncategorized.</div>
+        ${categories.length ? categories.map(c => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #f3f4f6">
+            <div style="font-size:13px;color:#111;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.replace(/</g,'&lt;')} <span style="font-weight:400;color:#9ca3af">(${catCounts[c]} item${catCounts[c] === 1 ? '' : 's'})</span></div>
+            <button class="mq-btn mq-btn-sm" onclick='mqRenameCategory(${JSON.stringify(c)})'>Rename</button>
+            <button class="mq-btn mq-btn-danger mq-btn-sm" onclick='mqDeleteCategory(${JSON.stringify(c)})'>Delete</button>
+          </div>`).join('') : '<div style="font-size:13px;color:#9ca3af;padding:1rem 0;text-align:center">No categories yet — add one from any item\'s Category dropdown.</div>'}
+        <button onclick="mqCloseManageCategoriesModal()" style="width:100%;margin-top:1.25rem;padding:11px;background:#f3f4f6;color:#374151;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqCloseManageCategoriesModal = function() {
+    const modal = document.getElementById('mq-manage-categories-modal');
+    if (modal) modal.style.display = 'none';
+  };
+  window.mqRenameCategory = async function(oldName) {
+    const newName = (prompt(`Rename "${oldName}" to:`, oldName) || '').trim();
+    if (!newName || newName === oldName) return;
+    const matches = (window._mqSpecRecords || []).filter(r => (r.fields['Category'] || '').trim() === oldName);
+    if (!matches.length) return;
+    try {
+      await Promise.all(matches.map(r => {
+        r.fields['Category'] = newName;
+        return atUpdate(CONFIG.SPECIALTY_TABLE, r.id, { 'Category': newName });
+      }));
+    } catch (e) {
+      console.error('Failed to rename category', e);
+      alert('Something went wrong renaming that category — please try again.');
+      return;
+    }
+    renderSpecialty(window._mqSpecRecords, window._mqShopRecord);
+    window.mqShowManageCategoriesModal();
+  };
+  window.mqDeleteCategory = async function(name) {
+    const matches = (window._mqSpecRecords || []).filter(r => (r.fields['Category'] || '').trim() === name);
+    if (!matches.length) return;
+    const count = matches.length;
+    const ok = confirm(`Delete the "${name}" category?\n\n${count} item${count === 1 ? '' : 's'} currently in it will no longer be categorized — they'll show up as uncategorized instead. The items themselves won't be deleted or changed in any other way.`);
+    if (!ok) return;
+    try {
+      await Promise.all(matches.map(r => {
+        r.fields['Category'] = '';
+        return atUpdate(CONFIG.SPECIALTY_TABLE, r.id, { 'Category': '' });
+      }));
+    } catch (e) {
+      console.error('Failed to delete category', e);
+      alert('Something went wrong deleting that category — please try again.');
+      return;
+    }
+    renderSpecialty(window._mqSpecRecords, window._mqShopRecord);
+    window.mqShowManageCategoriesModal();
+  };
+
   async function loadProposalTemplates(shopName) {
     const recs = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
     return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
@@ -4056,7 +4111,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </select>
         </div>
         <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by category</label>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#6b7280;margin-bottom:4px">
+            <span>Filter by category</span>
+            <span onclick="mqShowManageCategoriesModal()" style="color:#2563eb;cursor:pointer;font-weight:600;white-space:nowrap">Manage categories</span>
+          </label>
           <select id="mq-spec-tab-filter-category" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
             <option value="">All categories</option>
             ${[...new Set(specs.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
@@ -4066,11 +4124,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
           <input type="text" id="mq-spec-tab-filter-search" oninput="mqFilterSpecTable()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
         </div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;white-space:nowrap">
+            <input type="checkbox" id="mq-spec-tab-filter-proonly" onchange="mqFilterSpecTable()" style="width:16px;height:16px;accent-color:#1a1a1a"/>
+            ⭐ Pro only
+          </label>
+        </div>
       </div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Variants</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -4080,24 +4144,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             const catAttr = (r.fields['Category'] || '').replace(/"/g,'&quot;');
             const variantCount = mqParseVariants(r).length;
             return `
-            <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" data-category="${catAttr}" style="cursor:grab">
+            <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" data-category="${catAttr}" data-proonly="${r.fields['Pro only'] ? '1' : '0'}" style="cursor:grab">
               <td class="mq-spec-drag-handle" style="color:#9ca3af;font-size:16px;padding:8px 12px;cursor:grab">⠿</td>
               <td>
                 <div style="display:flex;flex-direction:column;gap:2px">
-                  <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:150px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:150px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
-                    <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
-                    <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
-                  </div>
+                  <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:180px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                  <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                  <button class="mq-btn mq-btn-danger mq-btn-sm" style="align-self:flex-start;margin-top:2px" onclick="mqDeleteSpec('${r.id}')">Delete</button>
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
+              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants column"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/></td>
               <td>
-                <div style="position:relative;display:inline-block;width:80px">
-                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-                  <span id="mq-spec-pricex-${r.id}" style="display:${variantCount ? 'flex' : 'none'};position:absolute;inset:0;align-items:center;justify-content:center;pointer-events:none;color:#dc2626;font-size:20px;font-weight:800;line-height:1">✕</span>
-                </div>
+                <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
               </td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
@@ -4109,7 +4168,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             </tr>
             <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
               <td></td>
-              <td colspan="10" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
+              <td colspan="11" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -4472,6 +4531,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const roomFilter = el('mq-spec-tab-filter-room')?.value || '';
     const categoryFilter = el('mq-spec-tab-filter-category')?.value || '';
     const searchFilter = (el('mq-spec-tab-filter-search')?.value || '').toLowerCase().trim();
+    const proOnlyFilter = !!el('mq-spec-tab-filter-proonly')?.checked;
     const tbody = document.getElementById('mq-spec-tbody');
     if (!tbody) return;
     let visibleCount = 0;
@@ -4494,7 +4554,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const categoryMatch = !categoryFilter || category === categoryFilter;
       const name = row.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
-      const show = roomMatch && categoryMatch && searchMatch;
+      const proOnlyMatch = !proOnlyFilter || row.getAttribute('data-proonly') === '1';
+      const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
       row.style.display = show ? '' : 'none';
       if (show) visibleCount++;
     });
@@ -4519,7 +4580,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // already on screen, so a long specialty items list stays manageable.
   window.mqFilterSpecialtyCards = function() {
     const roomFilter = el('mq-spec-filter-room')?.value || '';
+    const categoryFilter = el('mq-spec-filter-category')?.value || '';
     const searchFilter = (el('mq-spec-filter-search')?.value || '').toLowerCase().trim();
+    const proOnlyFilter = !!el('mq-spec-filter-proonly')?.checked;
     const grid = document.getElementById('mq-spec-cards-grid');
     if (!grid) return;
     let visibleCount = 0;
@@ -4527,9 +4590,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let rooms = [];
       try { rooms = JSON.parse(wrap.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
       const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const category = wrap.getAttribute('data-category') || '';
+      const categoryMatch = !categoryFilter || category === categoryFilter;
       const name = wrap.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
-      const show = roomMatch && searchMatch;
+      const proOnlyMatch = !proOnlyFilter || wrap.getAttribute('data-proonly') === '1';
+      const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
       wrap.style.display = show ? '' : 'none';
       if (show) visibleCount++;
     });
@@ -5164,8 +5230,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </select>
         </div>
         <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by category</label>
+          <select id="mq-spec-filter-category" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All categories</option>
+            ${[...new Set(specItems.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
           <input type="text" id="mq-spec-filter-search" oninput="mqFilterSpecialtyCards()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+        </div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;white-space:nowrap">
+            <input type="checkbox" id="mq-spec-filter-proonly" onchange="mqFilterSpecialtyCards()" style="width:16px;height:16px;accent-color:#1a1a1a"/>
+            ⭐ Pro only
+          </label>
         </div>
       </div>
       <div id="mq-spec-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
@@ -5174,22 +5253,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           const itemName = r.fields['Item name'] || '';
           const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
           const dataName = itemName.toLowerCase().replace(/"/g,'&quot;');
+          const dataCategory = (r.fields['Category'] || '').replace(/"/g,'&quot;');
+          const dataProOnly = r.fields['Pro only'] ? '1' : '0';
           const variants = mqParseVariants(r);
           // An item with variants (e.g. Maple/Oak/Painted MDF) doesn't have
           // one photo anymore — each variant gets its own, so it gets its
           // own card here instead, clearly labeled "Item — Variant" so it's
           // obvious which option each photo belongs to. Variants themselves
           // are still added/renamed/priced on the Specialty Items tab, not
-          // here — this is photos and best-seller badges only, same as
-          // every other item on this tab (photoCard already wires up the
-          // "Mark as Best seller" checkbox generically via savedFeatured,
-          // so nothing extra was needed to support it per-variant).
+          // here — this is photos only, same as every other item on this tab.
           if (!variants.length) {
-            return [`<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}">
+            return [`<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}">
               ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
             </div>`];
           }
-          return variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}">
+          return variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}">
             ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
           </div>`);
         }).join('')}
@@ -5326,32 +5404,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // keep it in sync whenever the name changes, or it's left showing a
       // stale label (like "New template item") forever after a rename.
       if (field === 'Item name') updates['Special Items'] = value;
-      // Keep the in-memory record in sync too, not just Airtable — the
-      // variants panel's header ("Variants for '<name>'") and its
-      // "+ Add a variant to '<name>'" button both read r.fields['Item name']
-      // fresh every time they re-render. Without this, renaming an item kept
-      // showing its old name (e.g. the default "New item") on that panel
-      // forever, even though the rename itself saved fine.
-      const r = (window._mqSpecRecords||[]).find(x => x.id === id);
-      if (r) Object.assign(r.fields, updates);
-      if (field === 'Item name') mqRefreshVariantsPanel(id);
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
   // ===================== Specialty item variants =====================
   // A specialty item can optionally have variants (e.g. a "Crown Molding"
-  // item offered in Maple/Oak/MDF) — each with its own label/price,
-  // everything else (category, project types, pricing method, Active, Pro
-  // only) staying shared on the parent item. Stored as one JSON field
-  // ('Variants') on the Specialty Items table, the same pattern already
-  // used for 'Visible rooms' — no new Airtable table, no separate
-  // relational linking, just an array on the record itself.
-  // Photos and best-seller badges for each variant are NOT part of this
-  // JSON at all — same as every other product's photo/badge, they live in
-  // the shop-wide Photos/Featured items maps, edited from the Products tab
-  // and keyed 'spec_<itemId>_v<variantId>' so they survive a variant being
-  // reordered or another variant being removed.
+  // item offered in Maple/Oak/MDF) — each with its own label/price/photo/
+  // best-seller flag, everything else (category, project types, pricing
+  // method, Active, Pro only) staying shared on the parent item. Stored as
+  // one JSON field ('Variants') on the Specialty Items table, the same
+  // pattern already used for 'Visible rooms' — no new Airtable table, no
+  // separate relational linking, just an array on the record itself.
   function mqParseVariants(r) {
     try {
       const v = JSON.parse(r?.fields?.['Variants'] || '[]');
@@ -5373,6 +5437,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;white-space:nowrap;cursor:pointer"><input type="checkbox" ${v.featured?'checked':''} onchange="mqSaveVariantField('${r.id}',${vi},'featured',this.checked)" style="width:14px;height:14px;accent-color:#f59e0b"/> 🏆 Best seller</label>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
       </div>`).join('');
     // Boxed with a colored left border and the item's own name repeated in
@@ -5386,7 +5451,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
         ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5"><span style="color:#dc2626;font-weight:800;margin-right:4px">✕</span>That's the red X on the Price field in the main row above — it's ignored once at least one variant exists, since each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos and best-seller badges for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
       </div>`;
   }
 
@@ -5408,18 +5473,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.style.color = n ? '#4338ca' : '#6b7280';
     }
     // Price field is meaningless once variants exist — disable it in place
-    // rather than making the shop owner guess why it's not being used, and
-    // stamp a red X right over it as a visual flag pointing at exactly
-    // which field just went dead — the "why" is spelled out in the
-    // variants panel below, which opens with the same red X so the two
-    // connect at a glance instead of the shop owner having to piece it
-    // together from a disabled input alone.
+    // rather than making the shop owner guess why it's not being used.
     const priceInput = document.getElementById(`mq-spec-price-${id}`);
     if (priceInput) {
       priceInput.disabled = n > 0;
       priceInput.title = n > 0 ? 'Priced per variant — see the Variants column' : '';
-      const priceX = document.getElementById(`mq-spec-pricex-${id}`);
-      if (priceX) priceX.style.display = n > 0 ? 'flex' : 'none';
     }
   }
 
@@ -5440,7 +5498,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // separately in the Products tab) is keyed by this id, so it has to
     // survive other variants being added/removed/reordered later.
     const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    variants.push({ id: newId, label: '', price: null });
+    variants.push({ id: newId, label: '', price: 0, featured: false });
     r.fields['Variants'] = JSON.stringify(variants);
     mqRefreshVariantsPanel(id);
     mqRefreshSpecVariantUI(id);
@@ -5528,7 +5586,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
           <span onclick="mqShowSpecHelpPopover(this,'This only shows to customers when install is priced differently than supply. Type your own question to customize it, or leave blank to use the placeholder text shown below as the default.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:175px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
+        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
     }
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
