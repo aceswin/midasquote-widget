@@ -1623,7 +1623,7 @@
             ${installModeLabelHtml}
           </div>
         </div>
-        ${installChoiceDropdownHtml ? `<div style="width:92px;align-self:flex-start" id="mq-spec-modewrap-${prefix}-${i}">${installChoiceDropdownHtml}</div>` : ''}
+        ${installChoiceDropdownHtml ? `<div style="width:100%" id="mq-spec-modewrap-${prefix}-${i}">${installChoiceDropdownHtml}</div>` : ''}
         ${variantPickerHtml}
         <div class="mq-spec-bottom">
           <div class="mq-qty-ctrl">

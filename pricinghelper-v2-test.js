@@ -32,6 +32,14 @@ let wizardBaseline = null;
   const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
   const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
 
+  // A UK (or any non-North-American) shop can pick their own currency
+  // symbol on the dashboard's Shop Info tab — everywhere in the pricing
+  // wizard that used to show a hardcoded "$" now reads it from here
+  // instead, falling back to "$" for shops that haven't set one.
+  // shopRecord is populated by mqph2Init() (passed in from dashboard.js's
+  // already-loaded shop record) before loadAndRender() ever runs.
+  function CUR() { return (shopRecord && shopRecord.fields && shopRecord.fields['Currency symbol']) || '$'; }
+
   async function atGet(table, formula) {
     const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
     const res = await fetch(url, { headers: AT_HEADS() });
@@ -560,7 +568,7 @@ window.mqphGoToWizard = function() {
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
             `<strong>No doors · No drawers · No hardware · Supply only</strong>`,
           ])}
-          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
           <div id="mqph-r-bl-u" class="mqph-result"></div>`;
       },
       nextLabel:'Next →',
@@ -586,8 +594,8 @@ window.mqphGoToWizard = function() {
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
             `<strong>No doors · No drawers · Supply only · Include toe kick</strong>`,
           ])}
-          ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was $${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
-          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
+          ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was ${CUR()}${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
           <div id="mqph-r-bl-b" class="mqph-result"></div>`;
       },
       nextLabel:'Next →',
@@ -615,7 +623,7 @@ window.mqphGoToWizard = function() {
                 `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                 `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · Supply only`,
               ])}
-              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcMatUp(${idx})"/></div>
+              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcMatUp(${idx})"/></div>
               <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
@@ -656,7 +664,7 @@ window.mqphGoToWizard = function() {
             `Door style: <span class="mqph-spec-tag">${doorName}</span> · <span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span>`,
             `Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only`,
           ])}
-          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-baseline" placeholder="0.00" oninput="mqphCalcDoorBaseline()"/></div>
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-door-baseline" placeholder="0.00" oninput="mqphCalcDoorBaseline()"/></div>
           <div id="mqph-r-door-baseline" class="mqph-result"></div>`;
       },
       nextLabel:'Next →',
@@ -691,7 +699,7 @@ window.mqphGoToWizard = function() {
                 `Material: <span class="mqph-spec-tag">${matName}</span> · Door: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
                 `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only`,
               ])}
-              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
+              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
               <div id="mqph-r-door-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
@@ -730,7 +738,7 @@ window.mqphGoToWizard = function() {
                 `Material: <span class="mqph-spec-tag">${matName}</span> · Door: <span class="mqph-spec-tag">${doorName}</span>`,
                 `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${blHingeName}) · No drawers · Supply only`,
               ])}
-              <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
+              <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
               <div id="mqph-r-hinge-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
@@ -769,7 +777,7 @@ window.mqphGoToWizard = function() {
                   `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
                   `<strong>1 top drawer per cabinet · Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
                 ])}
-                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-drawer1-${idx}" placeholder="0.00" oninput="mqphCalcDrawer1(${idx})"/></div>
+                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-drawer1-${idx}" placeholder="0.00" oninput="mqphCalcDrawer1(${idx})"/></div>
                 <div id="mqph-r-drawer1-${idx}" class="mqph-result"></div>
               </div>`).join('')}`;
         },
@@ -805,8 +813,8 @@ window.mqphGoToWizard = function() {
                   `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
                   `<strong>Full drawer bank (3 per cabinet) · Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
                 ])}
-                ${p1>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:10px">1-drawer quote was $${p1.toLocaleString()} — bank quote should be higher.</p>`:''}
-                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-drawer3-${idx}" placeholder="0.00" oninput="mqphCalcDrawer3(${idx})"/></div>
+                ${p1>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:10px">1-drawer quote was ${CUR()}${p1.toLocaleString()} — bank quote should be higher.</p>`:''}
+                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-drawer3-${idx}" placeholder="0.00" oninput="mqphCalcDrawer3(${idx})"/></div>
                 <div id="mqph-r-drawer3-${idx}" class="mqph-result"></div>
               </div>`;
             }).join('')}`;
@@ -855,20 +863,20 @@ window.mqphGoToWizard = function() {
         content:() => `
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
             <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔼 Upper cabinets — install only</div>
-            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
             <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔽 Base cabinets — install only</div>
-            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div id="mqph-r-install" class="mqph-result"></div>
           <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
           <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal & disposal</div>
           <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet (${mqphMm(48).toLocaleString()}mm) of base cabinets with doors?</label></div>
           <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Include your cost to haul away and dispose of the old cabinets. <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
-          <div class="mqph-input-row"><label>Removal & disposal price for 4ft (${mqphMm(48).toLocaleString()}mm) job</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          <div class="mqph-input-row"><label>Removal & disposal price for 4ft (${mqphMm(48).toLocaleString()}mm) job</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           <div id="mqph-r-removal" class="mqph-result"></div>`,
         skipLabel:'Skip — supply only',
         nextLabel:'Next →',
@@ -941,7 +949,7 @@ window.mqphGoToWizard = function() {
     const cfg=map[id]; if(!cfg) return;
     const p=parseFloat(document.getElementById(cfg.inputId)?.value||0);
     const res=document.getElementById(cfg.resId); if(!res) return;
-    if(p>0){res.style.display='block';res.innerHTML=`<strong>${cfg.label}:</strong> <span class="mqph-result-val">$${cfg.calc(p).toFixed(2)}/lin ft</span>`;}
+    if(p>0){res.style.display='block';res.innerHTML=`<strong>${cfg.label}:</strong> <span class="mqph-result-val">${CUR()}${cfg.calc(p).toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcMatUp = function(idx) {
@@ -952,7 +960,7 @@ window.mqphGoToWizard = function() {
       const upperRate = (wizardBaseline.upperRate || 0) + upcharge;
       const baseRate  = (wizardBaseline.baseRate  || 0) + upcharge;
       res.style.display='block';
-      res.innerHTML=`<strong>Upcharge:</strong> <span class="mqph-result-val">$${upcharge.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;→ uppers $${upperRate.toFixed(2)}/ft · bases $${baseRate.toFixed(2)}/ft</span>`;
+      res.innerHTML=`<strong>Upcharge:</strong> <span class="mqph-result-val">${CUR()}${upcharge.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;→ uppers ${CUR()}${upperRate.toFixed(2)}/ft · bases ${CUR()}${baseRate.toFixed(2)}/ft</span>`;
     }
     else res.style.display='none';
   };
@@ -962,19 +970,19 @@ window.mqphGoToWizard = function() {
     if(p>0){
       const u=(p-wizardBaseline.basePrice)/4;
       res.style.display='block';
-      res.innerHTML=`<strong>Door upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;(box $${wizardBaseline.baseRate.toFixed(2)} + door $${u.toFixed(2)} = $${(wizardBaseline.baseRate+u).toFixed(2)}/ft total)</span>`;
+      res.innerHTML=`<strong>Door upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;(box ${CUR()}${wizardBaseline.baseRate.toFixed(2)} + door ${CUR()}${u.toFixed(2)} = ${CUR()}${(wizardBaseline.baseRate+u).toFixed(2)}/ft total)</span>`;
     } else res.style.display='none';
   };
   window.mqphCalcDoorUp = function(idx) {
     const p=parseFloat(document.getElementById(`mqph-door-${idx}`)?.value||0);
     const res=document.getElementById(`mqph-r-door-${idx}`); if(!res||!wizardBaseline) return;
-    if(p>0){const u=(p-wizardBaseline.basePrice)/4;res.style.display='block';res.innerHTML=`<strong>Upcharge vs plain box:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;}
+    if(p>0){const u=(p-wizardBaseline.basePrice)/4;res.style.display='block';res.innerHTML=`<strong>Upcharge vs plain box:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcHingeUp = function(idx) {
     const p=parseFloat(document.getElementById(`mqph-hinge-${idx}`)?.value||0);
     const res=document.getElementById(`mqph-r-hinge-${idx}`); if(!res||!wizardBaseline) return;
-    if(p>0){const u=(p-(wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice))/4;res.style.display='block';res.innerHTML=`<strong>Hinge upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;}
+    if(p>0){const u=(p-(wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice))/4;res.style.display='block';res.innerHTML=`<strong>Hinge upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcDrawer1 = function(idx) {
@@ -983,7 +991,7 @@ window.mqphGoToWizard = function() {
     if(p>0){
       const u=(p-wizardBaseline.basePrice)/4;
       res.style.display='block';
-      res.innerHTML=`<strong>"Some drawers" upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;
+      res.innerHTML=`<strong>"Some drawers" upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;
     } else res.style.display='none';
   };
   window.mqphCalcDrawer3 = function(idx) {
@@ -993,7 +1001,7 @@ window.mqphGoToWizard = function() {
     if(p3>0){
       const mostlyRate=((p1+p3)/2-wizardBaseline.basePrice)/4;
       res.style.display='block';
-      res.innerHTML=`<strong>"Mostly drawers" upcharge:</strong> <span class="mqph-result-val">$${mostlyRate.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">(average of $${p1.toLocaleString()} + $${p3.toLocaleString()})</span>`;
+      res.innerHTML=`<strong>"Mostly drawers" upcharge:</strong> <span class="mqph-result-val">${CUR()}${mostlyRate.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">(average of ${CUR()}${p1.toLocaleString()} + ${CUR()}${p3.toLocaleString()})</span>`;
     } else res.style.display='none';
   };
   window.mqphCalcInstall = function() {
@@ -1004,22 +1012,22 @@ window.mqphGoToWizard = function() {
     const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
     const res=document.getElementById('mqph-r-install'); if(!res) return;
     let html='';
-    if(und>0) html+=`Uppers (no doors): <span class="mqph-result-val">$${(und/4).toFixed(2)}/lin ft</span><br/>`;
-    if(uwd>0) html+=`Uppers (with doors): <span class="mqph-result-val">$${(uwd/4).toFixed(2)}/lin ft</span><br/>`;
-    if(bnd>0) html+=`Bases (no doors): <span class="mqph-result-val">$${(bnd/4).toFixed(2)}/lin ft</span><br/>`;
+    if(und>0) html+=`Uppers (no doors): <span class="mqph-result-val">${CUR()}${(und/4).toFixed(2)}/lin ft</span><br/>`;
+    if(uwd>0) html+=`Uppers (with doors): <span class="mqph-result-val">${CUR()}${(uwd/4).toFixed(2)}/lin ft</span><br/>`;
+    if(bnd>0) html+=`Bases (no doors): <span class="mqph-result-val">${CUR()}${(bnd/4).toFixed(2)}/lin ft</span><br/>`;
     if(bwd>0) {
-      html+=`Bases (with doors): <span class="mqph-result-val">$${(bwd/4).toFixed(2)}/lin ft</span><br/>`;
-      html+=`Bases (some drawers): <span class="mqph-result-val">$${(bwd/4*1.10).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +10%</span><br/>`;
-      html+=`Bases (mostly drawers): <span class="mqph-result-val">$${(bwd/4*1.15).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +15%</span>`;
+      html+=`Bases (with doors): <span class="mqph-result-val">${CUR()}${(bwd/4).toFixed(2)}/lin ft</span><br/>`;
+      html+=`Bases (some drawers): <span class="mqph-result-val">${CUR()}${(bwd/4*1.10).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +10%</span><br/>`;
+      html+=`Bases (mostly drawers): <span class="mqph-result-val">${CUR()}${(bwd/4*1.15).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +15%</span>`;
       // Update removal suggestion hint
       const hint = document.getElementById('mqph-removal-hint');
-      if (hint) hint.textContent = `Suggested: $${Math.round(bwd*0.5)} (half your base install with doors rate)`;
+      if (hint) hint.textContent = `Suggested: ${CUR()}${Math.round(bwd*0.5)} (half your base install with doors rate)`;
     }
     if(html){res.style.display='block';res.innerHTML=html;}else res.style.display='none';
     // Removal live rate
     const remRes = document.getElementById('mqph-r-removal');
     if (remRes) {
-      if(rem>0){remRes.style.display='block';remRes.innerHTML=`<strong>Removal rate:</strong> <span class="mqph-result-val">$${(rem/4).toFixed(2)}/lin ft</span>`;}
+      if(rem>0){remRes.style.display='block';remRes.innerHTML=`<strong>Removal rate:</strong> <span class="mqph-result-val">${CUR()}${(rem/4).toFixed(2)}/lin ft</span>`;}
       else remRes.style.display='none';
     }
   };
@@ -1177,9 +1185,9 @@ window.mqphGoToWizard = function() {
     const options = miniWizMatchOptions(cat);
     if (!options.length) return ''; // nothing to match against yet
     const preview = miniWiz.matchRates ? (() => {
-      if (cat === 'material') return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (uppers) and $${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (bases) — same as "${miniWiz.matchName}"`;
-      if (cat === 'drawer') return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (some drawers) and $${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (mostly drawers) — same as "${miniWiz.matchName}"`;
-      return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft upcharge — same as "${miniWiz.matchName}"`;
+      if (cat === 'material') return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (uppers) and ${CUR()}${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (bases) — same as "${miniWiz.matchName}"`;
+      if (cat === 'drawer') return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (some drawers) and ${CUR()}${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (mostly drawers) — same as "${miniWiz.matchName}"`;
+      return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft upcharge — same as "${miniWiz.matchName}"`;
     })() : '';
     return `
       <div style="margin-bottom:1.25rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
@@ -1252,7 +1260,7 @@ window.mqphGoToWizard = function() {
             `Material: <span class="mqph-spec-tag">${name}</span> &nbsp;·&nbsp; No doors &nbsp;·&nbsp; Supply only &nbsp;·&nbsp; Local delivery`,
           ])}
           ${matchBlock}
-          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">Enter your quoted total for this 4 lin ft job</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
             <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
@@ -1268,7 +1276,7 @@ window.mqphGoToWizard = function() {
             `Material: <span class="mqph-spec-tag">${name}</span> &nbsp;·&nbsp; No doors &nbsp;·&nbsp; Supply only &nbsp;·&nbsp; Include toe kick`,
           ])}
           ${matchBlock}
-          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">Enter your quoted total for this 4 lin ft job</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
             <div class="mqph-rate-reveal-val" id="mqph-mini-rate-1">—</div>
@@ -1278,7 +1286,7 @@ window.mqphGoToWizard = function() {
     }
 
     if (cat === 'door') {
-      const baselineBoxDesc = `$${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price)`;
+      const baselineBoxDesc = `${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price)`;
       return `
         <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the same baseline base box job with this new door style added.</p>
         ${specBox([
@@ -1288,7 +1296,7 @@ window.mqphGoToWizard = function() {
           `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
         ])}
         ${matchBlock}
-        <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
         <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the door upcharge per lin ft</p>
         <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
           <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
@@ -1298,7 +1306,7 @@ window.mqphGoToWizard = function() {
 
     if (cat === 'hinge') {
       const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
-      const baselineDesc = `$${baseWithDoor.toLocaleString(undefined,{maximumFractionDigits:0})} (${bl.blMatName} bases + ${bl.blDoorName})`;
+      const baselineDesc = `${CUR()}${baseWithDoor.toLocaleString(undefined,{maximumFractionDigits:0})} (${bl.blMatName} bases + ${bl.blDoorName})`;
       return `
         <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the baseline box + baseline door, but swap to this hinge.</p>
         ${specBox([
@@ -1308,7 +1316,7 @@ window.mqphGoToWizard = function() {
           `Hinges: <span class="mqph-spec-tag">${name}</span> · No drawers · Supply only`,
         ])}
         ${matchBlock}
-        <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
         <p class="mqph-calc-hint">We'll subtract ${baselineDesc} and divide by 4 to get the hinge upcharge per lin ft</p>
         <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
           <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
@@ -1317,7 +1325,7 @@ window.mqphGoToWizard = function() {
     }
 
     if (cat === 'drawer') {
-      const baselineBoxDesc = `$${bl.blBasePrice.toLocaleString(undefined,{maximumFractionDigits:0})} (your ${bl.blMatName} base box price)`;
+      const baselineBoxDesc = `${CUR()}${bl.blBasePrice.toLocaleString(undefined,{maximumFractionDigits:0})} (your ${bl.blMatName} base box price)`;
       if (step === 0) {
         return `
           <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the baseline base box with <strong>1 top drawer</strong> in each cabinet. This gives us the "some drawers" rate.</p>
@@ -1328,7 +1336,7 @@ window.mqphGoToWizard = function() {
             `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
           ])}
           ${matchBlock}
-          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the "some drawers" upcharge per lin ft</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
             <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
@@ -1345,9 +1353,9 @@ window.mqphGoToWizard = function() {
             `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
             `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
           ])}
-          ${p0>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">1-drawer quote was $${p0.toLocaleString()} — bank quote should be higher.</p>`:''}
+          ${p0>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">1-drawer quote was ${CUR()}${p0.toLocaleString()} — bank quote should be higher.</p>`:''}
           ${matchBlock}
-          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">We'll average this with your 1-drawer quote to get the "mostly drawers" rate</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
             <div class="mqph-rate-reveal-val" id="mqph-mini-rate-1">—</div>
@@ -1370,7 +1378,7 @@ window.mqphGoToWizard = function() {
       const rv = document.getElementById(`mqph-mini-rate-${idx}`);
       if (!el || !rv) return;
       if (rate !== null && !isNaN(rate)) {
-        rv.textContent = `$${rate.toFixed(2)} / lin ft`;
+        rv.textContent = `${CUR()}${rate.toFixed(2)} / lin ft`;
         el.style.display = 'block';
       } else {
         el.style.display = 'none';
@@ -1818,7 +1826,7 @@ window.mqphGoToWizard = function() {
                   <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
-                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
+                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : CUR() +(r.fields['Rate']||0).toLocaleString()}</div>
                 <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
                 <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
                 <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
@@ -1891,7 +1899,7 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field"><label>Category</label>
               <select id="mqph-item-cat">${Object.entries(CAT_LABELS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
             </div>
-            <div class="mqph-field"><label>Rate ($)</label><input type="number" id="mqph-item-rate" step="0.01"/></div>
+            <div class="mqph-field"><label>Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01"/></div>
             <div class="mqph-field"><label>Unit</label>
               <select id="mqph-item-unit">
                 <option>per lin ft</option><option>per lin ft — uppers</option><option>per lin ft — bases</option>
@@ -2223,7 +2231,7 @@ window.mqphGoToWizard = function() {
       const allChecked = c.items.every(it => _bulkEdit.checkedIds.has(it.id));
       const someChecked = !allChecked && c.items.some(it => _bulkEdit.checkedIds.has(it.id));
       const isOpen = _bulkEdit.openClusters.has(c.key);
-      const priceLabel = c.priceFields.map(f => `${f.label}: $${f.value.toFixed(2)}`).join(' · ');
+      const priceLabel = c.priceFields.map(f => `${f.label}: ${CUR()}${f.value.toFixed(2)}`).join(' · ');
       const keyEsc = c.key.replace(/'/g,"\\'");
       return `
         <div style="border-bottom:1px solid #f3f4f6">
@@ -2292,7 +2300,7 @@ window.mqphGoToWizard = function() {
     resultsEl.innerHTML = matches.length ? matches.map(it => `
       <div onclick="mqphBulkPickMatch('${it.id.replace(/'/g,"\\'")}')" style="padding:6px 8px;font-size:12px;cursor:pointer;border-radius:6px;display:flex;justify-content:space-between;gap:8px" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
         <span>${it.label}</span>
-        <span style="color:#6b7280;white-space:nowrap">${it.priceFields.map(f=>'$'+f.value.toFixed(2)).join(' / ')}</span>
+        <span style="color:#6b7280;white-space:nowrap">${it.priceFields.map(f=>CUR() +f.value.toFixed(2)).join(' / ')}</span>
       </div>`).join('') : `<div style="font-size:12px;color:#9ca3af;padding:6px 8px">No matches.</div>`;
   };
 
@@ -2316,7 +2324,7 @@ window.mqphGoToWizard = function() {
     });
     if (newValues.some(v => v === null)) { alert('Please enter a new price for every field (or pick an item above to match).'); return; }
 
-    const summary = selected[0].priceFields.map((f,i) => `${f.label} → $${newValues[i].toFixed(2)}`).join(', ');
+    const summary = selected[0].priceFields.map((f,i) => `${f.label} → ${CUR()}${newValues[i].toFixed(2)}`).join(', ');
     if (!confirm(`Update ${selected.length} item${selected.length!==1?'s':''}?\n\n${summary}`)) return;
 
     // Group field updates by underlying record id first — crown/valance
@@ -2536,11 +2544,11 @@ window.mqphGoToWizard = function() {
       const iu = (unitParts[1]||'sqft').trim();
       const bsOpts = getBsOptions(r);
       const bsSummary = bsOpts.length
-        ? bsOpts.map(o=>`${o.label} (supply $${(o.supplyRate||0).toLocaleString()}, install $${(o.installRate||0).toLocaleString()}/lin ft)`).join(', ')
+        ? bsOpts.map(o=>`${o.label} (supply ${CUR()}${(o.supplyRate||0).toLocaleString()}, install ${CUR()}${(o.installRate||0).toLocaleString()}/lin ft)`).join(', ')
         : 'No backsplash options set';
       const cutoutOpts = getCutoutOptions(r);
       const cutoutSummary = cutoutOpts.length
-        ? cutoutOpts.map(o=>`${o.label} $${(o.rate||0).toLocaleString()}`).join(', ')
+        ? cutoutOpts.map(o=>`${o.label} ${CUR()}${(o.rate||0).toLocaleString()}`).join(', ')
         : null;
       return `
         <div class="mqph-row">
@@ -2550,11 +2558,11 @@ window.mqphGoToWizard = function() {
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
             <span style="color:#6b7280;font-size:11px">Supply:</span>
-            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/${su}</span>
             <span style="color:#d1d5db;margin:0 4px">·</span>
             <span style="color:#6b7280;font-size:11px">Install:</span>
-            <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Install rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/${iu}</span>
           </div>
           <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
@@ -2581,7 +2589,7 @@ window.mqphGoToWizard = function() {
       const taggedMats = materials.filter(m=>getAddonOptions(m).some(x=>x.id===a.id));
       const rates = taggedMats.map(m => getAddonOptions(m).find(x=>x.id===a.id)?.rate || 0);
       const allSame = rates.every(r => r === rates[0]);
-      const rateLabel = !rates.length ? '$0' : allSame ? `$${rates[0].toLocaleString()}` : `$${Math.min(...rates).toLocaleString()}–$${Math.max(...rates).toLocaleString()}`;
+      const rateLabel = !rates.length ? `${CUR()}0` : allSame ? `${CUR()}${rates[0].toLocaleString()}` : `${CUR()}${Math.min(...rates).toLocaleString()}–${CUR()}${Math.max(...rates).toLocaleString()}`;
       return `
       <div class="mqph-row">
         <div style="flex:1;min-width:0">
@@ -2758,11 +2766,11 @@ window.mqphGoToWizard = function() {
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
             <span style="color:#6b7280;font-size:11px">Supply:</span>
-            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/lin ft</span>
             <span style="color:#d1d5db;margin:0 4px">·</span>
             <span style="color:#6b7280;font-size:11px">Install:</span>
-            <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Install rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/lin ft</span>
           </div>
           <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
@@ -2867,7 +2875,7 @@ window.mqphGoToWizard = function() {
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px">
             <span style="color:#6b7280;font-size:11px">Base price:</span>
-            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/ unit</span>
           </div>
           <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
@@ -2962,7 +2970,7 @@ window.mqphGoToWizard = function() {
           `Include the box, shelves, and any interior fittings specific to this type (pullouts, drawer boxes, etc.)`,
           `<span style="color:#1e40af">Door upcharges, hinge upcharges, material upcharges, and install will be calculated automatically by the widget based on what the customer selects.</span>`,
         ])}
-        <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-tallcab-price" placeholder="0" oninput="mqphTallCabCalc()"/></div>
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-tallcab-price" placeholder="0" oninput="mqphTallCabCalc()"/></div>
         <p class="mqph-calc-hint">Base unit price only — door, hinge, material & install upcharges are added automatically</p>
         <div class="mqph-rate-reveal" id="mqph-tallcab-reveal" style="display:none">
           <div class="mqph-rate-reveal-val" id="mqph-tallcab-rate-val">—</div>
@@ -2979,7 +2987,7 @@ window.mqphGoToWizard = function() {
     const reveal = document.getElementById('mqph-tallcab-reveal');
     const val    = document.getElementById('mqph-tallcab-rate-val');
     if (reveal && val) {
-      if (p > 0) { reveal.style.display = 'block'; val.textContent = `$${p.toLocaleString()} / unit`; }
+      if (p > 0) { reveal.style.display = 'block'; val.textContent = `${CUR()}${p.toLocaleString()} / unit`; }
       else reveal.style.display = 'none';
     }
   };
