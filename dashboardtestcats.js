@@ -444,6 +444,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   document.addEventListener('click', () => {
     const pop = document.getElementById('mq-spec-help-popover');
     if (pop) pop.style.display = 'none';
+    const ratePop = document.getElementById('mq-spec-rate-calc-popover');
+    if (ratePop) ratePop.style.display = 'none';
   });
 
   window.mqShowSpecialtyTipsModal = function() {
@@ -543,26 +545,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
-      /* min-width:0 overrides the flex-item default of min-width:auto,
-         which otherwise refuses to let this panel shrink below the
-         intrinsic (unwrapped) width of whatever's inside it — a wide
-         table (like Specialty Items, 11 columns plus a long variants
-         explanation) would silently push .mq-content, and with it the
-         whole page, wider than the viewport instead of scrolling within
-         its own .mq-table-wrap as intended. This is what was actually
-         causing the page-wide horizontal bleed Jordan saw. */
-      #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
-      /* Previously this only existed inside the @media(max-width:768px)
-         block below, so on any normal desktop-width window a wide table
-         (like Specialty Items, 11 columns plus the Install price/mode
-         column's own wide inputs) had NO horizontal scroll container at
-         all — it just visually overflowed .mq-table-wrap and bled into
-         the rest of the page, even after .mq-content got min-width:0
-         above. That min-width:0 fix let .mq-content shrink to the
-         viewport, but something still has to absorb the table's real
-         width once it's shrunk past that — this is the rule that does it,
-         at every width, not just mobile ones. */
-      #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      #midasquote-dashboard .mq-content{flex:1;padding:2.5rem;overflow-y:visible}
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
@@ -588,12 +571,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-stat-purple .mq-stat-val{color:#6366f1}
       #midasquote-dashboard .mq-table{width:100%;border-collapse:collapse}
       #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:left}
-      /* The Specialty Items table specifically has more columns than any
-         other table in the dashboard (11, plus the Install price/mode
-         column's own wide inputs) — tighter cell padding here buys back
-         real width without touching every other table's spacing. */
-      #midasquote-dashboard #mq-spec-table th{padding:10px 9px}
-      #midasquote-dashboard #mq-spec-table td{padding:12px 9px}
       #midasquote-dashboard .mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:#111}
       #midasquote-dashboard #mq-spec-table td{vertical-align:top;padding-top:14px}
       #midasquote-dashboard #mq-spec-table{border-collapse:separate;border-spacing:0 10px}
@@ -4070,7 +4047,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Variants</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -4084,20 +4061,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <td class="mq-spec-drag-handle" style="color:#9ca3af;font-size:16px;padding:8px 12px;cursor:grab">⠿</td>
               <td>
                 <div style="display:flex;flex-direction:column;gap:2px">
-                  <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:150px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:150px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
-                    <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
-                    <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
-                  </div>
+                  <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:180px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                  <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                  <button class="mq-btn mq-btn-danger mq-btn-sm" style="align-self:flex-start;margin-top:2px" onclick="mqDeleteSpec('${r.id}')">Delete</button>
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
+              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants column"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>${variantCount ? '' : mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}</td>
               <td>
-                <div style="position:relative;display:inline-block;width:80px">
-                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-                  <span id="mq-spec-pricex-${r.id}" style="display:${variantCount ? 'flex' : 'none'};position:absolute;inset:0;align-items:center;justify-content:center;pointer-events:none;color:#dc2626;font-size:20px;font-weight:800;line-height:1">✕</span>
-                </div>
+                <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
               </td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
@@ -4109,7 +4081,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             </tr>
             <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
               <td></td>
-              <td colspan="10" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
+              <td colspan="11" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -5180,10 +5152,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           // own card here instead, clearly labeled "Item — Variant" so it's
           // obvious which option each photo belongs to. Variants themselves
           // are still added/renamed/priced on the Specialty Items tab, not
-          // here — this is photos and best-seller badges only, same as
-          // every other item on this tab (photoCard already wires up the
-          // "Mark as Best seller" checkbox generically via savedFeatured,
-          // so nothing extra was needed to support it per-variant).
+          // here — this is photos only, same as every other item on this tab.
           if (!variants.length) {
             return [`<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}">
               ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
@@ -5326,32 +5295,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // keep it in sync whenever the name changes, or it's left showing a
       // stale label (like "New template item") forever after a rename.
       if (field === 'Item name') updates['Special Items'] = value;
-      // Keep the in-memory record in sync too, not just Airtable — the
-      // variants panel's header ("Variants for '<name>'") and its
-      // "+ Add a variant to '<name>'" button both read r.fields['Item name']
-      // fresh every time they re-render. Without this, renaming an item kept
-      // showing its old name (e.g. the default "New item") on that panel
-      // forever, even though the rename itself saved fine.
-      const r = (window._mqSpecRecords||[]).find(x => x.id === id);
-      if (r) Object.assign(r.fields, updates);
-      if (field === 'Item name') mqRefreshVariantsPanel(id);
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
   // ===================== Specialty item variants =====================
   // A specialty item can optionally have variants (e.g. a "Crown Molding"
-  // item offered in Maple/Oak/MDF) — each with its own label/price,
-  // everything else (category, project types, pricing method, Active, Pro
-  // only) staying shared on the parent item. Stored as one JSON field
-  // ('Variants') on the Specialty Items table, the same pattern already
-  // used for 'Visible rooms' — no new Airtable table, no separate
-  // relational linking, just an array on the record itself.
-  // Photos and best-seller badges for each variant are NOT part of this
-  // JSON at all — same as every other product's photo/badge, they live in
-  // the shop-wide Photos/Featured items maps, edited from the Products tab
-  // and keyed 'spec_<itemId>_v<variantId>' so they survive a variant being
-  // reordered or another variant being removed.
+  // item offered in Maple/Oak/MDF) — each with its own label/price/photo/
+  // best-seller flag, everything else (category, project types, pricing
+  // method, Active, Pro only) staying shared on the parent item. Stored as
+  // one JSON field ('Variants') on the Specialty Items table, the same
+  // pattern already used for 'Visible rooms' — no new Airtable table, no
+  // separate relational linking, just an array on the record itself.
   function mqParseVariants(r) {
     try {
       const v = JSON.parse(r?.fields?.['Variants'] || '[]');
@@ -5373,6 +5328,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;white-space:nowrap;cursor:pointer"><input type="checkbox" ${v.featured?'checked':''} onchange="mqSaveVariantField('${r.id}',${vi},'featured',this.checked)" style="width:14px;height:14px;accent-color:#f59e0b"/> 🏆 Best seller</label>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
       </div>`).join('');
     // Boxed with a colored left border and the item's own name repeated in
@@ -5386,7 +5342,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
         ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5"><span style="color:#dc2626;font-weight:800;margin-right:4px">✕</span>That's the red X on the Price field in the main row above — it's ignored once at least one variant exists, since each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos and best-seller badges for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
       </div>`;
   }
 
@@ -5408,18 +5364,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.style.color = n ? '#4338ca' : '#6b7280';
     }
     // Price field is meaningless once variants exist — disable it in place
-    // rather than making the shop owner guess why it's not being used, and
-    // stamp a red X right over it as a visual flag pointing at exactly
-    // which field just went dead — the "why" is spelled out in the
-    // variants panel below, which opens with the same red X so the two
-    // connect at a glance instead of the shop owner having to piece it
-    // together from a disabled input alone.
+    // rather than making the shop owner guess why it's not being used.
     const priceInput = document.getElementById(`mq-spec-price-${id}`);
     if (priceInput) {
       priceInput.disabled = n > 0;
       priceInput.title = n > 0 ? 'Priced per variant — see the Variants column' : '';
-      const priceX = document.getElementById(`mq-spec-pricex-${id}`);
-      if (priceX) priceX.style.display = n > 0 ? 'flex' : 'none';
     }
   }
 
@@ -5440,7 +5389,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // separately in the Products tab) is keyed by this id, so it has to
     // survive other variants being added/removed/reordered later.
     const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    variants.push({ id: newId, label: '', price: null });
+    variants.push({ id: newId, label: '', price: 0, featured: false });
     r.fields['Variants'] = JSON.stringify(variants);
     mqRefreshVariantsPanel(id);
     mqRefreshSpecVariantUI(id);
@@ -5484,6 +5433,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty unit field', e); }
+    // The metric rate-calculator icon only makes sense once this item has
+    // an actual per-unit price — show/hide it in step with the checkboxes.
+    const iconWrap = document.getElementById(`mq-spec-price-calcwrap-${id}`);
+    if (iconWrap) {
+      const ftBox = document.getElementById(`mq-spec-perft-${id}`);
+      const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
+      iconWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'inline-flex' : 'none';
+    }
   };
 
   // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
@@ -5503,6 +5460,105 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
     } catch(e) { console.error('Failed to save specialty install unit field', e); }
+    const iconWrap = document.getElementById(`mq-spec-installprice-calcwrap-${id}`);
+    if (iconWrap) {
+      const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
+      const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
+      iconWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'inline-flex' : 'none';
+    }
+  };
+
+  // A shop owner thinking in metric shouldn't have to do the sqft/linft
+  // math themselves just to set a rate — this small blue calculator icon
+  // (shown only once Per lin ft / Per sq ft is actually checked, since a
+  // flat-price item has no unit to convert) opens a tiny popover where they
+  // type their rate per square metre or per linear metre, and it converts
+  // and drops the equivalent $/sqft or $/linft straight into the price
+  // field. The stored rate and the widget's own pricing math never change
+  // — this is purely a friendlier way to type the same number.
+  function mqSpecRateCalcIconHTML(id, isInstall, visible) {
+    const wrapId = isInstall ? `mq-spec-installprice-calcwrap-${id}` : `mq-spec-price-calcwrap-${id}`;
+    const svg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
+    return `<button type="button" id="${wrapId}" onclick="mqShowSpecRateCalc(this,'${id}',${isInstall ? 'true' : 'false'},event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:${visible ? 'inline-flex' : 'none'};align-items:center;justify-content:center;width:22px;height:22px;background:#eff6ff;border:1px solid #93c5fd;border-radius:5px;cursor:pointer;padding:0;margin-left:5px;vertical-align:middle">${svg}</button>`;
+  }
+
+  window.mqShowSpecRateCalc = function(triggerEl, id, isInstall, event) {
+    if (event) event.stopPropagation();
+    const perFtChecked = document.getElementById(isInstall ? `mq-spec-installperft-${id}` : `mq-spec-perft-${id}`)?.checked;
+    const mode = perFtChecked ? 'linear' : 'sqft'; // icon is only ever shown once one of the two is checked
+    const fieldId = isInstall ? `mq-spec-installprice-${id}` : `mq-spec-price-${id}`;
+    let pop = document.getElementById('mq-spec-rate-calc-popover');
+    const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'mq-spec-rate-calc-popover';
+      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#fff;color:#111;font-size:13px;line-height:1.5;padding:14px;border-radius:10px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid #e5e7eb';
+      // Without this, clicking anything inside the popover (the input, the
+      // buttons) bubbles up to the document-level listener that closes it
+      // on outside-click — which would close it before a click ever landed.
+      pop.addEventListener('click', (e) => e.stopPropagation());
+      document.body.appendChild(pop);
+    }
+    if (alreadyOpenForThis) { pop.style.display = 'none'; return; } // clicking the same icon again closes it
+    pop._trigger = triggerEl;
+    pop._fieldId = fieldId;
+    pop._mode = mode;
+    const unitLabel = mode === 'linear' ? 'linear metre' : 'square metre (m²)';
+    const targetUnitLabel = mode === 'linear' ? 'lin ft' : 'sq ft';
+    pop.innerHTML = `
+      <div style="font-weight:700;margin-bottom:8px;font-size:13px">🧮 Enter rate per ${unitLabel}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="color:#6b7280">$</span>
+        <input type="number" id="mq-spec-rate-calc-input" placeholder="0.00" style="flex:1;min-width:0;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" oninput="mqSpecRateCalcUpdate()"/>
+      </div>
+      <div style="background:#f0fdf4;border-radius:6px;padding:8px 10px;margin-bottom:10px;text-align:center">
+        <div style="font-size:11px;color:#6b7280">= per ${targetUnitLabel}</div>
+        <div id="mq-spec-rate-calc-result" style="font-size:15px;font-weight:700;color:#166534">$0.00</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button type="button" onclick="mqCloseSpecRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+        <button type="button" onclick="mqApplySpecRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:none;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Use this</button>
+      </div>`;
+    const rect = triggerEl.getBoundingClientRect();
+    pop.style.display = 'block';
+    pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    pop.style.left = Math.max(8, window.scrollX + rect.left - 100) + 'px';
+    setTimeout(() => document.getElementById('mq-spec-rate-calc-input')?.focus(), 50);
+  };
+
+  window.mqSpecRateCalcUpdate = function() {
+    const pop = document.getElementById('mq-spec-rate-calc-popover');
+    const input = document.getElementById('mq-spec-rate-calc-input');
+    const resultEl = document.getElementById('mq-spec-rate-calc-result');
+    if (!pop || !input || !resultEl) return;
+    const val = parseFloat(input.value) || 0;
+    // 1 sqft = 0.092903 sqm, 1 ft = 0.3048 m — so a rate per sqm/per linear
+    // metre converts to a rate per sqft/linft by multiplying by the same
+    // factors (dollars-per-bigger-unit -> dollars-per-smaller-unit shrinks).
+    const converted = pop._mode === 'linear' ? val * 0.3048 : val * 0.092903;
+    resultEl.textContent = '$' + converted.toFixed(2);
+  };
+
+  window.mqApplySpecRateCalc = function() {
+    const pop = document.getElementById('mq-spec-rate-calc-popover');
+    const input = document.getElementById('mq-spec-rate-calc-input');
+    if (!pop || !input || !pop._fieldId) return;
+    const val = parseFloat(input.value) || 0;
+    const converted = pop._mode === 'linear' ? val * 0.3048 : val * 0.092903;
+    const rounded = Math.round(converted * 100) / 100;
+    const targetEl = document.getElementById(pop._fieldId);
+    if (targetEl) {
+      targetEl.value = rounded;
+      // The price field saves on blur (onblur="mqSaveSpecField(...)") — this
+      // triggers that same handler rather than duplicating its save logic.
+      targetEl.dispatchEvent(new Event('blur', { bubbles: true }));
+    }
+    mqCloseSpecRateCalc();
+  };
+
+  window.mqCloseSpecRateCalc = function() {
+    const pop = document.getElementById('mq-spec-rate-calc-popover');
+    if (pop) pop.style.display = 'none';
   };
 
   // Builds whichever content belongs in the "Installed price / Mode" column
@@ -5518,7 +5574,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="font-size:11px;color:#6b7280">Install price (labor only, added on top)</span>
           <span onclick="mqShowSpecHelpPopover(this,'e.g. \$54.95/sqft to supply a door + \$16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>
+        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="$0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
           <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per lin ft</label>
           <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per sq ft</label>
@@ -5528,7 +5584,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
           <span onclick="mqShowSpecHelpPopover(this,'This only shows to customers when install is priced differently than supply. Type your own question to customize it, or leave blank to use the placeholder text shown below as the default.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:175px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
+        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
     }
     const mode = r.fields['Install mode'] || 'supply';
     return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
@@ -8708,7 +8764,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
+        script.src = 'https://widget.midasquote.com/pricinghelper-v2-test.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
