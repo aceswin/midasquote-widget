@@ -5323,7 +5323,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <span id="mq-sticky-real" style="display:none;font-size:12px;font-weight:700;color:#fbbf24;margin-left:8px;white-space:nowrap">💰 Real: <span id="mq-sticky-real-val">—</span></span> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
@@ -5518,6 +5518,23 @@ window.mqTogDrawerConfig=(prefix)=>{
     const allNoRange = cart.every(e => !e.showRange) && !mqShouldShowRange(prefix);
     const prev = window._mqStickyLast;
     el.textContent = allNoRange ? ('$' + Math.round(combinedTotal).toLocaleString()) : fmtRange(combinedLow, combinedHigh);
+    // Pro is the shop owner's own tool, not the customer-facing widget — so
+    // whenever the primary number above is the customer-safe range (i.e.
+    // not already the exact total), also surface the real exact total right
+    // next to it, live, the same way the post-Calculate results panel
+    // already shows "💰 Your real total" alongside "Customer sees this
+    // range". No need to duplicate it when the primary number IS already
+    // the exact total (range toggled off for every contributor).
+    const realEl = document.getElementById('mq-sticky-real');
+    const realValEl = document.getElementById('mq-sticky-real-val');
+    if (realEl && realValEl) {
+      if (allNoRange) {
+        realEl.style.display = 'none';
+      } else {
+        realValEl.textContent = '$' + Math.round(combinedTotal).toLocaleString();
+        realEl.style.display = 'inline';
+      }
+    }
     if (animate && prev) {
       const prevMid = (prev.low + prev.high) / 2;
       const newMid = (combinedLow + combinedHigh) / 2;
