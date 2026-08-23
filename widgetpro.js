@@ -3852,6 +3852,15 @@
       // at, and switching away from an empty tab correctly commits nothing.
       const allEntries = preview ? [...cart, preview] : cart;
 
+      // Pro is the shop owner's own tool, not the customer-facing widget —
+      // so any row still showing the customer-safe ballpark range also gets
+      // its own real exact total right next to it (to the left of the
+      // range, same "💰 Real" language as the main sticky number above).
+      // Only skip it when the row's already showing the exact number with
+      // no range at all — nothing to add there.
+      const realBadge = entry => entry.showRange
+        ? `<span style="font-size:11.5px;font-weight:700;color:#fbbf24;white-space:nowrap">💰 Real: $${Math.round(entry.total).toLocaleString()}</span>`
+        : '';
       const buildRows = (textColor, mutedColor) => allEntries.map(entry => {
         const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : ('$' + Math.round(entry.total).toLocaleString());
         const isPreview = !entry.id; // committed entries always have an id; the live preview never does
@@ -3859,6 +3868,7 @@
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:${textColor}${isPreview ? ';font-style:italic;opacity:0.85' : ''}">
           <span>${entry.label}</span>
           <span style="display:flex;align-items:center;gap:8px">
+            ${realBadge(entry)}
             <strong>${priceText}</strong>
             ${removeBtn}
           </span>
@@ -3886,8 +3896,11 @@
             stickyBreakdown.style.display = 'block';
             if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
           }
+          const totalRealBadge = !allNoRange
+            ? `<span style="font-size:11.5px;font-weight:700;color:#fbbf24;white-space:nowrap">💰 Real: $${Math.round(totalExact).toLocaleString()}</span>`
+            : '';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
-            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`
+            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span style="display:flex;align-items:center;gap:8px">${totalRealBadge}<span>${totalText}</span></span></div>`
             + `<div style="text-align:right;padding-top:6px"><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
         }
         mqAdjustWidgetBottomPadding();
