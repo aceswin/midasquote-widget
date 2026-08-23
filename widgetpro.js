@@ -3896,11 +3896,11 @@
             stickyBreakdown.style.display = 'block';
             if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
           }
-          const totalRealBadge = !allNoRange
-            ? `<span style="font-size:11.5px;font-weight:700;color:#fbbf24;white-space:nowrap">💰 Real: $${Math.round(totalExact).toLocaleString()}</span>`
-            : '';
+          // No real-total badge on this Total row — the main sticky number
+          // just above (top-left of the bar) already shows the real total,
+          // so repeating it here would be redundant.
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
-            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span style="display:flex;align-items:center;gap:8px">${totalRealBadge}<span>${totalText}</span></span></div>`
+            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span style="display:flex;align-items:center;gap:8px"><span>${totalText}</span></span></div>`
             + `<div style="text-align:right;padding-top:6px"><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
         }
         mqAdjustWidgetBottomPadding();
