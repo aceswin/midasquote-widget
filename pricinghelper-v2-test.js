@@ -51,17 +51,22 @@ let wizardBaseline = null;
     return data.records || [];
   }
   async function atCreate(table, fields) {
-    const res = await fetch(`${AT_BASE_URL()}/${table}`, { method: 'POST', headers: AT_HEADS(), body: JSON.stringify({ fields }) });
+    // typecast:true lets Airtable auto-add a new option to a Single Select
+    // field instead of rejecting the request with a 422 when the value
+    // isn't already one of the field's known choices.
+    const res = await fetch(`${AT_BASE_URL()}/${table}`, { method: 'POST', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
+      console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
     }
     return await res.json();
   }
   async function atUpdate(table, id, fields) {
-    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'PATCH', headers: AT_HEADS(), body: JSON.stringify({ fields }) });
+    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'PATCH', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
+      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
     }
     return await res.json();
@@ -2832,18 +2837,20 @@ window.mqphGoToWizard = function() {
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
-              <div style="display:flex;align-items:center;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-trim-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">/ lin ft</span>
+                ${mqphRateCalcIconHTML('mqph-trim-supply-rate', '', 'linear')}
               </div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate (per linear foot)</div>
-              <div style="display:flex;align-items:center;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-trim-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">/ lin ft</span>
+                ${mqphRateCalcIconHTML('mqph-trim-install-rate', '', 'linear')}
               </div>
             </div>
             <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
@@ -2966,7 +2973,7 @@ window.mqphGoToWizard = function() {
         <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Quote this exact tall cabinet in your software, then enter the total below.</p>
         ${specBox([
           `<strong>${name}</strong>`,
-          `Width: <span class="mqph-spec-tag">24"</span> (standard tall cabinet width)`,
+          `Width: <span class="mqph-spec-tag">24" (610mm)</span> (standard tall cabinet width)`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName||'your baseline material'}</span>`,
           `<strong>No doors · No hinges · Supply only · No install · Local delivery</strong>`,
           `Include the box, shelves, and any interior fittings specific to this type (pullouts, drawer boxes, etc.)`,
@@ -3090,18 +3097,27 @@ window.mqphGoToWizard = function() {
   // the Supply/Install rate field. The stored rate and the widget's own
   // pricing math never change — this is purely a friendlier way to type
   // the same number.
-  function mqphRateCalcIconHTML(targetInputId, targetUnitSelectId) {
+  // targetUnitSelectId: id of a <select> whose current value ('lin ft' vs
+  // anything else) decides linear-vs-sqft mode. Pass forcedMode ('linear' or
+  // 'sqft') instead when there's no unit dropdown at all — e.g. Crown/Valance
+  // rates, which are always per linear foot.
+  function mqphRateCalcIconHTML(targetInputId, targetUnitSelectId, forcedMode) {
     const svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
     return `<span style="display:inline-flex;align-items:center;gap:7px;margin-left:6px">
       <span style="font-size:11px;color:#2563eb;font-weight:600;white-space:nowrap">Use metric?</span>
-      <button type="button" onclick="mqphShowRateCalc(this,'${targetInputId}','${targetUnitSelectId}',event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
+      <button type="button" onclick="mqphShowRateCalc(this,'${targetInputId}','${targetUnitSelectId||''}',event,'${forcedMode||''}')" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
     </span>`;
   }
 
-  window.mqphShowRateCalc = function(triggerEl, targetInputId, targetUnitSelectId, event) {
+  window.mqphShowRateCalc = function(triggerEl, targetInputId, targetUnitSelectId, event, forcedMode) {
     if (event) event.stopPropagation();
-    const unitSelect = document.getElementById(targetUnitSelectId);
-    const mode = (unitSelect?.value === 'lin ft') ? 'linear' : 'sqft';
+    let mode;
+    if (forcedMode === 'linear' || forcedMode === 'sqft') {
+      mode = forcedMode;
+    } else {
+      const unitSelect = document.getElementById(targetUnitSelectId);
+      mode = (unitSelect?.value === 'lin ft') ? 'linear' : 'sqft';
+    }
     let pop = document.getElementById('mqph-rate-calc-popover');
     const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
     if (!pop) {

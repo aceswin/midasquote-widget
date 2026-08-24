@@ -583,6 +583,19 @@
       #midasquote-widget .mq-spec-variant-picker .mq-vpicker-label{font-size:9.5px}
       #midasquote-widget .mq-spec-variant-picker .mq-vpicker-select-btn{font-size:9px;padding:3px 7px;margin-top:3px}
       #midasquote-widget .mq-spec-variant-picker .mq-vpicker-featured-badge{font-size:7px;max-width:70px}
+      /* Confirmed regression fix: the variant picker's arrows previously
+         overlapped the next chip's badge/label at this narrow width (the
+         round arrow is fine floating over the wide 130px photo/material
+         chips, but not over these scaled-down 74px ones). Making the wrap
+         a real flex row and the arrows real flex items — not absolutely
+         positioned — gives each arrow its own reserved column so it can
+         never sit on top of a chip at any scroll position. Only .show
+         still gates visibility; everything else about how/when arrows
+         appear is untouched. */
+      #midasquote-widget .mq-spec-variant-wrap{display:flex;align-items:center;gap:2px}
+      #midasquote-widget .mq-spec-variant-wrap .mq-vpicker-row{flex:1;min-width:0}
+      #midasquote-widget .mq-spec-variant-wrap .mq-vpicker-arrow{position:static;transform:none;width:24px;height:24px;font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,0.2),0 0 0 1px rgba(0,0,0,0.06);flex-shrink:0}
+      #midasquote-widget .mq-spec-variant-wrap .mq-vpicker-arrow:hover{transform:scale(1.06)}
       /* Sticky estimate bar — appears after the first real Calculate, then
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
@@ -1454,7 +1467,19 @@
     // mq-spec-scroll-wrap marks this as a specialty-items-style row — see
     // the touch-device media query below, which re-enables the "more
     // items" arrow just for these rows.
-    return `<div class="mq-vpicker-wrap mq-spec-scroll-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
+    // A specialty item's own variant picker (mq-spec-variant-picker) is
+    // much narrower than the main photo/material picker — the round,
+    // absolutely-positioned arrow the wide picker uses floats right over
+    // the row's own edge, and at this width there's no scroll position
+    // where that doesn't land on top of some chip's badge/label (confirmed
+    // visually — see mq-spec-variant-wrap below for the fix). So this one
+    // context gets an extra wrap class making both arrows real flex
+    // siblings with their own reserved column instead, reusing the exact
+    // same ids/classes mqUpdatePickerArrow/mqScrollPickerRow already
+    // toggle and click — no JS logic changes needed, only CSS.
+    const narrowVariantPicker = extraClass === 'mq-spec-variant-picker';
+    const wrapClass = `mq-vpicker-wrap mq-spec-scroll-wrap${narrowVariantPicker ? ' mq-spec-variant-wrap' : ''}`;
+    return `<div class="${wrapClass}"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
   }
   // Builds the thumbnail+badges markup for one specialty item's current
   // "active" photo/badge/featured state — shared between specHTML's initial
@@ -5916,20 +5941,16 @@ window.mqTogDrawerConfig=(prefix)=>{
             try { localStorage.setItem(storageKey, '1'); } catch(e) {}
             const p = document.getElementById('mq-tips-popup');
             if (p) { p.style.opacity='0'; p.style.transition='opacity 0.2s'; setTimeout(()=>p.remove(), 200); }
-
-
-
           };
           setTimeout(() => document.body.appendChild(popup), 1000);
         }
-      } catch(e) { /*  jlocalStorage unavailable — skip popup */ }
+      } catch(e) { /* localStorage unavailable — skip popup */ }
     }
   }
 
   init();
   mqInitMobileFontFix();
   mqInitBottomBounceAutoOpen();
-
 
 
 })();
