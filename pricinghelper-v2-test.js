@@ -3800,7 +3800,7 @@ window.mqphGoToWizard = function() {
       _recordId: passedShopRecord.id,
       _shopName: (passedShopRecord.fields && passedShopRecord.fields['Shop name']) || '',
       _baseId:   'app4zrMlVLwF2xn4h',
-      _token:    'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
+      _token:    'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
       _pricingTable: 'tblu6AYZs8h7SIaQl',
     };
     pricingRecord = passedPricingRecord;
