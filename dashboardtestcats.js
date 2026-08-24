@@ -46,10 +46,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   async function atUpdate(table, id, fields) {
     const res = await fetch(`${AT_BASE}/${table}/${id}`, {
       method: 'PATCH', headers: AT_HEADS,
-      body: JSON.stringify({ fields })
+      // typecast:true lets Airtable auto-add a new option to a Single Select
+      // field (like "Currency symbol") instead of rejecting the request with
+      // a 422 when the value isn't already one of the field's known choices.
+      body: JSON.stringify({ fields, typecast: true })
     });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
+      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
     }
     return await res.json();
@@ -58,10 +62,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   async function atCreate(table, fields) {
     const res = await fetch(`${AT_BASE}/${table}`, {
       method: 'POST', headers: AT_HEADS,
-      body: JSON.stringify({ fields })
+      body: JSON.stringify({ fields, typecast: true })
     });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
+      console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
     }
     return await res.json();
@@ -4248,7 +4253,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         }
       }
       showMsg('mq-shop-msg', '✓ Shop info saved!');
-    } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
+    } catch(e) { console.error('mqSaveShop failed:', e); showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
   };
 
   window.mqSavePricing = async function() {
