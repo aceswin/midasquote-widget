@@ -8967,11 +8967,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
     }
     if (page === 'pricing') {
-      const helperContainer = document.getElementById('mq-pricinghelper-v2-test.js');
+      const helperContainer = document.getElementById('mq-pricinghelper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
+        script.src = 'https://widget.midasquote.com/pricinghelper-v2-test.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
