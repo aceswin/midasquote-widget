@@ -638,7 +638,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
-        #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:auto;scrollbar-color:#9ca3af #f3f4f6}
+        #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar{height:10px}
+        #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-track{background:#f3f4f6;border-radius:6px}
+        #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:6px}
+        #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb:hover{background:#6b7280}
         #midasquote-dashboard .mq-table{min-width:560px}
       }
     `;
@@ -4080,7 +4084,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Variants</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
+        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -4096,14 +4100,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 <div style="display:flex;flex-direction:column;gap:2px">
                   <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:180px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
                   <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <button class="mq-btn mq-btn-danger mq-btn-sm" style="align-self:flex-start;margin-top:2px" onclick="mqDeleteSpec('${r.id}')">Delete</button>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+                    <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
+                    <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
+                  </div>
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants column"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>${variantCount ? '' : mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}</td>
-              <td>
-                <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
-              </td>
+              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>${variantCount ? '' : mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}</td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
@@ -4114,7 +4118,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             </tr>
             <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
               <td></td>
-              <td colspan="11" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
+              <td colspan="10" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -5416,7 +5420,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const priceInput = document.getElementById(`mq-spec-price-${id}`);
     if (priceInput) {
       priceInput.disabled = n > 0;
-      priceInput.title = n > 0 ? 'Priced per variant — see the Variants column' : '';
+      priceInput.title = n > 0 ? 'Priced per variant — see the Variants pill under the item name' : '';
     }
   }
 
@@ -8831,7 +8835,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricinghelper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
