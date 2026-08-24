@@ -5922,7 +5922,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           };
           setTimeout(() => document.body.appendChild(popup), 1000);
         }
-      } catch(e) { /* localStorage unavailable — skip popup */ }
+      } catch(e) { /*  jlocalStorage unavailable — skip popup */ }
     }
   }
 
