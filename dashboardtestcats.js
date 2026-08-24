@@ -8967,7 +8967,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
     }
     if (page === 'pricing') {
-      const helperContainer = document.getElementById('mq-pricinghelper-v2');
+      const helperContainer = document.getElementById('mq-pricing-helper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
