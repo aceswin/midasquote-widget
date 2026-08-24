@@ -11,6 +11,15 @@
     EMAIL_WORKER:    'https://midasquote-email.jordan132001.workers.dev',
   };
 
+  // A UK (or any non-North-American) shop can pick their own currency
+  // symbol on the dashboard's Shop Info tab — everywhere on the widget
+  // that used to show a hardcoded "$" now reads it from here instead,
+  // falling back to "$" for shops that haven't set one. window._mqShopData
+  // isn't populated until loadShopData() resolves, so this only returns
+  // the shop's real symbol once quote data has actually loaded — every
+  // caller here only runs after that point anyway.
+  function CUR() { return (window._mqShopData && window._mqShopData['Currency symbol']) || '$'; }
+
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
@@ -196,23 +205,22 @@
         let variants = [];
         try { variants = r.fields['Variants'] ? JSON.parse(r.fields['Variants']) : []; } catch(e) { variants = []; }
         if (!Array.isArray(variants)) variants = [];
-        // Variant photos AND best-seller flags are NOT stored in the
-        // Variants JSON itself — they're managed in the dashboard's
-        // Products tab (My Products → Specialty Items), using the exact
-        // same shop-wide photo/featured maps every other product already
-        // uses, both keyed 'spec_<itemId>_v<variantId>'.
+        // Variant photos are NOT stored in the Variants JSON itself — they're
+        // managed in the dashboard's Products tab (My Products → Specialty
+        // Items), using the exact same shop-wide photo map every other
+        // product photo already uses, keyed 'spec_<itemId>_v<variantId>'.
         // Each variant carries its own stable `id` (assigned by the
         // dashboard the moment it's created) rather than relying on its
-        // position in the array, so a variant's photo/badge stays
-        // correctly matched to it even after some other variant earlier in
-        // the list gets removed and everything after it shifts down.
+        // position in the array, so a variant's photo stays correctly
+        // matched to it even after some other variant earlier in the list
+        // gets removed and everything after it shifts down.
         variants = variants.map((v, vi) => {
           const vid = (v && v.id) || ('i' + vi);
           return {
             label: ((v && v.label) || '').trim(),
             price: (v && v.price) || 0,
             photoUrl: shopPhotos['spec_' + r.id + '_v' + vid] || '',
-            featured: !!shopFeatured['spec_' + r.id + '_v' + vid],
+            featured: !!(v && v.featured),
           };
         }).filter(v => v.label);
         // $/$$/$$$ badges assigned per-item across just that item's own
@@ -300,7 +308,7 @@
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
       .map(l=>l.header
         ? `<tr><td colspan="2" style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:14px;text-transform:uppercase;letter-spacing:0.04em">${l.label}</td></tr>`
-        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${'$'}${Math.round(l.cost).toLocaleString()}</td></tr>`
+        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${CUR()}${Math.round(l.cost).toLocaleString()}</td></tr>`
       ).join('');
 
     if (!lead._isSkip || shop['Notify on every estimate'] === 'Yes') await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name || 'Anonymous visitor'}`,
@@ -317,7 +325,7 @@
         </table>
         <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center">
           <div style="font-size:14px;color:#666;margin-bottom:4px">Estimated range</div>
-          <div style="font-size:28px;font-weight:700;color:#16a34a">$${low.toLocaleString()} – $${high.toLocaleString()}</div>
+          <div style="font-size:28px;font-weight:700;color:#16a34a">${CUR()}${low.toLocaleString()} – ${CUR()}${high.toLocaleString()}</div>
         </div>
       </div>`);
 
@@ -512,8 +520,8 @@
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:block}
-      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
-      #midasquote-widget .mq-spec-top{display:flex;align-items:flex-start;gap:8px}
+      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
+      #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
       #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;display:block}
@@ -521,8 +529,8 @@
       #midasquote-widget .mq-spec-category-group{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 14px 14px;background:#fafafa;box-shadow:0 8px 20px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.08)}
       #midasquote-widget .mq-spec-category-heading{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#1d4ed8}
-      #midasquote-widget .mq-spec-thumb{width:92px;height:92px;border-radius:6px;object-fit:contain;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
-      #midasquote-widget .mq-spec-thumb-placeholder{width:92px;height:92px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
+      #midasquote-widget .mq-spec-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;flex-shrink:0;cursor:zoom-in;border:1px solid #e5e7eb;background:#f3f4f6}
+      #midasquote-widget .mq-spec-thumb-placeholder{width:116px;height:116px;border-radius:6px;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280;border:1px solid #e5e7eb}
       #midasquote-widget .mq-vpicker-row{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
       #midasquote-widget .mq-vpicker-row::-webkit-scrollbar{display:none}
       #midasquote-widget .mq-vpicker-wrap{position:relative}
@@ -563,36 +571,18 @@
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
       #midasquote-widget .mq-vpicker-featured-badge{position:absolute;top:-6px;left:-6px;font-size:8px;font-weight:700;padding:2px 5px;border-radius:8px;background:#f59e0b;color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
       /* A specialty item's own variant picker (e.g. Maple/Oak/MDF under one
-         "Crown Molding" item) is a row of plain text pill buttons, NOT photo
-         chips — the card already shows one big photo up top (.mq-spec-thumb)
-         that swaps to match whichever variant is picked, so giving each pill
-         its own smaller photo too was pure visual duplication (and cramped,
-         inside a 280px-wide card). A pill is directly clickable to select it
-         — no separate photo + name + "Select" button stack needed when
-         there's no photo on the pill itself. */
-      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 4px;flex:1;min-width:0}
-      #midasquote-widget .mq-vpicker-variant-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-family:inherit;font-size:12px;color:#374151;cursor:pointer;transition:all 0.15s;white-space:nowrap}
-      #midasquote-widget .mq-vpicker-variant-chip:hover{border-color:#d1d5db;background:#f9fafb}
-      #midasquote-widget .mq-vpicker-variant-chip.selected{border-color:${bc};background:${bc};color:#fff}
-      #midasquote-widget .mq-vpicker-variant-star{font-size:10px}
-      #midasquote-widget .mq-vpicker-variant-tier{font-size:10px;opacity:0.7}
-      /* The round scroll arrows every other picker uses are absolutely
-         positioned right over the row's own edge — fine for wide photo
-         chips, but there's no scroll position where that doesn't land on
-         top of SOME pill's text in this slimmer picker (padding out a
-         gutter only helped at the very start/end of the scrollable range,
-         not mid-scroll, where the arrow still floats over whatever pill
-         happens to be at the edge). Real fix for variant pickers
-         specifically: the arrows are genuine flex siblings of the scroll
-         row (see mqVariantScrollWrap), not absolutely positioned over it —
-         each has its own reserved column of space to the left/right of the
-         pills, so there's no scroll position where either arrow can ever
-         sit on top of pill text. Reuses the exact same ids/classes
-         mqUpdatePickerArrow/mqScrollPickerRow already toggle and click, so
-         no JS changes were needed, only where the buttons render. */
-      #midasquote-widget .mq-vpicker-arrow-inline{display:none;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;border:1px solid #d1d5db;background:#fff;font-size:13px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit;padding:0;flex-shrink:0}
-      #midasquote-widget .mq-vpicker-arrow-inline.show{display:inline-flex}
-      #midasquote-widget .mq-vpicker-arrow-inline:hover{background:#f3f4f6}
+         "Crown Molding" item) reuses the exact same mq-vpicker-chip
+         component as the door/material picker, just scaled down — it lives
+         inside a 280px-wide mq-spec-item card, not the full-width picker
+         area, so the normal 130px chip/116px thumb would barely fit two at
+         once. Everything else (badges, selected state, arrows) is identical. */
+      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 6px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-chip{width:74px;padding:4px;border-radius:8px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-thumb,
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-thumb-placeholder{width:62px;height:62px;font-size:15px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-label{font-size:9.5px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-select-btn{font-size:9px;padding:3px 7px;margin-top:3px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-featured-badge{font-size:7px;max-width:70px}
       /* Sticky estimate bar — appears after the first real Calculate, then
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
@@ -1159,14 +1149,14 @@
     const priceOf = it => (it.badgePrice != null ? it.badgePrice : it.price);
     const sorted = [...realItems].sort((a,b)=>priceOf(a)-priceOf(b));
     const allEqual = sorted.every(it => priceOf(it) === priceOf(sorted[0]));
-    if (allEqual) { sorted.forEach(it => it.badge = '$'); return sorted; }
+    if (allEqual) { sorted.forEach(it => it.badge = CUR()); return sorted; }
     const n = sorted.length;
-    if (n === 2) { sorted[0].badge='$'; sorted[1].badge='$$$'; }
-    else if (n === 3) { sorted[0].badge='$'; sorted[1].badge='$$'; sorted[2].badge='$$$'; }
+    if (n === 2) { sorted[0].badge=CUR(); sorted[1].badge=CUR().repeat(3); }
+    else if (n === 3) { sorted[0].badge=CUR(); sorted[1].badge=CUR().repeat(2); sorted[2].badge=CUR().repeat(3); }
     else {
       const min = priceOf(sorted[0]), max = priceOf(sorted[n-1]), range = max-min;
       const b1 = min + range/3, b2 = min + 2*range/3;
-      sorted.forEach(it => { const p = priceOf(it); it.badge = p<=b1 ? '$' : (p<=b2 ? '$$' : '$$$'); });
+      sorted.forEach(it => { const p = priceOf(it); it.badge = p<=b1 ? CUR() : (p<=b2 ? CUR().repeat(2) : CUR().repeat(3)); });
     }
     return sorted;
   }
@@ -1282,18 +1272,6 @@
     const leftArrow = document.getElementById(`mq-vparrow-left-${selectId}`);
     if (!row || !arrow) return;
     const hasOverflow = row.scrollWidth > row.clientWidth + 4;
-    // The variant picker's arrows live in their own row below the pills
-    // (see mqVariantScrollWrap) instead of floating over the edges, so
-    // there's no overlap risk in keeping both visible the whole time —
-    // and doing so is what Jordan asked for, since a lone right arrow
-    // gave no hint that scrolling left was ever possible once you'd
-    // scrolled part-way. Every other picker (photo rows, etc.) keeps the
-    // original near-start/near-end hiding behavior.
-    if (row.classList.contains('mq-spec-variant-picker')) {
-      arrow.classList.toggle('show', hasOverflow);
-      if (leftArrow) leftArrow.classList.toggle('show', hasOverflow);
-      return;
-    }
     const nearEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
     const nearStart = row.scrollLeft <= 4;
     arrow.classList.toggle('show', hasOverflow && !nearEnd);
@@ -1305,17 +1283,7 @@
   window.mqScrollPickerRow = function(selectId, direction) {
     const row = document.getElementById(`mq-vprow-${selectId}`);
     if (!row) return;
-    // Explicit clamped absolute target instead of scrollBy's relative delta —
-    // on mobile, tapping an arrow repeatedly while the previous smooth scroll
-    // is still animating let scrollBy's relative math stack past the row's
-    // real end (or start), landing on blank space beyond the last/first
-    // pill and needing the same number of taps in reverse to undo. Reading
-    // scrollLeft fresh on every tap and clamping the target to
-    // [0, scrollWidth - clientWidth] means the row can never be pushed past
-    // its actual content no matter how fast or how many times it's tapped.
-    const maxScroll = Math.max(0, row.scrollWidth - row.clientWidth);
-    const target = Math.min(maxScroll, Math.max(0, row.scrollLeft + row.clientWidth * 0.85 * direction));
-    row.scrollTo({ left: target, behavior: 'smooth' });
+    row.scrollBy({ left: row.clientWidth * 0.85 * direction, behavior: 'smooth' });
   };
   window.mqUpdateAllPickerArrows = function() {
     // Deferred a frame — scrollWidth/clientWidth need real layout to have
@@ -1486,34 +1454,7 @@
     // mq-spec-scroll-wrap marks this as a specialty-items-style row — see
     // the touch-device media query below, which re-enables the "more
     // items" arrow just for these rows.
-    // extraClass goes on BOTH the outer wrap and the inner scrolling row —
-    // the row needs it for row-only rules (like the tighter chip gap for
-    // variant pills), and the wrap needs it too so CSS can scope the
-    // arrow button itself (size/position) to just one kind of row, e.g.
-    // shrinking it for the slim variant-pill picker without touching the
-    // door/material photo pickers that reuse this same wrapper.
-    return `<div class="mq-vpicker-wrap mq-spec-scroll-wrap${extraClass?' '+extraClass:''}"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
-  }
-  // Same scroll-row mechanism as mqHscrollWrap, but for the specialty item
-  // variant picker specifically — its arrows render in their own small row
-  // UNDER the pills instead of absolutely-positioned on top of them, since
-  // any position that overlaps the row will inevitably land on top of some
-  // pill's text at some scroll offset (a padding gutter only protects the
-  // very start/end of the scrollable range, not mid-scroll). Reuses the
-  // exact same ids/classes mqUpdatePickerArrow and mqScrollPickerRow
-  // already operate on — those functions don't know or care where the
-  // buttons are drawn, only their ids — so no JS logic needed changing,
-  // only where the two arrow buttons live in the markup.
-  function mqVariantScrollWrap(rowId, innerHtml) {
-    // Arrows are real flex siblings of the scroll row, not absolutely
-    // positioned over it — so they occupy their own reserved space and can
-    // never sit on top of a pill's text at any scroll position, without
-    // needing a separate row underneath either.
-    return `<div class="mq-vpicker-wrap mq-spec-variant-picker" style="display:flex;align-items:center;gap:4px">
-      <button type="button" class="mq-vpicker-arrow-inline mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button>
-      <div class="mq-vpicker-row mq-spec-variant-picker" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div>
-      <button type="button" class="mq-vpicker-arrow-inline" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button>
-    </div>`;
+    return `<div class="mq-vpicker-wrap mq-spec-scroll-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
   }
   // Builds the thumbnail+badges markup for one specialty item's current
   // "active" photo/badge/featured state — shared between specHTML's initial
@@ -1531,21 +1472,20 @@
     const featuredBadgeHtml = s.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
     return `${thumb}${badgeHtml}${featuredBadgeHtml}`;
   }
-  // Builds one pill in a specialty item's variant picker (e.g. Maple/Oak/MDF
-  // under one "Crown Molding" item) — plain text buttons, deliberately with
-  // NO photo of their own. The card already has one big photo up top
-  // (mqSpecVisualHTML's output, in the #mq-spec-visual-${prefix}-${i} node)
-  // that mqPickSpecVariant swaps to match whichever variant is active — a
-  // second, smaller photo per pill was pure duplication of that same image,
-  // made the card feel cramped, and (since it reused .mq-vpicker-thumb's
-  // cursor:zoom-in styling despite having no lightbox wired to it) looked
-  // tappable/zoomable without actually doing anything. Each pill is
-  // directly clickable to select it — no separate "photo + name + Select
-  // button" stack needed once there's no photo on the pill itself.
+  // Builds one chip in a specialty item's variant picker (e.g. Maple/Oak/MDF
+  // under one "Crown Molding" item) — deliberately much simpler than the
+  // full material/door mq-vpicker-chip (no room/collection filtering, no
+  // hidden <select> to keep in sync), but reuses the exact same visual
+  // classes so it looks and slides identically.
   function mqSpecVariantChipHTML(s, prefix, i, v, vi, selected) {
-    const safeLabel = (v.label||'').replace(/</g,'&lt;');
-    const starHtml = v.featured ? `<span class="mq-vpicker-variant-star" title="${(window._mqBadgeLabel||'Best seller').replace(/"/g,'&quot;')}">🏆</span>` : '';
-    return `<button type="button" class="mq-vpicker-variant-chip${selected?' selected':''}" onclick="mqPickSpecVariant('${prefix}',${i},${vi})">${starHtml}${safeLabel}</button>`;
+    const safePhoto = (v.photoUrl||'').replace(/'/g,"\\'");
+    const safeLabel = (v.label||'').replace(/'/g,"\\'");
+    const thumb = v.photoUrl
+      ? `<img class="mq-vpicker-thumb" src="${v.photoUrl}" alt="${v.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>⭐</div>'"/>`
+      : `<div class="mq-vpicker-thumb-placeholder">⭐</div>`;
+    const badgeHtml = v.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${v.badge.length}">${v.badge}</span>` : '';
+    const featuredBadgeHtml = v.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+    return `<div class="mq-vpicker-chip${selected?' selected':''}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${v.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickSpecVariant('${prefix}',${i},${vi})">${selected?'✓ Selected':'Select'}</button></div>`;
   }
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
@@ -1563,8 +1503,8 @@
       // below need zero changes to work correctly with whichever variant is
       // currently active.
       const variantPickerHtml = (s.variants && s.variants.length) ? `
-        <div class="mq-spec-variant-row" id="mq-spec-variants-${prefix}-${i}">
-          ${mqVariantScrollWrap(`${prefix}-specvariant-${i}`,
+        <div class="mq-spec-variant-row" id="mq-spec-variants-${prefix}-${i}" style="margin-top:8px">
+          ${mqHscrollWrap(`${prefix}-specvariant-${i}`, 'mq-spec-variant-picker',
             s.variants.map((v,vi) => mqSpecVariantChipHTML(s, prefix, i, v, vi, vi===0)).join(''))}
         </div>` : '';
       // Items offering a choice get a dropdown that starts on a
@@ -1583,25 +1523,13 @@
       // 'linear' | 'sqft' | 'item' so they're comparable.
       const specUnitKind = (perFt, perSqFt) => perFt ? 'linear' : (perSqFt ? 'sqft' : 'item');
       const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt) !== specUnitKind(s.installPerFt, s.installPerSqFt);
-      // The actual supply/install CHOICE control (a real decision the
-      // customer has to make) sits under the photo, left-aligned to match
-      // the image's own width, above the variant pills — its own visually
-      // distinct row rather than crammed into the description column, per
-      // Jordan's request so the image/dropdown/pills all line up cleanly
-      // down the left side of the card. An item that only ever has ONE
-      // install mode (nothing to choose) keeps its plain-text label inline
-      // with the description instead — there's no decision to make, so it
-      // doesn't need the same visual prominence.
-      const installChoiceDropdownHtml = s.offersInstallChoice
-        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;width:100%;background:#fff;color:#111;font-weight:600" onchange="mqSpecModeChanged('${prefix}',${i})">
+      const installModeHtml = s.offersInstallChoice
+        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;margin-top:4px;width:100%;background:#fff;color:#111;font-weight:600" onchange="mqSpecModeChanged('${prefix}',${i})">
             <option value="" selected disabled>Choose one</option>
             <option value="supply">Supply only</option>
             <option value="install">Supplied &amp; Installed</option>
           </select>`
-        : '';
-      const installModeLabelHtml = (!s.offersInstallChoice && s.installMode !== 'na')
-        ? `<div style="font-size:11px;color:#6b7280;margin-top:10px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`
-        : '';
+        : (s.installMode === 'na' ? '' : `<div style="font-size:11px;color:#6b7280;margin-top:2px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`);
       const installQtyRowHtml = installDiffers ? `
         <div id="mq-spec-installqty-${prefix}-${i}" style="display:none;margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb">
           <div style="font-size:11px;color:#6b7280;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
@@ -1620,11 +1548,10 @@
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
-            ${installModeLabelHtml}
+            ${installModeHtml}
+            ${variantPickerHtml}
           </div>
         </div>
-        ${installChoiceDropdownHtml ? `<div style="width:100%" id="mq-spec-modewrap-${prefix}-${i}">${installChoiceDropdownHtml}</div>` : ''}
-        ${variantPickerHtml}
         <div class="mq-spec-bottom">
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
@@ -1771,10 +1698,20 @@
     return unit === 'mm' ? n / 304.8 : n / 12;
   }
 
+  // Same idea as mqCalcToFeet, but for fields that store inches instead of
+  // feet (e.g. tall cabinet width, a single surface's width/depth) — lets
+  // those fields reuse the exact same ft/in/mm calculator, just landing the
+  // total in inches instead of feet.
+  function mqCalcToInches(val, unit) {
+    const n = parseFloat(val) || 0;
+    if (unit === 'in') return n;
+    return unit === 'mm' ? n / 25.4 : n * 12;
+  }
+
   function mqCalcComputeTotalFor(sections, mode, unit) {
-    if (mode === 'linear') {
+    if (mode === 'linear' || mode === 'inches') {
       const totalUnits = sections.reduce((sum, s) => sum + (parseFloat(s.val) || 0), 0);
-      return mqCalcToFeet(totalUnits, unit);
+      return mode === 'inches' ? mqCalcToInches(totalUnits, unit) : mqCalcToFeet(totalUnits, unit);
     }
     return sections.reduce((sum, s) => sum + mqCalcToFeet(s.w, unit) * mqCalcToFeet(s.h, unit), 0);
   }
@@ -1821,7 +1758,7 @@
       }
     }
     if (!restored) {
-      _mqCalcSections = mode === 'linear' ? [{ val: '' }] : [{ w: '', h: '' }];
+      _mqCalcSections = (mode === 'linear' || mode === 'inches') ? [{ val: '' }] : [{ w: '', h: '' }];
     }
     mqEnsureCalcModal().style.display = 'flex';
     mqRenderCalc();
@@ -1855,7 +1792,7 @@
   };
 
   window.mqCalcAddSection = function() {
-    _mqCalcSections.push(_mqCalcMode === 'linear' ? { val: '' } : { w: '', h: '' });
+    _mqCalcSections.push((_mqCalcMode === 'linear' || _mqCalcMode === 'inches') ? { val: '' } : { w: '', h: '' });
     mqRenderCalc();
   };
 
@@ -1878,19 +1815,19 @@
     const totalEl = document.getElementById('mq-calc-total');
     if (!totalEl) return;
     const total = mqCalcComputeTotal();
-    totalEl.textContent = _mqCalcMode === 'linear' ? `${total.toFixed(2)} linear ft` : `${total.toFixed(2)} sq ft`;
+    totalEl.textContent = _mqCalcMode === 'linear' ? `${total.toFixed(2)} linear ft` : _mqCalcMode === 'inches' ? `${total.toFixed(2)} in` : `${total.toFixed(2)} sq ft`;
   }
 
   function mqRenderCalc() {
     const card = document.getElementById('mq-calc-card');
     if (!card) return;
     const unitLabel = _mqCalcUnit === 'mm' ? 'mm' : (_mqCalcUnit === 'ft' ? 'feet' : 'inches');
-    const rows = _mqCalcSections.map((s, idx) => _mqCalcMode === 'linear' ? `
+    const rows = _mqCalcSections.map((s, idx) => (_mqCalcMode === 'linear' || _mqCalcMode === 'inches') ? `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
+        ${_mqCalcMode === 'linear' ? `<span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>` : ''}
         <input type="number" value="${s.val}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:13px;color:#4b5563;width:44px">${unitLabel}</span>
-        ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
+        ${_mqCalcMode === 'linear' && _mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : (_mqCalcMode === 'linear' ? '<span style="width:20px;flex-shrink:0"></span>' : '')}
       </div>` : `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
@@ -1903,15 +1840,15 @@
     ).join('');
 
     card.innerHTML = `
-      <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'linear' ? '📏 Measurement calculator' : '📐 Square footage calculator'}${_mqCalcFieldLabel ? ` <span style="font-weight:600;color:#2563eb">(${_mqCalcFieldLabel})</span>` : ''}</div>
-      <div style="font-size:13px;color:#4b5563;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
+      <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'sqft' ? '📐 Square footage calculator' : '📏 Measurement calculator'}${_mqCalcFieldLabel ? ` <span style="font-weight:600;color:#2563eb">(${_mqCalcFieldLabel})</span>` : ''}</div>
+      <div style="font-size:13px;color:#4b5563;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : _mqCalcMode === 'inches' ? "Enter the measurement in whatever unit is easiest, and we'll convert it to inches for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button type="button" onclick="mqCalcSetUnit('ft')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'ft' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'ft' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'ft' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Feet</button>
         <button type="button" onclick="mqCalcSetUnit('in')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'in' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'in' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'in' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Inches</button>
         <button type="button" onclick="mqCalcSetUnit('mm')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'mm' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Millimeters</button>
       </div>
       <div id="mq-calc-rows">${rows}</div>
-      <button type="button" onclick="mqCalcAddSection()" style="width:100%;padding:8px;border-radius:6px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px">+ Add another section</button>
+      ${_mqCalcMode !== 'inches' ? `<button type="button" onclick="mqCalcAddSection()" style="width:100%;padding:8px;border-radius:6px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px">+ Add another section</button>` : ''}
       <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;margin-bottom:14px;text-align:center">
         <div style="font-size:12px;color:#4b5563;margin-bottom:2px">Total</div>
         <div id="mq-calc-total" style="font-size:18px;font-weight:700;color:#166534"></div>
@@ -1925,9 +1862,12 @@
 
   window.mqCalcApply = function() {
     const rawTotal = mqCalcComputeTotal();
-    // Specialty item qty fields (per linear/sq ft) now keep one decimal place;
-    // everything else (uft/bft/trim) already supports full decimals.
-    const total = _mqCalcTargetId && _mqCalcTargetId.startsWith('mq-qty-')
+    // Specialty item qty fields (per linear/sq ft), and inches-mode fields
+    // (tall cabinet width, a surface's width/depth — cabinetry is normally
+    // measured to the nearest fraction of an inch, not two decimals), keep
+    // one decimal place; everything else (uft/bft/trim) supports full
+    // decimals.
+    const total = (_mqCalcTargetId && _mqCalcTargetId.startsWith('mq-qty-')) || _mqCalcMode === 'inches'
       ? Math.round(rawTotal * 10) / 10
       : Math.round(rawTotal * 100) / 100;
     const targetEl = document.getElementById(_mqCalcTargetId);
@@ -2250,15 +2190,17 @@
     </div>`;
   }
 
-  const PRICE_LEGEND_HTML = `
+  // A function, not a precomputed const — CUR() needs to read the shop's
+  // currency symbol, which isn't loaded yet when this file first parses.
+  function priceLegendHTML() { return `
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#4b5563;line-height:1.6">
       Options below are listed <strong>cheapest to most expensive</strong>. Tap any photo to see it up close.
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;align-items:center">
-        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-1" style="position:static;display:inline-block">$</span> Budget-friendly</span>
-        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-2" style="position:static;display:inline-block">$$</span> Mid-range</span>
-        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-3" style="position:static;display:inline-block">$$$</span> Premium</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-1" style="position:static;display:inline-block">${CUR()}</span> Budget-friendly</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-2" style="position:static;display:inline-block">${CUR().repeat(2)}</span> Mid-range</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span class="mq-vpicker-badge mq-vpicker-badge-3" style="position:static;display:inline-block">${CUR().repeat(3)}</span> Premium</span>
       </div>
-    </div>`;
+    </div>`; }
 
   function buildWidgetHTML(shop, specs, data) {
     const hasCtInstall = hasCountertopInstall();
@@ -2308,7 +2250,7 @@
 
       <!-- CABINET TAB -->
       <div class="mq-tab-content" id="mq-tab-cabinets">
-        ${PRICE_LEGEND_HTML}
+        ${priceLegendHTML()}
         ${cabinetForm('c', specs, data)}
         <button class="mq-calc-btn" id="mq-c-calc-btn" onclick="mqCalcCabinets()">Calculate cabinet estimate</button>
         <div class="mq-empty-calc-msg" id="mq-c-empty-calc-msg" style="display:none">No selections have been made, or no linear feet was entered — please double-check before calculating.</div>
@@ -2331,7 +2273,7 @@
 
       <!-- COUNTERTOP TAB -->
       <div class="mq-tab-content" id="mq-tab-countertops">
-        ${PRICE_LEGEND_HTML}
+        ${priceLegendHTML()}
         <div class="mq-sec">
           <p class="mq-sec-title">Countertop surfaces</p>
           <div id="mq-ct-surfaces"></div>
@@ -2358,7 +2300,7 @@
 
       <!-- BOTH TAB -->
       <div class="mq-tab-content active" id="mq-tab-both">
-        ${PRICE_LEGEND_HTML}
+        ${priceLegendHTML()}
         <div class="mq-both-divider" id="mq-b-cabinet-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪵 Cabinet details</div><div class="mq-both-divider-line"></div></div>
         ${cabinetForm('b', specs, data)}
         <div id="mq-b-countertop-details-sec">
@@ -2391,6 +2333,7 @@
               <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px">
                 <label style="font-size:14px;color:#374151">Additional space (feet)</label>
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
+                ${calcBtn('mq-b-cab-extra-ft', 'linear', 'Additional counter space')}
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-top:8px">
                 <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Cutouts needed (sink, etc.)
@@ -2697,7 +2640,7 @@
     // installQty above — index i lines up with specs[i].
     ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);installQty[p]=new Array(specs.length).fill(0);specVariant[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
 
-    function fmt(n){return '$'+Math.round(n).toLocaleString();}
+    function fmt(n){return CUR() +Math.round(n).toLocaleString();}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
     function gn(id,d=0){const v=parseFloat(gv(id));return isNaN(v)?d:v;}
 
@@ -4050,7 +3993,7 @@
       const allEntries = preview ? [...cart, preview] : cart;
 
       const buildRows = (textColor, mutedColor) => allEntries.map(entry => {
-        const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : ('$' + Math.round(entry.total).toLocaleString());
+        const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : (CUR() + Math.round(entry.total).toLocaleString());
         const isPreview = !entry.id; // committed entries always have an id; the live preview never does
         const removeBtn = isPreview ? '' : `<button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:${mutedColor};cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>`;
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:${textColor}${isPreview ? ';font-style:italic;opacity:0.85' : ''}">
@@ -4071,7 +4014,7 @@
       // ranged entries would be misleading either way, so a combined range
       // is the safer default once more than one project type is involved.
       const allNoRange = allEntries.length > 0 && allEntries.every(e => !e.showRange);
-      const totalText = allNoRange ? ('$' + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
+      const totalText = allNoRange ? (CUR() + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
 
       // The sticky bar is created lazily (only once a Calculate has ever
       // run), so these elements may not exist yet the first time this runs
@@ -4328,8 +4271,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (visual) visual.innerHTML = mqSpecVisualHTML(s, visual.dataset.groupKey || '', `mq-sp-${prefix}-${i}`);
       const row = document.getElementById(`mq-spec-variants-${prefix}-${i}`);
       if (row) {
-        row.querySelectorAll('.mq-vpicker-variant-chip').forEach((chip, idx) => {
-          chip.classList.toggle('selected', idx === vi);
+        row.querySelectorAll('.mq-vpicker-chip').forEach((chip, idx) => {
+          const selected = idx === vi;
+          chip.classList.toggle('selected', selected);
+          const btn = chip.querySelector('.mq-vpicker-select-btn');
+          if (btn) btn.textContent = selected ? '✓ Selected' : 'Select';
         });
       }
     };
@@ -4387,7 +4333,10 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div style="display:flex;align-items:flex-end;gap:2rem;flex-wrap:wrap">
           <div class="mq-field" style="margin-bottom:0">
             <label class="mq-label">Width (inches)</label>
-            <input type="number" id="mq-tc-width-${id}" value="24" min="12" max="48" onblur="mqValidateTallCabWidth('${id}')" style="width:100px"/>
+            <div style="display:flex;align-items:center">
+              <input type="number" id="mq-tc-width-${id}" value="24" min="12" max="48" onblur="mqValidateTallCabWidth('${id}')" style="width:100px"/>
+              ${calcBtn(`mq-tc-width-${id}`, 'inches', 'Tall cabinet width')}
+            </div>
             <div id="mq-tc-width-note-${id}" style="display:none;font-size:11px;font-weight:600;color:#dc2626;margin-top:3px">Must be 12" or wider.</div>
           </div>
           <div>
@@ -5036,8 +4985,8 @@ window.mqTogDrawerConfig=(prefix)=>{
           <button class="mq-remove-btn" onclick="mqRemoveSurf('${prefix}','${id}')">Remove</button>
         </div>
         <div class="mq-grid3" style="margin-bottom:1rem">
-          <div class="mq-field"><label class="mq-label">Width (inches)</label><input type="number" id="mqsw-${id}" placeholder="e.g. 120" oninput="mqCalcSurfDims('${id}')"/></div>
-          <div class="mq-field"><label class="mq-label">Depth (inches)</label><input type="number" id="mqsd-${id}" placeholder="${ctDepth}" value="${ctDepth}" oninput="mqCalcSurfDims('${id}')"/></div>
+          <div class="mq-field"><label class="mq-label">Width (inches)</label><div style="display:flex;align-items:center"><input type="number" id="mqsw-${id}" placeholder="e.g. 120" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsw-${id}`, 'inches', 'Surface width')}</div></div>
+          <div class="mq-field"><label class="mq-label">Depth (inches)</label><div style="display:flex;align-items:center"><input type="number" id="mqsd-${id}" placeholder="${ctDepth}" value="${ctDepth}" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsd-${id}`, 'inches', 'Surface depth')}</div></div>
           <div class="mq-field"><label class="mq-label" style="color:#16a34a">Auto-calculated</label>
             <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
         </div>
@@ -5729,14 +5678,14 @@ window.mqTogDrawerConfig=(prefix)=>{
     return !room || room.showRange !== false;
   }
   function fmtRange(low, high) {
-    const f = n => '$' + Math.round(n).toLocaleString();
+    const f = n => CUR() + Math.round(n).toLocaleString();
     return `${f(low)} – ${f(high)}`;
   }
   // Single entry point for every place a price gets shown to a customer —
   // shows the usual ballpark range, or the exact clean total with no spread
   // at all, depending on the selected project type's own preference.
   function mqFmtPrice(prefix, low, high, total) {
-    return mqShouldShowRange(prefix) ? fmtRange(low, high) : ('$' + Math.round(total).toLocaleString());
+    return mqShouldShowRange(prefix) ? fmtRange(low, high) : (CUR() + Math.round(total).toLocaleString());
   }
   // Swaps out every "ballpark"/"estimated range" phrase for wording that's
   // actually true once a project type has the range toggled off — saying
@@ -5779,7 +5728,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // cart entry plus whatever's live now — is actually set to no-range.
     const allNoRange = cart.every(e => !e.showRange) && !mqShouldShowRange(prefix);
     const prev = window._mqStickyLast;
-    el.textContent = allNoRange ? ('$' + Math.round(combinedTotal).toLocaleString()) : fmtRange(combinedLow, combinedHigh);
+    el.textContent = allNoRange ? (CUR() + Math.round(combinedTotal).toLocaleString()) : fmtRange(combinedLow, combinedHigh);
     if (animate && prev) {
       const prevMid = (prev.low + prev.high) / 2;
       const newMid = (combinedLow + combinedHigh) / 2;
@@ -5791,7 +5740,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const badge = document.createElement('span');
           badge.className = 'mq-sticky-delta show';
           badge.style.color = delta > 0 ? '#16a34a' : '#dc2626';
-          badge.textContent = (delta > 0 ? '+' : '−') + '$' + Math.abs(delta).toLocaleString();
+          badge.textContent = (delta > 0 ? '+' : '−') + CUR() + Math.abs(delta).toLocaleString();
           wrap.appendChild(badge);
           setTimeout(() => badge.remove(), 1300);
         }
@@ -5967,16 +5916,20 @@ window.mqTogDrawerConfig=(prefix)=>{
             try { localStorage.setItem(storageKey, '1'); } catch(e) {}
             const p = document.getElementById('mq-tips-popup');
             if (p) { p.style.opacity='0'; p.style.transition='opacity 0.2s'; setTimeout(()=>p.remove(), 200); }
+
+
+
           };
           setTimeout(() => document.body.appendChild(popup), 1000);
         }
-      } catch(e) { /* localStorage unavailable — skip popup */ }
+      } catch(e) { /*  jlocalStorage unavailable — skip popup */ }
     }
   }
 
   init();
   mqInitMobileFontFix();
   mqInitBottomBounceAutoOpen();
+
 
 
 })();
