@@ -309,9 +309,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       `
     },
     billing: {
-      title: 'Billing',
+      title: 'Account',
       body: `
-        <p>Your subscription and payment details for MidasQuote itself.</p>
+        <p>Your login, subscription, and payment details for MidasQuote itself.</p>
       `
     },
     marketing: {
@@ -727,7 +727,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
           <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
-          <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Billing</div>
+          <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
           <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
         </div>
 
@@ -1189,8 +1189,8 @@ window.logoutMember = async function () {
           <!-- BILLING -->
           <div class="mq-page" id="mq-page-billing">
             <button class="mq-help-btn" onclick="mqShowHelp('billing')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Billing</div>
-            <div class="mq-page-sub">Manage your subscription, payment method, and invoices</div>
+            <div class="mq-page-title">Account</div>
+            <div class="mq-page-sub">Manage your login, subscription, payment method, and invoices</div>
 
             <div class="mq-card" style="margin-bottom:1rem">
               <div class="mq-card-title">📋 Current plan</div>
@@ -1227,7 +1227,7 @@ window.logoutMember = async function () {
             <div class="mq-card" style="margin-bottom:1rem" id="mq-billing-security-card">
               <div class="mq-card-title">🔒 Account security</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Update the password you use to log in to this dashboard.</p>
-              <button class="mq-btn" onclick="mqChangePassword()">Change password</button>
+              <a class="mq-btn" style="display:inline-block;text-decoration:none" data-ms-modal="profile" data-ms-modal-tab="changePassword" href="#">Change password</a>
             </div>
 
             <div class="mq-card" style="border-color:#fca5a5" id="mq-billing-cancel-card">
@@ -1669,7 +1669,6 @@ window.logoutMember = async function () {
       </div>
       <!-- Hidden Memberstack trigger for billing portal -->
       <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" id="mq-ms-plans-trigger" style="display:none">plans</a>
-      <a data-ms-modal="profile" data-ms-modal-tab="changePassword" href="#" id="mq-ms-changepw-trigger" style="display:none">change password</a>
     `;
   }
 
@@ -1729,16 +1728,6 @@ window.logoutMember = async function () {
       // Fallback to profile modal
       try { await window.$memberstackDom.openModal('PROFILE'); } catch(e2) {}
     }
-  };
-
-  // Memberstack's own Profile modal already has a full Change Password tab
-  // (current password, new password, confirm — all validated by Memberstack
-  // itself) — jumping straight to it via the hidden data-ms-modal-tab
-  // trigger is a one-line integration instead of building + validating a
-  // custom password form and calling updateMemberAuth() by hand.
-  window.mqChangePassword = function() {
-    const trigger = document.getElementById('mq-ms-changepw-trigger');
-    if (trigger) trigger.click();
   };
 
   window.mqLogout = function() {
@@ -2975,7 +2964,7 @@ window.logoutMember = async function () {
   // upload button or a URL field for one of these.
   function mqDemoImageLockedHTML(whatLabel) {
     return `<div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 12px;font-size:12px;color:#6b7280;line-height:1.6">
-      🔒 Custom ${whatLabel} is a paid feature. Your free Demo always shows MidasQuote's standard library photo here — upgrade from the Billing tab to use your own photos or video links.
+      🔒 Custom ${whatLabel} is a paid feature. Your free Demo always shows MidasQuote's standard library photo here — upgrade from the Account tab to use your own photos or video links.
     </div>`;
   }
 
@@ -5533,7 +5522,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;white-space:nowrap;cursor:pointer"><input type="checkbox" ${v.featured?'checked':''} onchange="mqSaveVariantField('${r.id}',${vi},'featured',this.checked)" style="width:14px;height:14px;accent-color:#f59e0b"/> 🏆 Best seller</label>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
       </div>`).join('');
     // Boxed with a colored left border and the item's own name repeated in
@@ -5999,7 +5987,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </label>
       ${isDemo ? `
       <div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:8px 10px;font-size:11px;color:#6b7280;line-height:1.5">
-        🔒 Adding or changing a photo here is a paid feature. Whatever photo this item already has stays showing — upgrade from the Billing tab to upload new ones or pick from the library.
+        🔒 Adding or changing a photo here is a paid feature. Whatever photo this item already has stays showing — upgrade from the Account tab to upload new ones or pick from the library.
       </div>
       <!-- Hidden, not removed: mqSaveProducts rebuilds its whole photo map
            from every [id^="mq-photo-"] input still in the DOM on every save,

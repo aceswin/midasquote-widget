@@ -220,7 +220,14 @@
             label: ((v && v.label) || '').trim(),
             price: (v && v.price) || 0,
             photoUrl: shopPhotos['spec_' + r.id + '_v' + vid] || '',
-            featured: !!(v && v.featured),
+            // Best-seller marking for specialty item variants now goes
+            // exclusively through My Products (shopFeatured, the same
+            // shop-wide map every other product type's badge already reads)
+            // — the variant's own former `featured` field is no longer
+            // written to by the dashboard and is ignored here even if old
+            // data still has it set, so there's exactly one place to check
+            // this shop's best-sellers instead of two that can disagree.
+            featured: !!shopFeatured['spec_' + r.id + '_v' + vid],
           };
         }).filter(v => v.label);
         // $/$$/$$$ badges assigned per-item across just that item's own
@@ -520,8 +527,8 @@
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:block}
-      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
-      #midasquote-widget .mq-spec-top{display:flex;align-items:flex-start;gap:8px}
+      #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
+      #midasquote-widget .mq-spec-top{display:flex;align-items:center;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
       #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;display:block}
@@ -571,36 +578,31 @@
       #midasquote-widget .mq-vpicker-badge{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none}
       #midasquote-widget .mq-vpicker-featured-badge{position:absolute;top:-6px;left:-6px;font-size:8px;font-weight:700;padding:2px 5px;border-radius:8px;background:#f59e0b;color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis}
       /* A specialty item's own variant picker (e.g. Maple/Oak/MDF under one
-         "Crown Molding" item) is a row of plain text pill buttons, NOT photo
-         chips — the card already shows one big photo up top (.mq-spec-thumb)
-         that swaps to match whichever variant is picked, so giving each pill
-         its own smaller photo too was pure visual duplication (and cramped,
-         inside a 280px-wide card). A pill is directly clickable to select it
-         — no separate photo + name + "Select" button stack needed when
-         there's no photo on the pill itself. */
-      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 4px;flex:1;min-width:0}
-      #midasquote-widget .mq-vpicker-variant-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-family:inherit;font-size:12px;color:#374151;cursor:pointer;transition:all 0.15s;white-space:nowrap}
-      #midasquote-widget .mq-vpicker-variant-chip:hover{border-color:#d1d5db;background:#f9fafb}
-      #midasquote-widget .mq-vpicker-variant-chip.selected{border-color:${bc};background:${bc};color:#fff}
-      #midasquote-widget .mq-vpicker-variant-star{font-size:10px}
-      #midasquote-widget .mq-vpicker-variant-tier{font-size:10px;opacity:0.7}
-      /* The round scroll arrows every other picker uses are absolutely
-         positioned right over the row's own edge — fine for wide photo
-         chips, but there's no scroll position where that doesn't land on
-         top of SOME pill's text in this slimmer picker (padding out a
-         gutter only helped at the very start/end of the scrollable range,
-         not mid-scroll, where the arrow still floats over whatever pill
-         happens to be at the edge). Real fix for variant pickers
-         specifically: the arrows are genuine flex siblings of the scroll
-         row (see mqVariantScrollWrap), not absolutely positioned over it —
-         each has its own reserved column of space to the left/right of the
-         pills, so there's no scroll position where either arrow can ever
-         sit on top of pill text. Reuses the exact same ids/classes
-         mqUpdatePickerArrow/mqScrollPickerRow already toggle and click, so
-         no JS changes were needed, only where the buttons render. */
-      #midasquote-widget .mq-vpicker-arrow-inline{display:none;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;border:1px solid #d1d5db;background:#fff;font-size:13px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit;padding:0;flex-shrink:0}
-      #midasquote-widget .mq-vpicker-arrow-inline.show{display:inline-flex}
-      #midasquote-widget .mq-vpicker-arrow-inline:hover{background:#f3f4f6}
+         "Crown Molding" item) reuses the exact same mq-vpicker-chip
+         component as the door/material picker, just scaled down — it lives
+         inside a 280px-wide mq-spec-item card, not the full-width picker
+         area, so the normal 130px chip/116px thumb would barely fit two at
+         once. Everything else (badges, selected state, arrows) is identical. */
+      #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 6px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-chip{width:74px;padding:4px;border-radius:8px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-thumb,
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-thumb-placeholder{width:62px;height:62px;font-size:15px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-label{font-size:9.5px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-select-btn{font-size:9px;padding:3px 7px;margin-top:3px}
+      #midasquote-widget .mq-spec-variant-picker .mq-vpicker-featured-badge{font-size:7px;max-width:70px}
+      /* Confirmed regression fix: the variant picker's arrows previously
+         overlapped the next chip's badge/label at this narrow width (the
+         round arrow is fine floating over the wide 130px photo/material
+         chips, but not over these scaled-down 74px ones). Making the wrap
+         a real flex row and the arrows real flex items — not absolutely
+         positioned — gives each arrow its own reserved column so it can
+         never sit on top of a chip at any scroll position. Only .show
+         still gates visibility; everything else about how/when arrows
+         appear is untouched. */
+      #midasquote-widget .mq-spec-variant-wrap{display:flex;align-items:center;gap:2px}
+      #midasquote-widget .mq-spec-variant-wrap .mq-vpicker-row{flex:1;min-width:0}
+      #midasquote-widget .mq-spec-variant-wrap .mq-vpicker-arrow{position:static;transform:none;width:24px;height:24px;font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,0.2),0 0 0 1px rgba(0,0,0,0.06);flex-shrink:0}
+      #midasquote-widget .mq-spec-variant-wrap .mq-vpicker-arrow:hover{transform:scale(1.06)}
       /* Sticky estimate bar — appears after the first real Calculate, then
          tracks live as the customer swaps items. Fixed to the viewport
          (not just the widget), since the widget can sit inside a much
@@ -1486,22 +1488,6 @@
     const wrapClass = `mq-vpicker-wrap mq-spec-scroll-wrap${narrowVariantPicker ? ' mq-spec-variant-wrap' : ''}`;
     return `<div class="${wrapClass}"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row${extraClass?' '+extraClass:''}" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button></div>`;
   }
-  // A specialty item's own variant picker needs its scroll arrows to never
-  // overlap a pill's text — at this narrow width there's no scroll position
-  // where an absolutely-positioned round arrow (fine for the wide photo
-  // pickers) doesn't land on top of some pill's label. Arrows here are real
-  // flex siblings of the scroll row instead, each with its own reserved
-  // column, so they can never sit on top of pill text at any scroll offset.
-  // Reuses the exact same ids/classes mqUpdatePickerArrow/mqScrollPickerRow
-  // already toggle and click — no JS logic needed changing, only where the
-  // two arrow buttons live in the markup.
-  function mqVariantScrollWrap(rowId, innerHtml) {
-    return `<div class="mq-vpicker-wrap mq-spec-variant-picker" style="display:flex;align-items:center;gap:4px">
-      <button type="button" class="mq-vpicker-arrow-inline mq-vpicker-arrow-left" id="mq-vparrow-left-${rowId}" onclick="mqScrollPickerRow('${rowId}',-1)" aria-label="Scroll left">‹</button>
-      <div class="mq-vpicker-row mq-spec-variant-picker" id="mq-vprow-${rowId}" onscroll="mqUpdatePickerArrow('${rowId}')">${innerHtml}</div>
-      <button type="button" class="mq-vpicker-arrow-inline" id="mq-vparrow-${rowId}" onclick="mqScrollPickerRow('${rowId}',1)" aria-label="Scroll right">›</button>
-    </div>`;
-  }
   // Builds the thumbnail+badges markup for one specialty item's current
   // "active" photo/badge/featured state — shared between specHTML's initial
   // render and mqPickSpecVariant's live update after the customer picks a
@@ -1524,9 +1510,14 @@
   // hidden <select> to keep in sync), but reuses the exact same visual
   // classes so it looks and slides identically.
   function mqSpecVariantChipHTML(s, prefix, i, v, vi, selected) {
-    const safeLabel = (v.label||'').replace(/</g,'&lt;');
-    const starHtml = v.featured ? `<span class="mq-vpicker-variant-star" title="${(window._mqBadgeLabel||'Best seller').replace(/"/g,'&quot;')}">🏆</span>` : '';
-    return `<button type="button" class="mq-vpicker-variant-chip${selected?' selected':''}" onclick="mqPickSpecVariant('${prefix}',${i},${vi})">${starHtml}${safeLabel}</button>`;
+    const safePhoto = (v.photoUrl||'').replace(/'/g,"\\'");
+    const safeLabel = (v.label||'').replace(/'/g,"\\'");
+    const thumb = v.photoUrl
+      ? `<img class="mq-vpicker-thumb" src="${v.photoUrl}" alt="${v.label}" onerror="this.outerHTML='<div class=\\'mq-vpicker-thumb-placeholder\\'>⭐</div>'"/>`
+      : `<div class="mq-vpicker-thumb-placeholder">⭐</div>`;
+    const badgeHtml = v.badge ? `<span class="mq-vpicker-badge mq-vpicker-badge-${v.badge.length}">${v.badge}</span>` : '';
+    const featuredBadgeHtml = v.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+    return `<div class="mq-vpicker-chip${selected?' selected':''}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${v.label}</span><button type="button" class="mq-vpicker-select-btn" onclick="mqPickSpecVariant('${prefix}',${i},${vi})">${selected?'✓ Selected':'Select'}</button></div>`;
   }
   function specHTML(specs, prefix) {
     if (!specs.length) return '<p style="font-size:14px;color:#4b5563">No specialty items configured yet.</p>';
@@ -1544,8 +1535,8 @@
       // below need zero changes to work correctly with whichever variant is
       // currently active.
       const variantPickerHtml = (s.variants && s.variants.length) ? `
-        <div class="mq-spec-variant-row" id="mq-spec-variants-${prefix}-${i}">
-          ${mqVariantScrollWrap(`${prefix}-specvariant-${i}`,
+        <div class="mq-spec-variant-row" id="mq-spec-variants-${prefix}-${i}" style="margin-top:8px">
+          ${mqHscrollWrap(`${prefix}-specvariant-${i}`, 'mq-spec-variant-picker',
             s.variants.map((v,vi) => mqSpecVariantChipHTML(s, prefix, i, v, vi, vi===0)).join(''))}
         </div>` : '';
       // Items offering a choice get a dropdown that starts on a
@@ -1564,25 +1555,13 @@
       // 'linear' | 'sqft' | 'item' so they're comparable.
       const specUnitKind = (perFt, perSqFt) => perFt ? 'linear' : (perSqFt ? 'sqft' : 'item');
       const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt) !== specUnitKind(s.installPerFt, s.installPerSqFt);
-      // The actual supply/install CHOICE control (a real decision the
-      // customer has to make) sits under the photo, left-aligned to match
-      // the image's own width, above the variant pills — its own visually
-      // distinct row rather than crammed into the description column, so
-      // the image/dropdown/pills all line up cleanly down the left side of
-      // the card. An item that only ever has ONE install mode (nothing to
-      // choose) keeps its plain-text label inline with the description
-      // instead — there's no decision to make, so it doesn't need the same
-      // visual prominence.
-      const installChoiceDropdownHtml = s.offersInstallChoice
-        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;width:100%;background:#fff;color:#111;font-weight:600" onchange="mqSpecModeChanged('${prefix}',${i})">
+      const installModeHtml = s.offersInstallChoice
+        ? `<select id="mq-spec-mode-${prefix}-${i}" class="mq-spec-mode-select" style="font-size:11px;padding:4px 6px;border:1.5px solid #d1d5db;border-radius:5px;margin-top:4px;width:100%;background:#fff;color:#111;font-weight:600" onchange="mqSpecModeChanged('${prefix}',${i})">
             <option value="" selected disabled>Choose one</option>
             <option value="supply">Supply only</option>
             <option value="install">Supplied &amp; Installed</option>
           </select>`
-        : '';
-      const installModeLabelHtml = (!s.offersInstallChoice && s.installMode !== 'na')
-        ? `<div style="font-size:11px;color:#6b7280;margin-top:10px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`
-        : '';
+        : (s.installMode === 'na' ? '' : `<div style="font-size:11px;color:#6b7280;margin-top:2px">${s.installMode === 'installed' ? 'Supplied & Installed' : 'Supply only'}</div>`);
       const installQtyRowHtml = installDiffers ? `
         <div id="mq-spec-installqty-${prefix}-${i}" style="display:none;margin-top:6px;padding-top:6px;border-top:1px dashed #e5e7eb">
           <div style="font-size:11px;color:#6b7280;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
@@ -1601,11 +1580,10 @@
           <div style="flex:1;min-width:0">
             <span class="mq-spec-name">${s.label}</span>
             ${s.description ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${s.description}</div>` : ''}
-            ${installModeLabelHtml}
+            ${installModeHtml}
+            ${variantPickerHtml}
           </div>
         </div>
-        ${installChoiceDropdownHtml ? `<div style="width:100%" id="mq-spec-modewrap-${prefix}-${i}">${installChoiceDropdownHtml}</div>` : ''}
-        ${variantPickerHtml}
         <div class="mq-spec-bottom">
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
@@ -4325,8 +4303,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (visual) visual.innerHTML = mqSpecVisualHTML(s, visual.dataset.groupKey || '', `mq-sp-${prefix}-${i}`);
       const row = document.getElementById(`mq-spec-variants-${prefix}-${i}`);
       if (row) {
-        row.querySelectorAll('.mq-vpicker-variant-chip').forEach((chip, idx) => {
-          chip.classList.toggle('selected', idx === vi);
+        row.querySelectorAll('.mq-vpicker-chip').forEach((chip, idx) => {
+          const selected = idx === vi;
+          chip.classList.toggle('selected', selected);
+          const btn = chip.querySelector('.mq-vpicker-select-btn');
+          if (btn) btn.textContent = selected ? '✓ Selected' : 'Select';
         });
       }
     };
