@@ -1227,7 +1227,7 @@ window.logoutMember = async function () {
             <div class="mq-card" style="margin-bottom:1rem" id="mq-billing-security-card">
               <div class="mq-card-title">🔒 Account security</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Update the password you use to log in to this dashboard.</p>
-              <a class="mq-btn" style="display:inline-block;text-decoration:none" data-ms-modal="profile" data-ms-modal-tab="changePassword" href="#">Change password</a>
+              <button class="mq-btn" onclick="mqShowChangePasswordModal()">Change password</button>
             </div>
 
             <div class="mq-card" style="border-color:#fca5a5" id="mq-billing-cancel-card">
@@ -1727,6 +1727,76 @@ window.logoutMember = async function () {
       console.error('Billing portal error:', e);
       // Fallback to profile modal
       try { await window.$memberstackDom.openModal('PROFILE'); } catch(e2) {}
+    }
+  };
+
+  // Memberstack's pre-built Profile modal turned out unreliable for jumping
+  // straight to its Change Password tab (data-ms-modal-tab requires their
+  // component setup to be exactly right, and it wasn't behaving here even
+  // as a real, directly-clicked link — it was just following the href="#"
+  // like a plain anchor instead of Memberstack intercepting the click).
+  // Rather than depend on that modal, or on pasting in Memberstack's own
+  // form snippet, this calls their documented updateMemberAuth() method
+  // directly — same DOM package already used everywhere else on this page
+  // (logout, billing portal, plan checkout) — inside a modal styled to
+  // match the rest of the dashboard exactly, e.g. Manage categories.
+  window.mqShowChangePasswordModal = function() {
+    let modal = document.getElementById('mq-changepw-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-changepw-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px">Change password</div>
+        <div style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.5">Enter your current password and a new one.</div>
+        <div id="mq-changepw-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:12.5px;border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.4"></div>
+        <div id="mq-changepw-success" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:12.5px;border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.4">✓ Password updated.</div>
+        <div id="mq-changepw-form">
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Current password</label>
+          <input type="password" id="mq-changepw-current" autocomplete="current-password" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:12px"/>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">New password</label>
+          <input type="password" id="mq-changepw-new" autocomplete="new-password" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:12px"/>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Confirm new password</label>
+          <input type="password" id="mq-changepw-confirm" autocomplete="new-password" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:1.25rem"/>
+          <button id="mq-changepw-submit" onclick="mqSubmitChangePassword()" style="width:100%;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Update password</button>
+        </div>
+        <button onclick="mqCloseChangePasswordModal()" style="width:100%;margin-top:8px;padding:11px;background:#f3f4f6;color:#374151;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+      </div>`;
+    modal.style.display = 'flex';
+    setTimeout(() => document.getElementById('mq-changepw-current')?.focus(), 50);
+  };
+  window.mqCloseChangePasswordModal = function() {
+    const modal = document.getElementById('mq-changepw-modal');
+    if (modal) modal.style.display = 'none';
+  };
+  window.mqSubmitChangePassword = async function() {
+    const errEl = document.getElementById('mq-changepw-error');
+    const current = document.getElementById('mq-changepw-current')?.value || '';
+    const next = document.getElementById('mq-changepw-new')?.value || '';
+    const confirm = document.getElementById('mq-changepw-confirm')?.value || '';
+    const showError = (msg) => { if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; } };
+    if (errEl) errEl.style.display = 'none';
+    if (!current || !next || !confirm) { showError('Please fill in all three fields.'); return; }
+    if (next !== confirm) { showError('New password and confirmation don\'t match.'); return; }
+    if (next === current) { showError('New password must be different from your current one.'); return; }
+    const btn = document.getElementById('mq-changepw-submit');
+    if (btn) { btn.textContent = 'Updating…'; btn.disabled = true; }
+    try {
+      await window.$memberstackDom.updateMemberAuth({ oldPassword: current, newPassword: next });
+      document.getElementById('mq-changepw-form').style.display = 'none';
+      const successEl = document.getElementById('mq-changepw-success');
+      if (successEl) successEl.style.display = 'block';
+    } catch (e) {
+      console.error('Change password error:', e);
+      // Memberstack's own message (e.g. "Incorrect password", or a password
+      // policy complaint like minimum length) is more useful here than a
+      // generic one — surfaced as-is when present, since it already speaks
+      // in plain, member-facing language.
+      showError(e?.message || 'Something went wrong updating your password — please try again.');
+      if (btn) { btn.textContent = 'Update password'; btn.disabled = false; }
     }
   };
 
