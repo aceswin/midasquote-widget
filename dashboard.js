@@ -1224,6 +1224,12 @@ window.logoutMember = async function () {
               <button class="mq-btn" onclick="mqOpenBillingPortal()">View invoices</button>
             </div>
 
+            <div class="mq-card" style="margin-bottom:1rem" id="mq-billing-security-card">
+              <div class="mq-card-title">🔒 Account security</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Update the password you use to log in to this dashboard.</p>
+              <button class="mq-btn" onclick="mqChangePassword()">Change password</button>
+            </div>
+
             <div class="mq-card" style="border-color:#fca5a5" id="mq-billing-cancel-card">
               <div class="mq-card-title" style="color:#dc2626">⚠️ Cancel subscription</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
@@ -1663,6 +1669,7 @@ window.logoutMember = async function () {
       </div>
       <!-- Hidden Memberstack trigger for billing portal -->
       <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" id="mq-ms-plans-trigger" style="display:none">plans</a>
+      <a data-ms-modal="profile" data-ms-modal-tab="changePassword" href="#" id="mq-ms-changepw-trigger" style="display:none">change password</a>
     `;
   }
 
@@ -1722,6 +1729,16 @@ window.logoutMember = async function () {
       // Fallback to profile modal
       try { await window.$memberstackDom.openModal('PROFILE'); } catch(e2) {}
     }
+  };
+
+  // Memberstack's own Profile modal already has a full Change Password tab
+  // (current password, new password, confirm — all validated by Memberstack
+  // itself) — jumping straight to it via the hidden data-ms-modal-tab
+  // trigger is a one-line integration instead of building + validating a
+  // custom password form and calling updateMemberAuth() by hand.
+  window.mqChangePassword = function() {
+    const trigger = document.getElementById('mq-ms-changepw-trigger');
+    if (trigger) trigger.click();
   };
 
   window.mqLogout = function() {
@@ -8978,8 +8995,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         document.body.appendChild(script);
       }
     }
-
-
   };
 
   init();
