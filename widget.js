@@ -1782,7 +1782,10 @@
     if (modal) return modal;
     modal = document.createElement('div');
     modal.id = 'mq-measure-calc';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100000;display:none;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    // z-index must beat #mq-sticky-bar (z-index:999999, position:fixed) —
+    // same fix as the proposal modals in widgetpro.js — or the sticky bar
+    // renders on top of and covers the bottom of this modal.
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000010;display:none;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
     modal.innerHTML = `<div id="mq-calc-card" style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;padding:1.5rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)"></div>`;
     // Click the dark backdrop (not the card itself) to close, same pattern
     // used by the showroom popup elsewhere in this file.
@@ -1823,16 +1826,9 @@
     }
     mqEnsureCalcModal().style.display = 'flex';
     mqRenderCalc();
-
-    // The sticky bar's expanded breakdown can be tall enough to cover part
-    // of this modal at the bottom of the screen once there's more than one
-    // room in it. Temporarily collapse it while the calculator is open,
-    // and only if it was actually showing — nothing to undo later if it
-    // was already collapsed to begin with.
-    const breakdown = document.getElementById('mq-sticky-breakdown');
-    const entryCount = (window._mqQuoteCart || []).length + (window._mqLivePreview ? 1 : 0);
-    window._mqCalcAutoHidBreakdown = !!(breakdown && breakdown.style.display === 'block' && entryCount > 1);
-    if (window._mqCalcAutoHidBreakdown) window.mqToggleStickyBreakdown();
+    // No need to collapse the sticky bar's breakdown here — the modal's
+    // z-index (see mqEnsureCalcModal) already puts it above #mq-sticky-bar,
+    // so it just renders on top regardless of the breakdown's state.
   };
 
   window.mqCloseMeasureCalc = function() {
@@ -1841,10 +1837,6 @@
     }
     const modal = document.getElementById('mq-measure-calc');
     if (modal) modal.style.display = 'none';
-    if (window._mqCalcAutoHidBreakdown) {
-      window._mqCalcAutoHidBreakdown = false;
-      window.mqToggleStickyBreakdown();
-    }
   };
 
   window.mqCalcSetUnit = function(unit) {
@@ -4088,13 +4080,8 @@
           stickyBreakdown.style.display = 'none';
           stickyBreakdown.innerHTML = '';
         } else {
-          // Keep the content fresh regardless, but don't fight the
-          // calculator modal's auto-hide by forcing this back open while
-          // it's active — it gets restored once the modal closes.
-          if (!window._mqCalcAutoHidBreakdown) {
-            stickyBreakdown.style.display = 'block';
-            if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
-          }
+          stickyBreakdown.style.display = 'block';
+          if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
             + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`
             + `<div style="text-align:right;padding-top:6px"><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
