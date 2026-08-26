@@ -5875,7 +5875,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!modal) {
         modal = document.createElement('div');
         modal.id = 'mq-proposal-modal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100005;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto';
+        // z-index must beat #mq-sticky-bar (z-index:999999, position:fixed)
+        // or the live-estimator sticky bar renders on top of and covers the
+        // bottom of this modal — the "can't scroll to the button" bug.
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000010;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto';
         document.body.appendChild(modal);
       }
       modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:540px;width:100%;padding:1.75rem;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
@@ -6466,7 +6469,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!modal) {
         modal = document.createElement('div');
         modal.id = 'mq-proposals-list-modal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100005;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto';
+        // Same z-index fix as #mq-proposal-modal above — must beat
+        // #mq-sticky-bar (z-index:999999) or the sticky bar covers the
+        // bottom of this modal too.
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000010;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto';
         document.body.appendChild(modal);
       }
       modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:1.75rem;max-height:85vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
