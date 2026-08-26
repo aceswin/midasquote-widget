@@ -4084,11 +4084,24 @@
           if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
             + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`
-            + `<div style="text-align:right;padding-top:6px"><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
+            + `<div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px"><button type="button" onclick="mqScrollToTop()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↑ Back to top</button><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
         }
         mqAdjustWidgetBottomPadding();
       }
     }
+
+    // "Back to top" link on the sticky bar's breakdown, next to Reset quote.
+    // Jumps to the active tab's project-type picker (Project basics, step
+    // 1) when that tab has one — Cabinets and Both both do; Countertops
+    // doesn't, so it falls back to the top of that tab's own content.
+    // Reuses mqScrollWithOffset so a shop site's own sticky header doesn't
+    // cover the landing spot.
+    window.mqScrollToTop = function() {
+      const prefix = window._mqActiveTabPrefix || 'b';
+      const tabId = prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets');
+      const target = document.getElementById(`mq-${prefix}-room`) || document.getElementById(tabId) || document.getElementById('midasquote-widget');
+      mqScrollWithOffset(target, 80);
+    };
 
     // Clears the whole running quote and resets every tab's form back to
     // its starting state, so the customer can start completely over.
