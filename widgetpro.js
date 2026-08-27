@@ -152,6 +152,14 @@
     // drawers, crown, valance can each say something different).
     try { window._mqCategoryPickerLabels = shop['Category picker labels'] ? JSON.parse(shop['Category picker labels']) : {}; } catch(e) { window._mqCategoryPickerLabels = {}; }
 
+    // Specialty item category display order, per project type — e.g.
+    // "Shelving" before "Pullouts" for Kitchen, but the other way around for
+    // Bathroom. { [roomId]: [categoryName, ...] }. Categories not listed for
+    // a given room just keep whatever order they'd otherwise render in — see
+    // mqReorderSpecCategoryGroups, which applies this every time the
+    // customer switches project type.
+    try { window._mqSpecCategoryOrder = shop['Specialty category order'] ? JSON.parse(shop['Specialty category order']) : {}; } catch(e) { window._mqSpecCategoryOrder = {}; }
+
     const p = payload.pricing || {};
 
     const lineItemRecords = payload.lineItems || [];
@@ -1527,7 +1535,12 @@
       const photoSpecs = catSpecs.filter(s => s.photoUrl);
       window._mqLightboxGroups[catKey] = photoSpecs.map(s => ({ src: s.photoUrl, label: s.label }));
       const cardsHtml = groups[cat].map(i => buildCard(specs[i], i, catKey, photoSpecs.indexOf(specs[i]))).join('');
-      return `<div class="mq-spec-category-group" style="margin:${gi===0?'0':'14px'} 0 0">
+      // data-cat carries the raw category key (not the display label) so
+      // mqReorderSpecCategoryGroups can match this group against a shop's
+      // saved per-project-type order regardless of how "Other" is worded —
+      // it's the same __other__ sentinel used to build `groups` above.
+      const catAttr = cat.replace(/"/g,'&quot;');
+      return `<div class="mq-spec-category-group" data-cat="${catAttr}" style="margin:${gi===0?'0':'14px'} 0 0">
         <div class="mq-spec-category-heading">${label}</div>
         ${mqHscrollWrap(catKey, 'mq-spec-category-items', cardsHtml)}
       </div>`;
@@ -2640,6 +2653,45 @@
           group.style.display = anyVisible ? '' : 'none';
         });
       }
+      mqReorderSpecCategoryGroups(prefix, roomId);
+    };
+
+    // All of a shop's specialty categories are built into the page once, up
+    // front, covering every project type at the same time — switching
+    // project types only ever shows/hides individual items and their parent
+    // category capsules above (mqRefreshRoomVisibility), it never re-renders
+    // them. So a per-project-type category order can't be baked in at build
+    // time the way item order can; instead this physically re-stacks the
+    // already-built category capsules in the DOM every time the customer
+    // switches project type, according to that room's saved order (falling
+    // back to whatever order they'd otherwise be in for any category that
+    // room hasn't customized). Margins are re-applied by actual visible
+    // position rather than left as originally rendered, so a category that's
+    // hidden entirely for this room never leaves a stray gap above whichever
+    // capsule now comes first.
+    window.mqReorderSpecCategoryGroups = function(prefix, roomId) {
+      const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
+      const grid = specBody ? specBody.querySelector('.mq-spec-grid') : null;
+      if (!grid) return;
+      const groups = [...grid.children].filter(el => el.classList.contains('mq-spec-category-group'));
+      if (groups.length > 1) {
+        const roomOrder = (window._mqSpecCategoryOrder || {})[roomId] || [];
+        if (roomOrder.length) {
+          const pos = new Map(roomOrder.map((c, i) => [c, i]));
+          // Anything not explicitly placed for this room keeps its current
+          // relative order, sorted in after everything that IS placed.
+          groups
+            .map((g, i) => ({ g, p: pos.has(g.dataset.cat) ? pos.get(g.dataset.cat) : (1000 + i) }))
+            .sort((a, b) => a.p - b.p)
+            .forEach(({ g }) => grid.appendChild(g));
+        }
+      }
+      let seenVisible = false;
+      [...grid.children].filter(el => el.classList.contains('mq-spec-category-group')).forEach(g => {
+        if (g.style.display === 'none') return;
+        g.style.margin = (seenVisible ? '14px' : '0') + ' 0 0';
+        seenVisible = true;
+      });
     };
     // Shows the shop owner's custom guidance note for whichever project type
     // is selected — e.g. "For door refacing, skip the box materials below,

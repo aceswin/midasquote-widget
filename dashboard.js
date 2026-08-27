@@ -3550,6 +3550,14 @@ window.logoutMember = async function () {
   }
   window.mqSpecCategoryChanged = function(id, sel) {
     const row = sel.closest('tr');
+    // Keep the in-memory record in sync too (mqSaveSpecField only writes to
+    // Airtable) — the category-order box above the table reads categories
+    // straight off window._mqSpecRecords, so without this a category change
+    // here wouldn't show up there until the next full reload. Only touched
+    // in the two branches below that actually persist a change, same as
+    // row.setAttribute('data-category', ...) right beside each — a
+    // cancelled "+ Add new category…" prompt leaves both alone.
+    const rec = (window._mqSpecRecords || []).find(x => x.id === id);
     if (sel.value === '__new__') {
       const name = (prompt('New category name:') || '').trim();
       if (name) {
@@ -3560,6 +3568,7 @@ window.logoutMember = async function () {
         sel.insertBefore(opt, sel.lastElementChild);
         mqSaveSpecField(id, 'Category', name);
         if (row) row.setAttribute('data-category', name);
+        if (rec) rec.fields['Category'] = name;
         // Make the new category immediately pickable everywhere else on the
         // page too, without needing a reload — every other item's own
         // dropdown, plus the "Filter by category" dropdown.
@@ -3584,12 +3593,14 @@ window.logoutMember = async function () {
     } else {
       mqSaveSpecField(id, 'Category', sel.value);
       if (row) row.setAttribute('data-category', sel.value);
+      if (rec) rec.fields['Category'] = sel.value;
     }
     // Whether it's a brand new category or a change to an existing one,
     // re-check this row against whatever filter is currently active — an
     // item moved out of the category being filtered on should disappear
     // right away, not linger until the page gets refreshed.
     if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
+    if (typeof window.mqRefreshCategoryOrderBox === 'function') window.mqRefreshCategoryOrderBox();
   };
 
   async function loadProposalTemplates(shopName) {
@@ -4185,7 +4196,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
         <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
-          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable();mqRefreshCategoryOrderBox()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
             <option value="">All project types</option>
             ${roomOptions}
           </select>
@@ -4211,6 +4222,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </label>
         </div>
       </div>
+      <div id="mq-spec-catorder-box">${mqCategoryOrderBoxHTML('')}</div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
@@ -4292,6 +4304,90 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       });
     });
   }
+
+  // Which categories should be listed for reordering under a given project
+  // type, and in what order — starts from that project type's saved order
+  // (if any), then appends any category that's present for this project
+  // type but hasn't been placed yet (new items, or a category never
+  // touched here before), alphabetically, so nothing is ever silently
+  // missing from the box. An item with an empty "Visible rooms" list is
+  // visible for every project type, same rule the room filter itself uses.
+  function mqSpecCategoriesForRoom(roomId) {
+    const specs = window._mqSpecRecords || [];
+    const catsHere = new Set();
+    specs.forEach(r => {
+      const cat = (r.fields['Category'] || '').trim();
+      if (!cat) return;
+      let rooms = [];
+      try { rooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { rooms = []; }
+      if (!rooms.length || rooms.includes(roomId)) catsHere.add(cat);
+    });
+    let orderMap = {};
+    try { orderMap = window._mqShopRecord?.fields['Specialty category order'] ? JSON.parse(window._mqShopRecord.fields['Specialty category order']) : {}; } catch(e) { orderMap = {}; }
+    const saved = orderMap[roomId] || [];
+    const ordered = saved.filter(c => catsHere.has(c));
+    [...catsHere].filter(c => !ordered.includes(c)).sort((a, b) => a.localeCompare(b)).forEach(c => ordered.push(c));
+    return ordered;
+  }
+
+  // Lets a shop owner control the order specialty-item categories appear in
+  // on the widget for ONE specific project type — e.g. "Shelving" before
+  // "Pullouts" for Kitchen, but Pullouts first for Bathroom. Only makes
+  // sense once a single project type is actually selected in the filter
+  // above (categories can legitimately want a different order per project
+  // type, so there's no single "order" to show for "All project types"),
+  // and only once that project type actually has 2+ categories to order —
+  // with 0 or 1 there's nothing to arrange. Saved on the shop record as one
+  // JSON blob keyed by project type, same pattern as "Category rooms".
+  function mqCategoryOrderBoxHTML(roomId) {
+    if (!roomId) return '';
+    const room = (window._mqRooms || defaultRoomTypes()).find(r => r.id === roomId);
+    const roomName = room ? room.name : roomId;
+    const ordered = mqSpecCategoriesForRoom(roomId);
+    if (ordered.length < 2) return '';
+    return `
+      <div style="margin-bottom:12px;padding:12px 14px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px">
+        <div style="font-size:12px;font-weight:700;color:#3730a3;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Category order for ${roomName.replace(/</g,'&lt;')}</div>
+        <div style="font-size:11px;color:#4338ca;margin-bottom:10px;line-height:1.5">This is the order customers see these categories in on the widget when quoting ${roomName.replace(/</g,'&lt;')} — doesn't affect any other project type.</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${ordered.map((c, i) => `
+            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e0e7ff;border-radius:6px;padding:6px 10px">
+              <span style="flex:1;font-size:13px;color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.replace(/</g,'&lt;')}</span>
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px" ${i===0?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},-1)' title="Move up">↑</button>
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px" ${i===ordered.length-1?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},1)' title="Move down">↓</button>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  window.mqRefreshCategoryOrderBox = function() {
+    const box = document.getElementById('mq-spec-catorder-box');
+    if (!box) return;
+    const roomId = el('mq-spec-tab-filter-room')?.value || '';
+    box.innerHTML = mqCategoryOrderBoxHTML(roomId);
+  };
+
+  window.mqMoveSpecCategoryOrder = async function(roomId, cat, dir) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const ordered = mqSpecCategoriesForRoom(roomId);
+    const idx = ordered.indexOf(cat);
+    const swapIdx = idx + dir;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= ordered.length) return;
+    [ordered[idx], ordered[swapIdx]] = [ordered[swapIdx], ordered[idx]];
+    let orderMap = {};
+    try { orderMap = shopRec.fields['Specialty category order'] ? JSON.parse(shopRec.fields['Specialty category order']) : {}; } catch(e) { orderMap = {}; }
+    orderMap = { ...orderMap, [roomId]: ordered };
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Specialty category order': JSON.stringify(orderMap) });
+      shopRec.fields['Specialty category order'] = JSON.stringify(orderMap);
+    } catch(e) {
+      console.error('Failed to save category order', e);
+      alert('Could not save that order — please try again.');
+      return;
+    }
+    window.mqRefreshCategoryOrderBox();
+  };
 
   // Categories aren't a real Airtable table — they only exist as whatever
   // string value shows up in specialty items' own Category field. So
@@ -6054,7 +6150,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // away, not linger until the page gets refreshed.
       const row = document.querySelector(`#mq-spec-tbody tr[data-id="${itemId}"]`);
       if (row) row.setAttribute('data-rooms', JSON.stringify(toSave));
+      // Same reason as mqSpecCategoryChanged — the category-order box reads
+      // straight off window._mqSpecRecords, which mqSaveSpecField-style
+      // saves never touch on their own.
+      const rec = (window._mqSpecRecords || []).find(x => x.id === itemId);
+      if (rec) rec.fields['Visible rooms'] = JSON.stringify(toSave);
       if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
+      if (typeof window.mqRefreshCategoryOrderBox === 'function') window.mqRefreshCategoryOrderBox();
     } catch(e) {
       console.error('Failed to save room links', e);
       rooms.forEach(r => {
