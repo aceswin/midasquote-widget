@@ -789,7 +789,11 @@ window.logoutMember = async function () {
             <div id="mq-shop-msg"></div>
 
             <div class="mq-card">
-              <div class="mq-card-title">🏢 Business info</div>
+              <div class="mq-card-title" onclick="mqToggleShopSection('business')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-business-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                🏢 Business info
+              </div>
+              <div id="mq-shopsec-business-body" style="display:none">
               <div class="mq-grid2">
                 <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" id="mq-shop-name"/></div>
                 <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" id="mq-shop-phone"/></div>
@@ -810,10 +814,15 @@ window.logoutMember = async function () {
                   <span class="mq-hint">Switches the symbol everywhere on your widget, MidasQuote Pro, and the pricing wizard — doesn't convert amounts, just how they're displayed</span>
                 </div>
               </div>
+              </div>
             </div>
 
             <div class="mq-card">
-              <div class="mq-card-title">🎨 Branding</div>
+              <div class="mq-card-title" onclick="mqToggleShopSection('branding')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-branding-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                🎨 Branding
+              </div>
+              <div id="mq-shopsec-branding-body" style="display:none">
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field"><label class="mq-label">Brand colour</label>
                   <div style="display:flex;align-items:center;gap:8px">
@@ -825,11 +834,11 @@ window.logoutMember = async function () {
               </div>
               <div style="margin-bottom:1rem;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
                 <div onclick="mqToggleColorScheme()" style="display:flex;align-items:center;gap:8px;padding:12px 16px;background:#f9fafb;cursor:pointer">
-                  <span id="mq-colorscheme-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                  <span id="mq-colorscheme-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s;transform:rotate(90deg)">▶</span>
                   <span style="font-size:13px;font-weight:700;color:#374151">MidasQuote default color scheme</span>
                   <span style="font-size:12px;color:#9ca3af">— click to customize</span>
                 </div>
-                <div id="mq-colorscheme-body" style="display:none;padding:14px 16px">
+                <div id="mq-colorscheme-body" style="display:block;padding:14px 16px">
                 <div class="mq-grid2" style="gap:12px">
                   <div class="mq-field"><label class="mq-label">Focal highlight colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
@@ -880,10 +889,15 @@ window.logoutMember = async function () {
                 <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png" oninput="mqRefreshLogoPreview()"/>
                 <span class="mq-hint">Appears in the top-left corner of your widget</span>
               </div>
+              </div>
             </div>
 
             <div class="mq-card">
-              <div class="mq-card-title">📝 Widget text &amp; quote settings</div>
+              <div class="mq-card-title" onclick="mqToggleShopSection('widgettext')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-widgettext-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                📝 Widget text &amp; quote settings
+              </div>
+              <div id="mq-shopsec-widgettext-body" style="display:none">
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field">
                   <label class="mq-label">Quote range — low (% below estimate)</label>
@@ -911,10 +925,15 @@ window.logoutMember = async function () {
                 <input type="text" id="mq-shop-projecttype-hint" placeholder="After calculating your first quote, you can continue adding other project types."/>
                 <span class="mq-hint">A short line under the dropdown letting customers know they can build one combined quote across multiple project types</span>
               </div>
+              </div>
             </div>
 
             <div class="mq-card">
-              <div class="mq-card-title">📩 Leads &amp; consultations</div>
+              <div class="mq-card-title" onclick="mqToggleShopSection('leads')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-leads-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                📩 Leads &amp; consultations
+              </div>
+              <div id="mq-shopsec-leads-body" style="display:none">
               <div class="mq-field" style="margin-bottom:1rem">
                 <label class="mq-label">Lead notify email</label>
                 <input type="email" id="mq-shop-email"/>
@@ -940,10 +959,15 @@ window.logoutMember = async function () {
                 </div>
                 <div class="mq-toggle" id="mq-notify-every-toggle" onclick="mqToggleNotifyEvery()"></div>
               </div>
+              </div>
             </div>
 
             <div class="mq-card">
-              <div class="mq-card-title">💳 Financing &amp; extras</div>
+              <div class="mq-card-title" onclick="mqToggleShopSection('financing')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-financing-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                💳 Financing &amp; extras
+              </div>
+              <div id="mq-shopsec-financing-body" style="display:none">
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">We offer financing</div>
@@ -964,6 +988,7 @@ window.logoutMember = async function () {
                   <div style="font-size:12px;color:#6b7280;margin-top:2px">Customers can browse your showroom before getting a quote</div>
                 </div>
                 <div class="mq-toggle on" id="mq-showroom-toggle" onclick="mqToggleShowroom()"></div>
+              </div>
               </div>
             </div>
           </div>
@@ -2672,7 +2697,9 @@ window.logoutMember = async function () {
       const link = el('mq-shop-consult-link')?.value?.trim() || '';
       const email = el('mq-shop-consult-email')?.value?.trim() || '';
       const warning = el('mq-shop-consult-warning');
-      if (warning) warning.style.display = (!link && !email) ? 'block' : 'none';
+      const needsWarning = !link && !email;
+      if (warning) warning.style.display = needsWarning ? 'block' : 'none';
+      if (needsWarning) window.mqOpenShopSection('leads');
     };
     window.mqCheckConsultFields();
     const toggle = el('mq-showroom-toggle');
@@ -4551,6 +4578,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     window.mqSaveShop();
     showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
+  };
+
+  window.mqToggleShopSection = function(key) {
+    const body = el('mq-shopsec-' + key + '-body');
+    const chevron = el('mq-shopsec-' + key + '-chevron');
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+  };
+  window.mqOpenShopSection = function(key) {
+    const body = el('mq-shopsec-' + key + '-body');
+    const chevron = el('mq-shopsec-' + key + '-chevron');
+    if (!body) return;
+    body.style.display = 'block';
+    if (chevron) chevron.style.transform = 'rotate(90deg)';
   };
 
   window.mqToggleColorScheme = function() {
