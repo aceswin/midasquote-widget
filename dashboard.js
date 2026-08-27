@@ -8883,6 +8883,108 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     update();
   }
 
+  // Sticky column-header row for the Specialty Items table — while
+  // scrolled into the (often long) table, "Per lin ft?", "Per sq ft?",
+  // "Offer supply/install choice?" etc. stay visible instead of scrolling
+  // off, so there's no need to scroll all the way back up just to remember
+  // what a checkbox column means.
+  //
+  // Deliberately NOT done by repositioning the real <thead> (position:fixed
+  // on a table section loses the table's column-width algorithm, and the
+  // table also scrolls horizontally in .mq-table-wrap — keeping a detached
+  // header lined up with the body under both a page scroll AND a table
+  // scroll gets fragile fast). Instead this floats a lightweight CLONE of
+  // just the header row, fixed under the topbar, whose column widths and
+  // horizontal offset are re-synced from the real header on every tick
+  // while it's showing. The real table itself is never touched, so nothing
+  // about its layout, drag-reordering, or inline editing can be disturbed
+  // by this. Same JS-driven technique as mqInitStickyNav/mqInitStickyTopbar
+  // above, for the same reason: this dashboard gets embedded in Webflow
+  // pages where an ancestor's overflow setting can silently break native
+  // CSS position:sticky.
+  function mqInitStickySpecHeader() {
+    let clone = null, innerTable = null;
+
+    function ensureClone() {
+      if (clone) return;
+      clone = document.createElement('div');
+      clone.id = 'mq-spec-sticky-clone';
+      clone.style.cssText = 'display:none;position:fixed;overflow:hidden;z-index:95;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.12);pointer-events:none;border-bottom:1px solid #e5e7eb';
+      innerTable = document.createElement('table');
+      innerTable.className = 'mq-table';
+      innerTable.style.cssText = 'border-collapse:collapse;margin:0';
+      clone.appendChild(innerTable);
+      document.body.appendChild(clone);
+    }
+
+    function update() {
+      const wrap = document.getElementById('mq-spec-table-wrap');
+      const realThead = wrap ? wrap.querySelector('thead') : null;
+      const realRow = realThead ? realThead.querySelector('tr') : null;
+      // No table on screen right now (different tab, still loading, or
+      // filtered view showing the empty state) — nothing to float.
+      if (!wrap || !realRow || !document.body.contains(wrap)) {
+        if (clone) clone.style.display = 'none';
+        return;
+      }
+
+      const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
+      const topbarHeight = topbar ? topbar.getBoundingClientRect().height : 60;
+      const wrapRect = wrap.getBoundingClientRect();
+      const theadRect = realThead.getBoundingClientRect();
+      const shouldShow = wrapRect.top < topbarHeight && wrapRect.bottom > topbarHeight + theadRect.height;
+
+      if (!shouldShow) {
+        if (clone) clone.style.display = 'none';
+        return;
+      }
+
+      ensureClone();
+      // Rebuild the cloned row's cells (content + widths) fresh on every
+      // tick this is showing — cheap for ~11 cells, and keeps it correct
+      // across renderSpecialty() re-renders (add/delete/reorder/filter all
+      // rebuild the real table's DOM) without needing a separate reset
+      // hook wired into every place that can trigger one.
+      const realThs = Array.from(realRow.children);
+      const clonedRow = realRow.cloneNode(true);
+      Array.from(clonedRow.children).forEach((th, i) => {
+        th.style.width = realThs[i].getBoundingClientRect().width + 'px';
+        th.style.boxSizing = 'border-box';
+      });
+      innerTable.innerHTML = '';
+      const theadEl = document.createElement('thead');
+      theadEl.appendChild(clonedRow);
+      innerTable.appendChild(theadEl);
+      innerTable.style.width = realRow.getBoundingClientRect().width + 'px';
+      // Mirrors whatever horizontal scroll position the real table-wrap is
+      // currently at, so the floating header's columns stay lined up with
+      // the real body scrolled underneath it.
+      innerTable.style.transform = `translateX(${-wrap.scrollLeft}px)`;
+
+      clone.style.display = 'block';
+      clone.style.top = topbarHeight + 'px';
+      clone.style.left = wrapRect.left + 'px';
+      clone.style.width = wrapRect.width + 'px';
+      clone.style.height = theadRect.height + 'px';
+    }
+
+    let ticking = false;
+    function onEvent() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { update(); ticking = false; });
+    }
+    window.addEventListener('scroll', onEvent, { passive: true });
+    window.addEventListener('resize', onEvent);
+    // Delegated so it keeps working even though #mq-spec-table-wrap itself
+    // gets torn down and rebuilt by renderSpecialty() — a direct listener
+    // on that element would go stale the first time the table re-renders.
+    document.addEventListener('scroll', (e) => {
+      if (e.target && e.target.id === 'mq-spec-table-wrap') onEvent();
+    }, { passive: true, capture: true });
+    update();
+  }
+
   // ============================================================
   // INIT
   // ============================================================
@@ -8952,6 +9054,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     container.innerHTML = buildHTML(shopRecord.fields);
     mqInitStickyTopbar();
     mqInitStickyNav();
+    mqInitStickySpecHeader();
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
     if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
