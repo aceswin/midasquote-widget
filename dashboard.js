@@ -993,7 +993,7 @@ window.logoutMember = async function () {
               <br><br>
               🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
               <br><br>
-              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but still takes a full sheet and the same labor as a bigger one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
+              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
             </div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
@@ -5605,10 +5605,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqVariantsPanelHTML(r) {
     const variants = mqParseVariants(r);
     const itemName = (r.fields['Item name'] || 'this item').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Min price has to be set per-variant, not shared like everything else
+    // below — a variant's own price is what its own minimum gets checked
+    // against (e.g. "Maple" and "Painted MDF" doors can easily want
+    // different floors). Same show/hide rule as the main row's Min $ field:
+    // only once this item is priced per lin ft or per sq ft (see
+    // mqSpecMinPriceHTML) — flat-rate items have nothing for a minimum to
+    // compare against.
+    const perFt = !!r.fields['Per linear foot'];
+    const perSqFt = !!r.fields['Per square foot'];
+    const showMin = perFt || perSqFt;
+    const minInputHTML = (v, vi) => !showMin ? '' : `
+        <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
+        <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
+        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
     const rows = variants.map((v, vi) => `
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+        ${minInputHTML(v, vi)}
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
       </div>`).join('');
     // Boxed with a colored left border and the item's own name repeated in
@@ -5622,7 +5637,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
         ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
       </div>`;
   }
 
@@ -5733,6 +5748,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
       minWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'flex' : 'none';
     }
+    // The variants panel has its own per-variant Min $ inputs, shown under
+    // the same per-lin-ft/per-sq-ft rule — if it's open right now, rebuild
+    // it so those inputs appear/disappear in step with the checkbox instead
+    // of only catching up the next time the panel is opened.
+    mqRefreshVariantsPanel(id);
   };
 
   // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
@@ -5811,7 +5831,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `<div id="${wrapId}" style="display:${visible ? 'flex' : 'none'};align-items:center;gap:4px;margin-top:5px">
       <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
       <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
-      <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — e.g. a tiny door still takes a full sheet and the same labor as a bigger one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+      <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
     </div>`;
   }
 

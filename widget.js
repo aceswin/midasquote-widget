@@ -219,6 +219,11 @@
           return {
             label: ((v && v.label) || '').trim(),
             price: (v && v.price) || 0,
+            // Min price is per-variant too (not shared like everything else
+            // on the item) — "Maple" and "Painted MDF" doors can easily
+            // want different floors. Install minimum stays item-level; only
+            // supply price/min vary per variant (see mqPickSpecVariant).
+            min: (v && v.min) || 0,
             photoUrl: shopPhotos['spec_' + r.id + '_v' + vid] || '',
             // Best-seller marking for specialty item variants now goes
             // exclusively through My Products (shopFeatured, the same
@@ -256,7 +261,7 @@
           // takes a full sheet and the same labor as a bigger one) — only
           // meaningful when perFt/perSqFt is set, same as the dashboard only
           // shows the field then. Supply and install each get their own.
-          minPrice: r.fields['Minimum price']||0,
+          minPrice: defaultVariant ? (defaultVariant.min||0) : (r.fields['Minimum price']||0),
           installMinPrice: r.fields['Install minimum price']||0,
           photoUrl: defaultVariant ? defaultVariant.photoUrl : (shopPhotos['spec_' + r.id] || ''),
           featured: defaultVariant ? defaultVariant.featured : (shopFeatured['spec_' + r.id] || false),
@@ -4335,6 +4340,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!v) return;
       specVariant[prefix][i] = vi;
       s.price = v.price || 0;
+      s.minPrice = v.min || 0;
       s.photoUrl = v.photoUrl || '';
       s.featured = !!v.featured;
       s.badge = v.badge || '';
