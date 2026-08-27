@@ -4269,6 +4269,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const tbody = document.getElementById('mq-spec-tbody');
     let dragging = null;
+    let draggingVariantsRow = null;
+
+    // Every item row has its own variants-editor row as a sibling <tr>
+    // right after it (mq-spec-variants-row-<id>, no data-id of its own).
+    // Dragging only ever moved the item row itself, leaving that sibling
+    // behind at its old spot in the table — so after a reorder, an item's
+    // variants panel would open under whichever OTHER item now happened to
+    // sit where this one used to be. pairEnd finds "the last row that
+    // belongs with this item" (its variants row, if it has one) so both
+    // insertion points below can move — or skip past — the pair together
+    // instead of just the one row.
+    function pairEnd(itemRow) {
+      if (!itemRow || !itemRow.dataset.id) return itemRow;
+      return document.getElementById(`mq-spec-variants-row-${itemRow.dataset.id}`) || itemRow;
+    }
 
     // Same fix as Project Types rows: draggable only turns on while the
     // mouse is actually down on the ⠿ handle — leaving the whole row
@@ -4282,25 +4297,38 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       row.addEventListener('mouseup', () => { row.draggable = false; });
       row.addEventListener('dragstart', () => {
         dragging = row;
+        draggingVariantsRow = document.getElementById(`mq-spec-variants-row-${row.dataset.id}`);
         setTimeout(() => row.style.opacity = '0.4', 0);
       });
       row.addEventListener('dragend', async () => {
         row.style.opacity = '1';
         row.draggable = false;
         dragging = null;
-        const rows = [...tbody.querySelectorAll('tr')];
+        draggingVariantsRow = null;
+        // Only real item rows carry a Sort order — the variants-row
+        // siblings have no data-id and no field of their own to save, and
+        // trying to atUpdate an undefined id would just fail (and, worse,
+        // throw partway through this loop, leaving everything after it
+        // unsaved). tr[data-id] is the same filter mqFilterSpecTable
+        // already uses to exclude those rows.
+        const rows = [...tbody.querySelectorAll('tr[data-id]')];
         for (let i = 0; i < rows.length; i++) {
           await atUpdate(CONFIG.SPECIALTY_TABLE, rows[i].dataset.id, { 'Sort order': i + 1 });
         }
       });
       row.addEventListener('dragover', e => {
         e.preventDefault();
+        // Ignore hovering over a variants-editor row itself (no data-id) —
+        // dropping should always be relative to a real item row, not
+        // wherever the mouse happens to be over an open panel underneath one.
+        if (!row.dataset.id || row === dragging) return;
         const after = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
-        if (e.clientY < after) {
-          tbody.insertBefore(dragging, row);
-        } else {
-          tbody.insertBefore(dragging, row.nextSibling);
-        }
+        // Dropping "after" this row means after ITS OWN variants row too
+        // (if it has one) — otherwise the dragged item would land wedged
+        // between this row and its variants panel instead of below both.
+        const target = e.clientY < after ? row : pairEnd(row).nextSibling;
+        tbody.insertBefore(dragging, target);
+        if (draggingVariantsRow) tbody.insertBefore(draggingVariantsRow, dragging.nextSibling);
       });
     });
   }
