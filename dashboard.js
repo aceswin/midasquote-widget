@@ -992,6 +992,8 @@ window.logoutMember = async function () {
               🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
               <br><br>
               🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
+              <br><br>
+              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but still takes a full sheet and the same labor as a bigger one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
             </div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
@@ -4235,7 +4237,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>${variantCount ? '' : mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}</td>
+              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>${variantCount ? '' : mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${variantCount ? '' : mqSpecMinPriceHTML(r, false)}</td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
@@ -5723,6 +5725,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       flatLabel.style.display = showMetric ? 'none' : 'inline-flex';
       metricGroup.style.display = showMetric ? 'inline-flex' : 'none';
     }
+    // Same show/hide, same trigger, for the "Min $" floor next to it — see
+    // mqSpecMinPriceHTML.
+    const minWrap = document.getElementById(`mq-spec-price-minwrap-${id}`);
+    if (minWrap) {
+      const ftBox = document.getElementById(`mq-spec-perft-${id}`);
+      const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
+      minWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'flex' : 'none';
+    }
   };
 
   // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
@@ -5751,6 +5761,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       flatLabel.style.display = showMetric ? 'none' : 'inline-flex';
       metricGroup.style.display = showMetric ? 'inline-flex' : 'none';
     }
+    const minWrap = document.getElementById(`mq-spec-installprice-minwrap-${id}`);
+    if (minWrap) {
+      const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
+      const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
+      minWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'flex' : 'none';
+    }
   };
 
   // A shop owner thinking in metric shouldn't have to do the sqft/linft
@@ -5777,6 +5793,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <button type="button" onclick="mqShowSpecRateCalc(this,'${id}',${isInstall ? 'true' : 'false'},event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
       </span>
     </span>`;
+  }
+
+  // A minimum only means anything once an item is priced per lin ft or per
+  // sq ft — a flat-rate item's one price already IS its floor, so this
+  // stays hidden until Per lin ft / Per sq ft is checked (same visibility
+  // rule, and the same show/hide toggle points, as the metric calculator
+  // above — see mqSaveSpecUnit / mqSaveSpecInstallUnit).
+  function mqSpecMinPriceHTML(r, isInstall) {
+    const id = r.id;
+    const wrapId = isInstall ? `mq-spec-installprice-minwrap-${id}` : `mq-spec-price-minwrap-${id}`;
+    const fieldId = isInstall ? `mq-spec-installprice-min-${id}` : `mq-spec-price-min-${id}`;
+    const field = isInstall ? 'Install minimum price' : 'Minimum price';
+    const perFt = isInstall ? r.fields['Install per linear foot'] : r.fields['Per linear foot'];
+    const perSqFt = isInstall ? r.fields['Install per square foot'] : r.fields['Per square foot'];
+    const visible = !!(perFt || perSqFt);
+    return `<div id="${wrapId}" style="display:${visible ? 'flex' : 'none'};align-items:center;gap:4px;margin-top:5px">
+      <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
+      <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
+      <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — e.g. a tiny door still takes a full sheet and the same labor as a bigger one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+    </div>`;
   }
 
   window.mqShowSpecRateCalc = function(triggerEl, id, isInstall, event) {
@@ -5872,6 +5908,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span onclick="mqShowSpecHelpPopover(this,'e.g. ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
         <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
+        ${mqSpecMinPriceHTML(r, true)}
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
           <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per lin ft</label>
           <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per sq ft</label>
@@ -5908,6 +5945,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const existingInstallPerFt = document.getElementById(`mq-spec-installperft-${id}`);
     const existingInstallPerSqFt = document.getElementById(`mq-spec-installpersqft-${id}`);
     const existingInstallQtyLabel = document.getElementById(`mq-spec-installqtylabel-${id}`);
+    const existingInstallMin = document.getElementById(`mq-spec-installprice-min-${id}`);
     col.innerHTML = mqSpecInstallColHTML({ id, fields: {
       'Offers install choice': offersChoice,
       'Install price': existingPriceInput ? existingPriceInput.value : '',
@@ -5915,6 +5953,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       'Install per linear foot': existingInstallPerFt ? existingInstallPerFt.checked : false,
       'Install per square foot': existingInstallPerSqFt ? existingInstallPerSqFt.checked : false,
       'Install quantity label': existingInstallQtyLabel ? existingInstallQtyLabel.value : '',
+      'Install minimum price': existingInstallMin ? existingInstallMin.value : '',
     }});
   };
 
@@ -6111,6 +6150,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> lin ft</label>
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> sq ft</label>
       </div>
+      ${mqSpecMinPriceHTML(r, false)}
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Offer supply/install choice</label>
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ⚡ Pro only</label>

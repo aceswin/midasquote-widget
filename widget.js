@@ -252,6 +252,12 @@
           badgePrice:(defaultVariant ? defaultVariant.price : (r.fields['Price']||0))+(r.fields['Install price']||0),
           perFt:r.fields['Per linear foot']||false,
           perSqFt:r.fields['Per square foot']||false,
+          // Per-order floor for size-based items (e.g. a tiny door still
+          // takes a full sheet and the same labor as a bigger one) — only
+          // meaningful when perFt/perSqFt is set, same as the dashboard only
+          // shows the field then. Supply and install each get their own.
+          minPrice: r.fields['Minimum price']||0,
+          installMinPrice: r.fields['Install minimum price']||0,
           photoUrl: defaultVariant ? defaultVariant.photoUrl : (shopPhotos['spec_' + r.id] || ''),
           featured: defaultVariant ? defaultVariant.featured : (shopFeatured['spec_' + r.id] || false),
           // The currently-active variant's own name (e.g. "Oak") — kept
@@ -810,6 +816,11 @@
             label:       item['Name'],
             ps:          item['Rate']||0,
             pi:          item['Install rate']||0,
+            // Per-counter floor — if a small counter's real sqft/lin ft math
+            // comes out under this, the minimum wins instead (see
+            // calcCountertop). 0/undefined means no minimum, same as always.
+            min:         item['Minimum price']||0,
+            installMin:  item['Install minimum price']||0,
             supplyUnit:  (unitParts[0]||'sqft').trim(),
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
@@ -4724,7 +4735,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       specs.forEach((s,i)=>{
         if(!specQty[prefix][i]) return;
         const supplyQty = specQty[prefix][i];
-        const supplyCost = s.price * supplyQty;
+        // A tiny order can still cost the shop full price to make (a small
+        // door takes a full sheet and the same labor as a bigger one) — the
+        // minimum only applies to size-based items (perFt/perSqFt), same as
+        // the dashboard only shows the field then.
+        let supplyCost = s.price * supplyQty;
+        if ((s.perFt || s.perSqFt) && s.minPrice > 0) supplyCost = Math.max(supplyCost, s.minPrice);
         const supplyQtyLabel = s.perSqFt?`${supplyQty} sqft`:(s.perFt?`${supplyQty} ft`:(supplyQty>1?`× ${supplyQty}`:''));
         // Fold the currently-picked variant's own name into the line-item
         // text (e.g. "Crown Molding — Oak") so the actual quote/lead always
@@ -4754,7 +4770,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
         const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
         const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : supplyQty;
-        const installCost = s.installPrice * installQtyVal;
+        let installCost = s.installPrice * installQtyVal;
+        if ((s.installPerFt || s.installPerSqFt) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
         const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
         specTotal += supplyCost + installCost;
         lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel}) — Supply`:`${itemLabel} — Supply`,cost:Math.round(supplyCost)});
@@ -4790,6 +4807,21 @@ window.mqTogDrawerConfig=(prefix)=>{
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
 
+      // Minimum charges pool PER MATERIAL, across every counter/run using
+      // that material in this one project type (the cabinet-run measure
+      // block below and every surface in the loop after it) — not per
+      // individual counter. e.g. three small counters in the same quote,
+      // same material, $100/lin ft install and a $150 minimum: their real
+      // install costs add up first, and the $150 floor is only applied
+      // once to that combined total if it's still short — not three
+      // separate $150 minimums. A different project type (a separate call
+      // to calcCountertop) starts its own pool from zero, same as before.
+      const minPools = {};
+      function poolFor(matKey, m) {
+        if (!minPools[matKey]) minPools[matKey] = { m, rawSupply:0, rawInstall:0, hasSupply:false, hasInstall:false };
+        return minPools[matKey];
+      }
+
       const useCabMeasure = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       if (useCabMeasure) {
         const bFt   = gn(`mq-${prefix}-bft`, 0);
@@ -4810,8 +4842,14 @@ window.mqTogDrawerConfig=(prefix)=>{
           const si    = gv(ctSiId);
           const m     = mat === 'none' ? null : (CT_MAT[mat] || null);
           if (m) {
-            const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
+            // Real (unclamped) cost for this run — the minimum, if any, is
+            // applied once at the end against this material's pooled total
+            // across every counter/run in this project type, not here.
+            const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
             const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
+            const pool = poolFor(mat, m);
+            pool.rawSupply += supplyCost; pool.hasSupply = true;
+            if (si==='install') { pool.rawInstall += installCost; pool.hasInstall = true; }
             const bsVal = gv(bsId);
             const bsOpt = (bsVal && bsVal!=='none') ? bsOptionsFor(m)[parseInt(bsVal,10)] : null;
             // Backsplash only runs along walls — add 2 ft per side splash, then
@@ -4849,8 +4887,20 @@ window.mqTogDrawerConfig=(prefix)=>{
         const w=gn('mqsw-'+id,0), d=gn('mqsd-'+id,ctDepth);
         const sqft=(w*(d||ctDepth))/144;
         const linFt=w/12;
-        const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
+        // Real (unclamped) cost for this surface — pooled into this
+        // material's running total below, same as the cabinet-run block
+        // above, so the minimum (if any) applies once across every counter
+        // of this material rather than per surface. Only pooled once the
+        // customer has actually entered a size (w > 0) — a surface card
+        // added but still at its default 0 width shouldn't nudge the pool
+        // toward a minimum charge for a counter that isn't really there yet.
+        const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
         const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
+        if (w > 0) {
+          const pool = poolFor(mat, m);
+          pool.rawSupply += supplyCost; pool.hasSupply = true;
+          if (si==='install') { pool.rawInstall += installCost; pool.hasInstall = true; }
+        }
         const bsVal = gv('mqsbs-'+id);
         const bsOpt = (bsVal && bsVal!=='none') ? bsOptionsFor(m)[parseInt(bsVal,10)] : null;
         // Backsplash only runs along walls — add 2 ft per side splash, then net
@@ -4873,6 +4923,24 @@ window.mqTogDrawerConfig=(prefix)=>{
         const totalCost = cost + addonsRes.cost;
         sub+=totalCost;
         lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${Math.round(bsLinFt*10)/10} lin ft)`:''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`,cost:Math.round(totalCost)});
+      });
+
+      // Settle every material's minimum against its pooled total from
+      // every counter/run above — every real counter's own line already
+      // shows its true cost, so this only adds a line (and the difference
+      // to sub) when the combined total across that material's counters
+      // still falls short of the shop's minimum.
+      Object.values(minPools).forEach(pool => {
+        if (pool.hasSupply && pool.m.min > 0 && pool.rawSupply < pool.m.min) {
+          const adj = pool.m.min - pool.rawSupply;
+          sub += adj;
+          lines.push({label:`${pool.m.label} — minimum charge (supply)`, cost:Math.round(adj)});
+        }
+        if (pool.hasInstall && pool.m.installMin > 0 && pool.rawInstall < pool.m.installMin) {
+          const adj = pool.m.installMin - pool.rawInstall;
+          sub += adj;
+          lines.push({label:`${pool.m.label} — minimum charge (install)`, cost:Math.round(adj)});
+        }
       });
 
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
