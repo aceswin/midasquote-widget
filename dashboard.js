@@ -1277,7 +1277,7 @@ window.logoutMember = async function () {
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
               <label class="mq-label" style="display:block;margin-bottom:6px">Link to use across everything below</label>
               <div style="display:flex;gap:8px">
-                <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1"/>
+                <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1;max-width:420px"/>
                 <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
               </div>
               <span class="mq-hint">Paste the link to your quote page — if you leave this blank, everything below uses your raw widget link instead</span>
@@ -1633,6 +1633,21 @@ window.logoutMember = async function () {
               </div>
             </div>
 
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('qrcode')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">QR code</div>
+                <span id="mq-mk-arrow-qrcode" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-qrcode" style="display:none;padding:0 1.25rem 1.25rem">
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Just the QR code by itself, no poster or headline — handy if you want to drop it into your own flyer, sign, or menu.</p>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+                <canvas id="mq-mk-qrcode-canvas" width="600" height="600" style="width:180px;height:180px;border-radius:10px;display:block;border:1px solid #e5e7eb"></canvas>
+                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link set at the top of this page — set it there if you haven't already</span>
+                <button class="mq-btn mq-btn-primary" id="mq-mk-qrcode-download-btn" style="width:100%;max-width:280px">⬇️ Download QR code (PNG)</button>
+              </div>
+              </div>
+            </div>
+
             <div class="mq-card" style="border-color:#86efac;background:#f0fdf4;padding:0;overflow:hidden">
               <div onclick="mqToggleMkSection('checklist')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
                 <div class="mq-card-title" style="margin:0">✅ Pre-launch checklist</div>
@@ -1645,21 +1660,6 @@ window.logoutMember = async function () {
                 ☐ You've tried the quote flow yourself at least once<br>
                 ☐ Your shop info (name, phone, logo) looks correct in the widget<br>
                 ☐ You know new leads land in your Leads tab
-              </div>
-              </div>
-            </div>
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('qrcode')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">QR code</div>
-                <span id="mq-mk-arrow-qrcode" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-qrcode" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Just the QR code by itself, no poster or headline — handy if you want to drop it into your own flyer, sign, or menu.</p>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-qrcode-canvas" width="600" height="600" style="width:180px;height:180px;border-radius:10px;display:block;border:1px solid #e5e7eb"></canvas>
-                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link set at the top of this page — set it there if you haven't already</span>
-                <button class="mq-btn mq-btn-primary" id="mq-mk-qrcode-download-btn" style="width:100%;max-width:280px">⬇️ Download QR code (PNG)</button>
               </div>
               </div>
             </div>
