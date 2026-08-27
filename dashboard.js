@@ -1648,6 +1648,21 @@ window.logoutMember = async function () {
               </div>
               </div>
             </div>
+
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div onclick="mqToggleMkSection('qrcode')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">QR code</div>
+                <span id="mq-mk-arrow-qrcode" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-mk-body-qrcode" style="display:none;padding:0 1.25rem 1.25rem">
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Just the QR code by itself, no poster or headline — handy if you want to drop it into your own flyer, sign, or menu.</p>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+                <canvas id="mq-mk-qrcode-canvas" width="600" height="600" style="width:180px;height:180px;border-radius:10px;display:block;border:1px solid #e5e7eb"></canvas>
+                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link set at the top of this page — set it there if you haven't already</span>
+                <button class="mq-btn mq-btn-primary" id="mq-mk-qrcode-download-btn" style="width:100%;max-width:280px">⬇️ Download QR code (PNG)</button>
+              </div>
+              </div>
+            </div>
           </div>
 
           <!-- PROPOSALS -->
@@ -6934,7 +6949,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const newLink = val || defaultQuoteLink;
         renderSocialPosts(buildSocialPosts(newLink));
         if (typeof window._mqRedrawQrPoster === 'function') window._mqRedrawQrPoster();
-        if (typeof window._mqRedrawSign === 'function') window._mqRedrawSign();
+        // Was calling a function named window._mqRedrawSign, which was never
+        // defined anywhere — a silent no-op, guarded by the typeof check, so
+        // it never threw and never redrew. The real Poster Designer redraw
+        // function (covers every poster template AND the landscape "yard
+        // sign" orientation) is _mqRedrawPosterDesigner.
+        if (typeof window._mqRedrawPosterDesigner === 'function') window._mqRedrawPosterDesigner();
+        if (typeof window._mqRedrawStandaloneQr === 'function') window._mqRedrawStandaloneQr();
         postLinkApplyBtn.textContent = 'Saving...';
         try {
           await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Marketing link': val });
@@ -7606,11 +7627,82 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
     }
 
+    // ── STANDALONE QR CODE (download-only, no poster styling) ──
+    // Deliberately self-contained rather than reusing qrLink/drawQrPoster
+    // from the QR poster block above — same reasoning as signLink below:
+    // it should never go stale or silently fail to render just because
+    // some other Marketing Kit feature's canvas isn't on the page.
+    const standaloneQrCanvas = el('mq-mk-qrcode-canvas');
+    if (standaloneQrCanvas && standaloneQrCanvas.getContext) {
+      const sqCtx = standaloneQrCanvas.getContext('2d');
+      const SQW = standaloneQrCanvas.width, SQH = standaloneQrCanvas.height;
+
+      function getStandaloneQrLink() {
+        return _mqCustomPostLink || defaultQuoteLink;
+      }
+      let standaloneQrLink = getStandaloneQrLink();
+
+      function drawStandaloneQr() {
+        sqCtx.clearRect(0, 0, SQW, SQH);
+        sqCtx.fillStyle = '#ffffff';
+        sqCtx.fillRect(0, 0, SQW, SQH);
+        if (!standaloneQrLink || !window.mqQrGen) return;
+        try {
+          const qr = window.mqQrGen(0, 'M');
+          qr.addData(standaloneQrLink);
+          qr.make();
+          const count = qr.getModuleCount();
+          const pad = SQW * 0.06;
+          const size = SQW - pad * 2;
+          const cell = size / count;
+          sqCtx.fillStyle = '#1a1a1a';
+          for (let row = 0; row < count; row++) {
+            for (let col = 0; col < count; col++) {
+              if (qr.isDark(row, col)) sqCtx.fillRect(pad + col*cell, pad + row*cell, cell+0.5, cell+0.5);
+            }
+          }
+        } catch(e) {}
+      }
+
+      window._mqRedrawStandaloneQr = () => { standaloneQrLink = getStandaloneQrLink(); drawStandaloneQr(); };
+
+      // Same inline-library loader as the QR poster's loadQrLib() above —
+      // duplicated in miniature (rather than reused, since that function is
+      // scoped inside the QR poster's own if-block) so this section can load
+      // and draw itself even if the poster block above ran into trouble.
+      if (window.mqQrGen) {
+        drawStandaloneQr();
+      } else {
+        try { window.mqQrGen = MQ_QR_LIB_FACTORY(); } catch(e) {}
+        drawStandaloneQr();
+      }
+
+      const standaloneQrDownloadBtn = el('mq-mk-qrcode-download-btn');
+      if (standaloneQrDownloadBtn) {
+        standaloneQrDownloadBtn.onclick = () => {
+          if (!standaloneQrLink) {
+            alert('Please add a link at the top of this page first.');
+            return;
+          }
+          const link = document.createElement('a');
+          link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'quote') + '-qr-code.png';
+          link.href = standaloneQrCanvas.toDataURL('image/png');
+          link.click();
+        };
+      }
+    }
+
     // signLink is used by both the QR poster above and the Poster Designer
     // below — declared here, outside any one feature's own block, so it's
     // never at risk of going undeclared if one of those features' own
-    // canvas doesn't exist on the page.
-    let signLink = _mqCustomPostLink || defaultQuoteLink;
+    // canvas doesn't exist on the page. getSignLink() mirrors the QR
+    // poster's own getQrLink() above: read _mqCustomPostLink fresh rather
+    // than trusting a value snapshotted once at init, since the Marketing
+    // link can change after this ran (see _mqRedrawPosterDesigner below).
+    function getSignLink() {
+      return _mqCustomPostLink || defaultQuoteLink;
+    }
+    let signLink = getSignLink();
 
       // ── Custom Poster & Sign Designer ──────────────────────────────────
       // Deliberately its own self-contained canvas system rather than
@@ -8360,7 +8452,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           else if (pdTemplate === 'bold-modern') drawBoldModern();
           else drawCurvedSplit();
         }
-        window._mqRedrawPosterDesigner = drawPosterDesigner;
+        window._mqRedrawPosterDesigner = () => { signLink = getSignLink(); drawPosterDesigner(); };
 
         window.mqPdSelectTemplate = (tpl, thumbEl) => {
           pdTemplate = tpl;
