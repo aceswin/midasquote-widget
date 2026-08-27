@@ -1,40 +1,48 @@
 /*
- * MidasQuote Dashboard v1.0
- * Shop owner backend panel
- * Loads based on Memberstack member's shopToken
- * This is a test
+ * MidasQuote Pricing Helper v4.5
+ * - Full wipe+rewrite on wizard finish (no duplicates)
+ * - Mini reverse-engineering wizard for adding individual items (no raw rate entry)
+ * - Clean, consistent UI throughout
  */
 
-(function () {
+(function() {
 
-  // Bundled QR code generator (qrcode-generator v2.0.4, MIT License, Kazuhiko Arase) — avoids external CDN dependency
-  function MQ_QR_LIB_FACTORY() {
-var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(o*r,n*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
-    return qrcode;
-  }
+  const LINE_ITEMS_TABLE = 'tblCkJsJ2OC6DgXok';
 
-  const CONFIG = {
-      AIRTABLE_TOKEN:     'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
-    BASE_ID:            'app4zrMlVLwF2xn4h',
-    SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
-    PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
-    SPECIALTY_TABLE:    'tbloaXeEM5K7TOZCD',
-    LEADS_TABLE:        'tblPcoTI8zCCHLICi',
-    LINE_ITEMS_TABLE:   'tblCkJsJ2OC6DgXok',
-    PROPOSAL_TEMPLATES_TABLE: 'tblF2upUbaWOUvBAW',
-    RESEND_API_KEY:     '',  // Removed — email sending goes through Cloudflare Worker which holds the key securely
-    EMAIL_WORKER:       'https://midasquote-email.jordan132001.workers.dev',
-    FROM_EMAIL:         'quotes@midasquote.com',
-    IMAGE_UPLOAD_URL:   'https://midasquote-image-worker.jordan132001.workers.dev',
-    IMAGE_UPLOAD_SECRET:'mq-upload-7f3k9xQ2',
-  };
+  let shopRecord = null;
+  let pricingRecord = null;
+  let lineItems = [];
+let wizardBaseline = null;
+  let wizardStep = 0;
+  let wizardItems = [];
+  let wizardStepContrib = {}; // stepIndex -> the wizardItems that step's onNext added last time through
+  let wizardFinishing = false;
+  let currentEditId = null;
 
-  const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
-  const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
+  // Mini-wizard state
+  let miniWiz = { cat: null, name: '', step: 0, matchMode: false, matchName: '', matchRates: null, bulkMode: false, bulkCount: 0, bulkRates: null, bulkNames: [] };
+
+  // Shops outside North America think in mm, not inches — rather than a full
+  // imperial/metric toggle, every inch/foot measurement shown in the wizard
+  // also gets its mm equivalent inline so metric shops never need a
+  // calculator. Everything still gets stored/output in linear feet either way.
+  const mqphMm = (inches) => Math.round(inches * 25.4);
+  const mqphMmTag = (inches) => `<span class="mqph-mm">(${mqphMm(inches).toLocaleString()}mm)</span>`;
+
+  const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
+  const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
+
+  // A UK (or any non-North-American) shop can pick their own currency
+  // symbol on the dashboard's Shop Info tab — everywhere in the pricing
+  // wizard that used to show a hardcoded "$" now reads it from here
+  // instead, falling back to "$" for shops that haven't set one.
+  // shopRecord is populated by mqph2Init() (passed in from dashboard.js's
+  // already-loaded shop record) before loadAndRender() ever runs.
+  function CUR() { return (shopRecord && shopRecord.fields && shopRecord.fields['Currency symbol']) || '$'; }
 
   async function atGet(table, formula) {
-    const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
-    const res = await fetch(url, { headers: AT_HEADS });
+    const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
+    const res = await fetch(url, { headers: AT_HEADS() });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
       throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
@@ -42,28 +50,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const data = await res.json();
     return data.records || [];
   }
-
-  async function atUpdate(table, id, fields) {
-    const res = await fetch(`${AT_BASE}/${table}/${id}`, {
-      method: 'PATCH', headers: AT_HEADS,
-      // typecast:true lets Airtable auto-add a new option to a Single Select
-      // field (like "Currency symbol") instead of rejecting the request with
-      // a 422 when the value isn't already one of the field's known choices.
-      body: JSON.stringify({ fields, typecast: true })
-    });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
-  }
-
   async function atCreate(table, fields) {
-    const res = await fetch(`${AT_BASE}/${table}`, {
-      method: 'POST', headers: AT_HEADS,
-      body: JSON.stringify({ fields, typecast: true })
-    });
+    // typecast:true lets Airtable auto-add a new option to a Single Select
+    // field instead of rejecting the request with a 422 when the value
+    // isn't already one of the field's known choices.
+    const res = await fetch(`${AT_BASE_URL()}/${table}`, { method: 'POST', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
       console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
@@ -71,11 +62,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     }
     return await res.json();
   }
-
+  async function atUpdate(table, id, fields) {
+    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'PATCH', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
+      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
+    }
+    return await res.json();
+  }
   async function atDelete(table, id) {
-    const res = await fetch(`${AT_BASE}/${table}/${id}`, {
-      method: 'DELETE', headers: AT_HEADS
-    });
+    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'DELETE', headers: AT_HEADS() });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
       throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
@@ -83,5758 +80,3074 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     return await res.json();
   }
 
-
-  // A UK (or any non-North-American) shop can pick their own currency
-  // symbol on the Shop Info tab — everywhere in the dashboard that used to
-  // show a hardcoded "$" now reads it from here instead, falling back to
-  // "$" for shops that haven't set one (every shop, until the "Currency
-  // symbol" field is added to the Shops table in Airtable and shops start
-  // picking one).
-  function CUR() { return (window._mqShopRecord && window._mqShopRecord.fields['Currency symbol']) || '$'; }
-
-  function fmt(n) { return CUR() + Math.round(n || 0).toLocaleString(); }
-  function gv(id) { const e = document.getElementById(id); return e ? e.value : ''; }
-  function gn(id, d = 0) { const v = parseFloat(gv(id)); return isNaN(v) ? d : v; }
-  function el(id) { return document.getElementById(id); }
-  function show(id) { const e = el(id); if (e) e.style.display = 'block'; }
-  function hide(id) { const e = el(id); if (e) e.style.display = 'none'; }
-  // Centers an element horizontally over .mq-content specifically (not the
-  // whole viewport), so it sits between the sidebar and the right edge —
-  // shared by the toast and the floating save button so they always line up.
-  function mqCenterOverContent(node) {
-    const content = document.querySelector('#midasquote-dashboard .mq-content');
-    if (!node || !content) return;
-    const rect = content.getBoundingClientRect();
-    node.style.left = (rect.left + rect.width / 2) + 'px';
-    node.style.transform = 'translateX(-50%)';
-  }
-
-  // Floating toast — guarantees the "saved!" confirmation is actually visible
-  // regardless of where on a (possibly long) tab the triggering action
-  // happened, whether that's a Save button, an inline checkbox toggle, or an
-  // image upload finishing.
-  function mqShowToast(msg, type = 'success') {
-    let toast = document.getElementById('mq-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'mq-toast';
-      toast.style.cssText = "position:fixed;bottom:88px;z-index:99999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,0.18);transition:opacity 0.25s ease;opacity:0;pointer-events:none;max-width:90vw;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
-      document.body.appendChild(toast);
-    }
-    mqCenterOverContent(toast);
-    const colors = { success: { bg:'#dcfce7', color:'#166534', border:'#86efac' }, error: { bg:'#fee2e2', color:'#991b1b', border:'#fca5a5' } };
-    const c = colors[type] || colors.success;
-    toast.style.background = c.bg;
-    toast.style.color = c.color;
-    toast.style.border = `1px solid ${c.border}`;
-    toast.textContent = msg;
-    toast.style.opacity = '1';
-    clearTimeout(toast._mqHideTimer);
-    toast._mqHideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
-  }
-
-  function showMsg(id, msg, type = 'success') {
-    const e = el(id);
-    if (e) {
-      e.textContent = msg;
-      e.className = `mq-msg mq-msg-${type}`;
-      e.style.display = 'block';
-      setTimeout(() => { e.style.display = 'none'; }, 3000);
-    }
-    mqShowToast(msg, type);
-  }
-
-  // Floating "Save changes" button — originally built just for Project
-  // Types (that tab got long enough that scrolling back down to one Save
-  // button got tedious), now shared across every tab that has a save
-  // action at all. mqNav looks up which action belongs to the tab being
-  // switched to and passes it in; tabs with no save action (Leads,
-  // Marketing Kit, Billing, etc.) just get it hidden entirely.
-  function mqPositionFloatingSave() {
-    mqCenterOverContent(document.getElementById('mq-floating-save'));
-  }
-
-  function mqToggleFloatingSave(action) {
-    let btn = document.getElementById('mq-floating-save');
-    if (!action) {
-      if (btn) btn.style.display = 'none';
-      window.removeEventListener('resize', mqPositionFloatingSave);
-      return;
-    }
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'mq-floating-save';
-      btn.style.cssText = "position:fixed;bottom:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:box-shadow 0.15s";
-      btn.onmouseover = () => { btn.style.boxShadow = '0 14px 36px rgba(0,0,0,0.32)'; };
-      btn.onmouseout = () => { btn.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)'; };
-      document.body.appendChild(btn);
-    }
-    btn.textContent = action.label;
-    btn.onclick = action.fn;
-    btn.style.display = 'block';
-    mqPositionFloatingSave();
-    window.addEventListener('resize', mqPositionFloatingSave);
-  }
-
-  // One save action per tab that actually has one. Tabs not listed here
-  // (Dashboard, Leads, Embed code, Marketing Kit, Billing) either have
-  // nothing to save or autosave invisibly per field, so they get no
-  // floating button at all.
-  const MQ_PAGE_SAVE_ACTIONS = {
-    shop:      { label: '💾 Save changes',  fn: () => window.mqSaveShop() },
-    rooms:     { label: '💾 Save changes',  fn: () => window.mqSaveRooms() },
-    specialty: { label: '💾 Save all',      fn: () => window.mqSaveAllSpecItems() },
-    products:  { label: '💾 Save changes',  fn: () => window.mqSaveProducts() },
-    templates: { label: '💾 Save all changes', fn: () => { window.mqSaveMasterRoomDefs(); window.mqSaveTemplatePhotos(); } },
-  };
-
-  // Per-tab help content shown in the "Need help?" modal. Written as plain
-  // paragraphs/lists for now — designed so a video embed or screenshot can
-  // just be dropped in above or below the text later without needing to
-  // restructure anything.
-  const MQ_HELP_CONTENT = {
-    overview: {
-      title: 'Dashboard',
-      body: `
-        <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
-        <p>If you're just getting started, head to <strong>Shop info</strong> first, then <strong>Project types</strong>, then <strong>Pricing</strong> — that's the order that makes the rest of the dashboard make sense.</p>
-      `
-    },
-    leads: {
-      title: 'Leads',
-      body: `
-        <p>Every quote a customer runs through your widget shows up here automatically — their contact info (if they gave it), the project type, and the estimate they saw.</p>
-        <p><strong>Statuses</strong> (New / Contacted / Booked / Lost) are just for your own tracking — customers never see these. Use the dropdown at the top to filter the list down to one status at a time.</p>
-        <p>A customer can run the widget multiple times without giving their name — you'll still see those as separate quote attempts, just grouped together and numbered ("Estimate 1 of 2", etc.) so you can tell they're the same visitor.</p>
-      `
-    },
-    shop: {
-      title: 'Shop info',
-      body: `
-        <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
-        <p><strong>Brand colour</strong> — used for your widget's tab bar, buttons, and logo placeholder.</p>
-        <p><strong>MidasQuote default color scheme</strong> — a collapsed section further down with four optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Left alone, it's the same polished blue scheme every shop starts with — click to expand it only if you want to customize any piece, like a dark background with light text.</p>
-        <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
-        <p><strong>Project type section title/hint</strong> — the heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
-        <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
-        <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
-        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific.</p>
-        <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
-        <p>Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
-      `
-    },
-    rooms: {
-      title: 'Project types',
-      body: `
-        <p>Each project type (Kitchen, Bathroom, Refacing, or anything custom you add) is its own self-contained setup: its own description, cover photo, "how to measure" guide, and pricing behavior.</p>
-        <p><strong>Price adjustments</strong> — four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
-        <p><strong>Live on widget / Draft</strong> — uncheck this while you're still setting a project type up, so customers don't see it half-finished.</p>
-        <p><strong>Visibility</strong> — choose where a project type appears: in both the customer widget and MidasQuote Pro, only in MidasQuote Pro (good for anything you only ever quote yourself), or everywhere except MidasQuote Pro (for something you only want offered publicly, not used for your own internal quoting).</p>
-        <p><strong>Hide "How to measure" section</strong> — for a project type that's entirely flat-rate items with nothing to actually measure (like a general "Odd jobs" type), this removes that whole section from the widget for that type only.</p>
-        <p><strong>Show price as a range</strong> — on by default, shows the usual ballpark spread (e.g. "${CUR()}2,375 – ${CUR()}3,000"). Uncheck it for a project type where a single clean number makes more sense instead (e.g. "${CUR()}2,600") — useful for flat-rate or fixed-price project types where a range wouldn't really apply. This also updates the wording around it automatically — "Estimated range" becomes "Your quote," and the ballpark disclaimer text adjusts to match, in every place the price shows up including the confirmation email.</p>
-        <p><strong>Cover image</strong> and <strong>Measuring guide image</strong> — upload your own, or click "↺ Use default image" to fall back to MidasQuote's own default photo for that project type. Leaving it on the default means it automatically stays current if that default photo is ever updated — nothing to re-upload later.</p>
-        <p><strong>More than one measuring guide image?</strong> Click "+ Add another image" as many times as needed — once there's more than one, the widget automatically turns it into a swipeable carousel instead of a single static photo, and gives it a brief one-time "nudge" animation so customers notice there's more than one image to see.</p>
-        <p><strong>Want a video instead of (or alongside) photos?</strong> Paste a YouTube, Vimeo, or Loom link — or a direct link to a video file — into any of the measuring guide image fields instead of a photo URL. It plays right there in the carousel with your other images, in whatever order you place it. There's no upload for video, only a link, since videos need to live somewhere that can actually stream them (YouTube, Vimeo, your own site) rather than something MidasQuote hosts for you.</p>
-        <p>Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
-      `
-    },
-    pricing: {
-      title: 'Pricing',
-      body: `
-        <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
-        <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
-        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
-        <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another [category]'s pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
-        <p style="margin-top:1.25rem"><strong>How some of the trickier pricing actually works:</strong></p>
-        <p><strong>Extended (36"–40") upper cabinets</strong> add a flat 30% on top of the material/door cost and the install cost for upper cabinets only — base cabinets are never affected, since it's only the uppers that get taller to reach the ceiling.</p>
-        <p><strong>Tall cabinets</strong> are priced per unit: your wizard's baseline unit price (24" wide, baseline material & door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced just because it shares a door style with the rest of the kitchen.</p>
-        <p><strong>Countertop edges</strong> are always priced per linear foot — there's genuinely no other accurate way to price an edge profile, since its cost is set by the length of material being shaped, not the counter's overall area. To account for the parts of a counter this tool can't precisely measure — the "returns" where an edge wraps around each end — every edge calculation adds 2 extra returns' worth of the counter's depth on top of its straight length. That's a deliberately generous assumption rather than an exact one: since this is a ballpark estimate, it's better to slightly overestimate an edge than to surprise a customer with a bigger number later at the real quote.</p>
-      `
-    },
-    specialty: {
-      title: 'Specialty items',
-      body: `
-        <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
-        <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
-        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Manage categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
-        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it: enter 16.80 as the install price, not ${CUR()}71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
-        <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
-        <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
-        <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
-        <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
-        <p><strong>🌍 Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
-      `
-    },
-    proposals: {
-      title: 'Proposals',
-      body: `
-        <p>Build proposal templates here — your team then picks one from <strong>MidasQuote Pro</strong>, right under a completed real-number estimate, to turn it into a clean, printable proposal for the customer to review and sign.</p>
-        <p>You start with three ready-made templates — <strong>Simple</strong>, <strong>Standard</strong>, and <strong>Large Project</strong> — but you can rewrite any of them completely, or add as many of your own as you'd like.</p>
-        <p><strong>The Body box is the whole proposal.</strong> Write it exactly like you'd write your own — your own wording, your own layout, your own order. Nothing is fixed except the branded header at the very top (your logo, shop name, accent colour, and the date) — everything below that is entirely yours to write.</p>
-        <p><strong>Tokens</strong> are how real data drops into your text. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you. Same idea for <code>{items}</code> (a styled list) or <code>{items_plain}</code> (the same list with no box or colour, if you'd rather it match your own paper proposal's look), <code>{totals_box}</code> or <code>{totals_plain}</code>, <code>{hr}</code> (a plain horizontal divider), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{customer_phone}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line — this app doesn't do e-signatures, this is for printing and signing in person).</p>
-        <p><strong>Show individual item prices</strong> — on by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
-        <p><strong>Deposit</strong> and <strong>Tax</strong> settings below the header row feed the <code>{deposit}</code> and <code>{tax}</code> tokens — set the percentage or flat amount here, then place the token wherever you want it to show up in the body text.</p>
-        <p><strong>👁 Preview</strong> — shows exactly what this template will actually produce, filled with sample data (a fake customer, sample line items), so you can see how it looks without leaving the dashboard or running a real quote first.</p>
-        <p>Proposals themselves — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
-      `
-    },
-    embed: {
-      title: 'Embed code',
-      body: `
-        <p>Three ways to actually get the widget in front of people, each in its own collapsible section:</p>
-        <p><strong>Code for websites</strong> — the embed code to paste into your own website (Wix, Squarespace, WordPress, Webflow, etc.).</p>
-        <p><strong>Direct link</strong> — a plain link that opens your quote tool directly, no website needed.</p>
-        <p><strong>MidasQuote Pro</strong> — a separate link just for you (or someone you trust, like a regular contractor). It shows the real exact numbers behind every quote alongside the same ballpark customers see. Not for sharing with customers.</p>
-        <p>Both links have "Add to Home Screen" instructions so they open like a real app on your phone — Android and Desktop Chrome even get a genuine one-tap "Install" button once you've used the page a bit.</p>
-      `
-    },
-    products: {
-      title: 'My Products',
-      body: `
-        <p>Add real photos for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon.</p>
-        <p>Don't have your own photo for something? Many common items already have one of our own curated photos ready to use — just pick "Choose from library" instead of uploading your own. No need to go find or shoot a photo for every single item yourself.</p>
-        <p>Every category starts collapsed — click any category's header to open just that one. With a lot of items configured, this keeps the page manageable.</p>
-        <p>When a customer taps a photo to zoom in on the widget, they can swipe left/right to move through the rest of that same group (e.g. every door style, or every item in one specialty category) without closing and reopening — no setup needed here, it just works automatically for any photo uploaded on this tab.</p>
-        <p>You can also control which project types each item shows up for right from here — the same setting as on the Specialty Items tab, just accessible from both places.</p>
-        <p><strong>Groups</strong> — in Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
-      `
-    },
-    templates: {
-      title: 'Templates (Admin)',
-      body: `
-        <p>This tab only shows up for the admin account — it controls the <em>defaults</em> every brand new shop starts with, not any one specific shop's live data.</p>
-        <p>Editing a project type's description, image, or measuring guide here only affects <strong>shops created from now on</strong> — it never retroactively changes a shop that already exists.</p>
-        <p><strong>"↺ Use built-in default"</strong> next to Refacing/Repainting/Restaining's cover image and measuring guide image fills in MidasQuote's current default photo for that field — review it, then Save like any other edit here. Unlike the same-looking button on the Project Types tab, this field <em>is</em> the default itself (what new shops start from), so there's nothing to "fall back to" — this just fills in the known-correct URL for you instead of needing it typed or pasted by hand.</p>
-        <p><strong>Push to all shops</strong> — pushes specialty item changes out to shops that already exist. Use this deliberately; it's the one action here that does touch live shops.</p>
-      `
-    },
-    billing: {
-      title: 'Account',
-      body: `
-        <p>Your login, subscription, and payment details for MidasQuote itself.</p>
-      `
-    },
-    marketing: {
-      title: 'Marketing Kit',
-      body: `
-        <p>Ready-made assets to help you promote your quote tool — share these however makes sense for your shop.</p>
-      `
-    },
-  };
-
-  window.mqShowHelp = function(pageId) {
-    const content = MQ_HELP_CONTENT[pageId];
-    if (!content) return;
-    let modal = document.getElementById('mq-help-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-help-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100000;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      modal.addEventListener('click', (e) => { if (e.target === modal) window.mqCloseHelpModal(); });
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-          <div style="font-size:18px;font-weight:800;color:#111">❓ ${content.title}</div>
-          <button onclick="mqCloseHelpModal()" style="background:none;border:none;font-size:22px;color:#9ca3af;cursor:pointer;line-height:1;padding:0 4px">×</button>
-        </div>
-        <div style="font-size:14px;color:#374151;line-height:1.7">${content.body}</div>
-      </div>`;
-    modal.style.display = 'flex';
-  };
-  window.mqCloseHelpModal = function() {
-    const modal = document.getElementById('mq-help-modal');
-    if (modal) modal.style.display = 'none';
-  };
-
-  // Shown exactly once per shop, ever — the moment a brand new shop owner
-  // first loads their dashboard. Tracked on the shop record itself in
-  // Airtable (not localStorage), so it correctly stays dismissed even if
-  // they log in from a different device or browser later.
-  window.mqShowWelcomeModal = function() {
-    let modal = document.getElementById('mq-welcome-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-welcome-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
-        <div style="font-size:40px;margin-bottom:12px">👋</div>
-        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
-        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
-          Every tab has a <strong style="color:#2563eb">❓ Need help?</strong> button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
-          <br><br>
-          Take your time exploring — there's no rush, and almost everything here autosaves as you go.
-        </div>
-        <button onclick="mqCloseWelcomeModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, let's go!</button>
-      </div>`;
-    modal.style.display = 'flex';
-  };
-  window.mqCloseWelcomeModal = function() {
-    const modal = document.getElementById('mq-welcome-modal');
-    if (modal) modal.style.display = 'none';
-    const shopRecord = window._mqShopRecord;
-    if (shopRecord && !shopRecord.fields['Welcome popup seen']) {
-      shopRecord.fields['Welcome popup seen'] = true;
-      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Welcome popup seen': true }).catch(()=>{});
-    }
-  };
-
-  // "What's new" announcements — versioned rather than a fresh boolean field
-  // per announcement. Bump MQ_LATEST_ANNOUNCEMENT below whenever there's a
-  // new one to show; shops that have already seen a given version (or newer)
-  // never see it again, tracked by storing that version string on the shop
-  // record. Brand new shops never see past announcements — they get the
-  // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-update-roundup';
-  const MQ_ANNOUNCEMENT_CONTENT = {
-    title: '🎉 Recently added',
-    body: `
-      <p style="margin-bottom:14px"><strong>Live-updating estimates</strong> — swap a door, material, or countertop and watch the whole estimate update instantly — not just the sticky total at the bottom, the full itemized breakdown too. No need to hit Calculate again to see it reflect your latest change.</p>
-      <p style="margin-bottom:14px"><strong>Email me a copy</strong> — customers can now email themselves their current estimate anytime, right from the sticky bar. Already gave their email earlier? It sends instantly. Skipped it? A quick one-field prompt asks just for that, nothing more.</p>
-      <p style="margin-bottom:14px"><strong>Smarter price badges</strong> — $/$$/$$$ badges now reflect real standing within each collection and category, instead of being thrown off by unrelated pricier (or cheaper) items elsewhere in your catalog.</p>
-      <p style="margin-bottom:14px"><strong>Best seller badges</strong> — mark your top items (any door, material, drawer, countertop, or specialty item) with an eye-catching badge right on the widget. Customize the wording ("Best seller," "Our pick," whatever fits) and the color, both from the top of My Products — change either one later and every already-marked item updates automatically, no need to re-mark anything.</p>
-      <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
-      <p style="font-size:13px;color:#4b5563;line-height:1.6">Mass price editing — update the price on multiple same-priced items all at once — and quick price edits right from the Pricing dashboard, no need to open each item individually.</p>
-    `,
-  };
-  window.mqShowAnnouncementModal = function() {
-    let modal = document.getElementById('mq-announcement-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-announcement-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:2rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
-        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:14px">${MQ_ANNOUNCEMENT_CONTENT.title}</div>
-        <div style="font-size:14px;color:#374151;line-height:1.7;text-align:left;margin-bottom:1.5rem">${MQ_ANNOUNCEMENT_CONTENT.body}</div>
-        <button onclick="mqCloseAnnouncementModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it</button>
-      </div>`;
-    modal.style.display = 'flex';
-  };
-  window.mqCloseAnnouncementModal = function() {
-    const modal = document.getElementById('mq-announcement-modal');
-    if (modal) modal.style.display = 'none';
-    const shopRecord = window._mqShopRecord;
-    if (shopRecord && shopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
-      shopRecord.fields['Announcement seen'] = MQ_LATEST_ANNOUNCEMENT;
-      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Announcement seen': MQ_LATEST_ANNOUNCEMENT }).catch(()=>{});
-    }
-  };
-
-  // Shown exactly once per shop, the first time they land on the Specialty
-  // Items tab — explains why there are already items sitting there waiting
-  // for them. Same dismiss-once-on-the-shop-record pattern as the main
-  // welcome modal, so it stays dismissed across devices/browsers too.
-  // A single shared narrow popover, reused by any small (?) info icon in
-  // the app — clicking one positions this near it and fills in its text.
-  // Native title="" tooltips render as one long unwrapped line, which is
-  // exactly the problem this replaces; this one actually wraps and is
-  // click-triggered (which is what people instinctively try anyway),
-  // dismissed by clicking anywhere else.
-  window.mqShowSpecHelpPopover = function(triggerEl, text, event) {
-    if (event) event.stopPropagation();
-    let pop = document.getElementById('mq-spec-help-popover');
-    const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
-    if (!pop) {
-      pop = document.createElement('div');
-      pop.id = 'mq-spec-help-popover';
-      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:230px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
-      document.body.appendChild(pop);
-    }
-    if (alreadyOpenForThis) { pop.style.display = 'none'; return; } // clicking the same icon again closes it
-    pop.textContent = text;
-    pop._trigger = triggerEl;
-    const rect = triggerEl.getBoundingClientRect();
-    pop.style.display = 'block';
-    pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
-    pop.style.left = Math.max(8, window.scrollX + rect.left - 100) + 'px';
-  };
-  document.addEventListener('click', () => {
-    const pop = document.getElementById('mq-spec-help-popover');
-    if (pop) pop.style.display = 'none';
-    const ratePop = document.getElementById('mq-spec-rate-calc-popover');
-    if (ratePop) ratePop.style.display = 'none';
-  });
-
-  window.mqShowSpecialtyTipsModal = function() {
-    let modal = document.getElementById('mq-specialty-tips-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-specialty-tips-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
-        <div style="font-size:40px;margin-bottom:12px">⭐</div>
-        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
-        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
-          You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to pre-populate items for shops that offer refacing, restaining, or repainting services.
-          <br><br>
-          A quick heads-up: specialty item lists get messy fast once you start adding a lot of them. It's worth organizing items into <strong>categories</strong> (using the Category column) right from the start — categorized items group together neatly instead of turning into one long, hard-to-scan list.
-          <br><br>
-          Once you've got more than a few, the easiest way to find one again is with the tools above the table: <strong>Filter by project type</strong>, <strong>Filter by category</strong>, or <strong>Search by name</strong>.
-          <br><br>
-          Thinking in metric? Once an item is priced per lin ft or per sq ft, a <strong>"Use metric?"</strong> calculator appears right beside the price — type your rate per linear or square metre and it converts automatically.
-          <br><br>
-          If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
-        </div>
-        <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
-      </div>`;
-    modal.style.display = 'flex';
-  };
-  window.mqCloseSpecialtyTipsModal = function() {
-    const modal = document.getElementById('mq-specialty-tips-modal');
-    if (modal) modal.style.display = 'none';
-    const shopRecord = window._mqShopRecord;
-    if (shopRecord && !shopRecord.fields['Specialty tips popup seen']) {
-      shopRecord.fields['Specialty tips popup seen'] = true;
-      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Specialty tips popup seen': true }).catch(()=>{});
-    }
-  };
-
-  // Shown exactly once per shop, the first time they land on the My
-  // Products tab — explains that items can be removed per project type,
-  // and specifically warns about Box Materials/Door Styles/Drawer
-  // Configurations being linked (same three categories as
-  // LINKED_CABINET_CATS below). Same dismiss-once-on-the-shop-record
-  // pattern as the other first-visit popups.
-  window.mqShowProductsTipsModal = function() {
-    let modal = document.getElementById('mq-products-tips-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-products-tips-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
-        <div style="font-size:40px;margin-bottom:12px">📦</div>
-        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
-        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
-          You can remove any item from any project type here — just uncheck it under that item's project types.
-          <br><br>
-          One thing to know: <strong>Box Materials, Door Styles, and Drawer Configurations are connected.</strong> Remove one of these from a project type, and all three come out together — they always work as a set for cabinet pricing, so there's no way to keep just one.
-          <br><br>
-          Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info on this tab.
-        </div>
-        <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
-      </div>`;
-    modal.style.display = 'flex';
-  };
-  window.mqCloseProductsTipsModal = function() {
-    const modal = document.getElementById('mq-products-tips-modal');
-    if (modal) modal.style.display = 'none';
-    const shopRecord = window._mqShopRecord;
-    if (shopRecord && !shopRecord.fields['Products tips popup seen']) {
-      shopRecord.fields['Products tips popup seen'] = true;
-      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Products tips popup seen': true }).catch(()=>{});
-    }
-  };
-
+  // ============================================================
+  // STYLES
+  // ============================================================
   function injectStyles() {
+    if (document.getElementById('mqph4-styles')) return;
     const s = document.createElement('style');
+    s.id = 'mqph4-styles';
     s.textContent = `
-      #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
-      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
-      #midasquote-dashboard .mq-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
-      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#111;display:flex;align-items:center;gap:8px}
-      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#6b7280}
-      #midasquote-dashboard .mq-topbar-actions{display:flex;align-items:center;gap:12px}
-      #midasquote-dashboard .mq-btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#111;font-family:inherit;transition:all 0.15s}
-      #midasquote-dashboard .mq-btn:hover{background:#f9fafb}
-      #midasquote-dashboard .mq-btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-      #midasquote-dashboard .mq-btn-primary:hover{opacity:0.88;background:#1a1a1a}
-      #midasquote-dashboard .mq-btn-danger{background:#fff;color:#dc2626;border-color:#fca5a5}
-      #midasquote-dashboard .mq-btn-danger:hover{background:#fef2f2}
-      #midasquote-dashboard .mq-btn-sm{padding:5px 10px;font-size:12px}
-      #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px);width:100%}
-      #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0;position:sticky;top:60px;align-self:flex-start;max-height:calc(100vh - 60px);overflow-y:auto}
-      #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
-      #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#f9fafb}
-      #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
-      #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
-      #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
-      #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
-      /* Any table wider than the available content area (Specialty items,
-         with its 11+ columns, is the usual culprit) needs to scroll within
-         its own box instead of stretching .mq-content — and therefore the
-         whole page — past the viewport. This has to be a base rule, not just
-         inside the mobile media query below, since desktop windows can be
-         narrower than the table's natural width too. */
-      #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;scrollbar-width:auto;scrollbar-color:#9ca3af #f3f4f6}
-      /* overflow-x:auto alone works for a touch swipe on mobile, but on a
-         narrow desktop window it can leave a table's right-hand columns
-         genuinely unreachable — most browsers/OSes only show a thin
-         auto-hiding "overlay" scrollbar there (invisible until you're
-         already mid-scroll), so there's no visible cue that the table
-         scrolls at all, let alone a bar a mouse user can actually grab and
-         drag. Styling it explicitly forces a real, always-visible,
-         click-and-drag scrollbar in Chrome/Edge/Safari (scrollbar-width/
-         -color above cover Firefox the same way). */
-      #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar{height:12px}
-      #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-track{background:#f3f4f6;border-radius:6px}
-      #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:6px;border:2px solid #f3f4f6}
-      #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb:hover{background:#6b7280}
-      #midasquote-dashboard .mq-page{display:none;position:relative}
-      #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
-      #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
-      #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
-      #midasquote-dashboard .mq-page.active{display:block}
-      #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
-      #midasquote-dashboard .mq-page-sub{font-size:13px;color:#6b7280;margin-bottom:2rem}
-      #midasquote-dashboard .mq-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.75rem;margin-bottom:1.5rem}
-      #midasquote-dashboard .mq-card-title{font-size:13px;font-weight:600;color:#111;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
-      #midasquote-dashboard .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
-      #midasquote-dashboard .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem}
-      #midasquote-dashboard .mq-field{display:flex;flex-direction:column;gap:5px}
-      #midasquote-dashboard .mq-label{font-size:12px;font-weight:500;color:#374151}
-      #midasquote-dashboard .mq-hint{font-size:11px;color:#9ca3af;margin-top:2px}
-      #midasquote-dashboard input[type=text],#midasquote-dashboard input[type=email],#midasquote-dashboard input[type=tel],#midasquote-dashboard input[type=number],#midasquote-dashboard input[type=url],#midasquote-dashboard select,#midasquote-dashboard textarea{font-family:inherit;font-size:13px;color:#111;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;width:100%}
-      #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{outline:none;border-color:#1a1a1a}
-      #midasquote-dashboard textarea{resize:vertical;min-height:40px}
-      #midasquote-dashboard .mq-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.25rem;margin-bottom:2rem}
-      #midasquote-dashboard .mq-stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem}
-      #midasquote-dashboard .mq-stat-val{font-size:26px;font-weight:700;color:#111;margin-bottom:6px}
-      #midasquote-dashboard .mq-stat-lbl{font-size:12px;color:#6b7280;font-weight:500}
-      #midasquote-dashboard .mq-stat-green .mq-stat-val{color:#16a34a}
-      #midasquote-dashboard .mq-stat-purple .mq-stat-val{color:#6366f1}
-      #midasquote-dashboard .mq-table{width:100%;border-collapse:collapse}
-      #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:left}
-      #midasquote-dashboard .mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:#111}
-      /* The Specialty Items table has more columns than any other table on
-         the dashboard (11, even after removing the standalone Variants
-         column) — the base 16px horizontal cell padding that's fine for
-         Leads/other tables adds up fast here and is a real contributor to
-         the table needing to scroll sideways. Tightened just for this table
-         so it stays as compact as possible without touching any other
-         table's spacing. Declared BEFORE the vertical-align/padding-top rule
-         below so that rule's padding-top:14px still wins (later same-
-         specificity rule wins per property) rather than being clobbered by
-         this shorthand. */
-      #midasquote-dashboard #mq-spec-table th{padding:10px 9px}
-      #midasquote-dashboard #mq-spec-table td{padding:12px 9px}
-      #midasquote-dashboard #mq-spec-table td{vertical-align:top;padding-top:14px}
-      #midasquote-dashboard #mq-spec-table{border-collapse:separate;border-spacing:0 10px}
-      #midasquote-dashboard #mq-spec-table td{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
-      #midasquote-dashboard #mq-spec-table td:first-child{border-left:1px solid #e5e7eb;border-radius:8px 0 0 8px}
-      #midasquote-dashboard #mq-spec-table td:last-child{border-right:1px solid #e5e7eb;border-radius:0 8px 8px 0}
-      #midasquote-dashboard #mq-spec-table thead th{border-bottom:2px solid var(--border)}
-      #midasquote-dashboard #mq-spec-table-wrap{padding-left:14px}
-      #midasquote-dashboard .mq-table tr:last-child td{border-bottom:none}
-      #midasquote-dashboard .mq-table tr:hover td{background:#f9fafb}
-      #midasquote-dashboard .mq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
-      #midasquote-dashboard .mq-badge-green{background:#dcfce7;color:#166534}
-      #midasquote-dashboard .mq-badge-blue{background:#dbeafe;color:#1e40af}
-      #midasquote-dashboard .mq-badge-yellow{background:#fef9c3;color:#854d0e}
-      #midasquote-dashboard .mq-badge-red{background:#fee2e2;color:#991b1b}
-      #midasquote-dashboard .mq-badge-grey{background:#f3f4f6;color:#6b7280}
-      #midasquote-dashboard .mq-embed-box{background:#1a1a1a;border-radius:8px;padding:1rem;font-family:monospace;font-size:12px;color:#a3e635;line-height:1.6;position:relative;margin-top:1rem;word-break:break-all}
-      #midasquote-dashboard .mq-copy-btn{position:absolute;top:8px;right:8px;background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit}
-      #midasquote-dashboard .mq-copy-btn:hover{background:#4b5563}
-      #midasquote-dashboard .mq-spec-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6}
-      #midasquote-dashboard .mq-spec-row:last-child{border-bottom:none}
-      #midasquote-dashboard .mq-spec-name{flex:1;font-size:13px;color:#111}
-      #midasquote-dashboard .mq-spec-price{width:100px}
-      #midasquote-dashboard .mq-msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
-      #midasquote-dashboard .mq-msg-success{background:#dcfce7;color:#166534;border:1px solid #86efac}
-      #midasquote-dashboard .mq-msg-error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
-      #midasquote-dashboard .mq-room-row.mq-room-open{border-color:#93c5fd!important;background:#f8fbff!important;box-shadow:0 2px 10px rgba(37,99,235,0.10)}
-      #midasquote-dashboard .mq-loading{text-align:center;padding:3rem;color:#6b7280;font-size:14px}
-      #midasquote-dashboard .mq-divider{height:1px;background:#e5e7eb;margin:1.5rem 0}
-      #midasquote-dashboard .mq-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
-      #midasquote-dashboard .mq-toggle{width:40px;height:22px;background:#d1d5db;border-radius:11px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
-      #midasquote-dashboard .mq-toggle.on{background:#1a1a1a}
-      #midasquote-dashboard .mq-toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
-      #midasquote-dashboard .mq-toggle.on::after{left:20px}
-      #midasquote-dashboard .mq-empty{text-align:center;padding:3rem;color:#9ca3af;font-size:14px}
-      #midasquote-dashboard .mq-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+      #mq-pricing-helper-v2 *{box-sizing:border-box !important}
+      #mq-pricing-helper-v2{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;padding:2rem !important;max-width:900px}
 
-      @media (max-width: 768px) {
-        #midasquote-dashboard .mq-layout{flex-direction:column}
-        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
-        #midasquote-dashboard .mq-nav-section{display:none}
-        #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
-        #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
-        #midasquote-dashboard .mq-content{padding:1.25rem}
-        #midasquote-dashboard .mq-help-btn{top:-13px}
-        #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
-        #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
-        #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
-        #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
-        #midasquote-dashboard .mq-topbar-brand{font-size:14px}
-        #midasquote-dashboard .mq-card{padding:1.25rem}
-        #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-        #midasquote-dashboard .mq-table{min-width:560px}
+      /* ── Buttons ── */
+      .mqph-btn{padding:10px 20px !important;font-size:13px !important;font-weight:600 !important;border-radius:8px !important;cursor:pointer !important;border:none !important;font-family:inherit !important;transition:all 0.15s !important;line-height:1.2 !important}
+      .mqph-btn-primary{background:#1a1a1a !important;color:#fff !important}.mqph-btn-primary:hover{opacity:0.88 !important}
+      .mqph-btn-secondary{background:#fff !important;color:#111 !important;border:1px solid #e5e7eb !important}.mqph-btn-secondary:hover{background:#f9fafb !important}
+      .mqph-btn-danger{background:#fff !important;color:#dc2626 !important;border:1px solid #fca5a5 !important}.mqph-btn-danger:hover{background:#fef2f2 !important}
+      .mqph-btn-sm{padding:5px 12px !important;font-size:12px !important}
+      .mqph-btn-ghost{background:none !important;border:none !important;color:#6b7280 !important;font-size:13px !important;cursor:pointer !important;font-family:inherit !important;padding:4px 0 !important}
+      .mqph-btn-ghost:hover{color:#111 !important}
+
+      /* ── Item setup chips ── */
+      .mqph-setup-card{background:#fff !important;border:1px solid #e5e7eb !important;border-radius:12px !important;margin-bottom:1.25rem !important;overflow:hidden !important}
+      .mqph-setup-header{background:#f9fafb !important;padding:14px 16px !important;border-bottom:1px solid #e5e7eb !important}
+      .mqph-setup-title{font-size:13px !important;font-weight:700 !important;color:#111 !important}
+      .mqph-setup-sub{font-size:11px !important;color:#6b7280 !important;margin-top:2px !important;line-height:1.5 !important}
+      .mqph-chip-row{display:flex !important;flex-wrap:wrap !important;gap:8px !important;padding:14px 16px !important;align-items:center !important}
+      .mqph-chip{display:flex !important;align-items:center !important;gap:6px !important;padding:6px 12px !important;background:#f9fafb !important;border:1px solid #e5e7eb !important;border-radius:20px !important;font-size:13px !important;color:#111 !important}
+      .mqph-chip-del{background:none !important;border:none !important;color:#9ca3af !important;cursor:pointer !important;font-size:16px !important;line-height:1 !important;padding:0 0 0 2px !important;font-family:inherit !important}.mqph-chip-del:hover{color:#dc2626 !important}
+      .mqph-chip-input{display:flex !important;align-items:center !important;gap:6px !important;padding:4px 8px !important;border:1.5px dashed #d1d5db !important;border-radius:20px !important}
+      .mqph-chip-input input{border:none !important;outline:none !important;font-size:13px !important;color:#111 !important;background:transparent !important;font-family:inherit !important;width:220px !important}
+      .mqph-chip-input button{background:#1a1a1a !important;color:#fff !important;border:none !important;border-radius:12px !important;padding:3px 10px !important;font-size:12px !important;cursor:pointer !important;font-family:inherit !important}
+      .mqph-default-chip{background:#eff6ff !important;border-color:#93c5fd !important;color:#1d4ed8 !important}
+
+      /* ── Wizard ── */
+      .mqph-wizard-card{background:#fff !important;border:1px solid #e5e7eb !important;border-radius:12px !important;overflow:hidden !important;margin-bottom:1.5rem !important}
+      .mqph-wizard-header{background:#1a1a1a !important;color:#fff !important;padding:1.25rem 1.5rem !important}
+      .mqph-wizard-header h2{font-size:15px !important;font-weight:600 !important;margin:0 0 4px !important;padding:0 !important}
+      .mqph-wizard-header p{font-size:12px !important;opacity:0.65 !important;margin:0 !important;padding:0 !important}
+      .mqph-progress{display:flex !important;gap:4px !important;margin-top:10px !important;padding:0 !important}
+      .mqph-progress .dot{flex:1 !important;height:4px !important;background:rgba(255,255,255,0.2) !important;border-radius:2px !important;transition:background 0.3s !important;padding:0 !important}
+      .mqph-progress .dot.done{background:#a3e635 !important}
+      .mqph-progress .dot.active{background:#fff !important}
+      .mqph-wizard-body{padding:1.5rem !important}
+      .mqph-wizard-nav{display:flex !important;gap:10px !important;padding:1rem 1.5rem !important;border-top:1px solid #e5e7eb !important;background:#f9fafb !important;align-items:center !important}
+      .mqph-step{display:none !important}.mqph-step.active{display:block !important}
+      .mqph-step-title{font-size:17px !important;font-weight:700 !important;color:#111 !important;margin-bottom:6px !important;padding:0 !important}
+      .mqph-step-sub{font-size:13px !important;color:#6b7280 !important;margin-bottom:1.25rem !important;line-height:1.6 !important;padding:0 !important}
+
+      /* ── Callout boxes ── */
+      .mqph-hl{background:#f0fdf4 !important;border:1px solid #86efac !important;border-radius:8px !important;padding:12px 16px !important;margin-bottom:1.25rem !important;font-size:13px !important;color:#166534 !important;line-height:1.7 !important}
+      .mqph-warn{background:#fef9c3 !important;border:1px solid #fde047 !important;border-radius:8px !important;padding:12px 16px !important;font-size:13px !important;color:#854d0e !important;margin-bottom:1rem !important;line-height:1.6 !important}
+      .mqph-info{background:#eff6ff !important;border:1px solid #bfdbfe !important;border-radius:8px !important;padding:12px 16px !important;font-size:13px !important;color:#1e40af !important;margin-bottom:1.25rem !important;line-height:1.7 !important}
+      .mqph-spec-box{background:#f9fafb !important;border:1px solid #e5e7eb !important;border-radius:8px !important;padding:12px 16px !important;margin-bottom:1.25rem !important;font-size:13px !important;color:#374151 !important;line-height:1.8 !important}
+      .mqph-spec-box strong{color:#111 !important}
+      .mqph-spec-tag{display:inline-block !important;background:#fff !important;border:1px solid #e5e7eb !important;border-radius:6px !important;padding:2px 8px !important;font-size:12px !important;font-weight:600 !important;color:#374151 !important;margin:2px 3px 2px 0 !important}
+      .mqph-mm{font-weight:500 !important;color:#9ca3af !important}
+
+      /* ── Inputs ── */
+      .mqph-input-row{display:flex !important;align-items:center !important;gap:10px !important;margin-bottom:1rem !important;padding:0 !important}
+      .mqph-input-row label{font-size:13px !important;color:#374151 !important;flex:1 !important;font-weight:500 !important;padding:0 !important;margin:0 !important}
+      .mqph-input-row input[type=number]{width:130px !important;text-align:right !important;font-weight:600 !important;font-family:inherit !important;font-size:13px !important;color:#111 !important;background:#fff !important;border:1.5px solid #d1d5db !important;border-radius:8px !important;padding:8px 12px !important}
+      .mqph-input-row input:focus{outline:none !important;border-color:#1a1a1a !important}
+      .mqph-pfx{font-size:14px !important;color:#6b7280 !important;padding:0 !important;margin:0 !important}
+      .mqph-result{background:#f9fafb !important;border-radius:8px !important;padding:10px 14px !important;margin-top:6px !important;margin-bottom:1rem !important;font-size:13px !important;display:none !important}
+      .mqph-result-val{font-size:18px !important;font-weight:700 !important;color:#16a34a !important}
+      .mqph-item-block{padding-bottom:1.25rem !important;margin-bottom:1.25rem !important;border-bottom:1px solid #f3f4f6 !important}
+      .mqph-item-block:last-child{border-bottom:none !important;margin-bottom:0 !important;padding-bottom:0 !important}
+      .mqph-item-block-label{font-size:13px !important;font-weight:600 !important;color:#111 !important;margin-bottom:8px !important;padding:0 !important}
+
+      /* ── Editor pricing list ── */
+      .mqph-cat-block{background:#fff !important;border:1px solid #e5e7eb !important;border-radius:12px !important;margin-bottom:1.25rem !important;overflow:hidden !important}
+      .mqph-cat-header{background:#f9fafb !important;padding:12px 16px !important;border-bottom:1px solid #e5e7eb !important;display:flex !important;align-items:center !important;justify-content:space-between !important}
+      .mqph-cat-title{font-size:12px !important;font-weight:700 !important;color:#374151 !important;text-transform:uppercase !important;letter-spacing:0.06em !important;padding:0 !important;margin:0 !important}
+      .mqph-row{display:flex !important;align-items:center !important;gap:8px !important;padding:10px 16px !important;border-bottom:1px solid #f3f4f6 !important}
+      .mqph-row:last-child{border-bottom:none !important}
+      .mqph-row-name{flex:1 !important;font-size:13px !important;font-weight:500 !important;color:#111 !important;padding:0 !important;margin:0 !important}
+      .mqph-row-desc{font-size:11px !important;color:#9ca3af !important;margin-top:1px !important;padding:0 !important}
+      .mqph-row-rate{font-size:13px !important;font-weight:600 !important;color:#111 !important;min-width:80px !important;text-align:right !important;padding:0 !important;margin:0 !important}
+      .mqph-row-unit{font-size:11px !important;color:#6b7280 !important;min-width:100px !important;text-align:right !important;padding:0 !important;margin:0 !important}
+      .mqph-toggle{width:32px !important;height:18px !important;background:#d1d5db !important;border-radius:9px !important;position:relative !important;cursor:pointer !important;transition:background 0.2s !important;flex-shrink:0 !important;display:inline-block !important;padding:0 !important;margin:0 !important}
+      .mqph-toggle.on{background:#16a34a !important}
+      .mqph-toggle::after{content:'' !important;position:absolute !important;width:14px !important;height:14px !important;background:#fff !important;border-radius:50% !important;top:2px !important;left:2px !important;transition:left 0.2s !important}
+      .mqph-toggle.on::after{left:16px !important}
+
+      /* ── Overlays & modals ── */
+      .mqph-overlay{display:none !important;position:fixed !important;inset:0 !important;background:rgba(0,0,0,0.5) !important;z-index:9999 !important;align-items:center !important;justify-content:center !important;padding:1rem !important}
+      .mqph-overlay.show{display:flex !important}
+      .mqph-modal{background:#fff !important;border-radius:12px !important;width:100% !important;max-width:520px !important;max-height:90vh !important;overflow-y:auto !important;box-shadow:0 20px 60px rgba(0,0,0,0.2) !important}
+      .mqph-modal-hdr{padding:1.25rem 1.5rem !important;border-bottom:1px solid #e5e7eb !important;display:flex !important;align-items:flex-start !important;justify-content:space-between !important;gap:12px !important}
+      .mqph-modal-hdr h3{font-size:16px !important;font-weight:700 !important;color:#111 !important;margin:0 !important;padding:0 !important}
+      .mqph-modal-hdr p{font-size:13px !important;color:#6b7280 !important;margin:4px 0 0 !important;padding:0 !important;line-height:1.5 !important}
+      .mqph-mini-hdr h3{color:#fff !important}
+      .mqph-mini-hdr p{color:rgba(255,255,255,0.65) !important}
+      .mqph-modal-hdr-close{background:none !important;border:none !important;font-size:20px !important;color:#9ca3af !important;cursor:pointer !important;line-height:1 !important;padding:0 !important;margin:0 !important;flex-shrink:0 !important}.mqph-modal-hdr-close:hover{color:#374151 !important}
+      .mqph-modal-body{padding:1.5rem !important}
+      .mqph-modal-footer{padding:1rem 1.5rem !important;border-top:1px solid #e5e7eb !important;display:flex !important;gap:10px !important;align-items:center !important;background:#f9fafb !important}
+
+      @media (max-width: 640px) {
+        .mqph-row{flex-wrap:wrap !important;gap:6px !important;padding:12px !important}
+        .mqph-row-name{flex:1 1 100% !important;order:1 !important}
+        .mqph-row-desc{flex:1 1 100% !important;order:2 !important}
+        .mqph-row-rate{order:3 !important;min-width:0 !important;text-align:left !important;flex:0 0 auto !important}
+        .mqph-row-unit{order:4 !important;min-width:0 !important;text-align:left !important;flex:0 0 auto !important}
+        .mqph-row .mqph-toggle{order:5 !important;margin-left:auto !important}
+        .mqph-row button{order:6 !important}
+        .mqph-cat-header{flex-wrap:wrap !important;gap:8px !important}
+        .mqph-modal{max-width:100% !important;width:100% !important;height:100% !important;max-height:100% !important;border-radius:0 !important}
+        .mqph-overlay{padding:0 !important}
       }
+
+      /* ── Mini-wizard steps ── */
+      .mqph-mini-step{display:none !important}.mqph-mini-step.active{display:block !important}
+      .mqph-name-input{font-family:inherit !important;font-size:15px !important;font-weight:600 !important;color:#111 !important;background:#fff !important;border:1.5px solid #d1d5db !important;border-radius:8px !important;padding:10px 14px !important;width:100% !important;margin-bottom:1.25rem !important}
+      /* Chrome/Edge draw their own little dropdown arrow on any input with
+         a "list" attribute — hides it so it doesn't overlap the custom ▼
+         we render ourselves next to the Group name fields. */
+      input[list]::-webkit-calendar-picker-indicator{display:none !important}
+      .mqph-name-input:focus{outline:none !important;border-color:#1a1a1a !important}
+      .mqph-price-input-wrap{display:flex !important;align-items:center !important;gap:8px !important;margin-bottom:8px !important}
+      .mqph-price-input-wrap .mqph-pfx{font-size:22px !important;color:#9ca3af !important;font-weight:300 !important}
+      .mqph-price-input-big{font-family:inherit !important;font-size:28px !important;font-weight:700 !important;color:#111 !important;background:#fff !important;border:none !important;border-bottom:2px solid #d1d5db !important;padding:4px 0 !important;width:180px !important;outline:none !important}
+      .mqph-price-input-big:focus{border-bottom-color:#1a1a1a !important}
+      .mqph-calc-hint{font-size:12px !important;color:#9ca3af !important;margin-bottom:1.25rem !important;padding:0 !important}
+      .mqph-rate-reveal{background:#f0fdf4 !important;border:1px solid #86efac !important;border-radius:8px !important;padding:14px 16px !important;margin-bottom:1.25rem !important;display:none !important}
+      .mqph-rate-reveal-val{font-size:22px !important;font-weight:700 !important;color:#16a34a !important}
+      .mqph-rate-reveal-lbl{font-size:12px !important;color:#6b7280 !important;margin-top:2px !important}
+
+      /* ── Edit modal fields ── */
+      .mqph-field{display:flex !important;flex-direction:column !important;gap:5px !important;margin-bottom:1rem !important;padding:0 !important}
+      .mqph-field label{font-size:12px !important;font-weight:600 !important;color:#374151 !important;text-transform:uppercase !important;letter-spacing:0.04em !important;margin:0 !important;padding:0 !important}
+      .mqph-field input,.mqph-field select,.mqph-field textarea{font-family:inherit !important;font-size:13px !important;color:#111 !important;background:#fff !important;border:1px solid #d1d5db !important;border-radius:8px !important;padding:8px 10px !important;width:100% !important}
+      .mqph-field input:focus,.mqph-field select:focus{outline:none !important;border-color:#1a1a1a !important}
+      .mqph-field textarea{resize:vertical !important;min-height:60px !important}
+      .mqph-msg{padding:10px 14px !important;border-radius:8px !important;font-size:13px !important;margin-bottom:1rem !important;display:none !important}
+      .mqph-msg-success{background:#dcfce7 !important;color:#166534 !important;border:1px solid #86efac !important}
+      .mqph-msg-error{background:#fee2e2 !important;color:#991b1b !important;border:1px solid #fca5a5 !important}
+
+      /* ── Countertop block ── */
+      .mqph-ct-block{background:#fff !important;border:1px solid #e5e7eb !important;border-radius:12px !important;margin-bottom:1.25rem !important;overflow:hidden !important}
+      .mqph-ct-row{display:flex !important;align-items:center !important;gap:10px !important;padding:10px 16px !important;border-bottom:1px solid #f3f4f6 !important}
+      .mqph-ct-row:last-child{border-bottom:none !important}
+      .mqph-ct-label{flex:1 !important;font-size:13px !important;color:#374151 !important;font-weight:500 !important;padding:0 !important;margin:0 !important}
+      .mqph-ct-inp{display:flex !important;align-items:center !important;gap:6px !important}
+      .mqph-ct-inp span{font-size:13px !important;color:#6b7280 !important}
+      .mqph-ct-inp input{width:90px !important;text-align:right !important;font-family:inherit !important;font-size:13px !important;color:#111 !important;background:#fff !important;border:1px solid #d1d5db !important;border-radius:8px !important;padding:7px 10px !important}
+      .mqph-ct-inp input:focus{outline:none !important;border-color:#1a1a1a !important}
     `;
     document.head.appendChild(s);
   }
 
-window.logoutMember = async function () {
-  try {
-    await window.$memberstackDom.logout();
+  // ============================================================
+  // CATEGORY CONFIG
+  // ============================================================
+  const CATEGORIES = [
+    { id:'material', label:'🪵 Box materials',          sub:'The material used to build the cabinet boxes (e.g. White melamine, Prefinished birch plywood, Painted MDF)', placeholder:'e.g. White melamine' },
+    { id:'door',     label:'🚪 Door styles',             sub:'Think species and profile — maple shaker, oak raised panel, MDF slab, and so on. Unless you charge significantly more for one finish over another, you don\'t need a separate item for each finish. Keep it to your most popular styles.', placeholder:'e.g. Maple shaker' },
+   { id:'drawer_config', label:'🗄️ Drawer configurations', sub:"Add your drawer options by material and close type — that's all customers care about. Something like 'White melamine — soft-close' or 'Prefinished birch — soft-close'. Skip the slide type and hardware details — keep it customer-friendly.", placeholder:'e.g. Prefinished birch — soft-close' },
+    { id:'hinge',    label:'🔧 Door hinges',             sub:'Pre-added — Hinge options you offer — your cheapest hinge is the baseline, others become upcharges. Most shops only need these 2 options.', placeholder:'e.g. Push to open hinge system' },
+  ];
 
-    // Change this if your login page URL is different
-    window.location.href = "/login";
-  } catch (err) {
-    console.error("Logout failed:", err);
-    alert("Logout failed. Please refresh and try again.");
+  const CAT_LABELS = {
+    material:'🪵 Box materials', door:'🚪 Door styles', drawer:'🗄️ Drawer configurations', drawer_config:'🗄️ Drawer configurations',
+    hinge:'🔧 Door hinges', install:'🔧 Installation & removal',
+    zone:'🚗 Travel zones', tax:'🧾 Tax', other:'📋 Other',
+    trim:'👑 Crown moulding / valance',
+  };
+
+  // Categories fully owned by the wizard — wiped on every full wizard run
+  const WIZARD_OWNED_CATEGORIES = ['material','door','drawer','hinge','install','tax'];
+
+  // Categories where "+ Add" opens the mini reverse-engineering wizard instead of raw form
+  const MINI_WIZ_CATS = ['material','door','drawer','hinge'];
+
+  const DEFAULT_INSTALL = [
+    { name:'Install — uppers (no doors)',   unit:'per lin ft', description:'Upper box install rate, no doors' },
+    { name:'Install — uppers (with doors)', unit:'per lin ft', description:'Upper install rate with doors hung' },
+    { name:'Install — bases (no doors)',    unit:'per lin ft', description:'Base box install rate, no doors' },
+    { name:'Install — bases (with doors)',  unit:'per lin ft', description:'Base install rate with doors hung' },
+    { name:'Cabinet removal',               unit:'per lin ft', description:'Remove & dispose existing cabinets' },
+  ];
+  const DEFAULT_HINGES = ['Regular hinges','Soft-close hinges'];
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+  function getByCategory(cat) {
+    return lineItems.filter(r => r.fields && r.fields['Category'] === cat && r.fields['Active'] !== false)
+      .sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
   }
-};
 
-  function buildHTML(shop) {
-    const token = shop['Shop token'] || '';
-    const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
-    window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
+  // Derive baseline rates from existing lineItems for mini-wizard math
+  function getBaselineRates() {
+    const materials = getByCategory('material');
+    const doors     = getByCategory('door');
+    const hinges    = getByCategory('hinge');
+
+    // Baseline material = first material (Sort order 1 = set in wizard as baseline)
+    const blMatName = materials[0]?.fields['Name']?.replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() || '';
+
+    // Find uppers + bases rates for baseline material
+    const blUpperRec = lineItems.find(r => r.fields &&
+      r.fields['Category']==='material' &&
+      r.fields['Name']?.replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() === blMatName &&
+      r.fields['Unit']?.includes('uppers'));
+    const blBaseRec = lineItems.find(r => r.fields &&
+      r.fields['Category']==='material' &&
+      r.fields['Name']?.replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() === blMatName &&
+      r.fields['Unit']?.includes('bases'));
+
+    const blUpperRate = blUpperRec?.fields['Rate'] || 0;
+    const blBaseRate  = blBaseRec?.fields['Rate']  || 0;
+
+    // Baseline door = first door style (Sort order 1)
+    const blDoor     = doors[0];
+    const blDoorRate = blDoor?.fields['Rate'] || 0;
+    const blDoorName = blDoor?.fields['Name'] || '';
+
+    // Baseline hinge = first hinge (rate 0)
+    const blHinge     = hinges[0];
+    const blHingeName = blHinge?.fields['Name'] || '';
+
+    return { blMatName, blUpperRate, blBaseRate, blUpperPrice:blUpperRate*4, blBasePrice:blBaseRate*4, blDoorName, blDoorRate, blHingeName };
+  }
+
+  function specBox(lines) {
+    return `<div class="mqph-spec-box">${lines.map(l=>`<div>${l}</div>`).join('')}</div>`;
+  }
+
+  // ============================================================
+  // ITEM SETUP
+  // ============================================================
+  function buildItemSetupHTML() {
+    const existing = {};
+    lineItems.filter(r => r.fields).forEach(r => {
+      const cat = r.fields['Category'];
+      if (!existing[cat]) existing[cat] = [];
+      existing[cat].push(r);
+    });
 
     return `
-      <div class="mq-topbar">
-        <div>
-          <div class="mq-topbar-brand">⚡ MidasQuote</div>
-          <div class="mq-topbar-shop">${shop['Shop name'] || 'My Shop'}</div>
+      <div style="margin-bottom:1.5rem">
+        <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px">🛠️ Set up your shop items</h2>
+        <p style="font-size:13px;color:#6b7280;line-height:1.6">Start with the materials, door styles, and drawer configs you sell most — your everyday go-tos, not the rare special orders. A focused list gives customers a better experience and makes your widget feel clean and professional.</p>
+      </div>
+
+      ${CATEGORIES.map(cat => {
+        const allItems = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+        let items;
+        if (cat.id === 'material') {
+          // Deduplicate by base name — strip "— uppers"/"— bases" so only one chip per material
+          const seenBaseNames = new Set();
+          items = allItems.filter(r => {
+            const baseName = (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+            if (seenBaseNames.has(baseName)) return false;
+            seenBaseNames.add(baseName);
+            return true;
+          }).map(r => ({
+            ...r,
+            fields: { ...r.fields, Name: (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim() }
+          }));
+        } else {
+          items = allItems;
+        }
+        return `
+          <div class="mqph-setup-card">
+            <div class="mqph-setup-header">
+              <div class="mqph-setup-title">${cat.label}</div>
+              <div class="mqph-setup-sub">${cat.sub}</div>
+            </div>
+            <div class="mqph-chip-row" id="mqph-chips-${cat.id}">
+              ${items.map(r => `
+                <div class="mqph-chip" id="mqph-chip-${r.id}">
+                  ${r.fields['Name']}
+                  <button class="mqph-chip-del" onclick="mqphDeleteChip('${r.id}','${cat.id}')">×</button>
+                </div>`).join('')}
+              <div class="mqph-chip-input">
+                <input type="text" id="mqph-chip-input-${cat.id}" placeholder="${cat.placeholder}" onkeydown="if(event.key==='Enter')mqphAddChip('${cat.id}')"/>
+                <button onclick="mqphAddChip('${cat.id}')">Add</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('')}
+
+      <!-- Local delivery zone — standalone, no chip input -->
+      <div class="mqph-setup-card">
+        <div class="mqph-setup-header">
+          <div class="mqph-setup-title">📍 Local delivery zone</div>
+          <div class="mqph-setup-sub">Define the radius within which you deliver at no extra travel charge. Any delivery cost within this area should already be factored into your regular pricing. Jobs outside this radius will show a note on the quote that travel charges may apply — you can confirm the exact amount when you follow up with the customer.</div>
         </div>
-        <div class="mq-topbar-actions">
-          <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#6b7280;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#6b7280'">Help</a>
-          <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
-          <button 
-  type="button"
-  class="mq-btn mq-btn-sm"
-  onclick="logoutMember()">
-  Log out
-</button>
+        <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <label style="font-size:13px;color:#374151;font-weight:500">Local radius:</label>
+          <input type="number" id="mqph-local-radius" value="${(existing['zone']||[]).find(r=>r.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15}" style="width:90px;text-align:right;font-family:inherit;font-size:14px;font-weight:600;color:#111;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+          <span style="font-size:13px;color:#6b7280;font-weight:500">km</span>
+          <button onclick="mqphSaveLocalRadius()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>
+          <span id="mqph-local-radius-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
         </div>
       </div>
 
-      <div class="mq-layout">
-        <div class="mq-sidebar">
-          <div class="mq-nav-section">Overview</div>
-          <div class="mq-nav-item active" onclick="mqNav('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
-          <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
-          <div class="mq-nav-section">Setup</div>
-          <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
-          <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
-          <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
-          <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
-          <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
-          <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
-          <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
-          <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
-          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
-          <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
-          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
+      <div class="mqph-setup-card">
+        <div class="mqph-setup-header">
+          <div class="mqph-setup-title">🔧 Installation & removal</div>
+          <div class="mqph-setup-sub">Pre-added — rates are set in the wizard. Delete any you don't offer. Supply-only shop? Delete all.</div>
         </div>
-
-        <div class="mq-content">
-
-          <!-- OVERVIEW -->
-          <div class="mq-page active" id="mq-page-overview">
-            <button class="mq-help-btn" onclick="mqShowHelp('overview')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Welcome back 👋</div>
-            <div class="mq-page-sub">Here's what's happening with your widget</div>
-            <div class="mq-stat-grid" id="mq-stats">
-              <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-leads">—</div><div class="mq-stat-lbl">Quotes generated</div></div>
-              <div class="mq-stat mq-stat-green"><div class="mq-stat-val" id="mq-stat-new">—</div><div class="mq-stat-lbl">New this week</div></div>
-              <div class="mq-stat mq-stat-purple"><div class="mq-stat-val" id="mq-stat-contacts">—</div><div class="mq-stat-lbl">With contact info</div></div>
-              <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-booked">—</div><div class="mq-stat-lbl">Booked</div></div>
-              <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-value">—</div><div class="mq-stat-lbl">Est. pipeline value</div></div>
-            </div>
-            <div class="mq-card">
-              <div class="mq-card-title">📋 Recent leads</div>
-              <div id="mq-recent-leads"><div class="mq-loading">Loading leads...</div></div>
-            </div>
-            <div class="mq-card">
-              <div class="mq-card-title">🔗 Your widget embed code</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear.</p>
-              <div class="mq-embed-box" id="mq-embed-preview"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-1">Copy</button></div>
-            </div>
-          </div>
-
-          <!-- LEADS -->
-          <div class="mq-page" id="mq-page-leads">
-            <button class="mq-help-btn" onclick="mqShowHelp('leads')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-section-header">
-              <div>
-                <div class="mq-page-title">Leads</div>
-                <div class="mq-page-sub">All quote requests from your widget</div>
-              </div>
-              <select id="mq-lead-filter" onchange="mqFilterLeads()" style="font-size:13px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit">
-                <option value="">All leads</option>
-                <option value="New">New</option>
-                <option value="Contacted">Contacted</option>
-                <option value="Booked">Booked</option>
-                <option value="Lost">Lost</option>
-              </select>
-            </div>
-            <div id="mq-leads-msg"></div>
-            <div style="margin-bottom:1rem;text-align:right">
-              <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteAllLeads()">🗑️ Clear all leads</button>
-            </div>
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div id="mq-leads-table"><div class="mq-loading">Loading leads...</div></div>
-            </div>
-          </div>
-
-          <!-- SHOP INFO -->
-          <div class="mq-page" id="mq-page-shop">
-            <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Shop info</div>
-            <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
-            <div class="mq-card">
-              <div id="mq-shop-msg"></div>
-              <div class="mq-grid2" style="margin-bottom:1rem">
-                <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" id="mq-shop-name"/></div>
-                <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" id="mq-shop-phone"/></div>
-                <div class="mq-field"><label class="mq-label">City</label><input type="text" id="mq-shop-city"/></div>
-                <div class="mq-field"><label class="mq-label">Website URL</label><input type="url" id="mq-shop-website"/></div>
-                <div class="mq-field"><label class="mq-label">Lead notify email</label><input type="email" id="mq-shop-email"/><span class="mq-hint">Where new lead notifications go</span></div>
-                <div class="mq-field"><label class="mq-label">Currency symbol</label>
-                  <select id="mq-shop-currency">
-                    <option value="$">$ — US / Canadian Dollar</option>
-                    <option value="£">£ — British Pound</option>
-                    <option value="€">€ — Euro</option>
-                    <option value="A$">A$ — Australian Dollar</option>
-                    <option value="NZ$">NZ$ — New Zealand Dollar</option>
-                    <option value="¥">¥ — Japanese Yen</option>
-                    <option value="Fr">Fr — Swiss Franc</option>
-                    <option value="kr">kr — Nordic Krona/Krone</option>
-                    <option value="R">R — South African Rand</option>
-                  </select>
-                  <span class="mq-hint">Switches the symbol everywhere on your widget, MidasQuote Pro, and the pricing wizard — doesn't convert amounts, just how they're displayed</span>
-                </div>
-                <div class="mq-field"><label class="mq-label">Brand colour</label>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <input type="text" id="mq-shop-color" placeholder="#1a1a1a" style="flex:1"/>
-                    <input type="color" id="mq-shop-color-swatch" value="#1a1a1a" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                  </div>
-                  <span class="mq-hint">Hex code for widget buttons</span>
-                </div>
-              </div>
-              <div style="margin-bottom:1rem;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
-                <div onclick="mqToggleColorScheme()" style="display:flex;align-items:center;gap:8px;padding:12px 16px;background:#f9fafb;cursor:pointer">
-                  <span id="mq-colorscheme-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
-                  <span style="font-size:13px;font-weight:700;color:#374151">MidasQuote default color scheme</span>
-                  <span style="font-size:12px;color:#9ca3af">— click to customize</span>
-                </div>
-                <div id="mq-colorscheme-body" style="display:none;padding:14px 16px">
-                <div class="mq-grid2" style="gap:12px">
-                  <div class="mq-field"><label class="mq-label">Focal highlight colour</label>
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-focalcolor" placeholder="#2563eb (default)" style="flex:1"/>
-                      <input type="color" id="mq-shop-focalcolor-swatch" value="#2563eb" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('focalcolor','Focal colour')" title="Reset to MidasQuote default">↺</button>
-                    </div>
-                    <span class="mq-hint">The step number badge and the Continue button</span>
-                  </div>
-                  <div class="mq-field"><label class="mq-label">Box border colour</label>
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-boxbordercolor" placeholder="#93c5fd (default)" style="flex:1"/>
-                      <input type="color" id="mq-shop-boxbordercolor-swatch" value="#93c5fd" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbordercolor','Box border colour')" title="Reset to MidasQuote default">↺</button>
-                    </div>
-                    <span class="mq-hint">Border around the "Start here" and "Supply/install" boxes, plus the glowing ring around whichever step the customer's currently on (the two always match)</span>
-                  </div>
-                  <div class="mq-field"><label class="mq-label">Box background colour</label>
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-boxbgcolor" placeholder="#eff6ff (default)" style="flex:1"/>
-                      <input type="color" id="mq-shop-boxbgcolor-swatch" value="#eff6ff" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbgcolor','Box background colour')" title="Reset to MidasQuote default">↺</button>
-                    </div>
-                    <span class="mq-hint">Background of those same highlight boxes</span>
-                  </div>
-                  <div class="mq-field"><label class="mq-label">Box text colour</label>
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-boxtextcolor" placeholder="#1e40af (default)" style="flex:1"/>
-                      <input type="color" id="mq-shop-boxtextcolor-swatch" value="#1e40af" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
-                      <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxtextcolor','Box text colour')" title="Reset to MidasQuote default">↺</button>
-                    </div>
-                    <span class="mq-hint">Label text inside those boxes — worth setting explicitly if you go dark on the background above</span>
-                  </div>
-                </div>
-                </div>
-              </div>
-              <div class="mq-grid2" style="margin-bottom:1rem">
-                <div class="mq-field">
-                  <label class="mq-label">Quote range — low (% below estimate)</label>
-                  <input type="number" id="mq-shop-range-low" placeholder="5" min="0" max="50"/>
-                  <span class="mq-hint">Default 5 — quote shows up to 5% below your estimate</span>
-                </div>
-                <div class="mq-field">
-                  <label class="mq-label">Quote range — high (% above estimate)</label>
-                  <input type="number" id="mq-shop-range-high" placeholder="20" min="0" max="50"/>
-                  <span class="mq-hint">Default 20 — quote shows up to 20% above your estimate</span>
-                </div>
-              </div>
-              <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Shop logo</label>
-                <div id="mq-shop-logo-preview" style="margin-bottom:8px;display:none">
-                  <img id="mq-shop-logo-img" src="" alt="Logo preview" style="height:56px;max-width:200px;object-fit:contain;border:1px solid #e5e7eb;border-radius:8px;padding:6px;background:#f9fafb"/>
-                </div>
-                <label class="mq-btn mq-btn-sm" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px">
-                  📤 Upload logo image
-                  <input type="file" id="mq-shop-logo-file" accept="image/*" style="display:none"/>
-                </label>
-                <div id="mq-shop-logo-upload-status" style="font-size:11px;color:#6b7280;margin-bottom:6px;min-height:14px"></div>
-                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a direct image URL:</div>
-                <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png" oninput="mqRefreshLogoPreview()"/>
-                <span class="mq-hint">Appears in the top-left corner of your widget</span>
-              </div>
-              <div class="mq-field" style="margin-bottom:1.5rem">
-                <label class="mq-label">Disclaimer text</label>
-                <textarea id="mq-shop-disclaimer" placeholder="Ballpark estimate only. Contact us for a full quote."></textarea>
-                <span class="mq-hint">Shown at the bottom of every quote</span>
-              </div>
-              <div class="mq-field" style="margin-bottom:1.5rem">
-                <label class="mq-label">Project type section title</label>
-                <input type="text" id="mq-shop-projecttype-title" placeholder="Start here — choose your project type"/>
-                <span class="mq-hint">The heading above the project type dropdown — change the wording to fit your business (e.g. "Choose your job type")</span>
-              </div>
-              <div class="mq-field" style="margin-bottom:1.5rem">
-                <label class="mq-label">Project type section hint</label>
-                <input type="text" id="mq-shop-projecttype-hint" placeholder="After calculating your first quote, you can continue adding other project types."/>
-                <span class="mq-hint">A short line under the dropdown letting customers know they can build one combined quote across multiple project types</span>
-              </div>
-              <div id="mq-shop-consult-warning" class="mq-msg-error" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px">
-                ⚠️ Please fill in at least one — a consultation link or a consultation email. Without one, customers just get sent to your quote form instead when they click "Ask a question" or "Book a consultation."
-              </div>
-              <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">"Book a consultation" link <span style="font-weight:400;color:#9ca3af">(choose this or the email below)</span></label>
-                <input type="url" id="mq-shop-consult-link" placeholder="https://yoursite.com/contact" oninput="mqCheckConsultFields()"/>
-                <span class="mq-hint">If set, the widget's "Book a consultation" button opens this page in a new tab instead of the default contact form</span>
-              </div>
-              <div class="mq-field" style="margin-bottom:1.5rem">
-                <label class="mq-label">Or, consultation email <span style="font-weight:400;color:#9ca3af">(choose this or the link above)</span></label>
-                <input type="email" id="mq-shop-consult-email" placeholder="sales@yourshop.com" oninput="mqCheckConsultFields()"/>
-                <span class="mq-hint">Used only if no link is set above — opens a pre-filled email instead. At least one of these two fields is required.</span>
-              </div>
-              <div class="mq-toggle-row" style="margin-bottom:1rem">
-                <div>
-                  <div style="font-size:13px;font-weight:500;color:#111">We offer financing</div>
-                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Shows a friendly "Financing available" note on the widget's quote results</div>
-                </div>
-                <div class="mq-toggle" id="mq-financing-toggle" onclick="mqToggleFinancing()"></div>
-              </div>
-              <div id="mq-financing-link-wrap" style="display:none;margin-bottom:1.5rem;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px">
-                <div class="mq-field" style="margin-bottom:0">
-                  <label class="mq-label">Pre-approval link <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
-                  <input type="url" id="mq-financing-link" placeholder="https://yourfinancingpartner.com/apply"/>
-                  <span class="mq-hint">If you have a link where customers can apply for financing, enter it here. The "Ask a question" button on your widget will become "Get pre-approved →" and send them straight there.</span>
-                </div>
-              </div>
-              <div class="mq-toggle-row" style="margin-bottom:1.5rem">
-                <div>
-                  <div style="font-size:13px;font-weight:500;color:#111">Email me for every estimate</div>
-                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Normally you're only notified when a customer gives their contact info. Turn this on to get an email every time anyone calculates an estimate — even if they skip that step.</div>
-                </div>
-                <div class="mq-toggle" id="mq-notify-every-toggle" onclick="mqToggleNotifyEvery()"></div>
-              </div>
-              <div class="mq-toggle-row" style="margin-bottom:1.5rem">
-                <div>
-                  <div style="font-size:13px;font-weight:500;color:#111">Show "View our products" link on widget</div>
-                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Customers can browse your showroom before getting a quote</div>
-                </div>
-                <div class="mq-toggle on" id="mq-showroom-toggle" onclick="mqToggleShowroom()"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ROOM TYPES -->
-          <div class="mq-page" id="mq-page-rooms">
-            <button class="mq-help-btn" onclick="mqShowHelp('rooms')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Project types</div>
-            <div class="mq-page-sub">Set up the project types your widget offers — rooms, service tiers, or anything else — and adjust pricing up or down for each one. Great for things like "Kitchen Reno — Premium" vs. "Luxury," or a bathroom vanity running smaller than a kitchen cabinet at the same length.</div>
-            <div class="mq-card">
-              <div id="mq-rooms-msg"></div>
-              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
-                💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
-              </div>
-              <div id="mq-rooms-list"></div>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
-                <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()">+ Add room</button>
-                <select id="mq-restore-room-select" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
-                  <option value="">↩ Restore a default type…</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- PRICING -->
-          <div class="mq-page" id="mq-page-pricing">
-            <button class="mq-help-btn" onclick="mqShowHelp('pricing')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div style="height:24px"></div>
-            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
-              🔧 <strong>Handles & knobs:</strong> Don't include handles or knobs in your pricing here — since their prices vary so widely, add them as a specialty item instead. That said, if your shop installs handles as part of the job, your door installation price should still account for that labor.
-            </div>
-            <div id="mq-pricing-helper-v2"></div>
-          </div>
-
-          <!-- SPECIALTY ITEMS -->
-          <div class="mq-page" id="mq-page-specialty">
-            <button class="mq-help-btn" onclick="mqShowHelp('specialty')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-section-header">
-              <div>
-                <div class="mq-page-title">Specialty items</div>
-                <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
-              </div>
-            </div>
-            <div id="mq-spec-msg"></div>
-            <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
-              <br><br>
-              🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
-              <br><br>
-              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
-              <br><br>
-              🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
-              <br><br>
-              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but still takes a full sheet and the same labor as a bigger one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
-            </div>
-            <div style="margin-bottom:1rem">
-              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
-            </div>
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
-            </div>
-          </div>
-
-          <!-- EMBED CODE -->
-          <div class="mq-page" id="mq-page-embed">
-            <button class="mq-help-btn" onclick="mqShowHelp('embed')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Embed code</div>
-            <div class="mq-page-sub">Pick what you want, then copy one combined block of code to paste into your website.</div>
-
-            <!-- ============================================================
-                 SECTION 1: Code for websites — the embed-code builder plus
-                 platform install instructions, all folded up together.
-            ============================================================= -->
-            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:14px">
-              <div onclick="mqToggleEmbedSection('websites')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🌐 Code for websites</div>
-                <span id="mq-embed-websites-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
-              </div>
-              <div id="mq-embed-websites-body" style="display:none;padding:0 1.25rem 1.25rem">
-
-                <!-- Combined builder card -->
-                <div class="mq-card" style="border:2px solid #1a1a1a">
-                  <div class="mq-card-title" style="font-size:15px">🧩 Build your embed code</div>
-                  <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Check the pieces you want — the combined code updates automatically. Paste it all in one go.</p>
-
-                  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem">
-                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                      <input type="checkbox" id="mq-embed-chk-header" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                      <div>
-                        <div style="font-size:13px;font-weight:600;color:#111">🎯 Quote page header</div>
-                        <div style="font-size:11px;color:#6b7280;margin-top:2px">Big headline + subtitle above your widget</div>
-                      </div>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                      <input type="checkbox" id="mq-embed-chk-trust" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                      <div>
-                        <div style="font-size:13px;font-weight:600;color:#111">✅ Trust bar</div>
-                        <div style="font-size:11px;color:#6b7280;margin-top:2px">"No commitment required · Results sent to inbox" row</div>
-                      </div>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer" onclick="mqUpdateCombinedEmbed()">
-                      <input type="checkbox" id="mq-embed-chk-widget" checked style="width:18px;height:18px;flex-shrink:0;accent-color:#1a1a1a"/>
-                      <div>
-                        <div style="font-size:13px;font-weight:600;color:#111">📋 Widget embed code</div>
-                        <div style="font-size:11px;color:#6b7280;margin-top:2px">The quote widget itself — required for it to appear</div>
-                      </div>
-                    </label>
-                  </div>
-
-                  <!-- Live preview -->
-                  <div id="mq-embed-preview-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:1.25rem;transform:scale(0.75);transform-origin:top left;width:133%;margin-right:-33%">
-                    <div id="mq-embed-preview-header"></div>
-                    <div id="mq-embed-preview-trust"></div>
-                    <div style="background:#fff;border:1.5px dashed #d1d5db;border-radius:10px;padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af" id="mq-embed-preview-widget">📋 Widget appears here</div>
-                  </div>
-
-                  <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-combined-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
-                  <button class="mq-btn mq-btn-primary" id="mq-combined-copy-btn" onclick="mqCopyCombinedEmbed(this)" style="width:100%">📋 Copy combined code</button>
-                </div>
-
-                <div class="mq-card">
-                  <div class="mq-card-title">💡 Installation help</div>
-                  <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#374151;line-height:1.6">
-                    <div><strong>Wix:</strong> Add → Embed → Embed a Widget → paste your code</div>
-                    <div><strong>Squarespace:</strong> Edit page → Add block → Code → paste your code</div>
-                    <div><strong>WordPress:</strong> Add block → Custom HTML → paste your code</div>
-                    <div><strong>Webflow:</strong> Add element → Embed → paste your code</div>
-                    <div><strong>Need help?</strong> Email <a href="mailto:support@midasquote.com" style="color:#1a1a1a">support@midasquote.com</a></div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            <!-- ============================================================
-                 SECTION 2: Direct link — the plain quote-tool link (no
-                 website needed) plus its own homescreen instructions.
-            ============================================================= -->
-            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:14px">
-              <div onclick="mqToggleEmbedSection('direct')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📱 Direct link</div>
-                <span id="mq-embed-direct-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
-              </div>
-              <div id="mq-embed-direct-body" style="display:none;padding:0 1.25rem 1.25rem">
-
-                <div class="mq-card">
-                  <div class="mq-card-title">📱 Direct quote link</div>
-                  <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed. Or use it for walk-in customers, right on the spot.</p>
-                  <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop
-                    <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
-                      <button onclick="window.open('https://widget.midasquote.com/?shop=${token}&mode=shop','_blank')" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">Open ↗</button>
-                      <button class="mq-copy-btn" style="position:static" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mq-card">
-                  <div class="mq-card-title">📱 Add MidasQuote shortcut to your homescreen</div>
-                  <p class="mq-hint" style="margin-bottom:12px">
-                    Keep your quote tool one tap away — great for quoting walk-in customers on the spot, without digging through browser tabs or bookmarks.
-                  </p>
-                  ${mqAddToHomescreenInstructionsHTML()}
-                </div>
-
-              </div>
-            </div>
-
-            <!-- ============================================================
-                 SECTION 3: MidasQuote Pro — the real-numbers version, for
-                 the shop owner (or anyone they trust, like a regular
-                 contractor) rather than customers.
-            ============================================================= -->
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleEmbedSection('pro')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">⚡ MidasQuote Pro</div>
-                <span id="mq-embed-pro-arrow" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
-              </div>
-              <div id="mq-embed-pro-body" style="display:none;padding:0 1.25rem 1.25rem">
-
-                <div class="mq-card">
-                  <div class="mq-card-title">⚡ Your MidasQuote Pro link</div>
-                  <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This one's just for you — or anyone you want to bring in, like a contractor you always work with. It shows the exact real numbers behind every quote, right alongside the same ballpark range your customers see. Not for sharing with customers.</p>
-                  <div class="mq-embed-box">https://widget.midasquote.com/pro.html?shop=${token}
-                    <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
-                      <button onclick="window.open('https://widget.midasquote.com/pro.html?shop=${token}','_blank')" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">Open ↗</button>
-                      <button class="mq-copy-btn" style="position:static" onclick="mqCopyText('https://widget.midasquote.com/pro.html?shop=${token}',this)">Copy</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mq-card">
-                  <div class="mq-card-title">📱 Add MidasQuote Pro shortcut to your homescreen</div>
-                  <p class="mq-hint" style="margin-bottom:12px">
-                    Keep it one tap away for quoting on the go, walking a jobsite, or sitting across the table from a customer.
-                  </p>
-                  ${mqAddToHomescreenInstructionsHTML()}
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-
-          <!-- MY PRODUCTS -->
-          <div class="mq-page" id="mq-page-products">
-            <button class="mq-help-btn" onclick="mqShowHelp('products')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">My Products</div>
-            <div class="mq-page-sub">Manage everything about how each item shows up on your widget: photos and thumbnails customers see while quoting, which project types each item is available for, and which items to hide entirely. Category-level shortcuts let you show or hide a whole group at once — individual items can still override that.</div>
-            <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
-              <strong>💡 How to add a photo:</strong><br>
-              <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item below and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
-              <strong>Option 2 —</strong> Click <em>"📷 Choose from library"</em> to pick from our curated cabinet & countertop photo collection.<br>
-              <strong>Option 3 —</strong> Already have a photo hosted somewhere reliable? Paste its direct image link instead — just avoid social media links, since those expire and will eventually break.
-            </div>
-            <div id="mq-products-msg"></div>
-            <div id="mq-products-content"><div class="mq-loading">Loading your products...</div></div>
-            <div class="mq-card" style="margin-top:1rem">
-              <div class="mq-card-title">🔗 Your showroom link</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Share this with customers so they can browse your products before getting a quote.</p>
-              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show View our products link"</strong> is turned on in your Shop Info tab, this link is automatically included in your widget — no extra setup needed.</div>
-              <div class="mq-embed-box"><span id="mq-showroom-link-text"></span><button class="mq-copy-btn" id="mq-showroom-copy-btn">Copy</button></div>
-              <button class="mq-btn" style="margin-top:10px" id="mq-showroom-open-btn">Open showroom ↗</button>
-            </div>
-          </div>
-
-          <!-- TEMPLATES (ADMIN ONLY) -->
-          <div class="mq-page" id="mq-page-templates">
-            <button class="mq-help-btn" onclick="mqShowHelp('templates')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">🔧 Templates (Admin)</div>
-            <div class="mq-page-sub">Manage the master specialty items for Refacing, Repainting, and Restaining. These are what every new shop gets automatically — add real door styles, prices, and photos here so shop owners never start from a blank page.</div>
-            <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#991b1b;line-height:1.6">
-              <strong>⚠️ Editing here alone changes nothing live.</strong> Changes only apply to a shop once you actually click "Push" — but be aware: pushing to an item a shop already has now <strong>fully overwrites</strong> its name, price, units, project types, and photo to match the master (this is intentional while you're still setting things up, since there's nothing real to protect yet — this should get smarter once real shops exist and may have customized their own copies).
-            </div>
-            <div id="mq-templates-msg"></div>
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">🏷️ Default project type descriptions</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These are the name and description every brand-new shop gets automatically for Refacing, Repainting, and Restaining — the note customers see on the widget when they pick that project type. Editing here only affects shops seeded from now on; it doesn't retroactively change any shop's existing project types.</p>
-              <div id="mq-master-rooms-content"><div class="mq-loading">Loading...</div></div>
-            </div>
-            <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
-            <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
-            <div class="mq-card" style="margin-top:1.5rem">
-              <div class="mq-card-title">📤 Push to all shops</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Adds any template items a shop doesn't already have yet. Never touches or removes anything a shop already received from a previous push, even if you've since edited it here.</p>
-              <button class="mq-btn mq-btn-primary" onclick="mqPushTemplatesToAllShops()">Push new template items to all shops</button>
-            </div>
-          </div>
-
-          <!-- BILLING -->
-          <div class="mq-page" id="mq-page-billing">
-            <button class="mq-help-btn" onclick="mqShowHelp('billing')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Account</div>
-            <div class="mq-page-sub">Manage your login, subscription, payment method, and invoices</div>
-
-            <div class="mq-card" style="margin-bottom:1rem">
-              <div class="mq-card-title">📋 Current plan</div>
-              <div id="mq-billing-plan" style="font-size:14px;color:#6b7280;margin-bottom:1.25rem">Loading plan info...</div>
-              <div id="mq-billing-active-actions" style="display:none;gap:10px;flex-wrap:wrap">
-                <button class="mq-btn mq-btn-primary" onclick="mqOpenBillingPortal()">Manage plan</button>
-                <button class="mq-btn" onclick="mqUpgradeToAnnual()">Upgrade to annual</button>
-              </div>
-              <div id="mq-billing-reactivate-actions" style="display:none;gap:10px;flex-wrap:wrap">
-                <button class="mq-btn mq-btn-primary" onclick="mqReactivate('prc_monthly-midasquote-o01n50jov')">Reactivate — Monthly</button>
-                <button class="mq-btn" onclick="mqReactivate('prc_annual-midasquote-2c1n80jbq')">Reactivate — Annual</button>
-              </div>
-              <div id="mq-billing-free-actions" style="display:none;gap:10px;flex-wrap:wrap">
-                <!-- New no-trial Monthly/Annual prices — a Free Trial/Demo shop
-                     already had 30 free days on the house, so upgrading from here
-                     goes straight to a real paid subscription, no second trial. -->
-                <button class="mq-btn mq-btn-primary" onclick="mqUpgradeFromFree('prc_monthly-midasquote-o01n50jov')">Upgrade — Monthly</button>
-                <button class="mq-btn" onclick="mqUpgradeFromFree('prc_annual-midasquote-2c1n80jbq')">Upgrade — Annual</button>
-              </div>
-            </div>
-
-            <div class="mq-card" style="margin-bottom:1rem" id="mq-billing-payment-card">
-              <div class="mq-card-title">💳 Payment method</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Update your credit card or billing details.</p>
-              <button class="mq-btn" onclick="mqOpenBillingPortal()">Update payment method</button>
-            </div>
-
-            <div class="mq-card" style="margin-bottom:1rem" id="mq-billing-invoices-card">
-              <div class="mq-card-title">🧾 Invoices</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">View and download your past invoices.</p>
-              <button class="mq-btn" onclick="mqOpenBillingPortal()">View invoices</button>
-            </div>
-
-            <div class="mq-card" style="margin-bottom:1rem" id="mq-billing-security-card">
-              <div class="mq-card-title">🔒 Account security</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Update the password you use to log in to this dashboard.</p>
-              <button class="mq-btn" onclick="mqShowChangePasswordModal()">Change password</button>
-            </div>
-
-            <div class="mq-card" style="border-color:#fca5a5" id="mq-billing-cancel-card">
-              <div class="mq-card-title" style="color:#dc2626">⚠️ Cancel subscription</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Your leads and pricing data will be available for 30 days after cancellation.</p>
-              <button class="mq-btn mq-btn-danger" onclick="mqOpenBillingPortal()">Cancel subscription</button>
-            </div>
-          </div>
-
-          <!-- SUPPORT -->
-          <div class="mq-page" id="mq-page-support">
-            <div class="mq-page-title">Support</div>
-            <div class="mq-page-sub">Have a question or an idea? Send it straight to us — your shop info is included automatically.</div>
-            <div class="mq-card" style="max-width:520px">
-              <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Your email <span style="color:#dc2626">*</span></label>
-                <div style="display:flex;gap:8px">
-                  <input type="email" id="mq-support-email" placeholder="you@example.com" required style="flex:1"/>
-                  <button type="button" class="mq-btn mq-btn-sm" id="mq-support-use-shop-email" onclick="mqUseShopInfoEmail()" style="flex-shrink:0;white-space:nowrap">Use my Shop Info email</button>
-                </div>
-                <span class="mq-hint">So we know where to send our reply</span>
-              </div>
-              <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Topic</label>
-                <select id="mq-support-topic">
-                  <option value="Question">Just a question</option>
-                  <option value="Support">Support — something's not working right</option>
-                  <option value="Suggestion">Suggestion — an idea for MidasQuote</option>
-                </select>
-              </div>
-              <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Message</label>
-                <textarea id="mq-support-message" rows="6" placeholder="Tell us what's going on..."></textarea>
-              </div>
-              <button class="mq-btn mq-btn-primary" id="mq-support-submit-btn" onclick="mqSubmitSupport()">Send</button>
-              <div id="mq-support-status" style="font-size:13px;margin-top:10px"></div>
-            </div>
-          </div>
-
-          <!-- MARKETING KIT -->
-          <div class="mq-page" id="mq-page-marketing">
-            <button class="mq-help-btn" onclick="mqShowHelp('marketing')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Marketing Kit</div>
-            <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
-
-            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
-              <label class="mq-label" style="display:block;margin-bottom:6px">Link to use across everything below</label>
-              <div style="display:flex;gap:8px">
-                <input type="url" id="mq-mk-post-link" placeholder="https://yoursite.com/get-a-quote" style="flex:1;max-width:420px"/>
-                <button class="mq-btn mq-btn-sm" id="mq-mk-post-link-apply" style="flex-shrink:0">Apply</button>
-              </div>
-              <span class="mq-hint">Paste the link to your quote page — if you leave this blank, everything below uses your raw widget link instead</span>
-              <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link is automatically used across every marketing item on this page — posts, graphics, QR codes, and everything else.</div>
-            </div>
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('social')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📱 Social media posts</div>
-                <span id="mq-mk-arrow-social" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-social" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
-              <div id="mq-mk-social"></div>
-              </div>
-            </div>
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('graphic')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖼️ Social graphic — ready to post</div>
-                <span id="mq-mk-arrow-graphic" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-graphic" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A square Instagram/Facebook-ready graphic with your shop name, brand colour, and quote link already on it. Download and post — no design needed.</p>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
-                <div style="width:100%;max-width:280px">
-                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
-                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 5 minutes" maxlength="60" style="font-size:13px"/>
-                </div>
-                <div style="display:flex;gap:8px;width:100%;max-width:280px">
-                  <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
-                    📷 Add background photo
-                    <input type="file" id="mq-mk-bg-photo" accept="image/*" style="display:none"/>
-                  </label>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-bg-remove" style="flex-shrink:0">✕</button>
-                </div>
-                <span style="font-size:11px;color:#9ca3af;text-align:center">Optional — use a photo of your shop or recent work for the background</span>
-                <div id="mq-mk-overlay-row" style="display:none;width:100%;max-width:280px;align-items:center;gap:10px">
-                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Darkness</span>
-                  <input type="range" id="mq-mk-overlay-slider" min="0" max="90" value="62" style="flex:1"/>
-                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-overlay-val">62%</span>
-                </div>
-                <button class="mq-btn mq-btn-primary" id="mq-mk-download-btn" style="width:100%;max-width:280px">⬇️ Download graphic (PNG)</button>
-              </div>
-              </div>
-            </div>
-
-            <div class="mq-card" id="mq-pd-outer-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('poster')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🎨 Custom Poster & Sign Designer</div>
-                <span id="mq-mk-arrow-poster" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-poster" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Pick a style, add your own project photo, and download a print-ready poster or yard sign — pick "Landscape" below for a yard sign.</p>
-
-              <div class="mq-field" style="margin-bottom:12px">
-                <label class="mq-label">Style</label>
-                <div style="display:flex;gap:10px;flex-wrap:wrap">
-                  <div class="mq-pd-template-thumb selected" data-template="curved-split" onclick="mqPdSelectTemplate('curved-split',this)" style="cursor:pointer;border:2px solid #1a1a1a;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(120deg,#fff 45%,#1a3a6b 55%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Curved Split</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="diamond-arrow" onclick="mqPdSelectTemplate('diamond-arrow',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(100deg,#111 45%,#c9a24b 47%,#8a6d2b 49%,#333 52%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Diamond Arrow</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="ornate-divider" onclick="mqPdSelectTemplate('ornate-divider',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:50%/20%;background:linear-gradient(#fff 45%,#8a5a3a 47%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Ornate Divider</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="circular-badge" onclick="mqPdSelectTemplate('circular-badge',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:#3a3a3a;position:relative">
-                      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:2px solid #c9a24b"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Circular Badge</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="bold-modern" onclick="mqPdSelectTemplate('bold-modern',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#1a3a6b 45%,#666 47%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Bold Modern</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mq-field" style="margin-bottom:12px">
-                <label class="mq-label">Orientation</label>
-                <div style="display:flex;gap:8px">
-                  <button class="mq-btn mq-btn-sm" id="mq-pd-orient-portrait" onclick="mqPdSetOrientation('portrait')">📱 Portrait — poster</button>
-                  <button class="mq-btn mq-btn-sm" id="mq-pd-orient-landscape" onclick="mqPdSetOrientation('landscape')">🖥️ Landscape — yard sign</button>
-                </div>
-              </div>
-
-              <div class="mq-grid2">
-                <div class="mq-field">
-                  <label class="mq-label">Project photo</label>
-                  <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-photo-input').click()">📤 Upload photo</button>
-                  <input type="file" id="mq-pd-photo-input" accept="image/*" style="display:none"/>
-                </div>
-                <div class="mq-field">
-                  <label class="mq-label">Text or your logo?</label>
-                  <select id="mq-pd-text-mode" onchange="mqPdTextModeChanged()">
-                    <option value="text">Text (shop name + tagline)</option>
-                    <option value="logo">My own logo image</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="mq-field" id="mq-pd-logo-upload-wrap" style="display:none;margin-bottom:12px">
-                <label class="mq-label">Logo image</label>
-                <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-logo-input').click()">📤 Upload logo</button>
-                <input type="file" id="mq-pd-logo-input" accept="image/*" style="display:none"/>
-                <p style="font-size:11px;color:#9ca3af;margin-top:4px">This is separate from your Shop Info logo — upload whatever image you want to appear here specifically.</p>
-                <label class="mq-label" style="margin-top:10px;display:block">Logo size</label>
-                <input type="range" id="mq-pd-logo-size" min="50" max="250" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-              </div>
-
-              <div class="mq-field" style="margin-bottom:12px">
-                <label class="mq-label">Tagline</label>
-                <input type="text" id="mq-pd-tagline" value="Custom Kitchens & Millwork" maxlength="60" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
-              </div>
-
-              <div class="mq-field" style="margin-bottom:12px">
-                <label class="mq-label">Badge text <span style="font-weight:400;color:#9ca3af;text-transform:none">(Circular Badge style only — independent of your shop name)</span></label>
-                <input type="text" id="mq-pd-badge-text" placeholder="e.g. DR" maxlength="4" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
-              </div>
-
-              <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem">
-                <div onclick="mqPdToggleColorSection()" style="display:flex;align-items:center;justify-content:space-between;padding:14px;cursor:pointer;background:#f9fafb">
-                  <div style="font-size:13px;font-weight:700;color:#374151">🎨 Colours &amp; Text Style</div>
-                  <span id="mq-pd-color-section-arrow" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-                </div>
-                <div id="mq-pd-color-section-body" style="padding:14px">
-                  <div class="mq-grid2">
-                    <div class="mq-field">
-                      <label class="mq-label">Background colour</label>
-                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                        <input type="color" id="mq-pd-bg-color" value="#ffffff" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
-                          <input type="checkbox" id="mq-pd-bg-gradient" onchange="mqPdToggleGradientColor2('mq-pd-bg-color2-wrap',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Gradient
-                        </label>
-                        <span id="mq-pd-bg-color2-wrap" style="display:none">
-                          <input type="color" id="mq-pd-bg-color2" value="#f0f0f0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                        </span>
-                      </div>
-                      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;margin-top:8px;cursor:pointer">
-                        <input type="checkbox" id="mq-pd-bg-image-enabled" onchange="mqPdBgImageToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Use an image instead
-                      </label>
-                      <div id="mq-pd-bg-image-upload-wrap" style="display:none;margin-top:6px">
-                        <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-bg-image-input').click()">📤 Upload background image</button>
-                        <input type="file" id="mq-pd-bg-image-input" accept="image/*" style="display:none"/>
-                        <div style="margin-top:8px">
-                          <button class="mq-btn mq-btn-sm" onclick="mqPdLoadTextureLibrary()">🧱 Or choose from our texture library</button>
-                          <div id="mq-pd-texture-grid" style="display:none;margin-top:8px;max-height:180px;overflow-y:auto;grid-template-columns:repeat(4,1fr);gap:6px"></div>
-                        </div>
-                        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
-                          <label class="mq-label" style="display:block;margin-bottom:6px">Overlay <span style="font-weight:400;color:#9ca3af;text-transform:none">(darken/tint the image so your text stays readable)</span></label>
-                          <div style="display:flex;gap:8px;align-items:center">
-                            <input type="color" id="mq-pd-bg-overlay-color" value="#000000" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                            <input type="range" id="mq-pd-bg-overlay-opacity" min="0" max="90" value="0" oninput="mqPdOverlayOpacityChanged()" style="flex:1"/>
-                            <span id="mq-pd-bg-overlay-opacity-val" style="font-size:11px;color:#6b7280;width:32px;text-align:right">0%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="mq-field">
-                      <label class="mq-label">Shape colour</label>
-                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                        <input type="color" id="mq-pd-shape-color" value="#1a3a6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
-                          <input type="checkbox" id="mq-pd-shape-gradient" onchange="mqPdToggleGradientColor2('mq-pd-shape-color2-wrap',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Gradient
-                        </label>
-                        <span id="mq-pd-shape-color2-wrap" style="display:none">
-                          <input type="color" id="mq-pd-shape-color2" value="#378ADD" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                        </span>
-                      </div>
-                    </div>
-                    <div class="mq-field">
-                      <label class="mq-label">Shop name colour <span style="font-weight:400;color:#9ca3af;text-transform:none">(independent of the shape colour above)</span></label>
-                      <input type="color" id="mq-pd-name-color" value="#1a1a1a" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                    </div>
-                  </div>
-
-                  <div class="mq-field" style="margin-top:12px">
-                    <label class="mq-label">Accent line colour</label>
-                    <input type="color" id="mq-pd-accent-color" value="#c9a24b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                  </div>
-
-                  <div style="border-top:1px solid #e5e7eb;margin:14px 0 0;padding-top:14px">
-                    <div class="mq-field" style="margin-bottom:12px">
-                      <label class="mq-label">"Another project by" text</label>
-                      <input type="text" id="mq-pd-pre-text" value="Another project by" maxlength="40" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
-                    </div>
-                    <div class="mq-grid2">
-                      <div class="mq-field">
-                        <label class="mq-label">"Another project by" colour</label>
-                        <input type="color" id="mq-pd-pre-color" value="#6b6b6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                      </div>
-                      <div class="mq-field">
-                        <label class="mq-label">Tagline colour</label>
-                        <input type="color" id="mq-pd-tag-color" value="#4b4b4b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                      </div>
-                    </div>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:10px;cursor:pointer">
-                      <input type="checkbox" id="mq-pd-text-shadow" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add drop shadow to all text
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
-                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Text size &amp; layout</div>
-                <div class="mq-grid2" style="margin-bottom:8px">
-                  <div class="mq-field">
-                    <label class="mq-label">"Another project by" size</label>
-                    <input type="range" id="mq-pd-size-pre" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                  <div class="mq-field">
-                    <label class="mq-label">Shop name size</label>
-                    <input type="range" id="mq-pd-size-name" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                </div>
-                <div class="mq-grid2" style="margin-bottom:8px">
-                  <div class="mq-field">
-                    <label class="mq-label">Tagline size</label>
-                    <input type="range" id="mq-pd-size-tag" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                  <div class="mq-field">
-                    <label class="mq-label">Space between lines</label>
-                    <input type="range" id="mq-pd-line-spacing" min="60" max="180" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                </div>
-                <div class="mq-field">
-                  <label class="mq-label">Move whole text block up / down</label>
-                  <input type="range" id="mq-pd-text-offset" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                </div>
-              </div>
-
-              <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
-                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">QR code &amp; quote button <span style="font-weight:400;text-transform:none;color:#9ca3af">(both optional)</span></div>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:10px;cursor:pointer">
-                  <input type="checkbox" id="mq-pd-qr-enabled" onchange="mqPdQrToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add a QR code onto the photo
-                </label>
-                <div id="mq-pd-qr-controls-wrap" style="display:none;margin-bottom:12px">
-                  <div class="mq-grid2">
-                    <div class="mq-field">
-                      <label class="mq-label">QR code size</label>
-                      <input type="range" id="mq-pd-qr-size" min="50" max="220" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                    </div>
-                    <div class="mq-field">
-                      <label class="mq-label">QR code position (up/down)</label>
-                      <input type="range" id="mq-pd-qr-position" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                    </div>
-                  </div>
-                </div>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-                  <input type="checkbox" id="mq-pd-btn-enabled" onchange="mqPdBtnToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add a "Get a Free Quote" button
-                </label>
-                <div id="mq-pd-btn-controls-wrap" style="display:none;margin-top:10px">
-                  <div class="mq-field">
-                    <label class="mq-label">Button position (up/down)</label>
-                    <input type="range" id="mq-pd-btn-position" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                </div>
-              </div>
-              </div>
-
-              <div style="display:none;position:fixed;top:90px;right:30px;max-width:480px;z-index:50;text-align:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)" id="mq-pd-sticky-preview">
-                <canvas id="mq-pd-canvas" width="1080" height="1620" onclick="mqPdOpenZoom()" style="width:auto;height:300px;border-radius:10px;display:block;margin:0 auto 10px;box-shadow:0 6px 24px rgba(0,0,0,0.18);cursor:zoom-in" title="Tap to zoom"></canvas>
-                <button class="mq-btn mq-btn-primary" id="mq-pd-download-btn" style="width:100%;display:block;margin:0 auto">⬇️ Download (PNG)</button>
-              </div>
-
-            </div>
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('dm')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">💬 Direct message template</div>
-                <span id="mq-mk-arrow-dm" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-dm" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Send this to past customers or leads who might have a future project.</p>
-              <div id="mq-mk-dm"></div>
-              </div>
-            </div>
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('qrposter')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖨️ Printable QR poster</div>
-                <span id="mq-mk-arrow-qrposter" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-qrposter" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A print-ready poster with a QR code linking straight to your quote page — perfect for a sandwich board, front desk, or restroom poster. Walk-in customers just scan and go.</p>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-qr-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
-                <div style="width:100%;max-width:280px">
-                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
-                  <input type="text" id="mq-mk-qr-headline" placeholder="Scan for an instant price" maxlength="60" style="font-size:13px"/>
-                </div>
-                <div style="width:100%;max-width:280px">
-                  <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline font</label>
-                  <select id="mq-mk-qr-font" style="font-size:13px;width:100%">
-                    <option value="-apple-system, sans-serif">Default (System)</option>
-                    <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica — Clean & Modern</option>
-                    <option value="Georgia, serif">Georgia — Warm & Premium</option>
-                    <option value="'Trebuchet MS', sans-serif">Trebuchet — Friendly & Bold</option>
-                    <option value="'Times New Roman', serif">Times New Roman — Classic</option>
-                    <option value="Impact, 'Arial Narrow', sans-serif">Impact — Strong & Punchy</option>
-                  </select>
-                </div>
-                <div style="width:100%;max-width:280px;align-items:center;gap:10px;display:flex">
-                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Letter spacing</span>
-                  <input type="range" id="mq-mk-qr-letter-spacing" min="0" max="20" value="0" style="flex:1"/>
-                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-qr-letter-spacing-val">0px</span>
-                </div>
-                <div style="width:100%;max-width:280px;display:flex;align-items:center;gap:10px">
-                  <label class="mq-label" style="font-size:11px;white-space:nowrap;margin:0">Background colour</label>
-                  <input type="color" id="mq-mk-qr-color" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-qr-color-reset" style="flex-shrink:0">Reset</button>
-                </div>
-                <div style="display:flex;gap:8px;width:100%;max-width:280px">
-                  <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
-                    📷 Add background photo
-                    <input type="file" id="mq-mk-qr-bg-photo" accept="image/*" style="display:none"/>
-                  </label>
-                  <button class="mq-btn mq-btn-sm" id="mq-mk-qr-bg-remove" style="flex-shrink:0">✕</button>
-                </div>
-                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link set at the top of this page — set it there if you haven't already</span>
-                <div id="mq-mk-qr-overlay-row" style="display:none;width:100%;max-width:280px;align-items:center;gap:10px">
-                  <span style="font-size:11px;color:#6b7280;white-space:nowrap">Darkness</span>
-                  <input type="range" id="mq-mk-qr-overlay-slider" min="0" max="90" value="62" style="flex:1"/>
-                  <span style="font-size:11px;color:#6b7280;width:28px;text-align:right" id="mq-mk-qr-overlay-val">62%</span>
-                </div>
-                <button class="mq-btn mq-btn-primary" id="mq-mk-qr-download-btn" style="width:100%;max-width:280px">⬇️ Download poster (PNG)</button>
-              </div>
-              </div>
-            </div>
-
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('whereto')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📍 Where to post</div>
-                <span id="mq-mk-arrow-whereto" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-whereto" style="display:none;padding:0 1.25rem 1.25rem">
-              <div style="font-size:13px;color:#374151;line-height:2">
-                ✓ Your website homepage or a dedicated "Get a Quote" page<br>
-                ✓ Pin a post to the top of your Facebook Business Page<br>
-                ✓ Local Facebook homeowner / renovation groups (check group rules first)<br>
-                ✓ Instagram bio link<br>
-                ✓ Google Business Profile — add to your website field or post an update<br>
-                ✓ Email signature<br>
-                ✓ A QR code sign for walk-in customers to scan in-store
-              </div>
-              </div>
-            </div>
-
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('qrcode')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">QR code</div>
-                <span id="mq-mk-arrow-qrcode" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-qrcode" style="display:none;padding:0 1.25rem 1.25rem">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Just the QR code by itself, no poster or headline — handy if you want to drop it into your own flyer, sign, or menu.</p>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
-                <canvas id="mq-mk-qrcode-canvas" width="600" height="600" style="width:180px;height:180px;border-radius:10px;display:block;border:1px solid #e5e7eb"></canvas>
-                <span style="font-size:11px;color:#9ca3af;text-align:center">Uses the link set at the top of this page — set it there if you haven't already</span>
-                <button class="mq-btn mq-btn-primary" id="mq-mk-qrcode-download-btn" style="width:100%;max-width:280px">⬇️ Download QR code (PNG)</button>
-              </div>
-              </div>
-            </div>
-
-            <div class="mq-card" style="border-color:#86efac;background:#f0fdf4;padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('checklist')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">✅ Pre-launch checklist</div>
-                <span id="mq-mk-arrow-checklist" style="font-size:13px;color:#166534;transition:transform 0.2s">▼</span>
-              </div>
-              <div id="mq-mk-body-checklist" style="display:none;padding:0 1.25rem 1.25rem">
-              <div style="font-size:13px;color:#166534;line-height:2">
-                ☐ Widget is embedded and tested on your site<br>
-                ☐ Link works on both desktop and mobile<br>
-                ☐ You've tried the quote flow yourself at least once<br>
-                ☐ Your shop info (name, phone, logo) looks correct in the widget<br>
-                ☐ You know new leads land in your Leads tab
-              </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- PROPOSALS -->
-          <div class="mq-page" id="mq-page-proposals">
-            <button class="mq-help-btn" onclick="mqShowHelp('proposals')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Proposals</div>
-            <div class="mq-page-sub">Set up templates here — your team picks one in MidasQuote Pro to turn a real-number estimate into a clean, printable proposal for the customer to sign.</div>
-            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#1e40af;line-height:1.5">
-              💡 <strong>Heads up:</strong> prices shown in a proposal aren't locked in — your team can tweak any item's price in real time in MidasQuote Pro when building a proposal for a specific customer, handy for one-off adjustments, without changing your actual pricing setup anywhere else.
-            </div>
-            <div id="mq-prop-msg"></div>
-            <div style="margin-bottom:1rem">
-              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddProposalTemplate()">+ New template</button>
-            </div>
-            <div id="mq-prop-list"><div class="mq-loading">Loading proposal templates...</div></div>
-          </div>
-
+        <div class="mqph-chip-row" id="mqph-chips-install">
+          ${(existing['install'] || []).map(r => `
+            <div class="mqph-chip mqph-default-chip" id="mqph-chip-${r.id}">
+              ${r.fields['Name']}<button class="mqph-chip-del" onclick="mqphDeleteChip('${r.id}','install')">×</button>
+            </div>`).join('')}
         </div>
       </div>
-      <!-- Hidden Memberstack trigger for billing portal -->
-      <a data-ms-modal="profile" data-ms-modal-tab="plans" href="#" id="mq-ms-plans-trigger" style="display:none">plans</a>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:0.5rem">
+        <button class="mqph-btn mqph-btn-secondary" onclick="loadAndRender()">Back to editor</button>
+        <button class="mqph-btn mqph-btn-primary" onclick="mqphGoToWizard()">Items look good — run pricing wizard →</button>
+      </div>
     `;
   }
 
+  window.mqphAddChip = async function(cat) {
+    const input = document.getElementById(`mqph-chip-input-${cat}`);
+    if (!input) return;
+    const name = input.value.trim();
+    if (!name) return;
+    input.value = '';
+    const sortMax = lineItems.filter(r => r.fields && r.fields['Category'] === cat).length + 1;
+    const rec = await atCreate(LINE_ITEMS_TABLE, {
+      'shop':[shopRecord._recordId], 'Name':name, 'Category':cat,
+      'Rate':0, 'Unit':'per lin ft', 'Active':true, 'Sort order':sortMax,
+    });
+    if (rec && rec.id) {
+      lineItems.push(rec);
+      const container = document.getElementById(`mqph-chips-${cat}`);
+      if (container) {
+        const chip = document.createElement('div');
+        chip.className = 'mqph-chip';
+        chip.id = `mqph-chip-${rec.id}`;
+        chip.innerHTML = `${name}<button class="mqph-chip-del" onclick="mqphDeleteChip('${rec.id}','${cat}')">×</button>`;
+        const inputWrap = container.querySelector('.mqph-chip-input');
+        container.insertBefore(chip, inputWrap);
+      }
+    }
+  };
+
+  window.mqphDeleteChip = async function(id, cat) {
+    if (!confirm('Remove this item?')) return;
+    // For drawer_config chips: also delete all associated priced 'drawer' records
+    if (cat === 'drawer_config') {
+      const configRec = lineItems.find(r => r.id === id);
+      const baseName = configRec?.fields['Name'] || '';
+      if (baseName) {
+        const pricedDrawers = lineItems.filter(r =>
+          r.fields && r.fields['Category'] === 'drawer' &&
+          (r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() === baseName
+        );
+        for (const r of pricedDrawers) {
+          try { await atDelete(LINE_ITEMS_TABLE, r.id); } catch(e) {}
+        }
+        lineItems = lineItems.filter(r => !pricedDrawers.find(p => p.id === r.id));
+      }
+    }
+    // For doors: any crown/valance linked to this door style needs that
+    // link cleaned up too, otherwise it keeps pointing at a door name that
+    // no longer exists — the widget would just silently never match it,
+    // but it'd sit there stale in the dashboard forever.
+    if (cat === 'door') {
+      const doorRec = lineItems.find(r => r.id === id);
+      const doorName = doorRec?.fields['Name'] || '';
+      if (doorName) {
+        const linkedTrims = lineItems.filter(r => {
+          if (!r.fields || r.fields['Category'] !== 'trim') return false;
+          let linked = [];
+          try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+          return linked.includes(doorName);
+        });
+        for (const t of linkedTrims) {
+          let linked = [];
+          try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+          const cleaned = linked.filter(name => name !== doorName);
+          try {
+            await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(cleaned) });
+            t.fields['Linked door style'] = JSON.stringify(cleaned);
+          } catch(e) { console.error('Failed to clean up linked door style', e); }
+        }
+      }
+    }
+    await atDelete(LINE_ITEMS_TABLE, id);
+    lineItems = lineItems.filter(r => r.id !== id);
+    const chip = document.getElementById(`mqph-chip-${id}`);
+    if (chip) chip.remove();
+  };
+
+window.mqphGoToWizard = function() {
+    wizardStep = 0; wizardItems = []; wizardBaseline = null; wizardFinishing = false; wizardStepContrib = {};
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (container) { container.innerHTML = buildWizardHTML(); renderWizardStep(0); }
+  };
+
   // ============================================================
-  // NAVIGATION
+  // WIZARD STEPS
   // ============================================================
-  // Opens checkout for a Free Trial / Demo shop upgrading to a real paid
-  // plan. The price IDs passed in from the HTML buttons above (search
-  // "mq-billing-free-actions") are the new no-trial Monthly/Annual prices —
-  // deliberately different from mqReactivate's below, since a Free
-  // Trial/Demo shop already had its 30 free days and shouldn't get a second
-  // trial. Same checkout mechanism as mqReactivate — a Free Trial/Demo shop
-  // has never had a Stripe subscription, so this is just opening checkout
-  // for the first time, kept as its own named function so the intent at
-  // each call site (upgrade-from-free vs. reactivate-a-lapsed-sub) stays
-  // clear even though the underlying call is identical.
-  window.mqUpgradeFromFree = async function(priceId) {
-    try {
-      await window.$memberstackDom.purchasePlansWithCheckout({ priceId });
-    } catch(e) {
-      console.error('Upgrade-from-free error:', e);
-      alert('Unable to open upgrade checkout. Please email support@midasquote.com to upgrade your plan.');
-    }
-  };
+  function buildWizardSteps() {
+    // Deduplicate materials by base name — strip "— uppers"/"— bases" so wizard
+    // only shows one entry per material (e.g. "White melamine" not both variants)
+    const allMaterials = getByCategory('material');
+    const seenMatNames = new Set();
+    const materials = allMaterials.filter(m => {
+      const baseName = (m.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+      if (seenMatNames.has(baseName)) return false;
+      seenMatNames.add(baseName);
+      return true;
+    }).map(m => ({
+      ...m,
+      fields: { ...m.fields, Name: (m.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim() }
+    }));
+    const doorStyles = getByCategory('door');
+    // drawer_config = user-defined base names (source for wizard steps)
+    // drawer = priced sub-records created by wizard (some/mostly variants)
+    const drawers    = getByCategory('drawer_config');
+    const hinges     = getByCategory('hinge');
+    const noMats  = materials.length === 0;
+    const noDoors = doorStyles.length === 0;
 
-  window.mqUpgradeToAnnual = async function() {
-    try {
-      await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: 'prc_annual-midasquote-2c1n80jbq',
-      });
-    } catch(e) {
-      console.error('Upgrade error:', e);
-      alert('Unable to open upgrade checkout. Please email support@midasquote.com to upgrade your plan.');
-    }
-  };
+    const matOpts   = materials.map((m,i)  => `<option value="${i}">${m.fields['Name']}</option>`).join('');
+    const doorOpts  = doorStyles.map((d,i) => `<option value="${i}">${d.fields['Name']}</option>`).join('');
+    const hingeOpts = hinges.map((h,i)     => `<option value="${i}">${h.fields['Name']}</option>`).join('');
 
-  // Used when a member's subscription has fully ended (not just scheduled to
-  // cancel) — the Stripe Customer Portal has no "resubscribe" option in that
-  // case, so we relaunch checkout directly via Memberstack instead.
-  window.mqReactivate = async function(priceId) {
-    try {
-      await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: priceId || 'prc_monthly-midasquote-o01n50jov',
-      });
-    } catch(e) {
-      console.error('Reactivate error:', e);
-      alert('Unable to open checkout. Please email support@midasquote.com to reactivate your plan.');
-    }
-  };
+    const steps = [];
 
-  window.mqOpenBillingPortal = async function() {
-    try {
-      // launchStripeCustomerPortal opens Stripe billing directly — cancel, update card, invoices all in one
-      await window.$memberstackDom.launchStripeCustomerPortal({});
-    } catch(e) {
-      console.error('Billing portal error:', e);
-      // Fallback to profile modal
-      try { await window.$memberstackDom.openModal('PROFILE'); } catch(e2) {}
-    }
-  };
-
-  // Memberstack's pre-built Profile modal turned out unreliable for jumping
-  // straight to its Change Password tab (data-ms-modal-tab requires their
-  // component setup to be exactly right, and it wasn't behaving here even
-  // as a real, directly-clicked link — it was just following the href="#"
-  // like a plain anchor instead of Memberstack intercepting the click).
-  // Rather than depend on that modal, or on pasting in Memberstack's own
-  // form snippet, this calls their documented updateMemberAuth() method
-  // directly — same DOM package already used everywhere else on this page
-  // (logout, billing portal, plan checkout) — inside a modal styled to
-  // match the rest of the dashboard exactly, e.g. Manage categories.
-  window.mqShowChangePasswordModal = function() {
-    let modal = document.getElementById('mq-changepw-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-changepw-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
-        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px">Change password</div>
-        <div style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.5">Enter your current password and a new one.</div>
-        <div id="mq-changepw-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:12.5px;border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.4"></div>
-        <div id="mq-changepw-success" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:12.5px;border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.4">✓ Password updated.</div>
-        <div id="mq-changepw-form">
-          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Current password</label>
-          <input type="password" id="mq-changepw-current" autocomplete="current-password" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:12px"/>
-          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">New password</label>
-          <input type="password" id="mq-changepw-new" autocomplete="new-password" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:12px"/>
-          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Confirm new password</label>
-          <input type="password" id="mq-changepw-confirm" autocomplete="new-password" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:1.25rem"/>
-          <button id="mq-changepw-submit" onclick="mqSubmitChangePassword()" style="width:100%;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Update password</button>
+    // Step 0: Welcome
+    steps.push({
+      title:'👋 Pricing Setup Wizard',
+      sub:`We'll reverse-engineer your rates from real job quotes using a consistent spec throughout — no math required.`,
+      content:() => noMats||noDoors ? `
+        <div class="mqph-warn">⚠️ <strong>Missing items.</strong> You need to add ${noMats?'box materials':''}${noMats&&noDoors?' and ':''}${noDoors?'door styles':''} before running the wizard.</div>
+        <button class="mqph-btn mqph-btn-primary" style="margin-top:10px" onclick="mqphStartItemSetup()">← Add shop items first</button>` : `
+        <div class="mqph-hl">
+          ✅ Found <strong>${materials.length}</strong> material${materials.length!==1?'s':''}, <strong>${doorStyles.length}</strong> door style${doorStyles.length!==1?'s':''}, <strong>${drawers.length}</strong> drawer config${drawers.length!==1?'s':''}, <strong>${hinges.length}</strong> hinge${hinges.length!==1?'s':''}.<br/><br/>
+          <strong>Every step uses the same spec:</strong>&nbsp;
+          <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} cabinet</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} cabinet</span> = <span class="mqph-spec-tag">4 linear feet ${mqphMmTag(48)}</span>
         </div>
-        <button onclick="mqCloseChangePasswordModal()" style="width:100%;margin-top:8px;padding:11px;background:#f3f4f6;color:#374151;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
-      </div>`;
-    modal.style.display = 'flex';
-    setTimeout(() => document.getElementById('mq-changepw-current')?.focus(), 50);
+        <div style="font-size:13px;color:#374151;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1.25rem;line-height:1.6">💡 <strong>Tip:</strong> Just price your main, most-common items here — not every single variation. Once your baseline is set, use the <strong>+ Add</strong> button on each category to add a whole batch of similarly-priced items at once — much faster than running through this wizard for every option.</div>
+        <div style="font-size:13px;color:#374151;line-height:1.9;margin-bottom:1.25rem">
+          ✅ Box-only baseline (no doors, no drawers)<br/>
+          ✅ Door styles as upcharges<br/>
+          ✅ Drawer configurations as upcharges<br/>
+          ✅ Separate upper and base rates<br/>
+          ✅ Installation and removal rates
+        </div>
+        <div class="mqph-warn">⚠️ <strong>Running the wizard replaces all existing pricing.</strong> Specialty items, countertop rates, and crown/valance rates are not affected.</div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;color:#374151">Need to add or change your shop items first?</span>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>
+        </div>`,
+      nextLabel: noMats||noDoors ? null : 'Start →',
+      onNext: () => noMats||noDoors ? 'abort' : null,
+    });
+
+    // Step 1: Choose baseline
+    steps.push({
+      title:'📐 Step 1 — Choose your baseline',
+      sub:'Pick your cheapest options. Everything else will be calculated as an upcharge from these.',
+      content:() => `
+        <div class="mqph-hl">Baseline = your cheapest material + cheapest door style + cheapest hinge.</div>
+        <div class="mqph-input-row"><label>Baseline box material</label><select id="mqph-bl-mat" style="width:260px">${matOpts}</select></div>
+        <div class="mqph-input-row"><label>Baseline door style <span style="font-weight:400;color:#9ca3af">(used in door pricing steps)</span></label><select id="mqph-bl-door" style="width:260px">${doorOpts}</select></div>
+        ${hinges.length>0?`<div class="mqph-input-row"><label>Cheapest hinge <span style="font-weight:400;color:#9ca3af">(others become upcharges)</span></label><select id="mqph-bl-hinge" style="width:260px">${hingeOpts}</select></div>`:''}`,
+      nextLabel:'Next →',
+      onNext:() => {
+        const mi = parseInt(document.getElementById('mqph-bl-mat')?.value||'0');
+        const di = parseInt(document.getElementById('mqph-bl-door')?.value||'0');
+        const hi = parseInt(document.getElementById('mqph-bl-hinge')?.value||'0');
+        wizardBaseline = {
+          matIndex:mi, matName:materials[mi]?.fields['Name']||'',
+          doorIndex:di, doorName:doorStyles[di]?.fields['Name']||'',
+          hingeIndex:hi, hingeName:hinges[hi]?.fields['Name']||'',
+          upperPrice:0, basePrice:0, upperRate:0, baseRate:0, baseWithDoorPrice:0,
+        };
+      }
+    });
+
+    // Step 2: Baseline uppers
+    steps.push({
+      title:'📐 Step 2 — Baseline upper cabinets (box only)',
+      sub:'Quote this exact job in your software:',
+      content:() => {
+        const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
+        return `
+          ${specBox([
+            `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${matName}</span>`,
+            `<strong>No doors · No drawers · No hardware · Supply only</strong>`,
+          ])}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
+          <div id="mqph-r-bl-u" class="mqph-result"></div>`;
+      },
+      nextLabel:'Next →',
+      onNext:() => {
+        const p = parseFloat(document.getElementById('mqph-bl-u-price')?.value||0);
+        if (p>0&&wizardBaseline) {
+          wizardBaseline.upperPrice=p; wizardBaseline.upperRate=p/4;
+          wizardItems.push({ name:wizardBaseline.matName+' — uppers', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline box rate uppers', active:true });
+        }
+      }
+    });
+
+    // Step 3: Baseline bases
+    steps.push({
+      title:'📐 Step 3 — Baseline base cabinets (box only)',
+      sub:'Same spec, bases only. Include toe kick — no doors, no drawers.',
+      content:() => {
+        const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
+        return `
+          ${specBox([
+            `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${matName}</span>`,
+            `<strong>No doors · No drawers · Supply only · Include toe kick</strong>`,
+          ])}
+          ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was ${CUR()}${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
+          <div id="mqph-r-bl-b" class="mqph-result"></div>`;
+      },
+      nextLabel:'Next →',
+      onNext:() => {
+        const p = parseFloat(document.getElementById('mqph-bl-b-price')?.value||0);
+        if (p>0&&wizardBaseline) {
+          wizardBaseline.basePrice=p; wizardBaseline.baseRate=p/4;
+          wizardItems.push({ name:wizardBaseline.matName+' — bases', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline box rate bases', active:true });
+        }
+      }
+    });
+
+    // Step 4: Additional materials (only if >1)
+    if (materials.length > 1) {
+      steps.push({
+        title:'🪵 Step 4 — Additional materials',
+        sub:'Same base cabinet spec, swap the material. Box only, no doors, no drawers.',
+        content:() => {
+          const blIdx = wizardBaseline?.matIndex ?? 0;
+          const others = materials.filter((_,i) => i !== blIdx);
+          return others.map((m,idx) => `
+            <div class="mqph-item-block">
+              <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
+              ${specBox([
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · Supply only`,
+              ])}
+              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcMatUp(${idx})"/></div>
+              <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
+            </div>`).join('');
+        },
+        skipLabel:'Skip — same price for all materials',
+        nextLabel:'Next →',
+  onNext:() => {
+          const blIdx = wizardBaseline?.matIndex ?? 0;
+          const others = materials.filter((_,i) => i !== blIdx);
+          others.forEach((m,idx) => {
+            const p = parseFloat(document.getElementById(`mqph-mat-${idx}`)?.value||0);
+            if (p>0 && wizardBaseline) {
+              const upcharge  = (p - wizardBaseline.basePrice) / 4;
+              const upperRate = (wizardBaseline.upperRate || 0) + upcharge;
+              const baseRate  = (wizardBaseline.baseRate  || 0) + upcharge;
+              wizardItems.push({ name:m.fields['Name']+' — uppers', category:'material', rate:Math.round(upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline uppers + material upcharge', active:true });
+              wizardItems.push({ name:m.fields['Name']+' — bases',  category:'material', rate:Math.round(baseRate*100)/100, unit:'per lin ft — bases',  description:'Baseline bases + material upcharge',  active:true });
+            }
+          });
+        }
+      });
+    }
+
+    // Step 5: Baseline door style
+    steps.push({
+      title:'🚪 Step 5 — Baseline door style',
+      sub:'Now add doors. Quote baseline material + baseline door style + cheapest hinge.',
+      content:() => {
+        const matName  = wizardBaseline?.matName  || materials[0]?.fields['Name'] || '—';
+        const doorName = wizardBaseline?.doorName || doorStyles[0]?.fields['Name'] || '—';
+        const hi = wizardBaseline?.hingeIndex ?? 0;
+        const hingeName = hinges[hi]?.fields['Name'] || 'your cheapest hinge';
+        return `
+          <div class="mqph-hl">Doors are priced as an upcharge on top of the box.</div>
+          ${specBox([
+            `<strong>Base cabinets + baseline door style (no drawers)</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${matName}</span>`,
+            `Door style: <span class="mqph-spec-tag">${doorName}</span> · <span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span>`,
+            `Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only`,
+          ])}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-door-baseline" placeholder="0.00" oninput="mqphCalcDoorBaseline()"/></div>
+          <div id="mqph-r-door-baseline" class="mqph-result"></div>`;
+      },
+      nextLabel:'Next →',
+      onNext:() => {
+        const p = parseFloat(document.getElementById('mqph-door-baseline')?.value||0);
+        if (p>0&&wizardBaseline) {
+          wizardBaseline.baseWithDoorPrice = p;
+          const u = (p - wizardBaseline.basePrice) / 4;
+          wizardItems.push({ name:wizardBaseline.doorName, category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Baseline door style', active:true });
+          if (wizardBaseline.hingeName) {
+            wizardItems.push({ name:wizardBaseline.hingeName, category:'hinge', rate:0, unit:'per lin ft upcharge', description:'Baseline hinge — included in door price', active:true });
+          }
+        }
+      }
+    });
+
+    // Step 6: Additional door styles
+    if (doorStyles.length > 1) {
+      steps.push({
+        title:'🚪 Step 6 — Additional door styles',
+        sub:'Same spec, swap the door style. Keep baseline material and baseline hinge.',
+        content:() => {
+          const blIdx = wizardBaseline?.doorIndex ?? 0;
+          const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
+          const hingeName = hinges[wizardBaseline?.hingeIndex ?? 0]?.fields['Name'] || 'baseline hinge';
+          const others = doorStyles.filter((_,i) => i !== blIdx);
+          return others.map((d,idx) => `
+            <div class="mqph-item-block">
+              <div class="mqph-item-block-label">🚪 ${d.fields['Name']}</div>
+              ${specBox([
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+                `Material: <span class="mqph-spec-tag">${matName}</span> · Door: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
+                `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only`,
+              ])}
+              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
+              <div id="mqph-r-door-${idx}" class="mqph-result"></div>
+            </div>`).join('');
+        },
+        skipLabel:'Skip — same price for all door styles',
+        nextLabel:'Next →',
+        onNext:() => {
+          const blIdx = wizardBaseline?.doorIndex ?? 0;
+          const others = doorStyles.filter((_,i) => i !== blIdx);
+          others.forEach((d,idx) => {
+            const p = parseFloat(document.getElementById(`mqph-door-${idx}`)?.value||0);
+            if (p>0&&wizardBaseline) {
+              const u = (p - wizardBaseline.basePrice) / 4;
+              wizardItems.push({ name:d.fields['Name'], category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Door style upcharge', active:true });
+            }
+          });
+        }
+      });
+    }
+
+    // Step 7: Hinge upcharges
+    if (hinges.length > 1) {
+      steps.push({
+        title:'🔧 Step 7 — Hinge upcharges',
+        sub:'Same spec with baseline door — swap the hinge.',
+        content:() => {
+          const blIdx = wizardBaseline?.hingeIndex ?? 0;
+          const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
+          const doorName = wizardBaseline?.doorName || doorStyles[0]?.fields['Name'] || '—';
+          const blHingeName = hinges[blIdx]?.fields['Name'] || 'baseline hinge';
+          const others = hinges.filter((_,i) => i !== blIdx);
+          return others.map((h,idx) => `
+            <div class="mqph-item-block">
+              <div class="mqph-item-block-label">🔧 ${h.fields['Name']}</div>
+              ${specBox([
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+                `Material: <span class="mqph-spec-tag">${matName}</span> · Door: <span class="mqph-spec-tag">${doorName}</span>`,
+                `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${blHingeName}) · No drawers · Supply only`,
+              ])}
+              <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
+              <div id="mqph-r-hinge-${idx}" class="mqph-result"></div>
+            </div>`).join('');
+        },
+        skipLabel:'Skip — only one hinge option',
+        nextLabel:'Next →',
+        onNext:() => {
+          const blIdx = wizardBaseline?.hingeIndex ?? 0;
+          const others = hinges.filter((_,i) => i !== blIdx);
+          others.forEach((h,idx) => {
+            const p = parseFloat(document.getElementById(`mqph-hinge-${idx}`)?.value||0);
+            if (p>0&&wizardBaseline) {
+              const u = (p - (wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice)) / 4;
+              wizardItems.push({ name:h.fields['Name'], category:'hinge', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:`Hinge upcharge over ${wizardBaseline.hingeName}`, active:true });
+            }
+          });
+        }
+      });
+    }
+
+    // Step 8a: Drawers — 1 drawer per cabinet ("some drawers" rate)
+    if (drawers.length > 0) {
+      steps.push({
+        title:'🗄️ Step 8a — Some drawers (1 per cabinet)',
+        sub:'Quote the baseline box job with 1 top drawer in each cabinet. No doors, no drawer fronts.',
+        content:() => {
+          const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
+          return `
+            <div class="mqph-hl">
+              This gives us the <strong>"some drawers"</strong> rate — used when a customer says their project has some drawers but not a full drawer bank in every cabinet.
+            </div>
+            ${drawers.map((d,idx) => `
+              <div class="mqph-item-block">
+                <div class="mqph-item-block-label">🗄️ ${d.fields['Name']}</div>
+                ${specBox([
+                  `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+                  `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
+                  `<strong>1 top drawer per cabinet · Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+                ])}
+                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-drawer1-${idx}" placeholder="0.00" oninput="mqphCalcDrawer1(${idx})"/></div>
+                <div id="mqph-r-drawer1-${idx}" class="mqph-result"></div>
+              </div>`).join('')}`;
+        },
+        skipLabel:'Skip drawers',
+        nextLabel:'Next →',
+        onNext:() => {
+          // Store 1-drawer prices in wizardBaseline for use in step 8b
+          if (!wizardBaseline.drawer1Prices) wizardBaseline.drawer1Prices = {};
+          drawers.forEach((d,idx) => {
+            const p = parseFloat(document.getElementById(`mqph-drawer1-${idx}`)?.value||0);
+            if (p>0) wizardBaseline.drawer1Prices[idx] = p;
+          });
+        }
+      });
+
+      // Step 8b: Drawers — full drawer bank ("mostly drawers" rate)
+      steps.push({
+        title:'🗄️ Step 8b — Mostly drawers (full bank)',
+        sub:'Same spec but now quote a full drawer bank — 3 drawers in each cabinet. No doors, no drawer fronts.',
+        content:() => {
+          const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
+          return `
+            <div class="mqph-hl">
+              This gives us the <strong>"mostly drawers"</strong> rate — used when a customer's project is heavily drawer-based. We'll average this with the 1-drawer quote to get an accurate blended rate.
+            </div>
+            ${drawers.map((d,idx) => {
+              const p1 = wizardBaseline?.drawer1Prices?.[idx] || 0;
+              return `
+              <div class="mqph-item-block">
+                <div class="mqph-item-block-label">🗄️ ${d.fields['Name']}</div>
+                ${specBox([
+                  `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+                  `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
+                  `<strong>Full drawer bank (3 per cabinet) · Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+                ])}
+                ${p1>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:10px">1-drawer quote was ${CUR()}${p1.toLocaleString()} — bank quote should be higher.</p>`:''}
+                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-drawer3-${idx}" placeholder="0.00" oninput="mqphCalcDrawer3(${idx})"/></div>
+                <div id="mqph-r-drawer3-${idx}" class="mqph-result"></div>
+              </div>`;
+            }).join('')}`;
+        },
+        skipLabel:'Skip',
+        nextLabel:'Next →',
+        onNext:() => {
+          drawers.forEach((d,idx) => {
+            const p1 = wizardBaseline?.drawer1Prices?.[idx] || 0;
+            const p3 = parseFloat(document.getElementById(`mqph-drawer3-${idx}`)?.value||0);
+            if (p1>0&&wizardBaseline) {
+              // "some drawers" rate = (1-drawer quote - baseline box) / 4
+              const someRate = (p1 - wizardBaseline.basePrice) / 4;
+              wizardItems.push({
+                name: d.fields['Name'] + ' — some drawers',
+                category: 'drawer',
+                rate: Math.round(someRate*100)/100,
+                unit: 'per lin ft',
+                description: 'Some drawers rate (1 drawer per cabinet)',
+                active: true,
+              });
+            }
+            if (p1>0&&p3>0&&wizardBaseline) {
+              // "mostly drawers" rate = ((1-drawer + bank) / 2 - baseline box) / 4
+              const mostlyRate = ((p1 + p3) / 2 - wizardBaseline.basePrice) / 4;
+              wizardItems.push({
+                name: d.fields['Name'] + ' — mostly drawers',
+                category: 'drawer',
+                rate: Math.round(mostlyRate*100)/100,
+                unit: 'per lin ft',
+                description: 'Mostly drawers rate (averaged 1-drawer + bank)',
+                active: true,
+              });
+            }
+          });
+        }
+      });
+    }
+
+    // Step 9: Installation & removal
+    const hasInstall = getByCategory('install').length > 0;
+    if (hasInstall) {
+      steps.push({
+        title:'🔧 Step 9 — Installation & removal',
+        sub:'Quote install-only prices — no supply, just labour. Use the same 4 lin ft spec.',
+        content:() => `
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔼 Upper cabinets — install only</div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          </div>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔽 Base cabinets — install only</div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          </div>
+          <div id="mqph-r-install" class="mqph-result"></div>
+          <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
+          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal & disposal</div>
+          <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet (${mqphMm(48).toLocaleString()}mm) of base cabinets with doors?</label></div>
+          <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Include your cost to haul away and dispose of the old cabinets. <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
+          <div class="mqph-input-row"><label>Removal & disposal price for 4ft (${mqphMm(48).toLocaleString()}mm) job</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          <div id="mqph-r-removal" class="mqph-result"></div>`,
+        skipLabel:'Skip — supply only',
+        nextLabel:'Next →',
+        onNext:() => {
+          const und=parseFloat(document.getElementById('mqph-inst-u-nd')?.value||0);
+          const uwd=parseFloat(document.getElementById('mqph-inst-u-wd')?.value||0);
+          const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
+          const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
+          const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
+
+          if(und>0) wizardItems.push({ name:'Install — uppers (no doors)',   category:'install', rate:Math.round((und/4)*100)/100, unit:'per lin ft', description:'Upper box install, no doors', active:true });
+          if(uwd>0) wizardItems.push({ name:'Install — uppers (with doors)', category:'install', rate:Math.round((uwd/4)*100)/100, unit:'per lin ft', description:'Upper install with doors hung', active:true });
+          if(bnd>0) wizardItems.push({ name:'Install — bases (no doors)',    category:'install', rate:Math.round((bnd/4)*100)/100, unit:'per lin ft', description:'Base box install, no doors', active:true });
+          if(bwd>0) {
+            const bwdRate = Math.round((bwd/4)*100)/100;
+            wizardItems.push({ name:'Install — bases (with doors)',       category:'install', rate:bwdRate,                              unit:'per lin ft', description:'Base install with doors hung', active:true });
+            // Auto-calculated drawer install rates — no extra quotes needed
+            wizardItems.push({ name:'Install — bases (some drawers)',     category:'install', rate:Math.round(bwdRate*1.10*100)/100,    unit:'per lin ft', description:'Base install with some drawers (+10% over with-doors rate)', active:true });
+            wizardItems.push({ name:'Install — bases (mostly drawers)',   category:'install', rate:Math.round(bwdRate*1.15*100)/100,    unit:'per lin ft', description:'Base install with mostly drawers (+15% over with-doors rate)', active:true });
+          }
+          if(rem>0) wizardItems.push({ name:'Cabinet removal', category:'install', rate:Math.round((rem/4)*100)/100, unit:'per lin ft', description:'Remove & dispose existing cabinets', active:true });
+        }
+      });
+    }
+
+    // Final: Local zone & tax
+    steps.push({
+      title:'📍 Final step — Local delivery zone',
+      sub:'Set your local delivery radius so the widget knows your service area.',
+      content:() => {
+        const existingRadius = getByCategory('zone').find(z=>z.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15;
+        return `
+          <div class="mqph-info">
+            Jobs within your local radius are quoted at no extra travel charge — any delivery cost should already be built into your regular pricing. Jobs outside this area will include a note on the quote that travel charges may apply.
+          </div>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">📍 Local delivery radius</div>
+            <div class="mqph-input-row"><label>No extra travel charge within this distance</label><input type="number" id="mqph-zone-r" value="${existingRadius}" style="width:130px;text-align:right"/><span class="mqph-pfx">km</span></div>
+          </div>`;
+      },
+      skipLabel:'Skip',
+      nextLabel:'Finish setup →',
+      onNext:() => {
+        const gn=id=>parseFloat(document.getElementById(id)?.value||0);
+        const zr=gn('mqph-zone-r');
+        if(zr>0) {
+          const existing = lineItems.find(r=>r.fields&&r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
+          if(existing) {
+            atUpdate(LINE_ITEMS_TABLE, existing.id, {Rate:zr});
+            existing.fields['Rate'] = zr;
+          } else {
+            atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Local zone radius',Category:'zone',Rate:zr,Unit:'km',Description:'Within this distance = no travel surcharge',Active:true,'Sort order':0})
+              .then(rec=>{ if(rec?.id) lineItems.push(rec); });
+          }
+        }
+      }
+    });
+
+    return steps;
+  }
+
+  // ============================================================
+  // WIZARD CALC HELPERS
+  // ============================================================
+  window.mqphCalc = function(id) {
+    const map = {
+      'bl-u':{ inputId:'mqph-bl-u-price', resId:'mqph-r-bl-u', label:'Upper box rate', calc:p=>p/4 },
+      'bl-b':{ inputId:'mqph-bl-b-price', resId:'mqph-r-bl-b', label:'Base box rate',  calc:p=>p/4 },
+    };
+    const cfg=map[id]; if(!cfg) return;
+    const p=parseFloat(document.getElementById(cfg.inputId)?.value||0);
+    const res=document.getElementById(cfg.resId); if(!res) return;
+    if(p>0){res.style.display='block';res.innerHTML=`<strong>${cfg.label}:</strong> <span class="mqph-result-val">${CUR()}${cfg.calc(p).toFixed(2)}/lin ft</span>`;}
+    else res.style.display='none';
   };
-  window.mqCloseChangePasswordModal = function() {
-    const modal = document.getElementById('mq-changepw-modal');
-    if (modal) modal.style.display = 'none';
+  window.mqphCalcMatUp = function(idx) {
+    const p=parseFloat(document.getElementById(`mqph-mat-${idx}`)?.value||0);
+    const res=document.getElementById(`mqph-r-mat-${idx}`); if(!res||!wizardBaseline) return;
+    if(p>0){
+      const upcharge  = (p - wizardBaseline.basePrice) / 4;
+      const upperRate = (wizardBaseline.upperRate || 0) + upcharge;
+      const baseRate  = (wizardBaseline.baseRate  || 0) + upcharge;
+      res.style.display='block';
+      res.innerHTML=`<strong>Upcharge:</strong> <span class="mqph-result-val">${CUR()}${upcharge.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;→ uppers ${CUR()}${upperRate.toFixed(2)}/ft · bases ${CUR()}${baseRate.toFixed(2)}/ft</span>`;
+    }
+    else res.style.display='none';
   };
-  window.mqSubmitChangePassword = async function() {
-    const errEl = document.getElementById('mq-changepw-error');
-    const current = document.getElementById('mq-changepw-current')?.value || '';
-    const next = document.getElementById('mq-changepw-new')?.value || '';
-    const confirm = document.getElementById('mq-changepw-confirm')?.value || '';
-    const showError = (msg) => { if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; } };
-    if (errEl) errEl.style.display = 'none';
-    if (!current || !next || !confirm) { showError('Please fill in all three fields.'); return; }
-    if (next !== confirm) { showError('New password and confirmation don\'t match.'); return; }
-    if (next === current) { showError('New password must be different from your current one.'); return; }
-    const btn = document.getElementById('mq-changepw-submit');
-    if (btn) { btn.textContent = 'Updating…'; btn.disabled = true; }
-    try {
-      await window.$memberstackDom.updateMemberAuth({ oldPassword: current, newPassword: next });
-      document.getElementById('mq-changepw-form').style.display = 'none';
-      const successEl = document.getElementById('mq-changepw-success');
-      if (successEl) successEl.style.display = 'block';
-    } catch (e) {
-      console.error('Change password error:', e);
-      // Memberstack's own message (e.g. "Incorrect password", or a password
-      // policy complaint like minimum length) is more useful here than a
-      // generic one — surfaced as-is when present, since it already speaks
-      // in plain, member-facing language.
-      showError(e?.message || 'Something went wrong updating your password — please try again.');
-      if (btn) { btn.textContent = 'Update password'; btn.disabled = false; }
+  window.mqphCalcDoorBaseline = function() {
+    const p=parseFloat(document.getElementById('mqph-door-baseline')?.value||0);
+    const res=document.getElementById('mqph-r-door-baseline'); if(!res||!wizardBaseline) return;
+    if(p>0){
+      const u=(p-wizardBaseline.basePrice)/4;
+      res.style.display='block';
+      res.innerHTML=`<strong>Door upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;(box ${CUR()}${wizardBaseline.baseRate.toFixed(2)} + door ${CUR()}${u.toFixed(2)} = ${CUR()}${(wizardBaseline.baseRate+u).toFixed(2)}/ft total)</span>`;
+    } else res.style.display='none';
+  };
+  window.mqphCalcDoorUp = function(idx) {
+    const p=parseFloat(document.getElementById(`mqph-door-${idx}`)?.value||0);
+    const res=document.getElementById(`mqph-r-door-${idx}`); if(!res||!wizardBaseline) return;
+    if(p>0){const u=(p-wizardBaseline.basePrice)/4;res.style.display='block';res.innerHTML=`<strong>Upcharge vs plain box:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;}
+    else res.style.display='none';
+  };
+  window.mqphCalcHingeUp = function(idx) {
+    const p=parseFloat(document.getElementById(`mqph-hinge-${idx}`)?.value||0);
+    const res=document.getElementById(`mqph-r-hinge-${idx}`); if(!res||!wizardBaseline) return;
+    if(p>0){const u=(p-(wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice))/4;res.style.display='block';res.innerHTML=`<strong>Hinge upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;}
+    else res.style.display='none';
+  };
+  window.mqphCalcDrawer1 = function(idx) {
+    const p=parseFloat(document.getElementById(`mqph-drawer1-${idx}`)?.value||0);
+    const res=document.getElementById(`mqph-r-drawer1-${idx}`); if(!res||!wizardBaseline) return;
+    if(p>0){
+      const u=(p-wizardBaseline.basePrice)/4;
+      res.style.display='block';
+      res.innerHTML=`<strong>"Some drawers" upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;
+    } else res.style.display='none';
+  };
+  window.mqphCalcDrawer3 = function(idx) {
+    const p3=parseFloat(document.getElementById(`mqph-drawer3-${idx}`)?.value||0);
+    const res=document.getElementById(`mqph-r-drawer3-${idx}`); if(!res||!wizardBaseline) return;
+    const p1=wizardBaseline?.drawer1Prices?.[idx]||0;
+    if(p3>0){
+      const mostlyRate=((p1+p3)/2-wizardBaseline.basePrice)/4;
+      res.style.display='block';
+      res.innerHTML=`<strong>"Mostly drawers" upcharge:</strong> <span class="mqph-result-val">${CUR()}${mostlyRate.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">(average of ${CUR()}${p1.toLocaleString()} + ${CUR()}${p3.toLocaleString()})</span>`;
+    } else res.style.display='none';
+  };
+  window.mqphCalcInstall = function() {
+    const und=parseFloat(document.getElementById('mqph-inst-u-nd')?.value||0);
+    const uwd=parseFloat(document.getElementById('mqph-inst-u-wd')?.value||0);
+    const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
+    const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
+    const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
+    const res=document.getElementById('mqph-r-install'); if(!res) return;
+    let html='';
+    if(und>0) html+=`Uppers (no doors): <span class="mqph-result-val">${CUR()}${(und/4).toFixed(2)}/lin ft</span><br/>`;
+    if(uwd>0) html+=`Uppers (with doors): <span class="mqph-result-val">${CUR()}${(uwd/4).toFixed(2)}/lin ft</span><br/>`;
+    if(bnd>0) html+=`Bases (no doors): <span class="mqph-result-val">${CUR()}${(bnd/4).toFixed(2)}/lin ft</span><br/>`;
+    if(bwd>0) {
+      html+=`Bases (with doors): <span class="mqph-result-val">${CUR()}${(bwd/4).toFixed(2)}/lin ft</span><br/>`;
+      html+=`Bases (some drawers): <span class="mqph-result-val">${CUR()}${(bwd/4*1.10).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +10%</span><br/>`;
+      html+=`Bases (mostly drawers): <span class="mqph-result-val">${CUR()}${(bwd/4*1.15).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +15%</span>`;
+      // Update removal suggestion hint
+      const hint = document.getElementById('mqph-removal-hint');
+      if (hint) hint.textContent = `Suggested: ${CUR()}${Math.round(bwd*0.5)} (half your base install with doors rate)`;
+    }
+    if(html){res.style.display='block';res.innerHTML=html;}else res.style.display='none';
+    // Removal live rate
+    const remRes = document.getElementById('mqph-r-removal');
+    if (remRes) {
+      if(rem>0){remRes.style.display='block';remRes.innerHTML=`<strong>Removal rate:</strong> <span class="mqph-result-val">${CUR()}${(rem/4).toFixed(2)}/lin ft</span>`;}
+      else remRes.style.display='none';
     }
   };
 
-  window.mqLogout = function() {
-    let attempts = 0;
-    const tryLogout = async () => {
-      if (window.$memberstackDom?.logout) {
-        try { await window.$memberstackDom.logout(); window.location.reload(); }
-        catch(e) { window.location.href = '/?ms-logout=true'; }
+  // ============================================================
+  // WIZARD NAV
+  // ============================================================
+  const wizardSavedInputs = {};
+  function saveCurrentInputs() {
+    document.querySelectorAll('.mqph-wizard-body input, .mqph-wizard-body select').forEach(el => { if(el.id) wizardSavedInputs[el.id]=el.value; });
+  }
+  function restoreSavedInputs() {
+    Object.entries(wizardSavedInputs).forEach(([id,val]) => { const el=document.getElementById(id); if(el) el.value=val; });
+  }
+
+  function renderWizardStep(idx) {
+    saveCurrentInputs();
+    const steps=buildWizardSteps();
+    const activeEl=document.getElementById(`mqph-step-${idx}`);
+    if(activeEl) activeEl.innerHTML=`<div class="mqph-step-title">${steps[idx].title}</div><div class="mqph-step-sub">${steps[idx].sub}</div>${steps[idx].content()}`;
+    restoreSavedInputs();
+    steps.forEach((_,i)=>{ const el=document.getElementById(`mqph-step-${i}`); if(el) el.classList.toggle('active',i===idx); });
+    const dots=document.querySelectorAll('.mqph-progress .dot');
+    dots.forEach((d,i)=>{ d.classList.remove('done','active'); if(i<idx) d.classList.add('done'); else if(i===idx) d.classList.add('active'); });
+    const back=document.getElementById('mqph-back-btn');
+    const next=document.getElementById('mqph-next-btn');
+    const skip=document.getElementById('mqph-skip-btn');
+    if(back) back.style.display=idx===0?'none':'inline-block';
+    if(next){ if(steps[idx].nextLabel){next.textContent=steps[idx].nextLabel;next.style.display='inline-block';}else next.style.display='none'; }
+    if(skip){ skip.style.display=steps[idx].skipLabel?'inline-block':'none'; if(steps[idx].skipLabel) skip.textContent=steps[idx].skipLabel; }
+  }
+
+  window.mqphExitWizard = function() {
+    if (wizardStep === 0 || confirm('Exit the wizard? Progress on this run won\'t be saved, but any pricing already in your account is untouched.')) {
+      loadAndRender();
+    }
+  };
+
+  window.mqphNext=function(){    const steps=buildWizardSteps();
+    // If we've been through this step before (i.e. the user hit Back to fix
+    // something and is now hitting Next again), pull out whatever it added
+    // last time before letting onNext push a fresh set — otherwise every
+    // revisit adds another duplicate copy on top.
+    if (wizardStepContrib[wizardStep]) {
+      wizardStepContrib[wizardStep].forEach(item => {
+        const idx = wizardItems.indexOf(item);
+        if (idx !== -1) wizardItems.splice(idx, 1);
+      });
+    }
+    const startLen = wizardItems.length;
+    const result=steps[wizardStep].onNext?steps[wizardStep].onNext():null;
+    if(result==='abort'){loadAndRender();return;}
+    wizardStepContrib[wizardStep] = wizardItems.slice(startLen);
+    wizardStep++;
+    if(wizardStep>=steps.length) mqphFinishWizard(); else renderWizardStep(wizardStep);
+  };
+  window.mqphBack=function(){if(wizardStep>0){wizardStep--;renderWizardStep(wizardStep);}};
+  window.mqphSkip=function(){
+    // Skipping means "this step contributes nothing" — if it previously
+    // contributed items (Next, then Back, then Skip instead), drop those too.
+    if (wizardStepContrib[wizardStep]) {
+      wizardStepContrib[wizardStep].forEach(item => {
+        const idx = wizardItems.indexOf(item);
+        if (idx !== -1) wizardItems.splice(idx, 1);
+      });
+      wizardStepContrib[wizardStep] = [];
+    }
+    wizardStep++;
+    const steps=buildWizardSteps();
+    if(wizardStep>=steps.length) mqphFinishWizard(); else renderWizardStep(wizardStep);
+  };
+
+  // ============================================================
+  // FINISH WIZARD — full wipe + rewrite
+  // ============================================================
+ async function mqphFinishWizard() {
+    if (wizardFinishing) return; // already saving — ignore a duplicate trigger
+    wizardFinishing = true;
+    const container=document.getElementById('mq-pricing-helper-v2');
+    if(container) container.innerHTML='<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Saving your pricing…</div>';
+
+    // Wipe all wizard-owned categories clean. Now that atDelete actually
+    // throws on failure, a failed delete here would previously have been
+    // silently swallowed by the empty catch and we'd carry on to create a
+    // fresh replacement anyway — leaving the old, undeleted record plus a
+    // brand-new duplicate. Retry once, and if it still fails, stop before
+    // creating anything rather than risk more duplicates.
+    const toDelete=lineItems.filter(r => r.fields && WIZARD_OWNED_CATEGORIES.includes(r.fields['Category']));
+    const failedDeletes=[];
+    for(const r of toDelete) {
+      try { await atDelete(LINE_ITEMS_TABLE,r.id); }
+      catch(e) {
+        try { await atDelete(LINE_ITEMS_TABLE,r.id); }
+        catch(e2) { console.error('Delete failed twice, giving up on this record:', r.id, e2); failedDeletes.push(r); }
+      }
+    }
+    if (failedDeletes.length) {
+      wizardFinishing = false;
+      if (container) container.innerHTML = `<div style="padding:3rem;text-align:center;color:#dc2626;font-size:14px">Couldn't clear out ${failedDeletes.length} old pricing item(s) before saving — nothing else was changed, so you don't end up with duplicates. Please wait a moment and try again.</div>`;
+      return;
+    }
+
+    // Write fresh records
+    for(let i=0;i<wizardItems.length;i++) {
+      const item=wizardItems[i];
+      try {
+        await atCreate(LINE_ITEMS_TABLE, {
+          shop:[shopRecord._recordId], Name:item.name, Category:item.category,
+          Rate:item.rate, Unit:item.unit, Description:item.description||'',
+          Active:true, 'Sort order':i+1,
+        });
+      } catch(e) { console.warn('Create failed:',item.name,e); }
+    }
+    await loadAndRender();
+  }
+
+  function buildWizardHTML() {
+    const steps=buildWizardSteps();
+    return `
+      <div class="mqph-wizard-card">
+        <div class="mqph-wizard-header">
+          <h2>⚙️ Pricing Setup Wizard</h2>
+          <p>Spec used throughout every step: 1 × 30" (${mqphMm(30)}mm) + 1 × 18" (${mqphMm(18)}mm) = 4 lin ft (${mqphMm(48).toLocaleString()}mm)</p>
+          <div class="mqph-progress">${steps.map(()=>'<div class="dot"></div>').join('')}</div>
+        </div>
+        <div class="mqph-wizard-body">${steps.map((_,i)=>`<div class="mqph-step ${i===0?'active':''}" id="mqph-step-${i}"></div>`).join('')}</div>
+        <div class="mqph-wizard-nav">
+          <button class="mqph-btn mqph-btn-secondary" id="mqph-back-btn" onclick="mqphBack()" style="display:none">← Back</button>
+          <button class="mqph-btn mqph-btn-secondary" id="mqph-skip-btn" onclick="mqphSkip()" style="display:none">Skip</button>
+          <button class="mqph-btn mqph-btn-ghost" id="mqph-exit-btn" onclick="mqphExitWizard()" style="margin-left:4px">Exit to editor</button>
+          <button class="mqph-btn mqph-btn-primary" id="mqph-next-btn" onclick="mqphNext()" style="margin-left:auto">Start →</button>
+        </div>
+      </div>`;
+  }
+
+  // ============================================================
+  // MINI REVERSE-ENGINEERING WIZARD  (add single item)
+  // ============================================================
+
+  // "Match another item's pricing" — lets a shop owner skip re-quoting the
+  // whole spec job and just copy an existing item's rate(s) directly instead.
+  // Material/drawer are 2-rate categories (uppers/bases, some/mostly drawers)
+  // stored as paired records with the same base name; door/hinge are single-rate.
+  function miniWizMatchOptions(cat) {
+    if (cat === 'material') {
+      return [...new Set(lineItems.filter(r=>r.fields&&r.fields['Category']==='material').map(r=>r.fields['Name'].replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim()))];
+    }
+    if (cat === 'drawer') {
+      return [...new Set(lineItems.filter(r=>r.fields&&r.fields['Category']==='drawer').map(r=>r.fields['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()))];
+    }
+    return lineItems.filter(r=>r.fields&&r.fields['Category']===cat).map(r=>r.fields['Name']);
+  }
+
+  function miniWizMatchBlock(cat) {
+    const options = miniWizMatchOptions(cat);
+    if (!options.length) return ''; // nothing to match against yet
+    const preview = miniWiz.matchRates ? (() => {
+      if (cat === 'material') return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (uppers) and ${CUR()}${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (bases) — same as "${miniWiz.matchName}"`;
+      if (cat === 'drawer') return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (some drawers) and ${CUR()}${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (mostly drawers) — same as "${miniWiz.matchName}"`;
+      return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft upcharge — same as "${miniWiz.matchName}"`;
+    })() : '';
+    return `
+      <div style="margin-bottom:1.25rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:500">
+          <input type="checkbox" id="mqph-mini-match-toggle" ${miniWiz.matchMode?'checked':''} onchange="mqphToggleMiniMatch(this.checked)" style="width:auto"/>
+          Match another ${CAT_LABELS[cat]||cat}'s pricing instead of quoting a new job
+        </label>
+        ${miniWiz.matchMode ? `
+          <select id="mqph-mini-match-select" onchange="mqphApplyMiniMatch('${cat}',this.value)" style="margin-top:8px;font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">Choose an item…</option>
+            ${options.map(n=>`<option value="${n.replace(/"/g,'&quot;')}" ${miniWiz.matchName===n?'selected':''}>${n}</option>`).join('')}
+          </select>
+          <div id="mqph-mini-match-preview" style="margin-top:8px;font-size:13px;color:#374151">${preview}</div>
+        ` : ''}
+      </div>`;
+  }
+
+  window.mqphToggleMiniMatch = function(checked) {
+    miniWiz.matchMode = checked;
+    miniWiz.matchName = '';
+    miniWiz.matchRates = null;
+    renderMiniWiz();
+  };
+
+  window.mqphApplyMiniMatch = function(cat, name) {
+    miniWiz.matchName = name;
+    if (!name) { miniWiz.matchRates = null; renderMiniWiz(); return; }
+    if (cat === 'material') {
+      const upperRec = lineItems.find(r=>r.fields&&r.fields['Category']==='material'&&r.fields['Name'].replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim()===name&&/uppers/i.test(r.fields['Name']));
+      const baseRec  = lineItems.find(r=>r.fields&&r.fields['Category']==='material'&&r.fields['Name'].replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim()===name&&/bases/i.test(r.fields['Name']));
+      miniWiz.matchRates = { rate0: upperRec?.fields['Rate']||0, rate1: baseRec?.fields['Rate']||0 };
+    } else if (cat === 'drawer') {
+      const someRec   = lineItems.find(r=>r.fields&&r.fields['Category']==='drawer'&&r.fields['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===name&&/some drawers/i.test(r.fields['Name']));
+      const mostlyRec = lineItems.find(r=>r.fields&&r.fields['Category']==='drawer'&&r.fields['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()===name&&/mostly drawers/i.test(r.fields['Name']));
+      miniWiz.matchRates = { rate0: someRec?.fields['Rate']||0, rate1: mostlyRec?.fields['Rate']||0 };
+    } else {
+      const rec = lineItems.find(r=>r.fields&&r.fields['Category']===cat&&r.fields['Name']===name);
+      miniWiz.matchRates = { rate0: rec?.fields['Rate']||0 };
+    }
+    renderMiniWiz();
+  };
+
+  // Returns the HTML content for each mini-wiz step
+  function miniWizContent(cat, name, step) {
+    if (miniWiz.bulkMode) name = 'your new items (you\'ll name each one individually at the end)';
+    const bl = getBaselineRates();
+    const noBaseline = bl.blBasePrice <= 0;
+
+    if (noBaseline) {
+      return `
+        <div class="mqph-warn" style="margin-bottom:0">
+          ⚠️ <strong>No baseline pricing found.</strong> Run the full pricing wizard first to set up your baseline rates. Then adding individual items will work correctly.
+        </div>`;
+    }
+
+    const matchBlock = miniWizMatchBlock(cat);
+    if (miniWiz.matchMode) {
+      // Match mode replaces the whole "quote a job" flow — nothing else to
+      // show once an existing item's pricing is being copied directly.
+      return matchBlock;
+    }
+
+    if (cat === 'material') {
+      if (step === 0) {
+        return `
+          <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote this job exactly in your software, then enter the total below.</p>
+          ${specBox([
+            `<strong>Upper cabinets — box only, no doors</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${name}</span> &nbsp;·&nbsp; No doors &nbsp;·&nbsp; Supply only &nbsp;·&nbsp; Local delivery`,
+          ])}
+          ${matchBlock}
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <p class="mqph-calc-hint">Enter your quoted total for this 4 lin ft job</p>
+          <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
+            <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
+            <div class="mqph-rate-reveal-lbl">per linear foot — uppers</div>
+          </div>`;
+      }
+      if (step === 1) {
+        return `
+          <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Same material, now bases. Include toe kick.</p>
+          ${specBox([
+            `<strong>Base cabinets — box only, no doors</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${name}</span> &nbsp;·&nbsp; No doors &nbsp;·&nbsp; Supply only &nbsp;·&nbsp; Include toe kick`,
+          ])}
+          ${matchBlock}
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <p class="mqph-calc-hint">Enter your quoted total for this 4 lin ft job</p>
+          <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
+            <div class="mqph-rate-reveal-val" id="mqph-mini-rate-1">—</div>
+            <div class="mqph-rate-reveal-lbl">per linear foot — bases</div>
+          </div>`;
+      }
+    }
+
+    if (cat === 'door') {
+      const baselineBoxDesc = `${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price)`;
+      return `
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the same baseline base box job with this new door style added.</p>
+        ${specBox([
+          `<strong>Base cabinets + new door style</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${name}</span>`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
+        ])}
+        ${matchBlock}
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+        <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the door upcharge per lin ft</p>
+        <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
+          <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
+          <div class="mqph-rate-reveal-lbl">per linear foot upcharge</div>
+        </div>`;
+    }
+
+    if (cat === 'hinge') {
+      const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
+      const baselineDesc = `${CUR()}${baseWithDoor.toLocaleString(undefined,{maximumFractionDigits:0})} (${bl.blMatName} bases + ${bl.blDoorName})`;
+      return `
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the baseline box + baseline door, but swap to this hinge.</p>
+        ${specBox([
+          `<strong>Base cabinets + baseline door + new hinge</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${bl.blDoorName}</span>`,
+          `Hinges: <span class="mqph-spec-tag">${name}</span> · No drawers · Supply only`,
+        ])}
+        ${matchBlock}
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+        <p class="mqph-calc-hint">We'll subtract ${baselineDesc} and divide by 4 to get the hinge upcharge per lin ft</p>
+        <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
+          <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
+          <div class="mqph-rate-reveal-lbl">per linear foot upcharge</div>
+        </div>`;
+    }
+
+    if (cat === 'drawer') {
+      const baselineBoxDesc = `${CUR()}${bl.blBasePrice.toLocaleString(undefined,{maximumFractionDigits:0})} (your ${bl.blMatName} base box price)`;
+      if (step === 0) {
+        return `
+          <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the baseline base box with <strong>1 top drawer</strong> in each cabinet. This gives us the "some drawers" rate.</p>
+          ${specBox([
+            `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
+            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+          ])}
+          ${matchBlock}
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the "some drawers" upcharge per lin ft</p>
+          <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
+            <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
+            <div class="mqph-rate-reveal-lbl">per linear foot — some drawers upcharge</div>
+          </div>`;
+      }
+      if (step === 1) {
+        const p0 = miniWiz.p0 || 0;
+        return `
+          <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Now quote a <strong>full drawer bank</strong> — 3 drawers in each cabinet. This gives us the "mostly drawers" rate.</p>
+          ${specBox([
+            `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
+            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+          ])}
+          ${p0>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">1-drawer quote was ${CUR()}${p0.toLocaleString()} — bank quote should be higher.</p>`:''}
+          ${matchBlock}
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <p class="mqph-calc-hint">We'll average this with your 1-drawer quote to get the "mostly drawers" rate</p>
+          <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
+            <div class="mqph-rate-reveal-val" id="mqph-mini-rate-1">—</div>
+            <div class="mqph-rate-reveal-lbl">per linear foot — mostly drawers upcharge</div>
+          </div>`;
+      }
+    }
+
+    return '';
+  }
+
+  // Live calc preview inside mini-wiz
+  window.mqphMiniCalc = function() {
+    const bl = getBaselineRates();
+    const cat = miniWiz.cat;
+    const step = miniWiz.step;
+
+    const reveal = (idx, rate) => {
+      const el = document.getElementById(`mqph-mini-reveal-${idx}`);
+      const rv = document.getElementById(`mqph-mini-rate-${idx}`);
+      if (!el || !rv) return;
+      if (rate !== null && !isNaN(rate)) {
+        rv.textContent = `${CUR()}${rate.toFixed(2)} / lin ft`;
+        el.style.display = 'block';
+      } else {
+        el.style.display = 'none';
+      }
+    };
+
+    if (cat === 'material') {
+      const p = parseFloat(document.getElementById(`mqph-mini-p${step}`)?.value || 0);
+      reveal(step, p > 0 ? p / 4 : null);
+    }
+    if (cat === 'door') {
+      const p = parseFloat(document.getElementById('mqph-mini-p0')?.value || 0);
+      reveal(0, p > 0 ? (p - bl.blBasePrice) / 4 : null);
+    }
+    if (cat === 'hinge') {
+      const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
+      const p = parseFloat(document.getElementById('mqph-mini-p0')?.value || 0);
+      reveal(0, p > 0 ? (p - baseWithDoor) / 4 : null);
+    }
+    if (cat === 'drawer') {
+      if (step === 0) {
+        const p = parseFloat(document.getElementById('mqph-mini-p0')?.value || 0);
+        reveal(0, p > 0 ? (p - bl.blBasePrice) / 4 : null);
+      }
+      if (step === 1) {
+        const p0 = miniWiz.p0 || 0;
+        const p1 = parseFloat(document.getElementById('mqph-mini-p1')?.value || 0);
+        reveal(1, p0 > 0 && p1 > 0 ? ((p0 + p1) / 2 - bl.blBasePrice) / 4 : null);
+      }
+    }
+  };
+
+  // Total steps per category
+  function miniWizTotalSteps(cat) {
+    return (cat === 'material' || cat === 'drawer') ? 2 : 1;
+  }
+
+  function renderMiniWiz() {
+    const cat  = miniWiz.cat;
+    const name = miniWiz.name;
+    const step = miniWiz.step;
+    const total = miniWizTotalSteps(cat);
+    const isLast = miniWiz.matchMode || step >= total - 1;
+
+    const stepLabels = { material:['Upper rate','Base rate'], door:['Door upcharge'], hinge:['Hinge upcharge'], drawer:['Some drawers','Mostly drawers'] };
+    const labels = stepLabels[cat] || [];
+
+    const progressDots = labels.map((_,i) =>
+      `<div style="flex:1;height:3px;border-radius:2px;background:${i<step?'#a3e635':i===step?'#fff':'rgba(255,255,255,0.25)'};transition:background 0.3s"></div>`
+    ).join('');
+
+    const catMeta = { material:{icon:'🪵',title:'Add box material'}, door:{icon:'🚪',title:'Add door style'}, hinge:{icon:'🔧',title:'Add door hinge'}, drawer:{icon:'🗄️',title:'Add drawer config'} };
+    const meta = catMeta[cat] || { icon:'➕', title:'Add item' };
+
+    document.getElementById('mqph-mini-title').innerHTML = `${meta.icon} ${meta.title}${miniWiz.bulkMode ? ` (× ${miniWiz.bulkCount})` : ''}`;
+    document.getElementById('mqph-mini-sub').textContent = miniWiz.bulkMode ? `${miniWiz.bulkCount} items, same price` : name;
+    document.getElementById('mqph-mini-progress').innerHTML = progressDots;
+    document.getElementById('mqph-mini-content').innerHTML = miniWizContent(cat, name, step);
+
+    // Nav buttons
+    const nextBtn = document.getElementById('mqph-mini-next');
+    const backBtn = document.getElementById('mqph-mini-back');
+    if (nextBtn) nextBtn.textContent = isLast ? 'Save →' : 'Next →';
+    if (backBtn) backBtn.style.display = (!miniWiz.matchMode && step > 0) ? 'inline-block' : 'none';
+  }
+
+  window.mqphMiniNext = async function() {
+    const cat  = miniWiz.cat;
+    const name = miniWiz.name;
+    const step = miniWiz.step;
+    const bl   = getBaselineRates();
+
+    // Match mode entirely bypasses the "quote a job" flow — just copy the
+    // matched item's rate(s) straight onto the new one and save.
+    if (miniWiz.matchMode) {
+      if (!miniWiz.matchRates) {
+        const sel = document.getElementById('mqph-mini-match-select');
+        if (sel) sel.style.borderColor = '#dc2626';
         return;
       }
-      attempts++;
-      if (attempts < 20) setTimeout(tryLogout, 250);
-      else window.location.href = '/?ms-logout=true';
-    };
-    tryLogout();
-  };
-
-  window.mqUseShopInfoEmail = function() {
-    const emailEl = document.getElementById('mq-support-email');
-    const shopEmail = window._mqShopRecord?.fields['Lead notify email'];
-    if (!emailEl) return;
-    if (shopEmail) {
-      emailEl.value = shopEmail;
-    } else {
-      const statusEl = document.getElementById('mq-support-status');
-      if (statusEl) { statusEl.textContent = "No email found in Shop Info yet — you'll need to type one in."; statusEl.style.color = '#dc2626'; }
-    }
-  };
-
-  window.mqSubmitSupport = async function() {
-    const emailEl = document.getElementById('mq-support-email');
-    const topicEl = document.getElementById('mq-support-topic');
-    const messageEl = document.getElementById('mq-support-message');
-    const statusEl = document.getElementById('mq-support-status');
-    const btn = document.getElementById('mq-support-submit-btn');
-    const email = (emailEl?.value || '').trim();
-    const topic = topicEl?.value || 'Support';
-    const message = (messageEl?.value || '').trim();
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    if (!emailValid) {
-      if (statusEl) { statusEl.textContent = 'Please enter a valid email so we know where to reply.'; statusEl.style.color = '#dc2626'; }
-      emailEl?.focus();
-      return;
-    }
-    if (!message) {
-      if (statusEl) { statusEl.textContent = 'Please enter a message first.'; statusEl.style.color = '#dc2626'; }
-      return;
-    }
-    const shopRecord = window._mqShopRecord;
-    const shopName = shopRecord?.fields['Shop name'] || 'Unknown shop';
-    const shopToken = shopRecord?.fields['Shop token'] || 'unknown-token';
-    if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
-    if (statusEl) statusEl.textContent = '';
-    try {
-      const html = `
-        <p><strong>Topic:</strong> ${topic}</p>
-        <p><strong>From:</strong> ${email}</p>
-        <p><strong>Shop name:</strong> ${shopName}</p>
-        <p><strong>Shop token:</strong> ${shopToken}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message.replace(/</g,'&lt;').replace(/\n/g, '<br>')}</p>
-      `;
-      await fetch(CONFIG.EMAIL_WORKER, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: 'support@midasquote.com',
-          replyTo: email, // so hitting "Reply" in your own inbox goes straight to them, not back to support@
-          subject: `[${topic}] ${shopName}`,
-          html
-        })
-      });
-      if (statusEl) { statusEl.textContent = "✓ Sent! We'll get back to you soon."; statusEl.style.color = '#166534'; }
-      if (messageEl) messageEl.value = '';
-    } catch(e) {
-      if (statusEl) { statusEl.textContent = 'Something went wrong sending that — please try again.'; statusEl.style.color = '#dc2626'; }
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
-    }
-  };
-
-  window.mqNav = function(page, el) {
-    document.querySelectorAll('#midasquote-dashboard .mq-nav-item').forEach(i => i.classList.remove('active'));
-    document.querySelectorAll('#midasquote-dashboard .mq-page').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    const pageEl = document.getElementById('mq-page-' + page);
-    if (pageEl) pageEl.classList.add('active');
-  };
-
-  // ============================================================
-  // COPY HELPERS
-  // ============================================================
-  function mqFallbackCopy(text) {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      return true;
-    } catch(e) { return false; }
-  }
-  window.mqUpdateCombinedEmbed = function() {
-    setTimeout(() => {
-      const wantHeader = document.getElementById('mq-embed-chk-header')?.checked;
-      const wantTrust  = document.getElementById('mq-embed-chk-trust')?.checked;
-      const wantWidget = document.getElementById('mq-embed-chk-widget')?.checked;
-      const headerCode = window._mqRawHeaderCode || '';
-      const trustCode  = window._mqRawTrustCode  || '';
-      const widgetCode = window._mqRawEmbedCode   || '';
-      const parts = [];
-      if (wantHeader && headerCode) parts.push(headerCode);
-      if (wantTrust  && trustCode)  parts.push(trustCode);
-      if (wantWidget && widgetCode) parts.push(widgetCode);
-      let combined = '';
-      if (parts.length) {
-        combined = `<div style="max-width:900px;margin:0 auto">\n\n${parts.join('\n\n')}\n\n</div>`;
+      if (miniWiz.bulkMode) {
+        miniWiz.bulkRates = miniWiz.matchRates;
+        mqphShowBulkNameScreen();
+        return;
       }
-      const display = document.getElementById('mq-combined-embed-display');
-      if (display) display.textContent = combined || '— Select at least one item above —';
-      window._mqRawCombinedEmbed = combined;
-
-      // Update live preview
-      const previewHeader = document.getElementById('mq-embed-preview-header');
-      const previewTrust  = document.getElementById('mq-embed-preview-trust');
-      const previewWidget = document.getElementById('mq-embed-preview-widget');
-      if (previewHeader) previewHeader.innerHTML = (wantHeader && headerCode) ? headerCode : '';
-      if (previewTrust)  previewTrust.innerHTML  = (wantTrust  && trustCode)  ? trustCode  : '';
-      if (previewWidget) {
-        previewWidget.style.display = wantWidget ? 'block' : 'none';
-      }
-    }, 10);
-  };
-
-  window.mqCopyCombinedEmbed = function(btn) {
-    const code = window._mqRawCombinedEmbed || '';
-    if (!code) { if (btn) { btn.textContent = 'Nothing selected!'; setTimeout(() => btn.textContent = '📋 Copy combined code', 2000); } return; }
-    const ok   = () => { if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '📋 Copy combined code', 2000); } };
-    const fail = () => { if (btn) { btn.textContent = 'Copy failed'; setTimeout(() => btn.textContent = '📋 Copy combined code', 2000); } };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(code).then(ok).catch(() => { mqFallbackCopy(code) ? ok() : fail(); });
-    } else { mqFallbackCopy(code) ? ok() : fail(); }
-  };
-
-  window.mqCopyEmbed = function(btn) {
-    const code = window._mqRawEmbedCode || '';
-    const ok = () => { if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
-    const fail = () => { if (btn) { btn.textContent = 'Copy failed'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(code).then(ok).catch(() => { mqFallbackCopy(code) ? ok() : fail(); });
-    } else {
-      mqFallbackCopy(code) ? ok() : fail();
-    }
-  };
-  window.mqCopyText = function(text, btn) {
-    const ok = () => { if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
-    const fail = () => { if (btn) { btn.textContent = 'Copy failed'; setTimeout(() => btn.textContent = 'Copy', 2000); } };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(ok).catch(() => { mqFallbackCopy(text) ? ok() : fail(); });
-    } else {
-      mqFallbackCopy(text) ? ok() : fail();
-    }
-  };
-
-  // Shared "Add to Home Screen" instructions — identical for both the Direct
-  // Link and MidasQuote Pro sections, since the steps themselves don't
-  // depend on which link is being added, just kept as one function so the
-  // two sections can't drift out of sync with each other.
-  function mqAddToHomescreenInstructionsHTML() {
-    return `
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🍎 iPhone / iPad (Safari)</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Open your direct link in Safari</li>
-        <li>Tap the <strong>Share</strong> icon (square with an arrow)</li>
-        <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
-        <li>Tap <strong>Add</strong> — done!</li>
-      </ol>
-    </div>
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">🤖 Android</div>
-      <p style="font-size:11.5px;color:#6b7280;margin-bottom:8px;line-height:1.5">Steps vary a bit by phone brand — Samsung phones especially use a different browser by default.</p>
-      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">In Chrome:</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0 0 10px">
-        <li>Open your direct link in Chrome</li>
-        <li>Tap the <strong>⋮</strong> menu (top right)</li>
-        <li>Tap <strong>Add to Home screen</strong> — not "Add to Favorites" (that's a bookmark, not a homescreen icon)</li>
-        <li>Confirm — done!</li>
-      </ol>
-      <div style="font-size:12.5px;font-weight:600;color:#374151;margin-bottom:4px">On Samsung phones (Samsung Internet browser):</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Tap the menu icon (bottom right)</li>
-        <li>Tap <strong>Add page to</strong> → <strong>Home screen</strong></li>
-      </ol>
-      <p style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Don't see the icon right away? Check your app drawer too — some phones add it there first.</p>
-    </div>
-
-    <div style="background:#f9fafb;border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">💻 Desktop (Chrome)</div>
-      <ol style="font-size:12.5px;color:#4b5563;line-height:1.7;padding-left:18px;margin:0">
-        <li>Open your direct link in Chrome</li>
-        <li>Click the <strong>⋮</strong> menu (top right)</li>
-        <li>Go to <strong>Cast, save, and share</strong></li>
-        <li>Click <strong>Install as app</strong></li>
-        <li>Confirm — it now opens like a regular app</li>
-      </ol>
-    </div>
-
-  </div>`;
-  }
-
-  // Collapsible sections on the Embed page ("Code for websites" / "Direct
-  // link" / "MidasQuote Pro") — same idea as the widget's own collapsible
-  // sections, just a small self-contained version for this one page.
-  window.mqToggleEmbedSection = function(key) {
-    const body = document.getElementById(`mq-embed-${key}-body`);
-    const arrow = document.getElementById(`mq-embed-${key}-arrow`);
-    if (!body) return;
-    const opening = body.style.display === 'none';
-    body.style.display = opening ? 'block' : 'none';
-    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
-  };
-
-  // ============================================================
-  // IMAGE UPLOAD — permanent hosting via Cloudflare R2 (replaces fragile pasted links)
-  // ============================================================
-  // Resizes/compresses a photo in the browser before it's uploaded — phone
-  // photos routinely come in at 3-8MB and several thousand pixels wide, but
-  // nothing in this app ever displays an image wider than the lightbox
-  // view, so there's no reason to ship (and store) the full original.
-  // Falls back to the original file untouched on any failure — never blocks
-  // an upload just because resizing didn't work for some reason.
-  function mqResizeImageFile(file, maxDim = 1200, quality = 0.85) {
-    return new Promise((resolve) => {
-      // Animated GIFs would lose their animation — canvas only ever
-      // captures a single frame. Upload those as-is.
-      if (file.type === 'image/gif') { resolve(file); return; }
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        const { width, height } = img;
-        if (!width || !height) { resolve(file); return; }
-        // Only shrink dimensions if actually oversized — never upscale a
-        // small image. But still re-encode at the ORIGINAL size below, even
-        // when no resizing happens: a real photo saved as PNG can easily be
-        // several MB at modest dimensions, since PNG is lossless and
-        // compresses photographic detail far worse than JPEG. Skipping
-        // compression just because the pixel dimensions were already small
-        // was the actual bug — file size and pixel dimensions aren't the
-        // same thing.
-        const scale = (width > maxDim || height > maxDim) ? maxDim / Math.max(width, height) : 1;
-        const newW = Math.round(width * scale);
-        const newH = Math.round(height * scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = newW;
-        canvas.height = newH;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, newW, newH);
-        // Decide the output format by actually checking for transparency,
-        // rather than trusting the original file extension — a PNG with no
-        // transparent pixels (the overwhelming majority of real product
-        // photos) compresses far better re-encoded as JPEG, while a PNG
-        // that's genuinely using transparency needs to stay PNG or it'll
-        // get a black/white background baked in.
-        let hasTransparency = false;
-        try {
-          const data = ctx.getImageData(0, 0, newW, newH).data;
-          for (let i = 3; i < data.length; i += 4) { if (data[i] < 255) { hasTransparency = true; break; } }
-        } catch (e) { hasTransparency = file.type === 'image/png'; } // can't inspect pixels (e.g. tainted canvas) — assume worst case
-        const outType = hasTransparency ? 'image/png' : 'image/jpeg';
-        canvas.toBlob((blob) => {
-          if (!blob) { resolve(file); return; }
-          // Re-encoding a PNG (no quality knob, lossless) can occasionally
-          // come out larger than a well-optimized original — never ship a
-          // "compressed" file that's actually bigger than what we started with.
-          if (blob.size >= file.size) { resolve(file); return; }
-          const ext = outType === 'image/png' ? 'png' : 'jpg';
-          const newName = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.' + ext;
-          resolve(new File([blob], newName, { type: outType }));
-        }, outType, outType === 'image/jpeg' ? quality : undefined);
-      };
-      img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
-      img.src = objectUrl;
-    });
-  }
-
-  async function mqUploadImage(file, shopToken, category) {
-    // Skip resizing for logos — usually already a small, deliberately-
-    // crafted file, and it represents the shop's brand, so it's not worth
-    // any risk of visible quality loss there. Everything else gets resized.
-    const uploadFile = category === 'logos' ? file : await mqResizeImageFile(file);
-    const formData = new FormData();
-    formData.append('file', uploadFile);
-    formData.append('shopToken', shopToken || 'unknown-shop');
-    formData.append('category', category || 'general');
-    const res = await fetch(CONFIG.IMAGE_UPLOAD_URL, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${CONFIG.IMAGE_UPLOAD_SECRET}` },
-      body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || 'Upload failed');
-    }
-    return data.url;
-  }
-
-  // Wires a hidden file input + visible "Upload photo" button to actually upload and
-  // fill the given target URL input field once done. Shows inline status feedback.
-  function mqWireUploadButton(uploadBtnId, fileInputId, statusElId, targetInputId, shopToken, category, onDone) {
-    const uploadBtn = uploadBtnId ? document.getElementById(uploadBtnId) : null;
-    const fileInput = document.getElementById(fileInputId);
-    const statusEl = document.getElementById(statusElId);
-    const targetInput = document.getElementById(targetInputId);
-    if (!fileInput) return;
-
-    fileInput.onchange = async () => {
-      const file = fileInput.files && fileInput.files[0];
-      if (!file) return;
-      if (statusEl) { statusEl.textContent = 'Uploading…'; statusEl.style.color = '#6b7280'; }
-      fileInput.disabled = true;
-      if (uploadBtn) uploadBtn.disabled = true;
+      if (!mqphWarnIfDuplicate(cat, name)) return;
+      const nextBtn = document.getElementById('mqph-mini-next');
+      if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
       try {
-        const url = await mqUploadImage(file, shopToken, category);
-        if (targetInput) targetInput.value = url;
-        if (statusEl) { statusEl.textContent = '✓ Uploaded!'; statusEl.style.color = '#16a34a'; }
-        if (typeof onDone === 'function') onDone(url);
-      } catch (e) {
-        if (statusEl) { statusEl.textContent = 'Upload failed — try again'; statusEl.style.color = '#dc2626'; }
-      } finally {
-        fileInput.disabled = false;
-        if (uploadBtn) uploadBtn.disabled = false;
-        fileInput.value = '';
-        setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 4000);
-      }
-    };
-  }
-
-  // ============================================================
-  // LOAD DATA
-  // ============================================================
-  async function loadShop(shopToken) {
-    const shops = await atGet(CONFIG.SHOPS_TABLE, `{Shop token} = "${shopToken}"`);
-    return shops.length ? shops[0] : null;
-  }
-
-  async function loadPricing(shopName) {
-    const recs = await atGet(CONFIG.PRICING_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
-    return recs.length ? recs[0] : null;
-  }
-
-  async function loadLeads(shopName) {
-    const recs = await atGet(CONFIG.LEADS_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
-    return recs;
-  }
-
-  async function loadSpecialty(shopName) {
-    const recs = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
-    return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
-  }
-
-  const DEFAULT_SPECIALTY_ITEMS = [
-    { name:'Single garbage pullout',     price:0,  perFt:false, sort:1 },
-    { name:'Lazy Susan',                 price:0,  perFt:false, sort:2 },
-    { name:'10x10 Glass door inserts',   price:0,  perFt:false, sort:3 },
-    { name:'Tall cabinet with pullouts', price:0,  perFt:false, sort:4 },
-  ];
-
-  async function ensureSpecialtyDefaults(shopRecord) {
-    const shopName = shopRecord.fields['Shop name'];
-    const existing = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
-    if (existing.length > 0) return existing;
-    // New shop — create default list
-    const created = [];
-    for (const item of DEFAULT_SPECIALTY_ITEMS) {
-      try {
-        const rec = await atCreate(CONFIG.SPECIALTY_TABLE, {
-          'Shop': [shopRecord.id],
-          'Item name': item.name,
-          'Special Items': item.name,
-          'Price': item.price,
-          'Per linear foot': item.perFt,
-          'Active': true,
-          'Sort order': item.sort,
-        });
-        if (rec?.id) created.push(rec);
-      } catch(e) { console.warn('Failed to create default specialty item:', item.name, e); }
-    }
-    return created.sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
-  }
-
-  // Refacing/Repainting/Restaining come with these specialty items pre-built,
-  // each tagged so they only show for their matching project type. Runs once
-  // per shop, gated by its own 'Templates seeded' flag — independent of
-  // ensureSpecialtyDefaults above, since shops that already have OTHER
-  // specialty items should still get these new templates.
-  const PROJECT_TYPE_TEMPLATES = {
-    refacing: [
-      { name:'New doors',              price:0, perFt:false, perSqFt:true  },
-      { name:'New drawer fronts',      price:0, perFt:false, perSqFt:true  },
-      { name:'Edge tape replacement',  price:0, perFt:true,  perSqFt:false },
-      { name:'Hinge replacement',      price:0, perFt:false, perSqFt:false },
-    ],
-    repainting: [
-      { name:'Door & drawer front painting', price:0, perFt:false, perSqFt:true  },
-      { name:'Edge tape painting',           price:0, perFt:true,  perSqFt:false },
-    ],
-    restaining: [
-      { name:'Door & drawer front restaining', price:0, perFt:false, perSqFt:true  },
-      { name:'Edge tape restaining',           price:0, perFt:true,  perSqFt:false },
-    ],
-  };
-
-  // Name of the special reserved shop record that holds the master template
-  // specialty items. Never shown to real customers — just an anchor for
-  // linked-record storage, same shape as any other shop.
-  const MASTER_TEMPLATE_SHOP_NAME = 'MASTER_TEMPLATE';
-
-  async function ensureMasterTemplateShop() {
-    if (window._mqMasterTemplateShop) return window._mqMasterTemplateShop;
-    const existing = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} = "${MASTER_TEMPLATE_SHOP_NAME}"`);
-    if (existing.length) { window._mqMasterTemplateShop = existing[0]; return existing[0]; }
-    // No Status set — this reserved record never goes through the normal
-    // active/trial/cancelled lifecycle, so there's no valid value that fits.
-    const created = await atCreate(CONFIG.SHOPS_TABLE, { 'Shop name': MASTER_TEMPLATE_SHOP_NAME });
-    if (!created?.id) {
-      console.error('Failed to create master template shop:', created);
-      throw new Error('Could not create the master template shop record — check the browser console for the exact Airtable error.');
-    }
-    window._mqMasterTemplateShop = created;
-    return created;
-  }
-
-  // Ensures the master template shop actually has its starter items —
-  // decoupled from ensureProjectTypeTemplates (which only runs for a shop
-  // that's never been seeded) so this self-heals every time the admin visits
-  // the Templates tab, even if the admin's own shop was seeded long before
-  // this feature existed.
-  async function ensureMasterTemplateItems() {
-    const masterShop = await ensureMasterTemplateShop();
-    let masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
-
-    // Bootstrap starter items per project type (refacing/repainting/
-    // restaining) independently — not all-or-nothing on the whole master
-    // shop. Otherwise the moment ANY item exists (even one totally
-    // unrelated to these three), the starters for a project type that
-    // still has zero items of its own would never get created at all.
-    const existingRoomIds = new Set();
-    masterItems.forEach(item => {
-      try {
-        (JSON.parse(item.fields['Visible rooms'] || '[]')).forEach(r => existingRoomIds.add(r));
-      } catch(e) { /* malformed Visible rooms on an existing item — skip it */ }
-    });
-    const missingEntries = Object.entries(PROJECT_TYPE_TEMPLATES).filter(([roomId]) => !existingRoomIds.has(roomId));
-    if (!missingEntries.length) return masterItems;
-
-    const bootstrapItems = missingEntries.flatMap(([roomId, items]) =>
-      items.map(item => ({ ...item, roomId }))
-    );
-    const results = await Promise.all(bootstrapItems.map(item => atCreate(CONFIG.SPECIALTY_TABLE, {
-      'Shop': [masterShop.id],
-      'Item name': item.name,
-      'Special Items': item.name,
-      'Price': item.price,
-      'Per linear foot': item.perFt,
-      'Per square foot': item.perSqFt,
-      'Active': true,
-      'Visible rooms': JSON.stringify([item.roomId]),
-    })));
-    const failed = results.filter(r => !r?.id);
-    if (failed.length) console.error('Some master template items failed to create:', failed);
-    masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
-    return masterItems;
-  }
-
-  // Default project type definitions (name/description/adjustment) for
-  // Refacing/Repainting/Restaining, now editable via the admin Templates
-  // page instead of being hardcoded here. Bootstraps the master shop's own
-  // Room types field once from these starting values if it's never been set.
-  const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
-    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
-    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
-  };
-
-  async function ensureMasterTemplateRoomDefs() {
-    const masterShop = await ensureMasterTemplateShop();
-    let masterRooms = [];
-    try { masterRooms = masterShop.fields['Room types'] ? JSON.parse(masterShop.fields['Room types']) : []; } catch(e) { masterRooms = []; }
-    if (masterRooms.length) return masterRooms;
-    // Never set before — bootstrap from the starting values above
-    masterRooms = Object.values(DEFAULT_TEMPLATE_ROOM_DEFS);
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, { 'Room types': JSON.stringify(masterRooms) });
-      masterShop.fields['Room types'] = JSON.stringify(masterRooms);
-    } catch(e) { console.warn('Failed to bootstrap master template room defs:', e); }
-    return masterRooms;
-  }
-
-  async function renderMasterRoomDefs() {
-    const masterRooms = await ensureMasterTemplateRoomDefs();
-    window._mqMasterRooms = masterRooms;
-    const content = document.getElementById('mq-master-rooms-content');
-    if (!content) return;
-    content.innerHTML = masterRooms.map((r, idx) => `
-      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px">
-        <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-master-room-name-${idx}" placeholder="Project type name" style="font-size:13px;font-weight:600;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
-        <textarea id="mq-master-room-desc-${idx}" placeholder="Description shown to customers on the widget for this project type" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
-        <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
-          <div id="mq-master-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-            ${r.coverImage ? `<img src="${r.coverImage}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
-          </div>
-          <div style="flex:1;min-width:0">
-            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default cover image — new shops start with this; they can change it afterward</label>
-            <input type="text" id="mq-master-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
-            <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-              📤 Upload
-              <input type="file" id="mq-master-room-cover-file-${idx}" accept="image/*" style="display:none"/>
-            </label>
-            ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultMasterCoverImage('${r.id}','${(r.name||'').replace(/'/g,"\\'")}',${idx})">↺ Use built-in default</button>` : ''}
-            <span id="mq-master-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
-          </div>
-        </div>
-        <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
-          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 Default "How to measure your space" for this project type</label>
-          <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
-          <div style="margin-bottom:8px">
-            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-master-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
-            <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo, [tip]text[/tip] wraps it in a yellow callout box</span>
-          </div>
-          <div style="display:flex;gap:8px;align-items:flex-start">
-            <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-              ${mqMeasureImgPreviewHTML(r.measureImage)}
-            </div>
-            <div style="flex:1;min-width:0">
-              <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Default measuring guide image or video (optional)</label>
-              <input type="text" id="mq-master-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg — or a YouTube/Vimeo/Loom link" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
-              <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                📤 Upload photo
-                <input type="file" id="mq-master-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
-              </label>
-              <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
-              ${MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(r.id||'').toLowerCase()] ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMasterMeasureImage('${r.id}',${idx})">↺ Use built-in default</button>` : ''}
-              <span id="mq-master-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `).join('');
-
-    masterRooms.forEach((r, idx) => {
-      mqWireUploadButton(
-        null,
-        `mq-master-room-cover-file-${idx}`,
-        `mq-master-room-cover-status-${idx}`,
-        `mq-master-room-cover-${idx}`,
-        MASTER_TEMPLATE_SHOP_NAME,
-        'products',
-        (url) => {
-          const preview = document.getElementById(`mq-master-room-cover-preview-${idx}`);
-          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
-          mqSaveMasterRoomDefs();
+        const mr = miniWiz.matchRates;
+        if (cat === 'material') {
+          const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='material').length;
+          const upperRec = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${name} — uppers`, Category:'material', Rate:mr.rate0, Unit:'per lin ft — uppers', Description:'Box material rate uppers', Active:true, 'Sort order':sortBase+1 });
+          const baseRec  = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${name} — bases`, Category:'material', Rate:mr.rate1, Unit:'per lin ft — bases', Description:'Box material rate bases', Active:true, 'Sort order':sortBase+2 });
+          if (upperRec?.id) lineItems.push(upperRec);
+          if (baseRec?.id)  lineItems.push(baseRec);
+        } else if (cat === 'door') {
+          const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='door').length;
+          const rec = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:name, Category:'door', Rate:mr.rate0, Unit:'per lin ft upcharge', Description:'Door style upcharge', Active:true, 'Sort order':sortBase+1 });
+          if (rec?.id) lineItems.push(rec);
+        } else if (cat === 'hinge') {
+          const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='hinge').length;
+          const rec = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:name, Category:'hinge', Rate:mr.rate0, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':sortBase+1 });
+          if (rec?.id) lineItems.push(rec);
+        } else if (cat === 'drawer') {
+          const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='drawer').length;
+          const rec1 = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${name} — some drawers`, Category:'drawer', Rate:mr.rate0, Unit:'per lin ft upcharge', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1 });
+          const rec2 = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${name} — mostly drawers`, Category:'drawer', Rate:mr.rate1, Unit:'per lin ft upcharge', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':sortBase+2 });
+          if (rec1?.id) lineItems.push(rec1);
+          if (rec2?.id) lineItems.push(rec2);
         }
-      );
-      mqWireUploadButton(
-        null,
-        `mq-master-room-measure-img-file-${idx}`,
-        `mq-master-room-measure-img-status-${idx}`,
-        `mq-master-room-measure-img-${idx}`,
-        MASTER_TEMPLATE_SHOP_NAME,
-        'products',
-        (url) => {
-          const preview = document.getElementById(`mq-master-room-measure-img-preview-${idx}`);
-          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
-          mqSaveMasterRoomDefs();
-        }
-      );
-    });
-  }
-
-  window.mqSaveMasterRoomDefs = async function() {
-    const masterShop = await ensureMasterTemplateShop();
-    const current = window._mqMasterRooms || [];
-    const updated = current.map((r, idx) => ({
-      ...r,
-      name: (el(`mq-master-room-name-${idx}`)?.value || r.name || '').trim(),
-      description: (el(`mq-master-room-desc-${idx}`)?.value || '').trim(),
-      coverImage: (el(`mq-master-room-cover-${idx}`)?.value || '').trim(),
-      measureText: (el(`mq-master-room-measure-text-${idx}`)?.value || '').trim(),
-      measureImage: (el(`mq-master-room-measure-img-${idx}`)?.value || '').trim(),
-    }));
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, { 'Room types': JSON.stringify(updated) });
-      masterShop.fields['Room types'] = JSON.stringify(updated);
-      window._mqMasterRooms = updated;
-      showMsg('mq-templates-msg', '✓ Default project type descriptions saved — this only affects shops seeded from now on.');
-    } catch(e) {
-      console.error('Failed to save master room defs:', e);
-      showMsg('mq-templates-msg', 'Error saving — please try again.', 'error');
-    }
-  };
-
-  async function ensureProjectTypeTemplates(shopRecord) {
-    if (shopRecord.fields['Templates seeded']) return; // already done for this shop
-
-    // Make sure Refacing/Repainting/Restaining actually exist in the room
-    // list too — not just their specialty items — otherwise a shop that
-    // already customized their rooms before this feature existed would end
-    // up with specialty items tagged to project types that aren't even in
-    // their dropdown. Pulled from the editable master template room defs,
-    // not hardcoded, so editing them on the admin Templates page actually
-    // changes what new shops get.
-    const templateRoomList = await ensureMasterTemplateRoomDefs();
-    const currentRooms = window._mqRooms || defaultRoomTypes();
-    let roomsChanged = false;
-    templateRoomList.forEach(roomDef => {
-      if (!currentRooms.find(r => r.id === roomDef.id)) {
-        currentRooms.push(roomDef);
-        roomsChanged = true;
-      }
-    });
-    if (roomsChanged) {
-      window._mqRooms = currentRooms;
-      try {
-        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Room types': JSON.stringify(currentRooms) });
-        shopRecord.fields['Room types'] = JSON.stringify(currentRooms);
-        renderRoomsList();
-      } catch(e) { console.warn('Failed to add project type template rooms:', e); }
-    }
-
-    // Refacing/Repainting/Restaining aren't priced through the cabinet/door
-    // pricing wizard — that reverse-engineers everything into linear feet,
-    // which doesn't fit these three (doors are normally priced per square
-    // foot as Specialty Items instead — see the Specialty Items help text).
-    // So by default, hide Box Materials, Door Styles, Drawer Configurations,
-    // Crown, Valance, and Tall Cabinets from these three project types. A
-    // shop owner can always turn any of them back on for a given project
-    // type from the My Products tab if they want to use the wizard for it
-    // after all.
-    // Door hinges deliberately isn't in this list — it doesn't need to be.
-    // The whole "Cabinet measurements" section (where hinges live) already
-    // hides itself on the widget whenever Box Materials has no visible
-    // options for a room (see mqRefreshSectionVisibility's `cabActive`
-    // check), so hiding Box Materials here hides hinges along with it for
-    // free.
-    const NON_WIZARD_ROOM_IDS = ['refacing', 'repainting', 'restaining'];
-    const NON_WIZARD_HIDDEN_CATS = ['material', 'door', 'drawer', 'trim_crown', 'trim_valance', 'tall_cabinet'];
-    const categoryRooms = window._mqCategoryRooms || {};
-    let categoryRoomsChanged = false;
-    NON_WIZARD_HIDDEN_CATS.forEach(cat => {
-      const hidden = new Set(categoryRooms[cat] || []);
-      NON_WIZARD_ROOM_IDS.forEach(roomId => {
-        if (!hidden.has(roomId)) { hidden.add(roomId); categoryRoomsChanged = true; }
-      });
-      categoryRooms[cat] = [...hidden];
-    });
-    if (categoryRoomsChanged) {
-      window._mqCategoryRooms = categoryRooms;
-      try {
-        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Category rooms': JSON.stringify(categoryRooms) });
-        shopRecord.fields['Category rooms'] = JSON.stringify(categoryRooms);
-      } catch(e) { console.warn('Failed to seed default hidden categories for Refacing/Repainting/Restaining:', e); }
-    }
-
-    const masterItems = await ensureMasterTemplateItems();
-
-    // Master items can have their own reference photos (uploaded on the
-    // Templates page) — those need to carry over to this shop's copies too,
-    // not just the text/price/settings. Computed locally as one combined
-    // write at the end rather than per-item, since these all run in
-    // parallel — writing the shop's Photos field concurrently per-item
-    // would risk one write clobbering another's.
-    const masterShop = await ensureMasterTemplateShop();
-    let masterPhotos = {};
-    try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
-    const shopPhotos = {};
-    try { Object.assign(shopPhotos, shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}); } catch(e) {}
-    let photosChanged = false;
-
-    // These items (New doors, Edge tape replacement, etc.) are pricing
-    // helpers for Refacing/Repainting/Restaining, not showcase-worthy
-    // products — hidden from the customer-facing showroom by default so a
-    // new shop doesn't end up displaying "Hinge replacement" as a featured
-    // item without the owner ever having decided that. Still fully usable
-    // for quoting either way; this only affects the showroom gallery page.
-    // A shop owner can turn any of these back on from My Products.
-    const shopHidden = {};
-    try { Object.assign(shopHidden, shopRecord.fields['Hidden'] ? JSON.parse(shopRecord.fields['Hidden']) : {}); } catch(e) {}
-    let hiddenChanged = false;
-
-    try {
-      await Promise.all(masterItems.map(async master => {
-        const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
-          'Shop': [shopRecord.id],
-          'Item name': master.fields['Item name'],
-          'Special Items': master.fields['Item name'],
-          'Price': master.fields['Price'] || 0,
-          'Per linear foot': master.fields['Per linear foot'] || false,
-          'Per square foot': master.fields['Per square foot'] || false,
-          'Offers install choice': master.fields['Offers install choice'] || false,
-          'Install price': master.fields['Install price'] || 0,
-          'Install mode': master.fields['Install mode'] || 'supply',
-          'Install per linear foot': master.fields['Install per linear foot'] || false,
-          'Install per square foot': master.fields['Install per square foot'] || false,
-          'Install quantity label': master.fields['Install quantity label'] || '',
-          'Description': master.fields['Description'] || '',
-          'Category': master.fields['Category'] || '',
-          'Pro only': master.fields['Pro only'] || false,
-          'Active': true,
-          'Visible rooms': master.fields['Visible rooms'] || '[]',
-          'Template source ID': master.id,
-        });
-        if (created?.id) {
-          const photoUrl = masterPhotos['spec_' + master.id];
-          if (photoUrl) { shopPhotos['spec_' + created.id] = photoUrl; photosChanged = true; }
-          shopHidden['spec_' + created.id] = true;
-          hiddenChanged = true;
-        }
-        return created;
-      }));
-      if (photosChanged) {
-        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Photos': JSON.stringify(shopPhotos) });
-        shopRecord.fields['Photos'] = JSON.stringify(shopPhotos);
-      }
-      if (hiddenChanged) {
-        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Hidden': JSON.stringify(shopHidden) });
-        shopRecord.fields['Hidden'] = JSON.stringify(shopHidden);
-      }
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Templates seeded': true });
-      shopRecord.fields['Templates seeded'] = true;
-    } catch(e) { console.warn('Failed to seed project type templates:', e); }
-  }
-
-  // ============================================================
-  // POPULATE FIELDS
-  // ============================================================
-  function populateShop(shop) {
-    const f = shop.fields;
-    const set = (id, val) => { const e = el(id); if (e) e.value = val || ''; };
-    set('mq-shop-name', f['Shop name']);
-    set('mq-shop-phone', f['Phone']);
-    set('mq-shop-city', f['City']);
-    set('mq-shop-website', f['Website']);
-    set('mq-shop-email', f['Lead notify email']);
-    set('mq-shop-currency', f['Currency symbol'] || '$');
-    set('mq-shop-color', f['Brand colour']);
-    {
-      const swatch = el('mq-shop-color-swatch');
-      const textField = el('mq-shop-color');
-      const loadedColor = f['Brand colour'];
-      if (swatch) {
-        swatch.value = /^#[0-9a-fA-F]{6}$/.test(loadedColor) ? loadedColor : '#1a1a1a';
-        // Wire bidirectional sync once — guard against duplicate listeners if
-        // populateShop runs again (e.g. after a save/reload cycle).
-        if (swatch && !swatch.dataset.mqWired) {
-          swatch.dataset.mqWired = '1';
-          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; });
-          if (textField) {
-            textField.addEventListener('input', () => {
-              if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) swatch.value = textField.value;
-            });
-          }
-        }
-      }
-    }
-    // The 4 optional guided-flow colors follow the exact same text+swatch
-    // sync pattern as Brand colour above — shared here since it's the same
-    // block 4 times over. Each one is allowed to be genuinely blank (that's
-    // the "match brand colour automatically" state), so the swatch just
-    // shows a neutral placeholder color rather than forcing a value.
-    [
-      ['mq-shop-focalcolor', 'Focal colour', '#2563eb'],
-      ['mq-shop-boxbordercolor', 'Box border colour', '#93c5fd'],
-      ['mq-shop-boxbgcolor', 'Box background colour', '#eff6ff'],
-      ['mq-shop-boxtextcolor', 'Box text colour', '#1e40af'],
-    ].forEach(([fieldId, airtableName, fallbackSwatch]) => {
-      set(fieldId, f[airtableName]);
-      const swatch = el(fieldId + '-swatch');
-      const textField = el(fieldId);
-      const loadedColor = f[airtableName];
-      if (swatch) {
-        swatch.value = /^#[0-9a-fA-F]{6}$/.test(loadedColor) ? loadedColor : fallbackSwatch;
-        if (!swatch.dataset.mqWired) {
-          swatch.dataset.mqWired = '1';
-          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; });
-          if (textField) {
-            textField.addEventListener('input', () => {
-              if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) swatch.value = textField.value;
-            });
-          }
-        }
-      }
-    });
-    set('mq-shop-range-low',  f['Quote range low']  || '5');
-    set('mq-shop-range-high', f['Quote range high'] || '20');
-    set('mq-shop-logo', f['Logo URL']);
-    mqRefreshLogoPreview();
-    mqWireUploadButton(
-      null,
-      'mq-shop-logo-file',
-      'mq-shop-logo-upload-status',
-      'mq-shop-logo',
-      (window._mqShopRecord && window._mqShopRecord.fields && window._mqShopRecord.fields['Shop token']) || 'unknown-shop',
-      'logos',
-      async (url) => {
-        mqRefreshLogoPreview();
-        const shopRec = window._mqShopRecord;
-        if (shopRec) {
-          try {
-            await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Logo URL': url });
-            shopRec.fields['Logo URL'] = url;
-            showMsg('mq-shop-msg', '✓ Logo uploaded and saved!');
-          } catch(e) { showMsg('mq-shop-msg', 'Logo uploaded but save failed — click Save shop info to retry.', 'error'); }
-        }
-      }
-    );
-    set('mq-shop-disclaimer', f['Disclaimer text']);
-    set('mq-shop-projecttype-title', f['Project type title']);
-    set('mq-shop-projecttype-hint', f['Project type hint']);
-    set('mq-shop-consult-link', f['Consultation link']);
-    set('mq-shop-consult-email', f['Consultation email']);
-    window.mqCheckConsultFields = function() {
-      const link = el('mq-shop-consult-link')?.value?.trim() || '';
-      const email = el('mq-shop-consult-email')?.value?.trim() || '';
-      const warning = el('mq-shop-consult-warning');
-      if (warning) warning.style.display = (!link && !email) ? 'block' : 'none';
-    };
-    window.mqCheckConsultFields();
-    const toggle = el('mq-showroom-toggle');
-    if (toggle) {
-      // Matches the widget's own check (shop['Show showroom'] !== 'Hide') —
-      // this used to check for the boolean `false` instead, which could
-      // never match the string actually being saved, making the toggle show
-      // the wrong state on every reload regardless of what was set.
-      const isOn = f['Show showroom'] !== 'Hide';
-      toggle.classList.toggle('on', isOn);
-    }
-    const financingToggle = el('mq-financing-toggle');
-    const financingLinkWrap = el('mq-financing-link-wrap');
-    if (financingToggle) {
-      // Matches the widget's own check (shop['Offers financing'] === 'Yes')
-      // — same issue as showroom above, this was checking for a boolean
-      // `true` that was never actually what got saved.
-      const isOn = f['Offers financing'] === 'Yes';
-      financingToggle.classList.toggle('on', isOn);
-      if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
-    }
-    set('mq-financing-link', f['Financing link']);
-    const notifyEveryToggle = el('mq-notify-every-toggle');
-    if (notifyEveryToggle) {
-      notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
-    }
-
-    // ── Autosave: fire mqSaveShop 1.5s after the user stops editing any field ──
-    let _shopAutoSaveTimer = null;
-    const shopAutoSave = () => {
-      clearTimeout(_shopAutoSaveTimer);
-      showMsg('mq-shop-msg', '…saving');
-      _shopAutoSaveTimer = setTimeout(() => { window.mqSaveShop(); }, 1500);
-    };
-    const shopFieldIds = [
-      'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
-      'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
-      'mq-shop-logo','mq-shop-disclaimer','mq-shop-projecttype-title','mq-shop-projecttype-hint','mq-shop-consult-link',
-      'mq-shop-consult-email','mq-financing-link',
-      'mq-shop-focalcolor','mq-shop-boxbordercolor','mq-shop-boxbgcolor','mq-shop-boxtextcolor'
-    ];
-    shopFieldIds.forEach(id => {
-      const field = el(id);
-      if (field) field.addEventListener('input', shopAutoSave);
-    });
-    const swatch = el('mq-shop-color-swatch');
-    if (swatch) swatch.addEventListener('change', shopAutoSave);
-    ['mq-shop-focalcolor-swatch','mq-shop-boxbordercolor-swatch','mq-shop-boxbgcolor-swatch','mq-shop-boxtextcolor-swatch'].forEach(id => {
-      const sw = el(id);
-      if (sw) sw.addEventListener('change', shopAutoSave);
-    });
-  }
-
-  // ============================================================
-  // ROOM TYPES
-  // ============================================================
-  // Same 6 defaults the widget falls back to for any shop that hasn't
-  // touched this new setting yet — Bathroom ships pre-set to -5% as a
-  // working example, everything else fully editable/deletable.
-  // Plain category display names, accessible at module level (unlike
-  // CAT_DISPLAY, which is scoped inside initProductsTab and includes emoji/
-  // title formatting we don't need here).
-  const CAT_DISPLAY_NAMES = {
-    material: 'Box Materials',
-    door: 'Door Styles',
-    drawer: 'Drawer Configurations',
-    hinge: 'Door Hinges',
-    countertop: 'Countertop Materials',
-    trim_crown: 'Crown Moulding',
-    trim_valance: 'Valance',
-    tall_cabinet: 'Tall Cabinets',
-    specialty: 'Specialty Items',
-  };
-
-  // Same wording as the widget's hardcoded fallback guide (defaultMeasureGuideHTML
-  // in widgettestcats.js), just written in the **bold**/line-break plain-text
-  // form a shop owner can start from and edit. Used by the "Use default guide"
-  // button in both the per-shop Project Types tab and the admin Templates tab.
-  // Kitchen gets its own wording (island + corner cabinets called out
-  // specifically); Bathroom skips the corner-cabinets note (not common
-  // enough there to be worth the extra line); everything else uses the
-  // general version, which includes it.
-  const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN =
-`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
-
-  const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL =
-`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]`;
-
-  const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM =
-`[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]
-
-**Upper cabinets:** A section for every place where uppers will go.
-
-**Base cabinets:** Same idea — a section for every run of base cabinets.
-
-**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.`;
-
-  // Fills a measure-guide textarea with the default text above — lets a shop
-  // owner start from (and edit) the standard guide instead of writing their
-  // own from scratch. Confirms first if the box already has something in it,
-  // so a stray click can't silently wipe out real custom text.
-  const DEFAULT_MEASURE_GUIDE_TEXT_SQFT =
-`[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]
-
-**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.
-
-**Not sure?** Just use your best guess — this is a ballpark estimate!`;
-
-  window.mqFillDefaultGuide = function(textareaId, roomId) {
-    const ta = el(textareaId);
-    if (!ta) return;
-    if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
-    ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
-      : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
-      // Refacing/Repainting/Restaining are priced per square foot, not
-      // linear feet — there's no corner cabinet concept for them, so they
-      // get their own guide instead of falling through to the general
-      // (corner-cabinet) one below.
-      : (roomId === 'refacing' || roomId === 'repainting' || roomId === 'restaining') ? DEFAULT_MEASURE_GUIDE_TEXT_SQFT
-      : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
-  };
-
-  // Deliberately separate from mqFillDefaultGuide above — a shop may want
-  // their own custom image with the default text, or vice versa, so these
-  // reset independently rather than being bundled into one button. Clears
-  // the field rather than writing a concrete URL into it — leaving it
-  // blank is what lets the widget's own fallback stay current forever
-  // without ever needing this button pressed again, and it also means the
-  // underlying GitHub address never has to be shown in the field. Also
-  // clears any additional images the shop had added, since several default
-  // rooms now ship with a small gallery rather than just one photo — a
-  // partial reset (primary cleared, stale extras left behind) would leave
-  // the widget showing a mismatched mix of default + leftover custom images.
-  window.mqFillDefaultMeasureImage = function(inputId, previewId, roomId, idx) {
-    const inp = el(inputId);
-    if (!inp) return;
-    const hadExtras = idx != null && window._mqRooms && window._mqRooms[idx] && (window._mqRooms[idx].measureImages||[]).length > 0;
-    if ((inp.value.trim() || hadExtras) && !confirm('Clear this and use the default measuring guide images instead? (Automatically stays up to date if the default ever changes.)')) return;
-    inp.value = '';
-    if (idx != null && window._mqRooms && window._mqRooms[idx]) {
-      window._mqRooms[idx].measureImage = '';
-      window._mqRooms[idx].measureImages = [];
-      renderRoomsList();
-      return; // renderRoomsList already rebuilds the preview with the fresh default
-    }
-    const previewUrl = mqDefaultMeasureImageUrlFor(roomId, idx != null && window._mqRooms && window._mqRooms[idx] ? window._mqRooms[idx].name : '');
-    const preview = document.getElementById(previewId);
-    if (preview) preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>';
-  };
-
-  const MQ_DEFAULT_MEASURE_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/';
-  const MQ_DEFAULT_COVER_IMAGE_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/';
-
-  // Unlike measureImage, coverImage is always written as a real URL when a
-  // shop's room types are first created (never left blank) — so an
-  // already-active shop's own saved value permanently overrides whatever
-  // this default points to, even after this default changes. This exists so
-  // a shop can explicitly opt back into "always match the current default"
-  // via the reset button below. refacing/repainting/restaining live on a
-  // different domain (aceswin.github.io vs raw.githubusercontent.com) —
-  // that inconsistency predates this and is left as-is, just kept in sync.
-  const MQ_DEFAULT_COVER_IMAGE_MAP = {
-    kitchen: MQ_DEFAULT_COVER_IMAGE_BASE + 'kitchen.jpg',
-    bathroom: MQ_DEFAULT_COVER_IMAGE_BASE + 'bathroom.jpg',
-    laundry: MQ_DEFAULT_COVER_IMAGE_BASE + 'laundry.jpg',
-    garage: MQ_DEFAULT_COVER_IMAGE_BASE + 'garage.jpg',
-    commercial: MQ_DEFAULT_COVER_IMAGE_BASE + 'commercial.jpg',
-    other: MQ_DEFAULT_COVER_IMAGE_BASE + 'other.jpg',
-    refacing: 'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg',
-    repainting: 'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg',
-    restaining: 'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg',
-  };
-  function mqDefaultCoverImageKeyFor(roomId, roomName) {
-    const id = (roomId||'').toLowerCase();
-    if (MQ_DEFAULT_COVER_IMAGE_MAP[id]) return id;
-    const name = (roomName||'').toLowerCase();
-    if (name.includes('kitchen')) return 'kitchen';
-    if (name.includes('bathroom')) return 'bathroom';
-    if (name.includes('laundry')) return 'laundry';
-    if (name.includes('garage')) return 'garage';
-    if (name.includes('commercial')) return 'commercial';
-    if (name.includes('refacing')) return 'refacing';
-    if (name.includes('repainting')) return 'repainting';
-    if (name.includes('restaining')) return 'restaining';
-    if (name.includes('other')) return 'other';
-    return null;
-  }
-  function mqDefaultCoverImageUrlFor(roomId, roomName) {
-    const key = mqDefaultCoverImageKeyFor(roomId, roomName);
-    return key ? MQ_DEFAULT_COVER_IMAGE_MAP[key] : '';
-  }
-  // Clears the field rather than writing a concrete URL — leaving it blank
-  // is what lets the widget's own fallback stay current forever without
-  // ever needing this button pressed again, matching mqFillDefaultMeasureImage.
-  // Same idea as mqFillDefaultMasterCoverImage below — this field IS the
-  // source of truth for new shops, so this just fills in the current
-  // known-correct built-in URL for review before Save, rather than making
-  // the person type/paste it by hand. Only ever applies to these three,
-  // since they're the only room types actually template-managed here.
-  const MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP = {
-    refacing: 'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg',
-    repainting: 'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg',
-    restaining: 'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg',
-  };
-  window.mqFillDefaultMasterMeasureImage = function(roomId, idx) {
-    const defaultUrl = MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP[(roomId||'').toLowerCase()];
-    if (!defaultUrl) return;
-    const inp = document.getElementById(`mq-master-room-measure-img-${idx}`);
-    if (inp) inp.value = defaultUrl;
-    const preview = document.getElementById(`mq-master-room-measure-img-preview-${idx}`);
-    if (preview) preview.innerHTML = `<img src="${defaultUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
-  };
-
-  window.mqUseDefaultCoverImage = function(roomId, idx) {
-    if (idx == null || !window._mqRooms || !window._mqRooms[idx]) return;
-    const room = window._mqRooms[idx];
-    const defaultUrl = mqDefaultCoverImageUrlFor(roomId, room.name);
-    if (!defaultUrl) return;
-    if (room.coverImage && !confirm('Clear this and use the default cover image instead? (Automatically stays up to date if the default ever changes.)')) return;
-    window._mqRooms[idx].coverImage = '';
-    renderRoomsList();
-  };
-  // Unlike the shop-level version above, this field IS the default (new
-  // shops start from whatever's saved here), so there's nothing to "fall
-  // back to" — this just fills in the current known-correct built-in URL
-  // directly so it can be reviewed and saved via the normal Save button,
-  // rather than needing to type/paste it by hand.
-  window.mqFillDefaultMasterCoverImage = function(roomId, roomName, idx) {
-    const defaultUrl = mqDefaultCoverImageUrlFor(roomId, roomName);
-    if (!defaultUrl) return;
-    const inp = document.getElementById(`mq-master-room-cover-${idx}`);
-    if (inp) inp.value = defaultUrl;
-    const preview = document.getElementById(`mq-master-room-cover-preview-${idx}`);
-    if (preview) preview.innerHTML = `<img src="${defaultUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
-  };
-
-  // Which filename the widget itself falls back to for each standard room
-  // when a shop's own measureImage is blank — this list must always match
-  // MQ_DEFAULT_MEASURE_IMAGES in widget.js/widgetpro.js exactly. Used here
-  // only for admin-side previewing and the "Use default image" button —
-  // never written into a shop's own saved data (see defaultRoomTypes below).
-  const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'];
-  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bathroom: ['bathroom11.jpg'], laundry: MQ_DEFAULT_MEASURE_IMAGE_SET, garage: MQ_DEFAULT_MEASURE_IMAGE_SET, commercial: MQ_DEFAULT_MEASURE_IMAGE_SET, other: MQ_DEFAULT_MEASURE_IMAGE_SET };
-  // Matches a room to one of the default-image keys — tries the id first
-  // (the normal, fast path for standard ids), but falls back to matching on
-  // the room's NAME too, same robust logic already used in widget.js's own
-  // mqDefaultImageKey. A room can end up with a mismatched id (renamed from
-  // something else, or added as a custom row that got an auto-generated
-  // room_<timestamp> id) while still clearly being "Garage" or "Commercial"
-  // by name — without this, those rooms silently get no default images.
-  // Matches widget.js's own mqVideoEmbedInfo detection (YouTube/Vimeo/Loom
-  // links, or a direct .mp4/.webm/.mov/.m4v file) — used here just to swap
-  // the little thumbnail preview for a 🎥 badge instead of attempting an
-  // <img> tag that would silently fail to load and leave a blank box, since
-  // a shop owner pasting a video link in has no other way to confirm it was
-  // recognized.
-  function mqIsVideoUrl(url) {
-    const u = (url || '').trim();
-    if (!u) return false;
-    if (/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)/i.test(u)) return true;
-    if (/vimeo\.com\//i.test(u)) return true;
-    if (/loom\.com\/share\//i.test(u)) return true;
-    if (/\.(mp4|webm|mov|m4v)(\?.*)?(#.*)?$/i.test(u)) return true;
-    return false;
-  }
-  // Renders the little 56x56 preview box's inner content for a measure-guide
-  // image/video field: the 📏 placeholder when empty, a 🎥 badge for a
-  // recognized video link, or the actual photo otherwise.
-  function mqMeasureImgPreviewHTML(url) {
-    const u = (url || '').trim();
-    if (!u) return '<span style="font-size:20px">📏</span>';
-    if (mqIsVideoUrl(u)) return '<span style="font-size:22px" title="Video link">🎥</span>';
-    return `<img src="${u.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
-  }
-  function mqDefaultImageKeyFor(roomId, roomName) {
-    const id = (roomId||'').toLowerCase();
-    if (MQ_DEFAULT_MEASURE_IMAGE_FILES[id]) return id;
-    const name = (roomName||'').toLowerCase();
-    if (name.includes('kitchen')) return 'kitchen';
-    if (name.includes('bathroom')) return 'bathroom';
-    if (name.includes('laundry')) return 'laundry';
-    if (name.includes('garage')) return 'garage';
-    if (name.includes('commercial')) return 'commercial';
-    if (name.includes('other')) return 'other';
-    return null;
-  }
-  function mqDefaultMeasureImageUrlFor(roomId, roomName) {
-    const key = mqDefaultImageKeyFor(roomId, roomName);
-    const files = key ? MQ_DEFAULT_MEASURE_IMAGE_FILES[key] : null;
-    return files && files.length ? MQ_DEFAULT_MEASURE_IMAGE_BASE + files[0] : '';
-  }
-  function mqDefaultMeasureImageUrlsFor(roomId, roomName) {
-    const key = mqDefaultImageKeyFor(roomId, roomName);
-    const files = key ? MQ_DEFAULT_MEASURE_IMAGE_FILES[key] : null;
-    return files ? files.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f) : [];
-  }
-  // For a shop whose measureImage/measureImages already has SOMETHING saved
-  // (even an old single default from before this gallery existed) — the
-  // "blank = auto-track forever" fallback above only works while the field
-  // is genuinely empty, so an already-active shop can get stuck showing
-  // just one old image forever with no way to pick up the rest. This writes
-  // the full current default set as real, editable values instead, so it
-  // shows up immediately and can be trimmed down one image at a time
-  // afterward with the existing ✕ Remove buttons.
-  window.mqUseAllDefaultMeasureImages = function(roomId, idx) {
-    if (idx == null || !window._mqRooms || !window._mqRooms[idx]) return;
-    const urls = mqDefaultMeasureImageUrlsFor(roomId, window._mqRooms[idx].name);
-    if (!urls.length) return;
-    if (!confirm(`Load all ${urls.length} default images for this project type? You can remove any you don't want afterward.`)) return;
-    window._mqRooms[idx].measureImage = urls[0];
-    window._mqRooms[idx].measureImages = urls.slice(1);
-    renderRoomsList();
-  };
-
-  function defaultRoomTypes() {
-    return [
-      // measureImage deliberately left blank for these 6 — the widget falls
-      // back to its own current default automatically whenever this is
-      // empty, so leaving it blank here means every shop that hasn't
-      // customized their own image always tracks whatever the current
-      // default is, forever, with zero manual intervention ever needed
-      // again. Baking a concrete URL in here would instead permanently
-      // freeze a shop at whatever the default happened to be the moment
-      // they first saved their Project Types page.
-      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:'' },
-      { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.jpg', measureText:'', measureImage:'' },
-      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.jpg', measureText:'', measureImage:'' },
-      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.jpg', measureText:'', measureImage:'' },
-      { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.jpg', measureText:'', measureImage:'' },
-      { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.jpg', measureText:'', measureImage:'' },
-      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
-      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
-      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
-    ];
-  }
-
-  function populateRooms(shop) {
-    const f = shop.fields;
-    let rooms = [];
-    try { rooms = f['Room types'] ? JSON.parse(f['Room types']) : []; } catch(e) { rooms = []; }
-    if (!Array.isArray(rooms) || !rooms.length) rooms = defaultRoomTypes();
-    window._mqRooms = rooms;
-    renderRoomsList();
-
-    // Category-level hiding: which project types each WHOLE category is
-    // hidden for (e.g. hide all Door Styles for "Door refacing"). Individual
-    // item settings still override this — see categoryRoomDisclosure below.
-    let categoryRooms = {};
-    try { categoryRooms = f['Category rooms'] ? JSON.parse(f['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
-    window._mqCategoryRooms = categoryRooms;
-  }
-
-  // Tracks which project types are currently expanded, keyed by the room's
-  // stable id (not array index, since index shifts on reorder/delete) — so
-  // expand/collapse state survives re-renders (e.g. every time you save).
-  let _mqExpandedRoomIds = new Set();
-
-  window.mqToggleRoomBody = function(idx) {
-    const room = (window._mqRooms || [])[idx];
-    if (!room) return;
-    const body = el(`mq-room-body-${idx}`);
-    const arrow = el(`mq-room-arrow-${idx}`);
-    if (!body) return;
-    const opening = body.style.display === 'none';
-    body.style.display = opening ? 'block' : 'none';
-    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
-    body.closest('.mq-room-row')?.classList.toggle('mq-room-open', opening);
-    if (opening) _mqExpandedRoomIds.add(room.id); else _mqExpandedRoomIds.delete(room.id);
-  };
-
-  // One checkbox+percent row for a project type's price adjustments. The
-  // checkbox is just a friendly on/off — checked means "value !== 0", and
-  // unchecking zeroes it out (same convention as "0 = no adjustment"
-  // everywhere else in this app, just given a clearer on/off affordance
-  // here since a shop owner can now stack up to three of these at once).
-  function mqRoomAdjRow(kind, idx, value, label, hint) {
-    const inputId = `mq-room-adj-${kind}-${idx}`;
-    const chkId = `mq-room-adj-${kind}-chk-${idx}`;
-    const checked = parseFloat(value) !== 0;
-    return `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-        <label for="${inputId}" style="font-size:12px;color:#374151;flex:1;min-width:0">${label} <span style="color:#9ca3af">— ${hint}</span></label>
-        <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center;flex-shrink:0"/>
-        <span style="font-size:12px;color:#6b7280;flex-shrink:0">%</span>
-      </div>`;
-  }
-  window.mqToggleRoomAdjInput = function(idx, kind) {
-    const chk = el(`mq-room-adj-${kind}-chk-${idx}`);
-    const inp = el(`mq-room-adj-${kind}-${idx}`);
-    if (!chk || !inp) return;
-    if (!chk.checked) { inp.value = 0; }
-    else if (parseFloat(inp.value) === 0) { inp.value = 0; inp.focus(); }
-    mqSaveRooms();
-  };
-
-  // Free Demo tier: no custom cover/measure images or video links — always
-  // MidasQuote's own library photo instead. Renders in place of the normal
-  // editable image block wherever a Demo shop would otherwise see an
-  // upload button or a URL field for one of these.
-  function mqDemoImageLockedHTML(whatLabel) {
-    return `<div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 12px;font-size:12px;color:#6b7280;line-height:1.6">
-      🔒 Custom ${whatLabel} is a paid feature. Your free Demo always shows MidasQuote's standard library photo here — upgrade from the Account tab to use your own photos or video links.
-    </div>`;
-  }
-
-  function renderRoomsList() {
-    const container = el('mq-rooms-list');
-    if (!container) return;
-    const rooms = window._mqRooms || [];
-    const isDemo = (window._mqShopRecord?.fields?.['Plan']||'') === 'Demo';
-    container.innerHTML = rooms.map((r, idx) => {
-      const isOpen = _mqExpandedRoomIds.has(r.id);
-      return `
-      <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
-        <div style="display:grid;grid-template-columns:24px minmax(140px,300px) 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
-          <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
-          <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
-          <button type="button" onclick="mqToggleRoomBody(${idx})" title="Show more" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;padding:4px">
-            <span id="mq-room-arrow-${idx}" style="display:inline-block;transition:transform 0.2s;font-size:12px;transform:rotate(${isOpen?'90':'0'}deg)">▶</span>
-          </button>
-          <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
-        </div>
-        <div id="mq-room-body-${idx}" style="padding-left:34px;display:${isOpen?'block':'none'}">
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:${r.active===false?'#92400e':'#166534'};font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-            ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
-          </label>
-          <div style="margin-bottom:8px">
-            <label style="display:block;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:4px">👁️ Visibility</label>
-            <select id="mq-room-visibility-${idx}" onchange="mqSaveRooms()" style="width:100%;max-width:320px;padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:12px;font-family:inherit;background:#fff">
-              <option value="both" ${!r.proOnly && !r.hideFromPro ? 'selected' : ''}>Show in both the widget & MidasQuote Pro</option>
-              <option value="proOnly" ${r.proOnly ? 'selected' : ''}>Only show in MidasQuote Pro (hidden from the customer widget)</option>
-              <option value="hideFromPro" ${r.hideFromPro ? 'selected' : ''}>Don't show in MidasQuote Pro (widget only)</option>
-            </select>
-          </div>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-            📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-            💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
-          </label>
-          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
-            ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
-            ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
-            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. renovations run higher since customers are living in the house')}
-            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
-          </div>
-          <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
-          <div style="margin-bottom:10px">
-            ${isDemo ? mqDemoImageLockedHTML('cover images') : `
-            <div style="display:flex;gap:8px;align-items:flex-start">
-              <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? `<img src="${r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
-              </div>
-              <div style="flex:1;min-width:0">
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Cover image (optional) — shows inside the note customers see when they pick this project type</label>
-                <input type="text" id="mq-room-cover-${idx}" value="${(r.coverImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
-                <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                  📤 Upload
-                  <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
-                </label>
-                ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseDefaultCoverImage('${r.id}',${idx})">↺ Use default image</button>` : ''}
-                <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
-              </div>
-            </div>`}
-          </div>
-          <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
-            <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
-            <div style="margin-bottom:8px">
-              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
-              <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo, [tip]text[/tip] wraps it in a yellow callout box</span>
-            </div>
-            ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos') : `
-            <div style="display:flex;gap:8px;align-items:flex-start">
-              <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                ${mqMeasureImgPreviewHTML(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name))}
-              </div>
-              <div style="flex:1;min-width:0">
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image or video (optional)</label>
-                <input type="text" id="mq-room-measure-img-${idx}" value="${(r.measureImage||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure.jpg — or a YouTube/Vimeo/Loom link" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
-                <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                  📤 Upload photo
-                  <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
-                </label>
-                <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
-                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
-                ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
-                <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
-              </div>
-            </div>
-            ${(r.measureImages || []).map((imgUrl, exIdx) => `
-              <div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb">
-                <div id="mq-room-measure-img-extra-preview-${idx}-${exIdx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                  ${mqMeasureImgPreviewHTML(imgUrl)}
-                </div>
-                <div style="flex:1;min-width:0">
-                  <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Additional image or video ${exIdx+2} <span style="color:#9ca3af;font-weight:400">— shows as a swipeable carousel with the rest</span></label>
-                  <input type="text" id="mq-room-measure-img-extra-${idx}-${exIdx}" value="${(imgUrl||'').replace(/"/g,'&quot;')}" placeholder="https://your-site.com/how-to-measure-2.jpg — or a video link" onchange="mqSaveRooms()" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:4px"/>
-                  <label class="mq-btn mq-btn-sm" style="font-size:11px;cursor:pointer;display:inline-block">
-                    📤 Upload photo
-                    <input type="file" id="mq-room-measure-img-extra-file-${idx}-${exIdx}" accept="image/*" style="display:none"/>
-                  </label>
-                  <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" style="font-size:11px" onclick="mqRemoveRoomMeasureImage(${idx},${exIdx})">✕ Remove</button>
-                  <span id="mq-room-measure-img-extra-status-${idx}-${exIdx}" style="font-size:11px;margin-left:6px"></span>
-                </div>
-              </div>
-            `).join('')}
-            <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>`}
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-
-    // Wire each room's cover-image upload button — uploads immediately, fills
-    // the URL field, and refreshes the small preview thumbnail on success.
-    rooms.forEach((r, idx) => {
-      mqWireUploadButton(
-        null,
-        `mq-room-cover-file-${idx}`,
-        `mq-room-cover-status-${idx}`,
-        `mq-room-cover-${idx}`,
-        window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
-        'products',
-        (url) => {
-          const preview = document.getElementById(`mq-room-cover-preview-${idx}`);
-          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
-          mqSaveRooms();
-        }
-      );
-      mqWireUploadButton(
-        null,
-        `mq-room-measure-img-file-${idx}`,
-        `mq-room-measure-img-status-${idx}`,
-        `mq-room-measure-img-${idx}`,
-        window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
-        'products',
-        (url) => {
-          const preview = document.getElementById(`mq-room-measure-img-preview-${idx}`);
-          if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
-          mqSaveRooms();
-        }
-      );
-      (r.measureImages || []).forEach((_, exIdx) => {
-        mqWireUploadButton(
-          null,
-          `mq-room-measure-img-extra-file-${idx}-${exIdx}`,
-          `mq-room-measure-img-extra-status-${idx}-${exIdx}`,
-          `mq-room-measure-img-extra-${idx}-${exIdx}`,
-          window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
-          'products',
-          (url) => {
-            const preview = document.getElementById(`mq-room-measure-img-extra-preview-${idx}-${exIdx}`);
-            if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
-            mqSaveRooms();
-          }
-        );
-      });
-    });
-
-    // Drag-and-drop reordering — same pattern already used for Specialty
-    // items, adapted since rooms live in one JSON list rather than separate
-    // Airtable records, so reordering just means rebuilding that array.
-    // draggable only turns on while the mouse is actually down on the ⠿
-    // handle — leaving the whole row draggable all the time made selecting
-    // text anywhere in it (like the measuring guide box) prone to being
-    // mistaken for a row-drag instead of a text selection.
-    let dragging = null;
-    container.querySelectorAll('.mq-room-row').forEach(row => {
-      row.draggable = false;
-      const handle = row.querySelector('.mq-room-drag-handle');
-      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
-      row.addEventListener('mouseup', () => { row.draggable = false; });
-      row.addEventListener('dragstart', () => {
-        dragging = row;
-        setTimeout(() => row.style.opacity = '0.4', 0);
-      });
-      row.addEventListener('dragend', () => {
-        row.style.opacity = '1';
-        row.draggable = false;
-        dragging = null;
-        const newRooms = [...container.querySelectorAll('.mq-room-row')].map(r => {
-          const oldIdx = r.dataset.idx;
-          return {
-            id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
-            name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
-            materialAdjPct: parseFloat(document.getElementById(`mq-room-adj-mat-${oldIdx}`)?.value) || 0,
-            upperMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-upper-mat-${oldIdx}`)?.value) || 0,
-            installAdjPct: parseFloat(document.getElementById(`mq-room-adj-install-${oldIdx}`)?.value) || 0,
-            totalAdjPct: parseFloat(document.getElementById(`mq-room-adj-total-${oldIdx}`)?.value) || 0,
-            description: document.getElementById(`mq-room-desc-${oldIdx}`)?.value || '',
-            active: document.getElementById(`mq-room-active-${oldIdx}`)?.checked !== false,
-            proOnly: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'proOnly',
-            hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
-            hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
-            showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
-            coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
-            measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
-            measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
-          };
-        });
-        window._mqRooms = newRooms;
-        renderRoomsList();
-      });
-      row.addEventListener('dragover', e => {
-        e.preventDefault();
-        const after = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
-        if (e.clientY < after) {
-          container.insertBefore(dragging, row);
-        } else {
-          container.insertBefore(dragging, row.nextSibling);
-        }
-      });
-    });
-
-    mqRefreshRestoreDropdown();
-  }
-
-  // Keeps the "Restore a default type" dropdown showing only the standard
-  // project types (Kitchen, Bathroom, Refacing, etc.) that are currently
-  // missing from this shop's own list — so a shop owner who accidentally
-  // deleted one can bring it straight back with its original description,
-  // cover image, and measuring guide intact, without needing to recreate
-  // any of that by hand.
-  function mqRefreshRestoreDropdown() {
-    const sel = document.getElementById('mq-restore-room-select');
-    if (!sel) return;
-    const currentIds = new Set((window._mqRooms || []).map(r => r.id));
-    const missing = defaultRoomTypes().filter(r => !currentIds.has(r.id));
-    sel.innerHTML = `<option value="">↩ Restore a default type…</option>` +
-      missing.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    sel.style.display = missing.length ? 'inline-block' : 'none';
-  }
-
-  window.mqRestoreDefaultRoom = function(roomId) {
-    if (!roomId) return;
-    const defaults = defaultRoomTypes();
-    const roomDef = defaults.find(r => r.id === roomId);
-    if (!roomDef) return;
-    if (!window._mqRooms) window._mqRooms = [];
-    window._mqRooms.push({ ...roomDef });
-    _mqExpandedRoomIds.add(roomId);
-    renderRoomsList();
-    showMsg('mq-rooms-msg', `✓ "${roomDef.name}" restored with its default description, image, and measuring guide.`);
-  };
-
-  window.mqAddRoom = function() {
-    if (!window._mqRooms) window._mqRooms = [];
-    const newId = 'room_' + Date.now();
-    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' });
-    _mqExpandedRoomIds.add(newId);
-    renderRoomsList();
-  };
-
-  window.mqRemoveRoom = function(idx) {
-    if (!window._mqRooms) return;
-    const room = window._mqRooms[idx];
-    const name = (room && room.name) ? room.name : 'this project type';
-    if (!confirm(`Are you sure you want to delete "${name}"? This won't take effect until you click Save.`)) return;
-    window._mqRooms.splice(idx, 1);
-    renderRoomsList();
-  };
-
-  window.mqAddRoomMeasureImage = function(idx) {
-    const room = (window._mqRooms || [])[idx];
-    if (!room) return;
-    if (!Array.isArray(room.measureImages)) room.measureImages = [];
-    room.measureImages.push('');
-    renderRoomsList();
-  };
-
-  window.mqRemoveRoomMeasureImage = function(idx, exIdx) {
-    const room = (window._mqRooms || [])[idx];
-    if (!room || !Array.isArray(room.measureImages)) return;
-    room.measureImages.splice(exIdx, 1);
-    renderRoomsList();
-  };
-
-  window.mqSaveRooms = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    try {
-      // Read current DOM values so any in-progress edits get captured, not
-      // just whatever was there when the list was last rendered.
-      const rooms = (window._mqRooms || []).map((r, idx) => ({
-        id: r.id,
-        name: (el(`mq-room-name-${idx}`)?.value || '').trim(),
-        materialAdjPct: parseFloat(el(`mq-room-adj-mat-${idx}`)?.value) || 0,
-        upperMaterialAdjPct: parseFloat(el(`mq-room-adj-upper-mat-${idx}`)?.value) || 0,
-        installAdjPct: parseFloat(el(`mq-room-adj-install-${idx}`)?.value) || 0,
-        totalAdjPct: parseFloat(el(`mq-room-adj-total-${idx}`)?.value) || 0,
-        description: (el(`mq-room-desc-${idx}`)?.value || '').trim(),
-        active: el(`mq-room-active-${idx}`)?.checked !== false,
-        proOnly: el(`mq-room-visibility-${idx}`)?.value === 'proOnly',
-        hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
-        hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
-        showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
-        coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
-        measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
-        measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
-        measureImages: (r.measureImages || []).map((_, exIdx) => (el(`mq-room-measure-img-extra-${idx}-${exIdx}`)?.value || '').trim()),
-      })).filter(r => r.name); // drop any left with a blank name
-
-      if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
-
-      window._mqRooms = rooms;
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(rooms) });
-      shopRec.fields['Room types'] = JSON.stringify(rooms);
-      renderRoomsList();
-      showMsg('mq-rooms-msg', '✓ Project types saved!');
-    } catch(e) { showMsg('mq-rooms-msg', 'Error saving — please try again.', 'error'); }
-  };
-
-  function populatePricing(pricing) {
-    if (!pricing) return;
-    const f = pricing.fields;
-    const set = (id, val) => { const e = el(id); if (e && val !== undefined) e.value = val; };
-    set('mq-p-melamine', f['Melamine price']);
-    set('mq-p-plywood', f['Plywood price']);
-    set('mq-p-mdf', f['MDF price']);
-    set('mq-p-solid', f['Solid wood price']);
-    set('mq-p-slab', f['Slab multiplier']);
-    set('mq-p-shaker', f['Shaker multiplier']);
-    set('mq-p-raised', f['Raised multiplier']);
-    set('mq-p-glass', f['Glass multiplier']);
-    set('mq-p-install', f['Install rate uppers']);
-    set('mq-p-hinges', f['Soft close hinges']);
-    set('mq-p-drawer', f['Birch drawer box']);
-    set('mq-p-removal', f['Removal rate']);
-    set('mq-p-lam', f['Lam supply']);
-    set('mq-p-ss-econ', f['SS econ supply']);
-    set('mq-p-ss-mid', f['SS mid supply']);
-    set('mq-p-ss-prem', f['SS prem supply']);
-    set('mq-p-gran-econ', f['Gran econ supply']);
-    set('mq-p-gran-mid', f['Gran mid supply']);
-    set('mq-p-gran-prem', f['Gran prem supply']);
-    set('mq-p-quartz', f['Quartz supply']);
-    set('mq-p-marble', f['Marble supply']);
-    set('mq-p-butcher', f['Butcher supply']);
-    set('mq-p-zone-radius', f['Local zone radius']);
-    set('mq-p-zone2', f['Zone 2 surcharge']);
-    set('mq-p-zone3', f['Zone 3 surcharge']);
-    set('mq-p-zone4', f['Zone 4 surcharge']);
-    set('mq-p-tax', f['Tax rate']);
-    set('mq-p-backsplash', f['Backsplash rate']);
-    set('mq-p-sink', f['Sink cutout']);
-    set('mq-p-cooktop', f['Cooktop cutout']);
-  }
-
-  // Sort state for the Leads table — persists across filter changes so
-  // picking "Contacted" doesn't reset whatever sort the shop owner had set.
-  let _mqLeadSort = { field: 'date', dir: 'desc' };
-
-  function sortLeadsArray(leads) {
-    const { field, dir } = _mqLeadSort;
-    const mult = dir === 'asc' ? 1 : -1;
-    return [...leads].sort((a, b) => {
-      let av, bv;
-      switch (field) {
-        case 'name':  av = (a.fields['Customer name']  || '').toLowerCase(); bv = (b.fields['Customer name']  || '').toLowerCase(); break;
-        case 'email': av = (a.fields['Customer email'] || '').toLowerCase(); bv = (b.fields['Customer email'] || '').toLowerCase(); break;
-        case 'phone': av = (a.fields['Customer phone'] || '');               bv = (b.fields['Customer phone'] || '');               break;
-        case 'type':  av = (a.fields['Quote type'] || '').toLowerCase();     bv = (b.fields['Quote type'] || '').toLowerCase();     break;
-        case 'room':  av = (a.fields['Room type'] || '').toLowerCase();      bv = (b.fields['Room type'] || '').toLowerCase();      break;
-        case 'price': av = a.fields['Estimate low'] || 0;                    bv = b.fields['Estimate low'] || 0;                    break;
-        case 'date':
-        default:      av = new Date(a.createdTime).getTime();                bv = new Date(b.createdTime).getTime();                break;
-      }
-      if (av < bv) return -1 * mult;
-      if (av > bv) return 1 * mult;
-      return 0;
-    });
-  }
-
-  window.mqSortLeads = function(field) {
-    if (_mqLeadSort.field === field) {
-      _mqLeadSort.dir = _mqLeadSort.dir === 'asc' ? 'desc' : 'asc';
-    } else {
-      _mqLeadSort.field = field;
-      _mqLeadSort.dir = field === 'date' ? 'desc' : 'asc'; // newest-first for date, A-Z for everything else
-    }
-    mqFilterLeads();
-  };
-
-  function sortArrow(field) {
-    if (_mqLeadSort.field !== field) return '';
-    return _mqLeadSort.dir === 'asc' ? ' ▲' : ' ▼';
-  }
-
-  function formatLeadDate(createdTime) {
-    if (!createdTime) return '—';
-    const d = new Date(createdTime);
-    const datePart = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    return `${datePart} · ${timePart}`;
-  }
-
-  function renderLeads(leads, limit) {
-    if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
-
-    // Group leads sharing a Session ID so multi-attempt visitors get a clear
-    // label instead of a bare "N attempts" badge. If nobody in the session
-    // ever gave a name, say so plainly; if someone did (even on a different
-    // attempt within the same session), credit the other attempts to them
-    // instead of leaving them looking like anonymous noise.
-    const sessionGroups = {};
-    leads.forEach(r => {
-      const sid = r.fields['Session ID'];
-      if (!sid) return;
-      (sessionGroups[sid] = sessionGroups[sid] || []).push(r);
-    });
-    const sessionBadgeByLeadId = {};
-    Object.values(sessionGroups).forEach(rows => {
-      if (rows.length < 2) return; // no badge needed for a solo attempt
-      // Order by when each estimate was actually made, so "1 of 2" / "2 of 2"
-      // means something real, regardless of how the table itself is sorted.
-      const chronological = [...rows].sort((a, b) => new Date(a.createdTime) - new Date(b.createdTime));
-      const namedRow = chronological.find(r => (r.fields['Customer name'] || '').trim());
-      if (namedRow) {
-        const name = namedRow.fields['Customer name'].trim();
-        // Shown on the OTHER rows, not the named row itself — no need to
-        // tell someone "additional estimate by Jane Doe" directly under
-        // Jane Doe's own already-labeled row.
-        const others = chronological.filter(r => r !== namedRow);
-        others.forEach((r, i) => {
-          sessionBadgeByLeadId[r.id] = `🔗 Additional estimate ${i + 1} of ${others.length} by ${name}`;
-        });
-      } else {
-        chronological.forEach((r, i) => {
-          sessionBadgeByLeadId[r.id] = `🔗 Estimate ${i + 1} of ${chronological.length} by an unknown person`;
-        });
-      }
-    });
-
-    const rows = (limit ? leads.slice(0, limit) : leads).map(r => {
-      const f = r.fields;
-      const statusColors = { New: 'blue', Contacted: 'yellow', Booked: 'green', Lost: 'red' };
-      const color = statusColors[f['Status']] || 'grey';
-      const badgeText = sessionBadgeByLeadId[r.id];
-      const sessionBadge = badgeText
-        ? `<span title="Session ${f['Session ID']}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">${badgeText}</span>`
-        : '';
-      return `<tr>
-        <td>${formatLeadDate(r.createdTime)}</td>
-        <td><strong>${f['Customer name'] || '—'}</strong>${sessionBadge ? '<br>'+sessionBadge : ''}</td>
-        <td>${f['Customer email'] || '—'}</td>
-        <td>${f['Customer phone'] || '—'}</td>
-        <td>${f['Quote type'] || '—'}</td>
-        <td>${f['Room type'] || '—'}</td>
-        <td>${f['Estimate low'] ? fmt(f['Estimate low']) + ' – ' + fmt(f['Estimate high']) : '—'}</td>
-        <td><span class="mq-badge mq-badge-${color}">${f['Status'] || 'New'}</span></td>
-        <td>
-          <select onchange="mqUpdateLeadStatus('${r.id}', this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit">
-            <option ${f['Status']==='New'?'selected':''}>New</option>
-            <option ${f['Status']==='Contacted'?'selected':''}>Contacted</option>
-            <option ${f['Status']==='Booked'?'selected':''}>Booked</option>
-            <option ${f['Status']==='Lost'?'selected':''}>Lost</option>
-          </select>
-        </td>
-        <td><button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteLead('${r.id}')">Delete</button></td>
-      </tr>`;
-    }).join('');
-    const th = (field, label) => `<th onclick="mqSortLeads('${field}')" style="cursor:pointer;user-select:none;white-space:nowrap">${label}${sortArrow(field)}</th>`;
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  }
-
-  function renderStats(leads) {
-    const total = leads.length;
-    const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const newThisWeek = leads.filter(r => new Date(r.fields['Created'] || r.createdTime) > oneWeekAgo).length;
-    const booked = leads.filter(r => r.fields['Status'] === 'Booked').length;
-    const pipeline = leads.reduce((sum, r) => sum + (r.fields['Estimate high'] || 0), 0);
-    const withContact = leads.filter(r => r.fields['Customer email'] || r.fields['Customer phone']).length;
-    const set = (id, val) => { const e = el(id); if (e) e.textContent = val; };
-    set('mq-stat-leads', total);
-    set('mq-stat-new', newThisWeek);
-    set('mq-stat-booked', booked);
-    set('mq-stat-value', fmt(pipeline));
-    set('mq-stat-contacts', withContact);
-  }
-
-  // A real dropdown of every category already in use — one click to reuse
-  // one, no retyping, plus a "+ Add new category" option for when a
-  // genuinely new one is needed. Shared between the per-shop table and the
-  // Templates cards; each just passes in whichever list of categories is
-  // relevant to its own set of items.
-  function mqCategoryPickerHTML(r, allCategories, wide) {
-    const current = (r.fields['Category']||'').trim();
-    const options = allCategories.map(c => `<option value="${c.replace(/"/g,'&quot;')}" ${c===current?'selected':''}>${c}</option>`).join('');
-    return `<select id="mq-spec-cat-${r.id}" onchange="mqSpecCategoryChanged('${r.id}', this)" style="font-size:${wide?'11px':'12px'};padding:${wide?'5px 8px':'4px 6px'};border:1px solid ${wide?'#e5e7eb':'#d1d5db'};border-radius:${wide?'6px':'5px'};${wide?'width:100%':'max-width:130px'};color:#374151">
-      <option value="" ${!current?'selected':''}>${wide?'No category':'(No category)'}</option>
-      ${options}
-      <option value="__new__">+ Add new category…</option>
-    </select>`;
-  }
-  window.mqSpecCategoryChanged = function(id, sel) {
-    const row = sel.closest('tr');
-    if (sel.value === '__new__') {
-      const name = (prompt('New category name:') || '').trim();
-      if (name) {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        opt.selected = true;
-        sel.insertBefore(opt, sel.lastElementChild);
-        mqSaveSpecField(id, 'Category', name);
-        if (row) row.setAttribute('data-category', name);
-        // Make the new category immediately pickable everywhere else on the
-        // page too, without needing a reload — every other item's own
-        // dropdown, plus the "Filter by category" dropdown.
-        document.querySelectorAll('select[id^="mq-spec-cat-"]').forEach(otherSel => {
-          if (otherSel === sel) return;
-          if ([...otherSel.options].some(o => o.value === name)) return;
-          const newOpt = document.createElement('option');
-          newOpt.value = name;
-          newOpt.textContent = name;
-          otherSel.insertBefore(newOpt, otherSel.lastElementChild);
-        });
-        const filterSel = document.getElementById('mq-spec-tab-filter-category');
-        if (filterSel && ![...filterSel.options].some(o => o.value === name)) {
-          const filterOpt = document.createElement('option');
-          filterOpt.value = name;
-          filterOpt.textContent = name;
-          filterSel.appendChild(filterOpt);
-        }
-      } else {
-        sel.value = ''; // cancelled — back to no category
-      }
-    } else {
-      mqSaveSpecField(id, 'Category', sel.value);
-      if (row) row.setAttribute('data-category', sel.value);
-    }
-    // Whether it's a brand new category or a change to an existing one,
-    // re-check this row against whatever filter is currently active — an
-    // item moved out of the category being filtered on should disappear
-    // right away, not linger until the page gets refreshed.
-    if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
-  };
-
-  async function loadProposalTemplates(shopName) {
-    const recs = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
-    return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
-  }
-
-  // Seeded once per shop, same pattern as ensureProjectTypeTemplates — a
-  // Simple one-pager for small jobs, a Standard proposal with deposit/tax,
-  // Default starter "Body" text — this is what actually gets typed into the
-  // freeform Body box below, tokens and all. Shop owners can rewrite this
-  // completely; it's just a sensible starting point, built directly off a
-  // real proposal document a shop owner shared, genericized.
-  const PROPOSAL_BODY_SIMPLE = `**{job_name}**
-
-{description}
-
-{items}
-
-{totals_box}
-
-{signature_line}`;
-
-  const PROPOSAL_BODY_STANDARD = `**Prepared for {customer_name}**
-{customer_address}
-{customer_phone}
-
-**Job:** {job_name}
-
-{description}
-
-**A note on your new cabinets:** due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, **not a defect**.
-
-Finishes (painted or stained, opaque or clear) do not fully seal out moisture, especially in high-traffic, high-moisture areas such as around sinks. Humidity levels inside a home affect wood movement, and this is outside our control as the manufacturer.
-
-We use modern materials and techniques to keep joint visibility to a minimum, but cannot guarantee against natural wood movement — **a single-piece composite door is the only way to eliminate visible joints entirely.**
-
-To clean painted or lacquered doors and panels, **use a damp cloth only** — standing water can penetrate the wood, causing the finish to peel and voiding the warranty.
-
-{items}
-
-{totals_box}
-
-**This proposal is valid for 30 days** from the date above.
-
-All materials are guaranteed to be as specified. All work will be completed in a workmanlike manner according to standard industry practices.
-
-Any alteration or deviation from the specifications above involving additional cost will be carried out only upon **written authorization**, and will become an extra charge added to this estimate.
-
-This agreement is contingent upon strikes, accidents, or delays beyond our control. The property owner is responsible for carrying fire, windstorm, and other necessary insurance. Our workers are fully covered by workers' compensation insurance.
-
-{signature_line}`;
-
-  const PROPOSAL_BODY_LARGE = PROPOSAL_BODY_STANDARD + `
-
-**A signed copy of this proposal will be kept on file.**`;
-
-  async function ensureProposalTemplatesSeeded(shopRecord) {
-    if (shopRecord.fields['Proposal templates seeded']) return;
-
-    // If a seed attempt for this shop is already running (e.g. the tab got
-    // clicked into twice in quick succession), just wait on that one
-    // instead of starting a second one — two overlapping attempts racing
-    // each other was almost certainly how a shop ended up with the
-    // "seeded" flag set while never actually getting its templates: one
-    // attempt got far enough to set the flag while the other's creates
-    // were still failing (an Airtable rate limit, a network blip, etc).
-    window._mqSeedingInProgress = window._mqSeedingInProgress || {};
-    if (window._mqSeedingInProgress[shopRecord.id]) {
-      return window._mqSeedingInProgress[shopRecord.id];
-    }
-
-    const doSeed = (async () => {
-      const starters = [
-        { name: 'Simple', size: 'Simple', accent: '#1a3a6b', body: PROPOSAL_BODY_SIMPLE, showPrices: true, depositType: 'Percent', depositValue: 0, taxPct: 0 },
-        { name: 'Standard', size: 'Standard', accent: '#1a3a6b', body: PROPOSAL_BODY_STANDARD, showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 },
-        { name: 'Large Project', size: 'Large', accent: '#1a3a6b', body: PROPOSAL_BODY_LARGE, showPrices: true, depositType: 'Percent', depositValue: 30, taxPct: 13 },
-      ];
-      try {
-        for (let i = 0; i < starters.length; i++) {
-          const t = starters[i];
-          await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
-            'Shop': [shopRecord.id],
-            'Template name': t.name,
-            'Size category': t.size,
-            'Accent colour': t.accent,
-            'Body': t.body,
-            'Show item prices': t.showPrices,
-            'Deposit type': t.depositType,
-            'Deposit value': t.depositValue,
-            'Tax percent': t.taxPct,
-            'Sort order': i,
-          });
-        }
-        // Only marked "seeded" once all 3 have actually landed — if any
-        // create above threw, we never reach this line, so the flag
-        // correctly stays unset and a future visit will retry properly.
-        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Proposal templates seeded': true });
-        shopRecord.fields['Proposal templates seeded'] = true;
+        mqphCloseMiniWiz();
+        await loadAndRender();
       } catch(e) {
-        console.warn('Failed to seed starter proposal templates:', e);
-      } finally {
-        delete window._mqSeedingInProgress[shopRecord.id];
+        console.error('Failed to save matched item', e);
+        if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Save →'; }
+        alert('Error saving. Please try again.');
       }
-    })();
-
-    window._mqSeedingInProgress[shopRecord.id] = doSeed;
-    return doSeed;
-  }
-
-  const PROPOSAL_TOKENS_HELP = `
-    <div style="margin-bottom:10px"><strong>**text**</strong> — bold, same as anywhere else. &nbsp; <strong>{hr}</strong> — a horizontal divider line, place it anywhere. &nbsp; <strong>{break}</strong> — extra vertical space wherever you need it (hitting Return extra times alone won't add space beyond one normal paragraph gap — use {break} instead for more).</div>
-    <div style="margin-bottom:10px">Want a colored box (like a disclaimer callout) or colored text? Highlight some text below and use the buttons above the Body box — no need to type <code>{box:#hex}...{/box}</code> or <code>{color:#hex}...{/color}</code> by hand, though you can if you'd rather.</div>
-
-    <div style="margin-bottom:6px"><strong>Customer &amp; job info</strong> <span style="font-weight:400">(filled in when the proposal is created in MidasQuote Pro)</span></div>
-    <div style="margin-bottom:10px">{customer_name} · {customer_address} · {customer_phone} · {job_name} · {description} · {date}<br>
-    <span style="font-size:10.5px">All except {customer_name} are optional — leave one blank on a given proposal and its whole line disappears automatically (e.g. a "Job:" line with nothing typed after it just won't show).</span></div>
-
-    <div style="margin-bottom:6px"><strong>Items &amp; totals</strong></div>
-    <div style="margin-bottom:10px">
-      {items} — styled list: coloured header, shaded rows.<br>
-      {items_plain} — the same list with no styling — bold item name, plain price, matches your body text.<br>
-      {items_plain_light} — same as {items_plain}, but item names aren't bold either.<br>
-      {items_header} — just the "Item / Price" header row on its own (no rows) — toss it above {items_plain} or {items_plain_light} if you want that classic header without the coloured box.<br>
-      {totals_box} — a bold, coloured summary box with the deposit called out hard.<br>
-      {totals_plain} — the same numbers as plain lines, no box.<br>
-      {subtotal} · {tax} · {total} · {deposit} — the raw numbers individually, if you'd rather place them yourself.
-    </div>
-
-    <div><strong>{signature_line}</strong> — a blank signature + date line, right at this spot.</div>
-  `;
-
-  function mqDefaultBodyForSize(size) {
-    if (size === 'Simple') return PROPOSAL_BODY_SIMPLE;
-    if (size === 'Large') return PROPOSAL_BODY_LARGE;
-    return PROPOSAL_BODY_STANDARD;
-  }
-
-  // Everything a fresh starter template of this size was originally seeded
-  // with — used both for the initial seeding and for "Reset to defaults"
-  // on an existing template, so the two always stay in sync automatically.
-  function mqDefaultSettingsForSize(size) {
-    if (size === 'Simple') return { body: PROPOSAL_BODY_SIMPLE, accent: '#1a3a6b', showPrices: true, depositType: 'Percent', depositValue: 0, taxPct: 0 };
-    if (size === 'Large') return { body: PROPOSAL_BODY_LARGE, accent: '#1a3a6b', showPrices: true, depositType: 'Percent', depositValue: 30, taxPct: 13 };
-    return { body: PROPOSAL_BODY_STANDARD, accent: '#1a3a6b', showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 };
-  }
-
-  function renderProposalTemplates(templates, shopRecord) {
-    const container = document.getElementById('mq-prop-list');
-    if (!container) return;
-    if (!templates.length) {
-      container.innerHTML = '<div class="mq-empty" style="padding:2rem">No proposal templates yet. Click "+ New template" to add your first one.</div>';
       return;
     }
 
-    // Migration: a template made before the freeform Body box existed (or
-    // any custom one that's simply never had Body text) gets a sensible
-    // default filled in automatically, based on its Size category — so
-    // nobody lands on a genuinely blank, empty-feeling template just
-    // because it happened to be created earlier.
-    templates.forEach(t => {
-      if (!t.fields['Body'] || !t.fields['Body'].trim()) {
-        const defaultBody = mqDefaultBodyForSize(t.fields['Size category']);
-        t.fields['Body'] = defaultBody;
-        mqSaveProposalField(t.id, 'Body', defaultBody);
-      }
-    });
-    window._mqProposalTemplatesCache = templates; // used by the Preview button below
-
-    container.innerHTML = templates.map(t => {
-      const f = t.fields;
-      const accent = f['Accent colour'] || '#1a3a6b';
-      const name = f['Template name'] || 'Untitled';
-      return `
-      <div class="mq-card" style="margin-bottom:1rem;padding:0;overflow:hidden">
-        <div onclick="mqToggleProposalCard('${t.id}')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer">
-          <span id="mq-prop-chevron-${t.id}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
-          <span style="width:14px;height:14px;border-radius:4px;background:${accent};flex-shrink:0"></span>
-          <strong id="mq-prop-header-name-${t.id}" style="font-size:14px">${name.replace(/</g,'&lt;')}</strong>
-          <span style="font-size:12px;color:#9ca3af">(${f['Size category']||'Standard'})</span>
-          <div style="flex:1"></div>
-          <button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqPreviewProposalTemplate('${t.id}')" title="Preview with sample data">👁 Preview</button>
-          <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="event.stopPropagation();mqDeleteProposalTemplate('${t.id}','${(name||'this template').replace(/'/g,"\\'")}')" title="Delete template">✕</button>
-        </div>
-        <div id="mq-prop-card-body-${t.id}" style="display:none;padding:0 16px 16px 16px;border-top:1px solid #e5e7eb">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin:14px 0 12px">
-          <div style="flex:1;min-width:180px">
-            <label class="mq-label">Template name</label>
-            <input type="text" value="${(f['Template name']||'').replace(/"/g,'&quot;')}" onblur="mqSaveProposalField('${t.id}','Template name',this.value); const h=document.getElementById('mq-prop-header-name-${t.id}'); if(h) h.textContent=this.value||'Untitled';"/>
-          </div>
-          <div style="width:150px">
-            <label class="mq-label">Size category</label>
-            <select onchange="mqSaveProposalField('${t.id}','Size category',this.value)" style="width:100%">
-              <option value="Simple" ${f['Size category']==='Simple'?'selected':''}>Simple</option>
-              <option value="Standard" ${f['Size category']==='Standard'||!f['Size category']?'selected':''}>Standard</option>
-              <option value="Large" ${f['Size category']==='Large'?'selected':''}>Large</option>
-            </select>
-          </div>
-          <div>
-            <label class="mq-label">Accent colour</label>
-            <input type="color" value="${accent}" onchange="mqSaveProposalField('${t.id}','Accent colour',this.value)" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer">
-            <input type="checkbox" ${f['Show item prices']!==false?'checked':''} onchange="mqSaveProposalField('${t.id}','Show item prices',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Show individual item prices <span style="font-weight:400;color:#9ca3af">(default — overridable per proposal in Pro)</span>
-          </label>
-          <div style="display:flex;align-items:center;gap:6px">
-            <label style="font-size:13px;color:#374151">Deposit:</label>
-            <select onchange="mqSaveProposalField('${t.id}','Deposit type',this.value)" style="width:auto">
-              <option value="Percent" ${f['Deposit type']!=='Flat amount'?'selected':''}>%</option>
-              <option value="Flat amount" ${f['Deposit type']==='Flat amount'?'selected':''}>${CUR()} flat</option>
-            </select>
-            <input type="number" value="${f['Deposit value']||''}" placeholder="0" style="width:70px" onblur="mqSaveProposalField('${t.id}','Deposit value',parseFloat(this.value)||0)"/>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <label style="font-size:13px;color:#374151">Tax:</label>
-            <input type="number" value="${f['Tax percent']||''}" placeholder="0" style="width:60px" onblur="mqSaveProposalField('${t.id}','Tax percent',parseFloat(this.value)||0)"/>
-            <span style="font-size:13px;color:#6b7280">%</span>
-          </div>
-        </div>
-
-        <label class="mq-label">Body — write the whole proposal yourself, place things wherever you want</label>
-        <div style="font-size:11.5px;color:#374151;line-height:1.7;margin-bottom:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px 14px">${PROPOSAL_TOKENS_HELP}</div>
-        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#f9fafb;border-radius:8px">
-          <div style="display:flex;align-items:center;gap:5px">
-            <input type="color" id="mq-prop-boxcolor-${t.id}" value="#eff6ff" title="Box background colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
-            <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${t.id}','box')">▭ Box selected text</button>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px">
-            <input type="color" id="mq-prop-textcolor-${t.id}" value="#dc2626" title="Text colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
-            <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${t.id}','color')">A Colour selected text</button>
-          </div>
-          <span style="font-size:10.5px;color:#9ca3af">Select some text in the box below first, then click one of these.</span>
-        </div>
-        <textarea id="mq-prop-body-${t.id}" rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onblur="mqSaveProposalField('${t.id}','Body',this.value)">${(f['Body']||'').replace(/</g,'&lt;')}</textarea>
-
-        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
-          <button class="mq-btn mq-btn-sm" onclick="mqResetProposalTemplateDefaults('${t.id}')">↺ Reset to defaults</button>
-          <span style="font-size:10.5px;color:#9ca3af;margin-left:8px">Restores the Body text, accent colour, deposit, tax, and prices setting for this template's size category — the name stays as you've set it.</span>
-        </div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  window.mqToggleProposalCard = function(id) {
-    const body = document.getElementById(`mq-prop-card-body-${id}`);
-    const chevron = document.getElementById(`mq-prop-chevron-${id}`);
-    if (!body) return;
-    const isOpen = body.style.display !== 'none';
-    body.style.display = isOpen ? 'none' : 'block';
-    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
-  };
-
-  // Wraps whatever text is currently selected in the Body textarea with
-  // {box:#hex}...{/box} or {color:#hex}...{/color} — nobody has to type a
-  // hex code or remember the tag syntax, just pick a color, highlight some
-  // text, and click. Saves immediately, same as every other field here.
-  window.mqInsertProposalFormatting = function(id, kind) {
-    const textarea = document.getElementById(`mq-prop-body-${id}`);
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    if (start === end) {
-      alert('Select some text in the Body box first, then click this button to wrap it.');
-      return;
-    }
-    const colorInput = document.getElementById(kind === 'box' ? `mq-prop-boxcolor-${id}` : `mq-prop-textcolor-${id}`);
-    const hex = colorInput ? colorInput.value : (kind === 'box' ? '#eff6ff' : '#dc2626');
-    const openTag = kind === 'box' ? `{box:${hex}}` : `{color:${hex}}`;
-    const closeTag = kind === 'box' ? `{/box}` : `{/color}`;
-    const selected = textarea.value.substring(start, end);
-    const newValue = textarea.value.substring(0, start) + openTag + selected + closeTag + textarea.value.substring(end);
-    textarea.value = newValue;
-    mqSaveProposalField(id, 'Body', newValue);
-    textarea.focus();
-    textarea.selectionStart = start;
-    textarea.selectionEnd = start + openTag.length + selected.length + closeTag.length;
-  };
-
-  // Restores everything about this template back to what a fresh starter
-  // of its size category originally looked like — Body text, accent
-  // colour, prices toggle, deposit, and tax. Leaves the template's name
-  // alone, since that's an identity the shop owner chose, not a "default."
-  window.mqResetProposalTemplateDefaults = async function(id) {
-    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
-    if (!t) return;
-    const name = t.fields['Template name'] || 'this template';
-    if (!confirm(`Reset "${name}" back to its default Body text, colours, deposit, and tax? Anything you've customized here will be lost — the template's name will stay the same.`)) return;
-
-    const defaults = mqDefaultSettingsForSize(t.fields['Size category']);
-    await Promise.all([
-      mqSaveProposalField(id, 'Body', defaults.body),
-      mqSaveProposalField(id, 'Accent colour', defaults.accent),
-      mqSaveProposalField(id, 'Show item prices', defaults.showPrices),
-      mqSaveProposalField(id, 'Deposit type', defaults.depositType),
-      mqSaveProposalField(id, 'Deposit value', defaults.depositValue),
-      mqSaveProposalField(id, 'Tax percent', defaults.taxPct),
-    ]);
-    renderProposalTemplates(window._mqProposalTemplatesCache, window._mqShopRecord);
-    showMsg('mq-prop-msg', `✓ "${name}" reset to defaults.`);
-  };
-
-  window.mqSaveProposalField = async function(id, field, value) {
-    // Update the cache immediately, synchronously — Preview reads from
-    // this, not a fresh fetch. Doing this AFTER the network save (the old
-    // bug) meant Preview could still show a stale value if clicked before
-    // the Airtable request finished — this way it's correct the instant
-    // you blur the field, regardless of network speed.
-    const cached = (window._mqProposalTemplatesCache || []).find(t => t.id === id);
-    if (cached) cached.fields[field] = value;
-    try {
-      await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value });
-    }
-    catch(e) { console.error('Failed to save proposal template field', e); }
-  };
-
-  window.mqAddProposalTemplate = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    try {
-      const existing = await loadProposalTemplates(shopRec.fields['Shop name']);
-      await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
-        'Shop': [shopRec.id],
-        'Template name': 'New template',
-        'Size category': 'Standard',
-        'Accent colour': '#1a3a6b',
-        'Show item prices': true,
-        'Deposit type': 'Percent',
-        'Deposit value': 0,
-        'Tax percent': 0,
-        // Pre-filled with the Standard starter's body as a working example
-        // of token usage — fully editable/erasable, just not a blank box.
-        'Body': PROPOSAL_BODY_STANDARD,
-        'Sort order': existing.length,
-      });
-      const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
-      renderProposalTemplates(templates, shopRec);
-      showMsg('mq-prop-msg', '✓ Template added — edit its name and settings below.');
-    } catch(e) { showMsg('mq-prop-msg', 'Error adding template.', 'error'); }
-  };
-
-  window.mqDeleteProposalTemplate = async function(id, name) {
-    if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
-    const shopRec = window._mqShopRecord;
-    try {
-      await atDelete(CONFIG.PROPOSAL_TEMPLATES_TABLE, id);
-      const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
-      renderProposalTemplates(templates, shopRec);
-      showMsg('mq-prop-msg', '✓ Template deleted.');
-    } catch(e) { showMsg('mq-prop-msg', 'Error deleting template.', 'error'); }
-  };
-
-
-  // Everything below mirrors the same token-rendering logic used for real
-  // in MidasQuote Pro (mqEscapeHtml / mqBuildProposalItemsHtml /
-  // mqRenderProposalBodyTokens) — kept in sync deliberately, since a
-  // preview that renders differently from the real thing would be worse
-  // than no preview at all.
-  function mqPropEscapeHtml(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function mqPropBuildItemsHtml(lines, showPrices, accent) {
-    const rows = lines.map((l, i) => showPrices ? `
-      <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid">
-        <td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td>
-        <td style="padding:12px 14px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;font-weight:600">${CUR()}${l.cost.toFixed(2)}</td>
-      </tr>` : `
-      <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td></tr>`).join('');
-    return `<table style="width:100%;border-collapse:collapse;margin:12px 0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
-      <thead><tr style="background:${accent}">
-        <th style="text-align:left;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Item</th>
-        ${showPrices ? `<th style="text-align:right;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Price</th>` : ''}
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-  }
-
-  function mqPropBuildItemsPlainHtml(lines, showPrices) {
-    const rows = lines.map(l => showPrices ? `
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid">
-        <strong>${mqPropEscapeHtml(l.label)}</strong><span>${CUR()}${l.cost.toFixed(2)}</span>
-      </div>` : `
-      <div style="padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid"><strong>${mqPropEscapeHtml(l.label)}</strong></div>`).join('');
-    return `<div style="margin:12px 0">${rows}</div>`;
-  }
-
-  function mqPropBuildItemsPlainLightHtml(lines, showPrices) {
-    const rows = lines.map(l => showPrices ? `
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid">
-        <span>${mqPropEscapeHtml(l.label)}</span><span>${CUR()}${l.cost.toFixed(2)}</span>
-      </div>` : `
-      <div style="padding:6px 0;border-bottom:1px solid #e5e7eb;page-break-inside:avoid;break-inside:avoid"><span>${mqPropEscapeHtml(l.label)}</span></div>`).join('');
-    return `<div style="margin:12px 0">${rows}</div>`;
-  }
-
-  function mqPropBuildItemsHeaderHtml(showPrices, accent) {
-    return `<div style="display:flex;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid ${accent};margin-bottom:4px">
-      <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;font-weight:700">Item</span>
-      ${showPrices ? `<span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;font-weight:700">Price</span>` : ''}
-    </div>`;
-  }
-
-  function mqPropSignatureHtml() {
-    return `<div style="margin-top:50px;display:flex;gap:40px;page-break-inside:avoid;break-inside:avoid">
-      <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
-      <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
-    </div>`;
-  }
-
-  function mqPropBuildHrHtml() {
-    return `<hr style="border:none;border-top:1px solid #d1d5db;margin:24px 0"/>`;
-  }
-
-  function mqPropBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
-    return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0;page-break-inside:avoid;break-inside:avoid">
-      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>${CUR()}${subtotal.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>${CUR()}${tax.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>${CUR()}${total.toFixed(2)}</span></div>
-      ${deposit > 0 ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-top:14px;background:${accent};border-radius:10px;color:#fff;font-size:16px;font-weight:800"><span>Deposit Due Today</span><span>${CUR()}${deposit.toFixed(2)}</span></div>` : ''}
-    </div>`;
-  }
-
-  function mqPropBuildTotalsPlainHtml(subtotal, tax, total, deposit) {
-    return `<div style="margin:20px 0;page-break-inside:avoid;break-inside:avoid">
-      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>${CUR()}${subtotal.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>${CUR()}${tax.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>${CUR()}${total.toFixed(2)}</strong></div>
-      ${deposit > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><strong>Deposit Due Today</strong><strong>${CUR()}${deposit.toFixed(2)}</strong></div>` : ''}
-    </div>`;
-  }
-
-  function mqPropFormatTextChunk(text) {
-    let html = mqPropEscapeHtml(text).replace(/\n/g, '<br>');
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\{color:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/color\}/g, (m, hex, inner) => `<span style="color:${hex}">${inner}</span>`);
-    return html;
-  }
-
-  function mqPropRenderBodyTokens(bodyText, data) {
-    const optionalEmpty = {
-      '{customer_address}': !data.customerAddress,
-      '{customer_phone}': !data.customerPhone,
-      '{job_name}': !data.jobName,
-      '{description}': !data.description,
-    };
-    const lines = (bodyText || '').split('\n').filter(line => {
-      for (const token in optionalEmpty) {
-        if (optionalEmpty[token] && line.includes(token)) return false;
-      }
-      return true;
-    });
-    const filteredText = lines.join('\n');
-
-    const customBlocks = {};
-    let blockIndex = 0;
-    const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (match, hex, inner) => {
-      const key = `\u0000BOX${blockIndex++}\u0000`;
-      const innerParas = inner.trim().split(/\n{2,}/).map(p => `<div style="page-break-inside:avoid;break-inside:avoid">${mqPropFormatTextChunk(p)}</div>`).join('<div style="height:12px"></div>');
-      customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
-      return key;
-    });
-
-    const paragraphs = textWithPlaceholders.split(/\n{2,}/);
-    const selfContainedTokens = new Set(['{items}', '{items_plain}', '{items_plain_light}', '{items_header}', '{totals_box}', '{totals_plain}', '{signature_line}', '{hr}']);
-    let html = paragraphs.map(para => {
-      const trimmed = para.trim();
-      if (/^\u0000BOX\d+\u0000$/.test(trimmed)) return trimmed;
-      if (selfContainedTokens.has(trimmed)) return mqPropFormatTextChunk(para);
-      return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${mqPropFormatTextChunk(para)}</div>`;
-    }).join('');
-
-    for (const [key, fragHtml] of Object.entries(customBlocks)) {
-      html = html.split(key).join(fragHtml);
-    }
-
-    const replacements = {
-      '{customer_name}': mqPropEscapeHtml(data.customerName),
-      '{customer_address}': mqPropEscapeHtml(data.customerAddress),
-      '{customer_phone}': mqPropEscapeHtml(data.customerPhone),
-      '{job_name}': mqPropEscapeHtml(data.jobName),
-      '{description}': mqPropEscapeHtml(data.description).replace(/\n/g, '<br>'),
-      '{date}': mqPropEscapeHtml(data.date),
-      '{subtotal}': CUR() + data.subtotal.toFixed(2),
-      '{tax}': CUR() + data.tax.toFixed(2),
-      '{total}': CUR() + data.total.toFixed(2),
-      '{deposit}': CUR() + data.deposit.toFixed(2),
-      '{items}': data.itemsHtml,
-      '{items_plain}': data.itemsPlainHtml,
-      '{items_plain_light}': data.itemsPlainLightHtml,
-      '{items_header}': data.itemsHeaderHtml,
-      '{signature_line}': data.signatureHtml,
-      '{totals_box}': data.totalsBoxHtml,
-      '{totals_plain}': data.totalsPlainHtml,
-      '{hr}': data.hrHtml,
-      '{break}': '<div style="height:20px"></div>',
-    };
-    for (const [token, val] of Object.entries(replacements)) html = html.split(token).join(val);
-    return html;
-  }
-
-  // Shows exactly what this template will actually produce in MidasQuote
-  // Pro — same token-rendering, same layout, same visual polish — but
-  // filled with clearly-labeled sample data (not a real customer/estimate),
-  // so a shop owner can see how it looks without leaving the dashboard or
-  // running a real quote first.
-  window.mqPreviewProposalTemplate = function(id) {
-    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
-    if (!t) return;
-    const f = t.fields;
-    const shop = (window._mqShopRecord || {}).fields || {};
-    const accent = f['Accent colour'] || '#1a3a6b';
-
-    const sampleLines = [
-      { label: 'Upper cabinets — Maple Shaker', cost: 1850 },
-      { label: 'Base cabinets — Maple Shaker', cost: 2100 },
-      { label: 'Countertop — Quartz', cost: 1400 },
-    ];
-    const subtotal = sampleLines.reduce((s, l) => s + l.cost, 0);
-    const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
-    const total = subtotal + taxAmt;
-    const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
-    const showPrices = f['Show item prices'] !== false;
-
-    const itemsHtml = mqPropBuildItemsHtml(sampleLines, showPrices, accent);
-    const itemsPlainHtml = mqPropBuildItemsPlainHtml(sampleLines, showPrices);
-    const itemsPlainLightHtml = mqPropBuildItemsPlainLightHtml(sampleLines, showPrices);
-    const itemsHeaderHtml = mqPropBuildItemsHeaderHtml(showPrices, accent);
-    const signatureHtml = mqPropSignatureHtml();
-    const hrHtml = mqPropBuildHrHtml();
-    const totalsBoxHtml = mqPropBuildTotalsBoxHtml(subtotal, taxAmt, total, depositAmt, accent);
-    const totalsPlainHtml = mqPropBuildTotalsPlainHtml(subtotal, taxAmt, total, depositAmt);
-    const dateStr = new Date().toLocaleDateString();
-
-    const renderedBodyHtml = mqPropRenderBodyTokens(f['Body'] || '', {
-      customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', customerPhone: '(555) 123-4567', jobName: 'Kitchen Reface',
-      description: 'Full kitchen reface — new doors, drawer fronts, and hardware throughout, plus a new quartz countertop.',
-      date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt,
-      itemsHtml, itemsPlainHtml, itemsPlainLightHtml, itemsHeaderHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
-    });
-
-    const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
-    const win = window.open('', '_blank');
-    if (!win) { alert('Please allow pop-ups to see this preview.'); return; }
-    win.document.write(`<!DOCTYPE html>
-<html><head><meta charset="utf-8"/><title>Preview — ${mqPropEscapeHtml(f['Template name'])}</title>
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#111; background:#f3f4f6; margin:0; padding:40px 20px; }
-  .mq-proposal-wrap { max-width:720px; margin:0 auto; }
-  #mq-proposal-content { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.08); padding:40px 36px; }
-</style>
-</head><body>
-  <div class="mq-proposal-wrap">
-  <div style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">👁 <strong>Preview only</strong> — sample customer and sample line items, so you can see exactly how "${mqPropEscapeHtml(f['Template name'])}" looks. Nothing here is saved or real.</div>
-  <div id="mq-proposal-content">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
-    <div>
-      ${logo}
-      <div style="font-size:18px;font-weight:800;margin-top:6px">${mqPropEscapeHtml(shop['Shop name'])}</div>
-      <div style="font-size:12px;color:#6b7280">${mqPropEscapeHtml(shop['City'])}${shop['Phone']?(' · '+mqPropEscapeHtml(shop['Phone'])):''}</div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:22px;font-weight:800;color:${accent}">Proposal</div>
-      <div style="font-size:12px;color:#6b7280">${dateStr}</div>
-    </div>
-  </div>
-  ${renderedBodyHtml}
-  </div>
-  </div>
-</body></html>`);
-    win.document.close();
-  };
-
-  function renderSpecialty(specs, shopRecord) {
-    const container = el('mq-spec-list');
-    if (!container) return;
-    // Kept in sync so mqAddVariant/mqRemoveVariant/mqSaveVariantField below
-    // can find and mutate the right record's Variants JSON in memory
-    // without a full reload — renderSpecialty always runs again after any
-    // add/delete, so this never goes stale.
-    window._mqSpecRecords = specs;
-    if (!specs.length) {
-      container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
-      return;
-    }
-    const rooms = window._mqRooms || defaultRoomTypes();
-    const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    container.innerHTML = `
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
-          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
-            <option value="">All project types</option>
-            ${roomOptions}
-          </select>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;font-size:11px;color:#6b7280;margin-bottom:4px">
-            <span>Filter by category</span>
-            <span onclick="mqShowManageCategoriesModal()" style="color:#2563eb;cursor:pointer;font-weight:600;white-space:nowrap">Manage categories</span>
-          </label>
-          <select id="mq-spec-tab-filter-category" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
-            <option value="">All categories</option>
-            ${[...new Set(specs.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
-          </select>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
-          <input type="text" id="mq-spec-tab-filter-search" oninput="mqFilterSpecTable()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
-        </div>
-        <div style="display:flex;align-items:flex-end;padding-bottom:6px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;white-space:nowrap">
-            <input type="checkbox" id="mq-spec-tab-filter-proonly" onchange="mqFilterSpecTable()" style="width:16px;height:16px;accent-color:#1a1a1a"/>
-            ⭐ Pro only
-          </label>
-        </div>
-      </div>
-      <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
-      <div class="mq-table-wrap" id="mq-spec-table-wrap">
-      <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
-        <tbody id="mq-spec-tbody">
-          ${specs.map(r => {
-            let visibleRooms = [];
-            try { visibleRooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { visibleRooms = []; }
-            const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
-            const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
-            const catAttr = (r.fields['Category'] || '').replace(/"/g,'&quot;');
-            const variantCount = mqParseVariants(r).length;
-            return `
-            <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" data-category="${catAttr}" data-proonly="${r.fields['Pro only'] ? '1' : '0'}" style="cursor:grab">
-              <td class="mq-spec-drag-handle" style="color:#9ca3af;font-size:16px;padding:8px 12px;cursor:grab">⠿</td>
-              <td>
-                <div style="display:flex;flex-direction:column;gap:2px">
-                  <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:180px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                  <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
-                    <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
-                    <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
-                  </div>
-                </div>
-              </td>
-              <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>${variantCount ? '' : mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${variantCount ? '' : mqSpecMinPriceHTML(r, false)}</td>
-              <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
-              <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
-              <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
-              <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
-              <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
-              <td><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" title="Hide this item from the customer-facing widget entirely — still shows in MidasQuote Pro, for every project type it's tagged to" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
-              <td><input type="checkbox" ${r.fields['Active']?'checked':''} onchange="mqSaveSpecField('${r.id}','Active',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
-            </tr>
-            <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
-              <td></td>
-              <td colspan="10" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-      </div>`;
-
-    const tbody = document.getElementById('mq-spec-tbody');
-    let dragging = null;
-
-    // Same fix as Project Types rows: draggable only turns on while the
-    // mouse is actually down on the ⠿ handle — leaving the whole row
-    // draggable all the time made selecting text anywhere in it (like the
-    // item name) prone to being grabbed as a row-drag instead of a normal
-    // text selection.
-    tbody.querySelectorAll('tr').forEach(row => {
-      row.draggable = false;
-      const handle = row.querySelector('.mq-spec-drag-handle');
-      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
-      row.addEventListener('mouseup', () => { row.draggable = false; });
-      row.addEventListener('dragstart', () => {
-        dragging = row;
-        setTimeout(() => row.style.opacity = '0.4', 0);
-      });
-      row.addEventListener('dragend', async () => {
-        row.style.opacity = '1';
-        row.draggable = false;
-        dragging = null;
-        const rows = [...tbody.querySelectorAll('tr')];
-        for (let i = 0; i < rows.length; i++) {
-          await atUpdate(CONFIG.SPECIALTY_TABLE, rows[i].dataset.id, { 'Sort order': i + 1 });
-        }
-      });
-      row.addEventListener('dragover', e => {
-        e.preventDefault();
-        const after = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
-        if (e.clientY < after) {
-          tbody.insertBefore(dragging, row);
-        } else {
-          tbody.insertBefore(dragging, row.nextSibling);
-        }
-      });
-    });
-  }
-
-  // Categories aren't a real Airtable table — they only exist as whatever
-  // string value shows up in specialty items' own Category field. So
-  // "renaming" or "deleting" a category really means bulk-editing every
-  // item currently tagged with that string. window._mqSpecRecords (kept in
-  // sync by renderSpecialty) is the source of truth for which items belong
-  // to which category right now.
-  window.mqShowManageCategoriesModal = function() {
-    const specs = window._mqSpecRecords || [];
-    const catCounts = {};
-    specs.forEach(r => {
-      const c = (r.fields['Category'] || '').trim();
-      if (c) catCounts[c] = (catCounts[c] || 0) + 1;
-    });
-    const categories = Object.keys(catCounts).sort((a, b) => a.localeCompare(b));
-    let modal = document.getElementById('mq-manage-categories-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-manage-categories-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.25);max-height:80vh;overflow-y:auto">
-        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px">Manage categories</div>
-        <div style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.5">Rename a category to update it everywhere at once, or delete one — deleting a category never deletes its items, they just become uncategorized.</div>
-        ${categories.length ? categories.map(c => `
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #f3f4f6">
-            <div style="font-size:13px;color:#111;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.replace(/</g,'&lt;')} <span style="font-weight:400;color:#9ca3af">(${catCounts[c]} item${catCounts[c] === 1 ? '' : 's'})</span></div>
-            <button class="mq-btn mq-btn-sm" onclick='mqRenameCategory(${JSON.stringify(c)})'>Rename</button>
-            <button class="mq-btn mq-btn-danger mq-btn-sm" onclick='mqDeleteCategory(${JSON.stringify(c)})'>Delete</button>
-          </div>`).join('') : '<div style="font-size:13px;color:#9ca3af;padding:1rem 0;text-align:center">No categories yet — add one from any item\'s Category dropdown.</div>'}
-        <button onclick="mqCloseManageCategoriesModal()" style="width:100%;margin-top:1.25rem;padding:11px;background:#f3f4f6;color:#374151;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>
-      </div>`;
-    modal.style.display = 'flex';
-  };
-  window.mqCloseManageCategoriesModal = function() {
-    const modal = document.getElementById('mq-manage-categories-modal');
-    if (modal) modal.style.display = 'none';
-  };
-  window.mqRenameCategory = async function(oldName) {
-    const newName = (prompt(`Rename "${oldName}" to:`, oldName) || '').trim();
-    if (!newName || newName === oldName) return;
-    const matches = (window._mqSpecRecords || []).filter(r => (r.fields['Category'] || '').trim() === oldName);
-    if (!matches.length) return;
-    try {
-      await Promise.all(matches.map(r => {
-        r.fields['Category'] = newName;
-        return atUpdate(CONFIG.SPECIALTY_TABLE, r.id, { 'Category': newName });
-      }));
-    } catch (e) {
-      console.error('Failed to rename category', e);
-      alert('Something went wrong renaming that category — please try again.');
-      return;
-    }
-    renderSpecialty(window._mqSpecRecords, window._mqShopRecord);
-    window.mqShowManageCategoriesModal();
-  };
-  window.mqDeleteCategory = async function(name) {
-    const matches = (window._mqSpecRecords || []).filter(r => (r.fields['Category'] || '').trim() === name);
-    if (!matches.length) return;
-    const count = matches.length;
-    const ok = confirm(`Delete the "${name}" category?\n\n${count} item${count === 1 ? '' : 's'} currently in it will no longer be categorized — they'll show up as uncategorized instead. The items themselves won't be deleted or changed in any other way.`);
-    if (!ok) return;
-    try {
-      await Promise.all(matches.map(r => {
-        r.fields['Category'] = '';
-        return atUpdate(CONFIG.SPECIALTY_TABLE, r.id, { 'Category': '' });
-      }));
-    } catch (e) {
-      console.error('Failed to delete category', e);
-      alert('Something went wrong deleting that category — please try again.');
-      return;
-    }
-    renderSpecialty(window._mqSpecRecords, window._mqShopRecord);
-    window.mqShowManageCategoriesModal();
-  };
-
-  // ============================================================
-  // SAVE FUNCTIONS
-  // ============================================================
-  window.mqRefreshLogoPreview = function() {
-    const urlInput = el('mq-shop-logo');
-    const preview  = el('mq-shop-logo-preview');
-    const img      = el('mq-shop-logo-img');
-    if (!urlInput || !preview || !img) return;
-    const url = urlInput.value.trim();
-    if (url) {
-      img.src = url;
-      img.onerror = () => { preview.style.display = 'none'; };
-      img.onload  = () => { preview.style.display = 'block'; };
-      preview.style.display = 'block';
-    } else {
-      preview.style.display = 'none';
-      img.src = '';
-    }
-  };
-
-  // Clears one of the 4 optional color fields back to blank — blank means
-  // "use the original MidasQuote blue scheme," not a preset value tied to
-  // anything else, so this just empties the field and saves.
-  window.mqClearShopColorField = function(shortId, label) {
-    const textField = el('mq-shop-' + shortId);
-    const swatch = el('mq-shop-' + shortId + '-swatch');
-    if (textField) textField.value = '';
-    if (swatch) {
-      const defaults = { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' };
-      swatch.value = defaults[shortId] || '#1a1a1a';
-    }
-    window.mqSaveShop();
-    showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
-  };
-
-  window.mqToggleColorScheme = function() {
-    const body = el('mq-colorscheme-body');
-    const chevron = el('mq-colorscheme-chevron');
-    if (!body) return;
-    const isOpen = body.style.display !== 'none';
-    body.style.display = isOpen ? 'none' : 'block';
-    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
-  };
-
-  window.mqSaveShop = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    try {
-      const updatedFields = {
-        'Shop name':         gv('mq-shop-name'),
-        'Phone':             gv('mq-shop-phone'),
-        'City':              gv('mq-shop-city'),
-        'Website':           gv('mq-shop-website'),
-        'Lead notify email': gv('mq-shop-email'),
-        'Currency symbol':   gv('mq-shop-currency') || '$',
-        'Brand colour':      gv('mq-shop-color'),
-        'Focal colour':      gv('mq-shop-focalcolor'),
-        'Box border colour': gv('mq-shop-boxbordercolor'),
-        'Box background colour': gv('mq-shop-boxbgcolor'),
-        'Box text colour':   gv('mq-shop-boxtextcolor'),
-        'Quote range low':   gn('mq-shop-range-low',  5),
-        'Quote range high':  gn('mq-shop-range-high', 20),
-        'Logo URL':          gv('mq-shop-logo'),
-        'Disclaimer text':   gv('mq-shop-disclaimer'),
-        'Project type title': gv('mq-shop-projecttype-title'),
-        'Project type hint': gv('mq-shop-projecttype-hint'),
-        'Consultation link': gv('mq-shop-consult-link'),
-        'Consultation email': gv('mq-shop-consult-email'),
-        'Financing link':    gv('mq-financing-link'),
-      };
-      const currencyChanged = updatedFields['Currency symbol'] !== (shopRec.fields['Currency symbol'] || '$');
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, updatedFields);
-      // Keep the in-memory record in sync so other tabs (like Marketing Kit) reflect changes immediately
-      Object.assign(shopRec.fields, updatedFields);
-      // If Marketing Kit has already been opened this session, force it to rebuild with fresh data
-      const socialEl = document.getElementById('mq-mk-social');
-      if (socialEl) {
-        socialEl.dataset.loaded = '';
-        initMarketingKit(shopRec);
-      }
-      // The Specialty Items and Pricing tabs are only ever built once (at
-      // page load, or the first time each tab is opened) — CUR() reads
-      // whatever shopRec.fields had at THAT render time, so a currency
-      // change here wouldn't show up on those already-rendered tabs until a
-      // full page reload. Force both to rebuild right away instead, the
-      // same way Marketing Kit already does above.
-      if (currencyChanged) {
-        loadSpecialty(shopRec.fields['Shop name']).then(specs => renderSpecialty(specs, shopRec)).catch(()=>{});
-        const helperContainer = document.getElementById('mq-pricing-helper-v2');
-        if (helperContainer && helperContainer.dataset.loaded && window.mqph2Init) {
-          window.mqph2Init(shopRec, window._mqPricingRecord);
-        }
-      }
-      showMsg('mq-shop-msg', '✓ Shop info saved!');
-    } catch(e) { console.error('mqSaveShop failed:', e); showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
-  };
-
-  window.mqSavePricing = async function() {
-    const pricingRec = window._mqPricingRecord;
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    try {
-      const fields = {
-        'Shop':                [shopRec.id],
-        'Melamine price':      gn('mq-p-melamine'),
-        'Plywood price':       gn('mq-p-plywood'),
-        'MDF price':           gn('mq-p-mdf'),
-        'Solid wood price':    gn('mq-p-solid'),
-        'Slab multiplier':     gn('mq-p-slab'),
-        'Shaker multiplier':   gn('mq-p-shaker'),
-        'Raised multiplier':   gn('mq-p-raised'),
-        'Glass multiplier':    gn('mq-p-glass'),
-        'Install rate uppers': gn('mq-p-install'),
-        'Soft close hinges':   gn('mq-p-hinges'),
-        'Birch drawer box':    gn('mq-p-drawer'),
-        'Removal rate':        gn('mq-p-removal'),
-        'Lam supply':          gn('mq-p-lam'),
-        'SS econ supply':      gn('mq-p-ss-econ'),
-        'SS mid supply':       gn('mq-p-ss-mid'),
-        'SS prem supply':      gn('mq-p-ss-prem'),
-        'Gran econ supply':    gn('mq-p-gran-econ'),
-        'Gran mid supply':     gn('mq-p-gran-mid'),
-        'Gran prem supply':    gn('mq-p-gran-prem'),
-        'Quartz supply':       gn('mq-p-quartz'),
-        'Marble supply':       gn('mq-p-marble'),
-        'Butcher supply':      gn('mq-p-butcher'),
-        'Local zone radius':   gn('mq-p-zone-radius'),
-        'Zone 2 surcharge':    gn('mq-p-zone2'),
-        'Zone 3 surcharge':    gn('mq-p-zone3'),
-        'Zone 4 surcharge':    gn('mq-p-zone4'),
-        'Tax rate':            gn('mq-p-tax'),
-        'Backsplash rate':     gn('mq-p-backsplash'),
-        'Sink cutout':         gn('mq-p-sink'),
-        'Cooktop cutout':      gn('mq-p-cooktop'),
-      };
-      if (pricingRec) {
-        await atUpdate(CONFIG.PRICING_TABLE, pricingRec.id, fields);
-      } else {
-        const newRec = await atCreate(CONFIG.PRICING_TABLE, fields);
-        window._mqPricingRecord = newRec;
-      }
-      showMsg('mq-pricing-msg', '✓ Pricing saved!');
-    } catch(e) { showMsg('mq-pricing-msg', 'Error saving — please try again.', 'error'); }
-  };
-
-  const PHOTO_LIBRARY = {
-    melamine:  { label:'Melamine',                emoji:'🟤', desc:'Durable, easy-clean surface over engineered wood. Budget-friendly and available in dozens of colours.' },
-    plywood:   { label:'Plywood',                 emoji:'🪵', desc:'Superior moisture resistance and structural strength. A premium choice for long-lasting cabinets.' },
-    mdf:       { label:'MDF',                     emoji:'⬜', desc:'Smooth, consistent surface ideal for painted finishes.' },
-    solid:     { label:'Solid Wood',              emoji:'🌲', desc:'Real hardwood construction. Beautiful grain, extremely durable, and a timeless choice.' },
-    slab:      { label:'Slab Door',               emoji:'▭',  desc:'Clean, flat door with no frame. The defining look of modern and minimalist kitchens.' },
-    shaker:    { label:'Shaker Door',             emoji:'⬜', desc:'Five-piece frame with a flat centre panel. The most popular style — timeless and versatile.' },
-    raised:    { label:'Raised Panel Door',       emoji:'🔲', desc:'Traditional raised centre panel. Adds depth and a classic, formal look.' },
-    glass:     { label:'Glass Front Door',        emoji:'🪟', desc:'Perfect for displaying dishes or adding visual lightness. Clear, frosted, or textured.' },
-    none:      { label:'No Doors',                emoji:'📦', desc:'Open shelving or frameless box only. Popular for pantry areas and modern designs.' },
-    lam:       { label:'Laminate',                emoji:'🟫', desc:'Most affordable option. Hundreds of colours and patterns including realistic stone looks.' },
-    ss_econ:   { label:'Solid Surface — Economy', emoji:'⬜', desc:'Non-porous, seamless surface that resists stains. Can be repaired if scratched.' },
-    ss_mid:    { label:'Solid Surface — Mid',     emoji:'⬜', desc:'Premium solid surface with better colour depth and durability.' },
-    ss_prem:   { label:'Solid Surface — Premium', emoji:'⬜', desc:'Top-tier solid surface with designer colour options and superior finish quality.' },
-    gran_econ: { label:'Granite — Economy',       emoji:'🪨', desc:'Natural stone with unique veining and excellent heat resistance. Great value.' },
-    gran_mid:  { label:'Granite — Mid',           emoji:'🪨', desc:'More consistent patterning and colour selection. Extremely durable.' },
-    gran_prem: { label:'Granite — Premium',       emoji:'🪨', desc:'Exceptional colour, movement, and rarity. Each slab is unique.' },
-    quartz:    { label:'Quartz',                  emoji:'💎', desc:'Engineered stone — non-porous, consistent colouring, very low maintenance.' },
-    marble:    { label:'Marble',                  emoji:'🤍', desc:'The ultimate luxury surface. Beautiful natural veining unique to every slab.' },
-    butcher:   { label:'Butcher Block',           emoji:'🟤', desc:'Warm, natural wood surface. Ideal for islands. Can be sanded and refinished.' },
-  };
-
-  // MidasQuote curated photo library — swap placeholder URLs for real photos when ready
-  // Format: { category: [ {url, label}, ... ] }
-  // GitHub photo library — reads directly from repo folders, no manifest needed
-  // Folder structure: photos/materials/, photos/doors/, photos/countertops/, etc.
-  const GH_REPO = 'aceswin/midasquote-widget';
-  const GH_BASE = `https://raw.githubusercontent.com/${GH_REPO}/main`;
-  const GH_API  = `https://api.github.com/repos/${GH_REPO}/contents`;
-
-  // Map line item categories to photo folder names
- const CAT_TO_FOLDER = {
-    material:   'materials',
-    door:       'doors',
-    drawer:     'drawers',
-    hinge:      'hinges',
-    countertop: 'countertops',
-    specialty:  'specialty',
-    trim_crown:   'crown',
-    trim_valance: 'valance',
-    tall_cabinet: 'tallcabinets',
-  };
-
-  const _photoCache = {};
-
-  async function fetchPhotoFolder(cat) {
-    const folder = CAT_TO_FOLDER[cat] || cat;
-    if (_photoCache[folder]) return _photoCache[folder];
-    try {
-      const res = await fetch(`${GH_API}/${folder}`);
-      if (!res.ok) { _photoCache[folder] = []; return []; }
-      const files = await res.json();
-      if (!Array.isArray(files)) { _photoCache[folder] = []; return []; }
-      const photos = files
-        .filter(f => f && f.name && /\.(jpg|jpeg|png|webp)$/i.test(f.name))
-        .map(f => ({
-          url:   `${GH_BASE}/${folder}/${f.name}`,
-          label: (f.name || '').replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-        }));
-      _photoCache[folder] = photos;
-      return photos;
-    } catch(e) { _photoCache[folder] = []; return []; }
-  }
-
-  // Photo picker modal
-  function injectPhotoPicker() {
-    if (document.getElementById('mq-photo-picker')) return;
-    const modal = document.createElement('div');
-    modal.id = 'mq-photo-picker';
-    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1rem';
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:14px;width:100%;max-width:780px;display:flex;flex-direction:column;overflow:hidden">
-        <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-          <div style="font-size:15px;font-weight:600;color:#111">📷 Choose from library</div>
-          <button onclick="mqClosePhotoPicker()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1">×</button>
-        </div>
-        <div style="position:relative;display:flex;align-items:center">
-          <button onclick="document.getElementById('mq-picker-grid').scrollBy({left:-400,behavior:'smooth'})"
-            style="flex-shrink:0;width:36px;height:36px;margin-left:8px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:16px;color:#374151;box-shadow:0 2px 6px rgba(0,0,0,0.1)">‹</button>
-          <div id="mq-picker-grid" style="padding:1rem;overflow-x:auto;overflow-y:hidden;flex:1;display:flex;gap:12px;scroll-behavior:smooth"></div>
-          <button onclick="document.getElementById('mq-picker-grid').scrollBy({left:400,behavior:'smooth'})"
-            style="flex-shrink:0;width:36px;height:36px;margin-right:8px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:16px;color:#374151;box-shadow:0 2px 6px rgba(0,0,0,0.1)">›</button>
-        </div>
-        <div style="padding:0.75rem 1rem;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center;flex-shrink:0">
-          Don't see what you're looking for? You can also paste a photo URL directly.
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-  }
-
-  let _pickerTargetKey = null;
-
-  window.mqOpenPhotoPicker = async function(key, cat) {
-    injectPhotoPicker();
-    _pickerTargetKey = key;
-    const grid = document.getElementById('mq-picker-grid');
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">Loading photos...</div>';
-    document.getElementById('mq-photo-picker').style.display = 'flex';
-
-    const photos = await fetchPhotoFolder(cat);
-
-    if (!photos.length) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">
-        No library photos available for this category yet.<br>
-        No worries — just paste your own photo URL above instead.
-      </div>`;
+    // Collect the value at this step
+    const p = parseFloat(document.getElementById(`mqph-mini-p${step}`)?.value || document.getElementById('mqph-mini-p0')?.value || 0);
+    if (!p || p <= 0) {
+      const inp = document.getElementById(`mqph-mini-p${step}`) || document.getElementById('mqph-mini-p0');
+      if (inp) { inp.style.borderBottomColor='#dc2626'; inp.focus(); }
       return;
     }
 
-    const escapeHtmlLib = (s) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const total = miniWizTotalSteps(cat);
+    const isLast = step >= total - 1;
 
-    grid.innerHTML = photos.map((p, i) => `
-      <div data-photo-idx="${i}" title="${escapeHtmlLib(p.label)}"
-        style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:all 0.15s;display:flex;flex-direction:column;width:170px;flex:0 0 170px">
-        <img src="${p.url}" style="width:100%;height:100px;object-fit:cover;display:block;flex-shrink:0"
-          onerror="this.parentElement.style.display='none'"/>
-        <div style="padding:6px 8px;font-size:11px;font-weight:500;color:#374151;text-align:center;line-height:1.35;word-break:break-word;min-height:30px;flex-shrink:0;display:flex;align-items:center;justify-content:center">${escapeHtmlLib(p.label)}</div>
-      </div>`).join('');
-
-    // Hover effect + safe click binding — avoids breakage from special characters in filenames
-    grid.querySelectorAll('[data-photo-idx]').forEach(card => {
-      const idx = parseInt(card.dataset.photoIdx, 10);
-      card.onclick = () => mqSelectLibraryPhoto(photos[idx].url);
-      card.onmouseover = () => { card.style.borderColor = '#1a1a1a'; };
-      card.onmouseout = () => { card.style.borderColor = '#e5e7eb'; };
-    });
-  };
-
-  window.mqClosePhotoPicker = function() {
-    const m = document.getElementById('mq-photo-picker');
-    if (m) m.style.display = 'none';
-  };
-
-  window.mqSelectLibraryPhoto = function(url) {
-    const input = el('mq-photo-' + _pickerTargetKey);
-    if (input) {
-      input.value = url;
-      mqPreviewPhoto(_pickerTargetKey);
-    }
-    mqClosePhotoPicker();
-  };
-
-  function buildProductCard(key, savedPhotos) {
-    const lib = PHOTO_LIBRARY[key];
-    if (!lib) return '';
-    const savedUrl = (savedPhotos && savedPhotos[key]) || '';
-    const preview = savedUrl
-      ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
-      : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${lib.emoji}</div>`;
-    return `
-      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
-        <div id="mq-photo-preview-${key}">${preview}</div>
-        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${lib.label}</div>
-        <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">${lib.desc}</div>
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Photo URL (optional)</div>
-        <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
-          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
-        <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${key in PHOTO_LIBRARY ? (PHOTO_LIBRARY[key].label||'').toLowerCase() : 'specialty'}')">📷 Choose from library</button>
-      </div>`;
-  }
-
-  window.mqPreviewPhoto = function(key) {
-    const input = el('mq-photo-' + key);
-    const preview = el('mq-photo-preview-' + key);
-    if (!input || !preview) return;
-    const url = input.value.trim();
-    if (!url) {
-      const lib = PHOTO_LIBRARY[key];
-      preview.innerHTML = `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${lib?.emoji||'📷'}</div>`;
+    if (!isLast) {
+      // Store step value and advance
+      miniWiz[`p${step}`] = p;
+      miniWiz.step++;
+      renderMiniWiz();
       return;
     }
-    preview.innerHTML = `<img src="${url}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.outerHTML='<div style=\\'width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px\\'>📷</div>'"/>`;
-  };
 
-  window.mqMarkProductsDirty = function() {
-    document.querySelectorAll('.mq-products-save-btn').forEach(btn => {
-      btn.textContent = '💾 Save changes';
-      btn.style.background = '#16a34a';
-      btn.style.borderColor = '#16a34a';
-    });
-  };
-
-  // Same pure view filter, for the Specialty Items tab's table specifically.
-  window.mqFilterSpecTable = function() {
-    const roomFilter = el('mq-spec-tab-filter-room')?.value || '';
-    const categoryFilter = el('mq-spec-tab-filter-category')?.value || '';
-    const searchFilter = (el('mq-spec-tab-filter-search')?.value || '').toLowerCase().trim();
-    const proOnlyFilter = !!el('mq-spec-tab-filter-proonly')?.checked;
-    const tbody = document.getElementById('mq-spec-tbody');
-    if (!tbody) return;
-    let visibleCount = 0;
-    // Only the item's own row carries data-id/data-rooms/data-category/
-    // data-name — its variants-editor row is a separate sibling <tr> with
-    // none of those, so "tr[data-id]" here (instead of every <tr>) is what
-    // excludes it from this pass. Selecting every <tr> used to run this same
-    // room/category/search check against the attribute-less panel row too:
-    // with no data-rooms it trivially satisfied the room filter, with no
-    // data-category it trivially satisfied the category filter, so it
-    // "matched" almost any filter and got set back to visible — silently
-    // re-opening any variant panel (even an empty one on an item the filter
-    // just hid) the moment a filter changed, regardless of whether the shop
-    // owner had ever clicked to open it.
-    tbody.querySelectorAll('tr[data-id]').forEach(row => {
-      let rooms = [];
-      try { rooms = JSON.parse(row.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
-      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
-      const category = row.getAttribute('data-category') || '';
-      const categoryMatch = !categoryFilter || category === categoryFilter;
-      const name = row.getAttribute('data-name') || '';
-      const searchMatch = !searchFilter || name.includes(searchFilter);
-      const proOnlyMatch = !proOnlyFilter || row.getAttribute('data-proonly') === '1';
-      const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
-      row.style.display = show ? '' : 'none';
-      if (show) visibleCount++;
-    });
-    // Belt and suspenders on top of the fix above: any variant panel that
-    // happened to be open closes on every filter change, and its pill's
-    // arrow resets to closed (▾) to match. A panel that stayed open under an
-    // item the filter just hid (or scrolled away from) is exactly the
-    // "dead variant panel followed me to a different project type" bug —
-    // always resetting closed here avoids it rather than trying to track
-    // which open panels should or shouldn't survive a re-filter.
-    tbody.querySelectorAll('tr[id^="mq-spec-variants-row-"]').forEach(row => {
-      row.style.display = 'none';
-    });
-    tbody.querySelectorAll('.mq-spec-variant-pill').forEach(pill => {
-      pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, '▾');
-    });
-    const emptyMsg = document.getElementById('mq-spec-tab-filter-empty');
-    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
-  };
-
-  // Pure view filter — doesn't touch any saved data, just shows/hides cards
-  // already on screen, so a long specialty items list stays manageable.
-  window.mqFilterSpecialtyCards = function() {
-    const roomFilter = el('mq-spec-filter-room')?.value || '';
-    const categoryFilter = el('mq-spec-filter-category')?.value || '';
-    const searchFilter = (el('mq-spec-filter-search')?.value || '').toLowerCase().trim();
-    const proOnlyFilter = !!el('mq-spec-filter-proonly')?.checked;
-    const grid = document.getElementById('mq-spec-cards-grid');
-    if (!grid) return;
-    let visibleCount = 0;
-    grid.querySelectorAll('.mq-spec-card-wrap').forEach(wrap => {
-      let rooms = [];
-      try { rooms = JSON.parse(wrap.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
-      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
-      const category = wrap.getAttribute('data-category') || '';
-      const categoryMatch = !categoryFilter || category === categoryFilter;
-      const name = wrap.getAttribute('data-name') || '';
-      const searchMatch = !searchFilter || name.includes(searchFilter);
-      const proOnlyMatch = !proOnlyFilter || wrap.getAttribute('data-proonly') === '1';
-      const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
-      wrap.style.display = show ? '' : 'none';
-      if (show) visibleCount++;
-    });
-    const emptyMsg = document.getElementById('mq-spec-filter-empty');
-    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
-  };
-
-  // Same pure view filter, for the Templates admin page.
-  window.mqFilterTemplateCards = function() {
-    const roomFilter = el('mq-tmpl-filter-room')?.value || '';
-    const searchFilter = (el('mq-tmpl-filter-search')?.value || '').toLowerCase().trim();
-    const grid = document.getElementById('mq-tmpl-cards-grid');
-    if (!grid) return;
-    let visibleCount = 0;
-    grid.querySelectorAll('.mq-tmpl-card-wrap').forEach(wrap => {
-      let rooms = [];
-      try { rooms = JSON.parse(wrap.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
-      const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
-      const name = wrap.getAttribute('data-name') || '';
-      const searchMatch = !searchFilter || name.includes(searchFilter);
-      const show = roomMatch && searchMatch;
-      wrap.style.display = show ? '' : 'none';
-      if (show) visibleCount++;
-    });
-    const emptyMsg = document.getElementById('mq-tmpl-filter-empty');
-    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
-  };
-
-  // Live-updates the badge preview next to the label/color fields as the
-  // shop owner types or picks — same visual spec as the actual widget badge
-  // (just sized up a touch for readability here, not crammed onto a tiny
-  // thumbnail corner).
-  window.mqUpdateBadgePreview = function() {
-    const label = (document.getElementById('mq-badge-label')?.value || '').trim() || 'Best seller';
-    const colorRaw = (document.getElementById('mq-badge-color')?.value || '').trim();
-    const color = /^#[0-9a-fA-F]{6}$/.test(colorRaw) ? colorRaw : '#f59e0b';
-    const preview = document.getElementById('mq-badge-preview');
-    if (preview) {
-      preview.style.background = color;
-      preview.textContent = `🏆 ${label}`;
-    }
-  };
-
-  window.mqSaveProducts = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    // Scoped to this tab's own container specifically — otherwise, if the
-    // Templates admin tab has also been visited this session, its leftover
-    // inputs (same id pattern) could get swept up into the wrong shop's save.
-    const scope = document.getElementById('mq-products-content') || document;
-    const photos = {};
-    const hidden = {};
-    const featured = {};
-    scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
-      if (input.tagName !== 'INPUT') return;
-      const key = input.id.replace('mq-photo-', '');
-      if (input.value.trim()) photos[key] = input.value.trim();
-    });
-    scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
-      const key = cb.id.replace('mq-hidden-', '');
-      if (cb.checked) hidden[key] = true;
-    });
-    scope.querySelectorAll('[id^="mq-featured-"]').forEach(cb => {
-      const key = cb.id.replace('mq-featured-', '');
-      if (cb.checked) featured[key] = true;
-    });
-    const badgeLabelInput = document.getElementById('mq-badge-label');
-    const badgeLabelToSave = badgeLabelInput ? (badgeLabelInput.value.trim() || 'Best seller') : (shopRec.fields['Badge label'] || 'Best seller');
-    const badgeColorInput = document.getElementById('mq-badge-color');
-    const badgeColorRaw = badgeColorInput ? badgeColorInput.value.trim() : shopRec.fields['Badge color'];
-    const badgeColorToSave = /^#[0-9a-fA-F]{6}$/.test(badgeColorRaw) ? badgeColorRaw : '#f59e0b';
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, {
-        'Photos':  JSON.stringify(photos),
-        'Hidden':  JSON.stringify(hidden),
-        'Featured items': JSON.stringify(featured),
-        'Badge label': badgeLabelToSave,
-        'Badge color': badgeColorToSave,
-      });
-      shopRec.fields['Photos']  = JSON.stringify(photos);
-      shopRec.fields['Hidden']  = JSON.stringify(hidden);
-      shopRec.fields['Featured items'] = JSON.stringify(featured);
-      shopRec.fields['Badge label'] = badgeLabelToSave;
-      shopRec.fields['Badge color'] = badgeColorToSave;
-      scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
-        btn.textContent = 'Saved ✓';
-        btn.style.background = '#1a1a1a';
-        btn.style.borderColor = '#1a1a1a';
-        setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
-      });
-      showMsg('mq-products-msg', '✓ Photos saved!');
-    } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
-  };
-
-  // Same pattern as mqSaveProducts, but scoped to the Templates tab and
-  // saving to the master template shop record instead of the admin's own shop.
-  window.mqSaveTemplatePhotos = async function() {
-    const masterShop = window._mqMasterTemplateShop;
-    if (!masterShop) return;
-    const scope = document.getElementById('mq-templates-content') || document;
-    const photos = {};
-    const hidden = {};
-    scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
-      if (input.tagName !== 'INPUT') return;
-      const key = input.id.replace('mq-photo-', '');
-      if (input.value.trim()) photos[key] = input.value.trim();
-    });
-    scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
-      const key = cb.id.replace('mq-hidden-', '');
-      if (cb.checked) hidden[key] = true;
-    });
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, {
-        'Photos': JSON.stringify(photos),
-        'Hidden': JSON.stringify(hidden),
-      });
-      masterShop.fields['Photos'] = JSON.stringify(photos);
-      masterShop.fields['Hidden'] = JSON.stringify(hidden);
-      scope.querySelectorAll('.mq-products-save-btn').forEach(btn => {
-        btn.textContent = 'Saved ✓';
-        btn.style.background = '#1a1a1a';
-        btn.style.borderColor = '#1a1a1a';
-        setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
-      });
-      showMsg('mq-templates-msg', '✓ Template photos saved!');
-    } catch(e) { showMsg('mq-templates-msg', 'Error saving — please try again.', 'error'); }
-  };
-
-  async function initProductsTab(shopRecord, lineItemsData) {
-    const token = shopRecord.fields['Shop token'] || '';
-    const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${token}`;
-
-    let savedPhotos = {};
-    let savedProducts = {};
-    try { if (shopRecord.fields['Photos']) savedPhotos = JSON.parse(shopRecord.fields['Photos']); } catch(e) {}
-    try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
-
-    // Categories to exclude from My Products (no photos needed)
-    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
-
-    // Group line items by category directly — same source as pricing helper
-    const byCategory = {};
-    (lineItemsData || []).forEach(r => {
-      if (!r.fields || r.fields['Active'] === false) return;
-      let cat = r.fields['Category'];
-      if (!cat || EXCLUDED_CATS.has(cat.toLowerCase())) return;
-      // Split trim into separate crown / valance buckets so they show as distinct sections
-      if (cat === 'trim') {
-        cat = (r.fields['Trim type'] === 'valance') ? 'trim_valance' : 'trim_crown';
-      }
-      if (!byCategory[cat]) byCategory[cat] = [];
-      // Deduplicate by base name (strip "— uppers"/"— bases" suffix)
-      const ITEM_EXCLUDE = /backsplash|cutout|cooktop/i;
-      const baseName = (r.fields['Name'] || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
-      if (ITEM_EXCLUDE.test(baseName)) return;
-      // Materials and drawers span 2 underlying records each (uppers/bases,
-      // some/mostly) merged into one card — track every id so room-visibility
-      // changes get applied to all of them together, keeping them in sync.
-      let existing = byCategory[cat].find(x => x.baseName === baseName);
-      if (!existing) {
-        let addonOptions = [];
-        try { addonOptions = r.fields['Addon options'] ? JSON.parse(r.fields['Addon options']) : []; } catch(e) { addonOptions = []; }
-        existing = {
-          id: r.id, ids: [r.id], baseName, fullName: r.fields['Name'] || baseName, visibleRooms: r.fields['Visible rooms'],
-          groupName: (r.fields['Group name']||'').trim(),
-          groupDesc: r.fields['Group description']||'',
-          groupOrder: typeof r.fields['Group sort order']==='number' ? r.fields['Group sort order'] : 0,
-          addonOptions,
-          price: r.fields['Rate']||0,
+    // Last step — save to Airtable (or, in bulk mode, compute the shared
+    // rate(s) and move to the naming screen instead of saving yet)
+    if (miniWiz.bulkMode) {
+      miniWiz[`p${step}`] = p;
+      if (cat === 'material') {
+        miniWiz.bulkRates = { rate0: Math.round((miniWiz.p0/4)*100)/100, rate1: Math.round((miniWiz.p1/4)*100)/100 };
+      } else if (cat === 'door') {
+        miniWiz.bulkRates = { rate0: Math.round(((p - bl.blBasePrice)/4)*100)/100 };
+      } else if (cat === 'hinge') {
+        const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
+        miniWiz.bulkRates = { rate0: Math.round(((p - baseWithDoor)/4)*100)/100 };
+      } else if (cat === 'drawer') {
+        const p0 = miniWiz.p0 || 0, p1 = miniWiz.p1 || 0;
+        miniWiz.bulkRates = {
+          rate0: p0>0 ? Math.round(((p0 - bl.blBasePrice)/4)*100)/100 : 0,
+          rate1: (p0>0 && p1>0) ? Math.round((((p0+p1)/2 - bl.blBasePrice)/4)*100)/100 : 0,
         };
-        byCategory[cat].push(existing);
-      } else {
-        existing.ids.push(r.id);
-        if (!existing.visibleRooms && r.fields['Visible rooms']) existing.visibleRooms = r.fields['Visible rooms'];
-        if (!existing.groupName && r.fields['Group name']) existing.groupName = r.fields['Group name'].trim();
       }
-    });
+      mqphShowBulkNameScreen();
+      return;
+    }
+    if (!mqphWarnIfDuplicate(cat, name)) return;
+    miniWiz[`p${step}`] = p;
+    const nextBtn = document.getElementById('mqph-mini-next');
+    if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
 
-    const CAT_DISPLAY = {
-      material: { title:'🪵 Box Materials',       emoji:'🪵' },
-      door:     { title:'🚪 Door Styles',          emoji:'🚪' },
-      drawer:   { title:'🗄️ Drawer Configurations', emoji:'🗄️' },
-      hinge:    { title:'🔧 Door Hinges',          emoji:'🔧' },
-      countertop:{ title:'🪨 Countertop Materials', emoji:'🪨' },
-      trim_crown:   { title:'👑 Crown Moulding',   emoji:'👑' },
-      trim_valance: { title:'📏 Valance',          emoji:'📏' },
-      tall_cabinet: { title:'🏛️ Tall Cabinets',    emoji:'🏛️' },
-    };
-    // Stored globally so mqToggleCategoryRoom (defined outside this closure)
-    // can bulk-sync every item in a category when its category-level
-    // checkbox changes.
-    window._mqByCategory = byCategory;
-
-    // Per-category "Pick a collection" dropdown label — e.g. shops may want
-    // "Pick a door style family" for doors but "Pick a finish" for materials.
-    // Stored as one JSON blob on the shop record, same pattern as "Category rooms".
-    let categoryPickerLabels = {};
-    try { categoryPickerLabels = shopRecord.fields['Category picker labels'] ? JSON.parse(shopRecord.fields['Category picker labels']) : {}; } catch(e) { categoryPickerLabels = {}; }
-    window._mqCategoryPickerLabels = categoryPickerLabels;
-
-    // Build Products for showroom — all item names per category
-    const savedProductsForShowroom = {};
-    Object.entries(byCategory).forEach(([cat, items]) => {
-      savedProductsForShowroom[cat] = items.map(i => i.baseName);
-    });
-
-
-    // Save detected keys so showroom can read them
     try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Products': JSON.stringify(savedProductsForShowroom) });
-      shopRecord.fields['Products'] = JSON.stringify(savedProductsForShowroom);
-    } catch(e) {}
+      if (cat === 'material') {
+        const upperRate = Math.round((miniWiz.p0 / 4) * 100) / 100;
+        const baseRate  = Math.round((miniWiz.p1 / 4) * 100) / 100;
+        const sortBase  = lineItems.filter(r=>r.fields&&r.fields['Category']==='material').length;
 
-    // Load specialty items
-    const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
-    // Stored globally in the same {id, ids, visibleRooms} shape as byCategory
-    // items, so the bulk-sync logic can treat specialty items identically.
-    window._mqSpecItemsList = specItems.map(r => ({ id: r.id, ids: [r.id], visibleRooms: r.fields['Visible rooms'] }));
-
-    const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
-    function specIcon(name) { for (const [k,v] of Object.entries(icons)) { if ((name||'').toLowerCase().includes(k)) return v; } return '⭐'; }
-
-    let savedHidden = {};
-    try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
-    let savedFeatured = {};
-    try { if (shopRecord.fields['Featured items']) savedFeatured = JSON.parse(shopRecord.fields['Featured items']); } catch(e) {}
-    const badgeLabel = (shopRecord.fields['Badge label'] || '').trim() || 'Best seller';
-    const badgeColor = /^#[0-9a-fA-F]{6}$/.test(shopRecord.fields['Badge color']) ? shopRecord.fields['Badge color'] : '#f59e0b';
-
-    // Free Demo tier: existing product photos (however they got there —
-    // library pick, upload, or a pasted link) stay exactly as-is and keep
-    // showing, per Jordan's call — only NEW uploads/links/library picks are
-    // locked, not what a shop already has.
-    const isDemoShop = (shopRecord.fields['Plan']||'') === 'Demo';
-    function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
-      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemoShop);
-    }
-
-    // Groups only make sense for categories customers actually pick a
-    // style/material from — not hinges, countertops, or tall cabinets.
-    const GROUPABLE_CATS = ['material','door','drawer','trim_crown','trim_valance','countertop'];
-
-    function catSection(cat) {
-      const items = byCategory[cat] || [];
-      if (!items.length) return '';
-      const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
-      return `<div class="mq-card" style="padding:0;overflow:hidden">
-        <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-          <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
-          <span id="mq-cat-arrow-${cat}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
-        </div>
-        <div id="mq-cat-body-${cat}" style="display:none;padding:0 1.25rem 1.25rem">
-          <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add a photo URL for each item — leave blank to show the default icon on your showroom page.</p>
-          ${categoryRoomDisclosure(cat)}
-          ${GROUPABLE_CATS.includes(cat) ? `<div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <button class="mq-btn mq-btn-secondary mq-btn-sm" onclick="event.stopPropagation();mqOpenGroupManager('${cat}',null)">+ New group</button>
-            <span style="font-size:11px;color:#9ca3af">You can make a group for a type of style — like "Shaker" or "Raised panel" — or price several items the same and collect them into one group. Want to leave things as they are? Just don't create any groups.</span>
-          </div>
-          <div style="margin-bottom:12px">
-            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Dropdown label shown to customers for this category's collections (only appears once you've created a group here)</label>
-            <input type="text" value="${((window._mqCategoryPickerLabels||{})[cat]||'').replace(/"/g,'&quot;')}" placeholder="Pick a collection"
-              style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;max-width:320px;box-sizing:border-box"
-              onchange="mqSaveCategoryPickerLabel('${cat}',this.value)"/>
-          </div>` : ''}
-          <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
-          ${cat === 'countertop' && mqCountertopAddonPhotoList().length ? `
-          <div style="margin-top:16px">
-            <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Edge &amp; addon photos</div>
-            <p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Names, pricing, and which materials each one applies to are managed in Pricing → Countertop pricing — this is just for adding a photo.</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-              ${mqCountertopAddonPhotoList().map(a => photoCard('addon_'+a.id, a.label, a.isEdge?'📐':'➕', 'countertop', null, null)).join('')}
-            </div>
-          </div>` : ''}
-        </div>
-      </div>`;
-    }
-
-    // Every distinct edge/addon across all countertop materials, deduped by
-    // id — used only to offer a photo card here; everything else about an
-    // addon (name, pricing, which materials it applies to) is managed in
-    // Pricing → Countertop pricing instead. "Standard" (the free default
-    // edge every material falls back to) isn't a real addon record — it's
-    // always added in here under a fixed key so shops can still give it a
-    // photo even with zero custom edges configured.
-    function mqCountertopAddonPhotoList() {
-      const items = byCategory['countertop'] || [];
-      const seen = new Map();
-      seen.set('standard_edge', { id:'standard_edge', label:'Standard', isEdge:true });
-      items.forEach(item => (item.addonOptions||[]).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
-      return [...seen.values()];
-    }
-
-    // The grid contents get rebuilt on their own (without re-rendering the
-    // whole tab) whenever a group name, description, or order changes — so
-    // this is split out from catSection itself.
-    // Tracks which product groups are expanded, keyed by "cat::groupName" so
-    // it survives re-renders (same reasoning as the category-level version
-    // below). Groups start COLLAPSED by default — unlike whole categories —
-    // since a single group can easily hold 40+ items, and switching from
-    // Group A to Group B shouldn't mean scrolling through all of A first.
-    let _mqExpandedProductGroups = new Set();
-    function mqGroupSlug(cat, groupKey) { return `${cat}-${groupKey.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`; }
-
-    window.mqToggleProductGroup = function(cat, groupKey) {
-      const fullKey = `${cat}::${groupKey}`;
-      const slug = mqGroupSlug(cat, groupKey);
-      const body = document.getElementById(`mq-group-body-${slug}`);
-      const arrow = document.getElementById(`mq-group-arrow-${slug}`);
-      if (!body) return;
-      const opening = body.style.display === 'none';
-      body.style.display = opening ? 'grid' : 'none';
-      if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
-      if (opening) _mqExpandedProductGroups.add(fullKey); else _mqExpandedProductGroups.delete(fullKey);
-    };
-
-    function catGridHtml(cat) {
-      const items = byCategory[cat] || [];
-      const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
-      const buildCard = (item) => {
-        const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
-        const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
-        const card = photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
-        if (!GROUPABLE_CATS.includes(cat)) return card;
-        // A clickable badge showing this item's group (if any) — clicking it
-        // opens the same group manager, so reassigning an item is "click its
-        // group, check/uncheck it there" rather than retyping text per item.
-        const badge = item.groupName
-          ? `<button onclick="mqOpenGroupManager('${cat}','${item.groupName.replace(/'/g,"\\'")}')" style="margin-top:6px;width:100%;font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151;text-align:left">🏷️ ${item.groupName}</button>`
-          : `<div style="margin-top:6px;font-size:11px;color:#9ca3af;padding:4px 2px">Not in a group</div>`;
-        return `<div>${card}${badge}</div>`;
-      };
-
-      if (!GROUPABLE_CATS.includes(cat) || !items.some(i => i.groupName)) {
-        return items.map(buildCard).join('');
+        const upperRec = await atCreate(LINE_ITEMS_TABLE, {
+          shop:[shopRecord._recordId], Name:`${name} — uppers`, Category:'material',
+          Rate:upperRate, Unit:'per lin ft — uppers', Description:'Box material rate uppers', Active:true, 'Sort order':sortBase+1,
+        });
+        const baseRec = await atCreate(LINE_ITEMS_TABLE, {
+          shop:[shopRecord._recordId], Name:`${name} — bases`, Category:'material',
+          Rate:baseRate, Unit:'per lin ft — bases', Description:'Box material rate bases', Active:true, 'Sort order':sortBase+2,
+        });
+        if (upperRec?.id) lineItems.push(upperRec);
+        if (baseRec?.id)  lineItems.push(baseRec);
       }
 
-      const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
-      const groupBlocks = groupNames.map(name => {
-        const members = items.filter(i => i.groupName === name);
-        const desc = members.find(m=>m.groupDesc)?.groupDesc || '';
-        const order = members.find(m=>m.groupOrder)?.groupOrder || 0;
-        return { name, members, desc, order };
-      }).sort((a,b) => a.order - b.order);
-      const ungrouped = items.filter(i => !i.groupName);
-      if (ungrouped.length) groupBlocks.push({ name: null, members: ungrouped, desc: '', order: Infinity }); // "Other" — always last
+      if (cat === 'door') {
+        const rate = Math.round(((p - bl.blBasePrice) / 4) * 100) / 100;
+        const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='door').length;
+        const rec = await atCreate(LINE_ITEMS_TABLE, {
+          shop:[shopRecord._recordId], Name:name, Category:'door',
+          Rate:rate, Unit:'per lin ft upcharge', Description:'Door style upcharge', Active:true, 'Sort order':sortBase+1,
+        });
+        if (rec?.id) lineItems.push(rec);
+      }
 
-      return groupBlocks.map((g, gi) => {
-        const groupKey = g.name || '__other__';
-        const fullKey = `${cat}::${groupKey}`;
-        const slug = mqGroupSlug(cat, groupKey);
-        const isOpen = _mqExpandedProductGroups.has(fullKey);
-        return `
-        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap;cursor:pointer" onclick="mqToggleProductGroup('${cat}','${groupKey.replace(/'/g,"\\'")}')">
-          <span id="mq-group-arrow-${slug}" style="display:inline-block;font-size:11px;color:#6b7280;transition:transform 0.2s;transform:rotate(${isOpen?'90deg':'0deg'})">▶</span>
-          <span style="font-weight:700;font-size:13px;color:#111">${g.name || 'Other'}</span>
-          <span style="font-size:11px;color:#9ca3af">(${g.members.length})</span>
-          ${g.name ? `
-            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
-            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
-            <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
-            ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
-          ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
-        </div>
-        <div id="mq-group-body-${slug}" style="display:${isOpen?'grid':'none'};grid-column:1/-1;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-          ${g.members.map(buildCard).join('')}
+      if (cat === 'hinge') {
+        const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
+        const rate = Math.round(((p - baseWithDoor) / 4) * 100) / 100;
+        const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='hinge').length;
+        const rec = await atCreate(LINE_ITEMS_TABLE, {
+          shop:[shopRecord._recordId], Name:name, Category:'hinge',
+          Rate:rate, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':sortBase+1,
+        });
+        if (rec?.id) lineItems.push(rec);
+      }
+
+      if (cat === 'drawer') {
+        const p0 = miniWiz.p0 || 0; // 1-drawer quote
+        const p1 = miniWiz.p1 || 0; // bank quote (current step)
+        const bl2 = getBaselineRates();
+        const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='drawer').length;
+
+        if (p0 > 0) {
+          const someRate = Math.round(((p0 - bl2.blBasePrice) / 4) * 100) / 100;
+          const rec1 = await atCreate(LINE_ITEMS_TABLE, {
+            shop:[shopRecord._recordId], Name:`${name} — some drawers`, Category:'drawer',
+            Rate:someRate, Unit:'per lin ft upcharge', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':sortBase+1,
+          });
+          if (rec1?.id) lineItems.push(rec1);
+        }
+
+        if (p0 > 0 && p1 > 0) {
+          const mostlyRate = Math.round((((p0 + p1) / 2 - bl2.blBasePrice) / 4) * 100) / 100;
+          const rec2 = await atCreate(LINE_ITEMS_TABLE, {
+            shop:[shopRecord._recordId], Name:`${name} — mostly drawers`, Category:'drawer',
+            Rate:mostlyRate, Unit:'per lin ft upcharge', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':sortBase+2,
+          });
+          if (rec2?.id) lineItems.push(rec2);
+        }
+      }
+
+      mqphCloseMiniWiz();
+      await loadAndRender();
+
+    } catch(e) {
+      console.error('Mini-wiz save error:', e);
+      if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Save →'; }
+      alert('Error saving. Please try again.');
+    }
+  };
+
+  // Hinges aren't a groupable category (matches My Products) — no group
+  // field offered there.
+  const GROUPABLE_MINI_CATS = ['material','door','drawer'];
+
+  // After the shared price is set, this screen collects one name per item —
+  // empty inputs (not pre-filled placeholders) so nothing gets silently
+  // saved with a generic, un-renamed label.
+  window.mqphShowBulkNameScreen = function() {
+    const cat = miniWiz.cat;
+    const catMeta = { material:{icon:'🪵',label:'box material'}, door:{icon:'🚪',label:'door style'}, hinge:{icon:'🔧',label:'hinge'}, drawer:{icon:'🗄️',label:'drawer configuration'} };
+    const meta = catMeta[cat] || { icon:'➕', label:'item' };
+    document.getElementById('mqph-mini-title').innerHTML = `${meta.icon} Name your ${miniWiz.bulkCount} new ${meta.label}s`;
+    document.getElementById('mqph-mini-sub').textContent = 'All share the price you just set';
+    document.getElementById('mqph-mini-progress').innerHTML = '';
+    const rows = Array.from({length: miniWiz.bulkCount}, (_,i) => `
+      <div style="margin-bottom:8px">
+        <input type="text" id="mqph-bulk-name-${i}" class="mqph-name-input" style="font-size:14px;padding:8px 10px" placeholder="${meta.label.charAt(0).toUpperCase()+meta.label.slice(1)} #${i+1}"/>
+      </div>`).join('');
+    const groupBlock = GROUPABLE_MINI_CATS.includes(cat) ? (() => {
+      const existingGroups = [...new Set(lineItems.filter(r=>r.fields&&r.fields['Category']===cat&&(r.fields['Group name']||'').trim()).map(r=>r.fields['Group name'].trim()))];
+      return `
+        <div style="margin-bottom:1rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Group name (optional)</label>
+          <div style="position:relative">
+            <input type="text" id="mqph-bulk-group" list="mqph-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group" style="width:100%;padding-right:28px"/>
+            <span onclick="document.getElementById('mqph-bulk-group').focus()" style="position:absolute;right:6px;top:0;bottom:0;width:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9ca3af;font-size:11px">▼</span>
+          </div>
+          <datalist id="mqph-bulk-group-list">${existingGroups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>
+          <div style="font-size:11px;color:#6b7280;margin-top:4px">Match an existing group to add these to it, or type a new name to create one — applies to all ${miniWiz.bulkCount} items below.</div>
         </div>`;
-      }).join('');
+    })() : '';
+    document.getElementById('mqph-mini-content').innerHTML = `
+      ${groupBlock}
+      <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">Type each name. Leave any blank and we'll flag it before saving.</p>
+      <div style="max-height:340px;overflow-y:auto;padding-right:4px">${rows}</div>
+      <div id="mqph-bulk-name-warn" style="display:none;margin-top:10px;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#991b1b"></div>
+    `;
+    const nextBtn = document.getElementById('mqph-mini-next');
+    const backBtn = document.getElementById('mqph-mini-back');
+    if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = `Create ${miniWiz.bulkCount} items →`; nextBtn.onclick = () => mqphSaveBulkNames(); }
+    if (backBtn) { backBtn.style.display = 'inline-block'; backBtn.textContent = 'Cancel'; backBtn.onclick = () => mqphCloseMiniWiz(); }
+  };
+
+  window.mqphSaveBulkNames = async function() {
+    const cat = miniWiz.cat;
+    const count = miniWiz.bulkCount;
+    const names = [];
+    const blanks = [];
+    for (let i = 0; i < count; i++) {
+      const v = document.getElementById(`mqph-bulk-name-${i}`)?.value.trim() || '';
+      names.push(v);
+      if (!v) blanks.push(i+1);
+    }
+    const warnEl = document.getElementById('mqph-bulk-name-warn');
+    if (blanks.length) {
+      if (warnEl) { warnEl.style.display='block'; warnEl.textContent = `${blanks.length} item${blanks.length>1?'s are':' is'} still unnamed (#${blanks.slice(0,10).join(', ')}${blanks.length>10?', …':''}). Fill in every name before saving.`; }
+      const firstBlank = document.getElementById(`mqph-bulk-name-${blanks[0]-1}`);
+      if (firstBlank) firstBlank.focus();
+      return;
+    }
+    // Internal duplicates (two rows named the same thing) and duplicates
+    // against existing items — checked once as a batch rather than one
+    // popup per item, since confirming 90 times would be unusable.
+    const seen = new Map();
+    const internalDupes = [];
+    names.forEach((n,i) => {
+      const key = mqphBaseNameFor(cat, n).toLowerCase();
+      if (seen.has(key)) internalDupes.push(n); else seen.set(key, i);
+    });
+    const existingDupes = names.filter(n => mqphFindDuplicateName(cat, n));
+    const allDupes = [...new Set([...internalDupes, ...existingDupes])];
+    if (allDupes.length) {
+      const proceed = confirm(`These names look like duplicates (either repeated in your list, or already exist): ${allDupes.slice(0,15).join(', ')}${allDupes.length>15?', …':''}.\n\nSave everything anyway?`);
+      if (!proceed) return;
     }
 
-    // Per-category "Pick a collection" dropdown label — stored as one JSON
-    // blob on the shop record (same pattern as "Category rooms"), so this
-    // only ever touches that one field, never the Line Items.
-    window.mqSaveCategoryPickerLabel = async function(cat, value) {
-      const label = (value||'').trim();
-      const labels = { ...(window._mqCategoryPickerLabels||{}) };
-      if (label) labels[cat] = label; else delete labels[cat];
-      try {
-        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Category picker labels': JSON.stringify(labels) });
-        window._mqCategoryPickerLabels = labels;
-        shopRecord.fields['Category picker labels'] = JSON.stringify(labels);
-      } catch(e) {
-        console.error('Failed to save picker label', e);
-        alert('Could not save that label — please try again.');
+    const nextBtn = document.getElementById('mqph-mini-next');
+    if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
+    const mr = miniWiz.bulkRates || {};
+    const groupName = GROUPABLE_MINI_CATS.includes(cat) ? (document.getElementById('mqph-bulk-group')?.value || '').trim() : '';
+    const groupFields = {};
+    if (groupName) {
+      const groupMembers = lineItems.filter(r=>r.fields&&r.fields['Category']===cat&&(r.fields['Group name']||'').trim()===groupName);
+      const isExistingGroup = groupMembers.length > 0;
+      groupFields['Group name'] = groupName;
+      if (isExistingGroup) {
+        groupFields['Group sort order'] = groupMembers.find(m=>typeof m.fields['Group sort order']==='number')?.fields['Group sort order'] || 0;
+        groupFields['Group description'] = groupMembers.find(m=>m.fields['Group description'])?.fields['Group description'] || '';
+      } else {
+        const allOrders = [...new Set(lineItems.filter(r=>r.fields&&r.fields['Category']===cat&&(r.fields['Group name']||'').trim()).map(r=>r.fields['Group sort order']||0))];
+        groupFields['Group sort order'] = allOrders.length ? Math.max(...allOrders)+1 : 0;
       }
-    };
-
-    // Assigns/renames/clears which group an item belongs to. Bulk-writes
-    // across every underlying id (materials/drawers can span 2 records —
-    // uppers/bases, some/mostly — that need to move together).
-    window.mqSaveItemGroup = async function(cat, idsCsv, value) {
-      const ids = (idsCsv||'').split(',').filter(Boolean);
-      const groupName = (value||'').trim();
-      const items = byCategory[cat] || [];
-      const item = items.find(i => i.ids.join(',') === idsCsv);
-      try {
-        await Promise.all(ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': groupName })));
-        if (item) item.groupName = groupName;
-        const grid = document.getElementById(`mq-cat-grid-${cat}`);
-        if (grid) grid.innerHTML = catGridHtml(cat);
-      } catch(e) {
-        console.error('Failed to save item group', e);
-        alert('Could not save the group — please try again.');
+    }
+    const writes = [];
+    let sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']===cat).length;
+    try {
+      for (const nm of names) {
+        if (cat === 'material') {
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${nm} — uppers`, Category:'material', Rate:mr.rate0||0, Unit:'per lin ft — uppers', Description:'Box material rate uppers', Active:true, 'Sort order':++sortBase, ...groupFields }));
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${nm} — bases`, Category:'material', Rate:mr.rate1||0, Unit:'per lin ft — bases', Description:'Box material rate bases', Active:true, 'Sort order':++sortBase, ...groupFields }));
+        } else if (cat === 'door') {
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:nm, Category:'door', Rate:mr.rate0||0, Unit:'per lin ft upcharge', Description:'Door style upcharge', Active:true, 'Sort order':++sortBase, ...groupFields }));
+        } else if (cat === 'hinge') {
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:nm, Category:'hinge', Rate:mr.rate0||0, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':++sortBase }));
+        } else if (cat === 'drawer') {
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${nm} — some drawers`, Category:'drawer', Rate:mr.rate0||0, Unit:'per lin ft upcharge', Description:'Some drawers rate (1 drawer per cabinet)', Active:true, 'Sort order':++sortBase, ...groupFields }));
+          writes.push(atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:`${nm} — mostly drawers`, Category:'drawer', Rate:mr.rate1||0, Unit:'per lin ft upcharge', Description:'Mostly drawers rate (averaged 1-drawer + bank)', Active:true, 'Sort order':++sortBase, ...groupFields }));
+        }
       }
-    };
+      await Promise.all(writes);
+      mqphCloseMiniWiz();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Bulk save error:', e);
+      if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = `Create ${count} items →`; }
+      alert('Something went wrong saving these — please try again. Anything already created stayed saved, so check My Products/Pricing before re-running to avoid duplicates.');
+    }
+  };
 
-    window.mqMoveProductGroup = async function(cat, groupName, dir) {
-      const items = byCategory[cat] || [];
-      const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
-      const groups = groupNames.map(name => {
-        const members = items.filter(i => i.groupName === name);
-        const order = members.find(m=>m.groupOrder)?.groupOrder || 0;
-        return { name, order, members };
-      }).sort((a,b) => a.order - b.order);
-      const idx = groups.findIndex(g => g.name === groupName);
-      const swapIdx = idx + dir;
-      if (idx === -1 || swapIdx < 0 || swapIdx >= groups.length) return;
-      const a = groups[idx], b = groups[swapIdx];
-      const aOrder = a.order, bOrder = b.order === aOrder ? aOrder + (dir>0?1:-1) : b.order; // guard against ties on first use
-      try {
-        await Promise.all([
-          ...a.members.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group sort order': bOrder }))),
-          ...b.members.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group sort order': aOrder }))),
-        ]);
-        a.members.forEach(i => i.groupOrder = bOrder);
-        b.members.forEach(i => i.groupOrder = aOrder);
-        const grid = document.getElementById(`mq-cat-grid-${cat}`);
-        if (grid) grid.innerHTML = catGridHtml(cat);
-      } catch(e) {
-        console.error('Failed to reorder groups', e);
-        alert('Could not reorder — please try again.');
-      }
-    };
+  window.mqphMiniBack = function() {
+    if (miniWiz.step > 0) { miniWiz.step--; renderMiniWiz(); }
+  };
 
-    // ============================================================
-    // GROUP MANAGER MODAL — create a group, rename it, edit its
-    // description, check/uncheck which items belong to it, or delete it.
-    // One place to do all of that instead of touching each item individually.
-    // ============================================================
-    function injectGroupManagerModal() {
-      if (document.getElementById('mq-group-manager')) return;
-      const modal = document.createElement('div');
-      modal.id = 'mq-group-manager';
-      modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1rem';
-      modal.innerHTML = `
-        <div style="background:#fff;border-radius:14px;width:100%;max-width:460px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
-          <div style="padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-            <div id="mq-gm-title" style="font-size:15px;font-weight:600;color:#111">New group</div>
-            <button onclick="mqCloseGroupManager()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1">×</button>
+  window.mqphCloseMiniWiz = function() {
+    document.getElementById('mqph-mini-overlay')?.classList.remove('show');
+    miniWiz = { cat:null, name:'', step:0, matchMode:false, matchName:'', matchRates:null, bulkMode:false, bulkCount:0, bulkRates:null, bulkNames:[] };
+  };
+
+  function openMiniWiz(cat, name, bulkCount) {
+    miniWiz = { cat, name, step:0, matchMode:false, matchName:'', matchRates:null, bulkMode: !!bulkCount, bulkCount: bulkCount||0, bulkRates:null, bulkNames:[] };
+    const overlay = document.getElementById('mqph-mini-overlay');
+    if (!overlay) return;
+    overlay.classList.add('show');
+    renderMiniWiz();
+  }
+
+  // ============================================================
+  // EDITOR
+  // ============================================================
+  function buildEditorHTML() {
+    // Wizard has run if any material record has a rate > 0
+    const wizardHasRun = lineItems.some(r => r.fields && r.fields['Category'] === 'material' && (r.fields['Rate'] || 0) > 0);
+
+    // Hide wizard-owned $0 items until wizard has completed —
+    // they exist in Airtable (pre-created by item setup) but aren't meaningful yet
+    const visibleItems = lineItems.filter(r => {
+      if (!r.fields) return false;
+      if (!wizardHasRun && WIZARD_OWNED_CATEGORIES.includes(r.fields['Category']) && (r.fields['Rate'] || 0) === 0) return false;
+      return true;
+    });
+
+    const groups = {};
+    visibleItems.forEach(r => {
+      const c = r.fields['Category'] || 'other';
+      if (c === 'countertop') return; // handled by buildCTHtml()
+      if (c === 'trim') return; // handled by buildTrimHtml()
+      if (c === 'tall_cabinet') return; // handled by buildTallCabHtml()
+      if (c === 'drawer_config') return; // config chips — not shown in editor, only in Edit Shop Items
+      if (!groups[c]) groups[c] = [];
+      groups[c].push(r);
+    });
+    const hasItems = visibleItems.length > 0;
+
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px">⚙️ Pricing</h2>
+          <p style="font-size:13px;color:#6b7280">Your rates — changes apply to your widget immediately.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${wizardHasRun ? `<div style="font-size:12px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;max-width:340px;line-height:1.5">✨ Add new items using the <strong>+ Add</strong> buttons below, or <button class="mqph-btn-ghost" style="font-size:12px;padding:0;color:#1d4ed8;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit" onclick="mqphGoToWizard()">re-run the pricing wizard</button> to reprice everything.</div>` : `<button class="mqph-btn mqph-btn-secondary" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>`}
+          <button class="mqph-btn mqph-btn-secondary" onclick="mqphGoToWizard()">🧙 Re-run pricing wizard</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDeleteAll()">🗑️ Start fresh</button>
+        </div>
+      </div>
+
+      ${!hasItems ? `
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:3rem;text-align:center;margin-bottom:1.5rem">
+          <div style="font-size:32px;margin-bottom:12px">⚙️</div>
+          <div style="font-size:16px;font-weight:600;color:#111;margin-bottom:8px">No pricing set up yet</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:1.5rem">Start by setting up your shop items, then run the pricing wizard.</div>
+          <button class="mqph-btn mqph-btn-primary" onclick="mqphStartItemSetup()">Set up shop items →</button>
+        </div>` : `
+
+        ${['material','door','drawer','hinge','zone','install','other','tax'].filter(cat => groups[cat]).map(cat => [cat, groups[cat]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
+          <div class="mqph-cat-block">
+            <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
+              <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
+              ${cat==='install'
+                ? ''
+                : MINI_WIZ_CATS.includes(cat)
+                  ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
+                  : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
+              }
+            </div>
+            <div id="mqph-cat-body-${cat}" style="display:none">
+            <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
+              <span style="cursor:pointer;flex:1" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
+              <span style="cursor:pointer;min-width:80px;text-align:right" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
+              ${['door','material'].includes(cat) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenBulkEdit('${cat}')">📊 Bulk edit</button>` : ''}
+            </div>
+            ${mqphSortRecs(cat, recs).map(r=>`
+              <div class="mqph-row">
+                <div style="flex:1;min-width:0">
+                  <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+                  ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
+                </div>
+                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : CUR() +(r.fields['Rate']||0).toLocaleString()}</div>
+                <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
+                <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+                <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
+                <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+              </div>`).join('')}
+            </div>
+          </div>`).join('')}
+      `}
+
+      ${buildCTHtml()}
+      ${buildTrimHtml()}
+      ${buildTallCabHtml()}
+
+      <!-- Bulk price edit overlay — Doors, Box Materials, Crown, Valance only -->
+      <div class="mqph-overlay" id="mqph-bulk-overlay">
+        <div class="mqph-modal" style="max-width:560px">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-bulk-title">Bulk edit prices</h3></div>
+            <button class="mqph-modal-close" onclick="mqphCloseBulkEdit()">×</button>
           </div>
-          <div style="padding:1.25rem;overflow-y:auto;flex:1">
-            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">Group name</label>
-            <input type="text" id="mq-gm-name" placeholder="e.g. Classic finishes" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;margin-bottom:1rem"/>
-            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px">Description (optional, shown to customers)</label>
-            <textarea id="mq-gm-desc" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box;margin-bottom:1rem;min-height:60px;font-family:inherit"></textarea>
-            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Items in this group</label>
-            <div style="display:flex;gap:6px;margin-bottom:8px">
-              <input type="text" id="mq-gm-search" placeholder="Search items…" oninput="mqGroupManagerSearch(this.value)" style="flex:1;font-size:13px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
-              <select id="mq-gm-sort" onchange="mqGroupManagerSort(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;flex-shrink:0">
-                <option value="default">Default order</option>
-                <option value="name">Name (A–Z)</option>
-                <option value="price-asc">Price (low→high)</option>
-                <option value="price-desc">Price (high→low)</option>
+          <div class="mqph-modal-body">
+            <div class="mqph-field">
+              <label>Narrow to a group <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+              <select id="mqph-bulk-group-filter" onchange="mqphBulkFilterGroup(this.value)"></select>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin:-4px 0 10px">Items with the exact same price(s) are grouped together below — check a whole group at once, or expand it to hand-pick individual items.</div>
+            <div id="mqph-bulk-clusters" style="max-height:280px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:1rem"></div>
+            <div id="mqph-bulk-edit-form" style="display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
+              <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:0.75rem" id="mqph-bulk-selected-count"></div>
+              <div id="mqph-bulk-price-fields"></div>
+              <div style="margin-top:10px">
+                <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px">Or match another item's price</label>
+                <input type="text" id="mqph-bulk-match-search" placeholder="Search items to match…" oninput="mqphBulkMatchSearch(this.value)" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
+                <div id="mqph-bulk-match-results" style="max-height:140px;overflow-y:auto;margin-top:4px"></div>
+              </div>
+              <button class="mqph-btn mqph-btn-primary" style="margin-top:1rem;width:100%" onclick="mqphBulkApply()">Update selected items →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini-wizard overlay -->
+      <div class="mqph-overlay" id="mqph-mini-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr mqph-mini-hdr" style="background:#1a1a1a;border-radius:12px 12px 0 0">
+            <div>
+              <h3 id="mqph-mini-title" style="color:#fff;font-size:15px">Add item</h3>
+              <p id="mqph-mini-sub" style="color:rgba(255,255,255,0.6);font-size:12px;margin:3px 0 0;padding:0"></p>
+              <div id="mqph-mini-progress" style="display:flex;gap:4px;margin-top:10px;min-width:200px"></div>
+            </div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseMiniWiz()" style="color:rgba(255,255,255,0.7);font-size:22px">×</button>
+          </div>
+          <div class="mqph-modal-body" id="mqph-mini-content"></div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" id="mqph-mini-back" onclick="mqphMiniBack()" style="display:none">← Back</button>
+            <button class="mqph-btn mqph-btn-primary" id="mqph-mini-next" onclick="mqphMiniNext()" style="margin-left:auto">Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raw edit modal -->
+      <div class="mqph-overlay" id="mqph-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-modal-title">Edit item</h3></div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseModal()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div class="mqph-field"><label>Name</label><input type="text" id="mqph-item-name"/></div>
+            <div class="mqph-field"><label>Category</label>
+              <select id="mqph-item-cat">${Object.entries(CAT_LABELS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
+            </div>
+            <div class="mqph-field"><label>Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01"/></div>
+            <div class="mqph-field"><label>Unit</label>
+              <select id="mqph-item-unit">
+                <option>per lin ft</option><option>per lin ft — uppers</option><option>per lin ft — bases</option>
+                <option>per lin ft upcharge</option><option>flat</option><option>each</option><option>%</option><option>km</option>
               </select>
             </div>
-            <div id="mq-gm-items" style="display:flex;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto;border:1px solid #f3f4f6;border-radius:8px;padding:4px"></div>
-          </div>
-          <div style="padding:1rem 1.25rem;border-top:1px solid #e5e7eb;display:flex;gap:8px;align-items:center;flex-shrink:0">
-            <button id="mq-gm-delete" class="mq-btn mq-btn-sm" style="color:#dc2626;display:none" onclick="mqDeleteProductGroup()">Delete group</button>
-            <div style="display:flex;gap:8px;margin-left:auto">
-              <button class="mq-btn mq-btn-sm" onclick="mqCloseGroupManager()">Cancel</button>
-              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqSaveGroupManager()">Save group</button>
+            <div class="mqph-field"><label>Description (optional)</label><textarea id="mqph-item-desc"></textarea></div>
+            <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
+              <label style="text-transform:none;font-size:13px;font-weight:500">Active</label>
+              <input type="checkbox" id="mqph-item-active" checked style="width:auto"/>
             </div>
           </div>
-        </div>`;
-      document.body.appendChild(modal);
-    }
-
-    let _gmCat = null;
-    let _gmOriginalName = null; // null = creating a brand new group
-    // Checked state is tracked here rather than read straight from the DOM,
-    // because searching filters items out of the DOM entirely — a checked
-    // item that's been searched away would otherwise be silently missed
-    // when saving. Keyed by item.id (the first real Airtable record id for
-    // that item), which stays stable across re-renders and re-sorts.
-    let _gmCheckedIds = new Set();
-    let _gmAllItems = [];
-    let _gmSearchText = '';
-    let _gmSortBy = 'default';
-
-    window.mqOpenGroupManager = function(cat, groupName) {
-      injectGroupManagerModal();
-      _gmCat = cat;
-      _gmOriginalName = groupName || null;
-      const items = byCategory[cat] || [];
-      _gmAllItems = items;
-      const isNew = !groupName;
-      document.getElementById('mq-gm-title').textContent = isNew ? 'New group' : `Edit "${groupName}"`;
-      document.getElementById('mq-gm-name').value = groupName || '';
-      const members = isNew ? [] : items.filter(i => i.groupName === groupName);
-      document.getElementById('mq-gm-desc').value = members[0]?.groupDesc || '';
-      document.getElementById('mq-gm-delete').style.display = isNew ? 'none' : 'inline-block';
-      _gmCheckedIds = new Set(members.map(i => i.id));
-      _gmSearchText = '';
-      _gmSortBy = 'default';
-      const searchInput = document.getElementById('mq-gm-search');
-      if (searchInput) searchInput.value = '';
-      const sortSelect = document.getElementById('mq-gm-sort');
-      if (sortSelect) sortSelect.value = 'default';
-      mqRenderGroupManagerItems();
-      document.getElementById('mq-group-manager').style.display = 'flex';
-    };
-
-    window.mqGroupManagerSearch = function(val) {
-      _gmSearchText = (val || '').toLowerCase();
-      mqRenderGroupManagerItems();
-    };
-
-    window.mqGroupManagerSort = function(val) {
-      _gmSortBy = val;
-      mqRenderGroupManagerItems();
-    };
-
-    window.mqGroupManagerToggleItem = function(id) {
-      if (_gmCheckedIds.has(id)) _gmCheckedIds.delete(id);
-      else _gmCheckedIds.add(id);
-    };
-
-    function mqRenderGroupManagerItems() {
-      const groupName = _gmOriginalName;
-      let items = [..._gmAllItems];
-      if (_gmSearchText) items = items.filter(i => i.baseName.toLowerCase().includes(_gmSearchText));
-      if (_gmSortBy === 'name') items.sort((a,b) => a.baseName.localeCompare(b.baseName));
-      else if (_gmSortBy === 'price-asc') items.sort((a,b) => (a.price||0) - (b.price||0));
-      else if (_gmSortBy === 'price-desc') items.sort((a,b) => (b.price||0) - (a.price||0));
-      const list = document.getElementById('mq-gm-items');
-      if (!list) return;
-      list.innerHTML = items.length ? items.map(item => `
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer;padding:5px 4px;border-radius:6px">
-          <input type="checkbox" onchange="mqGroupManagerToggleItem('${item.id}')" ${_gmCheckedIds.has(item.id) ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-          <span>${item.baseName}</span>
-          <span style="font-size:11px;color:#9ca3af">${CUR()}${(item.price||0).toFixed(2)}</span>
-          ${item.groupName && item.groupName !== groupName ? `<span style="font-size:10px;color:#9ca3af;margin-left:auto">in "${item.groupName}"</span>` : ''}
-        </label>`).join('') : `<div style="font-size:12px;color:#9ca3af;padding:10px 4px">No items match "${_gmSearchText}".</div>`;
-    }
-
-    window.mqCloseGroupManager = function() {
-      const m = document.getElementById('mq-group-manager');
-      if (m) m.style.display = 'none';
-    };
-
-    window.mqSaveGroupManager = async function() {
-      const cat = _gmCat;
-      const newName = document.getElementById('mq-gm-name').value.trim();
-      if (!newName) { alert('Please enter a group name.'); return; }
-      const desc = document.getElementById('mq-gm-desc').value.trim();
-      const items = byCategory[cat] || [];
-
-      // New groups go last by default; editing an existing group keeps its
-      // current position (reordering happens via the ↑/↓ buttons, not here).
-      const existingOrders = items.filter(i=>i.groupName && i.groupName !== _gmOriginalName).map(i=>i.groupOrder||0);
-      const order = _gmOriginalName
-        ? (items.find(i=>i.groupName===_gmOriginalName)?.groupOrder || 0)
-        : (existingOrders.length ? Math.max(...existingOrders)+1 : 0);
-
-      const writes = [];
-      items.forEach(item => {
-        const shouldBeIn = _gmCheckedIds.has(item.id);
-        const wasInThisGroup = _gmOriginalName && item.groupName === _gmOriginalName;
-        if (shouldBeIn) {
-          item.ids.forEach(id => writes.push(atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': newName, 'Group description': desc, 'Group sort order': order })));
-          item.groupName = newName; item.groupDesc = desc; item.groupOrder = order;
-        } else if (wasInThisGroup) {
-          item.ids.forEach(id => writes.push(atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': '' })));
-          item.groupName = '';
-        }
-      });
-
-      try {
-        await Promise.all(writes);
-        mqCloseGroupManager();
-        const grid = document.getElementById(`mq-cat-grid-${cat}`);
-        if (grid) grid.innerHTML = catGridHtml(cat);
-      } catch(e) {
-        console.error('Failed to save group', e);
-        alert('Could not save the group — please try again.');
-      }
-    };
-
-    window.mqDeleteProductGroup = async function() {
-      const cat = _gmCat, groupName = _gmOriginalName;
-      if (!groupName) return;
-      if (!confirm(`Remove the "${groupName}" group? Items stay — they'll just go back to being ungrouped.`)) return;
-      const items = (byCategory[cat]||[]).filter(i => i.groupName === groupName);
-      try {
-        await Promise.all(items.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': '' }))));
-        items.forEach(i => i.groupName = '');
-        mqCloseGroupManager();
-        const grid = document.getElementById(`mq-cat-grid-${cat}`);
-        if (grid) grid.innerHTML = catGridHtml(cat);
-      } catch(e) {
-        console.error('Failed to remove group', e);
-        alert('Could not remove the group — please try again.');
-      }
-    };
-    // Starts every category closed by default — with a lot of items across
-    // several categories, having them all open at once made this tab feel
-    // overwhelming. Click any category's header to open or close just that
-    // one.
-    window.mqToggleProductCategory = function(cat) {
-      const body = document.getElementById(`mq-cat-body-${cat}`);
-      const arrow = document.getElementById(`mq-cat-arrow-${cat}`);
-      if (!body) return;
-      const opening = body.style.display === 'none';
-      body.style.display = opening ? 'block' : 'none';
-      if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
-    };
-
-    const specRoomOptions = (window._mqRooms || defaultRoomTypes()).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    const specSection = specItems.length ? `<div class="mq-card" style="padding:0;overflow:hidden">
-      <div onclick="mqToggleProductCategory('specialty')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-        <div class="mq-card-title" style="margin:0">⭐ Specialty Items <span style="font-size:12px;font-weight:400;color:#9ca3af">(${specItems.length})</span></div>
-        <span id="mq-cat-arrow-specialty" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
-      </div>
-      <div id="mq-cat-body-specialty" style="display:none;padding:0 1.25rem 1.25rem">
-      <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;background:#f9fafb;border-radius:8px">
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
-          <select id="mq-spec-filter-room" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
-            <option value="">All project types</option>
-            ${specRoomOptions}
-          </select>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by category</label>
-          <select id="mq-spec-filter-category" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
-            <option value="">All categories</option>
-            ${[...new Set(specItems.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
-          </select>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
-          <input type="text" id="mq-spec-filter-search" oninput="mqFilterSpecialtyCards()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
-        </div>
-        <div style="display:flex;align-items:flex-end;padding-bottom:6px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;white-space:nowrap">
-            <input type="checkbox" id="mq-spec-filter-proonly" onchange="mqFilterSpecialtyCards()" style="width:16px;height:16px;accent-color:#1a1a1a"/>
-            ⭐ Pro only
-          </label>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseModal()">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" onclick="mqphSaveItem()" style="margin-left:auto">Save item</button>
+          </div>
         </div>
       </div>
-      <div id="mq-spec-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px" id="mq-spec-cards-grid">
-        ${specItems.flatMap(r => {
-          const itemName = r.fields['Item name'] || '';
-          const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
-          const dataName = itemName.toLowerCase().replace(/"/g,'&quot;');
-          const dataCategory = (r.fields['Category'] || '').replace(/"/g,'&quot;');
-          const dataProOnly = r.fields['Pro only'] ? '1' : '0';
-          const variants = mqParseVariants(r);
-          // An item with variants (e.g. Maple/Oak/Painted MDF) doesn't have
-          // one photo anymore — each variant gets its own, so it gets its
-          // own card here instead, clearly labeled "Item — Variant" so it's
-          // obvious which option each photo belongs to. Variants themselves
-          // are still added/renamed/priced on the Specialty Items tab, not
-          // here — this is photos only, same as every other item on this tab.
-          if (!variants.length) {
-            return [`<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}">
-              ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
-            </div>`];
-          }
-          return variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}">
-            ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
-          </div>`);
-        }).join('')}
-      </div>
-      </div>
-    </div>` : '';
-
-    const content = el('mq-products-content');
-    if (content) {
-      const catsOrdered = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance','tall_cabinet'];
-      const hasCats = catsOrdered.some(c => byCategory[c]?.length);
-      content.innerHTML = (!hasCats && !specItems.length)
-        ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
-        : `<div class="mq-card" style="margin-bottom:1.25rem">
-            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">🏆 Badge</label>
-            <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
-              <div>
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Text</label>
-                <input type="text" id="mq-badge-label" value="${badgeLabel.replace(/"/g,'&quot;')}" placeholder="Best seller" style="font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:200px" oninput="mqMarkProductsDirty();mqUpdateBadgePreview()"/>
-              </div>
-              <div>
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Color</label>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <input type="text" id="mq-badge-color" value="${badgeColor}" style="font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;width:100px" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('mq-badge-color-swatch').value=this.value;mqMarkProductsDirty();mqUpdateBadgePreview()"/>
-                  <input type="color" id="mq-badge-color-swatch" value="${badgeColor}" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0" oninput="document.getElementById('mq-badge-color').value=this.value;mqMarkProductsDirty();mqUpdateBadgePreview()"/>
-                </div>
-              </div>
-              <div>
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Preview</label>
-                <div style="height:34px;display:flex;align-items:center">
-                  <span id="mq-badge-preview" style="display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:${badgeColor};color:#fff;border:1px solid rgba(255,255,255,0.7);box-shadow:0 1px 3px rgba(0,0,0,0.25);white-space:nowrap">🏆 ${badgeLabel.replace(/</g,'&lt;')}</span>
-                </div>
-              </div>
-            </div>
-            <div style="font-size:11px;color:#9ca3af;margin-top:10px">Shown on any item you mark below — change the wording or color here and every marked item updates automatically, no need to re-mark anything.</div>
-          </div>` + catsOrdered.map(catSection).join('') + specSection;
-
-      // Wire up upload buttons for every photo card just rendered
-      const shopToken = shopRecord.fields['Shop token'] || 'unknown-shop';
-      content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
-        const key = fileInput.id.replace('mq-upload-file-', '');
-        mqWireUploadButton(
-          null,
-          'mq-upload-file-' + key,
-          'mq-upload-status-' + key,
-          'mq-photo-' + key,
-          shopToken,
-          'products',
-          (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
-        );
-      });
-    }
-
-    const linkText = el('mq-showroom-link-text');
-    const copyBtn  = el('mq-showroom-copy-btn');
-    const openBtn  = el('mq-showroom-open-btn');
-    if (linkText) linkText.textContent = showroomUrl;
-    if (copyBtn)  copyBtn.onclick = () => mqCopyText(showroomUrl, copyBtn);
-    if (openBtn)  openBtn.onclick = () => window.open(showroomUrl, '_blank');
+    `;
   }
-  window.mqToggleShowroom = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const toggle = el('mq-showroom-toggle');
-    const isOn = toggle.classList.contains('on');
-    toggle.classList.toggle('on', !isOn);
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Show showroom': !isOn ? 'Show' : 'Hide' });
-      shopRec.fields['Show showroom'] = !isOn ? 'Show' : 'Hide';
-      showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
-    } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
+
+  // Opens mini-wiz with a name prompt first
+  window.mqphOpenAddItem = function(cat) {
+    // Prompt for name inline — small name modal
+    const catMeta = {
+      material:{ icon:'🪵', label:'Box material',      ph:'e.g. Painted MDF' },
+      door:    { icon:'🚪', label:'Door style',         ph:'e.g. Maple shaker' },
+      hinge:   { icon:'🔧', label:'Door hinge',         ph:'e.g. Concealed soft-close' },
+      drawer:  { icon:'🗄️', label:'Drawer configuration', ph:'e.g. Birch — soft-close' },
+    };
+    const meta = catMeta[cat] || { icon:'➕', label:'Item', ph:'Enter name' };
+
+    // Reuse mini-wiz overlay with a name-entry screen
+    const overlay = document.getElementById('mqph-mini-overlay');
+    if (!overlay) return;
+
+    document.getElementById('mqph-mini-title').innerHTML = `${meta.icon} New ${meta.label}`;
+    document.getElementById('mqph-mini-sub').textContent = 'Step 1 of 2 — name it first';
+    document.getElementById('mqph-mini-progress').innerHTML = '';
+    document.getElementById('mqph-mini-content').innerHTML = `
+      <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">What do you call this ${meta.label.toLowerCase()}? Use a descriptive name — it'll appear in your widget dropdown.</p>
+      <input class="mqph-name-input" type="text" id="mqph-mini-name-inp" placeholder="${meta.ph}" onkeydown="if(event.key==='Enter')mqphMiniNameNext('${cat}')"/>
+      ${cat === 'door' ? `<p style="font-size:12px;color:#9ca3af;margin-top:-0.5rem;line-height:1.5">Tip: Keep it simple. (e.g. "Maple shaker", "Painted MDF shaker", "Melamine Slabs", "Red Oak raised panel", "3/4 PLAM", Etc.)</p>` : ''}
+      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid #e5e7eb">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:500">
+          <input type="checkbox" id="mqph-mini-bulk-toggle" onchange="mqphToggleMiniBulk('${cat}',this.checked)" style="width:auto"/>
+          Adding multiple items at the same price? (e.g. 90 door styles that all cost the same)
+        </label>
+        <div id="mqph-mini-bulk-wrap" style="display:none;margin-top:10px">
+          <div class="mqph-input-row"><label>How many ${meta.label.toLowerCase()}s?</label><input type="number" id="mqph-mini-bulk-count" min="2" max="300" placeholder="e.g. 90"/></div>
+          <p style="font-size:11px;color:#6b7280;margin-top:-6px">You'll quote one job to set the shared price, then name each one at the end.</p>
+        </div>
+      </div>
+    `;
+
+    const nextBtn = document.getElementById('mqph-mini-next');
+    const backBtn = document.getElementById('mqph-mini-back');
+    if (nextBtn) { nextBtn.textContent = 'Next →'; nextBtn.disabled = false; nextBtn.onclick = () => mqphMiniNameNext(cat); }
+    if (backBtn) { backBtn.style.display = 'inline-block'; backBtn.onclick = () => { mqphCloseMiniWiz(); }; backBtn.textContent = 'Cancel'; }
+
+    overlay.classList.add('show');
+    setTimeout(() => document.getElementById('mqph-mini-name-inp')?.focus(), 100);
   };
 
-  window.mqToggleFinancing = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const toggle = el('mq-financing-toggle');
-    if (!toggle) return;
-    const isOn = toggle.classList.contains('on');
-    toggle.classList.toggle('on', !isOn);
-    const linkWrap = el('mq-financing-link-wrap');
-    if (linkWrap) linkWrap.style.display = !isOn ? 'block' : 'none';
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Offers financing': !isOn ? 'Yes' : 'No' });
-      shopRec.fields['Offers financing'] = !isOn ? 'Yes' : 'No';
-      showMsg('mq-shop-msg', !isOn ? '✓ Financing note will show on your widget.' : '✓ Financing note hidden from widget.');
-    } catch(e) { toggle.classList.toggle('on', isOn); if (linkWrap) linkWrap.style.display = isOn ? 'block' : 'none'; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  window.mqphToggleMiniBulk = function(cat, checked) {
+    const nameInp = document.getElementById('mqph-mini-name-inp');
+    const bulkWrap = document.getElementById('mqph-mini-bulk-wrap');
+    if (nameInp) nameInp.style.display = checked ? 'none' : 'block';
+    if (bulkWrap) bulkWrap.style.display = checked ? 'block' : 'none';
+    const nextBtn = document.getElementById('mqph-mini-next');
+    if (nextBtn) nextBtn.onclick = () => checked ? mqphMiniBulkCountNext(cat) : mqphMiniNameNext(cat);
   };
 
-  window.mqToggleNotifyEvery = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const toggle = el('mq-notify-every-toggle');
-    if (!toggle) return;
-    const isOn = toggle.classList.contains('on');
-    toggle.classList.toggle('on', !isOn);
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Notify on every estimate': !isOn ? 'Yes' : 'No' });
-      shopRec.fields['Notify on every estimate'] = !isOn ? 'Yes' : 'No';
-      showMsg('mq-shop-msg', !isOn ? '✓ You\'ll be emailed for every estimate now.' : '✓ Back to only being notified when a customer gives their info.');
-    } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  window.mqphMiniBulkCountNext = function(cat) {
+    const count = parseInt(document.getElementById('mqph-mini-bulk-count')?.value || '0', 10);
+    if (!count || count < 2) {
+      const inp = document.getElementById('mqph-mini-bulk-count');
+      if (inp) { inp.style.borderColor = '#dc2626'; inp.focus(); }
+      return;
+    }
+    const nextBtn = document.getElementById('mqph-mini-next');
+    const backBtn = document.getElementById('mqph-mini-back');
+    if (nextBtn) nextBtn.onclick = () => mqphMiniNext();
+    if (backBtn) backBtn.onclick = () => mqphMiniBack();
+    openMiniWiz(cat, null, count);
   };
 
-  window.mqUpdateLeadStatus = async function(id, status) {
-    try {
-      await atUpdate(CONFIG.LEADS_TABLE, id, { 'Status': status });
-    } catch(e) { console.error('Failed to update lead status', e); }
+  window.mqphMiniNameNext = function(cat) {
+    const name = document.getElementById('mqph-mini-name-inp')?.value.trim();
+    if (!name) {
+      const inp = document.getElementById('mqph-mini-name-inp');
+      if (inp) inp.style.borderColor = '#dc2626';
+      return;
+    }
+    // Wire next button back to normal mini-wiz flow
+    const nextBtn = document.getElementById('mqph-mini-next');
+    const backBtn = document.getElementById('mqph-mini-back');
+    if (nextBtn) nextBtn.onclick = () => mqphMiniNext();
+    if (backBtn) backBtn.onclick = () => mqphMiniBack();
+    openMiniWiz(cat, name);
   };
 
-  window.mqSaveAllSpecItems = async function() {
-    const rows = document.querySelectorAll('#mq-spec-tbody tr[data-id]');
-    if (!rows.length) return;
-    showMsg('mq-spec-msg', 'Saving...');
+  window.mqphSaveLocalRadius = async function() {
+    const val = parseFloat(document.getElementById('mqph-local-radius')?.value || 15);
+    const existing = lineItems.find(r => r.fields && r.fields['Name']?.toLowerCase().includes('local') && r.fields['Category']==='zone');
+    if (existing) {
+      await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate':val });
+      existing.fields['Rate'] = val;
+    } else {
+      const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':'Local zone radius', 'Category':'zone', 'Rate':val, 'Unit':'km', 'Description':'Within this distance = no travel surcharge', 'Active':true, 'Sort order':0 });
+      if (rec?.id) lineItems.push(rec);
+    }
+    const saved = document.getElementById('mqph-local-radius-saved');
+    if (saved) { saved.style.display='inline'; setTimeout(()=>saved.style.display='none',2000); }
+  };
+
+  window.mqphStartItemSetup = async function() {
+    const hasHinge   = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='hinge');
+    const hasInstall = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='install');
+    if (!hasHinge)   { for(let i=0;i<DEFAULT_HINGES.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_HINGES[i],Category:'hinge',Rate:0,Unit:'per lin ft upcharge',Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
+    if (!hasInstall) { for(let i=0;i<DEFAULT_INSTALL.length;i++){const rec=await atCreate(LINE_ITEMS_TABLE,{shop:[shopRecord._recordId],Name:DEFAULT_INSTALL[i].name,Category:'install',Rate:0,Unit:DEFAULT_INSTALL[i].unit,Description:DEFAULT_INSTALL[i].description,Active:true,'Sort order':i+1});if(rec?.id)lineItems.push(rec);} }
+    // Migration: auto-create drawer_config records from existing priced 'drawer' records
+    // so shops that already ran the wizard get clean config chips without losing data
+    const hasDrawerConfigs = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='drawer_config');
+    if (!hasDrawerConfigs) {
+      const pricedDrawers = lineItems.filter(r=>r.fields&&r.fields['Category']==='drawer');
+      const baseNames = [...new Set(pricedDrawers.map(r=>(r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i,'').trim()).filter(Boolean))];
+      for (let i=0; i<baseNames.length; i++) {
+        const rec = await atCreate(LINE_ITEMS_TABLE, {
+          shop:[shopRecord._recordId], Name:baseNames[i], Category:'drawer_config',
+          Rate:0, Unit:'per lin ft', Active:true, 'Sort order':i+1,
+        });
+        if (rec?.id) lineItems.push(rec);
+      }
+    }
+    const container=document.getElementById('mq-pricing-helper-v2');
+    if(container) container.innerHTML=buildItemSetupHTML();
+  };
+
+  window.mqphOpenAdd = function(cat) {
+    currentEditId = null;
+    document.getElementById('mqph-modal-title').textContent = 'Add item';
+    document.getElementById('mqph-item-name').value = '';
+    document.getElementById('mqph-item-cat').value = cat || 'material';
+    document.getElementById('mqph-item-rate').value = '';
+    document.getElementById('mqph-item-unit').value = 'per lin ft';
+    document.getElementById('mqph-item-desc').value = '';
+    document.getElementById('mqph-item-active').checked = true;
+    document.getElementById('mqph-modal-overlay').classList.add('show');
+  };
+
+  window.mqphOpenEdit = function(id) {
+    const rec = lineItems.find(r=>r.id===id); if(!rec) return;
+    currentEditId = id;
+    document.getElementById('mqph-modal-title').textContent = 'Edit item';
+    document.getElementById('mqph-item-name').value  = rec.fields['Name']||'';
+    document.getElementById('mqph-item-cat').value   = rec.fields['Category']||'material';
+    document.getElementById('mqph-item-rate').value  = rec.fields['Rate']||'';
+    document.getElementById('mqph-item-unit').value  = rec.fields['Unit']||'per lin ft';
+    document.getElementById('mqph-item-desc').value  = rec.fields['Description']||'';
+    document.getElementById('mqph-item-active').checked = rec.fields['Active']!==false;
+    document.getElementById('mqph-modal-overlay').classList.add('show');
+  };
+
+  window.mqphCloseModal = function() { document.getElementById('mqph-modal-overlay')?.classList.remove('show'); };
+
+  window.mqphSaveItem = async function() {
+    const name = document.getElementById('mqph-item-name').value.trim();
+    if (!name) { alert('Please enter a name.'); return; }
+    const category = document.getElementById('mqph-item-cat').value;
+    if (!currentEditId && !mqphWarnIfDuplicate(category, name)) return;
+    const fields = {
+      shop:[shopRecord._recordId], Name:name,
+      Category:category,
+      Rate:parseFloat(document.getElementById('mqph-item-rate').value||0),
+      Unit:document.getElementById('mqph-item-unit').value,
+      Description:document.getElementById('mqph-item-desc').value.trim(),
+      Active:document.getElementById('mqph-item-active').checked,
+    };
     try {
-      for (const row of rows) {
-        const id = row.dataset.id;
-        const nameInput = document.getElementById('mq-spec-name-' + id);
-        const priceInput = document.getElementById('mq-spec-price-' + id);
-        if (nameInput || priceInput) {
-          await atUpdate(CONFIG.SPECIALTY_TABLE, id, {
-            'Item name': nameInput?.value || '',
-            'Price': parseFloat(priceInput?.value) || 0,
+      if (currentEditId) { await atUpdate(LINE_ITEMS_TABLE,currentEditId,fields); }
+      else { fields['Sort order']=lineItems.length+1; await atCreate(LINE_ITEMS_TABLE,fields); }
+      mqphCloseModal(); await loadAndRender();
+    } catch(e) { alert('Error saving. Please try again.'); }
+  };
+
+  window.mqphDeleteAll = async function() {
+    if (!confirm('Delete ALL pricing items and start fresh? This cannot be undone.')) return;
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (container) container.innerHTML = '<div style="padding:3rem;text-align:center;color:#6b7280;font-size:14px">Clearing all pricing…</div>';
+    for (const r of lineItems) { try { await atDelete(LINE_ITEMS_TABLE,r.id); } catch(e){} }
+    lineItems = [];
+    await loadAndRender();
+  };
+
+  window.mqphDelete = async function(id) {
+    if (!confirm('Delete this item?')) return;
+    try {
+      // Same door → linked-crown/valance cleanup as mqphDeleteChip, for
+      // this second, more generic delete path.
+      const rec = lineItems.find(r => r.id === id);
+      if (rec && rec.fields && rec.fields['Category'] === 'door') {
+        const doorName = rec.fields['Name'] || '';
+        if (doorName) {
+          const linkedTrims = lineItems.filter(r => {
+            if (!r.fields || r.fields['Category'] !== 'trim') return false;
+            let linked = [];
+            try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+            return linked.includes(doorName);
           });
+          for (const t of linkedTrims) {
+            let linked = [];
+            try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+            const cleaned = linked.filter(name => name !== doorName);
+            try { await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(cleaned) }); } catch(e) { console.error('Failed to clean up linked door style', e); }
+          }
         }
       }
-      showMsg('mq-spec-msg', '✓ All items saved!');
-    } catch(e) { showMsg('mq-spec-msg', 'Error saving — please try again.', 'error'); }
+      await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender();
+    } catch(e) { alert('Error deleting.'); }
   };
 
-  window.mqSaveSpecField = async function(id, field, value) {
-    try {
-      const updates = { [field]: value };
-      // 'Special Items' is the primary field shown in Airtable's own view —
-      // keep it in sync whenever the name changes, or it's left showing a
-      // stale label (like "New template item") forever after a rename.
-      if (field === 'Item name') updates['Special Items'] = value;
-      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
-    } catch(e) { console.error('Failed to save specialty field', e); }
+  // ============================================================
+  // BULK PRICE EDIT — update many same-priced items at once
+  // (Doors, Box Materials, Crown, Valance only)
+  //
+  // The underlying record structure differs by category, which this
+  // normalizes away: a door/crown/valance is one Airtable record, but a box
+  // material is actually TWO separate records (uppers + bases) linked only
+  // by a shared name pattern. Every category gets flattened here into a
+  // "logical item" with one or two named price fields, so the rest of this
+  // feature (clustering, selection, editing) doesn't need to care which
+  // category it's looking at.
+  // ============================================================
+  let _bulkEdit = { cat: null, items: [], groupFilter: '', checkedIds: new Set(), openClusters: new Set() };
+  const BULK_EDIT_LABELS = { material: '🪵 Box Materials', door: '🚪 Door Styles', trim_crown: '👑 Crown Moulding', trim_valance: '📏 Valance' };
+
+  function mqphBulkEditItems(cat) {
+    if (cat === 'material') {
+      const recs = lineItems.filter(r => r.fields && r.fields['Category'] === 'material');
+      const byBase = {};
+      recs.forEach(r => {
+        const nm = r.fields['Name'] || '';
+        const baseName = nm.replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+        const isUpper = /—\s*uppers\s*$/i.test(nm);
+        if (!byBase[baseName]) byBase[baseName] = { baseName, upperRec: null, baseRec: null, groupName: (r.fields['Group name']||'').trim() };
+        if (isUpper) byBase[baseName].upperRec = r; else byBase[baseName].baseRec = r;
+      });
+      // Only items with BOTH halves present are editable here — a
+      // material missing one half is a data problem to fix by hand, not
+      // something bulk edit should guess at.
+      return Object.values(byBase).filter(it => it.upperRec && it.baseRec).map(it => ({
+        id: 'mat:' + it.baseName,
+        label: it.baseName,
+        groupName: it.groupName,
+        priceFields: [
+          { key: 'upper', label: 'Uppers price', recId: it.upperRec.id, value: it.upperRec.fields['Rate']||0 },
+          { key: 'base', label: 'Bases price', recId: it.baseRec.id, value: it.baseRec.fields['Rate']||0 },
+        ],
+      }));
+    }
+    if (cat === 'door') {
+      return lineItems.filter(r => r.fields && r.fields['Category'] === 'door').map(r => ({
+        id: r.id, label: r.fields['Name']||'—', groupName: (r.fields['Group name']||'').trim(),
+        priceFields: [{ key: 'price', label: 'Price', recId: r.id, value: r.fields['Rate']||0 }],
+      }));
+    }
+    if (cat === 'trim_crown' || cat === 'trim_valance') {
+      const trimType = cat === 'trim_crown' ? 'crown' : 'valance';
+      return lineItems.filter(r => r.fields && r.fields['Category'] === 'trim' && (r.fields['Trim type']||'crown') === trimType).map(r => ({
+        id: r.id, label: r.fields['Name']||'—', groupName: (r.fields['Group name']||'').trim(),
+        priceFields: [
+          { key: 'supply', label: 'Supply price', recId: r.id, value: r.fields['Rate']||0 },
+          { key: 'install', label: 'Install price', recId: r.id, value: r.fields['Install rate']||0 },
+        ],
+      }));
+    }
+    return [];
+  }
+
+  window.mqphOpenBulkEdit = function(cat) {
+    _bulkEdit = { cat, items: mqphBulkEditItems(cat), groupFilter: '', checkedIds: new Set(), openClusters: new Set() };
+    document.getElementById('mqph-bulk-title').textContent = `Bulk edit — ${BULK_EDIT_LABELS[cat]||cat}`;
+    const groups = [...new Set(_bulkEdit.items.filter(i=>i.groupName).map(i=>i.groupName))];
+    const groupSel = document.getElementById('mqph-bulk-group-filter');
+    groupSel.innerHTML = `<option value="">All items</option>` + groups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}">${g}</option>`).join('');
+    groupSel.value = '';
+    mqphRenderBulkClusters();
+    document.getElementById('mqph-bulk-edit-form').style.display = 'none';
+    document.getElementById('mqph-bulk-overlay').classList.add('show');
   };
 
-  // ===================== Specialty item variants =====================
-  // A specialty item can optionally have variants (e.g. a "Crown Molding"
-  // item offered in Maple/Oak/MDF) — each with its own label/price/photo/
-  // best-seller flag, everything else (category, project types, pricing
-  // method, Active, Pro only) staying shared on the parent item. Stored as
-  // one JSON field ('Variants') on the Specialty Items table, the same
-  // pattern already used for 'Visible rooms' — no new Airtable table, no
-  // separate relational linking, just an array on the record itself.
-  function mqParseVariants(r) {
+  window.mqphCloseBulkEdit = function() {
+    document.getElementById('mqph-bulk-overlay').classList.remove('show');
+  };
+
+  window.mqphBulkFilterGroup = function(val) {
+    _bulkEdit.groupFilter = val;
+    mqphRenderBulkClusters();
+  };
+
+  // Two items only cluster together if EVERY price field matches exactly —
+  // for materials that means uppers AND bases both have to match, not just
+  // one of them.
+  function mqphBulkPriceKey(item) {
+    return item.priceFields.map(f => f.value.toFixed(2)).join('|');
+  }
+
+  function mqphBulkVisibleItems() {
+    return _bulkEdit.groupFilter ? _bulkEdit.items.filter(i => i.groupName === _bulkEdit.groupFilter) : _bulkEdit.items;
+  }
+
+  function mqphRenderBulkClusters() {
+    const container = document.getElementById('mqph-bulk-clusters');
+    if (!container) return;
+    const items = mqphBulkVisibleItems();
+    if (!items.length) {
+      container.innerHTML = `<div style="padding:1.5rem;text-align:center;font-size:13px;color:#9ca3af">No items ${_bulkEdit.groupFilter?'in this group':'found'}.</div>`;
+      return;
+    }
+    const clusters = {};
+    items.forEach(it => {
+      const key = mqphBulkPriceKey(it);
+      if (!clusters[key]) clusters[key] = { key, priceFields: it.priceFields, items: [] };
+      clusters[key].items.push(it);
+    });
+    const clusterList = Object.values(clusters).sort((a,b) => b.items.length - a.items.length);
+    container.innerHTML = clusterList.map(c => {
+      const allChecked = c.items.every(it => _bulkEdit.checkedIds.has(it.id));
+      const someChecked = !allChecked && c.items.some(it => _bulkEdit.checkedIds.has(it.id));
+      const isOpen = _bulkEdit.openClusters.has(c.key);
+      const priceLabel = c.priceFields.map(f => `${f.label}: ${CUR()}${f.value.toFixed(2)}`).join(' · ');
+      const keyEsc = c.key.replace(/'/g,"\\'");
+      return `
+        <div style="border-bottom:1px solid #f3f4f6">
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:${allChecked?'#eff6ff':'#fff'}">
+            <input type="checkbox" ${allChecked?'checked':''} onclick="mqphSelectBulkCluster('${keyEsc}')" style="width:auto;flex-shrink:0"/>
+            <span style="flex:1;font-size:13px;font-weight:600;color:#111;cursor:pointer" onclick="mqphExpandBulkCluster('${keyEsc}')">${priceLabel} <span style="font-weight:400;color:#9ca3af">— ${c.items.length} item${c.items.length!==1?'s':''}</span></span>
+            <span onclick="mqphExpandBulkCluster('${keyEsc}')" style="font-size:11px;color:#2563eb;cursor:pointer;user-select:none;white-space:nowrap">${isOpen?'Hide items ▲':'Show items ▼'}</span>
+          </div>
+          ${isOpen ? `<div style="padding:4px 12px 8px 34px">${c.items.map(it => `
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#374151;padding:4px 0;cursor:pointer">
+              <input type="checkbox" ${_bulkEdit.checkedIds.has(it.id)?'checked':''} onchange="mqphToggleBulkItem('${it.id.replace(/'/g,"\\'")}')" style="width:auto;flex-shrink:0"/>
+              <span>${it.label}${it.groupName?` <span style="color:#9ca3af">— ${it.groupName}</span>`:''}</span>
+            </label>`).join('')}</div>` : ''}
+        </div>`;
+    }).join('');
+    mqphUpdateBulkForm();
+  }
+
+  window.mqphExpandBulkCluster = function(key) {
+    if (_bulkEdit.openClusters.has(key)) _bulkEdit.openClusters.delete(key);
+    else _bulkEdit.openClusters.add(key);
+    mqphRenderBulkClusters();
+  };
+
+  window.mqphSelectBulkCluster = function(key) {
+    const clusterItems = mqphBulkVisibleItems().filter(it => mqphBulkPriceKey(it) === key);
+    const allChecked = clusterItems.every(it => _bulkEdit.checkedIds.has(it.id));
+    clusterItems.forEach(it => { if (allChecked) _bulkEdit.checkedIds.delete(it.id); else _bulkEdit.checkedIds.add(it.id); });
+    mqphRenderBulkClusters();
+  };
+
+  window.mqphToggleBulkItem = function(id) {
+    if (_bulkEdit.checkedIds.has(id)) _bulkEdit.checkedIds.delete(id);
+    else _bulkEdit.checkedIds.add(id);
+    mqphRenderBulkClusters();
+  };
+
+  function mqphUpdateBulkForm() {
+    const form = document.getElementById('mqph-bulk-edit-form');
+    const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    if (!selected.length) { form.style.display = 'none'; return; }
+    form.style.display = 'block';
+    document.getElementById('mqph-bulk-selected-count').textContent = `${selected.length} item${selected.length!==1?'s':''} selected`;
+    // Every logical item in a category shares the same price-field shape,
+    // so the first selected item's fields define the form.
+    document.getElementById('mqph-bulk-price-fields').innerHTML = selected[0].priceFields.map((f,i) => `
+      <div class="mqph-input-row" style="margin-bottom:8px">
+        <label>${f.label}</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="color:#6b7280">${CUR()}</span>
+          <input type="number" id="mqph-bulk-newprice-${i}" step="0.01" style="width:120px" placeholder="New price"/>
+        </div>
+      </div>`).join('');
+    const matchResults = document.getElementById('mqph-bulk-match-results');
+    if (matchResults) matchResults.innerHTML = '';
+    const searchInput = document.getElementById('mqph-bulk-match-search');
+    if (searchInput) searchInput.value = '';
+  }
+
+  window.mqphBulkMatchSearch = function(val) {
+    const term = (val||'').toLowerCase().trim();
+    const resultsEl = document.getElementById('mqph-bulk-match-results');
+    if (!resultsEl) return;
+    if (!term) { resultsEl.innerHTML = ''; return; }
+    const matches = _bulkEdit.items.filter(it => it.label.toLowerCase().includes(term)).slice(0, 8);
+    resultsEl.innerHTML = matches.length ? matches.map(it => `
+      <div onclick="mqphBulkPickMatch('${it.id.replace(/'/g,"\\'")}')" style="padding:6px 8px;font-size:12px;cursor:pointer;border-radius:6px;display:flex;justify-content:space-between;gap:8px" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+        <span>${it.label}</span>
+        <span style="color:#6b7280;white-space:nowrap">${it.priceFields.map(f=>CUR() +f.value.toFixed(2)).join(' / ')}</span>
+      </div>`).join('') : `<div style="font-size:12px;color:#9ca3af;padding:6px 8px">No matches.</div>`;
+  };
+
+  window.mqphBulkPickMatch = function(id) {
+    const target = _bulkEdit.items.find(it => it.id === id);
+    if (!target) return;
+    target.priceFields.forEach((f,i) => {
+      const input = document.getElementById(`mqph-bulk-newprice-${i}`);
+      if (input) input.value = f.value.toFixed(2);
+    });
+    document.getElementById('mqph-bulk-match-search').value = `Matched to: ${target.label}`;
+    document.getElementById('mqph-bulk-match-results').innerHTML = '';
+  };
+
+  window.mqphBulkApply = async function() {
+    const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    if (!selected.length) return;
+    const newValues = selected[0].priceFields.map((f,i) => {
+      const v = parseFloat(document.getElementById(`mqph-bulk-newprice-${i}`)?.value);
+      return isNaN(v) ? null : v;
+    });
+    if (newValues.some(v => v === null)) { alert('Please enter a new price for every field (or pick an item above to match).'); return; }
+
+    const summary = selected[0].priceFields.map((f,i) => `${f.label} → ${CUR()}${newValues[i].toFixed(2)}`).join(', ');
+    if (!confirm(`Update ${selected.length} item${selected.length!==1?'s':''}?\n\n${summary}`)) return;
+
+    // Group field updates by underlying record id first — crown/valance
+    // have supply AND install on the same record, so those need to go out
+    // as one combined update rather than two separate concurrent writes to
+    // the same record.
+    const writes = [];
+    selected.forEach(it => {
+      const byRecId = {};
+      it.priceFields.forEach((f,i) => {
+        const fieldName = f.key === 'install' ? 'Install rate' : 'Rate';
+        if (!byRecId[f.recId]) byRecId[f.recId] = {};
+        byRecId[f.recId][fieldName] = newValues[i];
+      });
+      Object.entries(byRecId).forEach(([recId, fields]) => writes.push(atUpdate(LINE_ITEMS_TABLE, recId, fields)));
+    });
     try {
-      const v = JSON.parse(r?.fields?.['Variants'] || '[]');
-      const arr = Array.isArray(v) ? v : [];
-      // Every variant needs a stable id (not its array position) so its
-      // photo — managed separately in the Products tab, keyed by this id —
-      // stays correctly matched to it even after some other variant earlier
-      // in the list gets removed and everything after it shifts down.
-      // Existing variants keep whatever id they already have; this only
-      // fills one in for older data that predates ids.
-      return arr.map((variant, vi) => ({ ...variant, id: variant.id || ('i' + vi) }));
+      await Promise.all(writes);
+      mqphCloseBulkEdit();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Bulk update failed', e);
+      alert('Something went wrong updating some items — please check and try again.');
+    }
+  };
+
+  // View-only sort for the item list within each category — doesn't touch
+  // the actual "Sort order" field at all, so it never affects what order
+  // customers see on the widget. Purely a convenience for finding/editing
+  // items in the dashboard (e.g. sort a big door list alphabetically to
+  // find one, then it's still in its normal custom order for customers).
+  let _mqphSortState = {}; // cat -> {field:'default'|'name'|'price', dir:'asc'|'desc'}
+  function mqphSortRecs(cat, recs) {
+    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const sorted = [...recs];
+    if (state.field === 'name') sorted.sort((a,b) => (a.fields['Name']||'').localeCompare(b.fields['Name']||''));
+    else if (state.field === 'price') sorted.sort((a,b) => (a.fields['Rate']||0) - (b.fields['Rate']||0));
+    else sorted.sort((a,b) => (a.fields['Sort order']||0) - (b.fields['Sort order']||0));
+    if (state.dir === 'desc') sorted.reverse();
+    return sorted;
+  }
+  function mqphSortArrow(cat, field) {
+    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    if (state.field !== field) return '<span style="opacity:0.35">↕</span>';
+    return state.dir === 'asc' ? '↑' : '↓';
+  }
+  window.mqphSetSort = function(cat, field) {
+    const current = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    if (current.field === field) {
+      // 3rd click cycles back to default order — asc, then desc, then back
+      // to normal, without needing a dedicated "Order" label taking up
+      // space of its own.
+      _mqphSortState[cat] = current.dir === 'asc' ? { field, dir:'desc' } : { field:'default', dir:'asc' };
+    } else {
+      _mqphSortState[cat] = { field, dir:'asc' };
+    }
+    mqphRerenderPricingPage();
+  };
+  // Re-renders using data already loaded in memory — no need to hit
+  // Airtable again just because a view-only sort preference changed.
+  function mqphRerenderPricingPage() {
+    const container = document.getElementById('mq-pricing-helper-v2');
+    if (!container) return;
+    container.innerHTML = buildEditorHTML();
+    mqphRestoreExpandedCats();
+  }
+
+  // Collapsible category sections — same pattern as My Products, to keep
+  // this page manageable once a shop has a lot of pricing set up. Tracked
+  // in this set (not just the DOM) because loadAndRender rebuilds the whole
+  // page's HTML from scratch after every save/delete — without this, every
+  // section would silently re-collapse on every single action.
+  let _mqphExpandedCats = new Set();
+  window.mqphToggleCategory = function(cat) {
+    const body = document.getElementById(`mqph-cat-body-${cat}`);
+    const arrow = document.getElementById(`mqph-cat-arrow-${cat}`);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+    if (opening) _mqphExpandedCats.add(cat); else _mqphExpandedCats.delete(cat);
+  };
+  // Re-applies whichever sections were open before the last rebuild —
+  // called right after buildEditorHTML() replaces the page's innerHTML.
+  function mqphRestoreExpandedCats() {
+    _mqphExpandedCats.forEach(cat => {
+      const body = document.getElementById(`mqph-cat-body-${cat}`);
+      const arrow = document.getElementById(`mqph-cat-arrow-${cat}`);
+      if (body) body.style.display = 'block';
+      if (arrow) arrow.style.transform = 'rotate(90deg)';
+    });
+  }
+
+  window.mqphToggle = async function(id, el) {
+    const rec = lineItems.find(r=>r.id===id); if(!rec) return;
+    const val = !rec.fields['Active'];
+    el.classList.toggle('on',val); rec.fields['Active']=val;
+    await atUpdate(LINE_ITEMS_TABLE,id,{Active:val});
+  };
+
+  // ============================================================
+  // COUNTERTOP EDITOR (dynamic — reads/writes Line Items table)
+  // Each material row is self-contained: supply, install, its own
+  // backsplash height options, and its own cutout rates.
+  // ============================================================
+
+  // Parse a material's backsplash options JSON safely
+  function getBsOptions(r) {
+    try {
+      const raw = r.fields['Backsplash options'];
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
     } catch(e) { return []; }
   }
 
-  function mqVariantsPanelHTML(r) {
-    const variants = mqParseVariants(r);
-    const itemName = (r.fields['Item name'] || 'this item').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const rows = variants.map((v, vi) => `
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
-        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
-        <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
-        <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
-      </div>`).join('');
-    // Boxed with a colored left border and the item's own name repeated in
-    // the header — this panel can end up sitting visually next to a
-    // DIFFERENT row once you scroll (it's a collapsible detail row that
-    // opens directly under whichever item's pill you click), so it needs to
-    // be unmistakable which item's variants you're looking at rather than
-    // just trusting position on the page.
+  // Parse a material's cutout options JSON safely
+  function getCutoutOptions(r) {
+    try {
+      const raw = r.fields['Cutout options'];
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch(e) { return []; }
+  }
+
+  // Parse a material's edge/addon options JSON safely
+  // Duplicate-name detection — the actual cause of at least one real
+  // customer's inflated pricing: re-adding an item (via the mini-wizard or
+  // any "+ Add" flow) that already exists silently creates a second,
+  // independent record instead of catching the mistake. Material/drawer
+  // names carry a suffix (— uppers/bases, — some/mostly drawers) that has
+  // to be stripped before comparing, or "X — uppers" would never match
+  // itself. Comparison is case-insensitive and only checks active items —
+  // an intentionally-deactivated old item shouldn't block a legitimate
+  // re-add of the same name.
+  function mqphBaseNameFor(category, name) {
+    if (category === 'material') return (name||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+    if (category === 'drawer') return (name||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
+    return (name||'').trim();
+  }
+  function mqphFindDuplicateName(category, name, excludeIds) {
+    const targetBase = mqphBaseNameFor(category, name).toLowerCase();
+    if (!targetBase) return null;
+    const excludeSet = new Set(excludeIds||[]);
+    return lineItems.find(r => r.fields && r.fields['Category']===category && r.fields['Active']!==false && !excludeSet.has(r.id) && mqphBaseNameFor(category, r.fields['Name']).toLowerCase() === targetBase) || null;
+  }
+  // Returns true if it's OK to proceed (no duplicate, or the shop owner
+  // confirmed they want to add it anyway) — false if they backed out.
+  function mqphWarnIfDuplicate(category, name, excludeIds) {
+    const dupe = mqphFindDuplicateName(category, name, excludeIds);
+    if (!dupe) return true;
+    return confirm(`"${dupe.fields['Name']}" already exists in this category. Adding another one with the same name can cause pricing mix-ups later — Airtable can't tell them apart, and whichever one happens to be found first is the one that gets used.\n\nAdd it anyway?`);
+  }
+
+  function getAddonOptions(r) {
+    try {
+      const raw = r.fields['Addon options'];
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch(e) { return []; }
+  }
+
+  // One-time migration: copy old global Backsplash/Sink/Cooktop rates onto
+  // every existing material that hasn't been migrated yet, so pricing never
+  // silently drops to $0 for an existing shop. Also upgrades materials that
+  // only have the older flat 'Sink cutout rate' / 'Cooktop cutout rate'
+  // fields into the newer 'Cutout options' list format.
+  async function migrateCTPricing() {
+    const ctItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop');
+    const oldBacksplash = ctItems.find(r=>(r.fields['Description']||'').includes('type:backsplash'));
+    const oldSink        = ctItems.find(r=>(r.fields['Description']||'').includes('type:cutout')&&r.fields['Name']?.toLowerCase().includes('sink'));
+    const oldCooktop     = ctItems.find(r=>(r.fields['Description']||'').includes('type:cutout')&&r.fields['Name']?.toLowerCase().includes('cooktop'));
+    const materials = ctItems.filter(r=>{
+      const desc = r.fields['Description']||'';
+      return !desc.includes('type:backsplash') && !desc.includes('type:cutout');
+    });
+
+    const defaultBsInstall = oldBacksplash ? (oldBacksplash.fields['Install rate']||12) : 12;
+    const defaultSinkRate  = oldSink ? (oldSink.fields['Rate']||180) : 180;
+    const defaultCookRate  = oldCooktop ? (oldCooktop.fields['Rate']||220) : 220;
+
+    for (const m of materials) {
+      const needsBs = !m.fields['Backsplash options'];
+      const needsCutoutOptions = !m.fields['Cutout options'];
+      if (!needsBs && !needsCutoutOptions) continue;
+      const patch = {};
+      if (needsBs) {
+        patch['Backsplash options'] = JSON.stringify([{label:'4" standard', heightIn:4, supplyRate:m.fields['Rate']||0, installRate:defaultBsInstall}]);
+      }
+      if (needsCutoutOptions) {
+        // Prefer this material's own flat sink/cooktop fields (set by a prior
+        // version of this editor) if present, otherwise fall back to the
+        // shop's old global cutout rates.
+        const sinkRate = m.fields['Sink cutout rate']!=null ? m.fields['Sink cutout rate'] : defaultSinkRate;
+        const cookRate = m.fields['Cooktop cutout rate']!=null ? m.fields['Cooktop cutout rate'] : defaultCookRate;
+        patch['Cutout options'] = JSON.stringify([
+          {label:'Sink cutout', rate:sinkRate},
+          {label:'Cooktop cutout', rate:cookRate},
+        ]);
+      }
+      try {
+        await atUpdate(LINE_ITEMS_TABLE, m.id, patch);
+        Object.assign(m.fields, patch);
+      } catch(e) { /* non-fatal — leave this material to migrate next load */ }
+    }
+  }
+
+  function buildCTHtml() {
+    const materials = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&!(r.fields['Description']||'').includes('type:backsplash')&&!(r.fields['Description']||'').includes('type:cutout'))
+      .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+
+    function matRow(r) {
+      const unitParts = (r.fields['Unit']||'sqft|sqft').split('|');
+      const su = (unitParts[0]||'sqft').trim();
+      const iu = (unitParts[1]||'sqft').trim();
+      const bsOpts = getBsOptions(r);
+      const bsSummary = bsOpts.length
+        ? bsOpts.map(o=>`${o.label} (supply ${CUR()}${(o.supplyRate||0).toLocaleString()}, install ${CUR()}${(o.installRate||0).toLocaleString()}/lin ft)`).join(', ')
+        : 'No backsplash options set';
+      const cutoutOpts = getCutoutOptions(r);
+      const cutoutSummary = cutoutOpts.length
+        ? cutoutOpts.map(o=>`${o.label} ${CUR()}${(o.rate||0).toLocaleString()}`).join(', ')
+        : null;
+      const minSupply = r.fields['Minimum price']||0;
+      const minInstall = r.fields['Install minimum price']||0;
+      const minSummary = (minSupply>0 || minInstall>0)
+        ? `📏 Min: ${minSupply>0?`${CUR()}${minSupply.toLocaleString()} supply`:''}${(minSupply>0&&minInstall>0)?' + ':''}${minInstall>0?`${CUR()}${minInstall.toLocaleString()} install`:''} per counter`
+        : null;
+      return `
+        <div class="mqph-row">
+          <div style="flex:1;min-width:0">
+            <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+            <div class="mqph-row-desc">🧱 ${bsSummary}${cutoutSummary ? ` &nbsp;·&nbsp; ✂️ ${cutoutSummary}` : ''}${minSummary ? ` &nbsp;·&nbsp; ${minSummary}` : ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
+            <span style="color:#6b7280;font-size:11px">Supply:</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/${su}</span>
+            <span style="color:#d1d5db;margin:0 4px">·</span>
+            <span style="color:#6b7280;font-size:11px">Install:</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/${iu}</span>
+          </div>
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenCTEdit('${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+        </div>`;
+    }
+
+    const section = (title, items, rowFn, emptyMsg) => items.length > 0
+      ? `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
+         ${items.map(rowFn).join('')}`
+      : `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
+         <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`;
+
+    // Every distinct edge/addon across all countertop materials, deduped by id
+    // (the same addon object lives redundantly on every material it applies to).
+    function mqphCountertopAddonList() {
+      const seen = new Map();
+      materials.forEach(m => getAddonOptions(m).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
+      return [...seen.values()];
+    }
+    const addonList = mqphCountertopAddonList();
+    const addonRow = (a) => {
+      const taggedMats = materials.filter(m=>getAddonOptions(m).some(x=>x.id===a.id));
+      const rates = taggedMats.map(m => getAddonOptions(m).find(x=>x.id===a.id)?.rate || 0);
+      const allSame = rates.every(r => r === rates[0]);
+      const rateLabel = !rates.length ? `${CUR()}0` : allSame ? `${CUR()}${rates[0].toLocaleString()}` : `${CUR()}${Math.min(...rates).toLocaleString()}–${CUR()}${Math.max(...rates).toLocaleString()}`;
+      return `
+      <div class="mqph-row">
+        <div style="flex:1;min-width:0">
+          <div class="mqph-row-name">${a.isEdge?'📐':'➕'} ${a.label}${a.isEdge?' <span style="font-weight:400;color:#6b7280;font-size:12px">(edge profile)</span>':''}</div>
+          <div class="mqph-row-desc">Applies to: ${taggedMats.map(m=>m.fields['Name']).join(', ') || '—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+          <span style="font-weight:600">${rateLabel}</span>
+          <span style="color:#6b7280;font-size:11px">${a.pricingType==='flat'?'flat rate':a.pricingType==='sqft'?'/ sq ft':'/ lin ft'}</span>
+        </div>
+        <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenAddonEdit('${a.id}')">Edit</button>
+        <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDeleteAddon('${a.id}')">Delete</button>
+      </div>`;
+    };
+
     return `
-      <div style="border-left:3px solid #c7d2fe;padding-left:10px">
-        <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
-        ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
-        <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+      <div class="mqph-ct-block">
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('countertop')" style="cursor:pointer">
+          <span class="mqph-cat-title"><span id="mqph-cat-arrow-countertop" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🪨 Countertop pricing <span style="font-size:12px;font-weight:400;color:#9ca3af">(${materials.length})</span></span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenCTAdd()">+ Add material</button>
+        </div>
+        <div id="mqph-cat-body-countertop" style="display:none">
+        <div id="mqph-ct-msg" class="mqph-msg"></div>
+        <div class="mqph-info" style="margin:12px 16px">
+          Each material now carries its own backsplash height options and cutout pricing — no more separate backsplash/cutout items to keep in sync. Add a material below, then set its backsplash heights and cutout rates right inside it. Each material also has its own optional minimum charge per counter (separately for supply and install) — set one when a small counter still means ordering a full sheet.
+        </div>
+        ${section('Materials', materials, matRow, 'No materials yet — add your first countertop material.')}
+        <div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between">
+          <span>Edges &amp; addons</span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenAddonAdd()">+ New edge/addon</button>
+        </div>
+        <div class="mqph-info" style="margin:12px 16px">
+          Edge profiles (like a bullnose or ogee edge) are always priced per linear foot and let the customer pick one per counter — if none are added, customers just get a standard edge at no extra charge. Addons (like a waterfall) can use any pricing method and stack in any quantity. Either kind can be tagged onto as many materials as you like.
+        </div>
+        ${addonList.length ? addonList.map(addonRow).join('') : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">No edges or addons yet.</div>`}
+        </div>
+      </div>
+
+      <!-- Countertop add/edit modal -->
+      <div class="mqph-overlay" id="mqph-ct-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-ct-modal-title">Add countertop material</h3></div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseCTModal()">×</button>
+          </div>
+          <div class="mqph-modal-body" id="mqph-ct-modal-body">
+            <div class="mqph-field" id="mqph-ct-name-field"><label>Name</label><input type="text" id="mqph-ct-name" placeholder="e.g. Granite — Mid"/></div>
+
+            <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e5e7eb" id="mqph-ct-bulk-toggle-wrap">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:500">
+                <input type="checkbox" id="mqph-ct-bulk-toggle" onchange="mqphToggleCTBulk(this.checked)" style="width:auto"/>
+                Adding multiple materials at the same price? (e.g. 10 laminate colors)
+              </label>
+              <div id="mqph-ct-bulk-wrap" style="display:none;margin-top:10px">
+                <div class="mqph-input-row"><label>How many materials?</label><input type="number" id="mqph-ct-bulk-count" min="2" max="300" placeholder="e.g. 10"/></div>
+                <p style="font-size:11px;color:#6b7280;margin-top:-6px">Set the shared pricing/backsplash/cutout settings below, then name each one at the end.</p>
+              </div>
+            </div>
+
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsSupplyRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">per</span>
+                <select id="mqph-ct-supply-unit" onchange="mqphSyncBsSupplyRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                  <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
+                </select>
+                ${mqphRateCalcIconHTML('mqph-ct-supply-rate', 'mqph-ct-supply-unit')}
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
+                <span style="font-size:12px;color:#6b7280;white-space:nowrap" title="A small counter can still mean ordering a full sheet of material — this floor makes sure supply cost never goes below what you set here, no matter how small the sq ft/lin ft math comes out. Leave at 0 for no minimum. Applies per counter/surface, not to the whole quote.">Minimum charge per counter ⓘ</span>
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-supply-min" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+              </div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsInstallRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">per</span>
+                <select id="mqph-ct-install-unit" onchange="mqphSyncBsInstallRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                  <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
+                </select>
+                ${mqphRateCalcIconHTML('mqph-ct-install-rate', 'mqph-ct-install-unit')}
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
+                <span style="font-size:12px;color:#6b7280;white-space:nowrap" title="Same idea as the supply minimum, but for install labor — a small counter can still take as long to template and install as a bigger one. Leave at 0 for no minimum.">Minimum charge per counter ⓘ</span>
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-install-min" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+              </div>
+            </div>
+
+            <!-- Backsplash options builder -->
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Backsplash height options</div>
+              <div class="mqph-info" style="margin-bottom:0.75rem">
+                Supply rate defaults to this material's own rate when you add a new option, but you can edit it per option. Set a label, height, supply rate, and install rate for each. The customer picks one option in the widget.
+              </div>
+              <div id="mqph-ct-bs-list"></div>
+              <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphAddBsOption()" style="margin-top:6px">+ Add height option</button>
+            </div>
+
+            <!-- Cutout options for this material -->
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Cutout options for this material</div>
+              <div class="mqph-info" style="margin-bottom:0.75rem">
+                Sink and cooktop cutouts are included by default — remove either if you don't need them, or add your own (e.g. "Outlet cutout"). Each one appears as its own quantity field in the widget.
+              </div>
+              <div id="mqph-ct-cutout-list"></div>
+              <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphAddCutoutOption()" style="margin-top:6px">+ Add cutout</button>
+            </div>
+
+            <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
+              <label style="text-transform:none;font-size:13px;font-weight:500">Active</label>
+              <input type="checkbox" id="mqph-ct-active" checked style="width:auto"/>
+            </div>
+          </div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseCTModal()">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" id="mqph-ct-save-btn" onclick="mqphSaveCTItem()" style="margin-left:auto">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Countertop edge/addon add/edit modal -->
+      <div class="mqph-overlay" id="mqph-addon-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-addon-modal-title">New edge/addon</h3></div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseAddonModal()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div class="mqph-field"><label>Name</label><input type="text" id="mqph-addon-name" placeholder="e.g. Waterfall edge"/></div>
+
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:1rem">
+              <input type="checkbox" id="mqph-addon-isedge" onchange="mqphAddonToggleEdge(this.checked)" style="width:auto"/>
+              This is an edge profile (customer picks one per counter — e.g. bullnose, ogee, mitered)
+            </label>
+
+            <div class="mqph-field">
+              <label>Pricing method</label>
+              <select id="mqph-addon-pricing">
+                <option value="flat">Flat rate</option>
+                <option value="linft">Per linear foot</option>
+                <option value="sqft">Per square foot</option>
+              </select>
+              <div id="mqph-addon-edge-note" style="display:none;font-size:12px;color:#92400e;margin-top:6px">Edges are always priced per linear foot — this can't be changed.</div>
+            </div>
+
+            <div class="mqph-info" style="margin-bottom:1rem">
+              💡 Flat rate keeps things simplest for the customer — it's one clear number, and since this is a ballpark tool, small real-world variation (extra material for an odd-shaped counter, a bit more labor on one job vs. another) is exactly what the estimate range is already there to absorb. Per linear/square foot makes sense when the cost genuinely scales with the size of the job — just know it adds a bit more for the customer to think through.
+            </div>
+
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Applies to these countertop materials</div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Check which materials this applies to, and set its own rate for each one — a waterfall on granite doesn't have to cost the same as a waterfall on laminate.</div>
+              <div id="mqph-addon-materials" style="display:flex;flex-direction:column;gap:6px"></div>
+            </div>
+          </div>
+          <div class="mqph-modal-footer">
+            <button id="mqph-addon-delete" class="mqph-btn mqph-btn-danger" style="display:none" onclick="mqphDeleteAddon()">Delete</button>
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseAddonModal()">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" onclick="mqphSaveAddon()" style="margin-left:auto">Save</button>
+          </div>
+        </div>
       </div>`;
   }
 
-  function mqRefreshVariantsPanel(id) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
-    const panel = document.getElementById(`mq-spec-variants-panel-${id}`);
-    if (r && panel) panel.innerHTML = mqVariantsPanelHTML(r);
+  function buildTrimHtml() {
+    const trimItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='trim')
+      .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+
+    const crownItems   = trimItems.filter(r => (r.fields['Trim type']||'crown') === 'crown');
+    const valanceItems = trimItems.filter(r => r.fields['Trim type'] === 'valance');
+
+    function trimRow(r) {
+      let linkedDoors = [];
+      try { linkedDoors = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linkedDoors = []; }
+      return `
+        <div class="mqph-row">
+          <div style="flex:1;min-width:0">
+            <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+            ${linkedDoors.length ? `<div style="font-size:11px;color:#16a34a;margin-top:2px">🔗 Auto-applies with: ${linkedDoors.join(', ')}</div>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
+            <span style="color:#6b7280;font-size:11px">Supply:</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/lin ft</span>
+            <span style="color:#d1d5db;margin:0 4px">·</span>
+            <span style="color:#6b7280;font-size:11px">Install:</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/lin ft</span>
+          </div>
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenTrimEdit('${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+        </div>`;
+    }
+
+    const trimSection = (title, items, emptyMsg, bulkCat) => `<div style="padding:8px 16px 4px;display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border-bottom:1px solid #f3f4f6">
+        <span style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em">${title}</span>
+        ${items.length > 0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenBulkEdit('${bulkCat}')">📊 Bulk edit</button>` : ''}
+      </div>
+      ${items.length > 0 ? items.map(trimRow).join('') : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
+
+    return `
+      <div class="mqph-ct-block">
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('trim')" style="cursor:pointer">
+          <span class="mqph-cat-title"><span id="mqph-cat-arrow-trim" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>👑 Crown moulding / valance <span style="font-size:12px;font-weight:400;color:#9ca3af">(${trimItems.length})</span></span>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenTrimAdd()">+ Add style</button>
+        </div>
+        <div id="mqph-cat-body-trim" style="display:none">
+        <div id="mqph-trim-msg" class="mqph-msg"></div>
+        ${trimSection('Crown moulding', crownItems, 'No crown moulding styles yet — add one above.', 'trim_crown')}
+        ${trimSection('Valance', valanceItems, 'No valance styles yet — add one above.', 'trim_valance')}
+        <div style="padding:0.75rem 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6">Customers can choose crown, valance, both, or neither — cost is calculated from the upper cabinet linear footage plus any wall returns they enter.</div>
+        </div>
+      </div>
+
+      <!-- Trim add/edit modal -->
+      <div class="mqph-overlay" id="mqph-trim-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqph-trim-modal-title">Add crown / valance style</h3></div>
+            <button class="mqph-modal-close" onclick="mqphCloseTrimModal()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#92400e;line-height:1.6">
+              Pricing isn't always equal across crown/valance styles — standard crown, crown to the ceiling, crown with a riser, different materials, etc. all cost differently. Add as many styles as you offer, each with its own rate. Since this is a ballpark estimate, use your average per-linear-foot pricing for each style.
+            </div>
+            <div class="mqph-field">
+              <label>Type</label>
+              <select id="mqph-trim-type" onchange="mqphUpdateTrimTypeHint()"><option value="crown">Crown moulding</option><option value="valance">Valance</option></select>
+            </div>
+            <div class="mqph-field">
+              <label>Style name</label>
+              <input type="text" id="mqph-trim-name" placeholder="e.g. Standard crown — Maple"/>
+            </div>
+            <div class="mqph-field">
+              <label>Which door styles show this <span id="mqph-trim-type-label-for-hint">crown</span>?</label>
+              <div style="display:flex;gap:6px;margin-bottom:6px">
+                <input type="text" id="mqph-trim-door-search" placeholder="Search door styles…" oninput="mqphTrimDoorSearch(this.value)" style="flex:1;font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
+                <button type="button" onclick="mqphTrimDoorSelectAll(true)" style="font-size:11px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;white-space:nowrap">Select all</button>
+                <button type="button" onclick="mqphTrimDoorSelectAll(false)" style="font-size:11px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;white-space:nowrap">Deselect all</button>
+              </div>
+              <div id="mqph-trim-door-link-list" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;max-height:160px;overflow-y:auto"></div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">Only the door styles checked here will show this <span id="mqph-trim-type-label-for-hint2">crown</span> as an option on the widget — anything left unchecked stays hidden for it. "Select all" / "Deselect all" only apply to whatever's currently showing under your search.</div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-trim-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">/ lin ft</span>
+                ${mqphRateCalcIconHTML('mqph-trim-supply-rate', '', 'linear')}
+              </div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate (per linear foot)</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-trim-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">/ lin ft</span>
+                ${mqphRateCalcIconHTML('mqph-trim-install-rate', '', 'linear')}
+              </div>
+            </div>
+            <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
+              <label style="text-transform:none;font-size:13px;font-weight:500">Active</label>
+              <input type="checkbox" id="mqph-trim-active" checked style="width:auto"/>
+            </div>
+          </div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseTrimModal()">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" onclick="mqphSaveTrimItem()" style="margin-left:auto">Save</button>
+          </div>
+        </div>
+      </div>`;
   }
 
-  function mqRefreshSpecVariantUI(id) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
-    if (!r) return;
-    const n = mqParseVariants(r).length;
-    const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
-    if (pill) {
-      const isOpen = pill.textContent.trim().endsWith('▴');
-      pill.textContent = (n ? `${n} variant${n===1?'':'s'}` : 'No variants') + (isOpen ? ' ▴' : ' ▾');
-      pill.style.background = n ? '#eef2ff' : '#f3f4f6';
-      pill.style.color = n ? '#4338ca' : '#6b7280';
+  // ============================================================
+  // TALL CABINET EDITOR
+  // ============================================================
+  function buildTallCabHtml() {
+    const tallCabs = lineItems.filter(r => r.fields && r.fields['Category'] === 'tall_cabinet')
+      .sort((a,b) => (a.fields['Sort order']||0) - (b.fields['Sort order']||0));
+
+    const wizardHasRun = lineItems.some(r => r.fields && r.fields['Category'] === 'material' && (r.fields['Rate']||0) > 0);
+
+    function tallRow(r) {
+      return `
+        <div class="mqph-row">
+          <div style="flex:1;min-width:0">
+            <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+            <div class="mqph-row-desc">Base unit price — door, material & install upcharges applied automatically by widget</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+            <span style="color:#6b7280;font-size:11px">Base price:</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="color:#6b7280;font-size:11px">/ unit</span>
+          </div>
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenTallCabEdit('${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
+        </div>`;
     }
-    // Price field is meaningless once variants exist — disable it in place
-    // rather than making the shop owner guess why it's not being used.
-    const priceInput = document.getElementById(`mq-spec-price-${id}`);
-    if (priceInput) {
-      priceInput.disabled = n > 0;
-      priceInput.title = n > 0 ? 'Priced per variant — see the Variants pill under the item name' : '';
+
+    return `
+      <div class="mqph-ct-block">
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('tallcab')" style="cursor:pointer">
+          <span class="mqph-cat-title"><span id="mqph-cat-arrow-tallcab" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏛️ Tall cabinets <span style="font-size:12px;font-weight:400;color:#9ca3af">(${tallCabs.length})</span></span>
+          ${wizardHasRun
+            ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenTallCabAdd()">+ Add type</button>`
+            : `<span style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:4px 10px">Complete main pricing wizard first</span>`
+          }
+        </div>
+        <div id="mqph-cat-body-tallcab" style="display:none">
+        <div id="mqph-tallcab-msg" class="mqph-msg"></div>
+        <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
+          Add each tall cabinet variation you offer — with pullouts, oven unit, pantry, etc. Quote each as a standard <strong>24" wide unit using your baseline material, no doors</strong> (supply only). The widget automatically calculates door upcharges, material upcharges, hinge upcharges, and install on top based on what the customer has selected.
+        </div>
+        ${tallCabs.length
+          ? tallCabs.map(tallRow).join('')
+          : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">No tall cabinet types yet — add your first one above.</div>`
+        }
+        <div style="padding:0.75rem 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6">The widget reminds customers not to include tall cabinet wall space in their upper and base measurements.</div>
+        </div>
+      </div>
+
+      <!-- Tall cabinet add/edit modal -->
+      <div class="mqph-overlay" id="mqph-tallcab-modal-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr mqph-mini-hdr" style="background:#1a1a1a;border-radius:12px 12px 0 0">
+            <div>
+              <h3 id="mqph-tallcab-modal-title" style="color:#fff;font-size:15px">Add tall cabinet type</h3>
+              <p id="mqph-tallcab-modal-sub" style="color:rgba(255,255,255,0.6);font-size:12px;margin:3px 0 0;padding:0"></p>
+              <div id="mqph-tallcab-modal-progress" style="display:flex;gap:4px;margin-top:10px"></div>
+            </div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseTallCabModal()" style="color:rgba(255,255,255,0.7);font-size:22px">×</button>
+          </div>
+          <div class="mqph-modal-body" id="mqph-tallcab-modal-content"></div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" id="mqph-tallcab-back" onclick="mqphTallCabBack()" style="display:none">← Back</button>
+            <button class="mqph-btn mqph-btn-primary" id="mqph-tallcab-next" onclick="mqphTallCabNext()" style="margin-left:auto">Next →</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Tall cabinet mini wizard state
+  let tallCabWiz = { step: 0, name: '', editId: null, price: null };
+
+  function renderTallCabWizStep() {
+    const bl = getBaselineRates();
+    const step = tallCabWiz.step;
+    const name = tallCabWiz.name;
+    const isEdit = !!tallCabWiz.editId;
+
+    const titleEl    = document.getElementById('mqph-tallcab-modal-title');
+    const subEl      = document.getElementById('mqph-tallcab-modal-sub');
+    const progressEl = document.getElementById('mqph-tallcab-modal-progress');
+    const contentEl  = document.getElementById('mqph-tallcab-modal-content');
+    const nextBtn    = document.getElementById('mqph-tallcab-next');
+    const backBtn    = document.getElementById('mqph-tallcab-back');
+
+    const dots = ['Name','Quote'].map((_,i) =>
+      `<div style="flex:1;height:3px;border-radius:2px;background:${i<step?'#a3e635':i===step?'#fff':'rgba(255,255,255,0.25)'};transition:background 0.3s"></div>`
+    ).join('');
+    if (progressEl) progressEl.innerHTML = dots;
+
+    if (step === 0) {
+      if (titleEl) titleEl.textContent = isEdit ? 'Edit tall cabinet type' : '🏛️ Add tall cabinet type';
+      if (subEl)   subEl.textContent   = 'Step 1 of 2 — name it first';
+      if (contentEl) contentEl.innerHTML = `
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">What do you call this tall cabinet? Be descriptive — it appears in your widget as a selectable option.</p>
+        <input class="mqph-name-input" type="text" id="mqph-tallcab-name-inp" placeholder="e.g. Tall cabinet — all doors & shelves" value="${name.replace(/"/g,'&quot;')}" onkeydown="if(event.key==='Enter')mqphTallCabNext()"/>
+        <div style="font-size:12px;color:#9ca3af;margin-top:-0.5rem;line-height:1.5">Examples: "Tall cab with pullouts", "Oven unit", "Pantry — all doors", "Tall cab — drawer bank bottom"</div>`;
+      if (nextBtn) { nextBtn.textContent = 'Next →'; nextBtn.disabled = false; }
+      if (backBtn) backBtn.style.display = 'none';
+
+    } else if (step === 1) {
+      if (titleEl) titleEl.textContent = '🏛️ Quote this tall cabinet';
+      if (subEl)   subEl.textContent   = name;
+      if (contentEl) contentEl.innerHTML = `
+        <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Quote this exact tall cabinet in your software, then enter the total below.</p>
+        ${specBox([
+          `<strong>${name}</strong>`,
+          `Width: <span class="mqph-spec-tag">24" (610mm)</span> (standard tall cabinet width)`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName||'your baseline material'}</span>`,
+          `<strong>No doors · No hinges · Supply only · No install · Local delivery</strong>`,
+          `Include the box, shelves, and any interior fittings specific to this type (pullouts, drawer boxes, etc.)`,
+          `<span style="color:#1e40af">Door upcharges, hinge upcharges, material upcharges, and install will be calculated automatically by the widget based on what the customer selects.</span>`,
+        ])}
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-tallcab-price" placeholder="0" oninput="mqphTallCabCalc()"/></div>
+        <p class="mqph-calc-hint">Base unit price only — door, hinge, material & install upcharges are added automatically</p>
+        <div class="mqph-rate-reveal" id="mqph-tallcab-reveal" style="display:none">
+          <div class="mqph-rate-reveal-val" id="mqph-tallcab-rate-val">—</div>
+          <div class="mqph-rate-reveal-lbl">base unit price (stored as-is)</div>
+        </div>`;
+      if (nextBtn) { nextBtn.textContent = 'Save →'; nextBtn.disabled = false; }
+      if (backBtn) backBtn.style.display = 'inline-block';
+      if (tallCabWiz.price) setTimeout(() => { const el = document.getElementById('mqph-tallcab-price'); if(el){el.value=tallCabWiz.price;mqphTallCabCalc();} }, 50);
     }
   }
 
-  window.mqToggleVariantsPanel = function(id) {
-    const row = document.getElementById(`mq-spec-variants-row-${id}`);
-    const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
-    if (!row) return;
-    const opening = row.style.display === 'none' || !row.style.display;
-    row.style.display = opening ? 'table-row' : 'none';
-    if (pill) pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, opening ? '▴' : '▾');
+  window.mqphTallCabCalc = function() {
+    const p = parseFloat(document.getElementById('mqph-tallcab-price')?.value || 0);
+    const reveal = document.getElementById('mqph-tallcab-reveal');
+    const val    = document.getElementById('mqph-tallcab-rate-val');
+    if (reveal && val) {
+      if (p > 0) { reveal.style.display = 'block'; val.textContent = `${CUR()}${p.toLocaleString()} / unit`; }
+      else reveal.style.display = 'none';
+    }
   };
 
-  window.mqAddVariant = async function(id) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
-    if (!r) return;
-    const variants = mqParseVariants(r);
-    // A stable id, not the variant's array position — its photo (added
-    // separately in the Products tab) is keyed by this id, so it has to
-    // survive other variants being added/removed/reordered later.
-    const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    variants.push({ id: newId, label: '', price: 0, featured: false });
-    r.fields['Variants'] = JSON.stringify(variants);
-    mqRefreshVariantsPanel(id);
-    mqRefreshSpecVariantUI(id);
-    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
-  };
-
-  window.mqRemoveVariant = async function(id, vi) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
-    if (!r) return;
-    const variants = mqParseVariants(r);
-    variants.splice(vi, 1);
-    r.fields['Variants'] = JSON.stringify(variants);
-    mqRefreshVariantsPanel(id);
-    mqRefreshSpecVariantUI(id);
-    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
-  };
-
-  window.mqSaveVariantField = async function(id, vi, field, value) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
-    if (!r) return;
-    const variants = mqParseVariants(r);
-    if (!variants[vi]) return;
-    variants[vi][field] = value;
-    r.fields['Variants'] = JSON.stringify(variants);
-    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
-  };
-  // =================== end specialty item variants ===================
-
-  // Per lin ft and Per sq ft are mutually exclusive — checking one unchecks
-  // the other, both in the UI and in what gets saved, so an item never ends
-  // up with both pricing units on at once.
-  window.mqSaveSpecUnit = async function(id, field, checked) {
-    const otherField = field === 'Per linear foot' ? 'Per square foot' : 'Per linear foot';
-    const otherId = field === 'Per linear foot' ? `mq-spec-persqft-${id}` : `mq-spec-perft-${id}`;
-    try {
-      const updates = { [field]: checked };
-      if (checked) {
-        updates[otherField] = false;
-        const otherCheckbox = document.getElementById(otherId);
-        if (otherCheckbox) otherCheckbox.checked = false;
+  window.mqphTallCabNext = async function() {
+    const step = tallCabWiz.step;
+    if (step === 0) {
+      const name = document.getElementById('mqph-tallcab-name-inp')?.value.trim();
+      if (!name) { const inp = document.getElementById('mqph-tallcab-name-inp'); if(inp){inp.style.borderColor='#dc2626';inp.focus();} return; }
+      tallCabWiz.name = name;
+      tallCabWiz.step = 1;
+      renderTallCabWizStep();
+    } else if (step === 1) {
+      const p = parseFloat(document.getElementById('mqph-tallcab-price')?.value || 0);
+      if (!p || p <= 0) { const inp = document.getElementById('mqph-tallcab-price'); if(inp){inp.style.borderBottomColor='#dc2626';inp.focus();} return; }
+      if (!tallCabWiz.editId && !mqphWarnIfDuplicate('tall_cabinet', tallCabWiz.name)) return;
+      tallCabWiz.price = p;
+      const nextBtn = document.getElementById('mqph-tallcab-next');
+      if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Saving…'; }
+      try {
+        const fields = {
+          shop: [shopRecord._recordId], Name: tallCabWiz.name, Category: 'tall_cabinet',
+          Rate: p, Unit: 'per unit',
+          Description: 'Base unit price — 24" wide, baseline material & door, supply only',
+          Active: true,
+        };
+        if (tallCabWiz.editId) {
+          await atUpdate(LINE_ITEMS_TABLE, tallCabWiz.editId, fields);
+        } else {
+          fields['Sort order'] = lineItems.filter(r=>r.fields?.['Category']==='tall_cabinet').length + 1;
+          const rec = await atCreate(LINE_ITEMS_TABLE, fields);
+          if (rec?.id) lineItems.push(rec);
+        }
+        mqphCloseTallCabModal();
+        await loadAndRender();
+      } catch(e) {
+        console.error('Tall cab save error:', e);
+        if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Save →'; }
+        alert('Error saving. Please try again.');
       }
-      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
-    } catch(e) { console.error('Failed to save specialty unit field', e); }
-    // The metric rate-calculator only makes sense once this item has an
-    // actual per-unit price — live-swap between the "Flat rate" label and
-    // the "Use metric?" calculator in step with the checkboxes.
-    const flatLabel = document.getElementById(`mq-spec-price-calcwrap-${id}-flat`);
-    const metricGroup = document.getElementById(`mq-spec-price-calcwrap-${id}-metric`);
-    if (flatLabel && metricGroup) {
-      const ftBox = document.getElementById(`mq-spec-perft-${id}`);
-      const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
-      const showMetric = !!(ftBox?.checked || sqftBox?.checked);
-      flatLabel.style.display = showMetric ? 'none' : 'inline-flex';
-      metricGroup.style.display = showMetric ? 'inline-flex' : 'none';
-    }
-    // Same show/hide, same trigger, for the "Min $" floor next to it — see
-    // mqSpecMinPriceHTML.
-    const minWrap = document.getElementById(`mq-spec-price-minwrap-${id}`);
-    if (minWrap) {
-      const ftBox = document.getElementById(`mq-spec-perft-${id}`);
-      const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
-      minWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'flex' : 'none';
     }
   };
 
-  // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
-  // install side's own pricing method — kept as separate fields entirely
-  // from the supply-side ones, since an item can easily be priced one way
-  // to supply and a different way to install (e.g. $54.95/sqft supply, a
-  // flat $16.80/door to install).
-  window.mqSaveSpecInstallUnit = async function(id, field, checked) {
-    const otherField = field === 'Install per linear foot' ? 'Install per square foot' : 'Install per linear foot';
-    const otherId = field === 'Install per linear foot' ? `mq-spec-installpersqft-${id}` : `mq-spec-installperft-${id}`;
-    try {
-      const updates = { [field]: checked };
-      if (checked) {
-        updates[otherField] = false;
-        const otherCheckbox = document.getElementById(otherId);
-        if (otherCheckbox) otherCheckbox.checked = false;
-      }
-      await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
-    } catch(e) { console.error('Failed to save specialty install unit field', e); }
-    const flatLabel = document.getElementById(`mq-spec-installprice-calcwrap-${id}-flat`);
-    const metricGroup = document.getElementById(`mq-spec-installprice-calcwrap-${id}-metric`);
-    if (flatLabel && metricGroup) {
-      const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
-      const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
-      const showMetric = !!(ftBox?.checked || sqftBox?.checked);
-      flatLabel.style.display = showMetric ? 'none' : 'inline-flex';
-      metricGroup.style.display = showMetric ? 'inline-flex' : 'none';
-    }
-    const minWrap = document.getElementById(`mq-spec-installprice-minwrap-${id}`);
-    if (minWrap) {
-      const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
-      const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
-      minWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'flex' : 'none';
-    }
+  window.mqphTallCabBack = function() {
+    if (tallCabWiz.step > 0) { tallCabWiz.step--; renderTallCabWizStep(); }
+  };
+
+  window.mqphOpenTallCabAdd = function() {
+    tallCabWiz = { step: 0, name: '', editId: null, price: null };
+    document.getElementById('mqph-tallcab-modal-overlay')?.classList.add('show');
+    renderTallCabWizStep();
+  };
+
+  window.mqphOpenTallCabEdit = function(id) {
+    const rec = lineItems.find(r => r.id === id); if (!rec) return;
+    tallCabWiz = { step: 0, name: rec.fields['Name']||'', editId: id, price: rec.fields['Rate']||null };
+    document.getElementById('mqph-tallcab-modal-overlay')?.classList.add('show');
+    renderTallCabWizStep();
+  };
+
+  window.mqphCloseTallCabModal = function() {
+    document.getElementById('mqph-tallcab-modal-overlay')?.classList.remove('show');
+    tallCabWiz = { step: 0, name: '', editId: null, price: null };
+  };
+
+  let currentTrimEditId = null;
+  let currentBsOptions = []; // in-memory list while the CT modal is open
+  let currentCutoutOptions = []; // in-memory list while the CT modal is open
+  let ctBulk = null; // shared config captured before the bulk naming screen
+  let ctModalOriginalBodyHTML = null; // captured once, restored before every open (bulk naming screen overwrites the body)
+
+  // Called by oninput on the supply rate field and onchange on supply unit dropdown
+  window.mqphSyncBsSupplyRate = function() {
+    const rate = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value || 0);
+    const unit = document.getElementById('mqph-ct-supply-unit')?.value || 'sqft';
+    currentBsOptions.forEach(o => {
+      if (o._supplyAutoSync !== false) { o.supplyRate = rate; o.supplyUnit = unit; }
+    });
+    mqphRenderBsList();
+  };
+
+  // Called by oninput on the install rate field and onchange on install unit dropdown
+  window.mqphSyncBsInstallRate = function() {
+    const rate = parseFloat(document.getElementById('mqph-ct-install-rate')?.value || 0);
+    const unit = document.getElementById('mqph-ct-install-unit')?.value || 'sqft';
+    currentBsOptions.forEach(o => {
+      if (o._installAutoSync !== false) { o.installRate = rate; o.installUnit = unit; }
+    });
+    mqphRenderBsList();
   };
 
   // A shop owner thinking in metric shouldn't have to do the sqft/linft
-  // math themselves just to set a rate — this small blue calculator icon
-  // (shown only once Per lin ft / Per sq ft is actually checked, since a
-  // flat-price item has no unit to convert) opens a tiny popover where they
-  // type their rate per square metre or per linear metre, and it converts
-  // and drops the equivalent $/sqft or $/linft straight into the price
-  // field. The stored rate and the widget's own pricing math never change
-  // — this is purely a friendlier way to type the same number.
-  function mqSpecRateCalcIconHTML(id, isInstall, visible) {
-    const wrapId = isInstall ? `mq-spec-installprice-calcwrap-${id}` : `mq-spec-price-calcwrap-${id}`;
+  // math themselves just to set a countertop rate — this "Use metric?"
+  // calculator (same idea as the one on the dashboard's Specialty Items
+  // tab) opens a tiny popover where they type their rate per square metre
+  // or per linear metre — whichever matches the field's current "per"
+  // dropdown — and it converts and drops the equivalent rate straight into
+  // the Supply/Install rate field. The stored rate and the widget's own
+  // pricing math never change — this is purely a friendlier way to type
+  // the same number.
+  // targetUnitSelectId: id of a <select> whose current value ('lin ft' vs
+  // anything else) decides linear-vs-sqft mode. Pass forcedMode ('linear' or
+  // 'sqft') instead when there's no unit dropdown at all — e.g. Crown/Valance
+  // rates, which are always per linear foot.
+  function mqphRateCalcIconHTML(targetInputId, targetUnitSelectId, forcedMode) {
     const svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
-    // Flat-rate items (neither per-unit box checked) show a plain "Flat
-    // rate" label in this same spot instead of nothing — so a shop owner
-    // sees right away that this item just isn't eligible for the metric
-    // calculator yet, and understands why the moment they check Per lin ft
-    // / Per sq ft, this label live-swaps for the actual calculator button
-    // (see mqSaveSpecUnit / mqSaveSpecInstallUnit).
-    return `<span id="${wrapId}" style="display:inline-flex;align-items:center;margin-left:14px;vertical-align:middle">
-      <span id="${wrapId}-flat" style="display:${visible ? 'none' : 'inline-flex'};font-size:11px;color:#9ca3af;font-style:italic;white-space:nowrap">Flat rate</span>
-      <span id="${wrapId}-metric" style="display:${visible ? 'inline-flex' : 'none'};align-items:center;gap:7px">
-        <span style="font-size:11px;color:#2563eb;font-weight:600;white-space:nowrap">Use metric?</span>
-        <button type="button" onclick="mqShowSpecRateCalc(this,'${id}',${isInstall ? 'true' : 'false'},event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
-      </span>
+    return `<span style="display:inline-flex;align-items:center;gap:7px;margin-left:6px">
+      <span style="font-size:11px;color:#2563eb;font-weight:600;white-space:nowrap">Use metric?</span>
+      <button type="button" onclick="mqphShowRateCalc(this,'${targetInputId}','${targetUnitSelectId||''}',event,'${forcedMode||''}')" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
     </span>`;
   }
 
-  // A minimum only means anything once an item is priced per lin ft or per
-  // sq ft — a flat-rate item's one price already IS its floor, so this
-  // stays hidden until Per lin ft / Per sq ft is checked (same visibility
-  // rule, and the same show/hide toggle points, as the metric calculator
-  // above — see mqSaveSpecUnit / mqSaveSpecInstallUnit).
-  function mqSpecMinPriceHTML(r, isInstall) {
-    const id = r.id;
-    const wrapId = isInstall ? `mq-spec-installprice-minwrap-${id}` : `mq-spec-price-minwrap-${id}`;
-    const fieldId = isInstall ? `mq-spec-installprice-min-${id}` : `mq-spec-price-min-${id}`;
-    const field = isInstall ? 'Install minimum price' : 'Minimum price';
-    const perFt = isInstall ? r.fields['Install per linear foot'] : r.fields['Per linear foot'];
-    const perSqFt = isInstall ? r.fields['Install per square foot'] : r.fields['Per square foot'];
-    const visible = !!(perFt || perSqFt);
-    return `<div id="${wrapId}" style="display:${visible ? 'flex' : 'none'};align-items:center;gap:4px;margin-top:5px">
-      <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
-      <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
-      <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — e.g. a tiny door still takes a full sheet and the same labor as a bigger one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
-    </div>`;
-  }
-
-  window.mqShowSpecRateCalc = function(triggerEl, id, isInstall, event) {
+  window.mqphShowRateCalc = function(triggerEl, targetInputId, targetUnitSelectId, event, forcedMode) {
     if (event) event.stopPropagation();
-    const perFtChecked = document.getElementById(isInstall ? `mq-spec-installperft-${id}` : `mq-spec-perft-${id}`)?.checked;
-    const mode = perFtChecked ? 'linear' : 'sqft'; // icon is only ever shown once one of the two is checked
-    const fieldId = isInstall ? `mq-spec-installprice-${id}` : `mq-spec-price-${id}`;
-    let pop = document.getElementById('mq-spec-rate-calc-popover');
+    let mode;
+    if (forcedMode === 'linear' || forcedMode === 'sqft') {
+      mode = forcedMode;
+    } else {
+      const unitSelect = document.getElementById(targetUnitSelectId);
+      mode = (unitSelect?.value === 'lin ft') ? 'linear' : 'sqft';
+    }
+    let pop = document.getElementById('mqph-rate-calc-popover');
     const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
     if (!pop) {
       pop = document.createElement('div');
-      pop.id = 'mq-spec-rate-calc-popover';
+      pop.id = 'mqph-rate-calc-popover';
       pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#fff;color:#111;font-size:13px;line-height:1.5;padding:14px;border-radius:10px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid #e5e7eb';
-      // Without this, clicking anything inside the popover (the input, the
-      // buttons) bubbles up to the document-level listener that closes it
-      // on outside-click — which would close it before a click ever landed.
       pop.addEventListener('click', (e) => e.stopPropagation());
       document.body.appendChild(pop);
+      // Only need to wire this once — closes the popover on any outside
+      // click, same pattern as the dashboard's Specialty Items version.
+      document.addEventListener('click', () => { pop.style.display = 'none'; });
     }
-    if (alreadyOpenForThis) { pop.style.display = 'none'; return; } // clicking the same icon again closes it
+    if (alreadyOpenForThis) { pop.style.display = 'none'; return; }
     pop._trigger = triggerEl;
-    pop._fieldId = fieldId;
+    pop._targetInputId = targetInputId;
     pop._mode = mode;
     const unitLabel = mode === 'linear' ? 'linear metre' : 'square metre (m²)';
     const targetUnitLabel = mode === 'linear' ? 'lin ft' : 'sq ft';
@@ -5842,3351 +3155,681 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="font-weight:700;margin-bottom:8px;font-size:13px">🧮 Enter rate per ${unitLabel}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <span style="color:#6b7280">${CUR()}</span>
-        <input type="number" id="mq-spec-rate-calc-input" placeholder="0.00" style="flex:1;min-width:0;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" oninput="mqSpecRateCalcUpdate()"/>
+        <input type="number" id="mqph-rate-calc-input" placeholder="0.00" style="flex:1;min-width:0;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" oninput="mqphRateCalcUpdate()"/>
       </div>
       <div style="background:#f0fdf4;border-radius:6px;padding:8px 10px;margin-bottom:10px;text-align:center">
         <div style="font-size:11px;color:#6b7280">= per ${targetUnitLabel}</div>
-        <div id="mq-spec-rate-calc-result" style="font-size:15px;font-weight:700;color:#166534">${CUR()}0.00</div>
+        <div id="mqph-rate-calc-result" style="font-size:15px;font-weight:700;color:#166534">${CUR()}0.00</div>
       </div>
       <div style="display:flex;gap:6px">
-        <button type="button" onclick="mqCloseSpecRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
-        <button type="button" onclick="mqApplySpecRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:none;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Use this</button>
+        <button type="button" onclick="mqphCloseRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+        <button type="button" onclick="mqphApplyRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:none;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Use this</button>
       </div>`;
     const rect = triggerEl.getBoundingClientRect();
     pop.style.display = 'block';
     pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
     pop.style.left = Math.max(8, window.scrollX + rect.left - 100) + 'px';
-    setTimeout(() => document.getElementById('mq-spec-rate-calc-input')?.focus(), 50);
+    setTimeout(() => document.getElementById('mqph-rate-calc-input')?.focus(), 50);
   };
 
-  window.mqSpecRateCalcUpdate = function() {
-    const pop = document.getElementById('mq-spec-rate-calc-popover');
-    const input = document.getElementById('mq-spec-rate-calc-input');
-    const resultEl = document.getElementById('mq-spec-rate-calc-result');
+  window.mqphRateCalcUpdate = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
+    const input = document.getElementById('mqph-rate-calc-input');
+    const resultEl = document.getElementById('mqph-rate-calc-result');
     if (!pop || !input || !resultEl) return;
     const val = parseFloat(input.value) || 0;
-    // 1 sqft = 0.092903 sqm, 1 ft = 0.3048 m — so a rate per sqm/per linear
-    // metre converts to a rate per sqft/linft by multiplying by the same
-    // factors (dollars-per-bigger-unit -> dollars-per-smaller-unit shrinks).
+    // 1 sqft = 0.092903 sqm, 1 ft = 0.3048 m — same conversion the
+    // Specialty Items calculator uses.
     const converted = pop._mode === 'linear' ? val * 0.3048 : val * 0.092903;
     resultEl.textContent = CUR() + converted.toFixed(2);
   };
 
-  window.mqApplySpecRateCalc = function() {
-    const pop = document.getElementById('mq-spec-rate-calc-popover');
-    const input = document.getElementById('mq-spec-rate-calc-input');
-    if (!pop || !input || !pop._fieldId) return;
+  window.mqphApplyRateCalc = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
+    const input = document.getElementById('mqph-rate-calc-input');
+    if (!pop || !input || !pop._targetInputId) return;
     const val = parseFloat(input.value) || 0;
     const converted = pop._mode === 'linear' ? val * 0.3048 : val * 0.092903;
     const rounded = Math.round(converted * 100) / 100;
-    const targetEl = document.getElementById(pop._fieldId);
+    const targetEl = document.getElementById(pop._targetInputId);
     if (targetEl) {
       targetEl.value = rounded;
-      // The price field saves on blur (onblur="mqSaveSpecField(...)") — this
-      // triggers that same handler rather than duplicating its save logic.
-      targetEl.dispatchEvent(new Event('blur', { bubbles: true }));
+      // Programmatic value changes don't fire input events on their own —
+      // dispatch one so mqphSyncBsSupplyRate/InstallRate (which keep the
+      // backsplash height options' auto-synced rates in step) actually run.
+      targetEl.dispatchEvent(new Event('input', { bubbles: true }));
     }
-    mqCloseSpecRateCalc();
+    mqphCloseRateCalc();
   };
 
-  window.mqCloseSpecRateCalc = function() {
-    const pop = document.getElementById('mq-spec-rate-calc-popover');
+  window.mqphCloseRateCalc = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
     if (pop) pop.style.display = 'none';
   };
 
-  // Builds whichever content belongs in the "Installed price / Mode" column
-  // for a given specialty item — an editable installed price if the shop
-  // is offering the customer a choice, or a plain "which mode is this
-  // item's one flat price" label if not.
-  function mqSpecInstallColHTML(r) {
-    const offersChoice = !!r.fields['Offers install choice'];
-    if (offersChoice) {
-      const installPerFt = !!r.fields['Install per linear foot'];
-      const installPerSqFt = !!r.fields['Install per square foot'];
-      return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
-          <span style="font-size:11px;color:#6b7280">Install price (labor only, added on top)</span>
-          <span onclick="mqShowSpecHelpPopover(this,'e.g. ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
-        </div>
-        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
-        ${mqSpecMinPriceHTML(r, true)}
-        <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per lin ft</label>
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per sq ft</label>
-          <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
-        </div>
-        <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
-          <span style="font-size:11px;color:#6b7280">Question customers see:</span>
-          <span onclick="mqShowSpecHelpPopover(this,'This only shows to customers when install is priced differently than supply. Type your own question to customize it, or leave blank to use the placeholder text shown below as the default.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
-        </div>
-        <input type="text" value="${(r.fields['Install quantity label']||'').replace(/"/g,'&quot;')}" id="mq-spec-installqtylabel-${r.id}" placeholder="How many of these need to be installed?" style="margin-top:2px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:210px" onblur="mqSaveSpecField('${r.id}','Install quantity label',this.value)"/>`;
-    }
-    const mode = r.fields['Install mode'] || 'supply';
-    return `<div style="font-size:11px;color:#6b7280;margin-bottom:3px">This item is priced as:</div>
-      <select id="mq-spec-mode-${r.id}" onchange="mqSaveSpecField('${r.id}','Install mode',this.value)" style="font-size:12px;padding:5px 8px;border:1px solid #d1d5db;border-radius:4px;width:170px">
-      <option value="supply" ${mode!=='installed'&&mode!=='na'?'selected':''}>Supply only</option>
-      <option value="installed" ${mode==='installed'?'selected':''}>Supplied &amp; Installed</option>
-      <option value="na" ${mode==='na'?'selected':''}>N/A — show no label</option>
-    </select>`;
-  }
-
-  // Flips whether this item offers the customer a supply/install choice,
-  // and swaps that column between an installed-price input and a plain
-  // mode label accordingly. Reads whatever's currently in the DOM rather
-  // than a fresh fetch, so a shop owner flipping this back and forth
-  // doesn't lose whatever they'd already typed.
-  window.mqToggleSpecInstallChoice = async function(id) {
-    const chk = el(`mq-spec-offerchoice-${id}`);
-    const col = el(`mq-spec-installcol-${id}`);
-    if (!chk || !col) return;
-    const offersChoice = chk.checked;
-    try { await atUpdate(CONFIG.SPECIALTY_TABLE, id, { 'Offers install choice': offersChoice }); } catch(e) { console.error('Failed to save install choice toggle', e); }
-    const existingPriceInput = document.getElementById(`mq-spec-installprice-${id}`);
-    const existingModeSelect = document.getElementById(`mq-spec-mode-${id}`);
-    const existingInstallPerFt = document.getElementById(`mq-spec-installperft-${id}`);
-    const existingInstallPerSqFt = document.getElementById(`mq-spec-installpersqft-${id}`);
-    const existingInstallQtyLabel = document.getElementById(`mq-spec-installqtylabel-${id}`);
-    const existingInstallMin = document.getElementById(`mq-spec-installprice-min-${id}`);
-    col.innerHTML = mqSpecInstallColHTML({ id, fields: {
-      'Offers install choice': offersChoice,
-      'Install price': existingPriceInput ? existingPriceInput.value : '',
-      'Install mode': existingModeSelect ? existingModeSelect.value : 'supply',
-      'Install per linear foot': existingInstallPerFt ? existingInstallPerFt.checked : false,
-      'Install per square foot': existingInstallPerSqFt ? existingInstallPerSqFt.checked : false,
-      'Install quantity label': existingInstallQtyLabel ? existingInstallQtyLabel.value : '',
-      'Install minimum price': existingInstallMin ? existingInstallMin.value : '',
-    }});
-  };
-
-
-  // Reads whatever room checkboxes are currently checked for this item,
-  // and saves the list. If every configured room is checked, saves an empty
-  // list instead — meaning "visible everywhere," which also automatically
-  // includes any room added later, rather than needing to be re-checked.
-  // Flips the room checkbox panel to open upward instead of downward when
-  // there isn't enough room below in the viewport — same fix pattern used
-  // for the widget's photo hover preview, which had the identical problem.
-  window.mqPositionRoomPanel = function(detailsEl) {
-    // Clean up any previous outside-click listener first, regardless of
-    // whether we're opening or closing, to avoid stacking duplicates.
-    if (detailsEl._mqCloseHandler) {
-      document.removeEventListener('click', detailsEl._mqCloseHandler);
-      detailsEl._mqCloseHandler = null;
-    }
-    if (!detailsEl.open) return;
-
-    const panel = detailsEl.querySelector('.mq-room-panel');
-    if (!panel) return;
-    const summary = detailsEl.querySelector('summary') || detailsEl;
-    const anchorRect = summary.getBoundingClientRect();
-
-    // position:fixed, placed via the anchor's actual on-screen position —
-    // not position:absolute — so this can never get invisibly clipped by a
-    // scrolling ancestor (like the specialty items table's horizontal
-    // scroll wrapper). Recomputed fresh every time it opens.
-    panel.style.position = 'fixed';
-    panel.style.left = Math.round(anchorRect.left) + 'px';
-    panel.style.top = Math.round(anchorRect.bottom + 6) + 'px';
-    panel.style.bottom = 'auto';
-    panel.style.margin = '0';
-
-    const panelRect = panel.getBoundingClientRect();
-    if (panelRect.bottom > window.innerHeight) {
-      panel.style.top = 'auto';
-      panel.style.bottom = Math.round(window.innerHeight - anchorRect.top + 6) + 'px';
-    }
-    if (panelRect.right > window.innerWidth) {
-      panel.style.left = Math.round(window.innerWidth - panelRect.width - 10) + 'px';
-    }
-
-    // Close on any click outside this details element. Deferred by one tick
-    // so the same click that opened it doesn't immediately close it again.
-    const closeHandler = (e) => {
-      if (!detailsEl.contains(e.target)) {
-        detailsEl.open = false;
-        document.removeEventListener('click', closeHandler);
-        detailsEl._mqCloseHandler = null;
-      }
-    };
-    setTimeout(() => document.addEventListener('click', closeHandler), 0);
-    detailsEl._mqCloseHandler = closeHandler;
-  };
-
-  window.mqToggleSpecRoom = async function(itemId) {
-    const rooms = window._mqRooms || defaultRoomTypes();
-    const items = window._mqSpecItemsList || [];
-    const cachedItem = items.find(it => it.id === itemId);
-    let prevRooms = [];
-    try { prevRooms = cachedItem && cachedItem.visibleRooms ? JSON.parse(cachedItem.visibleRooms) : []; } catch(e) { prevRooms = []; }
-
-    const checkedIds = rooms
-      .filter(r => document.getElementById(`mq-spec-room-${itemId}-${r.id}`)?.checked)
-      .map(r => r.id);
-    const allChecked = checkedIds.length === rooms.length;
-    const toSave = allChecked ? [] : checkedIds;
-    try {
-      await atUpdate(CONFIG.SPECIALTY_TABLE, itemId, { 'Visible rooms': JSON.stringify(toSave) });
-      const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
-      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
-      if (cachedItem) cachedItem.visibleRooms = JSON.stringify(toSave);
-      // Keep the row's own filterable data in sync and immediately re-apply
-      // whatever filter is currently active — an item that no longer
-      // matches the project type being filtered on should disappear right
-      // away, not linger until the page gets refreshed.
-      const row = document.querySelector(`#mq-spec-tbody tr[data-id="${itemId}"]`);
-      if (row) row.setAttribute('data-rooms', JSON.stringify(toSave));
-      if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
-    } catch(e) {
-      console.error('Failed to save room links', e);
-      rooms.forEach(r => {
-        const cb = document.getElementById(`mq-spec-room-${itemId}-${r.id}`);
-        if (cb) cb.checked = (!prevRooms.length || prevRooms.includes(r.id));
-      });
-      const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
-      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms) + ' — save failed, try again';
-    }
-  };
-
-
-  function roomLinkSummaryText(visibleRooms, rooms) {
-    if (!visibleRooms || !visibleRooms.length) return 'All project types';
-    const names = visibleRooms.map(id => rooms.find(r => r.id === id)?.name).filter(Boolean);
-    return names.length ? names.join(', ') : 'All project types';
-  }
-
-  function roomLinkDisclosure(itemId, visibleRoomsJson) {
-    const rooms = window._mqRooms || defaultRoomTypes();
-    let visibleRooms = [];
-    try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
-    const summary = roomLinkSummaryText(visibleRooms, rooms);
-    const checkboxes = rooms.map(r => `
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
-      </label>`).join('');
-    return `
-      <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
-        <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
-          <span id="mq-spec-room-summary-${itemId}">${summary}</span>
-          <span style="font-size:15px;line-height:1">▾</span>
-        </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
-          ${checkboxes}
-        </div>
-      </details>`;
-  }
-
-  // Same pattern as roomLinkDisclosure, but for My Products items — these
-  // can span 2 underlying Airtable records per card (materials: uppers/bases;
-  // drawers: some/mostly), so this saves to every id in that item's group at
-  // once, keeping them consistent.
-  // Module-level so both initProductsTab (My Products) and renderTemplates
-  // (admin Templates tab) can share it, instead of it being locked inside one
-  // function's closure over a specific shop's savedPhotos/savedHidden.
-  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo) {
-    const savedUrl = savedPhotos[key] || '';
-    const isHidden = savedHidden[key] || false;
-    // savedFeatured is only ever passed in from My Products — every other
-    // caller (the Templates admin tab, etc.) omits it entirely, which is
-    // what keeps this toggle scoped to My Products only without needing a
-    // separate flag to remember to pass around.
-    const featuredHtml = savedFeatured ? (() => {
-      const isFeatured = savedFeatured[key] || false;
-      return `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a" onchange="mqMarkProductsDirty()"/>
-        🏆 Mark as "${(badgeLabel||'Best seller').replace(/"/g,'&quot;')}"
-      </label>`;
-    })() : '';
-    const preview = savedUrl
-      ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
-      : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
-    const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat)}</div>` : '';
-    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
-      <div id="mq-photo-preview-${key}">${preview}</div>
-      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
-      ${roomLinkHtml}
-      ${featuredHtml}
-      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"
-          onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
-        Hide from showroom
-      </label>
-      ${isDemo ? `
-      <div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:8px 10px;font-size:11px;color:#6b7280;line-height:1.5">
-        🔒 Adding or changing a photo here is a paid feature. Whatever photo this item already has stays showing — upgrade from the Account tab to upload new ones or pick from the library.
-      </div>
-      <!-- Hidden, not removed: mqSaveProducts rebuilds its whole photo map
-           from every [id^="mq-photo-"] input still in the DOM on every save,
-           so this has to keep carrying the existing URL forward — otherwise
-           saving anything else on this tab (e.g. toggling "Hide from
-           showroom") would silently wipe photos this shop already has. -->
-      <input type="hidden" id="mq-photo-${key}" value="${savedUrl}"/>` : `
-      <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
-        📤 Upload a photo
-        <input type="file" id="mq-upload-file-${key}" accept="image/*" style="display:none"/>
-      </label>
-      <div id="mq-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
-      <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
-      <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
-        style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
-        oninput="mqMarkProductsDirty()"/>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>`}
-    </div>`;
-  }
-
-  // Template cards need editable name/price/unit fields too (regular My
-  // Products items get that from the separate Specialty Items tab table —
-  // templates don't have an equivalent, so it lives right on the card here).
-  function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
-    const itemName = r.fields['Item name'] || '';
-    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden);
-    const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
-    const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
-    return `<div style="display:flex;flex-direction:column;gap:6px">
-      <input type="text" value="${itemName.replace(/"/g,'&quot;')}" id="mq-spec-name-${r.id}" placeholder="Item name" style="font-size:13px;font-weight:600;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
-      ${mqCategoryPickerHTML(r, categoryList, true)}
-      <input type="text" value="${(r.fields['Description']||'').replace(/"/g,'&quot;')}" id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;color:#6b7280" onblur="mqSaveSpecField('${r.id}','Description',this.value)"/>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <input type="number" value="${r.fields['Price']||''}" id="mq-spec-price-${r.id}" placeholder="Price" style="font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:70px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> lin ft</label>
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> sq ft</label>
-      </div>
-      ${mqSpecMinPriceHTML(r, false)}
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Offer supply/install choice</label>
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ⚡ Pro only</label>
-      </div>
-      <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
-      ${photoHtml}
-      <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item for ALL shops</button>
-      <div style="display:flex;gap:4px;margin-bottom:4px">
-        <select id="mq-tmpl-shoppick-${r.id}" style="flex:1;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px">
-          <option value="">Pick a shop…</option>
-          ${shopOptions}
-        </select>
-        <button class="mq-btn mq-btn-sm" style="white-space:nowrap" onclick="mqPushSingleTemplateItemToShop('${r.id}', document.getElementById('mq-tmpl-shoppick-${r.id}').value)">Push to just this shop</button>
-      </div>
-      <div style="font-size:10px;color:#9ca3af;margin-top:-2px;margin-bottom:2px">Use this to backfill one shop that's missing the item — every other shop (including ones you've already customized) stays untouched.</div>
-      <button class="mq-btn mq-btn-danger mq-btn-sm" style="width:100%" onclick="mqDeleteTemplateItem('${r.id}')">Delete template item</button>
-    </div>`;
-  }
-
-  async function renderTemplates() {
-    const masterShop = await ensureMasterTemplateShop();
-    const items = await ensureMasterTemplateItems();
-    window._mqTemplateItems = items;
-    const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
-
-    let savedPhotos = {};
-    let savedHidden = {};
-    try { if (masterShop.fields['Photos']) savedPhotos = JSON.parse(masterShop.fields['Photos']); } catch(e) {}
-    try { if (masterShop.fields['Hidden']) savedHidden = JSON.parse(masterShop.fields['Hidden']); } catch(e) {}
-
-    const content = document.getElementById('mq-templates-content');
-    if (!content) return;
-    if (!items.length) {
-      content.innerHTML = '<div class="mq-empty">No template items yet. Click "+ Add template item" below to add your first one.</div>';
+  function mqphRenderBsList() {
+    const list = document.getElementById('mqph-ct-bs-list');
+    if (!list) return;
+    if (!currentBsOptions.length) {
+      list.innerHTML = `<div style="font-size:12px;color:#9ca3af;padding:6px 0">No height options yet — add one below.</div>`;
       return;
     }
-    const rooms = window._mqRooms || defaultRoomTypes();
-    const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    content.innerHTML = `
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
-          <select id="mq-tmpl-filter-room" onchange="mqFilterTemplateCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
-            <option value="">All project types</option>
-            ${roomOptions}
-          </select>
+    const matSupplyUnit  = document.getElementById('mqph-ct-supply-unit')?.value  || 'sqft';
+    const matInstallUnit = document.getElementById('mqph-ct-install-unit')?.value || 'sqft';
+    const unitOpts = (selected) => ['sqft','lin ft'].map(u => `<option value="${u}" ${u===selected?'selected':''}>${u}</option>`).join('');
+    list.innerHTML = currentBsOptions.map((o,i) => `
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:3px;flex:2;min-width:110px">
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Name</span>
+            <input type="text" value="${(o.label||'').replace(/"/g,'&quot;')}" placeholder='e.g. 4" standard' oninput="mqphUpdateBsOption(${i},'label',this.value,false)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;width:80px">
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Height (in)</span>
+            <input type="number" value="${o.heightIn!=null?o.heightIn:''}" placeholder="4" oninput="mqphUpdateBsOption(${i},'heightIn',this.value,false)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%;text-align:right"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:90px">
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Supply ${CUR()}</span>
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="number" value="${o.supplyRate!=null?o.supplyRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'supplyRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:80px;text-align:right"/>
+              <select onchange="mqphUpdateBsOption(${i},'supplyUnit',this.value,false)" style="font-family:inherit;font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 6px;min-width:60px">${unitOpts(o.supplyUnit||matSupplyUnit)}</select>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:90px">
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Install ${CUR()}</span>
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="number" value="${o.installRate!=null?o.installRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'installRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:80px;text-align:right"/>
+              <select onchange="mqphUpdateBsOption(${i},'installUnit',this.value,false)" style="font-family:inherit;font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 6px;min-width:60px">${unitOpts(o.installUnit||matInstallUnit)}</select>
+            </div>
+          </div>
+          <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveBsOption(${i})" style="flex-shrink:0;margin-bottom:1px">✕</button>
         </div>
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
-          <input type="text" id="mq-tmpl-filter-search" oninput="mqFilterTemplateCards()" placeholder="e.g. shaker door" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
-        </div>
-      </div>
-      <div id="mq-tmpl-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No template items match that filter.</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px" id="mq-tmpl-cards-grid">
-        ${items.map(r => {
-          const itemName = r.fields['Item name'] || '';
-          const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
-          return `<div class="mq-tmpl-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
-            ${templateItemCard(r, savedPhotos, savedHidden, items, allShops)}
-          </div>`;
-        }).join('')}
-      </div>
-      
-    `;
+      </div>`).join('');
+  }
 
-    // Wire up upload buttons for every template card just rendered — this
-    // step was missing entirely before, so the file picker existed visually
-    // but selecting a file did nothing at all.
-    content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
-      const key = fileInput.id.replace('mq-upload-file-', '');
-      mqWireUploadButton(
-        null,
-        'mq-upload-file-' + key,
-        'mq-upload-status-' + key,
-        'mq-photo-' + key,
-        MASTER_TEMPLATE_SHOP_NAME,
-        'products',
-        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
-      );
+  window.mqphAddBsOption = function() {
+    const matSupply  = parseFloat(document.getElementById('mqph-ct-supply-rate')?.value  || 0);
+    const matInstall = parseFloat(document.getElementById('mqph-ct-install-rate')?.value || 0);
+    const matSupplyUnit  = document.getElementById('mqph-ct-supply-unit')?.value  || 'sqft';
+    const matInstallUnit = document.getElementById('mqph-ct-install-unit')?.value || 'sqft';
+    currentBsOptions.push({ label:'', heightIn:4, supplyRate:matSupply, supplyUnit:matSupplyUnit, installRate:matInstall, installUnit:matInstallUnit, _supplyAutoSync:true, _installAutoSync:true });
+    mqphRenderBsList();
+  };
+
+  window.mqphRemoveBsOption = function(i) {
+    currentBsOptions.splice(i,1);
+    mqphRenderBsList();
+  };
+
+  function mqphRenderCutoutList() {
+    const list = document.getElementById('mqph-ct-cutout-list');
+    if (!list) return;
+    if (!currentCutoutOptions.length) {
+      list.innerHTML = `<div style="font-size:12px;color:#9ca3af;padding:6px 0">No cutout options — add one below (e.g. "Sink cutout").</div>`;
+      return;
+    }
+    list.innerHTML = currentCutoutOptions.map((o,i) => `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input type="text" value="${(o.label||'').replace(/"/g,'&quot;')}" placeholder="Label, e.g. Sink cutout" oninput="mqphUpdateCutoutOption(${i},'label',this.value)" style="flex:1;min-width:120px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+        <span style="font-size:11px;color:#9ca3af">${CUR()}</span>
+        <input type="number" value="${o.rate!=null?o.rate:''}" placeholder="Rate" step="0.01" oninput="mqphUpdateCutoutOption(${i},'rate',this.value)" style="width:100px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+        <span style="font-size:11px;color:#9ca3af">each</span>
+        <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveCutoutOption(${i})">✕</button>
+      </div>`).join('');
+  }
+
+  window.mqphAddCutoutOption = function() {
+    currentCutoutOptions.push({label:'', rate:0});
+    mqphRenderCutoutList();
+  };
+
+  window.mqphRemoveCutoutOption = function(i) {
+    currentCutoutOptions.splice(i,1);
+    mqphRenderCutoutList();
+  };
+
+  window.mqphUpdateCutoutOption = function(i, key, val) {
+    if (!currentCutoutOptions[i]) return;
+    currentCutoutOptions[i][key] = key==='rate' ? parseFloat(val||0) : val;
+  };
+
+  window.mqphUpdateBsOption = function(i, key, val, manualEdit) {
+    if (!currentBsOptions[i]) return;
+    currentBsOptions[i][key] = (key==='heightIn'||key==='installRate'||key==='supplyRate') ? parseFloat(val||0) : val;
+    if (manualEdit) {
+      if (key === 'supplyRate')  currentBsOptions[i]._supplyAutoSync  = false;
+      if (key === 'installRate') currentBsOptions[i]._installAutoSync = false;
+    }
+  };
+
+  window.mqphOpenCTAdd = function() {
+    currentCTEditId = null;
+    const body = document.getElementById('mqph-ct-modal-body');
+    if (body) {
+      if (ctModalOriginalBodyHTML === null) ctModalOriginalBodyHTML = body.innerHTML; // first-ever open — capture the pristine form
+      else body.innerHTML = ctModalOriginalBodyHTML; // restore in case the bulk naming screen replaced it last time
+    }
+    const saveBtn = document.getElementById('mqph-ct-save-btn');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; saveBtn.onclick = () => mqphSaveCTItem(); }
+    currentCutoutOptions = [{label:'Sink cutout', rate:180}, {label:'Cooktop cutout', rate:220}];
+    document.getElementById('mqph-ct-modal-title').textContent = 'Add countertop material';
+    document.getElementById('mqph-ct-name').value = '';
+    document.getElementById('mqph-ct-supply-rate').value = '';
+    document.getElementById('mqph-ct-supply-unit').value = 'sqft';
+    document.getElementById('mqph-ct-supply-min').value = '';
+    document.getElementById('mqph-ct-install-rate').value = '';
+    document.getElementById('mqph-ct-install-unit').value = 'sqft';
+    document.getElementById('mqph-ct-install-min').value = '';
+    document.getElementById('mqph-ct-active').checked = true;
+    // Default row — auto-sync flags update it live as user types rates above
+    currentBsOptions = [{ label:'4" standard', heightIn:4, supplyRate:0, supplyUnit:'sqft', installRate:0, installUnit:'sqft', _supplyAutoSync:true, _installAutoSync:true }];
+    mqphRenderBsList();
+    mqphRenderCutoutList();
+    document.getElementById('mqph-ct-bulk-toggle-wrap').style.display = 'block';
+    document.getElementById('mqph-ct-bulk-toggle').checked = false;
+    mqphToggleCTBulk(false);
+    document.getElementById('mqph-ct-modal-overlay').classList.add('show');
+  };
+
+  window.mqphToggleCTBulk = function(checked) {
+    const nameField = document.getElementById('mqph-ct-name-field');
+    const bulkWrap = document.getElementById('mqph-ct-bulk-wrap');
+    if (nameField) nameField.style.display = checked ? 'none' : 'flex';
+    if (bulkWrap) bulkWrap.style.display = checked ? 'block' : 'none';
+  };
+
+  window.mqphOpenCTEdit = function(id) {
+    const rec = lineItems.find(r=>r.id===id); if(!rec) return;
+    currentCTEditId = id;
+    const body = document.getElementById('mqph-ct-modal-body');
+    if (body && ctModalOriginalBodyHTML !== null) body.innerHTML = ctModalOriginalBodyHTML;
+    const saveBtn = document.getElementById('mqph-ct-save-btn');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; saveBtn.onclick = () => mqphSaveCTItem(); }
+    currentBsOptions = getBsOptions(rec);
+    const matSupply  = rec.fields['Rate']||0;
+    const matInstall = rec.fields['Install rate']||0;
+    const unitParts  = (rec.fields['Unit']||'sqft|sqft').split('|');
+    const matSupplyUnit  = (unitParts[0]||'sqft').trim();
+    const matInstallUnit = (unitParts[1]||'sqft').trim();
+    // Backfill any missing rate/unit fields on existing bs rows
+    currentBsOptions.forEach(o => {
+      if (o.supplyRate==null  || o.supplyRate===0)  { o.supplyRate  = matSupply;  o._supplyAutoSync  = true; }
+      if (o.supplyUnit==null)  o.supplyUnit  = matSupplyUnit;
+      if (o.installRate==null || o.installRate===0) { o.installRate = matInstall; o._installAutoSync = true; }
+      if (o.installUnit==null) o.installUnit = matInstallUnit;
     });
-  }
-
-  window.mqAddTemplateItem = async function() {
-    try {
-      const masterShop = await ensureMasterTemplateShop();
-      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
-        'Shop': [masterShop.id],
-        'Item name': 'New template item',
-        'Special Items': 'New template item',
-        'Price': 0,
-        'Active': true,
-      });
-      if (!created?.id) {
-        console.error('Failed to create template item:', created);
-        showMsg('mq-templates-msg', 'Error adding item — check the browser console for details.', 'error');
-        return;
-      }
-      await renderTemplates();
-      showMsg('mq-templates-msg', '✓ Template item added — edit the name, price, and project types above.');
-    } catch(e) {
-      console.error('Failed to create template item:', e);
-      showMsg('mq-templates-msg', 'Error adding item.', 'error');
-    }
-  };
-
-  window.mqDeleteTemplateItem = async function(id) {
-    if (!confirm('Delete this template item? This only affects future shops — existing shops keep their own copy.')) return;
-    try {
-      await atDelete(CONFIG.SPECIALTY_TABLE, id);
-      await renderTemplates();
-      showMsg('mq-templates-msg', '✓ Template item deleted.');
-    } catch(e) { showMsg('mq-templates-msg', 'Error deleting item.', 'error'); }
-  };
-
-  // Additive only, per your call: adds template items a shop doesn't already
-  // have (matched by Template source ID, not name — so renaming a template
-  // later never causes duplicates or misses). Never touches or removes
-  // anything a shop already has, even if you've since edited the master copy.
-  window.mqPushTemplatesToAllShops = async function() {
-    if (!confirm('Push ALL template items to every shop? This fully replaces any matching item a shop already has — full sync, not additive. Name, price, units, tags, and photo will always exactly match the master.')) return;
-    showMsg('mq-templates-msg', 'Pushing to all shops — this may take a moment...');
-    try {
-      const masterShop = await ensureMasterTemplateShop();
-      let masterPhotos = {};
-      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
-
-      const masterItems = await ensureMasterTemplateItems();
-      const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
-      const adminRooms = window._mqRooms || defaultRoomTypes();
-      let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
-
-      for (const shop of allShops) {
-        const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-
-        // Make sure every project type these items are tagged to actually
-        // exists in this shop's room list — added as a draft (hidden) room
-        // if it's missing, so it never silently shows up on their live
-        // widget without them reviewing and switching it on themselves.
-        let shopRooms = [];
-        try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
-        if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
-        let shopRoomsChanged = false;
-        masterItems.forEach(m => {
-          let vr = [];
-          try { vr = m.fields['Visible rooms'] ? JSON.parse(m.fields['Visible rooms']) : []; } catch(e) { vr = []; }
-          vr.forEach(roomId => {
-            if (!shopRooms.find(r => r.id === roomId)) {
-              const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
-              shopRoomsChanged = true;
-              roomsAddedCount++;
-            }
-          });
-        });
-        if (shopRoomsChanged) {
-          await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
-          shop.fields['Room types'] = JSON.stringify(shopRooms);
-        }
-
-        let shopPhotos = {};
-        try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-
-        // Sequential, not parallel — slower, but guarantees each item's
-        // delete-then-recreate fully completes before moving to the next,
-        // and makes any individual failure easy to isolate and log clearly.
-        for (const master of masterItems) {
-          try {
-            // Match by tag first, but also fall back to an exact name match —
-            // catches orphaned rows left behind by manual Airtable edits that
-            // never got (or lost) their tracking tag, so they don't silently
-            // block a clean push forever.
-            const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
-            const existingMatches = shopItems.filter(i =>
-              i.fields['Template source ID'] === master.id ||
-              (i.fields['Item name'] || '').trim().toLowerCase() === masterName
-            );
-            if (existingMatches.length) {
-              await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
-              replacedCount++;
-            } else {
-              createdCount++;
-            }
-            const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
-              'Shop': [shop.id],
-              'Item name': master.fields['Item name'],
-              'Special Items': master.fields['Item name'],
-              'Price': master.fields['Price'] || 0,
-              'Per linear foot': master.fields['Per linear foot'] || false,
-              'Per square foot': master.fields['Per square foot'] || false,
-              'Offers install choice': master.fields['Offers install choice'] || false,
-              'Install price': master.fields['Install price'] || 0,
-              'Install mode': master.fields['Install mode'] || 'supply',
-              'Install per linear foot': master.fields['Install per linear foot'] || false,
-              'Install per square foot': master.fields['Install per square foot'] || false,
-              'Install quantity label': master.fields['Install quantity label'] || '',
-          'Description': master.fields['Description'] || '',
-          'Category': master.fields['Category'] || '',
-          'Pro only': master.fields['Pro only'] || false,
-              'Active': false,
-              'Visible rooms': master.fields['Visible rooms'] || '[]',
-              'Template source ID': master.id,
-            });
-            if (!created?.id) {
-              errorCount++;
-              console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
-              continue;
-            }
-            // Write this item's photo immediately, right here — not batched
-            // up to write once at the end of the shop's whole item loop.
-            // Batching meant that if this slow, sequential push got
-            // interrupted (browser throttling a backgrounded tab, closing
-            // the page, anything) before every single item finished, the
-            // photo write for that shop would never happen at all, even
-            // though every item itself had already been created correctly.
-            const masterPhotoUrl = masterPhotos['spec_' + master.id];
-            if (masterPhotoUrl) {
-              shopPhotos['spec_' + created.id] = masterPhotoUrl;
-              await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
-              shop.fields['Photos'] = JSON.stringify(shopPhotos);
-            }
-          } catch(e) {
-            errorCount++;
-            console.error('Failed to push item:', master.fields['Item name'], 'to', shop.fields['Shop name'], e);
-          }
-        }
-      }
-      const roomsNote = roomsAddedCount ? `, ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
-      const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console for details` : '';
-      await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
-      showMsg('mq-templates-msg', `✓ Full sync complete — ${createdCount} created, ${replacedCount} fully replaced across ${allShops.length} shop${allShops.length===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
-    } catch(e) {
-      console.error('Push to shops failed:', e);
-      showMsg('mq-templates-msg', 'Error during push — please try again.', 'error');
-    }
-  };
-
-  // One item, everywhere at once. Creates it fresh for shops that don't have
-  // it yet (same safety net as the bulk push — auto-adds a missing project
-  // type as a hidden draft). For shops that already have it, this fully
-  // overwrites name/price/units/tags/photo to match the master. NOTE: this is
-  // a full overwrite by design right now, while there are no real shop
-  // customizations to protect — revisit this once real shops exist and may
-  // have renamed/retagged their own copies deliberately.
-  // The actual work of pushing one master item into one shop — creating the
-  // record, matching/replacing any existing copy, copying the photo, and
-  // adding any project types the item needs that the shop doesn't have yet.
-  // Shared by both "push to every shop" and "push to just one shop," so the
-  // two can never quietly drift apart or behave differently.
-  async function pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms) {
-    const result = { created: false, replaced: false, roomsAdded: 0, error: false };
-    try {
-      const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-      // Match by tag first, but also fall back to an exact name match —
-      // catches orphaned rows left behind by manual Airtable edits that
-      // never got (or lost) their tracking tag, so they don't silently
-      // block a clean push forever.
-      const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
-      const existingMatches = shopItems.filter(i =>
-        i.fields['Template source ID'] === master.id ||
-        (i.fields['Item name'] || '').trim().toLowerCase() === masterName
-      );
-
-      let shopRooms = [];
-      try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
-      if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
-      let shopRoomsChanged = false;
-      let vr = [];
-      try { vr = master.fields['Visible rooms'] ? JSON.parse(master.fields['Visible rooms']) : []; } catch(e) { vr = []; }
-      vr.forEach(roomId => {
-        if (!shopRooms.find(r => r.id === roomId)) {
-          const adminRoomDef = adminRooms.find(r => r.id === roomId);
-          shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
-          shopRoomsChanged = true;
-          result.roomsAdded++;
-        }
-      });
-      if (shopRoomsChanged) {
-        await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
-        shop.fields['Room types'] = JSON.stringify(shopRooms);
-      }
-
-      if (existingMatches.length) {
-        await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
-        result.replaced = true;
-      } else {
-        result.created = true;
-      }
-
-      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
-        'Shop': [shop.id],
-        'Item name': master.fields['Item name'],
-        'Special Items': master.fields['Item name'],
-        'Price': master.fields['Price'] || 0,
-        'Per linear foot': master.fields['Per linear foot'] || false,
-        'Per square foot': master.fields['Per square foot'] || false,
-        'Offers install choice': master.fields['Offers install choice'] || false,
-        'Install price': master.fields['Install price'] || 0,
-        'Install mode': master.fields['Install mode'] || 'supply',
-        'Install per linear foot': master.fields['Install per linear foot'] || false,
-        'Install per square foot': master.fields['Install per square foot'] || false,
-        'Install quantity label': master.fields['Install quantity label'] || '',
-        'Description': master.fields['Description'] || '',
-        'Category': master.fields['Category'] || '',
-        'Pro only': master.fields['Pro only'] || false,
-        'Active': false,
-        'Visible rooms': master.fields['Visible rooms'] || '[]',
-        'Template source ID': master.id,
-      });
-      if (!created?.id) {
-        result.error = true;
-        console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
-        return result;
-      }
-      if (masterPhotoUrl) {
-        let shopPhotos = {};
-        try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-        shopPhotos['spec_' + created.id] = masterPhotoUrl;
-        await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
-        shop.fields['Photos'] = JSON.stringify(shopPhotos);
-      }
-    } catch(e) {
-      result.error = true;
-      console.error('Failed to push item to shop:', shop.fields['Shop name'], e);
-    }
-    return result;
-  }
-
-  window.mqPushSingleTemplateItem = async function(masterItemId) {
-    showMsg('mq-templates-msg', 'Pushing this item to all shops...');
-    try {
-      // Fetch this record fresh rather than trusting window._mqTemplateItems
-      // — that's just a snapshot taken when the tab first loaded, and every
-      // field edit since then (price, name, checkboxes, all of it) saves
-      // straight to Airtable without updating that snapshot. Reading from
-      // it here would silently push whatever the values were BEFORE your
-      // most recent edits, undoing them on every shop.
-      const fresh = await atGet(CONFIG.SPECIALTY_TABLE, `RECORD_ID()="${masterItemId}"`);
-      const master = fresh[0];
-      if (!master) { showMsg('mq-templates-msg', 'Could not find that template item — try refreshing the page.', 'error'); return; }
-      // Keep the in-memory list in sync too, so anything else reading it
-      // this session (or a second push right after) also sees the current
-      // values instead of the stale ones.
-      if (window._mqTemplateItems) {
-        const idx = window._mqTemplateItems.findIndex(m => m.id === masterItemId);
-        if (idx !== -1) window._mqTemplateItems[idx] = master;
-      }
-
-      const masterShop = await ensureMasterTemplateShop();
-      let masterPhotos = {};
-      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
-      const masterPhotoUrl = masterPhotos['spec_' + master.id];
-
-      const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
-      const adminRooms = window._mqRooms || defaultRoomTypes();
-      let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
-
-      for (const shop of allShops) {
-        const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
-        if (r.error) errorCount++;
-        if (r.created) createdCount++;
-        if (r.replaced) replacedCount++;
-        roomsAddedCount += r.roomsAdded;
-      }
-      const roomsNote = roomsAddedCount ? `, added ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
-      const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console` : '';
-      await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
-      showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" — created for ${createdCount} shop${createdCount===1?'':'s'}, fully replaced for ${replacedCount} shop${replacedCount===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
-    } catch(e) {
-      console.error('Single item push failed:', e);
-      showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
-    }
-  };
-
-  // Pushes one master item into exactly one chosen shop — every other shop,
-  // including ones that already have their own edited copy of this item,
-  // is completely untouched. This is the safe option for backfilling an
-  // item onto a shop that's missing it without resetting anyone else's
-  // customizations, which the "push to every shop" button above cannot do
-  // (it always includes every real shop, with no way to exclude one).
-  window.mqPushSingleTemplateItemToShop = async function(masterItemId, shopId) {
-    if (!shopId) { showMsg('mq-templates-msg', 'Pick a shop first.', 'error'); return; }
-    showMsg('mq-templates-msg', 'Pushing to that shop...');
-    try {
-      const fresh = await atGet(CONFIG.SPECIALTY_TABLE, `RECORD_ID()="${masterItemId}"`);
-      const master = fresh[0];
-      if (!master) { showMsg('mq-templates-msg', 'Could not find that template item — try refreshing the page.', 'error'); return; }
-      if (window._mqTemplateItems) {
-        const idx = window._mqTemplateItems.findIndex(m => m.id === masterItemId);
-        if (idx !== -1) window._mqTemplateItems[idx] = master;
-      }
-
-      const masterShop = await ensureMasterTemplateShop();
-      let masterPhotos = {};
-      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
-      const masterPhotoUrl = masterPhotos['spec_' + master.id];
-
-      const shops = await atGet(CONFIG.SHOPS_TABLE, `RECORD_ID()="${shopId}"`);
-      const shop = shops[0];
-      if (!shop) { showMsg('mq-templates-msg', 'Could not find that shop — try refreshing the page.', 'error'); return; }
-
-      const adminRooms = window._mqRooms || defaultRoomTypes();
-      const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
-      const roomsNote = r.roomsAdded ? `, added ${r.roomsAdded} new draft project type${r.roomsAdded===1?'':'s'}` : '';
-      await new Promise(res => setTimeout(res, 500));
-      if (r.error) {
-        showMsg('mq-templates-msg', `Error pushing "${master.fields['Item name']}" to ${shop.fields['Shop name']} — check the browser console.`, 'error');
-      } else {
-        showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" ${r.replaced ? 'replaced' : 'created'} for ${shop.fields['Shop name']}${roomsNote}. No other shop was touched.`, 'success');
-      }
-    } catch(e) {
-      console.error('Single-shop push failed:', e);
-      showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
-    }
-  };
-
-  function lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat) {
-    const rooms = window._mqRooms || defaultRoomTypes();
-    let visibleRooms = [];
-    try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
-    const summary = roomLinkSummaryText(visibleRooms, rooms);
-    const idsAttr = (ids||[]).join(',');
-    const checkboxes = rooms.map(r => `
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
-      </label>`).join('');
-    return `
-      <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
-        <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
-          <span id="mq-li-room-summary-${key}">${summary}</span>
-          <span style="font-size:15px;line-height:1">▾</span>
-        </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
-          ${checkboxes}
-        </div>
-      </details>`;
-  }
-
-  window.mqToggleLineItemRoom = async function(key, idsCsv, cat) {
-    const ids = (idsCsv||'').split(',').filter(Boolean);
-    const rooms = window._mqRooms || defaultRoomTypes();
-    // Find this item's cached record so we can (a) know its last-saved state
-    // for rollback if the save below fails, and (b) keep the cache itself in
-    // sync on success — otherwise a later category-level bulk toggle would
-    // read this item's stale pre-edit rooms and silently overwrite the change
-    // we're about to make.
-    const items = cat === 'specialty' ? (window._mqSpecItemsList || []) : ((window._mqByCategory || {})[cat] || []);
-    const cachedItem = items.find(it => (it.ids || [it.id]).join(',') === idsCsv);
-    let prevRooms = [];
-    try { prevRooms = cachedItem && cachedItem.visibleRooms ? JSON.parse(cachedItem.visibleRooms) : []; } catch(e) { prevRooms = []; }
-
-    const checkedIds = rooms
-      .filter(r => document.getElementById(`mq-li-room-${key}-${r.id}`)?.checked)
-      .map(r => r.id);
-    const allChecked = checkedIds.length === rooms.length;
-    const toSave = allChecked ? [] : checkedIds;
-    const table = cat === 'specialty' ? CONFIG.SPECIALTY_TABLE : CONFIG.LINE_ITEMS_TABLE;
-    try {
-      await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(toSave) })));
-      const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
-      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
-      if (cachedItem) cachedItem.visibleRooms = JSON.stringify(toSave);
-    } catch(e) {
-      console.error('Failed to save line item room links', e);
-      // Save didn't stick — put the checkboxes back to the last known-good
-      // state instead of leaving the UI showing a change that never actually
-      // reached Airtable.
-      rooms.forEach(r => {
-        const cb = document.getElementById(`mq-li-room-${key}-${r.id}`);
-        if (cb) cb.checked = (!prevRooms.length || prevRooms.includes(r.id));
-      });
-      const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
-      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms) + ' — save failed, try again';
-    }
-  };
-
-  // Category-level hiding — e.g. hide the entire Door Styles category for
-  // "Door refacing" in one click, instead of unchecking every door one by
-  // one. Individual items can still override this (handled widget-side):
-  // if an item has its own explicit project-type setting, that wins outright
-  // regardless of what the category says.
-  function categorySummaryText(hiddenIds, rooms) {
-    if (!hiddenIds || !hiddenIds.length) return 'Visible for all project types';
-    const names = hiddenIds.map(id => rooms.find(r=>r.id===id)?.name).filter(Boolean);
-    return names.length ? `Hidden for: ${names.join(', ')}` : 'Visible for all project types';
-  }
-
-  function categoryRoomDisclosure(cat) {
-    const rooms = window._mqRooms || defaultRoomTypes();
-    const categoryRooms = window._mqCategoryRooms || {};
-    const hiddenIds = categoryRooms[cat] || [];
-    const summary = categorySummaryText(hiddenIds, rooms);
-    const checkboxes = rooms.map(r => `
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}','${r.id}',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
-      </label>`).join('');
-    const linkedWarning = LINKED_CABINET_CATS.includes(cat) ? `
-      <div style="font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:8px;line-height:1.4">
-        ⚠️ Box Materials, Door Styles, and Drawer Configurations are always used together. Unchecking a project type here does the same for all three automatically, which hides the whole Cabinet measurements section on the widget for that project type.
-      </div>` : '';
-    return `
-      <details style="position:relative;margin-bottom:12px" ontoggle="mqPositionRoomPanel(this)">
-        <summary style="font-size:12px;font-weight:600;color:#92400e;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;width:fit-content">
-          🗂️ <span id="mq-cat-room-summary-${cat}">${summary}</span>
-          <span style="font-size:15px;line-height:1">▾</span>
-        </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
-          ${linkedWarning}
-          <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match. Change one item afterward to make it an exception.</div>
-          ${checkboxes}
-        </div>
-      </details>`;
-  }
-
-  // Material, Door Styles, and Drawer Configurations are always used
-  // together for cabinet pricing — unchecking any one of them for a project
-  // type hides the whole Cabinet measurements section on the widget, so all
-  // three need to stay in sync rather than letting them drift apart.
-  const LINKED_CABINET_CATS = ['material', 'door', 'drawer'];
-
-  async function applyCategoryRoomChange(cat, roomId, checked) {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const rooms = window._mqRooms || defaultRoomTypes();
-    const allRoomIds = rooms.map(r => r.id);
-
-    // Update the category-level hidden list for this one room
-    if (!window._mqCategoryRooms) window._mqCategoryRooms = {};
-    let hidden = window._mqCategoryRooms[cat] || [];
-    hidden = checked ? hidden.filter(id => id !== roomId) : [...new Set([...hidden, roomId])];
-    window._mqCategoryRooms[cat] = hidden;
-
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Category rooms': JSON.stringify(window._mqCategoryRooms) });
-      shopRec.fields['Category rooms'] = JSON.stringify(window._mqCategoryRooms);
-    } catch(e) { console.error('Failed to save category room hiding', e); return; }
-
-    const summaryEl = document.getElementById(`mq-cat-room-summary-${cat}`);
-    if (summaryEl) summaryEl.textContent = categorySummaryText(hidden, rooms);
-    const cb = document.getElementById(`mq-cat-room-${cat}-${roomId}`);
-    if (cb) cb.checked = checked;
-
-    // Bulk-sync every item in this category: take each item's current
-    // effective per-room state, flip just this one room to match the
-    // category change, and save as an explicit list. From this point on,
-    // manually changing one item's own checkbox is a real override — until
-    // the category checkbox for that same room gets toggled again.
-    const items = cat === 'specialty' ? (window._mqSpecItemsList || []) : ((window._mqByCategory || {})[cat] || []);
-    const table = cat === 'specialty' ? CONFIG.SPECIALTY_TABLE : CONFIG.LINE_ITEMS_TABLE;
-
-    await Promise.all(items.map(async (item) => {
-      let current = [];
-      try { current = item.visibleRooms ? JSON.parse(item.visibleRooms) : []; } catch(e) { current = []; }
-      const effectiveSet = new Set(current.length ? current : allRoomIds); // empty = implicit all
-      if (checked) effectiveSet.add(roomId); else effectiveSet.delete(roomId);
-      const newList = allRoomIds.filter(id => effectiveSet.has(id));
-      const finalList = newList.length === allRoomIds.length ? [] : newList; // all-checked collapses back to "visible everywhere"
-      const ids = item.ids || [item.id];
-      try {
-        await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(finalList) })));
-        item.visibleRooms = JSON.stringify(finalList);
-      } catch(e) { console.error('Failed to bulk-sync item room links', e); }
-
-      // Reflect the sync visually on that item's own checkbox/summary, if rendered
-      const key = cat === 'specialty' ? `spec_${item.id}` : `li_${cat}_${(item.baseName||'').replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
-      const itemCb = document.getElementById(`mq-li-room-${key}-${roomId}`);
-      if (itemCb) itemCb.checked = checked;
-      const itemSummaryEl = document.getElementById(`mq-li-room-summary-${key}`);
-      if (itemSummaryEl) itemSummaryEl.textContent = roomLinkSummaryText(finalList, rooms);
-    }));
-  }
-
-  window.mqToggleCategoryRoom = async function(cat, roomId, checked) {
-    await applyCategoryRoomChange(cat, roomId, checked);
-    // If this is one of the three linked cabinet categories, mirror the exact
-    // same change to the other two so they never drift out of sync.
-    if (LINKED_CABINET_CATS.includes(cat)) {
-      const others = LINKED_CABINET_CATS.filter(c => c !== cat);
-      await Promise.all(others.map(otherCat => applyCategoryRoomChange(otherCat, roomId, checked)));
-      showMsg('mq-products-msg', `✓ Also updated ${others.map(c => CAT_DISPLAY_NAMES[c]).join(' and ')} to match, since they're always used together.`);
-    }
-  };
-
-  window.mqDeleteSpec = async function(id) {
-    if (!confirm('Delete this specialty item?')) return;
-    try {
-      await atDelete(CONFIG.SPECIALTY_TABLE, id);
-      const specs = await loadSpecialty(window._mqShopRecord.fields['Shop name']);
-      renderSpecialty(specs, window._mqShopRecord);
-      showMsg('mq-spec-msg', '✓ Item deleted.');
-    } catch(e) { showMsg('mq-spec-msg', 'Error deleting item.', 'error'); }
-  };
-
-  window.mqAddSpecItem = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    try {
-      const existing = await loadSpecialty(shopRec.fields['Shop name']);
-      // Strictly lower than the current lowest Sort order — not just 0 —
-      // so a brand new item always lands unambiguously first, even if
-      // other items also happen to be sitting at 0 already.
-      const minSort = existing.length ? Math.min(0, ...existing.map(r => r.fields['Sort order'] || 0)) : 0;
-      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
-        'Item name': 'New item',
-        'Shop': [shopRec.id],
-        'Price': 0,
-        'Active': true,
-        'Per linear foot': false,
-        'Sort order': minSort - 1,
-      });
-      const specs = await loadSpecialty(shopRec.fields['Shop name']);
-      renderSpecialty(specs, shopRec);
-      showMsg('mq-spec-msg', '✓ Item added at the top — edit the name and price below.');
-      // Scroll to it and focus the name field so it's impossible to miss,
-      // rather than landing somewhere off-screen with no visible sign
-      // anything happened.
-      if (created?.id) {
-        setTimeout(() => {
-          const nameInput = document.getElementById('mq-spec-name-' + created.id);
-          if (nameInput) {
-            nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            nameInput.focus();
-            nameInput.select();
-          }
-        }, 50);
-        // The "Hide from showroom" checkbox for this item actually lives on
-        // a different tab entirely (My Products), behind its own separate
-        // Save button — easy to forget about a brand new item you're not
-        // even looking at. Ask right now instead, while it's top of mind,
-        // and save the answer immediately so there's nothing left to
-        // remember later.
-        window.mqShowShowroomVisibilityPrompt(created.id);
-      }
-    } catch(e) { showMsg('mq-spec-msg', 'Error adding item.', 'error'); }
-  };
-
-  // Asks whether a just-created specialty item should appear on the
-  // customer-facing showroom page, and saves the answer straight to the
-  // shop's 'Hidden' field immediately — no need to visit My Products and
-  // click its separate Save button to make it stick.
-  window.mqShowShowroomVisibilityPrompt = function(specId) {
-    let modal = document.getElementById('mq-showroom-prompt-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-showroom-prompt-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
-        <div style="font-size:36px;margin-bottom:12px">🖼️</div>
-        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:10px">Show this new item in your showroom?</div>
-        <div style="font-size:14px;color:#4b5563;line-height:1.6;margin-bottom:1.5rem">
-          Some specialty items are things customers browse and get excited about — others are really just pricing pieces for a job. Either is fine, but which is this one?
-        </div>
-        <button onclick="mqAnswerShowroomVisibilityPrompt('${specId}', true)" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">Yes, show it in showroom</button>
-        <button onclick="mqAnswerShowroomVisibilityPrompt('${specId}', false)" style="width:100%;padding:13px;background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">No, keep it hidden</button>
-      </div>`;
-    modal.style.display = 'flex';
-  };
-  window.mqAnswerShowroomVisibilityPrompt = async function(specId, showInShowroom) {
-    const modal = document.getElementById('mq-showroom-prompt-modal');
-    if (modal) modal.style.display = 'none';
-    if (showInShowroom) return; // default is already visible — nothing to save
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    try {
-      let hidden = {};
-      try { hidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) {}
-      hidden['spec_' + specId] = true;
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden': JSON.stringify(hidden) });
-      shopRec.fields['Hidden'] = JSON.stringify(hidden);
-      showMsg('mq-spec-msg', '✓ Got it — hidden from your showroom. You can change this anytime from My Products.');
-    } catch(e) { console.warn('Failed to save showroom visibility choice:', e); }
-  };
-
-  window.mqDeleteLead = async function(id) {
-    if (!confirm('Delete this lead? This cannot be undone.')) return;
-    try {
-      await atDelete(CONFIG.LEADS_TABLE, id);
-      window._mqLeads = window._mqLeads.filter(r => r.id !== id);
-      renderStats(window._mqLeads);
-      el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
-      mqFilterLeads();
-      showMsg('mq-leads-msg', '✓ Lead deleted.');
-    } catch(e) { showMsg('mq-leads-msg', 'Error deleting lead.', 'error'); }
-  };
-
-  window.mqDeleteAllLeads = async function() {
-    const count = window._mqLeads?.length || 0;
-    if (count === 0) return;
-    if (!confirm(`Delete ALL ${count} leads? This is useful for clearing test data but cannot be undone. Are you sure?`)) return;
-    if (!confirm(`Really delete all ${count} leads? Last chance to cancel.`)) return;
-    try {
-      for (const lead of window._mqLeads) {
-        await atDelete(CONFIG.LEADS_TABLE, lead.id);
-      }
-      window._mqLeads = [];
-      renderStats([]);
-      el('mq-recent-leads').innerHTML = renderLeads([], 5);
-      mqFilterLeads();
-      showMsg('mq-leads-msg', '✓ All leads deleted.');
-    } catch(e) { showMsg('mq-leads-msg', 'Error deleting leads.', 'error'); }
-  };
-
-  // ============================================================
-  // MY PRODUCTS
-  // ============================================================
-
-
-  window.mqFilterLeads = async function() {
-    const filter = gv('mq-lead-filter');
-    let leads = window._mqLeads || [];
-    if (filter) leads = leads.filter(r => r.fields['Status'] === filter);
-    leads = sortLeadsArray(leads);
-    el('mq-leads-table').innerHTML = renderLeads(leads);
-  };
-
-  // ============================================================
-  // MARKETING KIT
-  // ============================================================
-  // Persisted across re-renders so re-opening or refreshing Marketing Kit doesn't lose an uploaded background photo
-  let _mqGraphicBgImage = null;
-  let _mqGraphicOverlayOpacity = 0.62;
-  let _mqCustomPostLink = '';
-  let _mqQrBgImage = null;
-  let _mqQrOverlayOpacity = 0.62;
-  let _mqSignBgImage = null;
-  let _mqSignOverlayOpacity = 0.62;
-  let _mqGraphicHeadline = '';
-  let _mqQrHeadline = '';
-  let _mqSignHeadline = '';
-  let _mqQrCustomColor = '';
-  let _mqSignCustomColor = '';
-  let _mqQrLibLoading = null;
-
-  let _mqHeadlineSaveTimer = null;
-  function saveHeadlinesDebounced(shopRecord) {
-    clearTimeout(_mqHeadlineSaveTimer);
-    _mqHeadlineSaveTimer = setTimeout(async () => {
-      try {
-        const payload = JSON.stringify({ graphic: _mqGraphicHeadline, qr: _mqQrHeadline, sign: _mqSignHeadline, qrColor: _mqQrCustomColor, signColor: _mqSignCustomColor });
-        await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Marketing headlines': payload });
-        shopRecord.fields['Marketing headlines'] = payload;
-      } catch(e) {}
-    }, 800);
-  }
-
-  // Shared collapsible toggle for every card on the Marketing Kit page —
-  // it was getting cluttered with everything always open at once, so each
-  // section now starts closed and opens on its own when clicked.
-  window.mqToggleMkSection = function(key) {
-    const body = document.getElementById(`mq-mk-body-${key}`);
-    const arrow = document.getElementById(`mq-mk-arrow-${key}`);
-    if (!body) return;
-    const opening = body.style.display === 'none';
-    body.style.display = opening ? 'block' : 'none';
-    if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
-    // Collapsing/expanding a section doesn't scroll the page, so the
-    // Poster Designer's floating preview needs its own explicit re-check
-    // here too — it can't rely on the scroll-based observer alone.
-    if (typeof window._mqPdUpdateStickyVisibility === 'function') {
-      window._mqPdUpdateStickyVisibility();
-    }
-  };
-
-  function initMarketingKit(shopRecord) {
-    const shopName = shopRecord.fields['Shop name'] || 'our shop';
-    const token = shopRecord.fields['Shop token'] || '';
-    const defaultQuoteLink = `https://widget.midasquote.com/?shop=${token}`;
-    const embedCode = `<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <script src="https://widget.midasquote.com/widget.js?shop=${token}"></script>\n</div>`;
-
-    function buildSocialPosts(quoteLink) {
-      return [
-        `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 5 minutes. Try it now → ${quoteLink}`,
-        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 5 minutes — right from your phone. ${quoteLink}`,
-        `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
-        `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
-        `Hey homeowners! If you're planning a kitchen remodel, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
+    currentCutoutOptions = getCutoutOptions(rec);
+    if (!currentCutoutOptions.length && (rec.fields['Sink cutout rate']!=null || rec.fields['Cooktop cutout rate']!=null)) {
+      currentCutoutOptions = [
+        {label:'Sink cutout', rate:rec.fields['Sink cutout rate']!=null?rec.fields['Sink cutout rate']:180},
+        {label:'Cooktop cutout', rate:rec.fields['Cooktop cutout rate']!=null?rec.fields['Cooktop cutout rate']:220},
       ];
     }
+    document.getElementById('mqph-ct-modal-title').textContent = 'Edit countertop material';
+    document.getElementById('mqph-ct-name').value = rec.fields['Name']||'';
+    document.getElementById('mqph-ct-supply-rate').value  = matSupply||'';
+    document.getElementById('mqph-ct-supply-unit').value  = matSupplyUnit;
+    document.getElementById('mqph-ct-supply-min').value = rec.fields['Minimum price']||'';
+    document.getElementById('mqph-ct-install-rate').value = matInstall||'';
+    document.getElementById('mqph-ct-install-unit').value = matInstallUnit;
+    document.getElementById('mqph-ct-install-min').value = rec.fields['Install minimum price']||'';
+    document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
+    mqphRenderBsList();
+    mqphRenderCutoutList();
+    // Bulk-add only makes sense when creating new items, not editing one
+    document.getElementById('mqph-ct-bulk-toggle-wrap').style.display = 'none';
+    mqphToggleCTBulk(false);
+    document.getElementById('mqph-ct-modal-overlay').classList.add('show');
+  };
 
-    const quoteLink = _mqCustomPostLink || defaultQuoteLink;
-    const socialPosts = buildSocialPosts(quoteLink);
+  window.mqphCloseCTModal = function() { document.getElementById('mqph-ct-modal-overlay')?.classList.remove('show'); };
 
-    const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
+  window.mqphSaveCTItem = async function() {
+    const bulkOn = document.getElementById('mqph-ct-bulk-toggle')?.checked && !currentCTEditId;
+    const su = document.getElementById('mqph-ct-supply-unit').value;
+    const iu = document.getElementById('mqph-ct-install-unit').value;
+    // Drop any half-filled backsplash/cutout rows (no label) before saving
+    const cleanBsOptions = currentBsOptions.filter(o => (o.label||'').trim().length > 0).map(({label, heightIn, supplyRate, supplyUnit, installRate, installUnit}) => ({label, heightIn, supplyRate, supplyUnit, installRate, installUnit}));
+    const cleanCutoutOptions = currentCutoutOptions.filter(o => (o.label||'').trim().length > 0);
 
-    // Google Fonts import — included in both blocks independently (harmless
-    // if both end up on the page together; browsers dedupe identical
-    // stylesheet URLs, so this is safe either way).
-    const fontLinks = `<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">`;
-
-    const heroHeaderHTML = `${fontLinks}
-<div style="text-align:center;padding:2rem 1rem 1.5rem;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b8763a;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;gap:10px">
-    <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
-    Instant Pricing
-    <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
-  </div>
-  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
-  <p style="font-size:14px;color:#5c5650;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
-</div>`;
-
-    const trustBarHTML = `${fontLinks}
-<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#faf8f5;border:1px solid rgba(61,56,48,0.12);border-radius:10px;margin:30px 0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">✅</span><span>No commitment required</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">📧</span><span>Results sent to your inbox</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">🔒</span><span>We never sell your info</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">⚡</span><span>Instant ballpark estimate</span></div>
-</div>`;
-
-    const escapeHtml = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    const socialEl = el('mq-mk-social');
-    function renderSocialPosts(posts) {
-      if (!socialEl) return;
-      socialEl.innerHTML = posts.map((post, i) => `
-        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:10px">
-          <div style="font-size:13px;color:#111;line-height:1.6;margin-bottom:8px">${escapeHtml(post)}</div>
-          <button class="mq-btn mq-btn-sm" data-copy-idx="${i}">Copy</button>
-        </div>`).join('');
-      socialEl.querySelectorAll('button[data-copy-idx]').forEach(btn => {
-        btn.onclick = () => mqCopyText(posts[parseInt(btn.dataset.copyIdx, 10)], btn);
-      });
-    }
-    renderSocialPosts(socialPosts);
-
-    const postLinkInput = el('mq-mk-post-link');
-    const postLinkApplyBtn = el('mq-mk-post-link-apply');
-    if (postLinkInput) postLinkInput.value = _mqCustomPostLink || defaultQuoteLink;
-    if (postLinkApplyBtn) {
-      postLinkApplyBtn.onclick = async () => {
-        const val = (postLinkInput?.value || '').trim();
-        _mqCustomPostLink = val;
-        const newLink = val || defaultQuoteLink;
-        renderSocialPosts(buildSocialPosts(newLink));
-        if (typeof window._mqRedrawQrPoster === 'function') window._mqRedrawQrPoster();
-        // Was calling a function named window._mqRedrawSign, which was never
-        // defined anywhere — a silent no-op, guarded by the typeof check, so
-        // it never threw and never redrew. The real Poster Designer redraw
-        // function (covers every poster template AND the landscape "yard
-        // sign" orientation) is _mqRedrawPosterDesigner.
-        if (typeof window._mqRedrawPosterDesigner === 'function') window._mqRedrawPosterDesigner();
-        if (typeof window._mqRedrawStandaloneQr === 'function') window._mqRedrawStandaloneQr();
-        postLinkApplyBtn.textContent = 'Saving...';
-        try {
-          await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Marketing link': val });
-          shopRecord.fields['Marketing link'] = val;
-          postLinkApplyBtn.textContent = 'Saved ✓';
-        } catch(e) {
-          postLinkApplyBtn.textContent = 'Error — try again';
-        }
-        setTimeout(() => { postLinkApplyBtn.textContent = 'Apply'; }, 1800);
+    if (bulkOn) {
+      const count = parseInt(document.getElementById('mqph-ct-bulk-count')?.value || '0', 10);
+      if (!count || count < 2) {
+        const inp = document.getElementById('mqph-ct-bulk-count');
+        if (inp) { inp.style.borderColor = '#dc2626'; inp.focus(); }
+        return;
+      }
+      ctBulk = {
+        count,
+        supplyRate: parseFloat(document.getElementById('mqph-ct-supply-rate').value||0),
+        supplyMin: parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
+        installRate: parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
+        installMin: parseFloat(document.getElementById('mqph-ct-install-min').value||0),
+        unit: `${su}|${iu}`,
+        bsOptions: cleanBsOptions,
+        cutoutOptions: cleanCutoutOptions,
+        active: document.getElementById('mqph-ct-active').checked,
       };
+      mqphShowCTBulkNameScreen();
+      return;
     }
 
-    const dmEl = el('mq-mk-dm');
-    if (dmEl) {
-      dmEl.innerHTML = `
-        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px">
-          <div style="font-size:13px;color:#111;line-height:1.6;margin-bottom:8px">${escapeHtml(dmTemplate)}</div>
-          <button class="mq-btn mq-btn-sm" id="mq-mk-dm-copy-btn">Copy</button>
-        </div>`;
-      const dmCopyBtn = el('mq-mk-dm-copy-btn');
-      if (dmCopyBtn) dmCopyBtn.onclick = () => mqCopyText(dmTemplate, dmCopyBtn);
+    const name = document.getElementById('mqph-ct-name').value.trim();
+    if (!name) { alert('Please enter a name.'); return; }
+    if (!currentCTEditId && !mqphWarnIfDuplicate('countertop', name)) return;
+    const fields = {
+      shop:[shopRecord._recordId], Name:name, Category:'countertop',
+      Rate:parseFloat(document.getElementById('mqph-ct-supply-rate').value||0),
+      'Minimum price':parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
+      'Install rate':parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
+      'Install minimum price':parseFloat(document.getElementById('mqph-ct-install-min').value||0),
+      Unit:`${su}|${iu}`, Description:'type:material',
+      'Backsplash options': JSON.stringify(cleanBsOptions),
+      'Cutout options': JSON.stringify(cleanCutoutOptions),
+      Active:document.getElementById('mqph-ct-active').checked,
+    };
+    try {
+      if (currentCTEditId) { await atUpdate(LINE_ITEMS_TABLE, currentCTEditId, fields); }
+      else { fields['Sort order'] = lineItems.filter(r=>r.fields?.['Category']==='countertop').length + 1; await atCreate(LINE_ITEMS_TABLE, fields); }
+      mqphCloseCTModal();
+      await loadAndRender();
+    } catch(e) { alert('Error saving. Please try again.'); }
+  };
+
+  // After the shared supply/install/backsplash/cutout settings are set,
+  // this swaps the same modal to a naming list — same pattern as the
+  // mini-wizard's bulk flow, just inside a modal instead of the full-screen
+  // wizard overlay since Countertops don't use that flow at all.
+  window.mqphShowCTBulkNameScreen = function() {
+    document.getElementById('mqph-ct-modal-title').textContent = `Name your ${ctBulk.count} new materials`;
+    const existingGroups = [...new Set(lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&(r.fields['Group name']||'').trim()).map(r=>r.fields['Group name'].trim()))];
+    const rows = Array.from({length: ctBulk.count}, (_,i) => `
+      <div style="margin-bottom:8px">
+        <input type="text" id="mqph-ct-bulk-name-${i}" class="mqph-name-input" style="font-size:14px;padding:8px 10px" placeholder="Material #${i+1}"/>
+      </div>`).join('');
+    document.getElementById('mqph-ct-modal-body').innerHTML = `
+      <p style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.6">All share the pricing/backsplash/cutout settings you just set. Type each name — leave any blank and we'll flag it before saving.</p>
+      <div style="margin-bottom:1rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Group name (optional)</label>
+        <div style="position:relative">
+          <input type="text" id="mqph-ct-bulk-group" list="mqph-ct-bulk-group-list" placeholder="e.g. Laminates — leave blank for no group" style="width:100%;padding-right:28px"/>
+          <span onclick="document.getElementById('mqph-ct-bulk-group').focus()" style="position:absolute;right:6px;top:0;bottom:0;width:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9ca3af;font-size:11px">▼</span>
+        </div>
+        <datalist id="mqph-ct-bulk-group-list">${existingGroups.map(g=>`<option value="${g.replace(/"/g,'&quot;')}"></option>`).join('')}</datalist>
+        <div style="font-size:11px;color:#6b7280;margin-top:4px">Match an existing group to add these to it, or type a new name to create one.</div>
+      </div>
+      <div style="max-height:300px;overflow-y:auto;padding-right:4px">${rows}</div>
+      <div id="mqph-ct-bulk-name-warn" style="display:none;margin-top:10px;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#991b1b"></div>
+    `;
+    const saveBtn = document.getElementById('mqph-ct-save-btn');
+    if (saveBtn) { saveBtn.textContent = `Create ${ctBulk.count} items →`; saveBtn.onclick = () => mqphSaveCTBulkNames(); }
+  };
+
+  window.mqphSaveCTBulkNames = async function() {
+    const count = ctBulk.count;
+    const names = [];
+    const blanks = [];
+    for (let i = 0; i < count; i++) {
+      const v = document.getElementById(`mqph-ct-bulk-name-${i}`)?.value.trim() || '';
+      names.push(v);
+      if (!v) blanks.push(i+1);
+    }
+    const warnEl = document.getElementById('mqph-ct-bulk-name-warn');
+    if (blanks.length) {
+      if (warnEl) { warnEl.style.display='block'; warnEl.textContent = `${blanks.length} item${blanks.length>1?'s are':' is'} still unnamed (#${blanks.slice(0,10).join(', ')}${blanks.length>10?', …':''}). Fill in every name before saving.`; }
+      const firstBlank = document.getElementById(`mqph-ct-bulk-name-${blanks[0]-1}`);
+      if (firstBlank) firstBlank.focus();
+      return;
+    }
+    const seen = new Set();
+    const internalDupes = [];
+    names.forEach(n => { const k = n.toLowerCase(); if (seen.has(k)) internalDupes.push(n); else seen.add(k); });
+    const existingDupes = names.filter(n => mqphFindDuplicateName('countertop', n));
+    const allDupes = [...new Set([...internalDupes, ...existingDupes])];
+    if (allDupes.length) {
+      if (!confirm(`These names look like duplicates (either repeated in your list, or already exist): ${allDupes.slice(0,15).join(', ')}${allDupes.length>15?', …':''}.\n\nSave everything anyway?`)) return;
     }
 
-    const headerDisplay = el('mq-mk-header-display');
-    const headerCopyBtn = el('mq-mk-header-copy');
-    const headerPreview = el('mq-mk-header-preview');
-    if (headerDisplay) headerDisplay.textContent = heroHeaderHTML;
-    if (headerCopyBtn) headerCopyBtn.onclick = () => mqCopyText(heroHeaderHTML, headerCopyBtn);
-    if (headerPreview) headerPreview.innerHTML = heroHeaderHTML;
-
-    // Store raw codes so the combined embed builder on the Embed tab can access them
-    window._mqRawHeaderCode = heroHeaderHTML;
-    window._mqRawTrustCode  = trustBarHTML;
-    // Trigger combined embed display to populate now that codes are ready
-    if (typeof window.mqUpdateCombinedEmbed === 'function') window.mqUpdateCombinedEmbed();
-
-    const trustDisplay = el('mq-mk-trustbar-display');
-    const trustCopyBtn = el('mq-mk-trustbar-copy');
-    const trustPreview = el('mq-mk-trustbar-preview');
-    if (trustDisplay) trustDisplay.textContent = trustBarHTML;
-    if (trustCopyBtn) trustCopyBtn.onclick = () => mqCopyText(trustBarHTML, trustCopyBtn);
-    if (trustPreview) trustPreview.innerHTML = trustBarHTML;
-
-    // Social graphic — drawn on canvas, downloadable as PNG
-    const canvas = el('mq-mk-canvas');
-    const downloadBtn = el('mq-mk-download-btn');
-    const bgPhotoInput = el('mq-mk-bg-photo');
-    if (canvas && canvas.getContext) {
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width, H = canvas.height;
-      const brandColor = shopRecord.fields['Brand colour'] || '#1a1a1a';
-      const city = shopRecord.fields['City'] || '';
-      const accentColor = (() => {
-        try {
-          const hex = brandColor.replace('#','');
-          const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-          const lighten = (c) => Math.min(255, Math.round(c + (255 - c) * 0.45));
-          return `rgb(${lighten(r)},${lighten(g)},${lighten(b)})`;
-        } catch(e) { return '#d4a574'; }
-      })();
-
-      let bgImage = _mqGraphicBgImage;
-      let overlayOpacity = _mqGraphicOverlayOpacity;
-      let graphicHeadline = _mqGraphicHeadline || 'Get your cabinet quote in under 5 minutes';
-
-      function wrapText(text, font, maxWidth) {
-        ctx.font = font;
-        const words = text.split(' ');
-        const lines = [];
-        let line = '';
-        words.forEach(word => {
-          const test = line ? line + ' ' + word : word;
-          if (ctx.measureText(test).width > maxWidth && line) {
-            lines.push(line);
-            line = word;
-          } else {
-            line = test;
-          }
-        });
-        if (line) lines.push(line);
-        return lines;
-      }
-
-      function drawGraphic() {
-        ctx.clearRect(0,0,W,H);
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-
-        // Background — photo (cover-fit + dark overlay) or solid
-        if (bgImage) {
-          const imgRatio = bgImage.width / bgImage.height;
-          const canvasRatio = W / H;
-          let dw, dh, dx, dy;
-          if (imgRatio > canvasRatio) {
-            dh = H; dw = H * imgRatio; dx = (W - dw) / 2; dy = 0;
-          } else {
-            dw = W; dh = W / imgRatio; dx = 0; dy = (H - dh) / 2;
-          }
-          ctx.drawImage(bgImage, dx, dy, dw, dh);
-          ctx.fillStyle = `rgba(10,10,10,${overlayOpacity})`;
-          ctx.fillRect(0,0,W,H);
-        } else {
-          ctx.fillStyle = '#1a1a1a';
-          ctx.fillRect(0,0,W,H);
-        }
-
-        const pad = 90;
-
-        // Logo chip + shop name
-        const chipSize = 100;
-        ctx.fillStyle = brandColor;
-        ctx.beginPath();
-        ctx.roundRect(pad, pad, chipSize, chipSize, 24);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = '500 50px -apple-system, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('⚡', pad + chipSize/2, pad + chipSize/2 + 4);
-
-        // Strong drop shadow on all text from here down — keeps it readable on any photo, even light ones
-        ctx.shadowColor = 'rgba(0,0,0,0.9)';
-        ctx.shadowBlur = 26;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 4;
-
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '600 44px -apple-system, sans-serif';
-        ctx.fillText(shopName, pad + chipSize + 28, pad + chipSize/2 - 4);
-        ctx.shadowBlur = 14; ctx.shadowOffsetY = 2;
-        ctx.fillText(shopName, pad + chipSize + 28, pad + chipSize/2 - 4);
-        ctx.shadowBlur = 26; ctx.shadowOffsetY = 4;
-        if (city) {
-          ctx.fillStyle = 'rgba(255,255,255,0.85)';
-          ctx.font = '400 30px -apple-system, sans-serif';
-          ctx.fillText(city, pad + chipSize + 28, pad + chipSize/2 + 36);
-        }
-
-        // Eyebrow
-        let y = pad + chipSize + 130;
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.font = '600 32px -apple-system, sans-serif';
-        ctx.fillText('INSTANT PRICING', pad, y);
-
-        // Headline — double shadow pass for extra weight
-        y += 80;
-        const headlineFont = '600 80px -apple-system, sans-serif';
-        ctx.font = headlineFont;
-        ctx.fillStyle = '#ffffff';
-        const headlineLines = wrapText(graphicHeadline, headlineFont, W - pad*2);
-        headlineLines.forEach(line => {
-          ctx.font = headlineFont;
-          ctx.fillText(line, pad, y);
-          ctx.shadowBlur = 14; ctx.shadowOffsetY = 2;
-          ctx.fillText(line, pad, y);
-          ctx.shadowBlur = 26; ctx.shadowOffsetY = 4;
-          y += 92;
-        });
-
-        // Subtext — double shadow pass too
-        y += 30;
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.font = '400 38px -apple-system, sans-serif';
-        ctx.fillText('No phone calls. No waiting. Just your price.', pad, y);
-        ctx.shadowBlur = 14; ctx.shadowOffsetY = 2;
-        ctx.fillText('No phone calls. No waiting. Just your price.', pad, y);
-
-        // Turn off shadow before drawing the solid white CTA pill (it has its own shadow below)
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-
-        // Bottom CTA pill — bigger, more prominent, own drop shadow for depth
-        const ctaH = 116;
-        const ctaW = 400;
-        const ctaY = H - pad - ctaH;
-        ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.35)';
-        ctx.shadowBlur = 20;
-        ctx.shadowOffsetY = 6;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.roundRect(pad, ctaY, ctaW, ctaH, 22);
-        ctx.fill();
-        ctx.restore();
-        ctx.fillStyle = '#1a1a1a';
-        ctx.font = '700 46px -apple-system, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Get a quote →', pad + ctaW/2, ctaY + ctaH/2 + 2);
-      }
-
-      drawGraphic();
-
-      const graphicHeadlineInput = el('mq-mk-graphic-headline');
-      if (graphicHeadlineInput) {
-        graphicHeadlineInput.value = _mqGraphicHeadline || '';
-        graphicHeadlineInput.oninput = () => {
-          const val = graphicHeadlineInput.value.trim();
-          _mqGraphicHeadline = val;
-          graphicHeadline = val || 'Get your cabinet quote in under 5 minutes';
-          drawGraphic();
-          saveHeadlinesDebounced(shopRecord);
-        };
-      }
-
-      const overlayRow = el('mq-mk-overlay-row');
-      const overlaySlider = el('mq-mk-overlay-slider');
-      const overlayVal = el('mq-mk-overlay-val');
-
-      // If a background photo was already set in a previous render, restore the slider UI to match
-      if (bgImage && overlayRow) {
-        overlayRow.style.display = 'flex';
-        if (overlaySlider) overlaySlider.value = Math.round(overlayOpacity * 100);
-        if (overlayVal) overlayVal.textContent = Math.round(overlayOpacity * 100) + '%';
-      }
-
-      if (bgPhotoInput) {
-        bgPhotoInput.onchange = (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-              bgImage = img;
-              _mqGraphicBgImage = img;
-              drawGraphic();
-              if (overlayRow) overlayRow.style.display = 'flex';
-            };
-            img.src = ev.target.result;
-          };
-          reader.readAsDataURL(file);
-        };
-      }
-
-      if (overlaySlider) {
-        overlaySlider.oninput = () => {
-          overlayOpacity = parseInt(overlaySlider.value, 10) / 100;
-          _mqGraphicOverlayOpacity = overlayOpacity;
-          if (overlayVal) overlayVal.textContent = overlaySlider.value + '%';
-          drawGraphic();
-        };
-      }
-
-      const removeBgBtn = el('mq-mk-bg-remove');
-      if (removeBgBtn) {
-        removeBgBtn.onclick = () => {
-          bgImage = null;
-          _mqGraphicBgImage = null;
-          if (bgPhotoInput) bgPhotoInput.value = '';
-          if (overlayRow) overlayRow.style.display = 'none';
-          drawGraphic();
-        };
-      }
-
-      if (downloadBtn) {
-        downloadBtn.onclick = () => {
-          const link = document.createElement('a');
-          link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'quote-graphic') + '-social-graphic.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        };
-      }
-    }
-
-    // ── QR POSTER ──
-    const qrCanvas = el('mq-mk-qr-canvas');
-    if (qrCanvas && qrCanvas.getContext) {
-      const qrCtx = qrCanvas.getContext('2d');
-      const QW = qrCanvas.width, QH = qrCanvas.height;
-      const brandColor = shopRecord.fields['Brand colour'] || '#1a1a1a';
-      let qrBgImage = _mqQrBgImage;
-      let qrOverlayOpacity = _mqQrOverlayOpacity;
-      let qrLibState = 'loading'; // 'loading' | 'ready' | 'failed'
-      let qrHeadline = _mqQrHeadline || 'Scan for an instant price';
-      let qrCustomColor = _mqQrCustomColor || '';
-      let qrFontFamily = '-apple-system, sans-serif';
-      let qrLetterSpacing = 0;
-
-      // QR generation library is bundled inline (no external CDN dependency)
-      function loadQrLib() {
-        if (window.mqQrGen) { qrLibState = 'ready'; return Promise.resolve(); }
-        try {
-          window.mqQrGen = MQ_QR_LIB_FACTORY();
-          qrLibState = 'ready';
-        } catch(e) {
-          qrLibState = 'failed';
-        }
-        return Promise.resolve();
-      }
-
-      function wrapTextQr(text, font, maxWidth) {
-        qrCtx.font = font;
-        const words = text.split(' ');
-        const lines = [];
-        let line = '';
-        words.forEach(word => {
-          const test = line ? line + ' ' + word : word;
-          if (qrCtx.measureText(test).width > maxWidth && line) {
-            lines.push(line);
-            line = word;
-          } else {
-            line = test;
-          }
-        });
-        if (line) lines.push(line);
-        return lines;
-      }
-
-      function drawPlaceholderCard(qrX, qrY, qrSize, cardPad, lines, subline) {
-        qrCtx.fillStyle = '#ffffff';
-        qrCtx.beginPath();
-        qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 24);
-        qrCtx.fill();
-        qrCtx.fillStyle = '#6b7280';
-        qrCtx.font = '600 36px -apple-system, sans-serif';
-        qrCtx.textAlign = 'center';
-        qrCtx.textBaseline = 'middle';
-        const lineHeight = 44;
-        let my = qrY + qrSize/2 - ((lines.length-1) * lineHeight)/2 - (subline ? 16 : 0);
-        lines.forEach(line => { qrCtx.fillText(line, qrX + qrSize/2, my); my += lineHeight; });
-        if (subline) {
-          qrCtx.font = '400 26px -apple-system, sans-serif';
-          qrCtx.fillStyle = '#9ca3af';
-          const subLines = wrapTextQr(subline, '400 26px -apple-system, sans-serif', qrSize - 70);
-          my += 14;
-          subLines.forEach(line => { qrCtx.fillText(line, qrX + qrSize/2, my); my += 32; });
-        }
-        qrCtx.textBaseline = 'alphabetic';
-      }
-
-      function shadeColorQr(hex, percent) {
-        try {
-          hex = hex.replace('#','');
-          let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-          const amt = Math.round(2.55 * percent);
-          r = Math.max(0, Math.min(255, r + amt));
-          g = Math.max(0, Math.min(255, g + amt));
-          b = Math.max(0, Math.min(255, b + amt));
-          return `rgb(${r},${g},${b})`;
-        } catch(e) { return hex; }
-      }
-
-      function getTextColorQr(hex) {
-        try {
-          hex = hex.replace('#','');
-          const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-          const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-          return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
-        } catch(e) { return '#ffffff'; }
-      }
-
-      function shadowText(text, x, y, font, fillColor) {
-        qrCtx.font = font;
-        qrCtx.textAlign = 'center';
-        qrCtx.textBaseline = 'alphabetic';
-        qrCtx.save();
-        qrCtx.shadowColor = 'rgba(0,0,0,0.9)';
-        qrCtx.shadowBlur = 28;
-        qrCtx.shadowOffsetY = 4;
-        qrCtx.fillStyle = fillColor;
-        qrCtx.fillText(text, x, y);
-        // Second pass for extra weight — blurred shadows alone can look soft, so stack two
-        qrCtx.shadowBlur = 16;
-        qrCtx.shadowOffsetY = 2;
-        qrCtx.fillText(text, x, y);
-        qrCtx.restore();
-      }
-
-      function drawQrPoster() {
-        qrCtx.clearRect(0,0,QW,QH);
-        const baseColor = qrCustomColor || brandColor;
-        const bannerTextColor = getTextColorQr(baseColor);
-
-        // ── Solid banner at the top for the shop name — same legibility guarantee as the yard sign ──
-        const bannerH = 220;
-        const bannerGrad = qrCtx.createLinearGradient(0, 0, 0, bannerH);
-        bannerGrad.addColorStop(0, baseColor);
-        bannerGrad.addColorStop(1, shadeColorQr(baseColor, -18));
-        qrCtx.fillStyle = bannerGrad;
-        qrCtx.fillRect(0, 0, QW, bannerH);
-
-        qrCtx.textAlign = 'center';
-        qrCtx.textBaseline = 'alphabetic';
-        qrCtx.fillStyle = bannerTextColor;
-        let nameFontSize = 64;
-        let nameFont = `800 ${nameFontSize}px ${qrFontFamily}`;
-        let nameLines = wrapTextQr(shopName, nameFont, QW - 140);
-        while (nameLines.length > 1 && nameFontSize > 40) {
-          nameFontSize -= 6;
-          nameFont = `800 ${nameFontSize}px ${qrFontFamily}`;
-          nameLines = wrapTextQr(shopName, nameFont, QW - 140);
-        }
-        qrCtx.font = nameFont;
-        qrCtx.fillText(nameLines[0], QW/2, bannerH/2 + nameFontSize*0.34);
-
-        // ── Photo / solid background fills the rest ──
-        const bodyY = bannerH;
-        const bodyH = QH - bannerH;
-        let posterTextColor = '#ffffff';
-
-        if (qrBgImage) {
-          const imgRatio = qrBgImage.width / qrBgImage.height;
-          const areaRatio = QW / bodyH;
-          let dw, dh, dx, dy;
-          if (imgRatio > areaRatio) {
-            dh = bodyH; dw = bodyH * imgRatio; dx = (QW - dw) / 2; dy = bodyY;
-          } else {
-            dw = QW; dh = QW / imgRatio; dx = 0; dy = bodyY - (dh - bodyH) / 2;
-          }
-          qrCtx.save();
-          qrCtx.beginPath();
-          qrCtx.rect(0, bodyY, QW, bodyH);
-          qrCtx.clip();
-          qrCtx.drawImage(qrBgImage, dx, dy, dw, dh);
-          qrCtx.fillStyle = `rgba(10,10,10,${qrOverlayOpacity * 0.6})`;
-          qrCtx.fillRect(0, bodyY, QW, bodyH);
-          qrCtx.restore();
-        } else {
-          posterTextColor = getTextColorQr(baseColor);
-          const grad = qrCtx.createLinearGradient(0, bodyY, 0, QH);
-          grad.addColorStop(0, shadeColorQr(baseColor, 4));
-          grad.addColorStop(1, shadeColorQr(baseColor, -26));
-          qrCtx.fillStyle = grad;
-          qrCtx.fillRect(0, bodyY, QW, bodyH);
-        }
-
-        const pad = 84;
-        qrCtx.textAlign = 'center';
-
-        // Treat headline + QR + subtext as ONE block, then center that whole block
-        // in the space between the banner and the CTA button — much more predictable.
-        const qrSize = 520;
-        const cardPad = 40;
-        const ctaHForCalc = 116;
-        const headlineFont = `700 62px ${qrFontFamily}`;
-        const lines = wrapTextQr(qrHeadline, headlineFont, QW - pad*2);
-        const headlineLineH = 74;
-        const subtextLineH = 44;
-
-        const gapHeadlineToQr = 80;   // space between bottom of headline and top of QR card
-        const gapQrToSubtext = 80;    // space between bottom of QR card and subtext
-        const qrCardH = qrSize + cardPad*2;
-
-        // Total height = all headline lines + gap + QR card + gap + one subtext line
-        const totalBlockH = (lines.length * headlineLineH) + gapHeadlineToQr + qrCardH + gapQrToSubtext + subtextLineH;
-
-        const availTop = bannerH;
-        const availBottom = QH - pad - ctaHForCalc - 40;
-        const blockTop = availTop + Math.max(0, (availBottom - availTop - totalBlockH) / 2);
-
-        // Headline — baseline of first line sits ~0.75x the line height down from blockTop
-        let y = blockTop + headlineLineH * 0.75;
-        lines.forEach(line => {
-          qrCtx.letterSpacing = qrLetterSpacing + 'px';
-          shadowText(line, QW/2, y, headlineFont, posterTextColor);
-          qrCtx.letterSpacing = '0px';
-          y += headlineLineH;
-        });
-
-        // QR card sits right after the headline block, with a fixed gap
-        const qrX = (QW - qrSize) / 2;
-        const qrY = blockTop + (lines.length * headlineLineH) + gapHeadlineToQr;
-
-        if (!qrLink) {
-          drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
-            ['No link added yet'],
-            'Set your quote page link at the top of this page');
-          y = qrY + qrSize + cardPad + gapQrToSubtext;
-        } else if (qrLibState !== 'ready') {
-          drawPlaceholderCard(qrX, qrY, qrSize, cardPad,
-            [qrLibState === 'failed' ? 'Couldn\u2019t load QR code' : 'Loading QR code\u2026'],
-            qrLibState === 'failed' ? 'Check your connection and reopen this tab' : null);
-          y = qrY + qrSize + cardPad + gapQrToSubtext;
-        } else {
-          try {
-            const qr = window.mqQrGen(0, 'M');
-            qr.addData(qrLink);
-            qr.make();
-            const count = qr.getModuleCount();
-            const cell = qrSize / count;
-
-            // Card with subtle shadow for depth
-            qrCtx.save();
-            qrCtx.shadowColor = 'rgba(0,0,0,0.35)';
-            qrCtx.shadowBlur = 30;
-            qrCtx.shadowOffsetY = 12;
-            qrCtx.fillStyle = '#ffffff';
-            qrCtx.beginPath();
-            qrCtx.roundRect(qrX - cardPad, qrY - cardPad, qrSize + cardPad*2, qrSize + cardPad*2, 28);
-            qrCtx.fill();
-            qrCtx.restore();
-
-            // Thin brand-colour border ring around the QR for polish
-            qrCtx.strokeStyle = brandColor;
-            qrCtx.lineWidth = 4;
-            qrCtx.beginPath();
-            qrCtx.roundRect(qrX - cardPad + 10, qrY - cardPad + 10, qrSize + cardPad*2 - 20, qrSize + cardPad*2 - 20, 20);
-            qrCtx.stroke();
-
-            qrCtx.fillStyle = '#1a1a1a';
-            for (let row = 0; row < count; row++) {
-              for (let col = 0; col < count; col++) {
-                if (qr.isDark(row, col)) {
-                  qrCtx.fillRect(qrX + col*cell, qrY + row*cell, cell+0.5, cell+0.5);
-                }
-              }
-            }
-            y = qrY + qrSize + cardPad + gapQrToSubtext;
-          } catch(e) {
-            drawPlaceholderCard(qrX, qrY, qrSize, cardPad, ['Couldn\u2019t generate QR code'], null);
-            y = qrY + qrSize + cardPad + gapQrToSubtext;
-          }
-        }
-
-        // Subtext with shadow
-        shadowText('No phone calls. No waiting.', QW/2, y, '500 36px -apple-system, sans-serif', posterTextColor);
-
-        // Bottom CTA button — bigger, bolder, brand-coloured accent border
-        const ctaH = 116;
-        const ctaW = 440;
-        const ctaY = QH - pad - ctaH;
-        const ctaX = (QW - ctaW) / 2;
-        qrCtx.save();
-        qrCtx.shadowColor = 'rgba(0,0,0,0.4)';
-        qrCtx.shadowBlur = 24;
-        qrCtx.shadowOffsetY = 8;
-        qrCtx.fillStyle = '#ffffff';
-        qrCtx.beginPath();
-        qrCtx.roundRect(ctaX, ctaY, ctaW, ctaH, 22);
-        qrCtx.fill();
-        qrCtx.restore();
-        qrCtx.fillStyle = '#1a1a1a';
-        qrCtx.font = '700 48px -apple-system, sans-serif';
-        qrCtx.textAlign = 'center';
-        qrCtx.textBaseline = 'middle';
-        qrCtx.fillText('Get a quote \u2192', QW/2, ctaY + ctaH/2 + 2);
-        qrCtx.textBaseline = 'alphabetic';
-      }
-
-      function getQrLink() {
-        return _mqCustomPostLink || defaultQuoteLink;
-      }
-
-      let qrLink = getQrLink();
-
-      window._mqRedrawQrPoster = () => { qrLink = getQrLink(); drawQrPoster(); };
-
-      drawQrPoster();
-      loadQrLib().then(() => { qrLink = getQrLink(); drawQrPoster(); });
-
-      const qrHeadlineInput = el('mq-mk-qr-headline');
-      if (qrHeadlineInput) {
-        qrHeadlineInput.value = _mqQrHeadline || '';
-        qrHeadlineInput.oninput = () => {
-          const val = qrHeadlineInput.value.trim();
-          _mqQrHeadline = val;
-          qrHeadline = val || 'Scan for an instant price';
-          drawQrPoster();
-          saveHeadlinesDebounced(shopRecord);
-        };
-      }
-
-      const qrFontSelect = el('mq-mk-qr-font');
-      if (qrFontSelect) {
-        qrFontSelect.onchange = () => {
-          qrFontFamily = qrFontSelect.value;
-          drawQrPoster();
-        };
-      }
-
-      const qrLetterSpacingSlider = el('mq-mk-qr-letter-spacing');
-      const qrLetterSpacingVal = el('mq-mk-qr-letter-spacing-val');
-      if (qrLetterSpacingSlider) {
-        qrLetterSpacingSlider.oninput = () => {
-          qrLetterSpacing = parseInt(qrLetterSpacingSlider.value, 10);
-          if (qrLetterSpacingVal) qrLetterSpacingVal.textContent = qrLetterSpacing + 'px';
-          drawQrPoster();
-        };
-      }
-
-      const qrColorInput = el('mq-mk-qr-color');
-      const qrColorResetBtn = el('mq-mk-qr-color-reset');
-      if (qrColorInput) {
-        qrColorInput.value = qrCustomColor || '#262422';
-        qrColorInput.oninput = () => {
-          qrCustomColor = qrColorInput.value;
-          _mqQrCustomColor = qrCustomColor;
-          drawQrPoster();
-          saveHeadlinesDebounced(shopRecord);
-        };
-      }
-      if (qrColorResetBtn) {
-        qrColorResetBtn.onclick = () => {
-          qrCustomColor = '';
-          _mqQrCustomColor = '';
-          if (qrColorInput) qrColorInput.value = '#262422';
-          drawQrPoster();
-          saveHeadlinesDebounced(shopRecord);
-        };
-      }
-
-      const qrBgPhotoInput = el('mq-mk-qr-bg-photo');
-      const qrOverlayRow = el('mq-mk-qr-overlay-row');
-      const qrOverlaySlider = el('mq-mk-qr-overlay-slider');
-      const qrOverlayVal = el('mq-mk-qr-overlay-val');
-      const qrDownloadBtn = el('mq-mk-qr-download-btn');
-      const qrBgRemoveBtn = el('mq-mk-qr-bg-remove');
-
-      if (qrBgImage && qrOverlayRow) {
-        qrOverlayRow.style.display = 'flex';
-        if (qrOverlaySlider) qrOverlaySlider.value = Math.round(qrOverlayOpacity * 100);
-        if (qrOverlayVal) qrOverlayVal.textContent = Math.round(qrOverlayOpacity * 100) + '%';
-      }
-
-      if (qrBgPhotoInput) {
-        qrBgPhotoInput.onchange = (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-              qrBgImage = img;
-              _mqQrBgImage = img;
-              drawQrPoster();
-              if (qrOverlayRow) qrOverlayRow.style.display = 'flex';
-            };
-            img.src = ev.target.result;
-          };
-          reader.readAsDataURL(file);
-        };
-      }
-
-      if (qrOverlaySlider) {
-        qrOverlaySlider.oninput = () => {
-          qrOverlayOpacity = parseInt(qrOverlaySlider.value, 10) / 100;
-          _mqQrOverlayOpacity = qrOverlayOpacity;
-          if (qrOverlayVal) qrOverlayVal.textContent = qrOverlaySlider.value + '%';
-          drawQrPoster();
-        };
-      }
-
-      if (qrBgRemoveBtn) {
-        qrBgRemoveBtn.onclick = () => {
-          qrBgImage = null;
-          _mqQrBgImage = null;
-          if (qrBgPhotoInput) qrBgPhotoInput.value = '';
-          if (qrOverlayRow) qrOverlayRow.style.display = 'none';
-          drawQrPoster();
-        };
-      }
-
-      if (qrDownloadBtn) {
-        qrDownloadBtn.onclick = () => {
-          if (!qrLink) {
-            alert('Please add a link at the top of this page first.');
-            return;
-          }
-          const link = document.createElement('a');
-          link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'quote-poster') + '-qr-poster.png';
-          link.href = qrCanvas.toDataURL('image/png');
-          link.click();
-        };
-      }
-    }
-
-    // ── STANDALONE QR CODE (download-only, no poster styling) ──
-    // Deliberately self-contained rather than reusing qrLink/drawQrPoster
-    // from the QR poster block above — same reasoning as signLink below:
-    // it should never go stale or silently fail to render just because
-    // some other Marketing Kit feature's canvas isn't on the page.
-    const standaloneQrCanvas = el('mq-mk-qrcode-canvas');
-    if (standaloneQrCanvas && standaloneQrCanvas.getContext) {
-      const sqCtx = standaloneQrCanvas.getContext('2d');
-      const SQW = standaloneQrCanvas.width, SQH = standaloneQrCanvas.height;
-
-      function getStandaloneQrLink() {
-        return _mqCustomPostLink || defaultQuoteLink;
-      }
-      let standaloneQrLink = getStandaloneQrLink();
-
-      function drawStandaloneQr() {
-        sqCtx.clearRect(0, 0, SQW, SQH);
-        sqCtx.fillStyle = '#ffffff';
-        sqCtx.fillRect(0, 0, SQW, SQH);
-        if (!standaloneQrLink || !window.mqQrGen) return;
-        try {
-          const qr = window.mqQrGen(0, 'M');
-          qr.addData(standaloneQrLink);
-          qr.make();
-          const count = qr.getModuleCount();
-          const pad = SQW * 0.06;
-          const size = SQW - pad * 2;
-          const cell = size / count;
-          sqCtx.fillStyle = '#1a1a1a';
-          for (let row = 0; row < count; row++) {
-            for (let col = 0; col < count; col++) {
-              if (qr.isDark(row, col)) sqCtx.fillRect(pad + col*cell, pad + row*cell, cell+0.5, cell+0.5);
-            }
-          }
-        } catch(e) {}
-      }
-
-      window._mqRedrawStandaloneQr = () => { standaloneQrLink = getStandaloneQrLink(); drawStandaloneQr(); };
-
-      // Same inline-library loader as the QR poster's loadQrLib() above —
-      // duplicated in miniature (rather than reused, since that function is
-      // scoped inside the QR poster's own if-block) so this section can load
-      // and draw itself even if the poster block above ran into trouble.
-      if (window.mqQrGen) {
-        drawStandaloneQr();
+    const groupName = (document.getElementById('mqph-ct-bulk-group')?.value || '').trim();
+    const groupFields = {};
+    if (groupName) {
+      const groupMembers = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&(r.fields['Group name']||'').trim()===groupName);
+      groupFields['Group name'] = groupName;
+      if (groupMembers.length) {
+        groupFields['Group sort order'] = groupMembers.find(m=>typeof m.fields['Group sort order']==='number')?.fields['Group sort order'] || 0;
+        groupFields['Group description'] = groupMembers.find(m=>m.fields['Group description'])?.fields['Group description'] || '';
       } else {
-        try { window.mqQrGen = MQ_QR_LIB_FACTORY(); } catch(e) {}
-        drawStandaloneQr();
-      }
-
-      const standaloneQrDownloadBtn = el('mq-mk-qrcode-download-btn');
-      if (standaloneQrDownloadBtn) {
-        standaloneQrDownloadBtn.onclick = () => {
-          if (!standaloneQrLink) {
-            alert('Please add a link at the top of this page first.');
-            return;
-          }
-          const link = document.createElement('a');
-          link.download = (shopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'quote') + '-qr-code.png';
-          link.href = standaloneQrCanvas.toDataURL('image/png');
-          link.click();
-        };
+        const allOrders = [...new Set(lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&(r.fields['Group name']||'').trim()).map(r=>r.fields['Group sort order']||0))];
+        groupFields['Group sort order'] = allOrders.length ? Math.max(...allOrders)+1 : 0;
       }
     }
 
-    // signLink is used by both the QR poster above and the Poster Designer
-    // below — declared here, outside any one feature's own block, so it's
-    // never at risk of going undeclared if one of those features' own
-    // canvas doesn't exist on the page. getSignLink() mirrors the QR
-    // poster's own getQrLink() above: read _mqCustomPostLink fresh rather
-    // than trusting a value snapshotted once at init, since the Marketing
-    // link can change after this ran (see _mqRedrawPosterDesigner below).
-    function getSignLink() {
-      return _mqCustomPostLink || defaultQuoteLink;
+    const saveBtn = document.getElementById('mqph-ct-save-btn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+    let sortBase = lineItems.filter(r=>r.fields?.['Category']==='countertop').length;
+    try {
+      const writes = names.map(nm => atCreate(LINE_ITEMS_TABLE, {
+        shop:[shopRecord._recordId], Name:nm, Category:'countertop',
+        Rate: ctBulk.supplyRate, 'Minimum price': ctBulk.supplyMin,
+        'Install rate': ctBulk.installRate, 'Install minimum price': ctBulk.installMin, Unit: ctBulk.unit,
+        Description:'type:material',
+        'Backsplash options': JSON.stringify(ctBulk.bsOptions),
+        'Cutout options': JSON.stringify(ctBulk.cutoutOptions),
+        Active: ctBulk.active, 'Sort order': ++sortBase, ...groupFields,
+      }));
+      await Promise.all(writes);
+      mqphCloseCTModal();
+      await loadAndRender();
+    } catch(e) {
+      console.error('CT bulk save error:', e);
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = `Create ${count} items →`; }
+      alert('Something went wrong saving these — please try again. Anything already created stayed saved, so check Pricing before re-running to avoid duplicates.');
     }
-    let signLink = getSignLink();
-
-      // ── Custom Poster & Sign Designer ──────────────────────────────────
-      // Deliberately its own self-contained canvas system rather than
-      // reusing the QR poster's helper functions, since those are scoped to
-      // that canvas's own context. First template: "Curved Split" — a
-      // smooth S-curve dividing a text/logo panel from a photo panel, in
-      // both portrait (poster) and landscape (yard sign) orientations.
-      // More template styles get added onto this same pattern later.
-      const pdCanvas = el('mq-pd-canvas');
-      if (pdCanvas) {
-        const pdCtx = pdCanvas.getContext('2d');
-        let pdOrientation = 'portrait';
-        let pdTemplate = 'curved-split';
-        let pdPhotoImage = null;
-        let pdOwnLogoImage = null; // uploaded specifically here, not shop info's logo
-        let pdBgImage = null; // optional uploaded background texture/image
-        const pdShopName = shopRecord.fields['Shop name'] || 'Your Shop';
-
-        function pdWrapText(text, font, maxWidth) {
-          pdCtx.font = font;
-          const words = text.split(' ');
-          const lines = [];
-          let line = '';
-          words.forEach(word => {
-            const test = line ? line + ' ' + word : word;
-            if (pdCtx.measureText(test).width > maxWidth && line) { lines.push(line); line = word; }
-            else line = test;
-          });
-          if (line) lines.push(line);
-          return lines;
-        }
-
-        // Reads the shared text size/spacing/position controls once per
-        // draw — same five values used by every template, so a slider
-        // dragged here consistently affects whichever style is selected.
-        // Turns on a soft drop shadow for whatever text gets drawn next —
-        // called right before a template's text-drawing section, and
-        // cleared right after, so it never accidentally applies to the
-        // photo, QR code, or button too.
-        function pdSetTextShadow() {
-          if (el('mq-pd-text-shadow')?.checked) {
-            pdCtx.shadowColor = 'rgba(0,0,0,0.45)';
-            pdCtx.shadowBlur = 8;
-            pdCtx.shadowOffsetX = 2;
-            pdCtx.shadowOffsetY = 3;
-          }
-        }
-        function pdClearShadow() {
-          pdCtx.shadowColor = 'transparent';
-          pdCtx.shadowBlur = 0;
-          pdCtx.shadowOffsetX = 0;
-          pdCtx.shadowOffsetY = 0;
-        }
-
-        function pdGetTextControls() {
-          return {
-            preMult: (parseInt(el('mq-pd-size-pre')?.value,10)||100)/100,
-            nameMult: (parseInt(el('mq-pd-size-name')?.value,10)||100)/100,
-            tagMult: (parseInt(el('mq-pd-size-tag')?.value,10)||100)/100,
-            lineMult: (parseInt(el('mq-pd-line-spacing')?.value,10)||100)/100,
-            offsetPct: (parseInt(el('mq-pd-text-offset')?.value,10)||0)/100,
-            preText: el('mq-pd-pre-text')?.value ?? '',
-            preColor: el('mq-pd-pre-color')?.value || '#6b6b6b',
-            tagColor: el('mq-pd-tag-color')?.value || '#4b4b4b'
-          };
-        }
-
-        // Reads the shared QR-code/quote-button settings once per draw.
-        function pdGetQrButtonSettings() {
-          return {
-            qrEnabled: el('mq-pd-qr-enabled')?.checked || false,
-            qrSizeMult: (parseInt(el('mq-pd-qr-size')?.value,10)||100)/100,
-            qrOffsetPct: (parseInt(el('mq-pd-qr-position')?.value,10)||0)/100,
-            btnEnabled: el('mq-pd-btn-enabled')?.checked || false,
-            btnOffsetPct: (parseInt(el('mq-pd-btn-position')?.value,10)||0)/100
-          };
-        }
-
-        // Draws a QR code centered at (cx, cy) — a white rounded card with a
-        // subtle shadow, same look as the existing yard sign's QR code.
-        // Silently does nothing if there's no quote link yet or the QR
-        // library hasn't loaded, same fallback used elsewhere.
-        function pdDrawQrCode(cx, cy, size) {
-          if (!signLink || !window.mqQrGen) return;
-          try {
-            const qr = window.mqQrGen(0, 'M');
-            qr.addData(signLink);
-            qr.make();
-            const count = qr.getModuleCount();
-            const cardPad = size * 0.09;
-            const x = cx - size/2, y = cy - size/2;
-            const cell = size / count;
-
-            pdCtx.save();
-            pdCtx.shadowColor = 'rgba(0,0,0,0.35)';
-            pdCtx.shadowBlur = 22;
-            pdCtx.shadowOffsetY = 6;
-            pdCtx.fillStyle = '#ffffff';
-            pdCtx.beginPath();
-            pdCtx.roundRect(x - cardPad, y - cardPad, size + cardPad*2, size + cardPad*2, 16);
-            pdCtx.fill();
-            pdCtx.restore();
-
-            pdCtx.fillStyle = '#1a1a1a';
-            for (let row = 0; row < count; row++) {
-              for (let col = 0; col < count; col++) {
-                if (qr.isDark(row, col)) pdCtx.fillRect(x + col*cell, y + row*cell, cell+0.5, cell+0.5);
-              }
-            }
-          } catch(e) {}
-        }
-
-        // Draws a rounded "Get a Free Quote" pill button centered at (cx, cy).
-        // Fills the whole canvas background — an uploaded image if the shop
-        // turned that on, otherwise whatever solid colour or gradient the
-        // colour pickers are set to. Centralized here since several
-        // templates need the exact same background-fill behavior.
-        function pdFillBackground(W, H, bgColor, bgColor2, bgGradient) {
-          const useImage = el('mq-pd-bg-image-enabled')?.checked && pdBgImage;
-          if (useImage) {
-            pdDrawPhotoInRect(pdBgImage, 0, 0, W, H);
-            // Optional colour overlay so text stays readable on busy
-            // textures/photos — any colour, not just black or white.
-            const overlayOpacity = (parseInt(el('mq-pd-bg-overlay-opacity')?.value,10)||0)/100;
-            if (overlayOpacity > 0) {
-              const overlayColor = el('mq-pd-bg-overlay-color')?.value || '#000000';
-              const hex = overlayColor.replace('#','');
-              const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-              pdCtx.fillStyle = `rgba(${r},${g},${b},${overlayOpacity})`;
-              pdCtx.fillRect(0, 0, W, H);
-            }
-            return;
-          }
-          if (bgGradient) {
-            const isPortrait = pdOrientation === 'portrait';
-            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
-            g.addColorStop(0, bgColor); g.addColorStop(1, bgColor2);
-            pdCtx.fillStyle = g;
-          } else {
-            pdCtx.fillStyle = bgColor;
-          }
-          pdCtx.fillRect(0, 0, W, H);
-        }
-
-        function pdDrawGetQuoteButton(cx, cy, color) {
-          const w = 340, h = 84;
-          pdCtx.save();
-          pdCtx.shadowColor = 'rgba(0,0,0,0.3)';
-          pdCtx.shadowBlur = 16;
-          pdCtx.shadowOffsetY = 4;
-          pdCtx.fillStyle = color;
-          pdCtx.beginPath();
-          pdCtx.roundRect(cx - w/2, cy - h/2, w, h, h/2);
-          pdCtx.fill();
-          pdCtx.restore();
-          pdCtx.fillStyle = pdMutedTextColorFor(color) === '#5b5b5b' ? '#1a1a1a' : '#ffffff';
-          pdCtx.font = '700 34px -apple-system, sans-serif';
-          pdCtx.textAlign = 'center'; pdCtx.textBaseline = 'middle';
-          pdCtx.fillText('Get a Free Quote', cx, cy + 2);
-          pdCtx.textBaseline = 'alphabetic';
-        }
-
-        function pdShade(hex, percent) {
-          try {
-            hex = hex.replace('#','');
-            let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-            const amt = Math.round(2.55 * percent);
-            r = Math.max(0, Math.min(255, r + amt)); g = Math.max(0, Math.min(255, g + amt)); b = Math.max(0, Math.min(255, b + amt));
-            return `rgb(${r},${g},${b})`;
-          } catch(e) { return hex; }
-        }
-
-        // Picks a readable dark or light grey for secondary text based on
-        // how light or dark the chosen background actually is — since a
-        // hardcoded grey tuned for white would disappear on a dark
-        // background someone picks, and vice versa.
-        function pdMutedTextColorFor(hex) {
-          try {
-            hex = hex.replace('#','');
-            const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            return luminance > 0.55 ? '#5b5b5b' : '#d4d4d4';
-          } catch(e) { return '#6b6b6b'; }
-        }
-
-        function pdDrawPhotoInRect(img, x, y, w, h) {
-          if (!img) {
-            pdCtx.fillStyle = '#e5e7eb';
-            pdCtx.fillRect(x, y, w, h);
-            pdCtx.fillStyle = '#9ca3af';
-            pdCtx.font = '500 32px -apple-system, sans-serif';
-            pdCtx.textAlign = 'center';
-            pdCtx.textBaseline = 'middle';
-            pdCtx.fillText('Upload a photo above', x + w/2, y + h/2);
-            pdCtx.textBaseline = 'alphabetic';
-            return;
-          }
-          const imgRatio = img.width / img.height;
-          const areaRatio = w / h;
-          let dw, dh, dx, dy;
-          if (imgRatio > areaRatio) { dh = h; dw = h * imgRatio; dx = x - (dw - w)/2; dy = y; }
-          else { dw = w; dh = w / imgRatio; dx = x; dy = y - (dh - h)/2; }
-          pdCtx.drawImage(img, dx, dy, dw, dh);
-        }
-
-        function drawCurvedSplit() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
-          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -30);
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const bgColor = el('mq-pd-bg-color')?.value || '#ffffff';
-          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -25);
-          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
-          const bandHalf = isPortrait ? H*0.014 : W*0.010;
-          const tc = pdGetTextControls();
-
-          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
-
-          // Photo zone, clipped to the curve
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46;
-            pdCtx.moveTo(0, splitY);
-            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07, W*0.65, splitY + H*0.07, W, splitY);
-            pdCtx.lineTo(W, H); pdCtx.lineTo(0, H); pdCtx.closePath();
-          } else {
-            const splitX = W * 0.42;
-            pdCtx.moveTo(splitX, 0);
-            pdCtx.bezierCurveTo(splitX - W*0.06, H*0.35, splitX + W*0.06, H*0.65, splitX, H);
-            pdCtx.lineTo(W, H); pdCtx.lineTo(W, 0); pdCtx.closePath();
-          }
-          pdCtx.clip();
-          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.32, W, H*0.74);
-          else pdDrawPhotoInRect(pdPhotoImage, W*0.28, 0, W*0.75, H);
-          pdCtx.restore();
-
-          // The customizable colored "shape" — a filled curved ribbon
-          // sitting right along the boundary between the text panel and the
-          // photo, solid or gradient depending on the controls above.
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46;
-            pdCtx.moveTo(0, splitY - bandHalf);
-            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07 - bandHalf, W*0.65, splitY + H*0.07 - bandHalf, W, splitY - bandHalf);
-            pdCtx.lineTo(W, splitY + bandHalf);
-            pdCtx.bezierCurveTo(W*0.65, splitY + H*0.07 + bandHalf, W*0.35, splitY - H*0.07 + bandHalf, 0, splitY + bandHalf);
-            pdCtx.closePath();
-          } else {
-            const splitX = W * 0.42;
-            pdCtx.moveTo(splitX - bandHalf, 0);
-            pdCtx.bezierCurveTo(splitX - W*0.06 - bandHalf, H*0.35, splitX + W*0.06 - bandHalf, H*0.65, splitX - bandHalf, H);
-            pdCtx.lineTo(splitX + bandHalf, H);
-            pdCtx.bezierCurveTo(splitX + W*0.06 + bandHalf, H*0.65, splitX - W*0.06 + bandHalf, H*0.35, splitX + bandHalf, 0);
-            pdCtx.closePath();
-          }
-          if (useGradient) {
-            const grad = isPortrait
-              ? pdCtx.createLinearGradient(0, H*0.35, 0, H*0.58)
-              : pdCtx.createLinearGradient(W*0.30, 0, W*0.54, 0);
-            grad.addColorStop(0, shapeColor);
-            grad.addColorStop(1, shapeColor2);
-            pdCtx.fillStyle = grad;
-          } else {
-            pdCtx.fillStyle = shapeColor;
-          }
-          pdCtx.fill();
-          pdCtx.restore();
-
-          // Thin accent line right along the outer edge of that ribbon
-          pdCtx.save();
-          pdCtx.strokeStyle = accentColor;
-          pdCtx.lineWidth = 5;
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46;
-            pdCtx.moveTo(0, splitY - bandHalf);
-            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07 - bandHalf, W*0.65, splitY + H*0.07 - bandHalf, W, splitY - bandHalf);
-          } else {
-            const splitX = W * 0.42;
-            pdCtx.moveTo(splitX - bandHalf, 0);
-            pdCtx.bezierCurveTo(splitX - W*0.06 - bandHalf, H*0.35, splitX + W*0.06 - bandHalf, H*0.65, splitX - bandHalf, H);
-          }
-          pdCtx.stroke();
-          pdCtx.restore();
-
-          // Text / logo panel
-          pdCtx.textAlign = 'center';
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
-            const maxLogoW = (isPortrait ? W*0.55 : W*0.30) * logoSizeMult;
-            const maxLogoH = (isPortrait ? H*0.30 : H*0.5) * logoSizeMult;
-            const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw / logoRatio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
-            const lx = isPortrait ? (W - lw)/2 : (W*0.42 - lw)/2 - W*0.02;
-            const ly = isPortrait ? (H*0.46 - lh)/2 + H*0.02 : (H - lh)/2;
-            pdCtx.drawImage(pdOwnLogoImage, lx, ly, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = '#9ca3af';
-            pdCtx.font = '500 32px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.21, isPortrait ? H*0.24 : H*0.5);
-          } else {
-            pdSetTextShadow();
-            const preFont = `500 ${Math.round((isPortrait?38:34)*tc.preMult)}px Georgia, serif`;
-            const nameFont = `800 ${Math.round((isPortrait?76:64)*tc.nameMult)}px -apple-system, sans-serif`;
-            const tagFont = `500 ${Math.round((isPortrait?32:28)*tc.tagMult)}px -apple-system, sans-serif`;
-            const centerX = isPortrait ? W/2 : W*0.21;
-            let cy = (isPortrait ? H*0.12 : H*0.26) + tc.offsetPct * H;
-
-            pdCtx.font = preFont;
-            pdCtx.fillStyle = tc.preColor;
-            pdCtx.fillText(tc.preText, centerX, cy);
-            // Deliberately generous gap here — this was the "too congested"
-            // spot, sitting right between the small intro line and the big
-            // shop name below it.
-            cy += (isPortrait ? 130 : 110) * tc.lineMult;
-
-            pdCtx.font = nameFont;
-            pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
-            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.36);
-            nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?86:72) * tc.lineMult; });
-
-            if (tagline) {
-              cy += (isPortrait ? 34 : 24) * tc.lineMult;
-              pdCtx.font = tagFont;
-              pdCtx.fillStyle = tc.tagColor;
-              const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.34);
-              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?58:50) * tc.lineMult; });
-            }
-          }
-
-          // Optional QR code + "Get a Free Quote" button, centered in the
-          // photo area — both independently toggleable, off by default.
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = isPortrait ? W/2 : W*0.28 + (W*0.75)/2;
-          const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
-          if (qb.qrEnabled) {
-            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawDiamondArrow() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const accentColor2 = el('mq-pd-shape-color2')?.value || pdShade(accentColor, -35);
-          const bgColor = el('mq-pd-bg-color')?.value || '#111111';
-          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -25);
-          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
-          const tc = pdGetTextControls();
-
-          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
-
-          // Photo zone, clipped to an angular arrow-point boundary instead
-          // of a curve.
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46, pointDepth = H * 0.05;
-            pdCtx.moveTo(0, splitY + pointDepth);
-            pdCtx.lineTo(W*0.5, splitY - pointDepth);
-            pdCtx.lineTo(W, splitY + pointDepth);
-            pdCtx.lineTo(W, H); pdCtx.lineTo(0, H); pdCtx.closePath();
-          } else {
-            const splitX = W * 0.44, pointDepth = W * 0.05;
-            pdCtx.moveTo(splitX + pointDepth, 0);
-            pdCtx.lineTo(splitX - pointDepth, H*0.5);
-            pdCtx.lineTo(splitX + pointDepth, H);
-            pdCtx.lineTo(W, H); pdCtx.lineTo(W, 0); pdCtx.closePath();
-          }
-          pdCtx.clip();
-          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.32, W, H*0.74);
-          else pdDrawPhotoInRect(pdPhotoImage, W*0.30, 0, W*0.75, H);
-          pdCtx.restore();
-
-          // Coloured accent stripe right along the point, plus a second
-          // thinner line for depth — the customizable "shape" element here.
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46, pointDepth = H * 0.05, stripeW = H*0.012;
-            pdCtx.moveTo(0, splitY + pointDepth - stripeW);
-            pdCtx.lineTo(W*0.5, splitY - pointDepth - stripeW);
-            pdCtx.lineTo(W, splitY + pointDepth - stripeW);
-            pdCtx.lineTo(W, splitY + pointDepth + stripeW);
-            pdCtx.lineTo(W*0.5, splitY - pointDepth + stripeW);
-            pdCtx.lineTo(0, splitY + pointDepth + stripeW);
-            pdCtx.closePath();
-          } else {
-            const splitX = W * 0.44, pointDepth = W * 0.05, stripeW = W*0.009;
-            pdCtx.moveTo(splitX + pointDepth - stripeW, 0);
-            pdCtx.lineTo(splitX - pointDepth - stripeW, H*0.5);
-            pdCtx.lineTo(splitX + pointDepth - stripeW, H);
-            pdCtx.lineTo(splitX + pointDepth + stripeW, H);
-            pdCtx.lineTo(splitX - pointDepth + stripeW, H*0.5);
-            pdCtx.lineTo(splitX + pointDepth + stripeW, 0);
-            pdCtx.closePath();
-          }
-          if (useGradient) {
-            const grad = isPortrait
-              ? pdCtx.createLinearGradient(0, H*0.35, 0, H*0.58)
-              : pdCtx.createLinearGradient(W*0.34, 0, W*0.56, 0);
-            grad.addColorStop(0, accentColor);
-            grad.addColorStop(1, accentColor2);
-            pdCtx.fillStyle = grad;
-          } else {
-            pdCtx.fillStyle = accentColor;
-          }
-          pdCtx.fill();
-          pdCtx.restore();
-
-          // Text / logo panel
-          pdCtx.textAlign = 'center';
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
-            const maxLogoW = (isPortrait ? W*0.55 : W*0.30) * logoSizeMult;
-            const maxLogoH = (isPortrait ? H*0.30 : H*0.5) * logoSizeMult;
-            const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw / logoRatio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
-            const lx = isPortrait ? (W - lw)/2 : (W*0.44 - lw)/2;
-            const ly = isPortrait ? (H*0.46 - lh)/2 : (H - lh)/2;
-            pdCtx.drawImage(pdOwnLogoImage, lx, ly, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = '#6b6b6b';
-            pdCtx.font = '500 32px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.22, isPortrait ? H*0.24 : H*0.5);
-          } else {
-            pdSetTextShadow();
-            const preFont = `italic 500 ${Math.round((isPortrait?38:34)*tc.preMult)}px Georgia, serif`;
-            const nameFont = `800 ${Math.round((isPortrait?72:60)*tc.nameMult)}px -apple-system, sans-serif`;
-            const tagFont = `500 ${Math.round((isPortrait?32:28)*tc.tagMult)}px -apple-system, sans-serif`;
-            const centerX = isPortrait ? W/2 : W*0.22;
-            let cy = (isPortrait ? H*0.12 : H*0.26) + tc.offsetPct * H;
-
-            pdCtx.font = preFont;
-            pdCtx.fillStyle = tc.preColor;
-            pdCtx.fillText(tc.preText, centerX, cy);
-            cy += (isPortrait ? 130 : 110) * tc.lineMult;
-
-            pdCtx.font = nameFont;
-            pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
-            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.38);
-            nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?82:68) * tc.lineMult; });
-
-            if (tagline) {
-              cy += (isPortrait ? 34 : 24) * tc.lineMult;
-              pdCtx.font = tagFont;
-              pdCtx.fillStyle = tc.tagColor;
-              const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.36);
-              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?58:50) * tc.lineMult; });
-            }
-          }
-
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = isPortrait ? W/2 : W*0.30 + (W*0.75)/2;
-          const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
-          if (qb.qrEnabled) {
-            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawOrnateDivider() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#8a5a3a';
-          const accentColor = el('mq-pd-accent-color')?.value || '#8a5a3a';
-          const bgColor = el('mq-pd-bg-color')?.value || '#ffffff';
-          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -20);
-          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
-          const tc = pdGetTextControls();
-
-          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
-
-          // Photo sits in a simple rounded panel, not a curve/angle — this
-          // template's character comes from the ornate line-and-diamond
-          // dividers around the text instead of the shape boundary itself.
-          const photoY = isPortrait ? H*0.50 : 0;
-          const photoX = isPortrait ? 0 : W*0.48;
-          const photoW = isPortrait ? W : W*0.52;
-          const photoH = isPortrait ? H*0.50 : H;
-          pdCtx.save();
-          pdCtx.beginPath();
-          pdCtx.rect(photoX, photoY, photoW, photoH);
-          pdCtx.clip();
-          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
-          pdCtx.restore();
-
-          pdCtx.textAlign = 'center';
-          const centerX = isPortrait ? W/2 : W*0.24;
-          const textTop = isPortrait ? H*0.10 : H*0.14;
-          const dividerW = isPortrait ? W*0.28 : W*0.16;
-
-          function ornateDivider(y) {
-            pdCtx.strokeStyle = accentColor;
-            pdCtx.lineWidth = 3;
-            pdCtx.beginPath();
-            pdCtx.moveTo(centerX - dividerW, y); pdCtx.lineTo(centerX - 14, y);
-            pdCtx.moveTo(centerX + 14, y); pdCtx.lineTo(centerX + dividerW, y);
-            pdCtx.stroke();
-            pdCtx.save();
-            pdCtx.translate(centerX, y);
-            pdCtx.rotate(Math.PI/4);
-            pdCtx.fillStyle = accentColor;
-            pdCtx.fillRect(-7, -7, 14, 14);
-            pdCtx.restore();
-          }
-
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
-            const maxLogoW = (isPortrait ? W*0.55 : W*0.34) * logoSizeMult, maxLogoH = (isPortrait ? H*0.32 : H*0.5) * logoSizeMult;
-            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw/ratio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
-            pdCtx.drawImage(pdOwnLogoImage, centerX - lw/2, textTop, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = '#9ca3af';
-            pdCtx.font = '500 30px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', centerX, textTop + 40);
-          } else {
-            pdSetTextShadow();
-            const preFont = `500 ${Math.round((isPortrait?34:30)*tc.preMult)}px -apple-system, sans-serif`;
-            const nameFont = `700 ${Math.round((isPortrait?66:54)*tc.nameMult)}px Georgia, serif`;
-            const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
-            let cy = textTop + tc.offsetPct * H;
-
-            ornateDivider(cy); cy += (isPortrait ? 60 : 50) * tc.lineMult;
-            pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
-            pdCtx.fillText(tc.preText, centerX, cy); cy += (isPortrait ? 90 : 76) * tc.lineMult;
-
-            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
-            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.36);
-            nameLines.forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?74:62) * tc.lineMult; });
-            cy += (isPortrait ? 20 : 14) * tc.lineMult;
-            ornateDivider(cy); cy += (isPortrait ? 50 : 42) * tc.lineMult;
-
-            if (tagline) {
-              pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?54:46) * tc.lineMult; });
-            }
-          }
-
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = photoX + photoW/2, photoCy = photoY + photoH/2;
-          if (qb.qrEnabled) {
-            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 240 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, photoY + photoH - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawCircularBadge() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const badgeText = (el('mq-pd-badge-text')?.value || '').trim();
-          const shapeColor = el('mq-pd-shape-color')?.value || '#c9a24b';
-          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -30);
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const bgColor = el('mq-pd-bg-color')?.value || '#1a1a1a';
-          const tc = pdGetTextControls();
-
-          // Photo fills the whole canvas here, darkened for legibility —
-          // the badge and text sit right on top of it.
-          pdDrawPhotoInRect(pdPhotoImage, 0, 0, W, H);
-          pdCtx.globalAlpha = 0.55;
-          pdCtx.fillStyle = bgColor;
-          pdCtx.fillRect(0, 0, W, H);
-          pdCtx.globalAlpha = 1;
-
-          const cx = W/2, cy = H*0.42, r = Math.min(W,H) * 0.20;
-          pdCtx.save();
-          pdCtx.beginPath();
-          pdCtx.arc(cx, cy, r, 0, Math.PI*2);
-          pdCtx.clip();
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            pdDrawPhotoInRect(pdOwnLogoImage, cx-r, cy-r, r*2, r*2);
-          } else {
-            pdCtx.fillStyle = '#1a1a1a';
-            pdCtx.fillRect(cx-r, cy-r, r*2, r*2);
-            pdCtx.fillStyle = shapeColor;
-            // Badge text is independent of the shop name — type anything
-            // (initials, a symbol, whatever) via the "Badge text" field
-            // above, or leave it blank to fall back to auto-initials.
-            const displayText = badgeText || (pdShopName.match(/\b\w/g) || ['D']).slice(0,2).join('').toUpperCase();
-            pdCtx.font = `800 ${Math.round(r*0.9*tc.nameMult)}px -apple-system, sans-serif`;
-            pdCtx.textAlign = 'center'; pdCtx.textBaseline = 'middle';
-            pdCtx.fillText(displayText, cx, cy + r*0.08);
-            pdCtx.textBaseline = 'alphabetic';
-          }
-          pdCtx.restore();
-
-          pdCtx.save();
-          pdCtx.beginPath();
-          pdCtx.arc(cx, cy, r, 0, Math.PI*2);
-          pdCtx.lineWidth = 6;
-          if (useGradient) {
-            const g = pdCtx.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
-            g.addColorStop(0, shapeColor); g.addColorStop(1, shapeColor2);
-            pdCtx.strokeStyle = g;
-          } else pdCtx.strokeStyle = shapeColor;
-          pdCtx.stroke();
-          pdCtx.restore();
-
-          pdCtx.textAlign = 'center';
-          pdSetTextShadow();
-          const preFont = `500 ${Math.round(30*tc.preMult)}px -apple-system, sans-serif`;
-          const nameFont = `800 ${Math.round(52*tc.nameMult)}px -apple-system, sans-serif`;
-          const tagFont = `500 ${Math.round(24*tc.tagMult)}px -apple-system, sans-serif`;
-          let ty = cy + r + 70 + tc.offsetPct * H;
-          pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
-          pdCtx.fillText(tc.preText, cx, ty); ty += 58 * tc.lineMult;
-          pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
-          pdWrapText(pdShopName, nameFont, W*0.85).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 58 * tc.lineMult; });
-          if (tagline) {
-            ty += 14 * tc.lineMult;
-            pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-            pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 46 * tc.lineMult; });
-          }
-
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          if (qb.qrEnabled) {
-            pdDrawQrCode(cx, ty + 130 + qb.qrOffsetPct * H, 220 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(cx, H - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawBoldModern() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
-          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -35);
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const tc = pdGetTextControls();
-
-          // A hard, flat rectangular split — no curve or angle at all. This
-          // template's identity is bold, uncluttered geometry instead.
-          const splitAt = isPortrait ? H*0.58 : W*0.46;
-          if (useGradient) {
-            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,splitAt) : pdCtx.createLinearGradient(0,0,splitAt,0);
-            g.addColorStop(0, shapeColor); g.addColorStop(1, shapeColor2);
-            pdCtx.fillStyle = g;
-          } else pdCtx.fillStyle = shapeColor;
-          if (isPortrait) pdCtx.fillRect(0, 0, W, splitAt); else pdCtx.fillRect(0, 0, splitAt, H);
-
-          // Clip the photo to its own half of the canvas before drawing —
-          // pdDrawPhotoInRect deliberately overflows to "cover" its target
-          // box (same idea as CSS background-size:cover), which every other
-          // template already contains with its own clip path. This was the
-          // one template drawing the photo with no clip at all, so that
-          // intentional overflow was free to bleed straight into the
-          // colour panel next to it.
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) pdCtx.rect(0, splitAt, W, H - splitAt);
-          else pdCtx.rect(splitAt, 0, W - splitAt, H);
-          pdCtx.clip();
-          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, splitAt, W, H - splitAt);
-          else pdDrawPhotoInRect(pdPhotoImage, splitAt, 0, W - splitAt, H);
-          pdCtx.restore();
-
-          pdCtx.fillStyle = accentColor;
-          if (isPortrait) pdCtx.fillRect(0, splitAt - 3, W, 6); else pdCtx.fillRect(splitAt - 3, 0, 6, H);
-
-          pdCtx.textAlign = 'center';
-          const centerX = isPortrait ? W/2 : W*0.20;
-          const textColor = pdMutedTextColorFor(shapeColor) === '#5b5b5b' ? '#1a1a1a' : '#ffffff';
-          const mutedColor = textColor === '#ffffff' ? '#d0d0d0' : '#555555';
-
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
-            const maxLogoW = (isPortrait ? W*0.55 : splitAt*0.75) * logoSizeMult, maxLogoH = (isPortrait ? splitAt*0.6 : H*0.5) * logoSizeMult;
-            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw/ratio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
-            pdCtx.drawImage(pdOwnLogoImage, centerX-lw/2, (isPortrait?splitAt:H)/2 - lh/2, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = mutedColor;
-            pdCtx.font = '500 28px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', centerX, isPortrait ? splitAt/2 : H/2);
-          } else {
-            pdSetTextShadow();
-            const preFont = `700 ${Math.round((isPortrait?32:28)*tc.preMult)}px -apple-system, sans-serif`;
-            const nameFont = `900 ${Math.round((isPortrait?70:56)*tc.nameMult)}px -apple-system, sans-serif`;
-            const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
-            let cy = (isPortrait ? splitAt*0.26 : H*0.30) + tc.offsetPct * H;
-            pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
-            pdCtx.fillText(tc.preText.toUpperCase(), centerX, cy); cy += (isPortrait?66:56) * tc.lineMult;
-            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || textColor;
-            pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : splitAt*0.85).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?76:64) * tc.lineMult; });
-            if (tagline) {
-              cy += (isPortrait ? 20 : 14) * tc.lineMult;
-              pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?50:44) * tc.lineMult; });
-            }
-          }
-
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = isPortrait ? W/2 : splitAt + (W-splitAt)/2;
-          const photoCy = isPortrait ? splitAt + (H-splitAt)/2 : H/2;
-          if (qb.qrEnabled) {
-            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 250 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, H - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawPosterDesigner() {
-          if (pdTemplate === 'diamond-arrow') drawDiamondArrow();
-          else if (pdTemplate === 'ornate-divider') drawOrnateDivider();
-          else if (pdTemplate === 'circular-badge') drawCircularBadge();
-          else if (pdTemplate === 'bold-modern') drawBoldModern();
-          else drawCurvedSplit();
-        }
-        window._mqRedrawPosterDesigner = () => { signLink = getSignLink(); drawPosterDesigner(); };
-
-        window.mqPdSelectTemplate = (tpl, thumbEl) => {
-          pdTemplate = tpl;
-          document.querySelectorAll('.mq-pd-template-thumb').forEach(t => t.style.border = '2px solid #e5e7eb');
-          if (thumbEl) thumbEl.style.border = '2px solid #1a1a1a';
-          // A sensible starting background per style — still fully editable
-          // afterward, this just saves someone from starting on a white
-          // background for a template designed to look best dark, or vice versa.
-          const bgInput = el('mq-pd-bg-color');
-          const bgInput2 = el('mq-pd-bg-color2');
-          const shapeInput = el('mq-pd-shape-color');
-          const shapeInput2 = el('mq-pd-shape-color2');
-          const accentInput = el('mq-pd-accent-color');
-          if (bgInput) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput.value = '#111111';
-            else bgInput.value = '#ffffff';
-          }
-          // A second colour for whichever gradient checkbox someone turns
-          // on — chosen to actually look like a deliberate two-tone blend
-          // for this specific style, not just a random pairing.
-          if (bgInput2) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput2.value = '#2b2b2b';
-            else bgInput2.value = '#f0f0f0';
-          }
-          if (shapeInput && accentInput) {
-            if (tpl === 'diamond-arrow') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'ornate-divider') { shapeInput.value = '#6b4226'; accentInput.value = '#8a5a3a'; }
-            else if (tpl === 'circular-badge') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'bold-modern') { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
-            else { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
-          }
-          if (shapeInput2) {
-            if (tpl === 'diamond-arrow') shapeInput2.value = '#8a6d2b';
-            else if (tpl === 'ornate-divider') shapeInput2.value = '#3d2814';
-            else if (tpl === 'circular-badge') shapeInput2.value = '#8a6d2b';
-            else if (tpl === 'bold-modern') shapeInput2.value = '#378ADD';
-            else shapeInput2.value = '#378ADD';
-          }
-          // Same idea for the pre-line/tagline text colours — sensible
-          // per-style defaults for readability, still fully editable.
-          const preColorInput = el('mq-pd-pre-color');
-          const tagColorInput = el('mq-pd-tag-color');
-          if (preColorInput && tagColorInput) {
-            if (tpl === 'diamond-arrow') { preColorInput.value = '#e5e7eb'; tagColorInput.value = '#e5e7eb'; }
-            else if (tpl === 'circular-badge') { preColorInput.value = '#f0f0f0'; tagColorInput.value = '#e0e0e0'; }
-            else if (tpl === 'bold-modern') { preColorInput.value = '#d0d0d0'; tagColorInput.value = '#d0d0d0'; }
-            else { preColorInput.value = '#6b6b6b'; tagColorInput.value = '#4b4b4b'; }
-          }
-          // Shop name colour is independent of shape colour (its own picker
-          // now, not derived from it) — still needs a sensible starting
-          // point per template though, same reasoning as the background
-          // colour above: diamond-arrow, circular-badge, and bold-modern
-          // all put the shop name over a dark panel/background by default,
-          // so white starts far more readable there than this picker's
-          // general black default.
-          const nameColorInput = el('mq-pd-name-color');
-          if (nameColorInput) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'bold-modern') nameColorInput.value = '#ffffff';
-            else nameColorInput.value = '#1a1a1a';
-          }
-          drawPosterDesigner();
-        };
-
-        window.mqPdSetOrientation = (orient) => {
-          pdOrientation = orient;
-          if (orient === 'portrait') { pdCanvas.width = 1080; pdCanvas.height = 1620; }
-          else { pdCanvas.width = 1620; pdCanvas.height = 1080; }
-          pdCanvas.style.width = 'auto';
-          pdCanvas.style.height = '300px'; // fixed height so landscape ends up wider, not shorter, matching portrait's actual visual size
-          drawPosterDesigner();
-        };
-
-        window.mqPdBtnToggled = () => {
-          const wrap = el('mq-pd-btn-controls-wrap');
-          const enabled = el('mq-pd-btn-enabled')?.checked;
-          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
-          drawPosterDesigner();
-        };
-
-        window.mqPdQrToggled = () => {
-          const wrap = el('mq-pd-qr-controls-wrap');
-          const enabled = el('mq-pd-qr-enabled')?.checked;
-          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
-          drawPosterDesigner();
-        };
-
-        window.mqPdToggleGradientColor2 = (wrapId, show) => {
-          const wrap = document.getElementById(wrapId);
-          if (wrap) wrap.style.display = show ? 'inline-block' : 'none';
-          drawPosterDesigner();
-        };
-
-        window.mqPdTextModeChanged = () => {
-          const mode = el('mq-pd-text-mode')?.value;
-          const wrap = el('mq-pd-logo-upload-wrap');
-          if (wrap) wrap.style.display = mode === 'logo' ? 'block' : 'none';
-          drawPosterDesigner();
-        };
-
-        const pdPhotoInput = el('mq-pd-photo-input');
-        if (pdPhotoInput) {
-          pdPhotoInput.onchange = (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const img = new Image();
-              img.onload = () => { pdPhotoImage = img; drawPosterDesigner(); };
-              img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-          };
-        }
-
-        const pdLogoInput = el('mq-pd-logo-input');
-        if (pdLogoInput) {
-          pdLogoInput.onchange = (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const img = new Image();
-              img.onload = () => { pdOwnLogoImage = img; drawPosterDesigner(); };
-              img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-          };
-        }
-
-        const pdBgImageInput = el('mq-pd-bg-image-input');
-        if (pdBgImageInput) {
-          pdBgImageInput.onchange = (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const img = new Image();
-              img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
-              img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-          };
-        }
-
-        // Tap-to-zoom — converts the current canvas to an image and shows it
-        // full-screen, since a canvas itself can't be pinch-zoomed the way a
-        // real <img> can. Tap anywhere to close.
-        window.mqPdOpenZoom = () => {
-          let overlay = document.getElementById('mq-pd-zoom-overlay');
-          if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'mq-pd-zoom-overlay';
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
-            overlay.onclick = () => { overlay.style.display = 'none'; };
-            document.body.appendChild(overlay);
-          }
-          overlay.innerHTML = `<img src="${pdCanvas.toDataURL('image/png')}" style="max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.4)"/>`;
-          overlay.style.display = 'flex';
-        };
-
-        window.mqPdToggleColorSection = () => {
-          const body = el('mq-pd-color-section-body');
-          const arrow = el('mq-pd-color-section-arrow');
-          if (!body) return;
-          const opening = body.style.display === 'none';
-          body.style.display = opening ? 'block' : 'none';
-          if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
-        };
-
-        // Pulls a live directory listing from the GitHub repo's textures
-        // folder via GitHub's API — no filenames hardcoded anywhere, so
-        // whatever gets added or removed from that folder just works, no
-        // code changes needed on our end. Cached per page load so flipping
-        // the picker open and closed doesn't keep re-fetching.
-        let _pdTextureCache = null;
-        window.mqPdLoadTextureLibrary = async () => {
-          const grid = el('mq-pd-texture-grid');
-          if (!grid) return;
-          const showing = grid.style.display === 'grid';
-          if (showing) { grid.style.display = 'none'; return; }
-          grid.style.display = 'grid';
-          if (_pdTextureCache) {
-            renderTextureGrid(_pdTextureCache);
-            return;
-          }
-          grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#9ca3af;padding:6px">Loading textures…</div>';
-          try {
-            const res = await fetch('https://api.github.com/repos/aceswin/midasquote-widget/contents/textures');
-            if (!res.ok) throw new Error('Could not load texture list');
-            const files = await res.json();
-            const images = (Array.isArray(files) ? files : [])
-              .filter(f => f.type === 'file' && /\.(png|jpe?g|webp|gif)$/i.test(f.name))
-              .map(f => ({ name: f.name, url: `https://widget.midasquote.com/textures/${encodeURIComponent(f.name)}` }));
-            _pdTextureCache = images;
-            renderTextureGrid(images);
-          } catch(e) {
-            grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#dc2626;padding:6px">Couldn\'t load the texture library — try again in a moment.</div>';
-          }
-          function renderTextureGrid(images) {
-            if (!images.length) {
-              grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#9ca3af;padding:6px">No textures found yet.</div>';
-              return;
-            }
-            grid.innerHTML = images.map(img => `
-              <div onclick="mqPdSelectTexture('${img.url.replace(/'/g,"\\'")}')" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:6px;overflow:hidden;aspect-ratio:1;background:#f3f4f6" title="${img.name.replace(/"/g,'&quot;')}">
-                <img src="${img.url}" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"/>
-              </div>
-            `).join('');
-          }
-        };
-
-        window.mqPdSelectTexture = (url) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
-          img.onerror = () => { alert("Couldn't load that texture — try a different one."); };
-          img.src = url;
-        };
-
-        window.mqPdOverlayOpacityChanged = () => {
-          const val = el('mq-pd-bg-overlay-opacity')?.value || 0;
-          const label = el('mq-pd-bg-overlay-opacity-val');
-          if (label) label.textContent = val + '%';
-          drawPosterDesigner();
-        };
-
-        window.mqPdBgImageToggled = () => {
-          const wrap = el('mq-pd-bg-image-upload-wrap');
-          const enabled = el('mq-pd-bg-image-enabled')?.checked;
-          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
-          drawPosterDesigner();
-        };
-
-        const pdDownloadBtn = el('mq-pd-download-btn');
-        if (pdDownloadBtn) {
-          pdDownloadBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.download = (pdShopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'poster') + '-' + pdTemplate + '-' + pdOrientation + '.png';
-            link.href = pdCanvas.toDataURL('image/png');
-            link.click();
-          };
-        }
-
-        drawPosterDesigner();
-
-        // Only show the floating preview while this specific section is
-        // BOTH scrolled into view AND actually expanded — not just
-        // scrolled past while collapsed, and not the whole time someone's
-        // anywhere on the Marketing Kit page.
-        const pdOuterCard = document.getElementById('mq-pd-outer-card');
-        const pdStickyPreview = document.getElementById('mq-pd-sticky-preview');
-        let pdSectionInView = false;
-        window._mqPdUpdateStickyVisibility = () => {
-          if (!pdStickyPreview) return;
-          const body = document.getElementById('mq-mk-body-poster');
-          const isOpen = body && body.style.display !== 'none';
-          pdStickyPreview.style.display = (pdSectionInView && isOpen) ? 'block' : 'none';
-        };
-        if (pdOuterCard && pdStickyPreview && 'IntersectionObserver' in window) {
-          const pdObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              pdSectionInView = entry.isIntersecting;
-              window._mqPdUpdateStickyVisibility();
-            });
-          }, { threshold: 0.05 });
-          pdObserver.observe(pdOuterCard);
-        }
-      }
+  };
+
+  // ============================================================
+  // COUNTERTOP EDGE/ADDON MANAGER — edge profiles (single-select per
+  // counter, always priced per linear foot) and stackable extras like a
+  // waterfall (flat/linear ft/sq ft). One addon object, redundantly stored
+  // in the 'Addon options' JSON list on every countertop material it
+  // applies to — create once here, tag onto as many materials as needed.
+  // ============================================================
+  let currentAddonEditId = null; // null = creating a brand new addon
+
+  window.mqphAddonToggleEdge = function(checked) {
+    const pricingSel = document.getElementById('mqph-addon-pricing');
+    const note = document.getElementById('mqph-addon-edge-note');
+    if (!pricingSel || !note) return;
+    if (checked) { pricingSel.value = 'linft'; pricingSel.disabled = true; note.style.display = 'block'; }
+    else { pricingSel.disabled = false; note.style.display = 'none'; }
+  };
+
+  function mqphCountertopMaterials() {
+    return lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&!(r.fields['Description']||'').includes('type:backsplash')&&!(r.fields['Description']||'').includes('type:cutout'))
+      .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
   }
 
-  // JS-driven sticky nav — CSS position:sticky silently stops working if ANY
-  // ancestor element has overflow:hidden/auto/scroll set on it, which is very
-  // common in page builders (Webflow, etc.) this dashboard gets embedded in.
-  // This works regardless of the surrounding page's container structure,
-  // since it just measures real scroll position rather than depending on
-  // the CSS containing-block chain.
-  function mqInitStickyNav() {
-    const sidebar = document.querySelector('#midasquote-dashboard .mq-sidebar');
-    const layout  = document.querySelector('#midasquote-dashboard .mq-layout');
-    const topbar  = document.querySelector('#midasquote-dashboard .mq-topbar');
-    if (!sidebar || !layout) return;
-
-    // Holds the sidebar's normal-flow space open once it goes fixed, so the
-    // content column doesn't jump sideways when the sidebar leaves the flex flow.
-    const placeholder = document.createElement('div');
-    placeholder.style.display = 'none';
-    placeholder.style.flexShrink = '0';
-    layout.insertBefore(placeholder, sidebar);
-
-    let stuck = false;
-
-    function update() {
-      const topbarHeight = topbar ? topbar.getBoundingClientRect().height : 60;
-      const layoutRect = layout.getBoundingClientRect();
-      const shouldStick = layoutRect.top <= topbarHeight && layoutRect.bottom > topbarHeight;
-
-      if (shouldStick && !stuck) {
-        const rect = sidebar.getBoundingClientRect();
-        placeholder.style.width = rect.width + 'px';
-        placeholder.style.height = rect.height + 'px';
-        placeholder.style.display = 'block';
-        sidebar.style.position = 'fixed';
-        sidebar.style.top = topbarHeight + 'px';
-        sidebar.style.left = layoutRect.left + 'px';
-        sidebar.style.width = rect.width + 'px';
-        sidebar.style.maxHeight = `calc(100vh - ${topbarHeight}px)`;
-        sidebar.style.overflowY = 'auto';
-        sidebar.style.zIndex = '90';
-        stuck = true;
-      } else if (!shouldStick && stuck) {
-        sidebar.style.position = '';
-        sidebar.style.top = '';
-        sidebar.style.left = '';
-        sidebar.style.width = '';
-        sidebar.style.maxHeight = '';
-        sidebar.style.overflowY = '';
-        sidebar.style.zIndex = '';
-        placeholder.style.display = 'none';
-        stuck = false;
-      } else if (stuck) {
-        // Keep it aligned in case of resize/orientation change while stuck
-        sidebar.style.left = layoutRect.left + 'px';
-      }
-    }
-
-    let ticking = false;
-    function onScrollOrResize() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => { update(); ticking = false; });
-    }
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
-    update();
+  function mqphCountertopAddonListAll() {
+    const seen = new Map();
+    mqphCountertopMaterials().forEach(m => getAddonOptions(m).forEach(a => { if (a && a.id && !seen.has(a.id)) seen.set(a.id, a); }));
+    return [...seen.values()];
   }
 
-  // Same technique as mqInitStickyNav, applied to the topbar — CSS
-  // position:sticky was silently failing on both for the same reason.
-  function mqInitStickyTopbar() {
-    const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
-    const root = document.getElementById('midasquote-dashboard');
-    if (!topbar || !root) return;
-
-    // Holds the topbar's normal-flow space open once it goes fixed, so
-    // everything below it doesn't jump up to fill the gap.
-    const placeholder = document.createElement('div');
-    placeholder.style.display = 'none';
-    root.insertBefore(placeholder, topbar);
-
-    let stuck = false;
-
-    function update() {
-      const rootRect = root.getBoundingClientRect();
-      const rect = topbar.getBoundingClientRect();
-      const shouldStick = rootRect.top <= 0 && rootRect.bottom > rect.height;
-
-      if (shouldStick && !stuck) {
-        placeholder.style.width = rect.width + 'px';
-        placeholder.style.height = rect.height + 'px';
-        placeholder.style.display = 'block';
-        topbar.style.position = 'fixed';
-        topbar.style.top = '0px';
-        topbar.style.left = rootRect.left + 'px';
-        topbar.style.width = rect.width + 'px';
-        topbar.style.zIndex = '100';
-        stuck = true;
-      } else if (!shouldStick && stuck) {
-        topbar.style.position = '';
-        topbar.style.top = '';
-        topbar.style.left = '';
-        topbar.style.width = '';
-        topbar.style.zIndex = '';
-        placeholder.style.display = 'none';
-        stuck = false;
-      } else if (stuck) {
-        topbar.style.left = rootRect.left + 'px';
-      }
-    }
-
-    let ticking = false;
-    function onScrollOrResize() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => { update(); ticking = false; });
-    }
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
-    update();
+  function mqphPopulateAddonMaterials(addonId) {
+    const list = document.getElementById('mqph-addon-materials');
+    if (!list) return;
+    const materials = mqphCountertopMaterials();
+    if (!materials.length) { list.innerHTML = '<div style="font-size:12px;color:#9ca3af">No countertop materials set up yet.</div>'; return; }
+    list.innerHTML = materials.map(m => {
+      const existing = getAddonOptions(m).find(a => a.id === addonId);
+      const checked = existing ? 'checked' : '';
+      const rateVal = existing ? existing.rate : '';
+      return `<div style="display:flex;align-items:center;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;cursor:pointer;flex:1">
+          <input type="checkbox" data-mat-id="${m.id}" ${checked} onchange="document.getElementById('mqph-addon-rate-${m.id}').style.visibility=this.checked?'visible':'hidden'" style="width:auto;flex-shrink:0"/>
+          <span>${m.fields['Name']||'—'}</span>
+        </label>
+        <div style="display:flex;align-items:center;gap:4px;visibility:${existing?'visible':'hidden'}" id="mqph-addon-ratewrap-${m.id}">
+          <span style="font-size:12px;color:#6b7280">${CUR()}</span>
+          <input type="number" id="mqph-addon-rate-${m.id}" value="${rateVal}" placeholder="0.00" step="0.01" style="width:70px;font-size:12px;padding:4px 6px;border:1px solid #d1d5db;border-radius:5px"/>
+        </div>
+      </div>`;
+    }).join('');
   }
+
+  window.mqphOpenAddonAdd = function() {
+    currentAddonEditId = null;
+    document.getElementById('mqph-addon-modal-title').textContent = 'New edge/addon';
+    document.getElementById('mqph-addon-name').value = '';
+    document.getElementById('mqph-addon-isedge').checked = false;
+    document.getElementById('mqph-addon-pricing').value = 'flat';
+    document.getElementById('mqph-addon-delete').style.display = 'none';
+    mqphAddonToggleEdge(false);
+    mqphPopulateAddonMaterials(null);
+    document.getElementById('mqph-addon-modal-overlay').classList.add('show');
+  };
+
+  window.mqphOpenAddonEdit = function(addonId) {
+    const existing = mqphCountertopAddonListAll().find(a => a.id === addonId);
+    if (!existing) return;
+    currentAddonEditId = addonId;
+    document.getElementById('mqph-addon-modal-title').textContent = `Edit "${existing.label}"`;
+    document.getElementById('mqph-addon-name').value = existing.label || '';
+    document.getElementById('mqph-addon-isedge').checked = !!existing.isEdge;
+    document.getElementById('mqph-addon-pricing').value = existing.pricingType || 'flat';
+    document.getElementById('mqph-addon-delete').style.display = 'inline-block';
+    mqphAddonToggleEdge(!!existing.isEdge);
+    mqphPopulateAddonMaterials(addonId);
+    document.getElementById('mqph-addon-modal-overlay').classList.add('show');
+  };
+
+  window.mqphCloseAddonModal = function() { document.getElementById('mqph-addon-modal-overlay')?.classList.remove('show'); };
+
+  window.mqphSaveAddon = async function() {
+    const name = document.getElementById('mqph-addon-name').value.trim();
+    if (!name) { alert('Please enter a name.'); return; }
+    const isEdge = document.getElementById('mqph-addon-isedge').checked;
+    const pricingType = isEdge ? 'linft' : document.getElementById('mqph-addon-pricing').value;
+    const id = currentAddonEditId || ('addon_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7));
+
+    const materials = mqphCountertopMaterials();
+    const checkedMatIds = new Set([...document.querySelectorAll('#mqph-addon-materials input[type=checkbox]:checked')].map(cb => cb.dataset.matId));
+
+    const writes = [];
+    materials.forEach(m => {
+      const shouldBeIn = checkedMatIds.has(m.id);
+      const current = getAddonOptions(m);
+      const currentlyIn = current.some(a => a.id === id);
+      let newList = null;
+      if (shouldBeIn) {
+        // Each material gets its own rate — a waterfall on granite doesn't
+        // have to cost the same as a waterfall on laminate.
+        const rate = parseFloat(document.getElementById(`mqph-addon-rate-${m.id}`)?.value) || 0;
+        const addonObj = { id, label: name, isEdge, pricingType, rate };
+        newList = currentlyIn ? current.map(a => a.id===id ? addonObj : a) : [...current, addonObj];
+      } else if (currentlyIn) {
+        newList = current.filter(a => a.id !== id);
+      }
+      if (newList) {
+        m.fields['Addon options'] = JSON.stringify(newList);
+        writes.push(atUpdate(LINE_ITEMS_TABLE, m.id, { 'Addon options': JSON.stringify(newList) }));
+      }
+    });
+
+    try {
+      await Promise.all(writes);
+      mqphCloseAddonModal();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Failed to save addon', e);
+      alert('Could not save — please try again.');
+    }
+  };
+
+  window.mqphDeleteAddon = async function(addonId) {
+    const id = addonId || currentAddonEditId;
+    if (!id) return;
+    if (!confirm('Delete this edge/addon? It will be removed from every countertop material using it.')) return;
+    const materials = mqphCountertopMaterials().filter(m => getAddonOptions(m).some(a=>a.id===id));
+    try {
+      await Promise.all(materials.map(m => {
+        const newList = getAddonOptions(m).filter(a=>a.id!==id);
+        m.fields['Addon options'] = JSON.stringify(newList);
+        return atUpdate(LINE_ITEMS_TABLE, m.id, { 'Addon options': JSON.stringify(newList) });
+      }));
+      mqphCloseAddonModal();
+      await loadAndRender();
+    } catch(e) {
+      console.error('Failed to delete addon', e);
+      alert('Could not delete — please try again.');
+    }
+  };
+
+  // Checked state is tracked here rather than read straight from the DOM,
+  // same reasoning as the product-group manager: searching filters door
+  // names out of the DOM entirely, so a checked door that's been searched
+  // away would otherwise be silently lost when saving.
+  let _trimDoorChecked = new Set();
+  let _trimDoorAllNames = [];
+  let _trimDoorSearchText = '';
+
+  function populateTrimDoorOptions(selectedDoorNames) {
+    const doorItems = lineItems.filter(r=>r.fields&&r.fields['Category']==='door');
+    _trimDoorAllNames = doorItems.map(d => d.fields['Name']||'').filter(Boolean);
+    const selected = Array.isArray(selectedDoorNames) ? selectedDoorNames : (selectedDoorNames ? [selectedDoorNames] : []);
+    _trimDoorChecked = new Set(selected);
+    _trimDoorSearchText = '';
+    const searchInput = document.getElementById('mqph-trim-door-search');
+    if (searchInput) searchInput.value = '';
+    mqphRenderTrimDoorList();
+  }
+
+  function mqphRenderTrimDoorList() {
+    const list = document.getElementById('mqph-trim-door-link-list');
+    if (!list) return;
+    if (!_trimDoorAllNames.length) {
+      list.innerHTML = '<div style="font-size:12px;color:#9ca3af">No door styles set up yet.</div>';
+      return;
+    }
+    let names = [..._trimDoorAllNames];
+    if (_trimDoorSearchText) names = names.filter(n => n.toLowerCase().includes(_trimDoorSearchText));
+    if (!names.length) {
+      list.innerHTML = `<div style="font-size:12px;color:#9ca3af">No door styles match "${_trimDoorSearchText}".</div>`;
+      return;
+    }
+    list.innerHTML = names.map(name => {
+      const checked = _trimDoorChecked.has(name) ? 'checked' : '';
+      return `<label class="mqph-trim-door-row" style="display:flex !important;flex-direction:row !important;align-items:center !important;gap:8px !important;font-size:13px !important;font-weight:400 !important;text-transform:none !important;letter-spacing:normal !important;color:#374151 !important;cursor:pointer;padding:6px 4px;border-radius:6px"
+        onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background='transparent'">
+        <input type="checkbox" onchange="mqphTrimDoorToggle('${name.replace(/'/g,"\\'")}')" ${checked} style="width:16px !important;height:16px !important;flex-shrink:0;margin:0 !important"/>
+        <span style="flex:1">${name}</span>
+      </label>`;
+    }).join('');
+  }
+
+  window.mqphTrimDoorSearch = function(val) {
+    _trimDoorSearchText = (val || '').toLowerCase();
+    mqphRenderTrimDoorList();
+  };
+
+  window.mqphTrimDoorToggle = function(name) {
+    if (_trimDoorChecked.has(name)) _trimDoorChecked.delete(name);
+    else _trimDoorChecked.add(name);
+  };
+
+  window.mqphTrimDoorSelectAll = function(select) {
+    // Scoped to whatever's currently visible under the active search — not
+    // the full list — so searching "maple" then clicking Select all only
+    // touches those maple results, leaving everything else as it was.
+    let names = [..._trimDoorAllNames];
+    if (_trimDoorSearchText) names = names.filter(n => n.toLowerCase().includes(_trimDoorSearchText));
+    names.forEach(n => { if (select) _trimDoorChecked.add(n); else _trimDoorChecked.delete(n); });
+    mqphRenderTrimDoorList();
+  };
+
+  window.mqphUpdateTrimTypeHint = function() {
+    const type = document.getElementById('mqph-trim-type')?.value || 'crown';
+    const label = type === 'valance' ? 'valance' : 'crown';
+    document.querySelectorAll('#mqph-trim-type-label-for-hint, #mqph-trim-type-label-for-hint2').forEach(el => { el.textContent = label; });
+  };
+
+  window.mqphOpenTrimAdd = function() {
+    currentTrimEditId = null;
+    document.getElementById('mqph-trim-modal-title').textContent = 'Add crown / valance style';
+    document.getElementById('mqph-trim-type').value = 'crown';
+    document.getElementById('mqph-trim-name').value = '';
+    document.getElementById('mqph-trim-supply-rate').value = '';
+    document.getElementById('mqph-trim-install-rate').value = '';
+    document.getElementById('mqph-trim-active').checked = true;
+    // Every door checked by default — a brand new style shows for
+    // everything until the shop deliberately narrows it down, rather than
+    // silently showing for nothing until they think to check boxes.
+    const allDoorNames = lineItems.filter(r=>r.fields&&r.fields['Category']==='door').map(d=>d.fields['Name']||'').filter(Boolean);
+    populateTrimDoorOptions(allDoorNames);
+    mqphUpdateTrimTypeHint();
+    document.getElementById('mqph-trim-modal-overlay').classList.add('show');
+  };
+
+  window.mqphOpenTrimEdit = function(id) {
+    const rec = lineItems.find(r=>r.id===id); if(!rec) return;
+    currentTrimEditId = id;
+    document.getElementById('mqph-trim-modal-title').textContent = 'Edit crown / valance style';
+    document.getElementById('mqph-trim-type').value = rec.fields['Trim type'] || 'crown';
+    document.getElementById('mqph-trim-name').value = rec.fields['Name']||'';
+    document.getElementById('mqph-trim-supply-rate').value = rec.fields['Rate']||'';
+    document.getElementById('mqph-trim-install-rate').value = rec.fields['Install rate']||'';
+    document.getElementById('mqph-trim-active').checked = rec.fields['Active']!==false;
+    let linkedDoors = [];
+    try { linkedDoors = rec.fields['Linked door style'] ? JSON.parse(rec.fields['Linked door style']) : []; } catch(e) { linkedDoors = []; }
+    populateTrimDoorOptions(linkedDoors);
+    mqphUpdateTrimTypeHint();
+    document.getElementById('mqph-trim-modal-overlay').classList.add('show');
+  };
+
+  window.mqphCloseTrimModal = function() { document.getElementById('mqph-trim-modal-overlay')?.classList.remove('show'); };
+
+  window.mqphSaveTrimItem = async function() {
+    const name = document.getElementById('mqph-trim-name').value.trim();
+    if (!name) { alert('Please enter a name.'); return; }
+    const trimType = document.getElementById('mqph-trim-type').value;
+    if (!currentTrimEditId) {
+      const dupe = lineItems.find(r => r.fields && r.fields['Category']==='trim' && (r.fields['Trim type']||'crown')===trimType && r.fields['Active']!==false && (r.fields['Name']||'').trim().toLowerCase()===name.toLowerCase());
+      if (dupe && !confirm(`"${dupe.fields['Name']}" already exists in ${trimType==='valance'?'Valance':'Crown moulding'}. Adding another one with the same name can cause pricing mix-ups later.\n\nAdd it anyway?`)) return;
+    }
+    const linkedDoors = [..._trimDoorChecked];
+    const fields = {
+      shop:[shopRecord._recordId], Name:name, Category:'trim',
+      Rate:parseFloat(document.getElementById('mqph-trim-supply-rate').value||0),
+      'Install rate':parseFloat(document.getElementById('mqph-trim-install-rate').value||0),
+      Unit:'lin ft|lin ft', Description:'type:trim',
+      'Trim type': trimType,
+      'Linked door style': JSON.stringify(linkedDoors),
+      Active:document.getElementById('mqph-trim-active').checked,
+    };
+    try {
+      if (currentTrimEditId) { await atUpdate(LINE_ITEMS_TABLE, currentTrimEditId, fields); }
+      else { fields['Sort order'] = lineItems.filter(r=>r.fields?.['Category']==='trim').length + 1; await atCreate(LINE_ITEMS_TABLE, fields); }
+      mqphCloseTrimModal();
+      await loadAndRender();
+    } catch(e) { alert('Error saving. Please try again.'); }
+  };
+
+  // ============================================================
+  // LOAD AND RENDER
+  // ============================================================
+  let ctMigrationDone = false;
+
+  async function loadAndRender() {
+    const container=document.getElementById('mq-pricing-helper-v2');
+    if(!container) return;
+    const recs=await atGet(LINE_ITEMS_TABLE,`FIND("${shopRecord._shopName}", ARRAYJOIN({shop}))`);
+    lineItems=recs.filter(r=>r.fields);
+    if (!ctMigrationDone) {
+      ctMigrationDone = true; // set before awaiting so a second call can't race in
+      await migrateCTPricing();
+    }
+    container.innerHTML=buildEditorHTML();
+    mqphRestoreExpandedCats();
+  }
+
+  window.loadAndRender=loadAndRender;
 
   // ============================================================
   // INIT
   // ============================================================
-  async function init() {
-    const container = document.getElementById('midasquote-dashboard');
-    if (!container) {
-      console.error('MidasQuote Dashboard: Add <div id="midasquote-dashboard"></div> to your page.');
-      return;
-    }
-
+  window.mqph2Init = function(passedShopRecord, passedPricingRecord) {
+    if (!passedShopRecord) return;
+    shopRecord = {
+      ...passedShopRecord,
+      _recordId: passedShopRecord.id,
+      _shopName: (passedShopRecord.fields && passedShopRecord.fields['Shop name']) || '',
+      _baseId:   'app4zrMlVLwF2xn4h',
+      _token:    'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
+      _pricingTable: 'tblu6AYZs8h7SIaQl',
+    };
+    pricingRecord = passedPricingRecord;
     injectStyles();
-    container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;font-size:14px;color:#6b7280">Loading your dashboard...</div>';
-
-    let shopToken = new URLSearchParams(window.location.search).get('shop');
-    let memberHasActivePlan = null;
-    let memberStripeCustomerId = null;
-    if (!shopToken && window.$memberstackDom) {
-      try {
-        const { data: member } = await window.$memberstackDom.getCurrentMember();
-        if (member) {
-          shopToken = member.metaData?.shoptoken || member.metaData?.shopToken || member.customFields?.shoptoken || member.customFields?.shopToken;
-          const plans = member?.planConnections || [];
-          memberHasActivePlan = plans.length > 0;
-          memberStripeCustomerId = member.stripeCustomerId || member.customerId || plans[0]?.payment?.stripeCustomerId || null;
-        }
-      } catch(e) {}
-    }
-    if (!shopToken) {
-      container.innerHTML = '<div style="padding:4rem;text-align:center;color:#dc2626;font-size:14px">Unable to load your dashboard — shop token not found. Please <a href="/login" style="color:#1a1a1a;font-weight:600">log in again</a> or contact support at support@midasquote.com</div>';
-      return;
-    }
-
-    const shopRecord = await loadShop(shopToken);
-    if (!shopRecord) {
-      container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at support@midasquote.com</div>';
-      return;
-    }
-
-    window._mqShopRecord = shopRecord;
-
-    if (!shopRecord.fields['Welcome popup seen']) {
-      window.mqShowWelcomeModal();
-      // Brand new shop — nothing to announce retroactively, so just mark
-      // them caught up on the current announcement without ever showing it.
-      if (shopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
-        shopRecord.fields['Announcement seen'] = MQ_LATEST_ANNOUNCEMENT;
-        atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Announcement seen': MQ_LATEST_ANNOUNCEMENT }).catch(()=>{});
-      }
-    } else if (shopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
-      window.mqShowAnnouncementModal();
-    }
-
-    // Save Stripe customer ID to Airtable if we have it and it's not stored yet
-    if (memberStripeCustomerId && !shopRecord.fields['Stripe customer ID']) {
-      try { await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Stripe customer ID': memberStripeCustomerId }); shopRecord.fields['Stripe customer ID'] = memberStripeCustomerId; } catch(e) {}
-    }
-
-    _mqCustomPostLink = shopRecord.fields['Marketing link'] || '';
-    try {
-      const savedHeadlines = shopRecord.fields['Marketing headlines'] ? JSON.parse(shopRecord.fields['Marketing headlines']) : {};
-      _mqGraphicHeadline = savedHeadlines.graphic || '';
-      _mqQrHeadline = savedHeadlines.qr || '';
-      _mqSignHeadline = savedHeadlines.sign || '';
-      _mqQrCustomColor = savedHeadlines.qrColor || '';
-      _mqSignCustomColor = savedHeadlines.signColor || '';
-    } catch(e) {}
-    container.innerHTML = buildHTML(shopRecord.fields);
-    mqInitStickyTopbar();
-    mqInitStickyNav();
-
-    // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
-    if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
-    else if (window.MemberStack?.reload) window.MemberStack.reload();
-
-    // Wire up embed copy buttons now that DOM exists
-    ['mq-copy-embed-1', 'mq-copy-embed-2'].forEach(id => {
-      const btn = document.getElementById(id);
-      if (btn) btn.onclick = () => mqCopyEmbed(btn);
-    });
-
-    const pricingRecord = await loadPricing(shopRecord.fields['Shop name']);
-    window._mqPricingRecord = pricingRecord;
-    if (pricingRecord) populatePricing(pricingRecord);
-    populateShop(shopRecord);
-    populateRooms(shopRecord);
-    await ensureProjectTypeTemplates(shopRecord);
-
-    // Admin Templates tab only ever shows up for the Maple & Stone demo shop.
-    // NOTE: adjust this exact name if your demo shop's actual 'Shop name'
-    // field is spelled/punctuated differently in Airtable.
-    if (shopRecord.fields['Shop name'] === 'Maple & Stone Cabinetry') {
-      const navTemplates = el('mq-nav-templates');
-      if (navTemplates) navTemplates.style.display = 'flex';
-    }
-
-    const leads = await loadLeads(shopRecord.fields['Shop name']);
-    window._mqLeads = sortLeadsArray(leads);
-    renderStats(window._mqLeads);
-    el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
-    el('mq-leads-table').innerHTML = renderLeads(window._mqLeads);
-
-    const specs = await ensureSpecialtyDefaults(shopRecord);
-    renderSpecialty(specs, shopRecord);
-
-    // Load line items for My Products tab
-    const lineItems = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-    window._mqLineItems = lineItems;
-  }
-
-  // Shared by every nav-triggered refetch below. Switching tabs used to
-  // re-query Airtable every single time, even if you'd been on that exact
-  // tab ten seconds earlier — harmless in isolation, but it adds up fast
-  // during normal back-and-forth dashboard use, and directly eats into
-  // Airtable's monthly API call allowance for no real benefit. This just
-  // skips the refetch (leaving whatever's already rendered in place) if
-  // it's been fetched recently; genuinely returning after a few minutes,
-  // or after an edit made elsewhere, still gets fresh data as normal.
-  window._mqLastFetchTimes = window._mqLastFetchTimes || {};
-  function mqShouldRefetch(key, minMs = 20000) {
-    const now = Date.now();
-    const last = window._mqLastFetchTimes[key] || 0;
-    if (now - last < minMs) return false;
-    window._mqLastFetchTimes[key] = now;
-    return true;
-  }
-
-  // Load pricing helper when that nav item is clicked
-  const origMqNav = window.mqNav;
-  window.mqNav = async function(page, navEl) {
-    origMqNav(page, navEl);
-    // Re-checks on every tab switch, not just the initial page load — so a
-    // shop already using the dashboard when a new announcement goes out
-    // sees it the moment they click anywhere, no refresh needed. Skips
-    // brand-new shops (still on the Welcome popup) the same way page load
-    // already does — nothing to announce retroactively to someone who's
-    // never used the app before.
-    if (window._mqShopRecord && window._mqShopRecord.fields['Welcome popup seen'] && window._mqShopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
-      window.mqShowAnnouncementModal();
-    }
-    mqToggleFloatingSave(MQ_PAGE_SAVE_ACTIONS[page] || null);
-    if (page === 'marketing' || page === 'embed') {
-      const socialEl = document.getElementById('mq-mk-social');
-      if (socialEl && !socialEl.dataset.loaded && window._mqShopRecord) {
-        socialEl.dataset.loaded = 'true';
-        initMarketingKit(window._mqShopRecord);
-      } else if (page === 'embed' && window._mqRawHeaderCode) {
-        // Codes already loaded — just refresh the combined display
-        window.mqUpdateCombinedEmbed();
-      }
-    }
-    if (page === 'billing') {
-      const planEl = document.getElementById('mq-billing-plan');
-      if (planEl && planEl.textContent === 'Loading plan info...') {
-        const activeActions = document.getElementById('mq-billing-active-actions');
-        const reactivateActions = document.getElementById('mq-billing-reactivate-actions');
-        const freeActions = document.getElementById('mq-billing-free-actions');
-        const paymentCard = document.getElementById('mq-billing-payment-card');
-        const invoicesCard = document.getElementById('mq-billing-invoices-card');
-        const cancelCard = document.getElementById('mq-billing-cancel-card');
-        // Airtable's Status field is updated by the onboarding Worker
-        // (member.created / member.plan.added / member.plan.canceled /
-        // member.deleted) and is the source of truth for real billing
-        // lifecycle — Memberstack's own planConnections data lags behind
-        // real cancellations, so we don't use it here.
-        //
-        // IMPORTANT: that onboarding Worker sets Status = 'Active' for
-        // EVERY new signup, free or paid — it doesn't know about the Plan
-        // field at all. So Status alone can't distinguish a real paying
-        // customer from a Free Trial/Demo shop; Plan must be checked
-        // FIRST, and Status is only meaningful once Plan has already
-        // ruled out the free tier.
-        const status = window._mqShopRecord?.fields?.['Status'] || '';
-        const plan = window._mqShopRecord?.fields?.['Plan'] || '';
-        const isFreeTier = plan === 'Free Trial' || plan === 'Demo';
-        const isActive = !isFreeTier && (status === 'Active' || status === 'Trial');
-        if (isActive) {
-          planEl.innerHTML = `
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="background:#dcfce7;color:#166534;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${status || 'Active'}</span>
-              <span style="font-size:14px;font-weight:500;color:#111">MidasQuote</span>
-            </div>
-            <p style="font-size:13px;color:#6b7280">Your subscription is active. Manage it using the buttons below.</p>`;
-          if (activeActions) activeActions.style.display = 'flex';
-          if (reactivateActions) reactivateActions.style.display = 'none';
-          if (freeActions) freeActions.style.display = 'none';
-          if (paymentCard) paymentCard.style.display = 'block';
-          if (invoicesCard) invoicesCard.style.display = 'block';
-          if (cancelCard) cancelCard.style.display = 'block';
-        } else if (isFreeTier) {
-          const demoNote = plan === 'Demo'
-            ? 'your free trial has ended and you\'re on the limited free Demo tier (DEMO watermark, no MidasQuote Pro, no custom photos)'
-            : 'you\'re on the free trial — full access, no card on file';
-          planEl.innerHTML = `
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan}</span>
-              <span style="font-size:14px;font-weight:500;color:#111">Free plan</span>
-            </div>
-            <p style="font-size:13px;color:#6b7280">You're not on a paid plan — ${demoNote}. Upgrade any time below, no interruption to your widget.</p>`;
-          if (activeActions) activeActions.style.display = 'none';
-          if (reactivateActions) reactivateActions.style.display = 'none';
-          if (freeActions) freeActions.style.display = 'flex';
-          if (paymentCard) paymentCard.style.display = 'none';
-          if (invoicesCard) invoicesCard.style.display = 'none';
-          if (cancelCard) cancelCard.style.display = 'none'; // nothing to cancel — never was a subscription
-        } else {
-          // Status is Cancelled, Paused, or unknown — subscription isn't
-          // active. The Stripe Customer Portal can't resubscribe a fully
-          // cancelled sub, so we surface reactivation buttons here instead.
-          const label = status || 'Inactive';
-          planEl.innerHTML = `
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="background:#fee2e2;color:#dc2626;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${label}</span>
-              <span style="font-size:14px;font-weight:500;color:#111">No active plan</span>
-            </div>
-            <p style="font-size:13px;color:#6b7280">Your subscription has ended. You still have dashboard access for now — pick a plan below to reactivate your widget.</p>`;
-          if (activeActions) activeActions.style.display = 'none';
-          if (reactivateActions) reactivateActions.style.display = 'flex';
-          if (freeActions) freeActions.style.display = 'none';
-          if (paymentCard) paymentCard.style.display = 'none';
-          if (invoicesCard) invoicesCard.style.display = 'none';
-          if (cancelCard) cancelCard.style.display = 'none';
-        }
-      }
-    }
-    if (page === 'leads') {
-      const leadsTable = document.getElementById('mq-leads-table');
-      if (leadsTable && window._mqShopRecord && mqShouldRefetch('leads')) {
-        leadsTable.innerHTML = '<div class="mq-loading">Refreshing leads...</div>';
-        loadLeads(window._mqShopRecord.fields['Shop name']).then(leads => {
-          window._mqLeads = sortLeadsArray(leads);
-          renderStats(window._mqLeads);
-          const recentEl = document.getElementById('mq-recent-leads');
-          if (recentEl) recentEl.innerHTML = renderLeads(window._mqLeads, 5);
-          mqFilterLeads(); // re-applies whatever status filter + sort was already active
-        });
-      }
-    }
-    if (page === 'specialty') {
-      const specList = document.getElementById('mq-spec-list');
-      if (specList && window._mqShopRecord && mqShouldRefetch('specialty')) {
-        specList.innerHTML = '<div class="mq-loading">Refreshing specialty items...</div>';
-        loadSpecialty(window._mqShopRecord.fields['Shop name']).then(specs => {
-          renderSpecialty(specs, window._mqShopRecord);
-        });
-      }
-      if (window._mqShopRecord && !window._mqShopRecord.fields['Specialty tips popup seen']) {
-        window.mqShowSpecialtyTipsModal();
-      }
-    }
-    if (page === 'proposals') {
-      const propList = document.getElementById('mq-prop-list');
-      if (propList && window._mqShopRecord && mqShouldRefetch('proposals')) {
-        propList.innerHTML = '<div class="mq-loading">Loading proposal templates...</div>';
-        ensureProposalTemplatesSeeded(window._mqShopRecord).then(() =>
-          loadProposalTemplates(window._mqShopRecord.fields['Shop name'])
-        ).then(templates => {
-          renderProposalTemplates(templates, window._mqShopRecord);
-        });
-      }
-    }
-    if (page === 'products') {
-      const prodContent = document.getElementById('mq-products-content');
-      if (prodContent && mqShouldRefetch('products')) {
-        prodContent.innerHTML = '<div class="mq-loading">Loading your products...</div>';
-        const shopToken = window._mqShopRecord.fields['Shop token'];
-        Promise.all([
-          loadShop(shopToken), // refetch the shop record itself fresh — this is where Photos/Hidden actually live, and a push from elsewhere (like the Templates admin tool) wouldn't otherwise show up until a full page reload
-          atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`),
-        ]).then(([freshShop, lineItems]) => {
-          if (freshShop) window._mqShopRecord = freshShop;
-          window._mqLineItems = lineItems;
-          initProductsTab(window._mqShopRecord, lineItems);
-          if (window._mqShopRecord && !window._mqShopRecord.fields['Products tips popup seen']) {
-            window.mqShowProductsTipsModal();
-          }
-        });
-      }
-    }
-    if (page === 'templates') {
-      const tmplContent = document.getElementById('mq-templates-content');
-      if (tmplContent && mqShouldRefetch('templates')) {
-        tmplContent.innerHTML = '<div class="mq-loading">Loading templates...</div>';
-        renderTemplates();
-      }
-      const masterRoomsContent = document.getElementById('mq-master-rooms-content');
-      if (masterRoomsContent && mqShouldRefetch('masterRooms')) {
-        masterRoomsContent.innerHTML = '<div class="mq-loading">Loading...</div>';
-        renderMasterRoomDefs();
-      }
-    }
-    if (page === 'pricing') {
-      const helperContainer = document.getElementById('mq-pricing-helper-v2');
-      if (helperContainer && !helperContainer.dataset.loaded) {
-        helperContainer.dataset.loaded = 'true';
-        const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
-        script.onload = function() {
-          window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
-        };
-        document.body.appendChild(script);
-      }
-    }
+    loadAndRender();
   };
-
-  init();
 
 })();
