@@ -4425,7 +4425,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const ordered = mqSpecCategoriesForRoom(roomId);
     if (ordered.length < 2) return '';
     return `
-      <div style="margin-top:28px;margin-bottom:20px;padding:22px 24px;background:#eef2ff;border:1.5px solid #a5b4fc;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
+      <div style="margin:28px 16px 20px;padding:22px 24px;background:#eef2ff;border:1.5px solid #a5b4fc;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
         <div style="font-size:12px;font-weight:700;color:#3730a3;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Category order for ${roomName.replace(/</g,'&lt;')}</div>
         <div style="font-size:11px;color:#4338ca;margin-bottom:10px;line-height:1.5">This is the order customers see these categories in on the widget when quoting ${roomName.replace(/</g,'&lt;')} — doesn't affect any other project type.</div>
         <div style="display:flex;flex-direction:column;gap:6px">
