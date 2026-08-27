@@ -786,14 +786,15 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Shop info</div>
             <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
+            <div id="mq-shop-msg"></div>
+
             <div class="mq-card">
-              <div id="mq-shop-msg"></div>
-              <div class="mq-grid2" style="margin-bottom:1rem">
+              <div class="mq-card-title">🏢 Business info</div>
+              <div class="mq-grid2">
                 <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" id="mq-shop-name"/></div>
                 <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" id="mq-shop-phone"/></div>
                 <div class="mq-field"><label class="mq-label">City</label><input type="text" id="mq-shop-city"/></div>
                 <div class="mq-field"><label class="mq-label">Website URL</label><input type="url" id="mq-shop-website"/></div>
-                <div class="mq-field"><label class="mq-label">Lead notify email</label><input type="email" id="mq-shop-email"/><span class="mq-hint">Where new lead notifications go</span></div>
                 <div class="mq-field"><label class="mq-label">Currency symbol</label>
                   <select id="mq-shop-currency">
                     <option value="$">$ — US / Canadian Dollar</option>
@@ -808,6 +809,12 @@ window.logoutMember = async function () {
                   </select>
                   <span class="mq-hint">Switches the symbol everywhere on your widget, MidasQuote Pro, and the pricing wizard — doesn't convert amounts, just how they're displayed</span>
                 </div>
+              </div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">🎨 Branding</div>
+              <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field"><label class="mq-label">Brand colour</label>
                   <div style="display:flex;align-items:center;gap:8px">
                     <input type="text" id="mq-shop-color" placeholder="#1a1a1a" style="flex:1"/>
@@ -859,19 +866,7 @@ window.logoutMember = async function () {
                 </div>
                 </div>
               </div>
-              <div class="mq-grid2" style="margin-bottom:1rem">
-                <div class="mq-field">
-                  <label class="mq-label">Quote range — low (% below estimate)</label>
-                  <input type="number" id="mq-shop-range-low" placeholder="5" min="0" max="50"/>
-                  <span class="mq-hint">Default 5 — quote shows up to 5% below your estimate</span>
-                </div>
-                <div class="mq-field">
-                  <label class="mq-label">Quote range — high (% above estimate)</label>
-                  <input type="number" id="mq-shop-range-high" placeholder="20" min="0" max="50"/>
-                  <span class="mq-hint">Default 20 — quote shows up to 20% above your estimate</span>
-                </div>
-              </div>
-              <div class="mq-field" style="margin-bottom:1rem">
+              <div class="mq-field" style="margin-bottom:0">
                 <label class="mq-label">Shop logo</label>
                 <div id="mq-shop-logo-preview" style="margin-bottom:8px;display:none">
                   <img id="mq-shop-logo-img" src="" alt="Logo preview" style="height:56px;max-width:200px;object-fit:contain;border:1px solid #e5e7eb;border-radius:8px;padding:6px;background:#f9fafb"/>
@@ -885,6 +880,22 @@ window.logoutMember = async function () {
                 <input type="url" id="mq-shop-logo" placeholder="https://yoursite.com/logo.png" oninput="mqRefreshLogoPreview()"/>
                 <span class="mq-hint">Appears in the top-left corner of your widget</span>
               </div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">📝 Widget text &amp; quote settings</div>
+              <div class="mq-grid2" style="margin-bottom:1rem">
+                <div class="mq-field">
+                  <label class="mq-label">Quote range — low (% below estimate)</label>
+                  <input type="number" id="mq-shop-range-low" placeholder="5" min="0" max="50"/>
+                  <span class="mq-hint">Default 5 — quote shows up to 5% below your estimate</span>
+                </div>
+                <div class="mq-field">
+                  <label class="mq-label">Quote range — high (% above estimate)</label>
+                  <input type="number" id="mq-shop-range-high" placeholder="20" min="0" max="50"/>
+                  <span class="mq-hint">Default 20 — quote shows up to 20% above your estimate</span>
+                </div>
+              </div>
               <div class="mq-field" style="margin-bottom:1.5rem">
                 <label class="mq-label">Disclaimer text</label>
                 <textarea id="mq-shop-disclaimer" placeholder="Ballpark estimate only. Contact us for a full quote."></textarea>
@@ -895,10 +906,19 @@ window.logoutMember = async function () {
                 <input type="text" id="mq-shop-projecttype-title" placeholder="Start here — choose your project type"/>
                 <span class="mq-hint">The heading above the project type dropdown — change the wording to fit your business (e.g. "Choose your job type")</span>
               </div>
-              <div class="mq-field" style="margin-bottom:1.5rem">
+              <div class="mq-field" style="margin-bottom:0">
                 <label class="mq-label">Project type section hint</label>
                 <input type="text" id="mq-shop-projecttype-hint" placeholder="After calculating your first quote, you can continue adding other project types."/>
                 <span class="mq-hint">A short line under the dropdown letting customers know they can build one combined quote across multiple project types</span>
+              </div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">📩 Leads &amp; consultations</div>
+              <div class="mq-field" style="margin-bottom:1rem">
+                <label class="mq-label">Lead notify email</label>
+                <input type="email" id="mq-shop-email"/>
+                <span class="mq-hint">Where new lead notifications go</span>
               </div>
               <div id="mq-shop-consult-warning" class="mq-msg-error" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px">
                 ⚠️ Please fill in at least one — a consultation link or a consultation email. Without one, customers just get sent to your quote form instead when they click "Ask a question" or "Book a consultation."
@@ -913,6 +933,17 @@ window.logoutMember = async function () {
                 <input type="email" id="mq-shop-consult-email" placeholder="sales@yourshop.com" oninput="mqCheckConsultFields()"/>
                 <span class="mq-hint">Used only if no link is set above — opens a pre-filled email instead. At least one of these two fields is required.</span>
               </div>
+              <div class="mq-toggle-row" style="margin-bottom:0">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Email me for every estimate</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Normally you're only notified when a customer gives their contact info. Turn this on to get an email every time anyone calculates an estimate — even if they skip that step.</div>
+                </div>
+                <div class="mq-toggle" id="mq-notify-every-toggle" onclick="mqToggleNotifyEvery()"></div>
+              </div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title">💳 Financing &amp; extras</div>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">We offer financing</div>
@@ -927,14 +958,7 @@ window.logoutMember = async function () {
                   <span class="mq-hint">If you have a link where customers can apply for financing, enter it here. The "Ask a question" button on your widget will become "Get pre-approved →" and send them straight there.</span>
                 </div>
               </div>
-              <div class="mq-toggle-row" style="margin-bottom:1.5rem">
-                <div>
-                  <div style="font-size:13px;font-weight:500;color:#111">Email me for every estimate</div>
-                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Normally you're only notified when a customer gives their contact info. Turn this on to get an email every time anyone calculates an estimate — even if they skip that step.</div>
-                </div>
-                <div class="mq-toggle" id="mq-notify-every-toggle" onclick="mqToggleNotifyEvery()"></div>
-              </div>
-              <div class="mq-toggle-row" style="margin-bottom:1.5rem">
+              <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Show "View our products" link on widget</div>
                   <div style="font-size:12px;color:#6b7280;margin-top:2px">Customers can browse your showroom before getting a quote</div>
