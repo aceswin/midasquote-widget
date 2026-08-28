@@ -3603,6 +3603,14 @@
       const tcContainer = document.getElementById(`mq-${prefix}-tallcabs`);
       if (tcContainer) tcContainer.innerHTML = '';
       renumberTallCabs(prefix);
+      // Re-seed one empty starter card for whichever room we're on now —
+      // same as the very first page load — so the section looks the same
+      // as it did on load instead of sitting empty with just the "+ Add a
+      // tall cabinet" button until the customer clicks it themselves.
+      // addTallCabInternal calls mqRefreshAllPickerVisibility/mqRefreshSectionVisibility
+      // itself, so the new card's Type picker is already filtered correctly
+      // for the room now selected.
+      if (Object.keys(TALL_CAB).length > 0) addTallCabInternal(prefix);
 
       const useCabTrimCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
       if (useCabTrimCb) useCabTrimCb.checked = false;
