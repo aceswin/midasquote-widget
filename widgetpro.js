@@ -3457,15 +3457,16 @@
 
       const tcSec = document.getElementById(`mq-${prefix}-tallcabs-sec`);
       if (tcSec) {
-        let anyReal = false;
-        tcSec.querySelectorAll('.mq-vpicker-row').forEach(row=>{
-          row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
-            if (chip.getAttribute('data-value')==='none') return;
-            let rooms=[];
-            try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
-            if (!rooms.length || rooms.includes(roomId)) anyReal = true;
-          });
-        });
+        // Checked against the shop's master tall-cabinet list (TALL_CAB)
+        // rather than whatever cards happen to be rendered right now —
+        // cards are cleared and rebuilt on every project-type switch
+        // (mqResetCabinetForm empties #mq-${prefix}-tallcabs, and nothing
+        // re-adds a starter card afterward), so between switches there can
+        // legitimately be zero cards on screen even though this room fully
+        // supports tall cabinets. Checking rendered cards for that state
+        // used to hide the whole section — including its "+ Add a tall
+        // cabinet" button — with no way back short of a page refresh.
+        const anyReal = Object.values(TALL_CAB).some(t => !t.visibleRooms || !t.visibleRooms.length || t.visibleRooms.includes(roomId));
         tcSec.style.display = anyReal ? '' : 'none';
       }
 
