@@ -2824,13 +2824,13 @@ window.logoutMember = async function () {
   const MQ_DEFAULT_COVER_IMAGE_MAP = {
     kitchen: MQ_DEFAULT_COVER_IMAGE_BASE + 'kitchen.jpg',
     bathroom: MQ_DEFAULT_COVER_IMAGE_BASE + 'bathroom.jpg',
-    laundry: MQ_DEFAULT_COVER_IMAGE_BASE + 'laundry.jpg',
-    garage: MQ_DEFAULT_COVER_IMAGE_BASE + 'garage.jpg',
+    // Placeholders — both reuse the Kitchen cover photo, same as
+    // widget-countertop.js's fallback for these two project types. Replace
+    // with real Outdoor Kitchen/BBQ and Bar/Island photos when available.
+    outdoor_kitchen: MQ_DEFAULT_COVER_IMAGE_BASE + 'kitchen.jpg',
+    bar_island: MQ_DEFAULT_COVER_IMAGE_BASE + 'kitchen.jpg',
     commercial: MQ_DEFAULT_COVER_IMAGE_BASE + 'commercial.jpg',
     other: MQ_DEFAULT_COVER_IMAGE_BASE + 'other.jpg',
-    refacing: 'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg',
-    repainting: 'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg',
-    restaining: 'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg',
   };
   function mqDefaultCoverImageKeyFor(roomId, roomName) {
     const id = (roomId||'').toLowerCase();
@@ -2838,12 +2838,8 @@ window.logoutMember = async function () {
     const name = (roomName||'').toLowerCase();
     if (name.includes('kitchen')) return 'kitchen';
     if (name.includes('bathroom')) return 'bathroom';
-    if (name.includes('laundry')) return 'laundry';
-    if (name.includes('garage')) return 'garage';
+    if (name.includes('bar') || name.includes('island')) return 'bar_island';
     if (name.includes('commercial')) return 'commercial';
-    if (name.includes('refacing')) return 'refacing';
-    if (name.includes('repainting')) return 'repainting';
-    if (name.includes('restaining')) return 'restaining';
     if (name.includes('other')) return 'other';
     return null;
   }
@@ -2902,7 +2898,7 @@ window.logoutMember = async function () {
   // only for admin-side previewing and the "Use default image" button —
   // never written into a shop's own saved data (see defaultRoomTypes below).
   const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'];
-  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bathroom: ['bathroom11.jpg'], laundry: MQ_DEFAULT_MEASURE_IMAGE_SET, garage: MQ_DEFAULT_MEASURE_IMAGE_SET, commercial: MQ_DEFAULT_MEASURE_IMAGE_SET, other: MQ_DEFAULT_MEASURE_IMAGE_SET };
+  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bathroom: ['bathroom11.jpg'], outdoor_kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bar_island: MQ_DEFAULT_MEASURE_IMAGE_SET, commercial: MQ_DEFAULT_MEASURE_IMAGE_SET, other: MQ_DEFAULT_MEASURE_IMAGE_SET };
   // Matches a room to one of the default-image keys — tries the id first
   // (the normal, fast path for standard ids), but falls back to matching on
   // the room's NAME too, same robust logic already used in widget.js's own
@@ -2940,8 +2936,7 @@ window.logoutMember = async function () {
     const name = (roomName||'').toLowerCase();
     if (name.includes('kitchen')) return 'kitchen';
     if (name.includes('bathroom')) return 'bathroom';
-    if (name.includes('laundry')) return 'laundry';
-    if (name.includes('garage')) return 'garage';
+    if (name.includes('bar') || name.includes('island')) return 'bar_island';
     if (name.includes('commercial')) return 'commercial';
     if (name.includes('other')) return 'other';
     return null;
@@ -2986,8 +2981,13 @@ window.logoutMember = async function () {
       // they first saved their Project Types page.
       { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your countertop material and finish, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:'' },
       { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.jpg', measureText:'', measureImage:'' },
-      { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.jpg', measureText:'', measureImage:'' },
-      { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.jpg', measureText:'', measureImage:'' },
+      // Placeholder — reuses the Kitchen cover photo, same as widget-countertop.js's
+      // fallback for this project type. Replace with a real Outdoor Kitchen/BBQ photo
+      // when available.
+      { id:'outdoor_kitchen', name:'Outdoor Kitchen / BBQ', materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Built for the elements and built to entertain — get a durable countertop made for your outdoor kitchen or BBQ station.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:'' },
+      // Placeholder — reuses the Kitchen cover photo, same as widget-countertop.js's
+      // fallback for this project type. Replace with a real Bar/Island photo when available.
+      { id:'bar_island', name:'Bar / Island', materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Whether it\'s a kitchen island or a home bar, get a countertop that becomes the centerpiece of the room.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:'' },
       { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get countertops built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.jpg', measureText:'', measureImage:'' },
       { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.jpg', measureText:'', measureImage:'' },
       // Countertop fork: Refacing/Repainting/Restaining removed — those were
