@@ -738,6 +738,26 @@
               </div>
             </div>
 
+            <!-- Removal rate — pricing an existing countertop's removal directly
+                 on the surface configurator, using its own measurements, rather
+                 than as a separately-quantified Specialty Item. Leaving the rate
+                 field blank means this material doesn't offer removal at all;
+                 saving it as 0 offers it for free. -->
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Removal rate (optional)</div>
+              <div class="mqph-info" style="margin-bottom:0.75rem">
+                Leave blank if you don't want to offer removal of an old countertop for this material — the widget won't show a removal option at all. Set it (even to ${CUR()}0 for free) to offer it, priced automatically off the surface's own measurements.
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-removal-rate" placeholder="Leave blank to not offer" step="0.01" style="width:160px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">per</span>
+                <select id="mqph-ct-removal-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                  <option value="sqft">sq ft</option><option value="linft">lin ft</option><option value="flat">flat rate (per counter)</option>
+                </select>
+              </div>
+            </div>
+
             <!-- Backsplash options builder -->
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Backsplash height options</div>
@@ -1056,6 +1076,8 @@
     document.getElementById('mqph-ct-install-rate').value = '';
     document.getElementById('mqph-ct-install-unit').value = 'sqft';
     document.getElementById('mqph-ct-install-min').value = '';
+    document.getElementById('mqph-ct-removal-rate').value = '';
+    document.getElementById('mqph-ct-removal-unit').value = 'sqft';
     document.getElementById('mqph-ct-active').checked = true;
     // Default row — auto-sync flags update it live as user types rates above
     currentBsOptions = [{ label:'4" standard', heightIn:4, supplyRate:0, supplyUnit:'sqft', installRate:0, installUnit:'sqft', _supplyAutoSync:true, _installAutoSync:true }];
@@ -1109,6 +1131,10 @@
     document.getElementById('mqph-ct-install-rate').value = matInstall||'';
     document.getElementById('mqph-ct-install-unit').value = matInstallUnit;
     document.getElementById('mqph-ct-install-min').value = rec.fields['Install minimum price']||'';
+    // Blank (not just falsy) means "not offered" for this material — a real
+    // 0 must render as "0", not fall through to an empty field.
+    document.getElementById('mqph-ct-removal-rate').value = (rec.fields['Removal rate']!=null) ? rec.fields['Removal rate'] : '';
+    document.getElementById('mqph-ct-removal-unit').value = rec.fields['Removal unit'] || 'sqft';
     document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
     mqphRenderBsList();
     mqphRenderCutoutList();
@@ -1141,6 +1167,8 @@
         supplyMin: parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
         installRate: parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
         installMin: parseFloat(document.getElementById('mqph-ct-install-min').value||0),
+        removalRate: (() => { const v = document.getElementById('mqph-ct-removal-rate').value; return v === '' ? null : parseFloat(v); })(),
+        removalUnit: document.getElementById('mqph-ct-removal-unit').value,
         unit: `${su}|${iu}`,
         bsOptions: cleanBsOptions,
         cutoutOptions: cleanCutoutOptions,
@@ -1153,12 +1181,18 @@
     const name = document.getElementById('mqph-ct-name').value.trim();
     if (!name) { alert('Please enter a name.'); return; }
     if (!currentCTEditId && !mqphWarnIfDuplicate('countertop', name)) return;
+    // Blank input means "don't offer removal for this material" — write null
+    // so Airtable clears the field, rather than defaulting to 0 like every
+    // other rate field here does (0 has to stay a real, distinct "free" value).
+    const removalRateRaw = document.getElementById('mqph-ct-removal-rate').value;
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'countertop',
       Rate:parseFloat(document.getElementById('mqph-ct-supply-rate').value||0),
       'Minimum price':parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
       'Install rate':parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
       'Install minimum price':parseFloat(document.getElementById('mqph-ct-install-min').value||0),
+      'Removal rate': removalRateRaw === '' ? null : parseFloat(removalRateRaw),
+      'Removal unit': document.getElementById('mqph-ct-removal-unit').value,
       Unit:`${su}|${iu}`, Description:'type:material',
       'Backsplash options': JSON.stringify(cleanBsOptions),
       'Cutout options': JSON.stringify(cleanCutoutOptions),
@@ -1248,6 +1282,7 @@
         shop:[shopRecord._recordId], Name:nm, Category:'countertop',
         Rate: ctBulk.supplyRate, 'Minimum price': ctBulk.supplyMin,
         'Install rate': ctBulk.installRate, 'Install minimum price': ctBulk.installMin, Unit: ctBulk.unit,
+        'Removal rate': ctBulk.removalRate, 'Removal unit': ctBulk.removalUnit,
         Description:'type:material',
         'Backsplash options': JSON.stringify(ctBulk.bsOptions),
         'Cutout options': JSON.stringify(ctBulk.cutoutOptions),

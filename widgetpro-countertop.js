@@ -746,6 +746,11 @@
             // calcCountertop). 0/undefined means no minimum, same as always.
             min:         item['Minimum price']||0,
             installMin:  item['Install minimum price']||0,
+            // Left as null/undefined (not defaulted to 0) when the shop never
+            // set it — that's what tells the widget not to offer removal at
+            // all for this material, vs. offering it for free at a real 0.
+            removalRate: item['Removal rate'],
+            removalUnit: item['Removal unit'] || 'sqft',
             supplyUnit:  (unitParts[0]||'sqft').trim(),
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
@@ -3371,9 +3376,24 @@
         const cost = supplyCost+installCost+bsCost
           +(document.getElementById('mqsco-'+id)?.checked?cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`mqscuts-${id}-q-${i}`)*(o.rate||0),0):0);
         const addonsRes = ctAddonsCost(m, `mqs-edge-${id}-sel`, `mqs-addons-${id}-a`, linFt, sqft, d||ctDepth);
-        const totalCost = cost + addonsRes.cost;
+        // Removal of an old countertop, priced directly off this surface's
+        // own measurements rather than as a separately-quantified Specialty
+        // Item. Only offered at all when the shop set a removalRate for
+        // this material (null means "don't offer" — see buildCTMAT and
+        // mqRefreshRemovalOpt); a real 0 is a valid "offer it for free".
+        // Not pooled into the per-material minimum-charge pool above —
+        // removal is its own flat/lin-ft/sqft charge, unrelated to the
+        // shop's supply/install minimums for that material.
+        const removalChecked = m.removalRate != null && !!document.getElementById('mqsrem-'+id)?.checked;
+        let removalCost = 0;
+        if (removalChecked) {
+          if (m.removalUnit === 'linft') removalCost = linFt * m.removalRate;
+          else if (m.removalUnit === 'flat') removalCost = m.removalRate;
+          else removalCost = sqft * m.removalRate; // 'sqft' (also the fallback default)
+        }
+        const totalCost = cost + addonsRes.cost + removalCost;
         sub+=totalCost;
-        lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${Math.round(bsLinFt*10)/10} lin ft)`:''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`,cost:Math.round(totalCost)});
+        lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${Math.round(bsLinFt*10)/10} lin ft)`:''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}${removalChecked?' + removal of existing countertop':''}`,cost:Math.round(totalCost)});
       });
 
       // Settle every material's minimum against its pooled total from
@@ -3543,12 +3563,19 @@
           <select id="mqssi-${id}" style="width:100%;min-width:160px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
         <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
           ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
-          <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
+          <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}');mqRefreshRemovalOpt('mqsm-${id}','mqsrem-wrap-${id}','mqsrem-${id}')" style="display:none">${ctMatOpts()}</select></div>
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
         <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Cutouts needed (sink, etc.)</label>
         <div id="mqscuts-${id}" style="display:none;margin-top:8px;margin-bottom:0.75rem;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>
+        <div id="mqsrem-wrap-${id}" style="display:none;margin-top:8px">
+          <!-- No dedicated onchange handler needed — the container-level
+               delegated 'input'/'change' listener (see mqScheduleLiveRecalc
+               wiring near buildWidget) already covers this checkbox like
+               everything else in the widget. -->
+          <label class="mq-check-row"><input type="checkbox" id="mqsrem-${id}" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Removing an existing countertop?</label>
+        </div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Backsplash</label>
           <select id="mqsbs-${id}" style="min-width:160px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select>
@@ -3574,6 +3601,7 @@
       window.mqRefreshCutoutOpts(`mqsm-${id}`, `mqscuts-${id}`);
       window.mqRefreshCtAddons(`mqsm-${id}`, `mqs-edge-${id}`, `mqs-addons-${id}`);
       window.mqRefreshSurfBsFt(id);
+      window.mqRefreshRemovalOpt(`mqsm-${id}`, `mqsrem-wrap-${id}`, `mqsrem-${id}`);
       mqRefreshAllPickerVisibility(prefix);
     }
 
@@ -3633,6 +3661,26 @@
       if (matSel.value === 'none') { container.innerHTML = ''; return; }
       const m = CT_MAT[matSel.value] || Object.values(CT_MAT)[0];
       container.innerHTML = cutoutRowsHtml(m, `${cutsContainerId}-q`);
+    };
+    // Shows/hides the "Removing an existing countertop?" checkbox based on
+    // whether the currently-selected material actually offers removal — a
+    // null removalRate (the shop left the field blank in the dashboard)
+    // means "don't offer this at all" for that material, vs. a real 0 which
+    // means "offer it, free" (see buildCTMAT). Also unchecks the box when
+    // switching to a material that doesn't offer removal, so a stale
+    // checked state from a previous material selection can't silently keep
+    // adding a removal cost that no longer applies.
+    window.mqRefreshRemovalOpt=(matSelectId, remWrapId, remCheckId)=>{
+      const matSel = document.getElementById(matSelectId);
+      const wrap = document.getElementById(remWrapId);
+      if (!matSel || !wrap) return;
+      const m = matSel.value !== 'none' ? (CT_MAT[matSel.value] || null) : null;
+      const offersRemoval = !!(m && m.removalRate != null);
+      wrap.style.display = offersRemoval ? 'block' : 'none';
+      if (!offersRemoval) {
+        const cb = document.getElementById(remCheckId);
+        if (cb) cb.checked = false;
+      }
     };
     window.mqRefreshCtAddons=(matSelectId, edgeContainerId, addonContainerId)=>{
       const matSel = document.getElementById(matSelectId);
