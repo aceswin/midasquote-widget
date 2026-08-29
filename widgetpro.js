@@ -3620,6 +3620,19 @@
       if (crownReturns) crownReturns.value = 0;
       const valanceReturns = document.getElementById(`mq-${prefix}-trim-valance-returns`);
       if (valanceReturns) valanceReturns.value = 0;
+      // Manual crown/valance linear footage ("Don't use upper cabinet
+      // linear footage — enter it myself") is a plain number input with no
+      // dependency on the crown/valance style pickers above, so nothing
+      // above ever touched it — it silently carried its old value into
+      // whichever project type came next. Reset directly (not via
+      // mqTogTrimManualFt) since that helper also flips trim-use-cab, which
+      // useCabTrimCb above already sets deliberately.
+      const trimManualToggle = document.getElementById(`mq-${prefix}-trim-manual-toggle`);
+      if (trimManualToggle) trimManualToggle.checked = false;
+      const trimManualFt = document.getElementById(`mq-${prefix}-trim-manual-ft`);
+      if (trimManualFt) trimManualFt.value = 0;
+      const trimManualWrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
+      if (trimManualWrap) trimManualWrap.style.display = 'none';
       window.mqTogTrimReturns(prefix);
 
       const removalEl = document.getElementById(`mq-${prefix}-removal`);
@@ -3629,6 +3642,26 @@
         const useCabCt = document.getElementById('mq-b-use-cab');
         if (useCabCt) useCabCt.checked = true;
         window.mqTogUseCab('b');
+        // Countertop material, backsplash, dishwasher/extra-space toggles,
+        // and cutouts were never reset here — mqResetCountertopStandalone
+        // covers this exact same set of fields for the standalone
+        // Countertops tab ('ct'), but this Both-tab countertop section uses
+        // its own id scheme (mq-b-cab-*/mq-b-ct-mat-cab) and was never
+        // wired into any reset path, so switching project types (or
+        // hitting "Reset quote," which calls this same function) silently
+        // carried the countertop material, backsplash, and additional
+        // counter space over from whichever project type was set up last.
+        mqResetPicker('mq-b-ct-mat-cab');
+        const ctBs = document.getElementById('mq-b-cab-bs');
+        if (ctBs) ctBs.selectedIndex = 0;
+        const ctDw = document.getElementById('mq-b-cab-dw');
+        if (ctDw) ctDw.checked = false;
+        const ctCo = document.getElementById('mq-b-cab-co');
+        if (ctCo && ctCo.checked) { ctCo.checked = false; ctCo.dispatchEvent(new Event('change')); }
+        const ctExtraToggle = document.getElementById('mq-b-cab-extra-toggle');
+        if (ctExtraToggle && ctExtraToggle.checked) { ctExtraToggle.checked = false; ctExtraToggle.dispatchEvent(new Event('change')); }
+        const ctExtraFt = document.getElementById('mq-b-cab-extra-ft');
+        if (ctExtraFt) ctExtraFt.value = 0;
         const ctSurfaces = document.getElementById('mq-b-ct-surfaces');
         if (ctSurfaces) { ctSurfaces.innerHTML = ''; ctSurfaces.dataset.autoAdded = 'false'; }
         const ctSi = document.getElementById('mq-b-ct-si');
