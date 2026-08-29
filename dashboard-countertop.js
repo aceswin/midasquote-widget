@@ -226,8 +226,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     rooms: {
       title: 'Project types',
       body: `
-        <p>Each project type (Kitchen, Bathroom, Refacing, or anything custom you add) is its own self-contained setup: its own description, cover photo, "how to measure" guide, and pricing behavior.</p>
-        <p><strong>Price adjustments</strong> — four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
+        <p>Each project type (Kitchen, Bathroom, Commercial, or anything custom you add) is its own self-contained setup: its own description, cover photo, "how to measure" guide, and pricing behavior.</p>
+        <p><strong>Price adjustments</strong> — four independent knobs per project type: two separate Material adjustments, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
         <p><strong>Live on widget / Draft</strong> — uncheck this while you're still setting a project type up, so customers don't see it half-finished.</p>
         <p><strong>Visibility</strong> — choose where a project type appears: in both the customer widget and MidasQuote Pro, only in MidasQuote Pro (good for anything you only ever quote yourself), or everywhere except MidasQuote Pro (for something you only want offered publicly, not used for your own internal quoting).</p>
         <p><strong>Hide "How to measure" section</strong> — for a project type that's entirely flat-rate items with nothing to actually measure (like a general "Odd jobs" type), this removes that whole section from the widget for that type only.</p>
@@ -235,7 +235,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Cover image</strong> and <strong>Measuring guide image</strong> — upload your own, or click "↺ Use default image" to fall back to MidasQuote's own default photo for that project type. Leaving it on the default means it automatically stays current if that default photo is ever updated — nothing to re-upload later.</p>
         <p><strong>More than one measuring guide image?</strong> Click "+ Add another image" as many times as needed — once there's more than one, the widget automatically turns it into a swipeable carousel instead of a single static photo, and gives it a brief one-time "nudge" animation so customers notice there's more than one image to see.</p>
         <p><strong>Want a video instead of (or alongside) photos?</strong> Paste a YouTube, Vimeo, or Loom link — or a direct link to a video file — into any of the measuring guide image fields instead of a photo URL. It plays right there in the carousel with your other images, in whatever order you place it. There's no upload for video, only a link, since videos need to live somewhere that can actually stream them (YouTube, Vimeo, your own site) rather than something MidasQuote hosts for you.</p>
-        <p>Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
+        <p>Accidentally deleted a standard type like Bathroom or Commercial? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
       `
     },
     pricing: {
@@ -254,11 +254,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: sink cutouts, seam relocation, custom edge upgrades, backsplash add-ons, hardware, or anything else you'd rather price with a straight rate than use the Pricing wizard.</p>
         <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (countertop materials and their edges) reverse-engineers everything into linear feet — built for a standard countertop run. A project type that's priced a completely different way (e.g. flat-rate per job) can skip the wizard entirely and be priced here instead, as one or more specialty items.</p>
-        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Manage categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
-        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it: enter 16.80 as the install price, not ${CUR()}71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
-        <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
+        <p><strong>Category</strong> — group items together (e.g. "Sink Cutouts," "Edge Upgrades") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Manage categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
+        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, ${CUR()}54.95/sqft to supply a countertop + ${CUR()}16.80/sqft to install it: enter 16.80 as the install price, not ${CUR()}71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
+        <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per job. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
-        <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
+        <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Rush fee" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
         <p><strong>🌍 Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
       `
@@ -292,7 +292,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Add real photos for the countertop materials and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon.</p>
         <p>Don't have your own photo for something? Many common items already have one of our own curated photos ready to use — just pick "Choose from library" instead of uploading your own. No need to go find or shoot a photo for every single item yourself.</p>
         <p>Every category starts collapsed — click any category's header to open just that one. With a lot of items configured, this keeps the page manageable.</p>
-        <p>When a customer taps a photo to zoom in on the widget, they can swipe left/right to move through the rest of that same group (e.g. every door style, or every item in one specialty category) without closing and reopening — no setup needed here, it just works automatically for any photo uploaded on this tab.</p>
+        <p>When a customer taps a photo to zoom in on the widget, they can swipe left/right to move through the rest of that same group (e.g. every countertop material, or every item in one specialty category) without closing and reopening — no setup needed here, it just works automatically for any photo uploaded on this tab.</p>
         <p>You can also control which project types each item shows up for right from here — the same setting as on the Specialty Items tab, just accessible from both places.</p>
         <p><strong>Groups</strong> — in Countertop Materials, use "+ New group" to bundle items together, like "Quartz" or "Granite." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
       `
@@ -302,7 +302,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>This tab only shows up for the admin account — it controls the <em>defaults</em> every brand new shop starts with, not any one specific shop's live data.</p>
         <p>Editing a project type's description, image, or measuring guide here only affects <strong>shops created from now on</strong> — it never retroactively changes a shop that already exists.</p>
-        <p><strong>"↺ Use built-in default"</strong> next to Refacing/Repainting/Restaining's cover image and measuring guide image fills in MidasQuote's current default photo for that field — review it, then Save like any other edit here. Unlike the same-looking button on the Project Types tab, this field <em>is</em> the default itself (what new shops start from), so there's nothing to "fall back to" — this just fills in the known-correct URL for you instead of needing it typed or pasted by hand.</p>
+        <p><strong>"↺ Use built-in default"</strong> next to a master project type's cover image and measuring guide image fills in MidasQuote's current default photo for that field — review it, then Save like any other edit here. Unlike the same-looking button on the Project Types tab, this field <em>is</em> the default itself (what new shops start from), so there's nothing to "fall back to" — this just fills in the known-correct URL for you instead of needing it typed or pasted by hand.</p>
         <p><strong>Push to all shops</strong> — pushes specialty item changes out to shops that already exist. Use this deliberately; it's the one action here that does touch live shops.</p>
       `
     },
@@ -473,7 +473,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="font-size:40px;margin-bottom:12px">⭐</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
-          You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to pre-populate items for shops that offer refacing, restaining, or repainting services.
+          You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to give you a starting point for common countertop-shop add-ons.
           <br><br>
           A quick heads-up: specialty item lists get messy fast once you start adding a lot of them. It's worth organizing items into <strong>categories</strong> (using the Category column) right from the start — categorized items group together neatly instead of turning into one long, hard-to-scan list.
           <br><br>
@@ -997,7 +997,7 @@ window.logoutMember = async function () {
             <div class="mq-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
-                💡 Base cabinets and Upper cabinets adjustments apply to countertop material cost only. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
+                💡 Both material adjustments below apply to countertop material cost only. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
               </div>
               <div id="mq-rooms-list"></div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
@@ -1014,7 +1014,7 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('pricing')"><span class="mq-help-badge">?</span> Need help?</button>
             <div style="height:24px"></div>
             <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
-              🔧 <strong>Handles & knobs:</strong> Don't include handles or knobs in your pricing here — since their prices vary so widely, add them as a specialty item instead. That said, if your shop installs handles as part of the job, your door installation price should still account for that labor.
+              🔧 <strong>Handles & knobs:</strong> Don't include handles or knobs in your pricing here — since their prices vary so widely, add them as a specialty item instead. That said, if your shop installs handles as part of the job, your installation price should still account for that labor.
             </div>
             <div id="mq-pricing-helper-v2"></div>
           </div>
@@ -1034,11 +1034,11 @@ window.logoutMember = async function () {
               <br><br>
               🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
               <br><br>
-              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
+              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/sqft install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per lin ft, for example) — the widget will ask the customer for whatever quantity install needs.
               <br><br>
               🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
               <br><br>
-              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
+              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a small 2 sq ft cutout might work out to ${CUR()}50 on the math, but a small job takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
             </div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
@@ -1214,14 +1214,14 @@ window.logoutMember = async function () {
           <div class="mq-page" id="mq-page-templates">
             <button class="mq-help-btn" onclick="mqShowHelp('templates')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">🔧 Templates (Admin)</div>
-            <div class="mq-page-sub">Manage the master specialty items for Refacing, Repainting, and Restaining. These are what every new shop gets automatically — add real door styles, prices, and photos here so shop owners never start from a blank page.</div>
+            <div class="mq-page-sub">Manage the master specialty items every new shop gets automatically — add real items, prices, and photos here so shop owners never start from a blank page.</div>
             <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#991b1b;line-height:1.6">
               <strong>⚠️ Editing here alone changes nothing live.</strong> Changes only apply to a shop once you actually click "Push" — but be aware: pushing to an item a shop already has now <strong>fully overwrites</strong> its name, price, units, project types, and photo to match the master (this is intentional while you're still setting things up, since there's nothing real to protect yet — this should get smarter once real shops exist and may have customized their own copies).
             </div>
             <div id="mq-templates-msg"></div>
             <div class="mq-card" style="margin-bottom:1.5rem">
               <div class="mq-card-title">🏷️ Default project type descriptions</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These are the name and description every brand-new shop gets automatically for Refacing, Repainting, and Restaining — the note customers see on the widget when they pick that project type. Editing here only affects shops seeded from now on; it doesn't retroactively change any shop's existing project types.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These are the name and description every brand-new shop gets automatically for any master project types configured below — the note customers see on the widget when they pick that project type. Editing here only affects shops seeded from now on; it doesn't retroactively change any shop's existing project types.</p>
               <div id="mq-master-rooms-content"><div class="mq-loading">Loading...</div></div>
             </div>
             <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
@@ -1353,7 +1353,7 @@ window.logoutMember = async function () {
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
                 <div style="width:100%;max-width:280px">
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
-                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 5 minutes" maxlength="60" style="font-size:13px"/>
+                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your countertop quote in under 5 minutes" maxlength="60" style="font-size:13px"/>
                 </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
@@ -1443,7 +1443,7 @@ window.logoutMember = async function () {
 
               <div class="mq-field" style="margin-bottom:12px">
                 <label class="mq-label">Tagline</label>
-                <input type="text" id="mq-pd-tagline" value="Custom Kitchens & Millwork" maxlength="60" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
+                <input type="text" id="mq-pd-tagline" value="Custom Countertops & Fabrication" maxlength="60" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
               </div>
 
               <div class="mq-field" style="margin-bottom:12px">
@@ -2230,10 +2230,10 @@ window.logoutMember = async function () {
   }
 
   const DEFAULT_SPECIALTY_ITEMS = [
-    { name:'Single garbage pullout',     price:0,  perFt:false, sort:1 },
-    { name:'Lazy Susan',                 price:0,  perFt:false, sort:2 },
-    { name:'10x10 Glass door inserts',   price:0,  perFt:false, sort:3 },
-    { name:'Tall cabinet with pullouts', price:0,  perFt:false, sort:4 },
+    { name:'Undermount sink cutout',        price:0,  perFt:false, sort:1 },
+    { name:'Cooktop cutout',                price:0,  perFt:false, sort:2 },
+    { name:'Seam relocation',               price:0,  perFt:false, sort:3 },
+    { name:'Demo/removal of old countertop', price:0, perFt:false, sort:4 },
   ];
 
   async function ensureSpecialtyDefaults(shopRecord) {
@@ -2259,27 +2259,16 @@ window.logoutMember = async function () {
     return created.sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
   }
 
-  // Refacing/Repainting/Restaining come with these specialty items pre-built,
-  // each tagged so they only show for their matching project type. Runs once
-  // per shop, gated by its own 'Templates seeded' flag — independent of
-  // ensureSpecialtyDefaults above, since shops that already have OTHER
-  // specialty items should still get these new templates.
-  const PROJECT_TYPE_TEMPLATES = {
-    refacing: [
-      { name:'New doors',              price:0, perFt:false, perSqFt:true  },
-      { name:'New drawer fronts',      price:0, perFt:false, perSqFt:true  },
-      { name:'Edge tape replacement',  price:0, perFt:true,  perSqFt:false },
-      { name:'Hinge replacement',      price:0, perFt:false, perSqFt:false },
-    ],
-    repainting: [
-      { name:'Door & drawer front painting', price:0, perFt:false, perSqFt:true  },
-      { name:'Edge tape painting',           price:0, perFt:true,  perSqFt:false },
-    ],
-    restaining: [
-      { name:'Door & drawer front restaining', price:0, perFt:false, perSqFt:true  },
-      { name:'Edge tape restaining',           price:0, perFt:true,  perSqFt:false },
-    ],
-  };
+  // Countertop fork: this used to seed Refacing/Repainting/Restaining with
+  // their own specialty items (each tagged so they only show for their
+  // matching project type) — those three project types don't apply to a
+  // countertop-only store and have been dropped from the defaults, so this
+  // is empty for now. Keyed by project-type id -> array of starter specialty
+  // items, same shape as before; the admin Templates page still works fine
+  // with nothing configured here (shows "No template items yet"), and a
+  // real countertop project type can be added the same way if a shop-wide
+  // starter kit is ever wanted again.
+  const PROJECT_TYPE_TEMPLATES = {};
 
   // Name of the special reserved shop record that holds the master template
   // specialty items. Never shown to real customers — just an anchor for
@@ -2310,11 +2299,13 @@ window.logoutMember = async function () {
     const masterShop = await ensureMasterTemplateShop();
     let masterItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${MASTER_TEMPLATE_SHOP_NAME}", ARRAYJOIN({Shop}))`);
 
-    // Bootstrap starter items per project type (refacing/repainting/
-    // restaining) independently — not all-or-nothing on the whole master
-    // shop. Otherwise the moment ANY item exists (even one totally
-    // unrelated to these three), the starters for a project type that
-    // still has zero items of its own would never get created at all.
+    // Bootstrap starter items per project type independently — not
+    // all-or-nothing on the whole master shop. Otherwise the moment ANY item
+    // exists (even one totally unrelated), the starters for a project type
+    // that still has zero items of its own would never get created at all.
+    // (Countertop fork: PROJECT_TYPE_TEMPLATES above is currently empty, so
+    // this loop is a no-op — kept in place in case a starter kit is added
+    // for a real countertop project type later.)
     const existingRoomIds = new Set();
     masterItems.forEach(item => {
       try {
@@ -2343,15 +2334,16 @@ window.logoutMember = async function () {
     return masterItems;
   }
 
-  // Default project type definitions (name/description/adjustment) for
-  // Refacing/Repainting/Restaining, now editable via the admin Templates
-  // page instead of being hardcoded here. Bootstraps the master shop's own
-  // Room types field once from these starting values if it's never been set.
-  const DEFAULT_TEMPLATE_ROOM_DEFS = {
-    refacing:   { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
-    repainting: { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
-    restaining: { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
-  };
+  // Countertop fork: this used to hold default project type definitions
+  // (name/description/adjustment) for Refacing/Repainting/Restaining,
+  // editable via the admin Templates page instead of being hardcoded here.
+  // Those three project types don't apply to a countertop-only store and
+  // have been dropped from the defaults, so this is empty for now — the
+  // admin Templates page's "Default project type descriptions" card simply
+  // has nothing to show until a real countertop-specific master project
+  // type is added here the same way (id/name/description/coverImage/
+  // measureText/measureImage, keyed by project-type id).
+  const DEFAULT_TEMPLATE_ROOM_DEFS = {};
 
   async function ensureMasterTemplateRoomDefs() {
     const masterShop = await ensureMasterTemplateShop();
@@ -2372,6 +2364,10 @@ window.logoutMember = async function () {
     window._mqMasterRooms = masterRooms;
     const content = document.getElementById('mq-master-rooms-content');
     if (!content) return;
+    if (!masterRooms.length) {
+      content.innerHTML = '<div class="mq-empty">No default project types configured here yet — this card is optional.</div>';
+      return;
+    }
     content.innerHTML = masterRooms.map((r, idx) => `
       <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px">
         <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-master-room-name-${idx}" placeholder="Project type name" style="font-size:13px;font-weight:600;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
@@ -2396,7 +2392,7 @@ window.logoutMember = async function () {
           <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
           <div style="margin-bottom:8px">
             <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-master-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
-            <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo, [tip]text[/tip] wraps it in a yellow callout box</span>
+            <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows a reference photo, [tip]text[/tip] wraps it in a yellow callout box</span>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start">
             <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
@@ -2994,9 +2990,10 @@ window.logoutMember = async function () {
       { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.jpg', measureText:'', measureImage:'' },
       { id:'commercial', name:'Commercial',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Make a great first impression. Get countertops built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'commercial.jpg', measureText:'', measureImage:'' },
       { id:'other',   name:'Other',          materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'other.jpg', measureText:'', measureImage:'' },
-      { id:'refacing',   name:'Refacing',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
-      { id:'repainting', name:'Repainting',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
-      { id:'restaining', name:'Restaining',  materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
+      // Countertop fork: Refacing/Repainting/Restaining removed — those were
+      // cabinet-refinishing project types (new doors, drawer fronts, crown,
+      // valance) that don't apply to a countertop-only store. The 6 types
+      // above are now the full default set.
     ];
   }
 
@@ -3110,8 +3107,8 @@ window.logoutMember = async function () {
           </label>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
-            ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanity tops run smaller than kitchen counters, or commercial jobs may always use a specific material tier')}
-            ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific material or edge style')}
+            ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Material adjustment', 'e.g. bathroom vanity tops run smaller than kitchen counters, or commercial jobs may always use a specific material tier')}
+            ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Material adjustment (2)', 'e.g. commercial jobs may always use a specific material or edge style')}
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. renovations run higher since customers are living in the house')}
             ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
           </div>
@@ -3136,10 +3133,10 @@ window.logoutMember = async function () {
           </div>
           <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
-            <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+            <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for a small vanity vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
             <div style="margin-bottom:8px">
               <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
-              <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo, [tip]text[/tip] wraps it in a yellow callout box</span>
+              <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows a reference photo, [tip]text[/tip] wraps it in a yellow callout box</span>
             </div>
             ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos') : `
             <div style="display:flex;gap:8px;align-items:flex-start">
@@ -3287,7 +3284,7 @@ window.logoutMember = async function () {
   }
 
   // Keeps the "Restore a default type" dropdown showing only the standard
-  // project types (Kitchen, Bathroom, Refacing, etc.) that are currently
+  // project types (Kitchen, Bathroom, Commercial, etc.) that are currently
   // missing from this shop's own list — so a shop owner who accidentally
   // deleted one can bring it straight back with its original description,
   // cover image, and measuring guide intact, without needing to recreate
@@ -3647,13 +3644,13 @@ window.logoutMember = async function () {
 
 {description}
 
-**A note on your new cabinets:** due to the natural expansion and contraction of wood, joints between components cannot be made completely invisible — this is normal and expected, **not a defect**.
+**A note on your new countertop:** natural stone and engineered materials can vary slightly in colour, veining, and pattern from any sample or photo you've seen — this is normal and expected, **not a defect**.
 
-Finishes (painted or stained, opaque or clear) do not fully seal out moisture, especially in high-traffic, high-moisture areas such as around sinks. Humidity levels inside a home affect wood movement, and this is outside our control as the manufacturer.
+Seams are placed for the best fit given the material and layout, and a properly sealed seam may still be visible up close — this is normal for countertop installation and not considered a defect.
 
-We use modern materials and techniques to keep joint visibility to a minimum, but cannot guarantee against natural wood movement — **a single-piece composite door is the only way to eliminate visible joints entirely.**
+We use industry-standard materials and techniques to keep seams and joints as minimal as possible, consistent with standard industry practices.
 
-To clean painted or lacquered doors and panels, **use a damp cloth only** — standing water can penetrate the wood, causing the finish to peel and voiding the warranty.
+To clean your countertop, **follow the care instructions for your specific material** — some cleaners and abrasive pads can dull or damage certain finishes.
 
 {items}
 
@@ -4134,9 +4131,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const accent = f['Accent colour'] || '#1a3a6b';
 
     const sampleLines = [
-      { label: 'Upper cabinets — Maple Shaker', cost: 1850 },
-      { label: 'Base cabinets — Maple Shaker', cost: 2100 },
-      { label: 'Countertop — Quartz', cost: 1400 },
+      { label: 'Countertop — Quartz', cost: 2800 },
+      { label: 'Undermount sink cutout', cost: 150 },
+      { label: 'Backsplash — 4" Quartz', cost: 400 },
     ];
     const subtotal = sampleLines.reduce((s, l) => s + l.cost, 0);
     const taxAmt = subtotal * ((f['Tax percent'] || 0) / 100);
@@ -4155,8 +4152,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const dateStr = new Date().toLocaleDateString();
 
     const renderedBodyHtml = mqPropRenderBodyTokens(f['Body'] || '', {
-      customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', customerPhone: '(555) 123-4567', jobName: 'Kitchen Reface',
-      description: 'Full kitchen reface — new doors, drawer fronts, and hardware throughout, plus a new quartz countertop.',
+      customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', customerPhone: '(555) 123-4567', jobName: 'Kitchen Countertops',
+      description: 'Full kitchen countertop replacement — quartz countertops, undermount sink cutout, and a new backsplash.',
       date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt,
       itemsHtml, itemsPlainHtml, itemsPlainLightHtml, itemsHeaderHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
     });
@@ -5762,7 +5759,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const minInputHTML = (v, vi) => !showMin ? '' : `
         <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
         <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
-        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small item takes just as much time to fabricate and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
     const rows = variants.map((v, vi) => `
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
@@ -5975,7 +5972,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `<div id="${wrapId}" style="display:${visible ? 'flex' : 'none'};align-items:center;gap:4px;margin-top:5px">
       <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
       <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
-      <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+      <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — a small item takes just as much time to fabricate and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
     </div>`;
   }
 
@@ -6069,14 +6066,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const installPerSqFt = !!r.fields['Install per square foot'];
       return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
           <span style="font-size:11px;color:#6b7280">Install price (labor only, added on top)</span>
-          <span onclick="mqShowSpecHelpPopover(this,'e.g. ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+          <span onclick="mqShowSpecHelpPopover(this,'e.g. ${CUR()}54.95/sqft to supply a countertop + ${CUR()}16.80/sqft to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
         <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
         ${mqSpecMinPriceHTML(r, true)}
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
           <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per lin ft</label>
           <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per sq ft</label>
-          <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+          <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per linear ft.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
         <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
@@ -6370,7 +6367,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
         <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
-          <input type="text" id="mq-tmpl-filter-search" oninput="mqFilterTemplateCards()" placeholder="e.g. shaker door" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+          <input type="text" id="mq-tmpl-filter-search" oninput="mqFilterTemplateCards()" placeholder="e.g. sink cutout" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
         </div>
       </div>
       <div id="mq-tmpl-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No template items match that filter.</div>
@@ -7112,7 +7109,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     Instant Pricing
     <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
   </div>
-  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
+  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your countertop estimate<br/>in under 5 minutes</h2>
   <p style="font-size:14px;color:#5c5650;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
 </div>`;
 
@@ -7220,7 +7217,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
       let bgImage = _mqGraphicBgImage;
       let overlayOpacity = _mqGraphicOverlayOpacity;
-      let graphicHeadline = _mqGraphicHeadline || 'Get your cabinet quote in under 5 minutes';
+      let graphicHeadline = _mqGraphicHeadline || 'Get your countertop quote in under 5 minutes';
 
       function wrapText(text, font, maxWidth) {
         ctx.font = font;
@@ -7360,7 +7357,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         graphicHeadlineInput.oninput = () => {
           const val = graphicHeadlineInput.value.trim();
           _mqGraphicHeadline = val;
-          graphicHeadline = val || 'Get your cabinet quote in under 5 minutes';
+          graphicHeadline = val || 'Get your countertop quote in under 5 minutes';
           drawGraphic();
           saveHeadlinesDebounced(shopRecord);
         };
