@@ -687,8 +687,8 @@ window.logoutMember = async function () {
 
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
-    const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
-    window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
+    const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget-countertop.js?shop=' + token + '"&gt;&lt;/script&gt;';
+    window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget-countertop.js?shop=' + token + '"></scr' + 'ipt>';
 
     return `
       <div class="mq-topbar">
@@ -1167,10 +1167,10 @@ window.logoutMember = async function () {
                 <div class="mq-card">
                   <div class="mq-card-title">⚡ Your MidasQuote Pro link</div>
                   <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This one's just for you — or anyone you want to bring in, like a contractor you always work with. It shows the exact real numbers behind every quote, right alongside the same ballpark range your customers see. Not for sharing with customers.</p>
-                  <div class="mq-embed-box">https://widget.midasquote.com/pro.html?shop=${token}
+                  <div class="mq-embed-box">https://widget.midasquote.com/pro-countertop.html?shop=${token}
                     <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
-                      <button onclick="window.open('https://widget.midasquote.com/pro.html?shop=${token}','_blank')" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">Open ↗</button>
-                      <button class="mq-copy-btn" style="position:static" onclick="mqCopyText('https://widget.midasquote.com/pro.html?shop=${token}',this)">Copy</button>
+                      <button onclick="window.open('https://widget.midasquote.com/pro-countertop.html?shop=${token}','_blank')" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">Open ↗</button>
+                      <button class="mq-copy-btn" style="position:static" onclick="mqCopyText('https://widget.midasquote.com/pro-countertop.html?shop=${token}',this)">Copy</button>
                     </div>
                   </div>
                 </div>
@@ -7081,7 +7081,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const shopName = shopRecord.fields['Shop name'] || 'our shop';
     const token = shopRecord.fields['Shop token'] || '';
     const defaultQuoteLink = `https://widget.midasquote.com/?shop=${token}`;
-    const embedCode = `<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <script src="https://widget.midasquote.com/widget.js?shop=${token}"></script>\n</div>`;
+    const embedCode = `<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <script src="https://widget.midasquote.com/widget-countertop.js?shop=${token}"></script>\n</div>`;
 
     function buildSocialPosts(quoteLink) {
       return [
@@ -9442,7 +9442,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-countertop.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
