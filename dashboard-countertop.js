@@ -698,7 +698,7 @@ window.logoutMember = async function () {
         </div>
         <div class="mq-topbar-actions">
           <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#6b7280;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#6b7280'">Help</a>
-          <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
+          <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/countertop.html?shop=${token}','_blank')">Preview widget ↗</button>
           <button 
   type="button"
   class="mq-btn mq-btn-sm"
@@ -1133,10 +1133,10 @@ window.logoutMember = async function () {
                 <div class="mq-card">
                   <div class="mq-card-title">📱 Direct quote link</div>
                   <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Opens your quote tool directly — share on social media, Google Business Profile, email signature, or anywhere online. No website needed. Or use it for walk-in customers, right on the spot.</p>
-                  <div class="mq-embed-box">https://widget.midasquote.com/?shop=${token}&mode=shop
+                  <div class="mq-embed-box">https://widget.midasquote.com/countertop.html?shop=${token}&mode=shop
                     <div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">
-                      <button onclick="window.open('https://widget.midasquote.com/?shop=${token}&mode=shop','_blank')" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">Open ↗</button>
-                      <button class="mq-copy-btn" style="position:static" onclick="mqCopyText('https://widget.midasquote.com/?shop=${token}&mode=shop',this)">Copy</button>
+                      <button onclick="window.open('https://widget.midasquote.com/countertop.html?shop=${token}&mode=shop','_blank')" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">Open ↗</button>
+                      <button class="mq-copy-btn" style="position:static" onclick="mqCopyText('https://widget.midasquote.com/countertop.html?shop=${token}&mode=shop',this)">Copy</button>
                     </div>
                   </div>
                 </div>
@@ -7080,16 +7080,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function initMarketingKit(shopRecord) {
     const shopName = shopRecord.fields['Shop name'] || 'our shop';
     const token = shopRecord.fields['Shop token'] || '';
-    const defaultQuoteLink = `https://widget.midasquote.com/?shop=${token}`;
+    const defaultQuoteLink = `https://widget.midasquote.com/countertop.html?shop=${token}`;
     const embedCode = `<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <script src="https://widget.midasquote.com/widget-countertop.js?shop=${token}"></script>\n</div>`;
 
     function buildSocialPosts(quoteLink) {
       return [
-        `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 5 minutes. Try it now → ${quoteLink}`,
-        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 5 minutes — right from your phone. ${quoteLink}`,
+        `🛠️ Now you can get an instant countertop quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 5 minutes. Try it now → ${quoteLink}`,
+        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your countertop project in 5 minutes — right from your phone. ${quoteLink}`,
         `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
-        `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
-        `Hey homeowners! If you're planning a kitchen remodel, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
+        `Know your price before you even call. Get an instant countertop estimate here → ${quoteLink}`,
+        `Hey homeowners! If you're planning a countertop upgrade, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
       ];
     }
 
