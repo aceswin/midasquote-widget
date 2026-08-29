@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MidasQuote Countertop Estimate</title>
+  <style>
+    body { margin: 0; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="midasquote-widget"></div>
+  <script>
+    // Same pattern as pro-countertop.html: reads ?shop=... from this page's
+    // own URL and passes it straight through to the widget script, so one
+    // central page works for every countertop shop's preview link without
+    // hand-editing anything per shop.
+    const shopToken = new URLSearchParams(window.location.search).get('shop');
+
+    if (!shopToken) {
+      document.getElementById('midasquote-widget').innerHTML =
+        '<div style="padding:3rem 1.5rem;text-align:center;color:#6b7280;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif">No shop specified. Make sure your link includes <code>?shop=your-shop-token</code>.</div>';
+    } else {
+      const s = document.createElement('script');
+      s.src = `https://widget.midasquote.com/widget-countertop.js?shop=${encodeURIComponent(shopToken)}`;
+      document.body.appendChild(s);
+    }
+  </script>
+</body>
+</html>
