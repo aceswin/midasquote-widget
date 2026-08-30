@@ -5952,16 +5952,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             </div>
           </div>
           <div id="mq-showroom-cat-body-${catKey}" style="display:${collapsed?'none':'block'};padding:0 1.25rem 1.25rem">
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
+            <div id="mq-showroom-grid-${cat.id}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
               ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer">
-                📤 Add photos
-                <input type="file" accept="image/*" multiple style="display:none" onchange="mqBulkAddShowroomItems('${cat.id}', this.files); this.value=''"/>
-              </label>
-              <button class="mq-btn mq-btn-sm" onclick="mqAddShowroomItem('${cat.id}')">+ Add blank item</button>
-            </div>
+            ${(cat.items||[]).length > 1 ? '<p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Drag any photo\'s ⠿ handle to reorder it.</p>' : ''}
+            <label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer;display:inline-block">
+              📤 Add photos
+              <input type="file" accept="image/*" multiple style="display:none" onchange="mqBulkAddShowroomItems('${cat.id}', this.files); this.value=''"/>
+            </label>
           </div>
         </div>`;
       }
@@ -6014,6 +6012,60 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'showroom',
         (url) => { mqSaveShowroomItemPhoto(key, url); }
       );
+    });
+
+    mqWireShowroomItemDrag();
+  }
+
+  // Drag-to-reorder for each custom category's item grid — same handle-
+  // activated draggable pattern already used for Project Types/Specialty
+  // items rows (draggable only turns on while the mouse is down on the ⠿
+  // handle, so dragging a card doesn't fight with clicking its buttons or
+  // selecting its name/URL text). Only custom categories are reorderable
+  // this way — a priced/specialty category's item list is computed live
+  // from Photos/Hidden, not a stored order, so there's nothing to persist
+  // there yet.
+  //
+  // Reordering itself is driven by DOM position (was the dragged card
+  // before or after the one being hovered) rather than the single-axis
+  // cursor-vs-midpoint check the row version uses — that check only really
+  // makes sense for a single-column list, and this is a multi-column grid.
+  function mqWireShowroomItemDrag() {
+    (window._mqShowroomCats || []).forEach(cat => {
+      const grid = document.getElementById('mq-showroom-grid-' + cat.id);
+      if (!grid) return;
+      let dragging = null;
+      grid.querySelectorAll('.mq-showroom-item-card').forEach(card => {
+        card.draggable = false;
+        const handle = card.querySelector('.mq-showroom-drag-handle');
+        if (handle) handle.addEventListener('mousedown', () => { card.draggable = true; });
+        card.addEventListener('mouseup', () => { card.draggable = false; });
+        card.addEventListener('dragstart', () => {
+          dragging = card;
+          setTimeout(() => { card.style.opacity = '0.4'; }, 0);
+        });
+        card.addEventListener('dragend', () => {
+          card.style.opacity = '1';
+          card.draggable = false;
+          dragging = null;
+          const orderedIds = [...grid.querySelectorAll('.mq-showroom-item-card')].map(c => c.dataset.itemId);
+          const itemsById = {};
+          (cat.items || []).forEach(i => { itemsById[i.id] = i; });
+          cat.items = orderedIds.map(id => itemsById[id]).filter(Boolean);
+          mqSaveShowroomCategories()
+            .then(() => { showMsg('mq-showroom-msg', '✓ Order saved.'); window.mqRefreshShowroomPreview(); })
+            .catch(() => showMsg('mq-showroom-msg', 'Error saving order — please try again.', 'error'));
+        });
+        card.addEventListener('dragover', e => {
+          e.preventDefault();
+          if (!dragging || dragging === card) return;
+          const cards = [...grid.children];
+          const dragIdx = cards.indexOf(dragging);
+          const targetIdx = cards.indexOf(card);
+          if (dragIdx < targetIdx) grid.insertBefore(dragging, card.nextSibling);
+          else grid.insertBefore(dragging, card);
+        });
+      });
     });
   }
 
@@ -6094,7 +6146,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const preview = photo
       ? `<img src="${photo}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
       : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🖼️</div>`;
-    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
+    return `<div class="mq-showroom-item-card" data-item-id="${item.id}" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;transition:opacity 0.15s">
+      <div class="mq-showroom-drag-handle" title="Drag to reorder" style="cursor:grab;text-align:center;color:#b0b0b0;font-size:14px;line-height:1;margin:-4px 0 8px;user-select:none">⠿</div>
       ${preview}
       <div style="font-size:13px;font-weight:${hasName?600:400};font-style:${hasName?'normal':'italic'};color:${hasName?'#111':'#9ca3af'};margin-bottom:8px">${hasName ? (item.name||'').replace(/</g,'&lt;') : 'Untitled item'}</div>
       <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
@@ -6202,25 +6255,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         : `✓ ${files.length} photo${files.length > 1 ? 's' : ''} added — name them whenever you're ready.`);
       window.mqRefreshShowroomPreview();
     } catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
-  };
-
-  // Name is optional — Cancel on the prompt aborts adding an item entirely,
-  // but clicking OK with the field left blank still adds one (as
-  // "Untitled item"), for shops who want to get a photo up now and name it
-  // later. Just a plain string in a JSON field either way, so nothing about
-  // Airtable cares whether it's empty.
-  window.mqAddShowroomItem = async function(catId) {
-    const cats = window._mqShowroomCats || [];
-    const cat = cats.find(c => c.id === catId);
-    if (!cat) return;
-    const raw = prompt('Item name — e.g. "Walnut Waterfall Island" (optional, leave blank and name it later if you\'d rather):');
-    if (raw === null) return; // Cancel
-    const name = raw.trim();
-    cat.items = cat.items || [];
-    cat.items.push({ id: mqGenShowroomId('item'), name, photo: '' });
-    renderShowroomCats();
-    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', name ? `✓ "${name}" added.` : '✓ Item added — name it whenever you\'re ready.'); window.mqRefreshShowroomPreview(); }
-    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
   window.mqRenameShowroomItem = async function(catId, itemId) {
