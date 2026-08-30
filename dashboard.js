@@ -5955,7 +5955,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
               ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
             </div>
-            <button class="mq-btn mq-btn-sm" onclick="mqAddShowroomItem('${cat.id}')">+ Add item</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer">
+                📤 Add photos
+                <input type="file" accept="image/*" multiple style="display:none" onchange="mqBulkAddShowroomItems('${cat.id}', this.files); this.value=''"/>
+              </label>
+              <button class="mq-btn mq-btn-sm" onclick="mqAddShowroomItem('${cat.id}')">+ Add blank item</button>
+            </div>
           </div>
         </div>`;
       }
@@ -6146,6 +6152,56 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     renderShowroomCats();
     try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', '✓ Category deleted.'); window.mqRefreshShowroomPreview(); }
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  // Bulk photo upload — pick several files at once, each one becomes its
+  // own unnamed item, no prompts at all. Every file goes through
+  // mqUploadImage exactly like every other photo uploaded on this
+  // dashboard (product photos, specialty items, logos aside), which resizes
+  // to a max of 1200px on the long side and re-encodes as JPEG at 85%
+  // quality — unless the image actually uses transparency, which stays PNG
+  // — and only keeps the re-encoded version if it's actually smaller. That
+  // already handles "no huge PNGs/BMPs," so there's nothing extra to add
+  // here beyond calling the same function per file.
+  window.mqBulkAddShowroomItems = async function(catId, fileList) {
+    const cats = window._mqShowroomCats || [];
+    const cat = cats.find(c => c.id === catId);
+    const shopRec = window._mqShopRecord;
+    if (!cat || !shopRec || !fileList || !fileList.length) return;
+    const files = Array.from(fileList);
+    const shopToken = shopRec.fields['Shop token'] || 'unknown-shop';
+
+    // Placeholder items appear immediately (blank photo, filled in as each
+    // upload finishes) so the grid updates right away instead of sitting
+    // blank while 10 photos upload.
+    const newItems = files.map(() => ({ id: mqGenShowroomId('item'), name: '', photo: '' }));
+    cat.items = cat.items || [];
+    cat.items.push(...newItems);
+    renderShowroomCats();
+    showMsg('mq-showroom-msg', `Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...`);
+
+    // A few at a time rather than all at once — friendlier to a shop's
+    // connection uploading several full photos from their phone, and to
+    // the image worker on the other end.
+    const CONCURRENCY = 3;
+    let cursor = 0, failed = 0;
+    async function worker() {
+      while (cursor < files.length) {
+        const i = cursor++;
+        try { newItems[i].photo = await mqUploadImage(files[i], shopToken, 'showroom'); }
+        catch(e) { failed++; }
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, files.length) }, worker));
+
+    renderShowroomCats();
+    try {
+      await mqSaveShowroomCategories();
+      showMsg('mq-showroom-msg', failed
+        ? `✓ ${files.length - failed} of ${files.length} uploaded — ${failed} failed, try those again from their card.`
+        : `✓ ${files.length} photo${files.length > 1 ? 's' : ''} added — name them whenever you're ready.`);
+      window.mqRefreshShowroomPreview();
+    } catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
   // Name is optional — Cancel on the prompt aborts adding an item entirely,
