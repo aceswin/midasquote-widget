@@ -5897,6 +5897,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     renderShowroomCats();
   }
 
+  // Every category card is collapsible — arrow + name toggles the item
+  // grid open/closed without a full re-render. Collapsed state lives only
+  // in memory (window._mqShowroomCollapsed), not saved to Airtable — it's
+  // a display convenience, not data. A category defaults to collapsed the
+  // first time it's ever seen only if it's already hidden from the
+  // showroom (keeps a long list of mostly-hidden categories out of the
+  // way); otherwise it defaults open, same as before. Once a category is
+  // explicitly hidden via mqShowroomToggleHideCat, it's force-collapsed
+  // right then too, so "hide" visibly shrinks the list immediately.
+  function mqShowroomIsCollapsed(catKey, defaultCollapsed) {
+    window._mqShowroomCollapsed = window._mqShowroomCollapsed || {};
+    if (!(catKey in window._mqShowroomCollapsed)) window._mqShowroomCollapsed[catKey] = !!defaultCollapsed;
+    return window._mqShowroomCollapsed[catKey];
+  }
+
+  window.mqShowroomToggleCat = function(catKey) {
+    window._mqShowroomCollapsed = window._mqShowroomCollapsed || {};
+    const collapsed = !window._mqShowroomCollapsed[catKey];
+    window._mqShowroomCollapsed[catKey] = collapsed;
+    const body  = document.getElementById('mq-showroom-cat-body-' + catKey);
+    const arrow = document.getElementById('mq-showroom-cat-arrow-' + catKey);
+    if (body)  body.style.display = collapsed ? 'none' : 'block';
+    if (arrow) arrow.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(90deg)';
+  };
+
   function renderShowroomCats() {
     const wrap = el('mq-showroom-cats');
     if (!wrap) return;
@@ -5911,16 +5936,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
       const cat = customById[catKey];
       if (cat) {
+        const collapsed = mqShowroomIsCollapsed(catKey, false);
         return `<div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
-            <div style="display:flex;gap:4px">${upBtn}${downBtn}</div>
-            <div style="font-size:14px;font-weight:600;color:#111;flex:1;min-width:120px">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></div>
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:120px">
+              <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
+              <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
+                <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
+                <span style="font-size:14px;font-weight:600;color:#111">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></span>
+              </div>
+            </div>
             <div style="display:flex;gap:8px;flex-shrink:0">
               <button class="mq-btn mq-btn-sm" onclick="mqRenameShowroomCategory('${cat.id}')">✏️ Rename</button>
               <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqDeleteShowroomCategory('${cat.id}')">🗑️ Delete category</button>
             </div>
           </div>
-          <div style="padding:0 1.25rem 1.25rem">
+          <div id="mq-showroom-cat-body-${catKey}" style="display:${collapsed?'none':'block'};padding:0 1.25rem 1.25rem">
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
               ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
             </div>
@@ -5933,17 +5964,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const isHidden = !!settings.hidden[catKey];
       const displayName = settings.names[catKey] || mqShowroomDefaultCatName(catKey);
       const items = mqShowroomVisibleItemsFor(catKey);
+      const collapsed = mqShowroomIsCollapsed(catKey, isHidden);
       return `<div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px;${isHidden?'opacity:0.55':''}">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
-          <div style="display:flex;gap:4px">${upBtn}${downBtn}</div>
-          <div style="font-size:14px;font-weight:600;color:#111;flex:1;min-width:120px">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''})</span></div>
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:120px">
+            <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
+              <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
+              <span style="font-size:14px;font-weight:600;color:#111">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''})</span></span>
+            </div>
+          </div>
           <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
             <button class="mq-btn mq-btn-sm" onclick="mqShowroomRenameCat('${catKey}')">✏️ Rename</button>
             ${settings.names[catKey] ? `<button class="mq-btn mq-btn-sm" onclick="mqShowroomResetCatName('${catKey}')">↺ Default name</button>` : ''}
             <button class="mq-btn mq-btn-sm" style="${isHidden?'':'color:#dc2626'}" onclick="mqShowroomToggleHideCat('${catKey}')">${isHidden ? '👁️ Show category' : '🚫 Hide category'}</button>
           </div>
         </div>
-        <div style="padding:0 1.25rem 1.25rem">
+        <div id="mq-showroom-cat-body-${catKey}" style="display:${collapsed?'none':'block'};padding:0 1.25rem 1.25rem">
           <p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Renaming or hiding this only changes your showroom page — your pricing and widget are never affected. Add photos (so more items show up here) or brand new priced items from the My Products tab.</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
             ${items.length ? items.map(it => `
@@ -6006,6 +6043,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (settings.hidden[catKey]) delete settings.hidden[catKey];
     else settings.hidden[catKey] = true;
     const nowHidden = !!settings.hidden[catKey];
+    // Hiding a category also collapses it right away, so the list actually
+    // shrinks instead of just graying out — matches what hiding is for.
+    if (nowHidden) { window._mqShowroomCollapsed = window._mqShowroomCollapsed || {}; window._mqShowroomCollapsed[catKey] = true; }
     renderShowroomCats();
     try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', nowHidden ? '✓ Category hidden from showroom.' : '✓ Category shown on showroom again.'); window.mqRefreshShowroomPreview(); }
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
