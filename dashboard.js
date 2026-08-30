@@ -302,9 +302,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     showroom: {
       title: 'Showroom',
       body: `
-        <p>This is a portfolio, not a pricing page — categories and items you add here are just for show. There's no pricing, no project types, and no "quotable" setting to worry about, so feel free to add, rename, and delete as much as you want.</p>
-        <p>Your real priced items (materials, doors, specialty items, etc.) still show up on your showroom page too — those are managed on the My Products tab, same as before. This tab is just for extra things you want to show off that aren't tied to a price, like past projects or custom pieces.</p>
-        <p>The live preview below is your actual showroom page, not a mockup — it's exactly what a customer (or anyone you send the link to) sees.</p>
+        <p>Every category that can appear on your showroom shows up here — your real priced categories (Box Materials, Door Styles, Specialty Items, etc.) right alongside any extra ones you add yourself.</p>
+        <p>For a priced category, "✏️ Rename" and "🚫 Hide category" only change what shows on your <em>showroom</em> — your actual pricing, categories, and the widget are never touched. Each item underneath has its own "Remove from showroom" button, same idea — the item itself is untouched, it just stops appearing here. An item needs a photo (added on My Products) before it shows up in this list at all.</p>
+        <p>"+ New category" adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it.</p>
+        <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order.</p>
+        <p>The live preview below is your actual showroom page, not a mockup — it's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
         <p>Your showroom has its own link that works completely on its own — paste it into your own website's navigation if you'd like, it doesn't need the widget at all.</p>
       `
     },
@@ -1228,7 +1230,7 @@ window.logoutMember = async function () {
           <div class="mq-page" id="mq-page-showroom">
             <button class="mq-help-btn" onclick="mqShowHelp('showroom')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">🖼️ Showroom</div>
-            <div class="mq-page-sub">Build out a portfolio of your own work — add as many categories and items as you want, each with its own photo. These are completely separate from your pricing, so there's nothing to configure and nothing you can break by adding, renaming, or deleting freely. To manage photos or show/hide items tied to your actual pricing (materials, doors, specialty items, etc.), use the My Products tab instead — those still show up on your showroom page too, just below what you add here.</div>
+            <div class="mq-page-sub">Manage everything that can appear on your showroom page — your real priced categories (materials, doors, specialty items, etc.) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
             <div id="mq-showroom-msg"></div>
 
             <div class="mq-card" style="margin-bottom:1.5rem">
@@ -1240,7 +1242,7 @@ window.logoutMember = async function () {
 
             <div class="mq-card" style="margin-bottom:1.5rem">
               <div class="mq-card-title">📦 Your categories</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Every add, rename, and delete saves right away — no separate "Save" button on this tab.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use the ▲▼ arrows to reorder. Every category shows here, even your regular priced ones (Box Materials, Door Styles, Specialty Items, etc.) — rename or hide those for the showroom only, or remove one of their items, without changing anything about your pricing. "+ New category" adds a fully independent one of your own. Every change saves right away — no separate "Save" button on this tab.</p>
               <div id="mq-showroom-cats"><div class="mq-loading">Loading...</div></div>
               <button class="mq-btn mq-btn-primary" style="margin-top:12px" onclick="mqAddShowroomCategory()">+ New category</button>
             </div>
@@ -5746,20 +5748,109 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   // ============================================================
-  // SHOWROOM TAB — independent showcase categories/items, not tied
-  // to pricing at all (a shop's real priced/specialty items still show
-  // on the live showroom too, but those are managed from My Products —
-  // this tab only owns the extra portfolio-style content layered on top).
-  // Stored as one JSON blob on the Shops table ("Showroom categories"),
-  // same pattern as Photos/Hidden/Products elsewhere on this tab.
-  // Shape: [{ id, name, items: [{ id, name, photo }] }]
-  // NOTE: the "Showroom categories" (Long text) field must already exist
-  // on the Shops table in Airtable — atUpdate/typecast can only convert
-  // a value into a field that's already there, it can't create a brand
-  // new field on its own.
+  // SHOWROOM TAB — one management view for everything that can appear on
+  // the live showroom page: (a) the shop's real priced/specialty
+  // categories & items (rename the showroom-facing label, remove an item,
+  // hide a whole category — all showroom-only, never touches pricing or
+  // the widget), and (b) fully independent showcase categories/items with
+  // no pricing tie-in at all (add/rename/delete freely). Both kinds share
+  // one reorderable list.
+  //
+  // Storage, 3 pieces:
+  //  - "Showroom categories" (Long text/JSON) — the INDEPENDENT showcase
+  //    categories' own content: [{ id, name, items: [{ id, name, photo }] }]
+  //  - "Showroom category settings" (Long text/JSON) — display order,
+  //    showroom-only name overrides, and whole-category hides, covering
+  //    BOTH kinds of category in one place: { order:[...], names:{...},
+  //    hidden:{...} }, keyed by category key — the fixed pricing/specialty
+  //    keys ('material','door',...,'specialty') or a custom category's id.
+  //  - "Hidden" (Long text/JSON) — already existed (My Products' "Hide
+  //    from showroom" checkbox); reused as-is for per-ITEM removal within
+  //    a priced/specialty category, keyed the same way My Products/
+  //    showroom.html already key it (li_<cat>_<name> / spec_<id>).
+  //
+  // NOTE: "Showroom categories" and "Showroom category settings" (both
+  // Long text) must already exist on the Shops table in Airtable —
+  // atUpdate/typecast can only convert a value into a field that's
+  // already there, it can't create a brand new field on its own.
   // ============================================================
+  const PRICING_SHOWROOM_CAT_KEYS = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance','tall_cabinet','specialty'];
+  const PRICING_SHOWROOM_CAT_EMOJI = { material:'🪵', door:'🚪', drawer:'🗄️', hinge:'🔧', countertop:'🪨', trim_crown:'👑', trim_valance:'📏', tall_cabinet:'🏛️', specialty:'⭐' };
+
   function mqGenShowroomId(prefix) {
     return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function mqShowroomDefaultCatName(catKey) {
+    const emoji = PRICING_SHOWROOM_CAT_EMOJI[catKey] ? PRICING_SHOWROOM_CAT_EMOJI[catKey] + ' ' : '';
+    return emoji + (CAT_DISPLAY_NAMES[catKey] || catKey);
+  }
+
+  // Standalone duplicate of the grouping logic My Products' initProductsTab
+  // uses to build byCategory (dedupe materials/drawers by base name, split
+  // trim into crown/valance) — kept as its own copy rather than shared, so
+  // nothing this tab does can ever affect the already-shipped My Products
+  // tab. Only needs baseName here (to compute the same photo key My
+  // Products/showroom.html already use), not ids/groups/pricing.
+  function buildShowroomLineItemCategories(lineItemsData) {
+    const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
+    const ITEM_EXCLUDE = /backsplash|cutout|cooktop/i;
+    const byCategory = {};
+    (lineItemsData || []).forEach(r => {
+      if (!r.fields || r.fields['Active'] === false) return;
+      let cat = r.fields['Category'];
+      if (!cat || EXCLUDED_CATS.has(cat.toLowerCase())) return;
+      if (cat === 'trim') cat = (r.fields['Trim type'] === 'valance') ? 'trim_valance' : 'trim_crown';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      const baseName = (r.fields['Name'] || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
+      if (ITEM_EXCLUDE.test(baseName)) return;
+      if (!byCategory[cat].find(x => x.baseName === baseName)) byCategory[cat].push({ baseName });
+    });
+    return byCategory;
+  }
+
+  // Currently-showing items for one priced/specialty category — has a
+  // photo AND isn't individually hidden. Anything without a photo yet just
+  // isn't a showroom concern until it gets one from My Products.
+  function mqShowroomVisibleItemsFor(catKey) {
+    const photos = window._mqShowroomPhotos || {};
+    const hiddenItems = window._mqShowroomHiddenItems || {};
+    if (catKey === 'specialty') {
+      return (window._mqShowroomSpecItems || []).flatMap(r => {
+        const itemName = r.fields['Item name'] || '';
+        const variants = mqParseVariants(r);
+        if (!variants.length) {
+          const itemKey = 'spec_' + r.id;
+          return (photos[itemKey] && !hiddenItems[itemKey]) ? [{ itemKey, name: itemName, photo: photos[itemKey] }] : [];
+        }
+        return variants.flatMap(v => {
+          const itemKey = 'spec_' + r.id + '_v' + v.id;
+          const name = `${itemName} — ${(v.label||'').trim() || 'Variant'}`;
+          return (photos[itemKey] && !hiddenItems[itemKey]) ? [{ itemKey, name, photo: photos[itemKey] }] : [];
+        });
+      });
+    }
+    const items = (window._mqShowroomByCategory && window._mqShowroomByCategory[catKey]) || [];
+    return items.flatMap(item => {
+      const itemKey = `li_${catKey}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
+      return (photos[itemKey] && !hiddenItems[itemKey]) ? [{ itemKey, name: item.baseName, photo: photos[itemKey] }] : [];
+    });
+  }
+
+  // Full combined display order: every fixed pricing/specialty key first
+  // (always present, even with 0 items right now, so a shop can pre-hide
+  // one before it ever has a photo), then every custom category — arranged
+  // by the shop's saved order, with anything missing from that saved order
+  // (a brand new custom category, or a shop that's never reordered
+  // anything) appended at the end in this same default relative order, so
+  // nothing silently disappears just for being unordered yet.
+  function mqShowroomFullOrder() {
+    const settings = window._mqShowroomSettings || { order: [] };
+    const customIds = (window._mqShowroomCats || []).map(c => c.id);
+    const allKeys = [...PRICING_SHOWROOM_CAT_KEYS, ...customIds];
+    const saved = (settings.order || []).filter(k => allKeys.includes(k));
+    const missing = allKeys.filter(k => !saved.includes(k));
+    return [...saved, ...missing];
   }
 
   async function initShowroomTab(shopRecord) {
@@ -5772,6 +5863,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!Array.isArray(cats)) cats = [];
     window._mqShowroomCats = cats;
 
+    let settingsRaw = {};
+    try { settingsRaw = shopRecord.fields['Showroom category settings'] ? JSON.parse(shopRecord.fields['Showroom category settings']) : {}; } catch(e) { settingsRaw = {}; }
+    window._mqShowroomSettings = {
+      order:  Array.isArray(settingsRaw.order) ? settingsRaw.order : [],
+      names:  (settingsRaw.names  && typeof settingsRaw.names  === 'object') ? settingsRaw.names  : {},
+      hidden: (settingsRaw.hidden && typeof settingsRaw.hidden === 'object') ? settingsRaw.hidden : {},
+    };
+
+    try { window._mqShowroomPhotos = shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}; } catch(e) { window._mqShowroomPhotos = {}; }
+    try { window._mqShowroomHiddenItems = shopRecord.fields['Hidden'] ? JSON.parse(shopRecord.fields['Hidden']) : {}; } catch(e) { window._mqShowroomHiddenItems = {}; }
+
     const linkText = el('mq-showroomtab-link-text');
     const copyBtn  = el('mq-showroomtab-copy-btn');
     const openBtn  = el('mq-showroomtab-open-btn');
@@ -5782,37 +5884,81 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const frame = el('mq-showroom-preview-frame');
     if (frame) frame.src = showroomUrl + '&_r=' + Date.now();
 
+    const wrap = el('mq-showroom-cats');
+    if (wrap) wrap.innerHTML = '<div class="mq-loading">Loading your products...</div>';
+
+    const [lineItems, specItems] = await Promise.all([
+      atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`),
+      atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`),
+    ]);
+    window._mqShowroomByCategory = buildShowroomLineItemCategories(lineItems);
+    window._mqShowroomSpecItems = specItems;
+
     renderShowroomCats();
   }
 
   function renderShowroomCats() {
     const wrap = el('mq-showroom-cats');
     if (!wrap) return;
-    const cats = window._mqShowroomCats || [];
-    if (!cats.length) {
-      wrap.innerHTML = '<div class="mq-empty">No categories yet — add your first one below.</div>';
-      return;
-    }
-    wrap.innerHTML = cats.map(cat => `
-      <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px">
+    const order = mqShowroomFullOrder();
+    const customById = {};
+    (window._mqShowroomCats || []).forEach(c => { customById[c.id] = c; });
+    const settings = window._mqShowroomSettings || { names: {}, hidden: {} };
+
+    wrap.innerHTML = order.map((catKey, idx) => {
+      const upBtn   = `<button class="mq-btn mq-btn-sm" ${idx===0?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',-1)" title="Move up">▲</button>`;
+      const downBtn = `<button class="mq-btn mq-btn-sm" ${idx===order.length-1?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',1)" title="Move down">▼</button>`;
+
+      const cat = customById[catKey];
+      if (cat) {
+        return `<div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;gap:4px">${upBtn}${downBtn}</div>
+            <div style="font-size:14px;font-weight:600;color:#111;flex:1;min-width:120px">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></div>
+            <div style="display:flex;gap:8px;flex-shrink:0">
+              <button class="mq-btn mq-btn-sm" onclick="mqRenameShowroomCategory('${cat.id}')">✏️ Rename</button>
+              <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqDeleteShowroomCategory('${cat.id}')">🗑️ Delete category</button>
+            </div>
+          </div>
+          <div style="padding:0 1.25rem 1.25rem">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
+              ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
+            </div>
+            <button class="mq-btn mq-btn-sm" onclick="mqAddShowroomItem('${cat.id}')">+ Add item</button>
+          </div>
+        </div>`;
+      }
+
+      // Priced/specialty category
+      const isHidden = !!settings.hidden[catKey];
+      const displayName = settings.names[catKey] || mqShowroomDefaultCatName(catKey);
+      const items = mqShowroomVisibleItemsFor(catKey);
+      return `<div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px;${isHidden?'opacity:0.55':''}">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
-          <div style="font-size:14px;font-weight:600;color:#111;flex:1;min-width:120px">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></div>
-          <div style="display:flex;gap:8px;flex-shrink:0">
-            <button class="mq-btn mq-btn-sm" onclick="mqRenameShowroomCategory('${cat.id}')">✏️ Rename</button>
-            <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqDeleteShowroomCategory('${cat.id}')">🗑️ Delete category</button>
+          <div style="display:flex;gap:4px">${upBtn}${downBtn}</div>
+          <div style="font-size:14px;font-weight:600;color:#111;flex:1;min-width:120px">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''})</span></div>
+          <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
+            <button class="mq-btn mq-btn-sm" onclick="mqShowroomRenameCat('${catKey}')">✏️ Rename</button>
+            ${settings.names[catKey] ? `<button class="mq-btn mq-btn-sm" onclick="mqShowroomResetCatName('${catKey}')">↺ Default name</button>` : ''}
+            <button class="mq-btn mq-btn-sm" style="${isHidden?'':'color:#dc2626'}" onclick="mqShowroomToggleHideCat('${catKey}')">${isHidden ? '👁️ Show category' : '🚫 Hide category'}</button>
           </div>
         </div>
         <div style="padding:0 1.25rem 1.25rem">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
-            ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
+          <p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Renaming or hiding this only changes your showroom page — your pricing and widget are never affected. Add photos (so more items show up here) or brand new priced items from the My Products tab.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+            ${items.length ? items.map(it => `
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
+                <img src="${it.photo}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>
+                <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">${(it.name||'').replace(/</g,'&lt;')}</div>
+                <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#dc2626" onclick="mqShowroomHideItem('${it.itemKey.replace(/'/g,"\\'")}')">🚫 Remove from showroom</button>
+              </div>`).join('') : '<div style="font-size:12px;color:#9ca3af">Nothing showing here yet — add photos on the My Products tab.</div>'}
           </div>
-          <button class="mq-btn mq-btn-sm" onclick="mqAddShowroomItem('${cat.id}')">+ Add item</button>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
 
-    // Wire upload buttons for every item photo card just rendered — same
-    // upload-then-fill-target-input pattern as My Products' photoCardShared.
+    // Wire upload buttons for custom-category item cards only (priced/
+    // specialty items still get their photos from My Products, not here).
     const shopToken = (window._mqShopRecord && window._mqShopRecord.fields['Shop token']) || 'unknown-shop';
     wrap.querySelectorAll('input[type="file"][id^="mq-showroom-upload-"]').forEach(fileInput => {
       const key = fileInput.id.replace('mq-showroom-upload-', '');
@@ -5827,6 +5973,73 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       );
     });
   }
+
+  async function mqSaveShowroomSettings() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const settings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Showroom category settings': JSON.stringify(settings) });
+    shopRec.fields['Showroom category settings'] = JSON.stringify(settings);
+  }
+
+  window.mqShowroomRenameCat = async function(catKey) {
+    const settings = window._mqShowroomSettings;
+    const current = settings.names[catKey] || mqShowroomDefaultCatName(catKey);
+    const name = (prompt('Rename this category — showroom display only, your pricing and widget are unaffected:', current) || '').trim();
+    if (!name || name === current) return;
+    settings.names[catKey] = name;
+    renderShowroomCats();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Renamed.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqShowroomResetCatName = async function(catKey) {
+    const settings = window._mqShowroomSettings;
+    delete settings.names[catKey];
+    renderShowroomCats();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Reset to default name.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqShowroomToggleHideCat = async function(catKey) {
+    const settings = window._mqShowroomSettings;
+    if (settings.hidden[catKey]) delete settings.hidden[catKey];
+    else settings.hidden[catKey] = true;
+    const nowHidden = !!settings.hidden[catKey];
+    renderShowroomCats();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', nowHidden ? '✓ Category hidden from showroom.' : '✓ Category shown on showroom again.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqShowroomMoveCat = async function(catKey, dir) {
+    const order = mqShowroomFullOrder();
+    const idx = order.indexOf(catKey);
+    const swapIdx = idx + dir;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= order.length) return;
+    [order[idx], order[swapIdx]] = [order[swapIdx], order[idx]];
+    window._mqShowroomSettings.order = order;
+    renderShowroomCats();
+    try { await mqSaveShowroomSettings(); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving order — please try again.', 'error'); }
+  };
+
+  // Removes one item from a priced/specialty category's showroom display —
+  // reuses the shop's existing "Hidden" field exactly as My Products'
+  // "Hide from showroom" checkbox already does, so this is fully showroom-
+  // only and never touches pricing, the widget, or the item itself.
+  window.mqShowroomHideItem = async function(itemKey) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    window._mqShowroomHiddenItems = window._mqShowroomHiddenItems || {};
+    window._mqShowroomHiddenItems[itemKey] = true;
+    renderShowroomCats();
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden': JSON.stringify(window._mqShowroomHiddenItems) });
+      shopRec.fields['Hidden'] = JSON.stringify(window._mqShowroomHiddenItems);
+      showMsg('mq-showroom-msg', '✓ Removed from showroom.');
+      window.mqRefreshShowroomPreview();
+    } catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
 
   function mqShowroomItemCardHTML(catId, item) {
     const key = catId + '::' + item.id;

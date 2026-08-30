@@ -268,35 +268,36 @@
       document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
     });
 
-    function renderShowroom() {
-      const { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds } = SHOWROOM_DATA;
-      let html = '';
-      let first = true;
+    // Builds one descriptor per possible section — priced/specialty AND
+    // custom — regardless of the shop's rename/hide/reorder settings.
+    // Filtering (hidden categories) and ordering happen in one place after,
+    // so every kind of section goes through the exact same pipeline instead
+    // of three separate ad-hoc blocks.
+    function buildShowroomSections() {
+      const { photos, hidden, categoryItems, specs, customCategories } = SHOWROOM_DATA;
+      const settings = SHOWROOM_DATA.catSettings || { order: [], names: {}, hidden: {} };
+      const sections = [];
 
       Object.entries(CAT_CONFIG).forEach(([cat, cfg]) => {
         const items = categoryItems[cat] || [];
         const visibleItems = items.filter(it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms));
         if (!visibleItems.length) return;
-        if (!first) html += '<div class="sr-divider"></div>';
-        first = false;
-        html += `<div class="sr-section" id="${cfg.id}">
+        sections.push({ key: cat, html: `<div class="sr-section" id="${cfg.id}">
           <div class="sr-section-header">
             <div class="sr-section-eyebrow">${cfg.eyebrow}</div>
-            <div class="sr-section-title">${cfg.title}</div>
+            <div class="sr-section-title">${settings.names[cat] || cfg.title}</div>
             <div class="sr-section-desc">${cfg.desc}</div>
           </div>
           <div class="sr-grid">${visibleItems.map(it => itemCard(it.name, it.photoKey, photos)).join('')}</div>
-        </div>`;
+        </div>` });
       });
 
       const visibleSpecs = specs.filter(s => !hidden[s.photoKey] && photos[s.photoKey] && itemVisible(s.visibleRooms));
       if (visibleSpecs.length) {
-        if (!first) html += '<div class="sr-divider"></div>';
-        first = false;
-        html += `<div class="sr-section" id="specialty">
+        sections.push({ key: 'specialty', html: `<div class="sr-section" id="specialty">
           <div class="sr-section-header">
             <div class="sr-section-eyebrow">Add-ons & upgrades</div>
-            <div class="sr-section-title">Specialty Items</div>
+            <div class="sr-section-title">${settings.names['specialty'] || 'Specialty Items'}</div>
             <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
           </div>
           <div class="sr-spec-grid">${visibleSpecs.map(s => {
@@ -307,24 +308,40 @@
               <div class="sr-spec-name">${s.name}</div>
             </div>`;
           }).join('')}</div>
-        </div>`;
+        </div>` });
       }
 
       // Custom showcase categories (dashboard's Showroom tab) — independent
-      // of pricing and project types, so these always show regardless of
-      // CURRENT_FILTER (the room-type chips only apply to priced items above).
-      const customCats = (SHOWROOM_DATA.customCategories || []).filter(c => (c.items||[]).length);
-      customCats.forEach(cat => {
-        if (!first) html += '<div class="sr-divider"></div>';
-        first = false;
-        html += `<div class="sr-section" id="custom-${cat.id}">
+      // of pricing and project types, so their items always show regardless
+      // of CURRENT_FILTER (the room-type chips only apply to priced items).
+      (customCategories || []).filter(c => (c.items||[]).length).forEach(cat => {
+        sections.push({ key: cat.id, html: `<div class="sr-section" id="custom-${cat.id}">
           <div class="sr-section-header">
             <div class="sr-section-eyebrow">Showcase</div>
-            <div class="sr-section-title">${cat.name||''}</div>
+            <div class="sr-section-title">${settings.names[cat.id] || cat.name || ''}</div>
           </div>
           <div class="sr-grid">${(cat.items||[]).map(customItemCard).join('')}</div>
-        </div>`;
+        </div>` });
       });
+
+      return sections;
+    }
+
+    function renderShowroom() {
+      const settings = SHOWROOM_DATA.catSettings || { order: [], names: {}, hidden: {} };
+      const visible = buildShowroomSections().filter(s => !settings.hidden[s.key]);
+      const order = Array.isArray(settings.order) ? settings.order : [];
+      // Stable sort: anything not in the saved order keeps its original
+      // relative position, appended after everything that IS ordered.
+      visible.sort((a, b) => {
+        const ai = order.indexOf(a.key), bi = order.indexOf(b.key);
+        if (ai === -1 && bi === -1) return 0;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+
+      let html = visible.map(s => s.html).join('<div class="sr-divider"></div>');
 
       if (!html) {
         html = CURRENT_FILTER === 'all'
@@ -352,6 +369,20 @@
       // applies to these the way it does to material/door/etc. below.
       let customCategories = []; try { customCategories = shop['Showroom categories'] ? JSON.parse(shop['Showroom categories']) : []; } catch(e) { customCategories = []; }
       if (!Array.isArray(customCategories)) customCategories = [];
+      // Display order / showroom-only name overrides / whole-category hides
+      // for EVERY category (priced, specialty, and custom alike) — set from
+      // the dashboard's Showroom tab. Keyed by category key: the fixed
+      // priced/specialty keys ('material','door',...,'specialty') or a
+      // custom category's own id.
+      let catSettings = { order: [], names: {}, hidden: {} };
+      try {
+        const raw = shop['Showroom category settings'] ? JSON.parse(shop['Showroom category settings']) : {};
+        catSettings = {
+          order:  Array.isArray(raw.order) ? raw.order : [],
+          names:  (raw.names  && typeof raw.names  === 'object') ? raw.names  : {},
+          hidden: (raw.hidden && typeof raw.hidden === 'object') ? raw.hidden : {},
+        };
+      } catch(e) {}
       let roomTypes = [];
       try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
       if (!Array.isArray(roomTypes) || !roomTypes.length) roomTypes = DEFAULT_ROOM_TYPES;
@@ -433,7 +464,7 @@
         visibleRooms: effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty', categoryRooms, allRoomIds),
       }));
 
-      SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes, customCategories };
+      SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes, customCategories, catSettings };
       renderFilterBar();
       renderShowroom();
     }
