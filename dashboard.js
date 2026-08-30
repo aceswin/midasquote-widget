@@ -302,8 +302,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     showroom: {
       title: 'Showroom',
       body: `
-        <p>Every category that can appear on your showroom shows up here — your real priced categories (Box Materials, Door Styles, Specialty Items, etc.) right alongside any extra ones you add yourself.</p>
-        <p><strong>🎭 Showroom style</strong> at the top switches your whole showroom between two looks: "Default showroom" shows your priced categories plus Specialty Items (the classic setup), while "Build my own" shows only your custom categories plus Specialty Items and hides your priced categories from the page (they're still managed below, just not shown) — it also hides the project-type filter bar at the top of your showroom, since there'd be nothing left for it to filter. Specialty Items always show, no matter which style is picked. Switching is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
+        <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page — nothing extra to scroll past.</p>
+        <p><strong>🎭 Showroom style</strong> at the top switches your whole showroom between two looks: "Default showroom" shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup) — and this tab shows those same categories to manage. "Build my own" shows only your custom categories plus Specialty Items on the page — and this tab switches to showing just those, tucking your priced categories out of sight (nothing about them is deleted, they're exactly as you left them) — it also hides the project-type filter bar at the top of your showroom, since there'd be nothing left for it to filter. Specialty Items always show, in the tab and on the page, no matter which style is picked. Switching is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
         <p>For a priced category, "✏️ Rename" and "🚫 Hide category" only change what shows on your <em>showroom</em> — your actual pricing, categories, and the widget are never touched. Each item underneath has its own "Remove from showroom" button, same idea — the item itself is untouched, it just stops appearing here. An item needs a photo (added on My Products) before it shows up in this list at all.</p>
         <p>"+ New category" adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
         <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
@@ -1251,7 +1251,7 @@ window.logoutMember = async function () {
                 </div>
                 <div id="mq-showroom-mode-custom" onclick="mqShowroomSetMode('custom')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
                   <div style="font-size:14px;font-weight:700;margin-bottom:4px">🎨 Build my own</div>
-                  <div style="font-size:12px;color:#6b7280">Only your custom categories below plus Specialty Items. Your regular priced categories are hidden from the showroom (still managed below, just not shown), and the project-type filter at the top of your showroom is hidden too, since there'd be nothing left for it to filter.</div>
+                  <div style="font-size:12px;color:#6b7280">Only your custom categories below plus Specialty Items. Your regular priced categories are hidden from the showroom — and from this tab too, so it stays uncluttered — but nothing about them is deleted; pick Default above any time to bring them right back. The project-type filter at the top of your showroom is hidden too, since there'd be nothing left for it to filter.</div>
                 </div>
               </div>
               <div id="mq-showroom-mode-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
@@ -1259,9 +1259,10 @@ window.logoutMember = async function () {
 
             <div class="mq-card" style="margin-bottom:1.5rem">
               <div class="mq-card-title">📦 Your categories</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use the ▲▼ arrows to reorder. Every category shows here, even your regular priced ones (Box Materials, Door Styles, Specialty Items, etc.) — rename or hide those for the showroom only, or remove one of their items, without changing anything about your pricing. "+ New category" adds a fully independent one of your own. Every change saves right away — no separate "Save" button on this tab.</p>
+              <p id="mq-showroom-cats-intro" style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use the ▲▼ arrows to reorder. Every change saves right away — no separate "Save" button on this tab.</p>
               <div id="mq-showroom-cats"><div class="mq-loading">Loading...</div></div>
-              <button class="mq-btn mq-btn-primary" style="margin-top:12px" onclick="mqAddShowroomCategory()">+ New category</button>
+              <div id="mq-showroom-addcat-note" style="font-size:12px;color:#6b7280;display:none"></div>
+              <button id="mq-showroom-addcat-btn" class="mq-btn mq-btn-primary" style="margin-top:12px" onclick="mqAddShowroomCategory()">+ New category</button>
             </div>
 
             <div class="mq-card" style="padding:0;overflow:hidden">
@@ -5880,8 +5881,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (curCard) { curCard.style.borderColor = mode === 'custom'  ? '#1a1a1a' : '#e5e7eb'; curCard.style.background = mode === 'custom'  ? '#f9fafb' : '#fff'; }
     const note = el('mq-showroom-mode-note');
     if (note) note.textContent = mode === 'custom'
-      ? '🎨 Build My Own is active — your priced categories below stay here for your records, but won\'t show on your live showroom right now. Pick Default above any time to bring them back.'
-      : '🏭 Default showroom is active — your custom categories below are saved but won\'t show on your live showroom until you pick Build My Own above.';
+      ? '🎨 Build My Own is active — your priced categories are tucked out of sight below (nothing about them is deleted). Pick Default above any time to bring them back.'
+      : '🏭 Default showroom is active — your custom categories are tucked out of sight below (nothing about them is deleted). Pick Build My Own above any time to bring them back.';
+
+    // The categories card below only ever shows what's relevant to the
+    // active style, so its intro/add-button need to switch with it too —
+    // otherwise "+ New category" would add something that immediately
+    // disappears from view, which is exactly the confusion we're avoiding.
+    const intro = el('mq-showroom-cats-intro');
+    if (intro) intro.textContent = mode === 'custom'
+      ? 'Use the ▲▼ arrows to reorder. Only your custom categories and Specialty Items show here while Build My Own is active. Every change saves right away — no separate "Save" button on this tab.'
+      : 'Use the ▲▼ arrows to reorder. Only your regular priced categories and Specialty Items show here while Default showroom is active — rename or hide any of them for the showroom only, or remove one of their items, without changing anything about your pricing. Every change saves right away — no separate "Save" button on this tab.';
+    const addBtn = el('mq-showroom-addcat-btn');
+    const addNote = el('mq-showroom-addcat-note');
+    if (addBtn) addBtn.style.display = mode === 'custom' ? 'inline-block' : 'none';
+    if (addNote) { addNote.style.display = mode === 'custom' ? 'none' : 'block'; addNote.textContent = 'Switch to 🎨 Build my own above to add and manage your own categories.'; }
   }
 
   window.mqShowroomSetMode = async function(mode) {
@@ -5979,9 +5993,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const settings = window._mqShowroomSettings || { names: {}, hidden: {} };
     const mode = settings.mode === 'custom' ? 'custom' : 'default';
 
-    wrap.innerHTML = order.map((catKey, idx) => {
+    // Only manage/show categories relevant to the currently active style —
+    // priced categories while in Default, custom categories while in Build
+    // My Own. Specialty Items is relevant to both, so it always stays. This
+    // keeps the tab matching what's actually live on the showroom right
+    // now, instead of cluttering it with categories the current style
+    // doesn't use (see mqShowroomMoveCat for how reordering stays correct
+    // against this filtered view).
+    const isRelevantNow = catKey => customById[catKey]
+      ? mode === 'custom'
+      : (catKey === 'specialty' ? true : mode === 'default');
+    const visibleOrder = order.filter(isRelevantNow);
+
+    wrap.innerHTML = visibleOrder.map((catKey, idx) => {
       const upBtn   = `<button class="mq-btn mq-btn-sm" ${idx===0?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',-1)" title="Move up">▲</button>`;
-      const downBtn = `<button class="mq-btn mq-btn-sm" ${idx===order.length-1?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',1)" title="Move down">▼</button>`;
+      const downBtn = `<button class="mq-btn mq-btn-sm" ${idx===visibleOrder.length-1?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',1)" title="Move down">▼</button>`;
 
       const cat = customById[catKey];
       if (cat) {
@@ -5992,7 +6018,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
               <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
                 <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
-                <span style="font-size:14px;font-weight:600;color:#111">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length}${mode==='default'?' · not shown right now':''})</span></span>
+                <span style="font-size:14px;font-weight:600;color:#111">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></span>
               </div>
             </div>
             <div style="display:flex;gap:8px;flex-shrink:0">
@@ -6024,7 +6050,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
             <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
               <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
-              <span style="font-size:14px;font-weight:600;color:#111">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''}${mode==='custom' && catKey!=='specialty' ? ' · not shown right now' : ''})</span></span>
+              <span style="font-size:14px;font-weight:600;color:#111">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''})</span></span>
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
@@ -6159,12 +6185,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqShowroomMoveCat = async function(catKey, dir) {
+    const settings = window._mqShowroomSettings || (window._mqShowroomSettings = { order: [], names: {}, hidden: {} });
+    const mode = settings.mode === 'custom' ? 'custom' : 'default';
+    const customIds = (window._mqShowroomCats || []).map(c => c.id);
     const order = mqShowroomFullOrder();
-    const idx = order.indexOf(catKey);
+
+    // The tab only shows categories relevant to the active style, so the
+    // arrows must only swap a card with the next one it can actually see —
+    // otherwise this would silently reorder against a category that's
+    // currently hidden from view, with no visible change on screen. Reorder
+    // just the relevant subsequence, then splice it back into the full
+    // order so every hidden-right-now category keeps its own slot intact.
+    const isRelevantNow = k => customIds.includes(k) ? mode === 'custom' : (k === 'specialty' ? true : mode === 'default');
+    const relevant = order.filter(isRelevantNow);
+    const idx = relevant.indexOf(catKey);
     const swapIdx = idx + dir;
-    if (idx < 0 || swapIdx < 0 || swapIdx >= order.length) return;
-    [order[idx], order[swapIdx]] = [order[swapIdx], order[idx]];
-    window._mqShowroomSettings.order = order;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= relevant.length) return;
+    [relevant[idx], relevant[swapIdx]] = [relevant[swapIdx], relevant[idx]];
+    let ri = 0;
+    window._mqShowroomSettings.order = order.map(k => isRelevantNow(k) ? relevant[ri++] : k);
     renderShowroomCats();
     try { await mqSaveShowroomSettings(); window.mqRefreshShowroomPreview(); }
     catch(e) { showMsg('mq-showroom-msg', 'Error saving order — please try again.', 'error'); }
