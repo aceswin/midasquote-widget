@@ -211,7 +211,10 @@
       const imgHtml = photoUrl
         ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}')" onerror="this.style.display='none'">`
         : `<div style="width:100%;height:160px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gray-400)">📷</div>`;
-      return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${item.name||''}</div></div></div>`;
+      // Name is optional on this kind of item — skip the name row entirely
+      // rather than showing an empty line when a shop hasn't named it yet.
+      const nameHtml = (item.name||'').trim() ? `<div class="sr-card-body"><div class="sr-card-name">${item.name}</div></div>` : '';
+      return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div>${nameHtml}</div>`;
     }
 
     function itemVisible(visibleRooms) {

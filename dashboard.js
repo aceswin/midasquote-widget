@@ -6084,12 +6084,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqShowroomItemCardHTML(catId, item) {
     const key = catId + '::' + item.id;
     const photo = item.photo || '';
+    const hasName = !!(item.name||'').trim();
     const preview = photo
       ? `<img src="${photo}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
       : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🖼️</div>`;
     return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
       ${preview}
-      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">${(item.name||'').replace(/</g,'&lt;')}</div>
+      <div style="font-size:13px;font-weight:${hasName?600:400};font-style:${hasName?'normal':'italic'};color:${hasName?'#111':'#9ca3af'};margin-bottom:8px">${hasName ? (item.name||'').replace(/</g,'&lt;') : 'Untitled item'}</div>
       <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
         📤 ${photo ? 'Replace photo' : 'Upload a photo'}
         <input type="file" id="mq-showroom-upload-${key}" accept="image/*" style="display:none"/>
@@ -6099,6 +6100,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <input type="text" id="mq-showroom-url-${key}" value="${photo.replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg"
         style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
       <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqRenameShowroomItem('${catId}','${item.id}')">${hasName ? '✏️ Rename' : '✏️ Add name'}</button>
       <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Delete item</button>
     </div>`;
   }
@@ -6146,16 +6148,37 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
+  // Name is optional — Cancel on the prompt aborts adding an item entirely,
+  // but clicking OK with the field left blank still adds one (as
+  // "Untitled item"), for shops who want to get a photo up now and name it
+  // later. Just a plain string in a JSON field either way, so nothing about
+  // Airtable cares whether it's empty.
   window.mqAddShowroomItem = async function(catId) {
     const cats = window._mqShowroomCats || [];
     const cat = cats.find(c => c.id === catId);
     if (!cat) return;
-    const name = (prompt('Item name — e.g. "Walnut Waterfall Island":') || '').trim();
-    if (!name) return;
+    const raw = prompt('Item name — e.g. "Walnut Waterfall Island" (optional, leave blank and name it later if you\'d rather):');
+    if (raw === null) return; // Cancel
+    const name = raw.trim();
     cat.items = cat.items || [];
     cat.items.push({ id: mqGenShowroomId('item'), name, photo: '' });
     renderShowroomCats();
-    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', `✓ "${name}" added.`); window.mqRefreshShowroomPreview(); }
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', name ? `✓ "${name}" added.` : '✓ Item added — name it whenever you\'re ready.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqRenameShowroomItem = async function(catId, itemId) {
+    const cats = window._mqShowroomCats || [];
+    const cat = cats.find(c => c.id === catId);
+    const item = cat && (cat.items||[]).find(i => i.id === itemId);
+    if (!item) return;
+    const raw = prompt('Item name:', item.name || '');
+    if (raw === null) return;
+    const name = raw.trim();
+    if (name === (item.name || '')) return;
+    item.name = name;
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', '✓ Saved.'); window.mqRefreshShowroomPreview(); }
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
