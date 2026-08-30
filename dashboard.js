@@ -299,6 +299,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Groups</strong> — in Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
       `
     },
+    showroom: {
+      title: 'Showroom',
+      body: `
+        <p>This is a portfolio, not a pricing page — categories and items you add here are just for show. There's no pricing, no project types, and no "quotable" setting to worry about, so feel free to add, rename, and delete as much as you want.</p>
+        <p>Your real priced items (materials, doors, specialty items, etc.) still show up on your showroom page too — those are managed on the My Products tab, same as before. This tab is just for extra things you want to show off that aren't tied to a price, like past projects or custom pieces.</p>
+        <p>The live preview below is your actual showroom page, not a mockup — it's exactly what a customer (or anyone you send the link to) sees.</p>
+        <p>Your showroom has its own link that works completely on its own — paste it into your own website's navigation if you'd like, it doesn't need the widget at all.</p>
+      `
+    },
     templates: {
       title: 'Templates (Admin)',
       body: `
@@ -724,6 +733,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
+          <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
           <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
@@ -1211,6 +1221,37 @@ window.logoutMember = async function () {
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show View our products link"</strong> is turned on in your Shop Info tab, this link is automatically included in your widget — no extra setup needed.</div>
               <div class="mq-embed-box"><span id="mq-showroom-link-text"></span><button class="mq-copy-btn" id="mq-showroom-copy-btn">Copy</button></div>
               <button class="mq-btn" style="margin-top:10px" id="mq-showroom-open-btn">Open showroom ↗</button>
+            </div>
+          </div>
+
+          <!-- SHOWROOM -->
+          <div class="mq-page" id="mq-page-showroom">
+            <button class="mq-help-btn" onclick="mqShowHelp('showroom')"><span class="mq-help-badge">?</span> Need help?</button>
+            <div class="mq-page-title">🖼️ Showroom</div>
+            <div class="mq-page-sub">Build out a portfolio of your own work — add as many categories and items as you want, each with its own photo. These are completely separate from your pricing, so there's nothing to configure and nothing you can break by adding, renaming, or deleting freely. To manage photos or show/hide items tied to your actual pricing (materials, doors, specialty items, etc.), use the My Products tab instead — those still show up on your showroom page too, just below what you add here.</div>
+            <div id="mq-showroom-msg"></div>
+
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🔗 Your showroom link</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">This is a standalone page with its own link — share it anywhere, including as a page in your own website's navigation. It works on its own, with or without the widget.</p>
+              <div class="mq-embed-box"><span id="mq-showroomtab-link-text"></span><button class="mq-copy-btn" id="mq-showroomtab-copy-btn">Copy</button></div>
+              <button class="mq-btn" style="margin-top:10px" id="mq-showroomtab-open-btn">Open showroom ↗</button>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">📦 Your categories</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Every add, rename, and delete saves right away — no separate "Save" button on this tab.</p>
+              <div id="mq-showroom-cats"><div class="mq-loading">Loading...</div></div>
+              <button class="mq-btn mq-btn-primary" style="margin-top:12px" onclick="mqAddShowroomCategory()">+ New category</button>
+            </div>
+
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div style="padding:1.25rem 1.25rem 0">
+                <div class="mq-card-title" style="margin-bottom:4px">👁️ Live preview</div>
+                <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This is your actual showroom page, loaded live — it updates automatically as you make changes above, or click refresh any time.</p>
+                <button class="mq-btn mq-btn-sm" style="margin-bottom:1rem" onclick="mqRefreshShowroomPreview()">🔄 Refresh preview</button>
+              </div>
+              <iframe id="mq-showroom-preview-frame" style="width:100%;height:800px;border:0;border-top:1px solid #e5e7eb;display:block"></iframe>
             </div>
           </div>
 
@@ -5704,6 +5745,201 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
   };
 
+  // ============================================================
+  // SHOWROOM TAB — independent showcase categories/items, not tied
+  // to pricing at all (a shop's real priced/specialty items still show
+  // on the live showroom too, but those are managed from My Products —
+  // this tab only owns the extra portfolio-style content layered on top).
+  // Stored as one JSON blob on the Shops table ("Showroom categories"),
+  // same pattern as Photos/Hidden/Products elsewhere on this tab.
+  // Shape: [{ id, name, items: [{ id, name, photo }] }]
+  // NOTE: the "Showroom categories" (Long text) field must already exist
+  // on the Shops table in Airtable — atUpdate/typecast can only convert
+  // a value into a field that's already there, it can't create a brand
+  // new field on its own.
+  // ============================================================
+  function mqGenShowroomId(prefix) {
+    return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  async function initShowroomTab(shopRecord) {
+    const token = shopRecord.fields['Shop token'] || '';
+    const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${token}`;
+    window._mqShowroomUrl = showroomUrl;
+
+    let cats = [];
+    try { cats = shopRecord.fields['Showroom categories'] ? JSON.parse(shopRecord.fields['Showroom categories']) : []; } catch(e) { cats = []; }
+    if (!Array.isArray(cats)) cats = [];
+    window._mqShowroomCats = cats;
+
+    const linkText = el('mq-showroomtab-link-text');
+    const copyBtn  = el('mq-showroomtab-copy-btn');
+    const openBtn  = el('mq-showroomtab-open-btn');
+    if (linkText) linkText.textContent = showroomUrl;
+    if (copyBtn)  copyBtn.onclick = () => mqCopyText(showroomUrl, copyBtn);
+    if (openBtn)  openBtn.onclick = () => window.open(showroomUrl, '_blank');
+
+    const frame = el('mq-showroom-preview-frame');
+    if (frame) frame.src = showroomUrl + '&_r=' + Date.now();
+
+    renderShowroomCats();
+  }
+
+  function renderShowroomCats() {
+    const wrap = el('mq-showroom-cats');
+    if (!wrap) return;
+    const cats = window._mqShowroomCats || [];
+    if (!cats.length) {
+      wrap.innerHTML = '<div class="mq-empty">No categories yet — add your first one below.</div>';
+      return;
+    }
+    wrap.innerHTML = cats.map(cat => `
+      <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
+          <div style="font-size:14px;font-weight:600;color:#111;flex:1;min-width:120px">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="mq-btn mq-btn-sm" onclick="mqRenameShowroomCategory('${cat.id}')">✏️ Rename</button>
+            <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqDeleteShowroomCategory('${cat.id}')">🗑️ Delete category</button>
+          </div>
+        </div>
+        <div style="padding:0 1.25rem 1.25rem">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
+            ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
+          </div>
+          <button class="mq-btn mq-btn-sm" onclick="mqAddShowroomItem('${cat.id}')">+ Add item</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Wire upload buttons for every item photo card just rendered — same
+    // upload-then-fill-target-input pattern as My Products' photoCardShared.
+    const shopToken = (window._mqShopRecord && window._mqShopRecord.fields['Shop token']) || 'unknown-shop';
+    wrap.querySelectorAll('input[type="file"][id^="mq-showroom-upload-"]').forEach(fileInput => {
+      const key = fileInput.id.replace('mq-showroom-upload-', '');
+      mqWireUploadButton(
+        null,
+        'mq-showroom-upload-' + key,
+        'mq-showroom-upload-status-' + key,
+        'mq-showroom-url-' + key,
+        shopToken,
+        'showroom',
+        (url) => { mqSaveShowroomItemPhoto(key, url); }
+      );
+    });
+  }
+
+  function mqShowroomItemCardHTML(catId, item) {
+    const key = catId + '::' + item.id;
+    const photo = item.photo || '';
+    const preview = photo
+      ? `<img src="${photo}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
+      : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🖼️</div>`;
+    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
+      ${preview}
+      <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">${(item.name||'').replace(/</g,'&lt;')}</div>
+      <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+        📤 ${photo ? 'Replace photo' : 'Upload a photo'}
+        <input type="file" id="mq-showroom-upload-${key}" accept="image/*" style="display:none"/>
+      </label>
+      <div id="mq-showroom-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+      <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL</div>
+      <input type="text" id="mq-showroom-url-${key}" value="${photo.replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg"
+        style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Delete item</button>
+    </div>`;
+  }
+
+  async function mqSaveShowroomCategories() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const cats = window._mqShowroomCats || [];
+    await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Showroom categories': JSON.stringify(cats) });
+    shopRec.fields['Showroom categories'] = JSON.stringify(cats);
+  }
+
+  window.mqAddShowroomCategory = async function() {
+    const name = (prompt('Name this category — e.g. "Custom Islands" or "Recent Projects":') || '').trim();
+    if (!name) return;
+    window._mqShowroomCats = window._mqShowroomCats || [];
+    window._mqShowroomCats.push({ id: mqGenShowroomId('cat'), name, items: [] });
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', `✓ "${name}" added.`); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqRenameShowroomCategory = async function(catId) {
+    const cats = window._mqShowroomCats || [];
+    const cat = cats.find(c => c.id === catId);
+    if (!cat) return;
+    const name = (prompt('Rename category:', cat.name || '') || '').trim();
+    if (!name || name === cat.name) return;
+    cat.name = name;
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', '✓ Renamed.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqDeleteShowroomCategory = async function(catId) {
+    const cats = window._mqShowroomCats || [];
+    const cat = cats.find(c => c.id === catId);
+    if (!cat) return;
+    const itemCount = (cat.items||[]).length;
+    const warn = itemCount ? ` This also deletes all ${itemCount} item(s) inside it.` : '';
+    if (!confirm(`Delete "${cat.name}"?${warn} This can't be undone.`)) return;
+    window._mqShowroomCats = cats.filter(c => c.id !== catId);
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', '✓ Category deleted.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqAddShowroomItem = async function(catId) {
+    const cats = window._mqShowroomCats || [];
+    const cat = cats.find(c => c.id === catId);
+    if (!cat) return;
+    const name = (prompt('Item name — e.g. "Walnut Waterfall Island":') || '').trim();
+    if (!name) return;
+    cat.items = cat.items || [];
+    cat.items.push({ id: mqGenShowroomId('item'), name, photo: '' });
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', `✓ "${name}" added.`); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqDeleteShowroomItem = async function(catId, itemId) {
+    const cats = window._mqShowroomCats || [];
+    const cat = cats.find(c => c.id === catId);
+    if (!cat) return;
+    if (!confirm('Delete this item?')) return;
+    cat.items = (cat.items||[]).filter(i => i.id !== itemId);
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', '✓ Item deleted.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  // Fired both by a completed upload (mqWireUploadButton's onDone) and by
+  // the "Save photo URL" button for a pasted link — key is "<catId>::<itemId>".
+  window.mqSaveShowroomItemPhoto = async function(key, url) {
+    const [catId, itemId] = key.split('::');
+    const cats = window._mqShowroomCats || [];
+    const cat = cats.find(c => c.id === catId);
+    const item = cat && (cat.items||[]).find(i => i.id === itemId);
+    if (!item) return;
+    item.photo = url || '';
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', '✓ Photo saved.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving photo — please try again.', 'error'); }
+  };
+
+  // Cross-origin iframe (dashboard's host vs. widget.midasquote.com), so
+  // contentWindow.location.reload() would throw — a fresh cache-busting
+  // query param forces the reload instead, reliably, in every browser.
+  window.mqRefreshShowroomPreview = function() {
+    const frame = el('mq-showroom-preview-frame');
+    const base = window._mqShowroomUrl;
+    if (frame && base) frame.src = base + '&_r=' + Date.now();
+  };
+
   window.mqToggleFinancing = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -9478,6 +9714,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           if (window._mqShopRecord && !window._mqShopRecord.fields['Products tips popup seen']) {
             window.mqShowProductsTipsModal();
           }
+        });
+      }
+    }
+    if (page === 'showroom') {
+      const catsWrap = document.getElementById('mq-showroom-cats');
+      if (catsWrap && window._mqShopRecord && mqShouldRefetch('showroom')) {
+        catsWrap.innerHTML = '<div class="mq-loading">Loading your showroom...</div>';
+        loadShop(window._mqShopRecord.fields['Shop token']).then(freshShop => {
+          if (freshShop) window._mqShopRecord = freshShop;
+          initShowroomTab(window._mqShopRecord);
         });
       }
     }

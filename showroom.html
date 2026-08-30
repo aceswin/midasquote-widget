@@ -199,6 +199,21 @@
       return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div></div></div>`;
     }
 
+    // Showcase items (from the dashboard's "Showroom" tab) aren't tied to
+    // pricing at all — unlike itemCard() above, this always renders once an
+    // item exists, showing the 📷 placeholder if no photo has been added
+    // yet, rather than hiding the item entirely. That's deliberate: a shop
+    // owner adding these one at a time wants confirmation the item saved,
+    // even before they've gotten around to a photo.
+    function customItemCard(item) {
+      const photoUrl = item.photo || '';
+      const safeName = (item.name||'').replace(/'/g, "\\'");
+      const imgHtml = photoUrl
+        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}')" onerror="this.style.display='none'">`
+        : `<div style="width:100%;height:160px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gray-400)">📷</div>`;
+      return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${item.name||''}</div></div></div>`;
+    }
+
     function itemVisible(visibleRooms) {
       if (CURRENT_FILTER === 'all') return true;
       return !visibleRooms.length || visibleRooms.includes(CURRENT_FILTER);
@@ -277,6 +292,7 @@
       const visibleSpecs = specs.filter(s => !hidden[s.photoKey] && photos[s.photoKey] && itemVisible(s.visibleRooms));
       if (visibleSpecs.length) {
         if (!first) html += '<div class="sr-divider"></div>';
+        first = false;
         html += `<div class="sr-section" id="specialty">
           <div class="sr-section-header">
             <div class="sr-section-eyebrow">Add-ons & upgrades</div>
@@ -294,9 +310,25 @@
         </div>`;
       }
 
+      // Custom showcase categories (dashboard's Showroom tab) — independent
+      // of pricing and project types, so these always show regardless of
+      // CURRENT_FILTER (the room-type chips only apply to priced items above).
+      const customCats = (SHOWROOM_DATA.customCategories || []).filter(c => (c.items||[]).length);
+      customCats.forEach(cat => {
+        if (!first) html += '<div class="sr-divider"></div>';
+        first = false;
+        html += `<div class="sr-section" id="custom-${cat.id}">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">Showcase</div>
+            <div class="sr-section-title">${cat.name||''}</div>
+          </div>
+          <div class="sr-grid">${(cat.items||[]).map(customItemCard).join('')}</div>
+        </div>`;
+      });
+
       if (!html) {
         html = CURRENT_FILTER === 'all'
-          ? '<div class="sr-empty" style="padding:4rem;text-align:center">Visit your dashboard → My Products tab to set up your showroom.</div>'
+          ? '<div class="sr-empty" style="padding:4rem;text-align:center">Visit your dashboard → Showroom or My Products tab to set up your showroom.</div>'
           : '<div class="sr-empty" style="padding:4rem;text-align:center">Nothing to show for this project type yet.</div>';
       }
       document.getElementById('sr-content').innerHTML = html;
@@ -315,6 +347,11 @@
       let photos = {};        try { photos = shop['Photos'] ? JSON.parse(shop['Photos']) : {}; } catch(e) {}
       let hidden = {};        try { hidden = shop['Hidden'] ? JSON.parse(shop['Hidden']) : {}; } catch(e) {}
       let categoryRooms = {}; try { categoryRooms = shop['Category rooms'] ? JSON.parse(shop['Category rooms']) : {}; } catch(e) {}
+      // Independent showcase categories/items added from the dashboard's
+      // Showroom tab — not tied to pricing, so no dedupe/room-filter logic
+      // applies to these the way it does to material/door/etc. below.
+      let customCategories = []; try { customCategories = shop['Showroom categories'] ? JSON.parse(shop['Showroom categories']) : []; } catch(e) { customCategories = []; }
+      if (!Array.isArray(customCategories)) customCategories = [];
       let roomTypes = [];
       try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
       if (!Array.isArray(roomTypes) || !roomTypes.length) roomTypes = DEFAULT_ROOM_TYPES;
@@ -396,7 +433,7 @@
         visibleRooms: effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty', categoryRooms, allRoomIds),
       }));
 
-      SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes };
+      SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes, customCategories };
       renderFilterBar();
       renderShowroom();
     }
