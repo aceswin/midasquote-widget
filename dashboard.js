@@ -303,9 +303,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Showroom',
       body: `
         <p>Every category that can appear on your showroom shows up here — your real priced categories (Box Materials, Door Styles, Specialty Items, etc.) right alongside any extra ones you add yourself.</p>
+        <p><strong>🎭 Showroom style</strong> at the top switches your whole showroom between two looks: "Default showroom" shows your priced categories plus Specialty Items (the classic setup), while "Build my own" shows only your custom categories plus Specialty Items and hides your priced categories from the page (they're still managed below, just not shown) — it also hides the project-type filter bar at the top of your showroom, since there'd be nothing left for it to filter. Specialty Items always show, no matter which style is picked. Switching is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
         <p>For a priced category, "✏️ Rename" and "🚫 Hide category" only change what shows on your <em>showroom</em> — your actual pricing, categories, and the widget are never touched. Each item underneath has its own "Remove from showroom" button, same idea — the item itself is untouched, it just stops appearing here. An item needs a photo (added on My Products) before it shows up in this list at all.</p>
-        <p>"+ New category" adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it.</p>
-        <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order.</p>
+        <p>"+ New category" adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
+        <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
         <p>The live preview below is your actual showroom page, not a mockup — it's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
         <p>Your showroom has its own link that works completely on its own — paste it into your own website's navigation if you'd like, it doesn't need the widget at all.</p>
       `
@@ -1238,6 +1239,22 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">This is a standalone page with its own link — share it anywhere, including as a page in your own website's navigation. It works on its own, with or without the widget.</p>
               <div class="mq-embed-box"><span id="mq-showroomtab-link-text"></span><button class="mq-copy-btn" id="mq-showroomtab-copy-btn">Copy</button></div>
               <button class="mq-btn" style="margin-top:10px" id="mq-showroomtab-open-btn">Open showroom ↗</button>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🎭 Showroom style</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Choose how your showroom page looks. Specialty Items show either way — everything else depends on which one's picked.</p>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <div id="mq-showroom-mode-default" onclick="mqShowroomSetMode('default')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🏭 Default showroom</div>
+                  <div style="font-size:12px;color:#6b7280">Your regular priced categories (Box Materials, Door Styles, etc.) plus Specialty Items — the classic MidasQuote showroom.</div>
+                </div>
+                <div id="mq-showroom-mode-custom" onclick="mqShowroomSetMode('custom')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🎨 Build my own</div>
+                  <div style="font-size:12px;color:#6b7280">Only your custom categories below plus Specialty Items. Your regular priced categories are hidden from the showroom (still managed below, just not shown), and the project-type filter at the top of your showroom is hidden too, since there'd be nothing left for it to filter.</div>
+                </div>
+              </div>
+              <div id="mq-showroom-mode-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
             </div>
 
             <div class="mq-card" style="margin-bottom:1.5rem">
@@ -5853,6 +5870,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return [...saved, ...missing];
   }
 
+  // Highlights whichever showroom-style card is active and updates the
+  // note underneath — called on load and every time the mode changes.
+  function mqShowroomRenderModeUI() {
+    const mode = (window._mqShowroomSettings && window._mqShowroomSettings.mode === 'custom') ? 'custom' : 'default';
+    const defCard = el('mq-showroom-mode-default');
+    const curCard = el('mq-showroom-mode-custom');
+    if (defCard) { defCard.style.borderColor = mode === 'default' ? '#1a1a1a' : '#e5e7eb'; defCard.style.background = mode === 'default' ? '#f9fafb' : '#fff'; }
+    if (curCard) { curCard.style.borderColor = mode === 'custom'  ? '#1a1a1a' : '#e5e7eb'; curCard.style.background = mode === 'custom'  ? '#f9fafb' : '#fff'; }
+    const note = el('mq-showroom-mode-note');
+    if (note) note.textContent = mode === 'custom'
+      ? '🎨 Build My Own is active — your priced categories below stay here for your records, but won\'t show on your live showroom right now. Pick Default above any time to bring them back.'
+      : '🏭 Default showroom is active — your custom categories below are saved but won\'t show on your live showroom until you pick Build My Own above.';
+  }
+
+  window.mqShowroomSetMode = async function(mode) {
+    window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    if (window._mqShowroomSettings.mode === mode) return;
+    window._mqShowroomSettings.mode = mode;
+    mqShowroomRenderModeUI();
+    renderShowroomCats();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', mode === 'custom' ? '✓ Switched to Build My Own.' : '✓ Switched to Default showroom.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
   async function initShowroomTab(shopRecord) {
     const token = shopRecord.fields['Shop token'] || '';
     const showroomUrl = `https://widget.midasquote.com/showroom.html?shop=${token}`;
@@ -5869,7 +5910,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       order:  Array.isArray(settingsRaw.order) ? settingsRaw.order : [],
       names:  (settingsRaw.names  && typeof settingsRaw.names  === 'object') ? settingsRaw.names  : {},
       hidden: (settingsRaw.hidden && typeof settingsRaw.hidden === 'object') ? settingsRaw.hidden : {},
+      // 'default' = the classic showroom (priced categories + Specialty
+      // Items, old behavior); 'custom' = only Specialty Items + this shop's
+      // own categories below. Defaults to 'default' for any shop that's
+      // never touched this, so nothing changes for existing shops until
+      // they deliberately pick "Build my own."
+      mode: settingsRaw.mode === 'custom' ? 'custom' : 'default',
     };
+    mqShowroomRenderModeUI();
 
     try { window._mqShowroomPhotos = shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}; } catch(e) { window._mqShowroomPhotos = {}; }
     try { window._mqShowroomHiddenItems = shopRecord.fields['Hidden'] ? JSON.parse(shopRecord.fields['Hidden']) : {}; } catch(e) { window._mqShowroomHiddenItems = {}; }
@@ -5929,6 +5977,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const customById = {};
     (window._mqShowroomCats || []).forEach(c => { customById[c.id] = c; });
     const settings = window._mqShowroomSettings || { names: {}, hidden: {} };
+    const mode = settings.mode === 'custom' ? 'custom' : 'default';
 
     wrap.innerHTML = order.map((catKey, idx) => {
       const upBtn   = `<button class="mq-btn mq-btn-sm" ${idx===0?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',-1)" title="Move up">▲</button>`;
@@ -5943,7 +5992,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
               <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
                 <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
-                <span style="font-size:14px;font-weight:600;color:#111">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></span>
+                <span style="font-size:14px;font-weight:600;color:#111">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length}${mode==='default'?' · not shown right now':''})</span></span>
               </div>
             </div>
             <div style="display:flex;gap:8px;flex-shrink:0">
@@ -5975,7 +6024,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
             <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
               <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
-              <span style="font-size:14px;font-weight:600;color:#111">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''})</span></span>
+              <span style="font-size:14px;font-weight:600;color:#111">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''}${mode==='custom' && catKey!=='specialty' ? ' · not shown right now' : ''})</span></span>
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">

@@ -225,7 +225,12 @@
     function renderFilterBar() {
       const bar = document.getElementById('sr-filter-bar');
       const { roomTypes } = SHOWROOM_DATA;
-      if (!roomTypes.length) { bar.style.display = 'none'; return; }
+      // In "Build my own" mode there are no priced categories left to
+      // filter by project type — custom categories ignore this filter
+      // entirely (see buildShowroomSections) — so the whole bar is just
+      // dead weight; hide it rather than show chips that do nothing.
+      const mode = (SHOWROOM_DATA.catSettings && SHOWROOM_DATA.catSettings.mode === 'custom') ? 'custom' : 'default';
+      if (mode === 'custom' || !roomTypes.length) { bar.style.display = 'none'; return; }
       bar.style.display = 'flex';
       const chips = [{ id: 'all', name: 'All' }, ...roomTypes];
       bar.innerHTML = chips.map(r => `<button class="sr-filter-chip${CURRENT_FILTER===r.id?' active':''}" onclick="mqSetFilter('${r.id}')">${r.name}</button>`).join('');
@@ -278,23 +283,32 @@
     // of three separate ad-hoc blocks.
     function buildShowroomSections() {
       const { photos, hidden, categoryItems, specs, customCategories } = SHOWROOM_DATA;
-      const settings = SHOWROOM_DATA.catSettings || { order: [], names: {}, hidden: {} };
+      const settings = SHOWROOM_DATA.catSettings || { order: [], names: {}, hidden: {}, mode: 'default' };
+      const mode = settings.mode === 'custom' ? 'custom' : 'default';
       const sections = [];
 
-      Object.entries(CAT_CONFIG).forEach(([cat, cfg]) => {
-        const items = categoryItems[cat] || [];
-        const visibleItems = items.filter(it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms));
-        if (!visibleItems.length) return;
-        sections.push({ key: cat, html: `<div class="sr-section" id="${cfg.id}">
-          <div class="sr-section-header">
-            <div class="sr-section-eyebrow">${cfg.eyebrow}</div>
-            <div class="sr-section-title">${settings.names[cat] || cfg.title}</div>
-            <div class="sr-section-desc">${cfg.desc}</div>
-          </div>
-          <div class="sr-grid">${visibleItems.map(it => itemCard(it.name, it.photoKey, photos)).join('')}</div>
-        </div>` });
-      });
+      // Priced categories only appear in 'default' mode — in 'custom' mode
+      // this shop has deliberately replaced them with their own categories
+      // below, so showing both would defeat the point of picking "Build my
+      // own" in the first place.
+      if (mode === 'default') {
+        Object.entries(CAT_CONFIG).forEach(([cat, cfg]) => {
+          const items = categoryItems[cat] || [];
+          const visibleItems = items.filter(it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms));
+          if (!visibleItems.length) return;
+          sections.push({ key: cat, html: `<div class="sr-section" id="${cfg.id}">
+            <div class="sr-section-header">
+              <div class="sr-section-eyebrow">${cfg.eyebrow}</div>
+              <div class="sr-section-title">${settings.names[cat] || cfg.title}</div>
+              <div class="sr-section-desc">${cfg.desc}</div>
+            </div>
+            <div class="sr-grid">${visibleItems.map(it => itemCard(it.name, it.photoKey, photos)).join('')}</div>
+          </div>` });
+        });
+      }
 
+      // Specialty Items show in BOTH modes — useful either way, per the
+      // dashboard's Showroom tab.
       const visibleSpecs = specs.filter(s => !hidden[s.photoKey] && photos[s.photoKey] && itemVisible(s.visibleRooms));
       if (visibleSpecs.length) {
         sections.push({ key: 'specialty', html: `<div class="sr-section" id="specialty">
@@ -314,18 +328,22 @@
         </div>` });
       }
 
-      // Custom showcase categories (dashboard's Showroom tab) — independent
-      // of pricing and project types, so their items always show regardless
-      // of CURRENT_FILTER (the room-type chips only apply to priced items).
-      (customCategories || []).filter(c => (c.items||[]).length).forEach(cat => {
-        sections.push({ key: cat.id, html: `<div class="sr-section" id="custom-${cat.id}">
-          <div class="sr-section-header">
-            <div class="sr-section-eyebrow">Showcase</div>
-            <div class="sr-section-title">${settings.names[cat.id] || cat.name || ''}</div>
-          </div>
-          <div class="sr-grid">${(cat.items||[]).map(customItemCard).join('')}</div>
-        </div>` });
-      });
+      // Custom showcase categories (dashboard's Showroom tab) — only appear
+      // in 'custom' mode. Independent of pricing and project types, so
+      // their items always show regardless of CURRENT_FILTER (moot anyway
+      // in this mode, since the filter bar itself is hidden — see
+      // renderFilterBar).
+      if (mode === 'custom') {
+        (customCategories || []).filter(c => (c.items||[]).length).forEach(cat => {
+          sections.push({ key: cat.id, html: `<div class="sr-section" id="custom-${cat.id}">
+            <div class="sr-section-header">
+              <div class="sr-section-eyebrow">Showcase</div>
+              <div class="sr-section-title">${settings.names[cat.id] || cat.name || ''}</div>
+            </div>
+            <div class="sr-grid">${(cat.items||[]).map(customItemCard).join('')}</div>
+          </div>` });
+        });
+      }
 
       return sections;
     }
@@ -377,13 +395,19 @@
       // the dashboard's Showroom tab. Keyed by category key: the fixed
       // priced/specialty keys ('material','door',...,'specialty') or a
       // custom category's own id.
-      let catSettings = { order: [], names: {}, hidden: {} };
+      // mode: 'default' shows the priced categories below (the classic
+      // showroom); 'custom' shows only this shop's own categories instead.
+      // Specialty Items show in both — set from the dashboard's Showroom
+      // tab "Showroom style" choice. Missing/invalid always falls back to
+      // 'default', so nothing changes for a shop that's never touched this.
+      let catSettings = { order: [], names: {}, hidden: {}, mode: 'default' };
       try {
         const raw = shop['Showroom category settings'] ? JSON.parse(shop['Showroom category settings']) : {};
         catSettings = {
           order:  Array.isArray(raw.order) ? raw.order : [],
           names:  (raw.names  && typeof raw.names  === 'object') ? raw.names  : {},
           hidden: (raw.hidden && typeof raw.hidden === 'object') ? raw.hidden : {},
+          mode:   raw.mode === 'custom' ? 'custom' : 'default',
         };
       } catch(e) {}
       let roomTypes = [];
