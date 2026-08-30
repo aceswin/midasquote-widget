@@ -304,6 +304,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page — nothing extra to scroll past.</p>
         <p><strong>🎭 Showroom style</strong> at the top switches your whole showroom between two looks: "Default showroom" shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup) — and this tab shows those same categories to manage. "Build my own" shows only your custom categories plus Specialty Items on the page — and this tab switches to showing just those, tucking your priced categories out of sight (nothing about them is deleted, they're exactly as you left them) — it also hides the project-type filter bar at the top of your showroom, since there'd be nothing left for it to filter. Specialty Items always show, in the tab and on the page, no matter which style is picked. Switching is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
+        <p>The line under your shop name on the showroom page ("Browse the materials, door styles..." by default) is fixed for Default showroom, since it's describing your actual priced categories. While Build My Own is active, a <strong>Showroom subheading</strong> box appears right below the style picker so you can write your own — leave it blank to use the built-in "Browse some of our past projects and features..." line instead.</p>
         <p>For a priced category, "✏️ Rename" and "🚫 Hide category" only change what shows on your <em>showroom</em> — your actual pricing, categories, and the widget are never touched. Each item underneath has its own "Remove from showroom" button, same idea — the item itself is untouched, it just stops appearing here. An item needs a photo (added on My Products) before it shows up in this list at all.</p>
         <p>"+ New category" adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
         <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
@@ -1255,6 +1256,12 @@ window.logoutMember = async function () {
                 </div>
               </div>
               <div id="mq-showroom-mode-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
+              <div id="mq-showroom-subhead-wrap" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">
+                <label class="mq-label">Showroom subheading (Build My Own only)</label>
+                <p style="font-size:12px;color:#6b7280;margin:2px 0 8px">Shown under your shop name on your showroom page while Build My Own is active. Your Default-style subheading isn't editable — leave this blank to use the default shown below.</p>
+                <input type="text" id="mq-showroom-subhead-input" maxlength="160" placeholder="Browse some of our past projects and features. Have questions? Get in touch for a full consultation." style="width:100%;margin-bottom:8px"/>
+                <button class="mq-btn mq-btn-sm" onclick="mqSaveShowroomSubheading()">Save</button>
+              </div>
             </div>
 
             <div class="mq-card" style="margin-bottom:1.5rem">
@@ -1312,15 +1319,15 @@ window.logoutMember = async function () {
                 <button class="mq-btn" onclick="mqUpgradeToAnnual()">Upgrade to annual</button>
               </div>
               <div id="mq-billing-reactivate-actions" style="display:none;gap:10px;flex-wrap:wrap">
-                <button class="mq-btn mq-btn-primary" onclick="mqReactivate('prc_monthly-midasquote-o01n50jov')">Reactivate — Monthly</button>
-                <button class="mq-btn" onclick="mqReactivate('prc_annual-midasquote-2c1n80jbq')">Reactivate — Annual</button>
+                <button class="mq-btn mq-btn-primary" onclick="mqReactivate('prc_monthly-special-7d1bh0j3g')">Reactivate — Monthly</button>
+                <button class="mq-btn" onclick="mqReactivate('prc_special-annual-4t1bi0ji1')">Reactivate — Annual</button>
               </div>
               <div id="mq-billing-free-actions" style="display:none;gap:10px;flex-wrap:wrap">
                 <!-- New no-trial Monthly/Annual prices — a Free Trial/Demo shop
                      already had 30 free days on the house, so upgrading from here
                      goes straight to a real paid subscription, no second trial. -->
-                <button class="mq-btn mq-btn-primary" onclick="mqUpgradeFromFree('prc_monthly-midasquote-o01n50jov')">Upgrade — Monthly</button>
-                <button class="mq-btn" onclick="mqUpgradeFromFree('prc_annual-midasquote-2c1n80jbq')">Upgrade — Annual</button>
+                <button class="mq-btn mq-btn-primary" onclick="mqUpgradeFromFree('prc_monthly-special-7d1bh0j3g')">Upgrade — Monthly</button>
+                <button class="mq-btn" onclick="mqUpgradeFromFree('prc_special-annual-4t1bi0ji1')">Upgrade — Annual</button>
               </div>
             </div>
 
@@ -1824,7 +1831,7 @@ window.logoutMember = async function () {
   window.mqUpgradeToAnnual = async function() {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: 'prc_annual-midasquote-2c1n80jbq',
+        priceId: 'prc_special-annual-4t1bi0ji1',
       });
     } catch(e) {
       console.error('Upgrade error:', e);
@@ -1838,7 +1845,7 @@ window.logoutMember = async function () {
   window.mqReactivate = async function(priceId) {
     try {
       await window.$memberstackDom.purchasePlansWithCheckout({
-        priceId: priceId || 'prc_monthly-midasquote-o01n50jov',
+        priceId: priceId || 'prc_monthly-special-7d1bh0j3g',
       });
     } catch(e) {
       console.error('Reactivate error:', e);
@@ -5896,6 +5903,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const addNote = el('mq-showroom-addcat-note');
     if (addBtn) addBtn.style.display = mode === 'custom' ? 'inline-block' : 'none';
     if (addNote) { addNote.style.display = mode === 'custom' ? 'none' : 'block'; addNote.textContent = 'Switch to 🎨 Build my own above to add and manage your own categories.'; }
+
+    // Subheading text under the shop name on the showroom page — only the
+    // Build My Own version is editable (Default's wording names specific
+    // priced category types, so it stays fixed); only show/populate the
+    // input while that style is actually active.
+    const subWrap = el('mq-showroom-subhead-wrap');
+    if (subWrap) subWrap.style.display = mode === 'custom' ? 'block' : 'none';
+    const subInput = el('mq-showroom-subhead-input');
+    if (subInput && document.activeElement !== subInput) {
+      subInput.value = (window._mqShowroomSettings && window._mqShowroomSettings.customSubheading) || '';
+    }
   }
 
   window.mqShowroomSetMode = async function(mode) {
@@ -5905,6 +5923,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     mqShowroomRenderModeUI();
     renderShowroomCats();
     try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', mode === 'custom' ? '✓ Switched to Build My Own.' : '✓ Switched to Default showroom.'); window.mqRefreshShowroomPreview(); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  // Build-My-Own-only subheading override. Blank clears it back to
+  // showroom.html's own built-in default line ("Browse some of our past
+  // projects and features...") rather than saving an empty string that
+  // would render as a blank line on the live page.
+  window.mqSaveShowroomSubheading = async function() {
+    const input = el('mq-showroom-subhead-input');
+    if (!input) return;
+    window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    window._mqShowroomSettings.customSubheading = input.value.trim();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Subheading saved.'); window.mqRefreshShowroomPreview(); }
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -5930,6 +5961,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // never touched this, so nothing changes for existing shops until
       // they deliberately pick "Build my own."
       mode: settingsRaw.mode === 'custom' ? 'custom' : 'default',
+      // Build-My-Own-only subheading override — see mqSaveShowroomSubheading.
+      // Empty/missing means "use the built-in default line" (showroom.html
+      // has its own copy of that default text, this never stores it).
+      customSubheading: typeof settingsRaw.customSubheading === 'string' ? settingsRaw.customSubheading : '',
     };
     mqShowroomRenderModeUI();
 
