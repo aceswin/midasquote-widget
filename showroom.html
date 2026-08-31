@@ -87,7 +87,7 @@
   <div class="sr-hero" id="sr-hero">
     <div class="sr-hero-eyebrow">Products & Materials</div>
     <h1 id="sr-hero-title">Our Product Catalogue</h1>
-    <p>Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.</p>
+    <p id="sr-hero-sub">Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.</p>
   </div>
 
   <div class="sr-filter-bar" id="sr-filter-bar"></div>
@@ -400,7 +400,7 @@
       // Specialty Items show in both — set from the dashboard's Showroom
       // tab "Showroom style" choice. Missing/invalid always falls back to
       // 'default', so nothing changes for a shop that's never touched this.
-      let catSettings = { order: [], names: {}, hidden: {}, mode: 'default' };
+      let catSettings = { order: [], names: {}, hidden: {}, mode: 'default', customSubheading: '' };
       try {
         const raw = shop['Showroom category settings'] ? JSON.parse(shop['Showroom category settings']) : {};
         catSettings = {
@@ -408,6 +408,10 @@
           names:  (raw.names  && typeof raw.names  === 'object') ? raw.names  : {},
           hidden: (raw.hidden && typeof raw.hidden === 'object') ? raw.hidden : {},
           mode:   raw.mode === 'custom' ? 'custom' : 'default',
+          // Build-My-Own-only subheading override, set on the dashboard's
+          // Showroom tab. Blank/missing means "use the built-in default
+          // line below" — Default mode's subheading is never editable.
+          customSubheading: typeof raw.customSubheading === 'string' ? raw.customSubheading : '',
         };
       } catch(e) {}
       let roomTypes = [];
@@ -431,8 +435,21 @@
       }
       document.getElementById('sr-shop-name').textContent = shop['Shop name'] || '';
       document.getElementById('sr-shop-city').textContent = [shop['City'], shop['Province/State']].filter(Boolean).join(', ');
-      document.getElementById('sr-hero-title').textContent = `${shop['Shop name'] || 'Our'} Product Catalogue`;
-      document.title = `${shop['Shop name'] || 'Products'} — Materials & Options`;
+      document.getElementById('sr-hero-title').textContent = catSettings.mode === 'custom'
+        ? `${shop['Shop name'] || 'Our'} Product Catalogue`
+        : `${shop['Shop name'] || 'Our'} Materials & Options`;
+      // Default mode's subheading names specific priced category types, so
+      // it stays fixed — not editable, since it needs to stay accurate to
+      // what Default mode actually shows. Build My Own's categories could
+      // be anything, so the shop owner can override this one from the
+      // dashboard's Showroom tab; blank/unset falls back to this same
+      // generic line the dashboard shows as its placeholder.
+      document.getElementById('sr-hero-sub').textContent = catSettings.mode === 'custom'
+        ? (catSettings.customSubheading || 'Browse some of our past projects and features. Have questions? Get in touch for a full consultation.')
+        : 'Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.';
+      document.title = catSettings.mode === 'custom'
+        ? `${shop['Shop name'] || 'Products'} — Product Catalogue`
+        : `${shop['Shop name'] || 'Products'} — Materials & Options`;
 
       const lineItems = (payload.lineItems || []).filter(r => r.fields);
       const byCategory = cat => lineItems.filter(r => r.fields['Category'] === cat).map(r => r.fields);
