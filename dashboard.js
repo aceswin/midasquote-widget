@@ -4359,8 +4359,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
             const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
             const catAttr = (r.fields['Category'] || '').replace(/"/g,'&quot;');
-            const variantCount = mqParseVariants(r).length;
-            const specPhotoUrl = savedPhotos['spec_' + r.id] || '';
+            const specVariants = mqParseVariants(r);
+            const variantCount = specVariants.length;
+            // An item with variants has no photo of its own — each variant
+            // gets its own, keyed 'spec_<id>_v<variantId>' (see the photo
+            // card in My Products). Show the first variant's photo here
+            // (same one the widget shows by default) rather than nothing.
+            const specPhotoKey = variantCount ? ('spec_' + r.id + '_v' + specVariants[0].id) : ('spec_' + r.id);
+            const specPhotoUrl = savedPhotos[specPhotoKey] || '';
             const specThumbHtml = specPhotoUrl
               ? `<img src="${specPhotoUrl}" style="width:100%;max-width:180px;height:48px;object-fit:cover;border-radius:6px;margin-top:4px;display:block" onerror="this.style.display='none'"/>`
               : '';
