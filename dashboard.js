@@ -7325,7 +7325,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Description': master.fields['Description'] || '',
         'Category': master.fields['Category'] || '',
         'Pro only': master.fields['Pro only'] || false,
-        'Active': false,
+        'Active': true,
         'Visible rooms': master.fields['Visible rooms'] || '[]',
         'Template source ID': master.id,
       });
