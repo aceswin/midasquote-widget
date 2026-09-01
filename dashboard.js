@@ -736,7 +736,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
-          <div class="mq-nav-item" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
+          <div class="mq-nav-item" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
           <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
@@ -4309,6 +4309,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
       return;
     }
+    // Photos live on the shop record, keyed 'spec_<id>' — same map My
+    // Products reads/writes. Read-only here: this tab just shows whatever's
+    // already there so it's easier to tell items apart at a glance; actually
+    // adding/changing a photo still happens on My Products.
+    let savedPhotos = {};
+    try { savedPhotos = shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}; } catch(e) {}
     const rooms = window._mqRooms || defaultRoomTypes();
     const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
     container.innerHTML = `
@@ -4354,6 +4360,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             const nameAttr = (r.fields['Item name'] || '').toLowerCase().replace(/"/g,'&quot;');
             const catAttr = (r.fields['Category'] || '').replace(/"/g,'&quot;');
             const variantCount = mqParseVariants(r).length;
+            const specPhotoUrl = savedPhotos['spec_' + r.id] || '';
+            const specThumbHtml = specPhotoUrl
+              ? `<img src="${specPhotoUrl}" style="width:100%;max-width:180px;height:48px;object-fit:cover;border-radius:6px;margin-top:4px;display:block" onerror="this.style.display='none'"/>`
+              : '';
             return `
             <tr data-id="${r.id}" data-rooms="${roomsAttr}" data-name="${nameAttr}" data-category="${catAttr}" data-proonly="${r.fields['Pro only'] ? '1' : '0'}" style="cursor:grab">
               <td class="mq-spec-drag-handle" style="color:#9ca3af;font-size:16px;padding:8px 12px;cursor:grab">⠿</td>
@@ -4361,6 +4371,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 <div style="display:flex;flex-direction:column;gap:2px">
                   <textarea id="mq-spec-name-${r.id}" style="display:block;border:none;background:none;font-size:13px;width:180px;height:34px;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Item name',this.value)">${(r.fields['Item name'] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
                   <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                  ${specThumbHtml}
+                  <div onclick="mqNav('products', document.getElementById('mq-nav-products'))" style="font-size:10px;color:#9ca3af;margin-top:2px;cursor:pointer;width:fit-content" title="Go to My Products">Add/change images in My Products</div>
                   <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
                     <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
                     <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
