@@ -1298,11 +1298,11 @@ window.logoutMember = async function () {
             </div>
             <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
             <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
-            <div class="mq-card" style="margin-top:1.5rem">
-              <div class="mq-card-title">📤 Push to all shops</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Adds any template items a shop doesn't already have yet. Never touches or removes anything a shop already received from a previous push, even if you've since edited it here.</p>
-              <button class="mq-btn mq-btn-primary" onclick="mqPushTemplatesToAllShops()">Push new template items to all shops</button>
-            </div>
+            <!-- No bulk "push to all shops" here on purpose: a template item
+                 you add only ever reaches brand-new shops automatically when
+                 they sign up (see ensureProjectTypeTemplates). If you want to
+                 hand one specific existing shop a new item, use "Push to just
+                 this shop" on that item's own card below. -->
           </div>
 
           <!-- BILLING -->
@@ -5037,6 +5037,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Same pure view filter, for the Templates admin page.
   window.mqFilterTemplateCards = function() {
     const roomFilter = el('mq-tmpl-filter-room')?.value || '';
+    const categoryFilter = el('mq-tmpl-filter-category')?.value || '';
     const searchFilter = (el('mq-tmpl-filter-search')?.value || '').toLowerCase().trim();
     const grid = document.getElementById('mq-tmpl-cards-grid');
     if (!grid) return;
@@ -5045,11 +5046,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let rooms = [];
       try { rooms = JSON.parse(wrap.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
       const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
+      const category = wrap.getAttribute('data-category') || '';
+      const categoryMatch = !categoryFilter || category === categoryFilter;
       const name = wrap.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
-      const show = roomMatch && searchMatch;
+      const show = roomMatch && categoryMatch && searchMatch;
       wrap.style.display = show ? '' : 'none';
       if (show) visibleCount++;
+    });
+    // A category section whose cards are all hidden by the filter above
+    // shouldn't leave its heading floating with nothing under it.
+    grid.querySelectorAll('.mq-tmpl-cat-section').forEach(section => {
+      const anyVisible = [...section.querySelectorAll('.mq-tmpl-card-wrap')].some(w => w.style.display !== 'none');
+      section.style.display = anyVisible ? '' : 'none';
     });
     const emptyMsg = document.getElementById('mq-tmpl-filter-empty');
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
@@ -7023,7 +7032,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Module-level so both initProductsTab (My Products) and renderTemplates
   // (admin Templates tab) can share it, instead of it being locked inside one
   // function's closure over a specific shop's savedPhotos/savedHidden.
-  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo) {
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo, autosave) {
+    // autosave (Templates admin tab only — every other caller omits it) —
+    // this tab's floating "Save all changes" button is easy to forget after
+    // uploading/pasting a photo or toggling "Hide from showroom," and
+    // anything not saved before navigating away or reloading is silently
+    // lost (mqSaveTemplatePhotos rebuilds the whole Photos/Hidden blob from
+    // whatever's in the DOM at save time). So on this tab specifically,
+    // these two actions save immediately instead of only marking dirty.
+    const autosaveJs = autosave ? "if(typeof window.mqSaveTemplatePhotos==='function')window.mqSaveTemplatePhotos();" : '';
     const savedUrl = savedPhotos[key] || '';
     const isHidden = savedHidden[key] || false;
     // savedFeatured is only ever passed in from My Products — every other
@@ -7048,7 +7065,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       ${featuredHtml}
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
         <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"
-          onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1'"/>
+          onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1';${autosaveJs}"/>
         Hide from showroom
       </label>
       ${isDemo ? `
@@ -7069,7 +7086,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
       <input type="text" id="mq-photo-${key}" value="${savedUrl}" placeholder="https://your-site.com/photo.jpg"
         style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
-        oninput="mqMarkProductsDirty()"/>
+        oninput="mqMarkProductsDirty()" onblur="${autosaveJs}"/>
       <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqPreviewPhoto('${key}')">Preview photo</button>
       <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenPhotoPicker('${key}','${cat||'specialty'}')">📷 Choose from library</button>`}
     </div>`;
@@ -7080,7 +7097,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // templates don't have an equivalent, so it lives right on the card here).
   function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
-    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden);
+    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, true);
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
     const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:6px">
@@ -7099,7 +7116,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>
       <div id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</div>
       ${photoHtml}
-      <button class="mq-btn mq-btn-primary mq-btn-sm" style="width:100%;margin-bottom:4px" onclick="mqPushSingleTemplateItem('${r.id}')">📤 Push/refresh this item for ALL shops</button>
       <div style="display:flex;gap:4px;margin-bottom:4px">
         <select id="mq-tmpl-shoppick-${r.id}" style="flex:1;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px">
           <option value="">Pick a shop…</option>
@@ -7131,8 +7147,33 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     const rooms = window._mqRooms || defaultRoomTypes();
     const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+
+    // Group template items by Category so the tab reads as sections instead
+    // of one long flat grid — same "organize by category" idea as the
+    // shop-facing Specialty Items tab. Categories sort alphabetically;
+    // anything with no Category set lands in its own "Uncategorized" bucket
+    // at the end, so a missing category never silently hides an item.
+    const UNCATEGORIZED = 'Uncategorized';
+    const catNames = [...new Set(items.map(r => (r.fields['Category'] || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const groupOrder = [...catNames, UNCATEGORIZED];
+    const groups = {};
+    groupOrder.forEach(c => { groups[c] = []; });
+    items.forEach(r => {
+      const cat = (r.fields['Category'] || '').trim() || UNCATEGORIZED;
+      groups[cat].push(r);
+    });
+    const catFilterOptions = catNames.map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('');
+
     content.innerHTML = `
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by category</label>
+          <select id="mq-tmpl-filter-category" onchange="mqFilterTemplateCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+            <option value="">All categories</option>
+            ${catFilterOptions}
+            <option value="${UNCATEGORIZED}">${UNCATEGORIZED}</option>
+          </select>
+        </div>
         <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
           <select id="mq-tmpl-filter-room" onchange="mqFilterTemplateCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
@@ -7146,16 +7187,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
       </div>
       <div id="mq-tmpl-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No template items match that filter.</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px" id="mq-tmpl-cards-grid">
-        ${items.map(r => {
-          const itemName = r.fields['Item name'] || '';
-          const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
-          return `<div class="mq-tmpl-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}">
-            ${templateItemCard(r, savedPhotos, savedHidden, items, allShops)}
-          </div>`;
-        }).join('')}
+      <div id="mq-tmpl-cards-grid">
+        ${groupOrder.filter(cat => groups[cat].length).map(cat => `
+          <div class="mq-tmpl-cat-section" data-cat-section="${cat.replace(/"/g,'&quot;')}" style="margin-bottom:22px">
+            <div style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid #e5e7eb">${cat.replace(/</g,'&lt;')} <span style="font-weight:500;color:#9ca3af;text-transform:none;letter-spacing:normal">(${groups[cat].length})</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">
+              ${groups[cat].map(r => {
+                const itemName = r.fields['Item name'] || '';
+                const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
+                return `<div class="mq-tmpl-card-wrap" data-rooms="${roomsAttr}" data-name="${itemName.toLowerCase().replace(/"/g,'&quot;')}" data-category="${cat.replace(/"/g,'&quot;')}">
+                  ${templateItemCard(r, savedPhotos, savedHidden, items, allShops)}
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        `).join('')}
       </div>
-      
+
     `;
 
     // Wire up upload buttons for every template card just rendered — this
@@ -7170,7 +7218,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'mq-photo-' + key,
         MASTER_TEMPLATE_SHOP_NAME,
         'products',
-        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
+        // Save immediately once the upload finishes, instead of only
+        // marking dirty — same reasoning as the autosave wiring in
+        // photoCardShared above: this tab's "Save all changes" button is
+        // easy to forget, and an uploaded-but-unsaved photo silently
+        // disappears the next time this tab is reloaded.
+        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos(); }
       );
     });
   }
@@ -7207,140 +7260,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { showMsg('mq-templates-msg', 'Error deleting item.', 'error'); }
   };
 
-  // Additive only, per your call: adds template items a shop doesn't already
-  // have (matched by Template source ID, not name — so renaming a template
-  // later never causes duplicates or misses). Never touches or removes
-  // anything a shop already has, even if you've since edited the master copy.
-  window.mqPushTemplatesToAllShops = async function() {
-    if (!confirm('Push ALL template items to every shop? This fully replaces any matching item a shop already has — full sync, not additive. Name, price, units, tags, and photo will always exactly match the master.')) return;
-    showMsg('mq-templates-msg', 'Pushing to all shops — this may take a moment...');
-    try {
-      const masterShop = await ensureMasterTemplateShop();
-      let masterPhotos = {};
-      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
-
-      const masterItems = await ensureMasterTemplateItems();
-      const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
-      const adminRooms = window._mqRooms || defaultRoomTypes();
-      let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
-
-      for (const shop of allShops) {
-        const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
-
-        // Make sure every project type these items are tagged to actually
-        // exists in this shop's room list — added as a draft (hidden) room
-        // if it's missing, so it never silently shows up on their live
-        // widget without them reviewing and switching it on themselves.
-        let shopRooms = [];
-        try { shopRooms = shop.fields['Room types'] ? JSON.parse(shop.fields['Room types']) : []; } catch(e) { shopRooms = []; }
-        if (!Array.isArray(shopRooms) || !shopRooms.length) shopRooms = defaultRoomTypes();
-        let shopRoomsChanged = false;
-        masterItems.forEach(m => {
-          let vr = [];
-          try { vr = m.fields['Visible rooms'] ? JSON.parse(m.fields['Visible rooms']) : []; } catch(e) { vr = []; }
-          vr.forEach(roomId => {
-            if (!shopRooms.find(r => r.id === roomId)) {
-              const adminRoomDef = adminRooms.find(r => r.id === roomId);
-              shopRooms.push({ id: roomId, name: adminRoomDef ? adminRoomDef.name : roomId, materialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: adminRoomDef ? (adminRoomDef.description || '') : '', active: false, measureText: adminRoomDef ? (adminRoomDef.measureText || '') : '', measureImage: adminRoomDef ? (adminRoomDef.measureImage || '') : '' });
-              shopRoomsChanged = true;
-              roomsAddedCount++;
-            }
-          });
-        });
-        if (shopRoomsChanged) {
-          await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Room types': JSON.stringify(shopRooms) });
-          shop.fields['Room types'] = JSON.stringify(shopRooms);
-        }
-
-        let shopPhotos = {};
-        try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-
-        // Sequential, not parallel — slower, but guarantees each item's
-        // delete-then-recreate fully completes before moving to the next,
-        // and makes any individual failure easy to isolate and log clearly.
-        for (const master of masterItems) {
-          try {
-            // Match by tag first, but also fall back to an exact name match —
-            // catches orphaned rows left behind by manual Airtable edits that
-            // never got (or lost) their tracking tag, so they don't silently
-            // block a clean push forever.
-            const masterName = (master.fields['Item name'] || '').trim().toLowerCase();
-            const existingMatches = shopItems.filter(i =>
-              i.fields['Template source ID'] === master.id ||
-              (i.fields['Item name'] || '').trim().toLowerCase() === masterName
-            );
-            if (existingMatches.length) {
-              await Promise.all(existingMatches.map(item => atDelete(CONFIG.SPECIALTY_TABLE, item.id)));
-              replacedCount++;
-            } else {
-              createdCount++;
-            }
-            const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
-              'Shop': [shop.id],
-              'Item name': master.fields['Item name'],
-              'Special Items': master.fields['Item name'],
-              'Price': master.fields['Price'] || 0,
-              'Per linear foot': master.fields['Per linear foot'] || false,
-              'Per square foot': master.fields['Per square foot'] || false,
-              'Offers install choice': master.fields['Offers install choice'] || false,
-              'Install price': master.fields['Install price'] || 0,
-              'Install mode': master.fields['Install mode'] || 'supply',
-              'Install per linear foot': master.fields['Install per linear foot'] || false,
-              'Install per square foot': master.fields['Install per square foot'] || false,
-              'Install quantity label': master.fields['Install quantity label'] || '',
-          'Description': master.fields['Description'] || '',
-          'Category': master.fields['Category'] || '',
-          'Pro only': master.fields['Pro only'] || false,
-              'Active': false,
-              'Visible rooms': master.fields['Visible rooms'] || '[]',
-              'Template source ID': master.id,
-            });
-            if (!created?.id) {
-              errorCount++;
-              console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
-              continue;
-            }
-            // Write this item's photo immediately, right here — not batched
-            // up to write once at the end of the shop's whole item loop.
-            // Batching meant that if this slow, sequential push got
-            // interrupted (browser throttling a backgrounded tab, closing
-            // the page, anything) before every single item finished, the
-            // photo write for that shop would never happen at all, even
-            // though every item itself had already been created correctly.
-            const masterPhotoUrl = masterPhotos['spec_' + master.id];
-            if (masterPhotoUrl) {
-              shopPhotos['spec_' + created.id] = masterPhotoUrl;
-              await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
-              shop.fields['Photos'] = JSON.stringify(shopPhotos);
-            }
-          } catch(e) {
-            errorCount++;
-            console.error('Failed to push item:', master.fields['Item name'], 'to', shop.fields['Shop name'], e);
-          }
-        }
-      }
-      const roomsNote = roomsAddedCount ? `, ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
-      const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console for details` : '';
-      await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
-      showMsg('mq-templates-msg', `✓ Full sync complete — ${createdCount} created, ${replacedCount} fully replaced across ${allShops.length} shop${allShops.length===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
-    } catch(e) {
-      console.error('Push to shops failed:', e);
-      showMsg('mq-templates-msg', 'Error during push — please try again.', 'error');
-    }
-  };
-
-  // One item, everywhere at once. Creates it fresh for shops that don't have
-  // it yet (same safety net as the bulk push — auto-adds a missing project
-  // type as a hidden draft). For shops that already have it, this fully
-  // overwrites name/price/units/tags/photo to match the master. NOTE: this is
-  // a full overwrite by design right now, while there are no real shop
-  // customizations to protect — revisit this once real shops exist and may
-  // have renamed/retagged their own copies deliberately.
-  // The actual work of pushing one master item into one shop — creating the
-  // record, matching/replacing any existing copy, copying the photo, and
-  // adding any project types the item needs that the shop doesn't have yet.
-  // Shared by both "push to every shop" and "push to just one shop," so the
-  // two can never quietly drift apart or behave differently.
+  // The actual work of pushing one master item into one specific, explicitly
+  // chosen shop — creating the record, copying the photo, and adding any
+  // project types the item needs that the shop doesn't have yet. This is now
+  // the ONLY way a template item can ever land on a shop that already
+  // exists (there is deliberately no bulk "push to all shops" anymore — a
+  // new template item only ever reaches brand-new shops automatically, via
+  // ensureProjectTypeTemplates, when they sign up). Called only from "Push
+  // to just this shop," where fully replacing an existing match is the
+  // intended, deliberate behavior — you picked this one shop on purpose.
   async function pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms) {
     const result = { created: false, replaced: false, roomsAdded: 0, error: false };
     try {
@@ -7420,58 +7348,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return result;
   }
 
-  window.mqPushSingleTemplateItem = async function(masterItemId) {
-    showMsg('mq-templates-msg', 'Pushing this item to all shops...');
-    try {
-      // Fetch this record fresh rather than trusting window._mqTemplateItems
-      // — that's just a snapshot taken when the tab first loaded, and every
-      // field edit since then (price, name, checkboxes, all of it) saves
-      // straight to Airtable without updating that snapshot. Reading from
-      // it here would silently push whatever the values were BEFORE your
-      // most recent edits, undoing them on every shop.
-      const fresh = await atGet(CONFIG.SPECIALTY_TABLE, `RECORD_ID()="${masterItemId}"`);
-      const master = fresh[0];
-      if (!master) { showMsg('mq-templates-msg', 'Could not find that template item — try refreshing the page.', 'error'); return; }
-      // Keep the in-memory list in sync too, so anything else reading it
-      // this session (or a second push right after) also sees the current
-      // values instead of the stale ones.
-      if (window._mqTemplateItems) {
-        const idx = window._mqTemplateItems.findIndex(m => m.id === masterItemId);
-        if (idx !== -1) window._mqTemplateItems[idx] = master;
-      }
-
-      const masterShop = await ensureMasterTemplateShop();
-      let masterPhotos = {};
-      try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
-      const masterPhotoUrl = masterPhotos['spec_' + master.id];
-
-      const allShops = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} != "${MASTER_TEMPLATE_SHOP_NAME}"`);
-      const adminRooms = window._mqRooms || defaultRoomTypes();
-      let createdCount = 0, replacedCount = 0, roomsAddedCount = 0, errorCount = 0;
-
-      for (const shop of allShops) {
-        const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
-        if (r.error) errorCount++;
-        if (r.created) createdCount++;
-        if (r.replaced) replacedCount++;
-        roomsAddedCount += r.roomsAdded;
-      }
-      const roomsNote = roomsAddedCount ? `, added ${roomsAddedCount} new draft project type${roomsAddedCount===1?'':'s'}` : '';
-      const errNote = errorCount ? ` — ${errorCount} error${errorCount===1?'':'s'}, check the browser console` : '';
-      await new Promise(r => setTimeout(r, 800)); // brief buffer so a quick click to another tab doesn't outrace Airtable settling the writes
-      showMsg('mq-templates-msg', `✓ "${master.fields['Item name']}" — created for ${createdCount} shop${createdCount===1?'':'s'}, fully replaced for ${replacedCount} shop${replacedCount===1?'':'s'}${roomsNote}${errNote}.`, errorCount ? 'error' : 'success');
-    } catch(e) {
-      console.error('Single item push failed:', e);
-      showMsg('mq-templates-msg', 'Error pushing item — please try again.', 'error');
-    }
-  };
-
   // Pushes one master item into exactly one chosen shop — every other shop,
-  // including ones that already have their own edited copy of this item,
-  // is completely untouched. This is the safe option for backfilling an
-  // item onto a shop that's missing it without resetting anyone else's
-  // customizations, which the "push to every shop" button above cannot do
-  // (it always includes every real shop, with no way to exclude one).
+  // including ones that already have their own edited copy of this item, is
+  // completely untouched. This is the ONLY way a template item can ever
+  // land on a shop that already exists — deliberately scoped to one shop
+  // you explicitly pick, on purpose, right here.
   window.mqPushSingleTemplateItemToShop = async function(masterItemId, shopId) {
     if (!shopId) { showMsg('mq-templates-msg', 'Pick a shop first.', 'error'); return; }
     showMsg('mq-templates-msg', 'Pushing to that shop...');
