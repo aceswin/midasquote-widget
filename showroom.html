@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --brand: #1a1a1a; --white: #ffffff; --gray-50: #fafaf8; --gray-100: #f0efeb; --gray-200: #e2e0d9; --gray-400: #9e9b92; --gray-600: #5c5a54; --gray-900: #1a1917; --radius: 12px; }
+    :root { --brand: #1a1a1a; --white: #ffffff; --gray-50: #fafaf8; --gray-100: #f0efeb; --gray-200: #e2e0d9; --gray-400: #9e9b92; --gray-600: #5c5a54; --gray-900: #1a1917; --radius: 12px; --header-h: 77px; --nav-h: 49px; }
     body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-900); -webkit-font-smoothing: antialiased; }
     .sr-header { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .sr-shop-info { display: flex; align-items: center; gap: 12px; }
@@ -33,12 +33,12 @@
     .sr-filter-chip { flex-shrink: 0; padding: 7px 16px; border-radius: 999px; border: 1.5px solid var(--gray-200); background: var(--white); color: var(--gray-600); font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
     .sr-filter-chip:hover { border-color: var(--brand); color: var(--gray-900); }
     .sr-filter-chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
-    .sr-nav { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 0 2rem; display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .sr-nav { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 0 2rem; display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; position: sticky; top: var(--header-h); z-index: 90; }
     .sr-nav-item { padding: 1rem 1.25rem; font-size: 13px; font-weight: 500; color: var(--gray-400); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.15s; text-decoration: none; }
     .sr-nav-item:hover { color: var(--gray-900); }
     .sr-nav-item.active { color: var(--gray-900); border-bottom-color: var(--brand); }
     .sr-content { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
-    .sr-section { margin-bottom: 4rem; }
+    .sr-section { margin-bottom: 4rem; scroll-margin-top: calc(var(--header-h) + var(--nav-h)); }
     .sr-section-header { margin-bottom: 2rem; }
     .sr-section-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 8px; }
     .sr-section-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; color: var(--gray-900); margin-bottom: 8px; }
@@ -73,7 +73,7 @@
 </head>
 <body>
 
-  <div class="sr-header">
+  <div class="sr-header" id="sr-header">
     <div class="sr-shop-info">
       <div class="sr-shop-logo" id="sr-logo">?</div>
       <div>
@@ -242,6 +242,25 @@
       renderShowroom();
     };
 
+    // Keeps the sticky header + sticky nav sized correctly for whatever's
+    // actually on screen right now — the header's height isn't a fixed
+    // number (a long shop name can wrap to two lines on a narrow screen,
+    // a real uploaded logo can be taller/shorter than the placeholder
+    // square), so this measures both bars live instead of trusting the
+    // CSS fallback values. Also drives .sr-section's scroll-margin-top so
+    // clicking a nav tab lands the section right below both sticky bars
+    // instead of hidden underneath them.
+    function syncStickyOffsets() {
+      const header = document.getElementById('sr-header');
+      const nav = document.getElementById('sr-nav');
+      if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+      if (nav) document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+    }
+    window.addEventListener('resize', syncStickyOffsets);
+    // The web font can swap in after first paint and nudge text height —
+    // re-measure once it's actually loaded so the sticky offset stays exact.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncStickyOffsets);
+
     // Rebuilds the top nav from whichever sections actually rendered this
     // time (changes as the filter changes), rather than a fixed list —
     // otherwise a filtered-out category would leave a dead link behind.
@@ -254,6 +273,7 @@
         return `<a class="sr-nav-item${i===0?' active':''}" href="#${s.id}">${title}</a>`;
       }).join('');
       wireNav();
+      syncStickyOffsets();
     }
 
     function wireNav() {
@@ -435,6 +455,7 @@
       }
       document.getElementById('sr-shop-name').textContent = shop['Shop name'] || '';
       document.getElementById('sr-shop-city').textContent = [shop['City'], shop['Province/State']].filter(Boolean).join(', ');
+      syncStickyOffsets(); // header height depends on the real shop name/logo just set above
       document.getElementById('sr-hero-title').textContent = catSettings.mode === 'custom'
         ? `${shop['Shop name'] || 'Our'} Product Catalogue`
         : `${shop['Shop name'] || 'Our'} Materials & Options`;
