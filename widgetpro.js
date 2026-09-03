@@ -546,8 +546,12 @@
          the widget's own scoped CSS — this is a small, self-contained copy
          of just what they need, under their own dedicated classes so
          nothing here can collide with the widget's internal styling or the
-         host page's own CSS. */
-      .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999998;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+         host page's own CSS.
+         z-index must beat #mq-sticky-bar (z-index:999999, position:fixed) —
+         same fix as mqEnsureCalcModal — or the sticky bar renders on top of
+         and covers these popups (Ask a question / Book a consultation /
+         quick email / lead capture / demo locked). */
+      .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000010;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
       .mq-overlay.show{display:flex}
       .mq-modal{background:#f8faff;border-radius:12px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.18);position:relative;margin:auto;box-sizing:border-box}
       .mq-modal *{box-sizing:border-box}
