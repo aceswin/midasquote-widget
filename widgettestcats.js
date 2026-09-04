@@ -4241,12 +4241,8 @@
         } else {
           stickyBreakdown.style.display = 'block';
           if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
-          const financingDisclaimerHTML = (window._mqFinancingOn && window._mqFinancingAPR != null && window._mqFinancingTermMonths != null)
-            ? `<div style="font-size:11px;color:rgba(255,255,255,0.55);font-style:italic;padding-top:6px">*Estimated payment only — subject to approval and final terms.</div>`
-            : '';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
             + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`
-            + financingDisclaimerHTML
             + `<div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px"><button type="button" onclick="mqScrollToTop()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↑ Back to top</button><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
         }
         mqAdjustWidgetBottomPadding();
