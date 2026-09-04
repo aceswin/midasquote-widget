@@ -693,7 +693,9 @@
       #mq-sticky-ctas{display:flex;gap:6px;flex-shrink:0}
       #mq-sticky-ctas button{font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;white-space:nowrap;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
       #mq-sticky-ctas button.mq-pri{border-color:transparent;font-weight:700}
-      #mq-sticky-financing{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.14);font-size:12px;font-weight:700;color:#fbbf24;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:0.01em}
+      #mq-sticky-financing{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.14);text-align:center}
+      #mq-sticky-financing-main{font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:0.01em;display:flex;align-items:center;justify-content:center;gap:6px}
+      #mq-sticky-financing-disclaimer{font-size:10px;font-weight:400;color:rgba(255,255,255,0.55);font-style:italic;margin-top:3px}
       @media (max-width:420px){
         #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
         #mq-sticky-content{flex:1 1 100%}
@@ -777,10 +779,10 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
-      #midasquote-widget .mq-financing-box{display:flex;justify-content:space-between;align-items:center;padding:0.85rem 1.25rem;background:#f0fdf4;border-radius:8px;margin-top:0.75rem;border:1px solid #bbf7d0}
+      #midasquote-widget .mq-financing-box{padding:0.85rem 1.25rem;background:#f0fdf4;border-radius:8px;margin-top:0.75rem;border:1px solid #bbf7d0}
       #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:600;color:#166534}
       #midasquote-widget .mq-financing-box-sub{font-size:11.5px;color:#4b5563;margin-top:2px;font-style:italic}
-      #midasquote-widget .mq-financing-box-val{font-size:22px;font-weight:700;color:#166534;text-align:right}
+      #midasquote-widget .mq-financing-box-val{font-size:22px;font-weight:700;color:#166534;margin-top:8px}
       .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
@@ -2376,7 +2378,8 @@
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
           <div class="mq-financing-box" id="mq-c-financing-box" style="display:none">
-            <div><div class="mq-financing-box-label">💳 Financing available</div><div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div></div>
+            <div class="mq-financing-box-label">💳 Financing available</div>
+            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
             <div class="mq-financing-box-val" id="mq-c-financing-val">—</div>
           </div>
           <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
@@ -2408,7 +2411,8 @@
           </div>
           <ul class="mq-line-items" id="mq-ct-line-items"></ul>
           <div class="mq-financing-box" id="mq-ct-financing-box" style="display:none">
-            <div><div class="mq-financing-box-label">💳 Financing available</div><div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div></div>
+            <div class="mq-financing-box-label">💳 Financing available</div>
+            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
             <div class="mq-financing-box-val" id="mq-ct-financing-val">—</div>
           </div>
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
@@ -2501,7 +2505,8 @@
             <div class="mq-grand-val" id="mq-b-grand">—</div>
           </div>
           <div class="mq-financing-box" id="mq-b-financing-box" style="display:none">
-            <div><div class="mq-financing-box-label">💳 Financing available</div><div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div></div>
+            <div class="mq-financing-box-label">💳 Financing available</div>
+            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
             <div class="mq-financing-box-val" id="mq-b-financing-val">—</div>
           </div>
           <div class="mq-disclaimer" id="mq-b-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
@@ -5825,7 +5830,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           </div>
         </div>
         <div id="mq-sticky-breakdown" style="display:none;padding:0 16px 12px;font-size:12.5px;color:rgba(255,255,255,0.9)"></div>
-        ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available<span id="mq-sticky-financing-payment"></span></div>` : ''}
+        ${window._mqFinancingOn ? `<div id="mq-sticky-financing"><div id="mq-sticky-financing-main">💳 Financing available<span id="mq-sticky-financing-payment"></span></div><div id="mq-sticky-financing-disclaimer" style="display:none">*Estimated amount only</div></div>` : ''}
       </div>`;
     document.body.appendChild(bar);
     window.addEventListener('resize', mqAdjustWidgetBottomPadding);
@@ -6044,6 +6049,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // low/high/total used for the price above — stays in sync with it as
     // the customer edits their quote.
     const financingPayEl = document.getElementById('mq-sticky-financing-payment');
+    const financingDisclaimerEl = document.getElementById('mq-sticky-financing-disclaimer');
     if (financingPayEl) {
       if (window._mqFinancingAPR != null && window._mqFinancingTermMonths != null) {
         const payBasisLow = allNoRange ? combinedTotal : combinedLow;
@@ -6056,11 +6062,14 @@ window.mqTogDrawerConfig=(prefix)=>{
             : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
           financingPayEl.textContent = ` · as low as ${payText}*`;
           financingPayEl.title = 'Estimated payment only — subject to approval and final terms.';
+          if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'block';
         } else {
           financingPayEl.textContent = '';
+          if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'none';
         }
       } else {
         financingPayEl.textContent = '';
+        if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'none';
       }
     }
     if (animate && prev) {
