@@ -777,6 +777,10 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
+      #midasquote-widget .mq-financing-box{display:flex;justify-content:space-between;align-items:center;padding:0.85rem 1.25rem;background:#f0fdf4;border-radius:8px;margin-top:0.75rem;border:1px solid #bbf7d0}
+      #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:600;color:#166534}
+      #midasquote-widget .mq-financing-box-sub{font-size:11.5px;color:#4b5563;margin-top:2px;font-style:italic}
+      #midasquote-widget .mq-financing-box-val{font-size:22px;font-weight:700;color:#166534;text-align:right}
       .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
@@ -2371,6 +2375,10 @@
             <div><div class="mq-res-range-lbl" id="mq-c-res-range-lbl">Estimated range</div><div class="mq-res-range" id="mq-c-res-range">—</div></div>
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
+          <div class="mq-financing-box" id="mq-c-financing-box" style="display:none">
+            <div><div class="mq-financing-box-label">💳 Financing available</div><div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div></div>
+            <div class="mq-financing-box-val" id="mq-c-financing-val">—</div>
+          </div>
           <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
@@ -2399,6 +2407,10 @@
             <div><div class="mq-res-range-lbl">Estimated range</div><div class="mq-res-range" id="mq-ct-res-range">—</div></div>
           </div>
           <ul class="mq-line-items" id="mq-ct-line-items"></ul>
+          <div class="mq-financing-box" id="mq-ct-financing-box" style="display:none">
+            <div><div class="mq-financing-box-label">💳 Financing available</div><div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div></div>
+            <div class="mq-financing-box-val" id="mq-ct-financing-val">—</div>
+          </div>
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
@@ -2487,6 +2499,10 @@
           <div class="mq-grand-total">
             <div><div class="mq-grand-label">Total project estimate</div><div class="mq-grand-sub" id="mq-b-grand-sub">Before tax · Ballpark estimate only</div></div>
             <div class="mq-grand-val" id="mq-b-grand">—</div>
+          </div>
+          <div class="mq-financing-box" id="mq-b-financing-box" style="display:none">
+            <div><div class="mq-financing-box-label">💳 Financing available</div><div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div></div>
+            <div class="mq-financing-box-val" id="mq-b-financing-val">—</div>
           </div>
           <div class="mq-disclaimer" id="mq-b-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
@@ -5108,6 +5124,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const subEl = document.getElementById('mq-c-res-sub');
         if (subEl) subEl.textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
         renderResult('mq-c-res-range','mq-c-line-items', r, 'c');
+        mqUpdateFinancingBox('c', r.low, r.high, r.total);
         return { low: r.low, high: r.high, total: r.total, label: r.roomLabel };
       }
       if (prefix === 'ct') {
@@ -5118,6 +5135,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const subEl = document.getElementById('mq-ct-res-sub');
         if (subEl) subEl.textContent = `${active} surface(s)`;
         renderResult('mq-ct-res-range','mq-ct-line-items', r, 'ct');
+        mqUpdateFinancingBox('ct', r.low, r.high, r.total);
         return { low: r.low, high: r.high, total: r.total, label: 'Countertops' };
       }
       if (prefix === 'b') {
@@ -5138,6 +5156,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const tl = cab.low+ct.low, th = cab.high+ct.high, totalB = cab.total+ct.total;
         const grandEl = document.getElementById('mq-b-grand');
         if (grandEl) { mqRefreshBallparkWording('b'); grandEl.textContent = mqFmtPrice('b', tl, th, totalB); }
+        mqUpdateFinancingBox('b', tl, th, totalB);
         return { low: tl, high: th, total: totalB, label: cab.roomLabel || 'Cabinets + Countertops' };
       }
       return null;
@@ -5161,6 +5180,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         // stops announcing it in the results panel.
         if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r,'c');
+        mqUpdateFinancingBox('c', r.low, r.high, r.total);
         window.mqShowStickyBar('c', r.low, r.high, r.total);
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');mqScrollPoweredByAboveSticky('c');
@@ -5184,6 +5204,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const active=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length;
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r,'ct');
+          mqUpdateFinancingBox('ct', r.low, r.high, r.total);
           window.mqShowStickyBar('ct', r.low, r.high, r.total);
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');mqScrollPoweredByAboveSticky('ct');
@@ -5218,6 +5239,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const tl=cab.low+ct.low,th=cab.high+ct.high,totalB=cab.total+ct.total;
           mqRefreshBallparkWording('b');
           document.getElementById('mq-b-grand').textContent=mqFmtPrice('b', tl, th, totalB);
+          mqUpdateFinancingBox('b', tl, th, totalB);
           window.mqShowStickyBar('b', tl, th, totalB);
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');mqScrollPoweredByAboveSticky('b');
@@ -5944,6 +5966,37 @@ window.mqTogDrawerConfig=(prefix)=>{
   // at all, depending on the selected project type's own preference.
   function mqFmtPrice(prefix, low, high, total) {
     return mqShouldShowRange(prefix) ? fmtRange(low, high) : (CUR() + Math.round(total).toLocaleString());
+  }
+  // Formats the financing monthly-payment text for a results panel, mirroring
+  // mqFmtPrice's own range-vs-single-number logic so the payment box always
+  // matches whatever basis (range or one clean total) the price above it is
+  // using. Returns null when financing has no rate/term set, or the basis is
+  // $0 (nothing calculated yet).
+  function mqFinancingPaymentText(prefix, low, high, total) {
+    if (window._mqFinancingAPR == null || window._mqFinancingTermMonths == null) return null;
+    const showRange = mqShouldShowRange(prefix);
+    const basisLow = showRange ? low : total;
+    const basisHigh = showRange ? high : total;
+    if (!(basisLow > 0) && !(basisHigh > 0)) return null;
+    const payLow = Math.round(mqCalcMonthlyPayment(basisLow, window._mqFinancingAPR, window._mqFinancingTermMonths));
+    const payHigh = Math.round(mqCalcMonthlyPayment(basisHigh, window._mqFinancingAPR, window._mqFinancingTermMonths));
+    return payLow === payHigh
+      ? `${CUR()}${payHigh.toLocaleString()}/mo`
+      : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
+  }
+  // Shows/hides and fills in the big financing box under a results panel's
+  // total (mq-${prefix}-financing-box) — used by both the "Calculate" flows
+  // and the silent live-refresh path, so it always tracks whatever's
+  // currently displayed as that panel's total.
+  function mqUpdateFinancingBox(prefix, low, high, total) {
+    const box = document.getElementById(`mq-${prefix}-financing-box`);
+    if (!box) return;
+    if (!window._mqFinancingOn) { box.style.display = 'none'; return; }
+    const payText = mqFinancingPaymentText(prefix, low, high, total);
+    if (!payText) { box.style.display = 'none'; return; }
+    const valEl = document.getElementById(`mq-${prefix}-financing-val`);
+    if (valEl) valEl.textContent = `as low as ${payText}*`;
+    box.style.display = 'flex';
   }
   // Swaps out every "ballpark"/"estimated range" phrase for wording that's
   // actually true once a project type has the range toggled off — saying
