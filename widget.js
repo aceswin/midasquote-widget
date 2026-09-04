@@ -2211,9 +2211,8 @@
         <p class="mq-sec-title">Drawers</p>
         <div class="mq-field">
           <label class="mq-label">Drawer amount</label>
-          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
-            🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full drawer banks. 🗄️ <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
-          </div>
+          <div style="font-size:13px;color:#4b5563;margin-bottom:6px;line-height:1.5">🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full drawer banks.</div>
+          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">🗄️ <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.</div>
           ${pickerRow(`mq-${prefix}-drawer-tier`, drawerTierItems, null, 'drawer-tier')}
           <select id="mq-${prefix}-drawer-tier" onchange="mqTogDrawerConfig('${prefix}')" style="display:none">
             <option value="none">No drawers</option>
