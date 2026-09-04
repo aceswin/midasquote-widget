@@ -780,8 +780,9 @@
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
       #midasquote-widget .mq-financing-box{padding:0.9rem 1.25rem;background:#f0fdf4;border-radius:8px;margin-top:0.75rem;border:1px solid #bbf7d0}
+      #midasquote-widget .mq-financing-box-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px}
       #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:600;color:#166534}
-      #midasquote-widget .mq-financing-box-val{font-size:22px;font-weight:700;color:#166534;margin-top:6px}
+      #midasquote-widget .mq-financing-box-val{font-size:22px;font-weight:700;color:#166534;text-align:right}
       #midasquote-widget .mq-financing-box-sub{font-size:11px;color:#6b7280;margin-top:8px;font-style:italic}
       .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
@@ -2378,8 +2379,10 @@
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
           <div class="mq-financing-box" id="mq-c-financing-box" style="display:none">
-            <div class="mq-financing-box-label">💳 Financing available</div>
-            <div class="mq-financing-box-val" id="mq-c-financing-val">—</div>
+            <div class="mq-financing-box-row">
+              <div class="mq-financing-box-label">💳 Financing available</div>
+              <div class="mq-financing-box-val" id="mq-c-financing-val">—</div>
+            </div>
             <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
           </div>
           <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
@@ -2411,8 +2414,10 @@
           </div>
           <ul class="mq-line-items" id="mq-ct-line-items"></ul>
           <div class="mq-financing-box" id="mq-ct-financing-box" style="display:none">
-            <div class="mq-financing-box-label">💳 Financing available</div>
-            <div class="mq-financing-box-val" id="mq-ct-financing-val">—</div>
+            <div class="mq-financing-box-row">
+              <div class="mq-financing-box-label">💳 Financing available</div>
+              <div class="mq-financing-box-val" id="mq-ct-financing-val">—</div>
+            </div>
             <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
           </div>
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
@@ -2505,8 +2510,10 @@
             <div class="mq-grand-val" id="mq-b-grand">—</div>
           </div>
           <div class="mq-financing-box" id="mq-b-financing-box" style="display:none">
-            <div class="mq-financing-box-label">💳 Financing available</div>
-            <div class="mq-financing-box-val" id="mq-b-financing-val">—</div>
+            <div class="mq-financing-box-row">
+              <div class="mq-financing-box-label">💳 Financing available</div>
+              <div class="mq-financing-box-val" id="mq-b-financing-val">—</div>
+            </div>
             <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
           </div>
           <div class="mq-disclaimer" id="mq-b-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
