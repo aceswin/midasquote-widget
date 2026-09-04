@@ -6011,7 +6011,12 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!payText) { box.style.display = 'none'; return; }
     const valEl = document.getElementById(`mq-${prefix}-financing-val`);
     if (valEl) valEl.textContent = `as low as ${payText}*`;
-    box.style.display = 'flex';
+    // Block, not flex — the box itself just stacks its row + disclaimer
+    // children top to bottom; only the inner .mq-financing-box-row (label
+    // + price) is a flex row. Setting this to 'flex' here would force the
+    // row-div and the disclaimer-div into two squeezed side-by-side flex
+    // items instead of the row sitting above a full-width disclaimer line.
+    box.style.display = 'block';
   }
   // Swaps out every "ballpark"/"estimated range" phrase for wording that's
   // actually true once a project type has the range toggled off — saying
