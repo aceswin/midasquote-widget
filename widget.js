@@ -4254,16 +4254,26 @@
       // — that's fine, mqShowStickyBar re-triggers this once they do.
       const stickyToggle = document.getElementById('mq-sticky-breakdown-toggle');
       const stickyBreakdown = document.getElementById('mq-sticky-breakdown');
+      const stickyPrice = document.getElementById('mq-sticky-price');
       if (stickyToggle) stickyToggle.style.display = allEntries.length ? 'inline' : 'none';
       if (stickyBreakdown) {
         if (!allEntries.length) {
           stickyBreakdown.style.display = 'none';
           stickyBreakdown.innerHTML = '';
+          // Nothing in the breakdown to show a total in, so the top-left
+          // price is the only number on screen — keep it visible.
+          if (stickyPrice) stickyPrice.style.display = 'inline-block';
         } else {
           stickyBreakdown.style.display = 'block';
           if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
+          // The breakdown's own Total row (below) shows the same number as
+          // the top-left price — once the breakdown is open that would be
+          // a duplicate, so hide the top-left one and let the Total row do
+          // the job as the one visible total. mqToggleStickyBreakdown keeps
+          // this in sync if the customer manually collapses the panel.
+          if (stickyPrice) stickyPrice.style.display = 'none';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
-            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`
+            + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 0;margin-top:6px;border-top:1px solid rgba(255,255,255,0.25);color:#fff"><span style="font-size:13.5px;font-weight:700">Total</span><span style="font-size:20px;font-weight:800">${totalText}</span></div>`
             + `<div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px"><button type="button" onclick="mqScrollToTop()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↑ Back to top</button><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
         }
         mqAdjustWidgetBottomPadding();
@@ -5855,9 +5865,14 @@ window.mqTogDrawerConfig=(prefix)=>{
   window.mqToggleStickyBreakdown = function() {
     const panel = document.getElementById('mq-sticky-breakdown');
     const toggle = document.getElementById('mq-sticky-breakdown-toggle');
+    const price = document.getElementById('mq-sticky-price');
     if (!panel) return;
     const opening = panel.style.display === 'none';
     panel.style.display = opening ? 'block' : 'none';
+    // Keep the top-left price and the breakdown's own Total row mutually
+    // exclusive — collapsing the breakdown by hand should bring the price
+    // back, same as when there's nothing to show a breakdown for at all.
+    if (price) price.style.display = opening ? 'none' : 'inline-block';
     if (toggle) toggle.textContent = opening ? '▴ Hide breakdown' : '▾ Breakdown';
     mqAdjustWidgetBottomPadding();
   };
