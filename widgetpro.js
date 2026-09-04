@@ -683,7 +683,7 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
-      #midasquote-widget .mq-financing-box{padding:0;background:#f0fdf4;border-radius:12px;margin-top:0.75rem;border:1px solid #bbf7d0;overflow:hidden;box-shadow:0 4px 16px rgba(134,239,172,0.35)}
+      #midasquote-widget .mq-financing-box{padding:0;background:#f0fdf4;border-radius:12px;margin-top:0.75rem;border:1.5px solid #4ade80;overflow:hidden;box-shadow:0 4px 16px rgba(134,239,172,0.35)}
       #midasquote-widget .mq-financing-box-topstrip{background:#bbf7d0;padding:0.55rem 1.25rem}
       #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:700;color:#166534}
       #midasquote-widget .mq-financing-box-body{padding:0.9rem 1.25rem}
