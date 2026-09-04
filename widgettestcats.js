@@ -20,6 +20,16 @@
   // caller here only runs after that point anyway.
   function CUR() { return (window._mqShopData && window._mqShopData['Currency symbol']) || '$'; }
 
+  // Standard loan amortization: monthly payment for a given principal, APR
+  // (as a percent, e.g. 9.9), and term in months. 0% APR falls back to a
+  // straight-line principal/months split rather than dividing by zero.
+  function mqCalcMonthlyPayment(principal, aprPct, months) {
+    if (!principal || principal <= 0 || !months || months <= 0) return 0;
+    const r = (aprPct || 0) / 100 / 12;
+    if (r <= 0) return principal / months;
+    return principal * r / (1 - Math.pow(1 + r, -months));
+  }
+
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
@@ -120,12 +130,18 @@
     try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
     if (!Array.isArray(roomTypes) || !roomTypes.length) {
       roomTypes = [
-        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/kitchen1.jpg' },
-        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/bathroom1.jpg' },
-        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/laundry1.jpg' },
-        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/garage1.jpg' },
-        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/commercial1.jpg' },
-        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.jpg', measureImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/other1.jpg' },
+        // measureImage deliberately blank for these 6 (was previously
+        // pointing at stale, pre-gallery filenames like "kitchen1.jpg" that
+        // don't match the current default set — fixed so this rarely-hit
+        // fallback, used only when a shop has never saved ANY Room types at
+        // all, renders the same current default gallery as everywhere else
+        // via MQ_DEFAULT_MEASURE_IMAGES below instead of an outdated photo).
+        { id:'kitchen', name:'Kitchen',        adjustment:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.jpg', measureImage:'' },
+        { id:'bathroom',name:'Bathroom',       adjustment:-5, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/bathroom.jpg', measureImage:'' },
+        { id:'laundry', name:'Laundry room',   adjustment:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/laundry.jpg', measureImage:'' },
+        { id:'garage',  name:'Garage',         adjustment:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/garage.jpg', measureImage:'' },
+        { id:'commercial', name:'Commercial',  adjustment:0,  description:'Make a great first impression. Get cabinetry built to fit your business, whether it\'s a sleek office or a welcoming retail space.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/commercial.jpg', measureImage:'' },
+        { id:'other',   name:'Other',          adjustment:0,  description:'Got a project that doesn\'t quite fit the mold? We love a good challenge — let\'s bring your vision to life.', active:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/other.jpg', measureImage:'' },
         { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
         { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
         { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
@@ -146,6 +162,14 @@
     // Per-category "Pick a collection" dropdown label (materials, doors,
     // drawers, crown, valance can each say something different).
     try { window._mqCategoryPickerLabels = shop['Category picker labels'] ? JSON.parse(shop['Category picker labels']) : {}; } catch(e) { window._mqCategoryPickerLabels = {}; }
+
+    // Specialty item category display order, per project type — e.g.
+    // "Shelving" before "Pullouts" for Kitchen, but the other way around for
+    // Bathroom. { [roomId]: [categoryName, ...] }. Categories not listed for
+    // a given room just keep whatever order they'd otherwise render in — see
+    // mqReorderSpecCategoryGroups, which applies this every time the
+    // customer switches project type.
+    try { window._mqSpecCategoryOrder = shop['Specialty category order'] ? JSON.parse(shop['Specialty category order']) : {}; } catch(e) { window._mqSpecCategoryOrder = {}; }
 
     const p = payload.pricing || {};
 
@@ -219,8 +243,20 @@
           return {
             label: ((v && v.label) || '').trim(),
             price: (v && v.price) || 0,
+            // Min price is per-variant too (not shared like everything else
+            // on the item) — "Maple" and "Painted MDF" doors can easily
+            // want different floors. Install minimum stays item-level; only
+            // supply price/min vary per variant (see mqPickSpecVariant).
+            min: (v && v.min) || 0,
             photoUrl: shopPhotos['spec_' + r.id + '_v' + vid] || '',
-            featured: !!(v && v.featured),
+            // Best-seller marking for specialty item variants now goes
+            // exclusively through My Products (shopFeatured, the same
+            // shop-wide map every other product type's badge already reads)
+            // — the variant's own former `featured` field is no longer
+            // written to by the dashboard and is ignored here even if old
+            // data still has it set, so there's exactly one place to check
+            // this shop's best-sellers instead of two that can disagree.
+            featured: !!shopFeatured['spec_' + r.id + '_v' + vid],
           };
         }).filter(v => v.label);
         // $/$$/$$$ badges assigned per-item across just that item's own
@@ -245,6 +281,12 @@
           badgePrice:(defaultVariant ? defaultVariant.price : (r.fields['Price']||0))+(r.fields['Install price']||0),
           perFt:r.fields['Per linear foot']||false,
           perSqFt:r.fields['Per square foot']||false,
+          // Per-order floor for size-based items (e.g. a tiny door still
+          // takes a full sheet and the same labor as a bigger one) — only
+          // meaningful when perFt/perSqFt is set, same as the dashboard only
+          // shows the field then. Supply and install each get their own.
+          minPrice: defaultVariant ? (defaultVariant.min||0) : (r.fields['Minimum price']||0),
+          installMinPrice: r.fields['Install minimum price']||0,
           photoUrl: defaultVariant ? defaultVariant.photoUrl : (shopPhotos['spec_' + r.id] || ''),
           featured: defaultVariant ? defaultVariant.featured : (shopFeatured['spec_' + r.id] || false),
           // The currently-active variant's own name (e.g. "Oak") — kept
@@ -610,8 +652,12 @@
          the widget's own scoped CSS — this is a small, self-contained copy
          of just what they need, under their own dedicated classes so
          nothing here can collide with the widget's internal styling or the
-         host page's own CSS. */
-      .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999998;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+         host page's own CSS.
+         z-index must beat #mq-sticky-bar (z-index:999999, position:fixed) —
+         same fix as mqEnsureCalcModal — or the sticky bar renders on top of
+         and covers these popups (Ask a question / Book a consultation /
+         quick email / lead capture / demo locked). */
+      .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000010;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
       .mq-overlay.show{display:flex}
       .mq-modal{background:#f8faff;border-radius:12px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.18);position:relative;margin:auto;box-sizing:border-box}
       .mq-modal *{box-sizing:border-box}
@@ -803,6 +849,11 @@
             label:       item['Name'],
             ps:          item['Rate']||0,
             pi:          item['Install rate']||0,
+            // Per-counter floor — if a small counter's real sqft/lin ft math
+            // comes out under this, the minimum wins instead (see
+            // calcCountertop). 0/undefined means no minimum, same as always.
+            min:         item['Minimum price']||0,
+            installMin:  item['Install minimum price']||0,
             supplyUnit:  (unitParts[0]||'sqft').trim(),
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
@@ -1659,7 +1710,12 @@
       const photoSpecs = catSpecs.filter(s => s.photoUrl);
       window._mqLightboxGroups[catKey] = photoSpecs.map(s => ({ src: s.photoUrl, label: s.label }));
       const cardsHtml = groups[cat].map(i => buildCard(specs[i], i, catKey, photoSpecs.indexOf(specs[i]))).join('');
-      return `<div class="mq-spec-category-group" style="margin:${gi===0?'0':'14px'} 0 0">
+      // data-cat carries the raw category key (not the display label) so
+      // mqReorderSpecCategoryGroups can match this group against a shop's
+      // saved per-project-type order regardless of how "Other" is worded —
+      // it's the same __other__ sentinel used to build `groups` above.
+      const catAttr = cat.replace(/"/g,'&quot;');
+      return `<div class="mq-spec-category-group" data-cat="${catAttr}" style="margin:${gi===0?'0':'14px'} 0 0">
         <div class="mq-spec-category-heading">${label}</div>
         ${mqHscrollWrap(catKey, 'mq-spec-category-items', cardsHtml)}
       </div>`;
@@ -1775,7 +1831,10 @@
     if (modal) return modal;
     modal = document.createElement('div');
     modal.id = 'mq-measure-calc';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100000;display:none;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    // z-index must beat #mq-sticky-bar (z-index:999999, position:fixed) —
+    // same fix as the proposal modals in widgetpro.js — or the sticky bar
+    // renders on top of and covers the bottom of this modal.
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000010;display:none;align-items:center;justify-content:center;padding:1rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
     modal.innerHTML = `<div id="mq-calc-card" style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;padding:1.5rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)"></div>`;
     // Click the dark backdrop (not the card itself) to close, same pattern
     // used by the showroom popup elsewhere in this file.
@@ -1816,16 +1875,9 @@
     }
     mqEnsureCalcModal().style.display = 'flex';
     mqRenderCalc();
-
-    // The sticky bar's expanded breakdown can be tall enough to cover part
-    // of this modal at the bottom of the screen once there's more than one
-    // room in it. Temporarily collapse it while the calculator is open,
-    // and only if it was actually showing — nothing to undo later if it
-    // was already collapsed to begin with.
-    const breakdown = document.getElementById('mq-sticky-breakdown');
-    const entryCount = (window._mqQuoteCart || []).length + (window._mqLivePreview ? 1 : 0);
-    window._mqCalcAutoHidBreakdown = !!(breakdown && breakdown.style.display === 'block' && entryCount > 1);
-    if (window._mqCalcAutoHidBreakdown) window.mqToggleStickyBreakdown();
+    // No need to collapse the sticky bar's breakdown here — the modal's
+    // z-index (see mqEnsureCalcModal) already puts it above #mq-sticky-bar,
+    // so it just renders on top regardless of the breakdown's state.
   };
 
   window.mqCloseMeasureCalc = function() {
@@ -1834,10 +1886,6 @@
     }
     const modal = document.getElementById('mq-measure-calc');
     if (modal) modal.style.display = 'none';
-    if (window._mqCalcAutoHidBreakdown) {
-      window._mqCalcAutoHidBreakdown = false;
-      window.mqToggleStickyBreakdown();
-    }
   };
 
   window.mqCalcSetUnit = function(unit) {
@@ -2276,6 +2324,14 @@
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
     window._mqAskQuestionBtn = askQuestionBtn;
     window._mqFinancingOn = financingOn;
+    // Optional monthly-payment estimate: only kicks in once the shop has
+    // entered BOTH an interest rate and a term — a shop that's just turned
+    // financing on without either still gets the plain badge, no number.
+    const financingAPRRaw = parseFloat(shop['Financing APR']);
+    const financingTermRaw = parseInt(shop['Financing term months'], 10);
+    const financingHasTerms = financingOn && !isNaN(financingAPRRaw) && financingAPRRaw >= 0 && !isNaN(financingTermRaw) && financingTermRaw > 0;
+    window._mqFinancingAPR = financingHasTerms ? financingAPRRaw : null;
+    window._mqFinancingTermMonths = financingHasTerms ? financingTermRaw : null;
 
     return `
       <div class="mq-header">
@@ -2773,6 +2829,45 @@
           group.style.display = anyVisible ? '' : 'none';
         });
       }
+      mqReorderSpecCategoryGroups(prefix, roomId);
+    };
+
+    // All of a shop's specialty categories are built into the page once, up
+    // front, covering every project type at the same time — switching
+    // project types only ever shows/hides individual items and their parent
+    // category capsules above (mqRefreshRoomVisibility), it never re-renders
+    // them. So a per-project-type category order can't be baked in at build
+    // time the way item order can; instead this physically re-stacks the
+    // already-built category capsules in the DOM every time the customer
+    // switches project type, according to that room's saved order (falling
+    // back to whatever order they'd otherwise be in for any category that
+    // room hasn't customized). Margins are re-applied by actual visible
+    // position rather than left as originally rendered, so a category that's
+    // hidden entirely for this room never leaves a stray gap above whichever
+    // capsule now comes first.
+    window.mqReorderSpecCategoryGroups = function(prefix, roomId) {
+      const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
+      const grid = specBody ? specBody.querySelector('.mq-spec-grid') : null;
+      if (!grid) return;
+      const groups = [...grid.children].filter(el => el.classList.contains('mq-spec-category-group'));
+      if (groups.length > 1) {
+        const roomOrder = (window._mqSpecCategoryOrder || {})[roomId] || [];
+        if (roomOrder.length) {
+          const pos = new Map(roomOrder.map((c, i) => [c, i]));
+          // Anything not explicitly placed for this room keeps its current
+          // relative order, sorted in after everything that IS placed.
+          groups
+            .map((g, i) => ({ g, p: pos.has(g.dataset.cat) ? pos.get(g.dataset.cat) : (1000 + i) }))
+            .sort((a, b) => a.p - b.p)
+            .forEach(({ g }) => grid.appendChild(g));
+        }
+      }
+      let seenVisible = false;
+      [...grid.children].filter(el => el.classList.contains('mq-spec-category-group')).forEach(g => {
+        if (g.style.display === 'none') return;
+        g.style.margin = (seenVisible ? '14px' : '0') + ' 0 0';
+        seenVisible = true;
+      });
     };
     // Shows the shop owner's custom guidance note for whichever project type
     // is selected — e.g. "For door refacing, skip the box materials below,
@@ -3569,15 +3664,16 @@
 
       const tcSec = document.getElementById(`mq-${prefix}-tallcabs-sec`);
       if (tcSec) {
-        let anyReal = false;
-        tcSec.querySelectorAll('.mq-vpicker-row').forEach(row=>{
-          row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
-            if (chip.getAttribute('data-value')==='none') return;
-            let rooms=[];
-            try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
-            if (!rooms.length || rooms.includes(roomId)) anyReal = true;
-          });
-        });
+        // Checked against the shop's master tall-cabinet list (TALL_CAB)
+        // rather than whatever cards happen to be rendered right now —
+        // cards are cleared and rebuilt on every project-type switch
+        // (mqResetCabinetForm empties #mq-${prefix}-tallcabs, and nothing
+        // re-adds a starter card afterward), so between switches there can
+        // legitimately be zero cards on screen even though this room fully
+        // supports tall cabinets. Checking rendered cards for that state
+        // used to hide the whole section — including its "+ Add a tall
+        // cabinet" button — with no way back short of a page refresh.
+        const anyReal = Object.values(TALL_CAB).some(t => !t.visibleRooms || !t.visibleRooms.length || t.visibleRooms.includes(roomId));
         tcSec.style.display = anyReal ? '' : 'none';
       }
 
@@ -3731,6 +3827,14 @@
       const tcContainer = document.getElementById(`mq-${prefix}-tallcabs`);
       if (tcContainer) tcContainer.innerHTML = '';
       renumberTallCabs(prefix);
+      // Re-seed one empty starter card for whichever room we're on now —
+      // same as the very first page load — so the section looks the same
+      // as it did on load instead of sitting empty with just the "+ Add a
+      // tall cabinet" button until the customer clicks it themselves.
+      // addTallCabInternal calls mqRefreshAllPickerVisibility/mqRefreshSectionVisibility
+      // itself, so the new card's Type picker is already filtered correctly
+      // for the room now selected.
+      if (Object.keys(TALL_CAB).length > 0) addTallCabInternal(prefix);
 
       const useCabTrimCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
       if (useCabTrimCb) useCabTrimCb.checked = false;
@@ -3740,6 +3844,19 @@
       if (crownReturns) crownReturns.value = 0;
       const valanceReturns = document.getElementById(`mq-${prefix}-trim-valance-returns`);
       if (valanceReturns) valanceReturns.value = 0;
+      // Manual crown/valance linear footage ("Don't use upper cabinet
+      // linear footage — enter it myself") is a plain number input with no
+      // dependency on the crown/valance style pickers above, so nothing
+      // above ever touched it — it silently carried its old value into
+      // whichever project type came next. Reset directly (not via
+      // mqTogTrimManualFt) since that helper also flips trim-use-cab, which
+      // useCabTrimCb above already sets deliberately.
+      const trimManualToggle = document.getElementById(`mq-${prefix}-trim-manual-toggle`);
+      if (trimManualToggle) trimManualToggle.checked = false;
+      const trimManualFt = document.getElementById(`mq-${prefix}-trim-manual-ft`);
+      if (trimManualFt) trimManualFt.value = 0;
+      const trimManualWrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
+      if (trimManualWrap) trimManualWrap.style.display = 'none';
       window.mqTogTrimReturns(prefix);
 
       const removalEl = document.getElementById(`mq-${prefix}-removal`);
@@ -3749,6 +3866,26 @@
         const useCabCt = document.getElementById('mq-b-use-cab');
         if (useCabCt) useCabCt.checked = true;
         window.mqTogUseCab('b');
+        // Countertop material, backsplash, dishwasher/extra-space toggles,
+        // and cutouts were never reset here — mqResetCountertopStandalone
+        // covers this exact same set of fields for the standalone
+        // Countertops tab ('ct'), but this Both-tab countertop section uses
+        // its own id scheme (mq-b-cab-*/mq-b-ct-mat-cab) and was never
+        // wired into any reset path, so switching project types (or
+        // hitting "Reset quote," which calls this same function) silently
+        // carried the countertop material, backsplash, and additional
+        // counter space over from whichever project type was set up last.
+        mqResetPicker('mq-b-ct-mat-cab');
+        const ctBs = document.getElementById('mq-b-cab-bs');
+        if (ctBs) ctBs.selectedIndex = 0;
+        const ctDw = document.getElementById('mq-b-cab-dw');
+        if (ctDw) ctDw.checked = false;
+        const ctCo = document.getElementById('mq-b-cab-co');
+        if (ctCo && ctCo.checked) { ctCo.checked = false; ctCo.dispatchEvent(new Event('change')); }
+        const ctExtraToggle = document.getElementById('mq-b-cab-extra-toggle');
+        if (ctExtraToggle && ctExtraToggle.checked) { ctExtraToggle.checked = false; ctExtraToggle.dispatchEvent(new Event('change')); }
+        const ctExtraFt = document.getElementById('mq-b-cab-extra-ft');
+        if (ctExtraFt) ctExtraFt.value = 0;
         const ctSurfaces = document.getElementById('mq-b-ct-surfaces');
         if (ctSurfaces) { ctSurfaces.innerHTML = ''; ctSurfaces.dataset.autoAdded = 'false'; }
         const ctSi = document.getElementById('mq-b-ct-si');
@@ -4081,20 +4218,32 @@
           stickyBreakdown.style.display = 'none';
           stickyBreakdown.innerHTML = '';
         } else {
-          // Keep the content fresh regardless, but don't fight the
-          // calculator modal's auto-hide by forcing this back open while
-          // it's active — it gets restored once the modal closes.
-          if (!window._mqCalcAutoHidBreakdown) {
-            stickyBreakdown.style.display = 'block';
-            if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
-          }
+          stickyBreakdown.style.display = 'block';
+          if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
+          const financingDisclaimerHTML = (window._mqFinancingOn && window._mqFinancingAPR != null && window._mqFinancingTermMonths != null)
+            ? `<div style="font-size:11px;color:rgba(255,255,255,0.55);font-style:italic;padding-top:6px">*Estimated payment only — subject to approval and final terms.</div>`
+            : '';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
             + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(255,255,255,0.25);font-size:13.5px;font-weight:700;color:#fff"><span>Total</span><span>${totalText}</span></div>`
-            + `<div style="text-align:right;padding-top:6px"><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
+            + financingDisclaimerHTML
+            + `<div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px"><button type="button" onclick="mqScrollToTop()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↑ Back to top</button><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
         }
         mqAdjustWidgetBottomPadding();
       }
     }
+
+    // "Back to top" link on the sticky bar's breakdown, next to Reset quote.
+    // Jumps to the active tab's project-type picker (Project basics, step
+    // 1) when that tab has one — Cabinets and Both both do; Countertops
+    // doesn't, so it falls back to the top of that tab's own content.
+    // Reuses mqScrollWithOffset so a shop site's own sticky header doesn't
+    // cover the landing spot.
+    window.mqScrollToTop = function() {
+      const prefix = window._mqActiveTabPrefix || 'b';
+      const tabId = prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets');
+      const target = document.getElementById(`mq-${prefix}-room`) || document.getElementById(tabId) || document.getElementById('midasquote-widget');
+      mqScrollWithOffset(target, 80);
+    };
 
     // Clears the whole running quote and resets every tab's form back to
     // its starting state, so the customer can start completely over.
@@ -4317,6 +4466,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!v) return;
       specVariant[prefix][i] = vi;
       s.price = v.price || 0;
+      s.minPrice = v.min || 0;
       s.photoUrl = v.photoUrl || '';
       s.featured = !!v.featured;
       s.badge = v.badge || '';
@@ -4717,7 +4867,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       specs.forEach((s,i)=>{
         if(!specQty[prefix][i]) return;
         const supplyQty = specQty[prefix][i];
-        const supplyCost = s.price * supplyQty;
+        // A tiny order can still cost the shop full price to make (a small
+        // door takes a full sheet and the same labor as a bigger one) — the
+        // minimum only applies to size-based items (perFt/perSqFt), same as
+        // the dashboard only shows the field then.
+        let supplyCost = s.price * supplyQty;
+        if ((s.perFt || s.perSqFt) && s.minPrice > 0) supplyCost = Math.max(supplyCost, s.minPrice);
         const supplyQtyLabel = s.perSqFt?`${supplyQty} sqft`:(s.perFt?`${supplyQty} ft`:(supplyQty>1?`× ${supplyQty}`:''));
         // Fold the currently-picked variant's own name into the line-item
         // text (e.g. "Crown Molding — Oak") so the actual quote/lead always
@@ -4747,7 +4902,8 @@ window.mqTogDrawerConfig=(prefix)=>{
         const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
         const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
         const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : supplyQty;
-        const installCost = s.installPrice * installQtyVal;
+        let installCost = s.installPrice * installQtyVal;
+        if ((s.installPerFt || s.installPerSqFt) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
         const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
         specTotal += supplyCost + installCost;
         lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel}) — Supply`:`${itemLabel} — Supply`,cost:Math.round(supplyCost)});
@@ -4783,6 +4939,21 @@ window.mqTogDrawerConfig=(prefix)=>{
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
 
+      // Minimum charges pool PER MATERIAL, across every counter/run using
+      // that material in this one project type (the cabinet-run measure
+      // block below and every surface in the loop after it) — not per
+      // individual counter. e.g. three small counters in the same quote,
+      // same material, $100/lin ft install and a $150 minimum: their real
+      // install costs add up first, and the $150 floor is only applied
+      // once to that combined total if it's still short — not three
+      // separate $150 minimums. A different project type (a separate call
+      // to calcCountertop) starts its own pool from zero, same as before.
+      const minPools = {};
+      function poolFor(matKey, m) {
+        if (!minPools[matKey]) minPools[matKey] = { m, rawSupply:0, rawInstall:0, hasSupply:false, hasInstall:false };
+        return minPools[matKey];
+      }
+
       const useCabMeasure = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       if (useCabMeasure) {
         const bFt   = gn(`mq-${prefix}-bft`, 0);
@@ -4803,8 +4974,14 @@ window.mqTogDrawerConfig=(prefix)=>{
           const si    = gv(ctSiId);
           const m     = mat === 'none' ? null : (CT_MAT[mat] || null);
           if (m) {
-            const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
+            // Real (unclamped) cost for this run — the minimum, if any, is
+            // applied once at the end against this material's pooled total
+            // across every counter/run in this project type, not here.
+            const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
             const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
+            const pool = poolFor(mat, m);
+            pool.rawSupply += supplyCost; pool.hasSupply = true;
+            if (si==='install') { pool.rawInstall += installCost; pool.hasInstall = true; }
             const bsVal = gv(bsId);
             const bsOpt = (bsVal && bsVal!=='none') ? bsOptionsFor(m)[parseInt(bsVal,10)] : null;
             // Backsplash only runs along walls — add 2 ft per side splash, then
@@ -4842,8 +5019,20 @@ window.mqTogDrawerConfig=(prefix)=>{
         const w=gn('mqsw-'+id,0), d=gn('mqsd-'+id,ctDepth);
         const sqft=(w*(d||ctDepth))/144;
         const linFt=w/12;
-        const supplyCost  = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
+        // Real (unclamped) cost for this surface — pooled into this
+        // material's running total below, same as the cabinet-run block
+        // above, so the minimum (if any) applies once across every counter
+        // of this material rather than per surface. Only pooled once the
+        // customer has actually entered a size (w > 0) — a surface card
+        // added but still at its default 0 width shouldn't nudge the pool
+        // toward a minimum charge for a counter that isn't really there yet.
+        const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
         const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
+        if (w > 0) {
+          const pool = poolFor(mat, m);
+          pool.rawSupply += supplyCost; pool.hasSupply = true;
+          if (si==='install') { pool.rawInstall += installCost; pool.hasInstall = true; }
+        }
         const bsVal = gv('mqsbs-'+id);
         const bsOpt = (bsVal && bsVal!=='none') ? bsOptionsFor(m)[parseInt(bsVal,10)] : null;
         // Backsplash only runs along walls — add 2 ft per side splash, then net
@@ -4866,6 +5055,24 @@ window.mqTogDrawerConfig=(prefix)=>{
         const totalCost = cost + addonsRes.cost;
         sub+=totalCost;
         lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${Math.round(bsLinFt*10)/10} lin ft)`:''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`,cost:Math.round(totalCost)});
+      });
+
+      // Settle every material's minimum against its pooled total from
+      // every counter/run above — every real counter's own line already
+      // shows its true cost, so this only adds a line (and the difference
+      // to sub) when the combined total across that material's counters
+      // still falls short of the shop's minimum.
+      Object.values(minPools).forEach(pool => {
+        if (pool.hasSupply && pool.m.min > 0 && pool.rawSupply < pool.m.min) {
+          const adj = pool.m.min - pool.rawSupply;
+          sub += adj;
+          lines.push({label:`${pool.m.label} — minimum charge (supply)`, cost:Math.round(adj)});
+        }
+        if (pool.hasInstall && pool.m.installMin > 0 && pool.rawInstall < pool.m.installMin) {
+          const adj = pool.m.installMin - pool.rawInstall;
+          sub += adj;
+          lines.push({label:`${pool.m.label} — minimum charge (install)`, cost:Math.round(adj)});
+        }
       });
 
       lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
@@ -5596,7 +5803,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           </div>
         </div>
         <div id="mq-sticky-breakdown" style="display:none;padding:0 16px 12px;font-size:12.5px;color:rgba(255,255,255,0.9)"></div>
-        ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available</div>` : ''}
+        ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available<span id="mq-sticky-financing-payment"></span></div>` : ''}
       </div>`;
     document.body.appendChild(bar);
     window.addEventListener('resize', mqAdjustWidgetBottomPadding);
@@ -5780,6 +5987,29 @@ window.mqTogDrawerConfig=(prefix)=>{
     const allNoRange = cart.every(e => !e.showRange) && !mqShouldShowRange(prefix);
     const prev = window._mqStickyLast;
     el.textContent = allNoRange ? (CUR() + Math.round(combinedTotal).toLocaleString()) : fmtRange(combinedLow, combinedHigh);
+    // Financing monthly-payment estimate, recomputed off the same combined
+    // low/high/total used for the price above — stays in sync with it as
+    // the customer edits their quote.
+    const financingPayEl = document.getElementById('mq-sticky-financing-payment');
+    if (financingPayEl) {
+      if (window._mqFinancingAPR != null && window._mqFinancingTermMonths != null) {
+        const payBasisLow = allNoRange ? combinedTotal : combinedLow;
+        const payBasisHigh = allNoRange ? combinedTotal : combinedHigh;
+        if (payBasisLow > 0 || payBasisHigh > 0) {
+          const payLow = Math.round(mqCalcMonthlyPayment(payBasisLow, window._mqFinancingAPR, window._mqFinancingTermMonths));
+          const payHigh = Math.round(mqCalcMonthlyPayment(payBasisHigh, window._mqFinancingAPR, window._mqFinancingTermMonths));
+          const payText = payLow === payHigh
+            ? `${CUR()}${payHigh.toLocaleString()}/mo`
+            : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
+          financingPayEl.textContent = ` · as low as ${payText}*`;
+          financingPayEl.title = 'Estimated payment only — subject to approval and final terms.';
+        } else {
+          financingPayEl.textContent = '';
+        }
+      } else {
+        financingPayEl.textContent = '';
+      }
+    }
     if (animate && prev) {
       const prevMid = (prev.low + prev.high) / 2;
       const newMid = (combinedLow + combinedHigh) / 2;
