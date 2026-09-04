@@ -218,7 +218,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Project type section title/hint</strong> — the heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
         <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
-        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific.</p>
+        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge.</p>
         <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
         <p>Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
       `
@@ -990,11 +990,22 @@ window.logoutMember = async function () {
                 <div class="mq-toggle" id="mq-financing-toggle" onclick="mqToggleFinancing()"></div>
               </div>
               <div id="mq-financing-link-wrap" style="display:none;margin-bottom:1.5rem;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px">
-                <div class="mq-field" style="margin-bottom:0">
+                <div class="mq-field">
                   <label class="mq-label">Pre-approval link <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
                   <input type="url" id="mq-financing-link" placeholder="https://yourfinancingpartner.com/apply"/>
                   <span class="mq-hint">If you have a link where customers can apply for financing, enter it here. The "Ask a question" button on your widget will become "Get pre-approved →" and send them straight there.</span>
                 </div>
+                <div style="display:flex;gap:10px;margin-top:12px">
+                  <div class="mq-field" style="margin-bottom:0;flex:1">
+                    <label class="mq-label">Interest rate <span style="font-weight:400;color:#9ca3af">(APR %, optional)</span></label>
+                    <input type="number" id="mq-financing-apr" step="0.1" min="0" placeholder="9.9"/>
+                  </div>
+                  <div class="mq-field" style="margin-bottom:0;flex:1">
+                    <label class="mq-label">Term <span style="font-weight:400;color:#9ca3af">(months, optional)</span></label>
+                    <input type="number" id="mq-financing-term" step="1" min="1" placeholder="60"/>
+                  </div>
+                </div>
+                <span class="mq-hint" style="display:block;margin-top:8px">Enter both and your widget will show customers an estimated monthly payment next to the financing badge (e.g. "as low as $123/mo – $155/mo"). Leave either blank to just show the plain badge with no number.</span>
               </div>
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
@@ -2790,6 +2801,8 @@ window.logoutMember = async function () {
       if (financingLinkWrap) financingLinkWrap.style.display = isOn ? 'block' : 'none';
     }
     set('mq-financing-link', f['Financing link']);
+    set('mq-financing-apr', f['Financing APR'] != null ? f['Financing APR'] : '');
+    set('mq-financing-term', f['Financing term months'] != null ? f['Financing term months'] : '');
     const notifyEveryToggle = el('mq-notify-every-toggle');
     if (notifyEveryToggle) {
       notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
@@ -2806,7 +2819,7 @@ window.logoutMember = async function () {
       'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
       'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
       'mq-shop-logo','mq-shop-disclaimer','mq-shop-projecttype-title','mq-shop-projecttype-hint','mq-shop-consult-link',
-      'mq-shop-consult-email','mq-financing-link',
+      'mq-shop-consult-email','mq-financing-link','mq-financing-apr','mq-financing-term',
       'mq-shop-focalcolor','mq-shop-boxbordercolor','mq-shop-boxbgcolor','mq-shop-boxtextcolor'
     ];
     shopFieldIds.forEach(id => {
@@ -4723,6 +4736,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Consultation link': gv('mq-shop-consult-link'),
         'Consultation email': gv('mq-shop-consult-email'),
         'Financing link':    gv('mq-financing-link'),
+        'Financing APR':     gv('mq-financing-apr') === '' ? null : parseFloat(gv('mq-financing-apr')),
+        'Financing term months': gv('mq-financing-term') === '' ? null : parseInt(gv('mq-financing-term'), 10),
       };
       const currencyChanged = updatedFields['Currency symbol'] !== (shopRec.fields['Currency symbol'] || '$');
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, updatedFields);

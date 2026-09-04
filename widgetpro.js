@@ -26,6 +26,16 @@
   // caller here only runs after that point anyway.
   function CUR() { return (window._mqShopData && window._mqShopData['Currency symbol']) || '$'; }
 
+  // Standard loan amortization: monthly payment for a given principal, APR
+  // (as a percent, e.g. 9.9), and term in months. 0% APR falls back to a
+  // straight-line principal/months split rather than dividing by zero.
+  function mqCalcMonthlyPayment(principal, aprPct, months) {
+    if (!principal || principal <= 0 || !months || months <= 0) return 0;
+    const r = (aprPct || 0) / 100 / 12;
+    if (r <= 0) return principal / months;
+    return principal * r / (1 - Math.pow(1 + r, -months));
+  }
+
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
@@ -587,7 +597,9 @@
       #mq-sticky-ctas{display:flex;gap:6px;flex-shrink:0}
       #mq-sticky-ctas button{font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;white-space:nowrap;cursor:pointer;font-family:inherit;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
       #mq-sticky-ctas button.mq-pri{background:#fbbf24;color:#0f2a52;border-color:transparent;font-weight:700}
-      #mq-sticky-financing{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.14);font-size:12px;font-weight:700;color:#fbbf24;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:0.01em}
+      #mq-sticky-financing{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.14);text-align:center}
+      #mq-sticky-financing-main{font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:0.01em;display:flex;align-items:center;justify-content:center;gap:6px}
+      #mq-sticky-financing-disclaimer{font-size:10px;font-weight:400;color:rgba(255,255,255,0.55);font-style:italic;margin-top:3px}
       @media (max-width:420px){
         #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
         #mq-sticky-content{flex:1 1 100%}
@@ -671,6 +683,11 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
+      #midasquote-widget .mq-financing-box{padding:0.9rem 1.25rem;background:#f0fdf4;border-radius:8px;margin-top:0.75rem;border:1px solid #bbf7d0}
+      #midasquote-widget .mq-financing-box-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px}
+      #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:600;color:#166534}
+      #midasquote-widget .mq-financing-box-val{font-size:22px;font-weight:700;color:#166534;text-align:right}
+      #midasquote-widget .mq-financing-box-sub{font-size:11px;color:#6b7280;margin-top:8px;font-style:italic}
       .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
@@ -2155,6 +2172,14 @@
       : `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`;
     window._mqAskQuestionBtn = askQuestionBtn;
     window._mqFinancingOn = financingOn;
+    // Optional monthly-payment estimate: only kicks in once the shop has
+    // entered BOTH an interest rate and a term — a shop that's just turned
+    // financing on without either still gets the plain badge, no number.
+    const financingAPRRaw = parseFloat(shop['Financing APR']);
+    const financingTermRaw = parseInt(shop['Financing term months'], 10);
+    const financingHasTerms = financingOn && !isNaN(financingAPRRaw) && financingAPRRaw >= 0 && !isNaN(financingTermRaw) && financingTermRaw > 0;
+    window._mqFinancingAPR = financingHasTerms ? financingAPRRaw : null;
+    window._mqFinancingTermMonths = financingHasTerms ? financingTermRaw : null;
 
     return `
       <div style="background:linear-gradient(135deg,#0f2a52,#1e3a5f);padding:16px 20px;text-align:center">
@@ -2203,6 +2228,13 @@
             </div>
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
+          <div class="mq-financing-box" id="mq-c-financing-box" style="display:none">
+            <div class="mq-financing-box-row">
+              <div class="mq-financing-box-label">💳 Financing available</div>
+              <div class="mq-financing-box-val" id="mq-c-financing-val">—</div>
+            </div>
+            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+          </div>
           <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
@@ -2236,6 +2268,13 @@
             </div>
           </div>
           <ul class="mq-line-items" id="mq-ct-line-items"></ul>
+          <div class="mq-financing-box" id="mq-ct-financing-box" style="display:none">
+            <div class="mq-financing-box-row">
+              <div class="mq-financing-box-label">💳 Financing available</div>
+              <div class="mq-financing-box-val" id="mq-ct-financing-val">—</div>
+            </div>
+            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+          </div>
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
           <div class="mq-cta-row">
@@ -2341,6 +2380,13 @@
             <div class="mq-grand-val" id="mq-b-grand">—</div>
           </div>
           <div style="text-align:right;margin-top:8px"><span style="display:inline-block;background:linear-gradient(135deg,#111,#1f1f1f);border:1px solid #fbbf24;border-radius:8px;padding:7px 14px;font-size:14px;font-weight:700;color:#fbbf24">💰 Your real total: <span id="mq-b-grand-real" style="color:#fff">—</span></span></div>
+          <div class="mq-financing-box" id="mq-b-financing-box" style="display:none">
+            <div class="mq-financing-box-row">
+              <div class="mq-financing-box-label">💳 Financing available</div>
+              <div class="mq-financing-box-val" id="mq-b-financing-val">—</div>
+            </div>
+            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+          </div>
           <div class="mq-disclaimer" id="mq-b-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
@@ -3253,19 +3299,26 @@
     // scroll), so this keeps nudging toward the target and re-checking
     // until it actually lands there, instead of assuming one shot got it
     // right.
-    function mqScrollPoweredByAboveSticky(prefix) {
+    // Scrolls a freshly-generated estimate into view so its price (and the
+    // financing box right under it, when shown) lands near the TOP of the
+    // screen. This used to anchor on the "Powered by" footer instead,
+    // aligning it just above the sticky bar — but that broke once the
+    // financing box made results panels taller: on a short/mobile viewport,
+    // pinning the footer near the bottom pushed the price itself off the
+    // top of the screen. Anchoring on the price/total block's own top edge
+    // is robust regardless of how tall the rest of the panel grows.
+    function mqScrollResultsIntoView(prefix) {
       const resultId = prefix === 'c' ? 'mq-c-result' : prefix === 'ct' ? 'mq-ct-result' : 'mq-b-result';
+      const anchorSelector = prefix === 'b' ? '.mq-grand-total' : '.mq-res-hdr';
       let attempts = 0;
       function tryScroll() {
         attempts++;
         const resultEl = document.getElementById(resultId);
-        const poweredBy = resultEl ? resultEl.querySelector('.mq-powered-by') : null;
-        if (!poweredBy) return;
-        const bar = document.getElementById('mq-sticky-bar');
-        const barHeight = (bar && bar.classList.contains('show')) ? bar.offsetHeight : 0;
-        const targetGap = barHeight + 8;
-        const rect = poweredBy.getBoundingClientRect();
-        const scrollAmount = rect.bottom - (window.innerHeight - targetGap);
+        const anchorEl = resultEl ? resultEl.querySelector(anchorSelector) : null;
+        if (!anchorEl) return;
+        const topGap = 16; // small breathing room above the price block
+        const rect = anchorEl.getBoundingClientRect();
+        const scrollAmount = rect.top - topGap;
         if (Math.abs(scrollAmount) <= 2 || attempts >= 12) return; // close enough, or give up cleanly
         window.scrollBy({ top: scrollAmount, behavior: attempts === 1 ? 'smooth' : 'auto' });
         setTimeout(tryScroll, attempts === 1 ? 450 : 120);
@@ -4858,6 +4911,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const subEl = document.getElementById('mq-c-res-sub');
         if (subEl) subEl.textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
         renderResult('mq-c-res-range','mq-c-line-items', r, 'c');
+        mqUpdateFinancingBox('c', r.low, r.high, r.total);
         window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
         return { low: r.low, high: r.high, total: r.total, label: r.roomLabel };
       }
@@ -4869,6 +4923,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const subEl = document.getElementById('mq-ct-res-sub');
         if (subEl) subEl.textContent = `${active} surface(s)`;
         renderResult('mq-ct-res-range','mq-ct-line-items', r, 'ct');
+        mqUpdateFinancingBox('ct', r.low, r.high, r.total);
         window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
         return { low: r.low, high: r.high, total: r.total, label: 'Countertops' };
       }
@@ -4892,6 +4947,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (grandEl) { mqRefreshBallparkWording('b'); grandEl.textContent = mqFmtPrice('b', tl, th, totalB); }
         const realTotalEl = document.getElementById('mq-b-grand-real');
         if (realTotalEl) realTotalEl.textContent = fmt(totalB);
+        mqUpdateFinancingBox('b', tl, th, totalB);
         window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: totalB } });
         return { low: tl, high: th, total: totalB, label: cab.roomLabel || 'Cabinets + Countertops' };
       }
@@ -4915,10 +4971,11 @@ window.mqTogDrawerConfig=(prefix)=>{
         // stops announcing it in the results panel.
         if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r,'c');
+        mqUpdateFinancingBox('c', r.low, r.high, r.total);
         window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
         window.mqShowStickyBar('c', r.low, r.high, r.total);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');mqScrollPoweredByAboveSticky('c');
+        document.getElementById('mq-c-result').classList.add('show');mqScrollResultsIntoView('c');
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets',r.low,r.high,r.lines,r.total,'c');
       });
@@ -4938,10 +4995,11 @@ window.mqTogDrawerConfig=(prefix)=>{
           const active=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length;
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r,'ct');
+          mqUpdateFinancingBox('ct', r.low, r.high, r.total);
           window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
           window.mqShowStickyBar('ct', r.low, r.high, r.total);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');mqScrollPoweredByAboveSticky('ct');
+          document.getElementById('mq-ct-result').classList.add('show');mqScrollResultsIntoView('ct');
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await mqSaveLeadWithCart(data,lead,'Countertops',r.low,r.high,r.lines,r.total,'ct');
         },900);
@@ -4974,10 +5032,11 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-b-grand').textContent=mqFmtPrice('b', tl, th, totalB);
           const realTotalEl = document.getElementById('mq-b-grand-real');
           if (realTotalEl) realTotalEl.textContent = fmt(totalB);
+          mqUpdateFinancingBox('b', tl, th, totalB);
           window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { b: { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: totalB } });
           window.mqShowStickyBar('b', tl, th, totalB);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');mqScrollPoweredByAboveSticky('b');
+          document.getElementById('mq-b-result').classList.add('show');mqScrollResultsIntoView('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],totalB,'b');
         },1200);
@@ -5524,7 +5583,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           </div>
         </div>
         <div id="mq-sticky-breakdown" style="display:none;padding:0 16px 12px;font-size:12.5px;color:rgba(255,255,255,0.9)"></div>
-        ${window._mqFinancingOn ? `<div id="mq-sticky-financing">💳 Financing available</div>` : ''}
+        ${window._mqFinancingOn ? `<div id="mq-sticky-financing"><div id="mq-sticky-financing-main">💳 Financing available<span id="mq-sticky-financing-payment"></span></div><div id="mq-sticky-financing-disclaimer" style="display:none">*Estimated amount only</div></div>` : ''}
       </div>`;
     document.body.appendChild(bar);
     window.addEventListener('resize', mqAdjustWidgetBottomPadding);
@@ -5669,6 +5728,42 @@ window.mqTogDrawerConfig=(prefix)=>{
   function mqFmtPrice(prefix, low, high, total) {
     return mqShouldShowRange(prefix) ? fmtRange(low, high) : (CUR() + Math.round(total).toLocaleString());
   }
+  // Formats the financing monthly-payment text for a results panel, mirroring
+  // mqFmtPrice's own range-vs-single-number logic so the payment box always
+  // matches whatever basis (range or one clean total) the price above it is
+  // using. Returns null when financing has no rate/term set, or the basis is
+  // $0 (nothing calculated yet).
+  function mqFinancingPaymentText(prefix, low, high, total) {
+    if (window._mqFinancingAPR == null || window._mqFinancingTermMonths == null) return null;
+    const showRange = mqShouldShowRange(prefix);
+    const basisLow = showRange ? low : total;
+    const basisHigh = showRange ? high : total;
+    if (!(basisLow > 0) && !(basisHigh > 0)) return null;
+    const payLow = Math.round(mqCalcMonthlyPayment(basisLow, window._mqFinancingAPR, window._mqFinancingTermMonths));
+    const payHigh = Math.round(mqCalcMonthlyPayment(basisHigh, window._mqFinancingAPR, window._mqFinancingTermMonths));
+    return payLow === payHigh
+      ? `${CUR()}${payHigh.toLocaleString()}/mo`
+      : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
+  }
+  // Shows/hides and fills in the big financing box under a results panel's
+  // total (mq-${prefix}-financing-box) — used by both the "Calculate" flows
+  // and the silent live-refresh path, so it always tracks whatever's
+  // currently displayed as that panel's total.
+  function mqUpdateFinancingBox(prefix, low, high, total) {
+    const box = document.getElementById(`mq-${prefix}-financing-box`);
+    if (!box) return;
+    if (!window._mqFinancingOn) { box.style.display = 'none'; return; }
+    const payText = mqFinancingPaymentText(prefix, low, high, total);
+    if (!payText) { box.style.display = 'none'; return; }
+    const valEl = document.getElementById(`mq-${prefix}-financing-val`);
+    if (valEl) valEl.textContent = `as low as ${payText}*`;
+    // Block, not flex — the box itself just stacks its row + disclaimer
+    // children top to bottom; only the inner .mq-financing-box-row (label
+    // + price) is a flex row. Setting this to 'flex' here would force the
+    // row-div and the disclaimer-div into two squeezed side-by-side flex
+    // items instead of the row sitting above a full-width disclaimer line.
+    box.style.display = 'block';
+  }
   // Swaps out every "ballpark"/"customer sees this range" phrase for wording
   // that's actually true once a project type has the range toggled off —
   // this tool always shows the shop owner their own real total regardless,
@@ -5711,6 +5806,33 @@ window.mqTogDrawerConfig=(prefix)=>{
     const allNoRange = cart.every(e => !e.showRange) && !mqShouldShowRange(prefix);
     const prev = window._mqStickyLast;
     el.textContent = allNoRange ? (CUR() + Math.round(combinedTotal).toLocaleString()) : fmtRange(combinedLow, combinedHigh);
+    // Financing monthly-payment estimate, recomputed off the same combined
+    // low/high/total used for the price above — stays in sync with it as
+    // the customer edits their quote.
+    const financingPayEl = document.getElementById('mq-sticky-financing-payment');
+    const financingDisclaimerEl = document.getElementById('mq-sticky-financing-disclaimer');
+    if (financingPayEl) {
+      if (window._mqFinancingAPR != null && window._mqFinancingTermMonths != null) {
+        const payBasisLow = allNoRange ? combinedTotal : combinedLow;
+        const payBasisHigh = allNoRange ? combinedTotal : combinedHigh;
+        if (payBasisLow > 0 || payBasisHigh > 0) {
+          const payLow = Math.round(mqCalcMonthlyPayment(payBasisLow, window._mqFinancingAPR, window._mqFinancingTermMonths));
+          const payHigh = Math.round(mqCalcMonthlyPayment(payBasisHigh, window._mqFinancingAPR, window._mqFinancingTermMonths));
+          const payText = payLow === payHigh
+            ? `${CUR()}${payHigh.toLocaleString()}/mo`
+            : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
+          financingPayEl.textContent = ` · as low as ${payText}*`;
+          financingPayEl.title = 'Estimated payment only — subject to approval and final terms.';
+          if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'block';
+        } else {
+          financingPayEl.textContent = '';
+          if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'none';
+        }
+      } else {
+        financingPayEl.textContent = '';
+        if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'none';
+      }
+    }
     // Pro is the shop owner's own tool, not the customer-facing widget — so
     // whenever the main number above is still the customer-safe range, also
     // surface the real exact total right next to it. Skip it when the main
