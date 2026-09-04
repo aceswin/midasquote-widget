@@ -784,6 +784,10 @@
       #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:600;color:#166534}
       #midasquote-widget .mq-financing-box-val{font-size:22px;font-weight:700;color:#166534;text-align:right}
       #midasquote-widget .mq-financing-box-sub{font-size:11px;color:#6b7280;margin-top:8px;font-style:italic}
+      @media (max-width:420px){
+        #midasquote-widget .mq-financing-box-row{flex-direction:column;align-items:flex-start;gap:2px}
+        #midasquote-widget .mq-financing-box-val{text-align:left}
+      }
       .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
