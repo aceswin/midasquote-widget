@@ -5848,7 +5848,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
