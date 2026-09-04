@@ -352,6 +352,10 @@
         ? `<tr><td colspan="2" style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:14px;text-transform:uppercase;letter-spacing:0.04em">${l.label}</td></tr>`
         : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${CUR()}${Math.round(l.cost).toLocaleString()}</td></tr>`
       ).join('');
+    // Same gating as the widget's own financing box/badge (rate+term set,
+    // and — if the shop set a floor — the high end clears it), so an email
+    // never shows a number the widget itself wouldn't have shown live.
+    const financingLine = mqFinancingPaymentText(prefix, low, high, total);
 
     if (!lead._isSkip || shop['Notify on every estimate'] === 'Yes') await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name || 'Anonymous visitor'}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
@@ -368,6 +372,7 @@
         <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center">
           <div style="font-size:14px;color:#666;margin-bottom:4px">Estimated range</div>
           <div style="font-size:28px;font-weight:700;color:#16a34a">${CUR()}${low.toLocaleString()} – ${CUR()}${high.toLocaleString()}</div>
+          ${financingLine ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">💳 Est. payment: ${financingLine}</div>` : ''}
         </div>
       </div>`);
 
@@ -381,6 +386,7 @@
           <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
             <div style="font-size:14px;color:#666;margin-bottom:4px">${mqShouldShowRange(prefix) ? 'Your estimated range' : 'Your estimate'}</div>
             <div style="font-size:28px;font-weight:700;color:#16a34a">${mqFmtPrice(prefix, low, high, total)}</div>
+            ${financingLine ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">💳 As low as ${financingLine}*</div><div style="font-size:10.5px;color:#6b7280;margin-top:2px">*Estimated payment only — subject to approval and final terms.</div>` : ''}
           </div>
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
             <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What’s included</td></tr>${customerLineRows}
@@ -2340,6 +2346,11 @@
     const financingHasTerms = financingOn && !isNaN(financingAPRRaw) && financingAPRRaw >= 0 && !isNaN(financingTermRaw) && financingTermRaw > 0;
     window._mqFinancingAPR = financingHasTerms ? financingAPRRaw : null;
     window._mqFinancingTermMonths = financingHasTerms ? financingTermRaw : null;
+    // Optional floor on the payment number specifically (not the badge) —
+    // a shop can set this so a $400 specialty-item quote doesn't show "as
+    // low as $9/mo" next to it. Unset/blank means no floor, same as today.
+    const financingMinRaw = parseFloat(shop['Financing minimum amount']);
+    window._mqFinancingMinAmount = !isNaN(financingMinRaw) && financingMinRaw > 0 ? financingMinRaw : 0;
 
     return `
       <div class="mq-header">
@@ -6014,6 +6025,13 @@ window.mqTogDrawerConfig=(prefix)=>{
     const basisLow = showRange ? low : total;
     const basisHigh = showRange ? high : total;
     if (!(basisLow > 0) && !(basisHigh > 0)) return null;
+    // Shop-set floor: below it, the plain "Financing available" badge shows
+    // with no number attached (same as if rate/term weren't set at all) —
+    // judged off the LOW end, so a range never shows a low-end number
+    // that's below the shop's own floor (checking the high end alone let a
+    // small low-end figure sneak through inside an otherwise-qualifying
+    // range, which defeated the point of having a floor at all).
+    if (basisLow < (window._mqFinancingMinAmount || 0)) return null;
     const payLow = Math.round(mqCalcMonthlyPayment(basisLow, window._mqFinancingAPR, window._mqFinancingTermMonths));
     const payHigh = Math.round(mqCalcMonthlyPayment(basisHigh, window._mqFinancingAPR, window._mqFinancingTermMonths));
     return payLow === payHigh
@@ -6088,7 +6106,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (window._mqFinancingAPR != null && window._mqFinancingTermMonths != null) {
         const payBasisLow = allNoRange ? combinedTotal : combinedLow;
         const payBasisHigh = allNoRange ? combinedTotal : combinedHigh;
-        if (payBasisLow > 0 || payBasisHigh > 0) {
+        // Same shop-set floor as the results-panel financing box, judged
+        // off the low end — below it, falls through to the plain badge
+        // with no number (the same branch as rate/term being unset).
+        if ((payBasisLow > 0 || payBasisHigh > 0) && payBasisLow >= (window._mqFinancingMinAmount || 0)) {
           const payLow = Math.round(mqCalcMonthlyPayment(payBasisLow, window._mqFinancingAPR, window._mqFinancingTermMonths));
           const payHigh = Math.round(mqCalcMonthlyPayment(payBasisHigh, window._mqFinancingAPR, window._mqFinancingTermMonths));
           const payText = payLow === payHigh

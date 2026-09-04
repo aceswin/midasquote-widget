@@ -1006,6 +1006,11 @@ window.logoutMember = async function () {
                   </div>
                 </div>
                 <span class="mq-hint" style="display:block;margin-top:8px">Enter both and your widget will show customers an estimated monthly payment next to the financing badge (e.g. "as low as $123/mo – $155/mo"). Leave either blank to just show the plain badge with no number.</span>
+                <div class="mq-field" style="margin-top:12px;margin-bottom:0">
+                  <label class="mq-label">Minimum project amount to show payment <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+                  <input type="number" id="mq-financing-min" step="1" min="0" placeholder="e.g. 3000"/>
+                  <span class="mq-hint">Only show the monthly payment when the LOW end of the quote is at least this much — so a range never shows a small-looking number on its low side. Smaller quotes still show the plain "Financing available" badge with no number attached. Leave blank to always show the payment whenever rate and term are set.</span>
+                </div>
               </div>
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
@@ -2803,6 +2808,7 @@ window.logoutMember = async function () {
     set('mq-financing-link', f['Financing link']);
     set('mq-financing-apr', f['Financing APR'] != null ? f['Financing APR'] : '');
     set('mq-financing-term', f['Financing term months'] != null ? f['Financing term months'] : '');
+    set('mq-financing-min', f['Financing minimum amount'] != null ? f['Financing minimum amount'] : '');
     const notifyEveryToggle = el('mq-notify-every-toggle');
     if (notifyEveryToggle) {
       notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
@@ -2819,7 +2825,7 @@ window.logoutMember = async function () {
       'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
       'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
       'mq-shop-logo','mq-shop-disclaimer','mq-shop-projecttype-title','mq-shop-projecttype-hint','mq-shop-consult-link',
-      'mq-shop-consult-email','mq-financing-link','mq-financing-apr','mq-financing-term',
+      'mq-shop-consult-email','mq-financing-link','mq-financing-apr','mq-financing-term','mq-financing-min',
       'mq-shop-focalcolor','mq-shop-boxbordercolor','mq-shop-boxbgcolor','mq-shop-boxtextcolor'
     ];
     shopFieldIds.forEach(id => {
@@ -4738,6 +4744,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Financing link':    gv('mq-financing-link'),
         'Financing APR':     gv('mq-financing-apr') === '' ? null : parseFloat(gv('mq-financing-apr')),
         'Financing term months': gv('mq-financing-term') === '' ? null : parseInt(gv('mq-financing-term'), 10),
+        'Financing minimum amount': gv('mq-financing-min') === '' ? null : parseFloat(gv('mq-financing-min')),
       };
       const currencyChanged = updatedFields['Currency symbol'] !== (shopRec.fields['Currency symbol'] || '$');
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, updatedFields);
