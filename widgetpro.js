@@ -683,11 +683,12 @@
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
       #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
-      #midasquote-widget .mq-financing-box{padding:0.9rem 1.25rem;background:#f0fdf4;border-radius:8px;margin-top:0.75rem;border:1px solid #bbf7d0}
-      #midasquote-widget .mq-financing-box-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px}
-      #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:600;color:#166534}
-      #midasquote-widget .mq-financing-box-val{font-size:22px;font-weight:700;color:#166534;text-align:right}
-      #midasquote-widget .mq-financing-box-sub{font-size:11px;color:#6b7280;margin-top:8px;font-style:italic}
+      #midasquote-widget .mq-financing-box{padding:0;background:#f0fdf4;border-radius:12px;margin-top:0.75rem;border:1px solid #bbf7d0;overflow:hidden;box-shadow:0 4px 16px rgba(134,239,172,0.35)}
+      #midasquote-widget .mq-financing-box-topstrip{background:#bbf7d0;padding:0.55rem 1.25rem}
+      #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:700;color:#166534}
+      #midasquote-widget .mq-financing-box-body{padding:0.9rem 1.25rem}
+      #midasquote-widget .mq-financing-box-val{font-size:18px;font-weight:700;color:#166534}
+      #midasquote-widget .mq-financing-box-sub{font-size:11px;color:#6b7280;margin-top:6px;font-style:italic}
       .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
@@ -2229,11 +2230,13 @@
           </div>
           <ul class="mq-line-items" id="mq-c-line-items"></ul>
           <div class="mq-financing-box" id="mq-c-financing-box" style="display:none">
-            <div class="mq-financing-box-row">
+            <div class="mq-financing-box-topstrip">
               <div class="mq-financing-box-label">💳 Financing available</div>
-              <div class="mq-financing-box-val" id="mq-c-financing-val">—</div>
             </div>
-            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+            <div class="mq-financing-box-body">
+              <div class="mq-financing-box-val" id="mq-c-financing-val">—</div>
+              <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+            </div>
           </div>
           <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
@@ -2269,11 +2272,13 @@
           </div>
           <ul class="mq-line-items" id="mq-ct-line-items"></ul>
           <div class="mq-financing-box" id="mq-ct-financing-box" style="display:none">
-            <div class="mq-financing-box-row">
+            <div class="mq-financing-box-topstrip">
               <div class="mq-financing-box-label">💳 Financing available</div>
-              <div class="mq-financing-box-val" id="mq-ct-financing-val">—</div>
             </div>
-            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+            <div class="mq-financing-box-body">
+              <div class="mq-financing-box-val" id="mq-ct-financing-val">—</div>
+              <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+            </div>
           </div>
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
@@ -2381,11 +2386,13 @@
           </div>
           <div style="text-align:right;margin-top:8px"><span style="display:inline-block;background:linear-gradient(135deg,#111,#1f1f1f);border:1px solid #fbbf24;border-radius:8px;padding:7px 14px;font-size:14px;font-weight:700;color:#fbbf24">💰 Your real total: <span id="mq-b-grand-real" style="color:#fff">—</span></span></div>
           <div class="mq-financing-box" id="mq-b-financing-box" style="display:none">
-            <div class="mq-financing-box-row">
+            <div class="mq-financing-box-topstrip">
               <div class="mq-financing-box-label">💳 Financing available</div>
-              <div class="mq-financing-box-val" id="mq-b-financing-val">—</div>
             </div>
-            <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+            <div class="mq-financing-box-body">
+              <div class="mq-financing-box-val" id="mq-b-financing-val">—</div>
+              <div class="mq-financing-box-sub">*Estimated payment only — subject to approval and final terms.</div>
+            </div>
           </div>
           <div class="mq-disclaimer" id="mq-b-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
@@ -5757,11 +5764,9 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!payText) { box.style.display = 'none'; return; }
     const valEl = document.getElementById(`mq-${prefix}-financing-val`);
     if (valEl) valEl.textContent = `as low as ${payText}*`;
-    // Block, not flex — the box itself just stacks its row + disclaimer
-    // children top to bottom; only the inner .mq-financing-box-row (label
-    // + price) is a flex row. Setting this to 'flex' here would force the
-    // row-div and the disclaimer-div into two squeezed side-by-side flex
-    // items instead of the row sitting above a full-width disclaimer line.
+    // Block, not flex — the box is a simple top-strip + body stack (a
+    // little "card" look: the label sits in its own colored strip up top,
+    // the price + fine print sit in the body below it).
     box.style.display = 'block';
   }
   // Swaps out every "ballpark"/"customer sees this range" phrase for wording
