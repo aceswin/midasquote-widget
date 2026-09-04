@@ -2071,6 +2071,16 @@
         groupName: (someRec?.['Group name']||'').trim(), groupOrder: someRec?.['Group sort order']||0, groupDesc: someRec?.['Group description']||'',
       };
     }));
+    // Fixed order (none, some, mostly) rather than price-sorted — these are
+    // tiers, not priced products, so no badge/sort helper here. "No
+    // drawers" gets an icon-only chip (no photo needed to explain it);
+    // Some/Mostly reuse the same reference photos the old dropdown's
+    // image callouts used to show below it.
+    const drawerTierItems = [
+      {value:'none', label:'No drawers', icon:'🚫'},
+      {value:'some', label:'Some drawers', icon:'🗄️', photoUrl:'https://widget.midasquote.com/drawer-guide/some-drawers.png'},
+      {value:'mostly', label:'Mostly drawers', icon:'🗄️', photoUrl:'https://widget.midasquote.com/drawer-guide/mostly-drawers.png'},
+    ];
 
     // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
     // the shop has real pricing data, or the legacy fallback values when not)
@@ -2201,24 +2211,15 @@
         <p class="mq-sec-title">Drawers</p>
         <div class="mq-field">
           <label class="mq-label">Drawer amount</label>
-          <select id="mq-${prefix}-drawer-tier" onchange="mqTogDrawerConfig('${prefix}')">
+          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
+            🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full drawer banks. 🗄️ <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
+          </div>
+          ${pickerRow(`mq-${prefix}-drawer-tier`, drawerTierItems, null, 'drawer-tier')}
+          <select id="mq-${prefix}-drawer-tier" onchange="mqTogDrawerConfig('${prefix}')" style="display:none">
             <option value="none">No drawers</option>
             <option value="some">Some drawers</option>
             <option value="mostly">Mostly drawers</option>
           </select>
-        </div>
-        <div style="font-size:13px;color:#4b5563;margin:12px 0 10px;line-height:1.5">
-          🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full drawer banks. 🗄️ <strong>Some drawers</strong> means fewer than that — most are a standard door with just one drawer on top.
-        </div>
-        <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;justify-content:flex-start">
-          <div style="flex:0 1 150px;text-align:center">
-            <img src="https://widget.midasquote.com/drawer-guide/mostly-drawers.png" alt="Full drawer bank example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/mostly-drawers.png','Full drawer bank example')" onerror="this.style.display='none'"/>
-            <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Mostly drawers</strong></div>
-          </div>
-          <div style="flex:0 1 150px;text-align:center">
-            <img src="https://widget.midasquote.com/drawer-guide/some-drawers.png" alt="Standard door with one top drawer example" style="width:100%;max-width:150px;border-radius:8px;border:1px solid #e5e7eb;display:block;margin:0 auto;cursor:zoom-in" onclick="mqPhotoLightbox('https://widget.midasquote.com/drawer-guide/some-drawers.png','Standard door with one top drawer example')" onerror="this.style.display='none'"/>
-            <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.4">Most bases look like this → pick <strong>Some drawers</strong></div>
-          </div>
         </div>
         <div class="mq-field" id="mq-${prefix}-drawer-config-wrap" style="display:none;margin-top:10px">
           <label class="mq-label">Drawer type</label>
@@ -3860,8 +3861,7 @@
       mqResetPicker(`mq-${prefix}-hinge`);
       mqResetPicker(`mq-${prefix}-u-door`);
 
-      const drawerTierEl = document.getElementById(`mq-${prefix}-drawer-tier`);
-      if (drawerTierEl) drawerTierEl.selectedIndex = 0;
+      mqResetPicker(`mq-${prefix}-drawer-tier`);
       mqResetPicker(`mq-${prefix}-drawer-config`);
       window.mqTogDrawerConfig(prefix);
 
