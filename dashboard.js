@@ -4364,6 +4364,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function renderSpecialty(specs, shopRecord) {
     const container = el('mq-spec-list');
     if (!container) return;
+    // renderSpecialty rebuilds the whole filter bar (project type, category,
+    // search, pro-only) from scratch every time it runs — and it runs after
+    // EVERY add/delete/reorder/category-rename, not just on first load. That
+    // used to silently snap the filters back to "All project types" / "All
+    // categories" / no search each time, so deleting one item while filtered
+    // down to a category meant losing your place and having to re-filter to
+    // delete the next one. Capture whatever's currently set before rebuilding
+    // below, then restore it after — a no-op on first render, since these
+    // elements don't exist yet.
+    const savedFilters = {
+      room: el('mq-spec-tab-filter-room')?.value || '',
+      category: el('mq-spec-tab-filter-category')?.value || '',
+      search: el('mq-spec-tab-filter-search')?.value || '',
+      proOnly: !!el('mq-spec-tab-filter-proonly')?.checked,
+    };
     // Kept in sync so mqAddVariant/mqRemoveVariant/mqSaveVariantField below
     // can find and mutate the right record's Variants JSON in memory
     // without a full reload — renderSpecialty always runs again after any
@@ -4411,7 +4426,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </label>
         </div>
       </div>
-      <div id="mq-spec-catorder-box">${mqCategoryOrderBoxHTML('')}</div>
+      <div id="mq-spec-catorder-box">${mqCategoryOrderBoxHTML(savedFilters.room)}</div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
@@ -4467,6 +4482,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </tbody>
       </table>
       </div>`;
+
+    // Restore whatever filters were set before this re-render, then reapply
+    // them to the freshly-built rows — otherwise the table would show
+    // everything (unfiltered) until the shop owner touched a filter again,
+    // even though the dropdowns themselves now look right.
+    const roomFilterEl = document.getElementById('mq-spec-tab-filter-room');
+    if (roomFilterEl) roomFilterEl.value = savedFilters.room;
+    const categoryFilterEl = document.getElementById('mq-spec-tab-filter-category');
+    if (categoryFilterEl) categoryFilterEl.value = savedFilters.category;
+    const searchFilterEl = document.getElementById('mq-spec-tab-filter-search');
+    if (searchFilterEl) searchFilterEl.value = savedFilters.search;
+    const proOnlyFilterEl = document.getElementById('mq-spec-tab-filter-proonly');
+    if (proOnlyFilterEl) proOnlyFilterEl.checked = savedFilters.proOnly;
+    if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
 
     const tbody = document.getElementById('mq-spec-tbody');
     let dragging = null;
