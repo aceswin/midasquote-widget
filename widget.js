@@ -2803,7 +2803,8 @@
     window._mqActiveTabPrefix = window._mqActiveTabPrefix || 'b';
     window.mqSwitchTab=(id,el)=>{
       const newPrefix = id === 'both' ? 'b' : (id === 'countertops' ? 'ct' : 'c');
-      if (newPrefix !== window._mqActiveTabPrefix) {
+      const tabActuallyChanged = newPrefix !== window._mqActiveTabPrefix;
+      if (tabActuallyChanged) {
         const committed = mqCommitCurrentConfig(window._mqActiveTabPrefix);
         if (committed) {
           // Reset the tab being left too, since it's now folded into the
@@ -2820,6 +2821,18 @@
       el.classList.add('active');
       if (id === 'cabinets') { mqRenumberSteps('c'); window.mqUpdateStepFocus('c'); }
       else if (id === 'both') { window.mqTogUseCab('b'); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
+      // Once the customer has calculated anything at all, the sticky bar's
+      // live-typing tracker (window._mqStickyPrefix) needs to follow
+      // whichever tab is now active — otherwise it stays locked to
+      // whatever tab was active when Calculate was last pressed, so typing
+      // on a freshly-switched-to tab silently does nothing to the estimate
+      // until THAT tab gets its own explicit Calculate. Retarget + recalc
+      // right away so the number updates the moment you land on the new
+      // tab, not on the next keystroke.
+      if (tabActuallyChanged && window._mqStickyPrefix) {
+        window._mqStickyPrefix = newPrefix;
+        mqLiveRecalcSticky();
+      }
     };
 
     window.mqTogDiff=(prefix)=>{
