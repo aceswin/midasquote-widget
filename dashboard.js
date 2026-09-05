@@ -1128,6 +1128,44 @@ window.logoutMember = async function () {
                     </label>
                   </div>
 
+                  <!-- Header/trust bar color overrides — mostly matters when a shop is
+                       pasting onto a page with a dark or unusual background, since the
+                       defaults below are tuned to look right on a plain white page. -->
+                  <div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:1.25rem">
+                    <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">🎨 Header &amp; trust bar colors</div>
+                    <div style="font-size:11px;color:#6b7280;margin-bottom:12px">Only matters if you're pasting this onto a page with a dark or unusual background — the defaults already look right on a plain white page. Doesn't touch the widget itself, which has its own colors on the Shop Info tab.</div>
+
+                    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Quote page header</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px">
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Eyebrow text
+                        <input type="color" id="mq-embed-color-eyebrow" value="#b8763a" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Headline
+                        <input type="color" id="mq-embed-color-headline" value="#3d3830" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Paragraph text
+                        <input type="color" id="mq-embed-color-para" value="#5c5650" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">
+                        <span style="display:flex;align-items:center;gap:5px;white-space:nowrap"><input type="checkbox" id="mq-embed-bg-toggle" onchange="mqUpdateEmbedColors()" style="width:13px;height:13px"/> Background</span>
+                        <input type="color" id="mq-embed-color-headerbg" value="#1a1a1a" oninput="mqUpdateEmbedColors()" disabled style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer;opacity:0.4"/>
+                      </label>
+                    </div>
+                    <div style="font-size:10.5px;color:#9ca3af;margin:-8px 0 14px">Leave "Background" unchecked to keep this section see-through, so it just takes on whatever background your own page already has.</div>
+
+                    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Trust bar</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px">
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Background
+                        <input type="color" id="mq-embed-color-trustbg" value="#faf8f5" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Text
+                        <input type="color" id="mq-embed-color-trusttext" value="#5c5650" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                    </div>
+
+                    <button class="mq-btn mq-btn-sm" onclick="mqResetEmbedColors()">↩ Reset to defaults</button>
+                  </div>
+
                   <!-- Live preview -->
                   <div id="mq-embed-preview-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:1.25rem;transform:scale(0.75);transform-origin:top left;width:133%;margin-right:-33%">
                     <div id="mq-embed-preview-header"></div>
@@ -7755,18 +7793,123 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   let _mqQrCustomColor = '';
   let _mqSignCustomColor = '';
   let _mqQrLibLoading = null;
+  // Quote-page-header / trust-bar color overrides for the Embed page's
+  // copy-paste snippet — blank means "use the built-in default", so a shop
+  // that never touches these pickers gets the exact same output as before
+  // this feature existed. _mqHeaderBgColor blank specifically means "no
+  // background wrapper at all" (inherit whatever the shop's own page
+  // background is) rather than falling back to a default color.
+  let _mqHeaderEyebrowColor = '';
+  let _mqHeaderHeadlineColor = '';
+  let _mqHeaderParaColor = '';
+  let _mqHeaderBgColor = '';
+  let _mqTrustBgColor = '';
+  let _mqTrustTextColor = '';
 
   let _mqHeadlineSaveTimer = null;
   function saveHeadlinesDebounced(shopRecord) {
     clearTimeout(_mqHeadlineSaveTimer);
     _mqHeadlineSaveTimer = setTimeout(async () => {
       try {
-        const payload = JSON.stringify({ graphic: _mqGraphicHeadline, qr: _mqQrHeadline, sign: _mqSignHeadline, qrColor: _mqQrCustomColor, signColor: _mqSignCustomColor });
+        const payload = JSON.stringify({
+          graphic: _mqGraphicHeadline, qr: _mqQrHeadline, sign: _mqSignHeadline,
+          qrColor: _mqQrCustomColor, signColor: _mqSignCustomColor,
+          headerColors: { eyebrow: _mqHeaderEyebrowColor, headline: _mqHeaderHeadlineColor, para: _mqHeaderParaColor, bg: _mqHeaderBgColor },
+          trustColors: { bg: _mqTrustBgColor, text: _mqTrustTextColor },
+        });
         await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Marketing headlines': payload });
         shopRecord.fields['Marketing headlines'] = payload;
       } catch(e) {}
     }, 800);
   }
+
+  // hex '#rrggbb' -> 'rgba(r,g,b,alpha)', used to derive the trust bar's
+  // border tint from whatever text color a shop picks (falls back to the
+  // original hardcoded border tint if the hex is malformed/empty).
+  function mqHexToRgba(hex, alpha) {
+    try {
+      const h = (hex || '').replace('#', '');
+      if (h.length !== 6) return `rgba(61,56,48,${alpha})`;
+      const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+      if ([r, g, b].some(n => isNaN(n))) return `rgba(61,56,48,${alpha})`;
+      return `rgba(${r},${g},${b},${alpha})`;
+    } catch (e) { return `rgba(61,56,48,${alpha})`; }
+  }
+
+  // Google Fonts import shared by both snippets below — hoisted to module
+  // scope (was a local inside initMarketingKit) since buildHeroHeaderHTML/
+  // buildTrustBarHTML now also need to run from the color-picker handlers,
+  // independent of a fresh initMarketingKit() call.
+  const mqEmbedFontLinks = `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">`;
+
+  function buildHeroHeaderHTML() {
+    const eyebrow = _mqHeaderEyebrowColor || '#b8763a';
+    const headline = _mqHeaderHeadlineColor || '#3d3830';
+    const para = _mqHeaderParaColor || '#5c5650';
+    const bgStyle = _mqHeaderBgColor ? `background:${_mqHeaderBgColor};border-radius:12px;` : '';
+    return `${mqEmbedFontLinks}
+<div style="text-align:center;padding:2rem 1rem 1.5rem;${bgStyle}font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${eyebrow};margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;gap:10px">
+    <span style="display:block;width:24px;height:1.5px;background:${eyebrow}"></span>
+    Instant Pricing
+    <span style="display:block;width:24px;height:1.5px;background:${eyebrow}"></span>
+  </div>
+  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:${headline};line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
+  <p style="font-size:14px;color:${para};line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
+</div>`;
+  }
+
+  function buildTrustBarHTML() {
+    const bg = _mqTrustBgColor || '#faf8f5';
+    const text = _mqTrustTextColor || '#5c5650';
+    const border = mqHexToRgba(text, 0.12);
+    const item = (icon, label) => `<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:${text}"><span style="font-size:15px">${icon}</span><span>${label}</span></div>`;
+    return `${mqEmbedFontLinks}
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:${bg};border:1px solid ${border};border-radius:10px;margin:30px 0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  ${item('✅', 'No commitment required')}
+  ${item('📧', 'Results sent to your inbox')}
+  ${item('🔒', 'We never sell your info')}
+  ${item('⚡', 'Instant ballpark estimate')}
+</div>`;
+  }
+
+  // Reads the color pickers on the Embed page, rebuilds both snippets, pushes
+  // the new code into the combined-embed builder + live preview, and
+  // debounce-saves the choice to Airtable. Wired to both the color inputs'
+  // oninput and the background checkbox's onchange.
+  window.mqUpdateEmbedColors = function() {
+    _mqHeaderEyebrowColor = document.getElementById('mq-embed-color-eyebrow')?.value || '';
+    _mqHeaderHeadlineColor = document.getElementById('mq-embed-color-headline')?.value || '';
+    _mqHeaderParaColor = document.getElementById('mq-embed-color-para')?.value || '';
+    const bgToggle = document.getElementById('mq-embed-bg-toggle');
+    const bgInput = document.getElementById('mq-embed-color-headerbg');
+    if (bgInput) { bgInput.disabled = !bgToggle?.checked; bgInput.style.opacity = bgToggle?.checked ? '1' : '0.4'; }
+    _mqHeaderBgColor = bgToggle?.checked ? (bgInput?.value || '') : '';
+    _mqTrustBgColor = document.getElementById('mq-embed-color-trustbg')?.value || '';
+    _mqTrustTextColor = document.getElementById('mq-embed-color-trusttext')?.value || '';
+    window._mqRawHeaderCode = buildHeroHeaderHTML();
+    window._mqRawTrustCode = buildTrustBarHTML();
+    if (typeof window.mqUpdateCombinedEmbed === 'function') window.mqUpdateCombinedEmbed();
+    if (window._mqShopRecord) saveHeadlinesDebounced(window._mqShopRecord);
+  };
+
+  // Restores every picker to the original built-in look (blank state vars
+  // fall back to the same hardcoded defaults buildHeroHeaderHTML/
+  // buildTrustBarHTML always had before this feature existed).
+  window.mqResetEmbedColors = function() {
+    const set = (id, val) => { const elx = document.getElementById(id); if (elx) elx.value = val; };
+    set('mq-embed-color-eyebrow', '#b8763a');
+    set('mq-embed-color-headline', '#3d3830');
+    set('mq-embed-color-para', '#5c5650');
+    set('mq-embed-color-headerbg', '#1a1a1a');
+    set('mq-embed-color-trustbg', '#faf8f5');
+    set('mq-embed-color-trusttext', '#5c5650');
+    const bgToggle = document.getElementById('mq-embed-bg-toggle');
+    if (bgToggle) bgToggle.checked = false;
+    window.mqUpdateEmbedColors();
+  };
 
   // Shared collapsible toggle for every card on the Marketing Kit page —
   // it was getting cluttered with everything always open at once, so each
@@ -7807,31 +7950,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
 
-    // Google Fonts import — included in both blocks independently (harmless
-    // if both end up on the page together; browsers dedupe identical
-    // stylesheet URLs, so this is safe either way).
-    const fontLinks = `<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">`;
+    // Sync the Embed page's color pickers to whatever this shop has saved
+    // (or the built-in defaults, if they've never touched them) — safe to
+    // re-run every time this function runs (first open, or after a Shop
+    // Info save), same as the rest of Marketing Kit's init.
+    (function syncEmbedColorPickers() {
+      const set = (id, val) => { const elx = document.getElementById(id); if (elx) elx.value = val; };
+      set('mq-embed-color-eyebrow', _mqHeaderEyebrowColor || '#b8763a');
+      set('mq-embed-color-headline', _mqHeaderHeadlineColor || '#3d3830');
+      set('mq-embed-color-para', _mqHeaderParaColor || '#5c5650');
+      set('mq-embed-color-headerbg', _mqHeaderBgColor || '#1a1a1a');
+      set('mq-embed-color-trustbg', _mqTrustBgColor || '#faf8f5');
+      set('mq-embed-color-trusttext', _mqTrustTextColor || '#5c5650');
+      const bgToggle = document.getElementById('mq-embed-bg-toggle');
+      const bgInput = document.getElementById('mq-embed-color-headerbg');
+      if (bgToggle) bgToggle.checked = !!_mqHeaderBgColor;
+      if (bgInput) { bgInput.disabled = !_mqHeaderBgColor; bgInput.style.opacity = _mqHeaderBgColor ? '1' : '0.4'; }
+    })();
 
-    const heroHeaderHTML = `${fontLinks}
-<div style="text-align:center;padding:2rem 1rem 1.5rem;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b8763a;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;gap:10px">
-    <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
-    Instant Pricing
-    <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
-  </div>
-  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
-  <p style="font-size:14px;color:#5c5650;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
-</div>`;
-
-    const trustBarHTML = `${fontLinks}
-<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#faf8f5;border:1px solid rgba(61,56,48,0.12);border-radius:10px;margin:30px 0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">✅</span><span>No commitment required</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">📧</span><span>Results sent to your inbox</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">🔒</span><span>We never sell your info</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">⚡</span><span>Instant ballpark estimate</span></div>
-</div>`;
+    const heroHeaderHTML = buildHeroHeaderHTML();
+    const trustBarHTML = buildTrustBarHTML();
 
     const escapeHtml = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -9920,6 +10058,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       _mqSignHeadline = savedHeadlines.sign || '';
       _mqQrCustomColor = savedHeadlines.qrColor || '';
       _mqSignCustomColor = savedHeadlines.signColor || '';
+      const savedHeaderColors = savedHeadlines.headerColors || {};
+      _mqHeaderEyebrowColor = savedHeaderColors.eyebrow || '';
+      _mqHeaderHeadlineColor = savedHeaderColors.headline || '';
+      _mqHeaderParaColor = savedHeaderColors.para || '';
+      _mqHeaderBgColor = savedHeaderColors.bg || '';
+      const savedTrustColors = savedHeadlines.trustColors || {};
+      _mqTrustBgColor = savedTrustColors.bg || '';
+      _mqTrustTextColor = savedTrustColors.text || '';
     } catch(e) {}
     container.innerHTML = buildHTML(shopRecord.fields);
     mqInitStickyTopbar();
