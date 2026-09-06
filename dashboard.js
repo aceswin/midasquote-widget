@@ -3182,6 +3182,41 @@ window.logoutMember = async function () {
     let categoryRooms = {};
     try { categoryRooms = f['Category rooms'] ? JSON.parse(f['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
     window._mqCategoryRooms = categoryRooms;
+
+    // Default for any shop that has NEVER touched category-level room
+    // hiding at all — checked via the 'material' key being entirely absent
+    // from the object, not just falsy/empty, since an empty array there
+    // means the shop DID interact with this and deliberately ended up at
+    // "visible everywhere" (see the "all-checked collapses back to []"
+    // comment in applyCategoryRoomChange below) — that choice must never
+    // get silently overwritten by this. Box Materials, Door Styles, and
+    // Drawer Configurations (LINKED_CABINET_CATS — always kept in sync with
+    // each other) start hidden for Refacing, Repainting, and Restaining,
+    // since those three project types reuse the customer's EXISTING
+    // box/doors/drawers rather than pricing new ones — without this, a shop
+    // has to notice and hide all three by hand before their first refacing
+    // quote looks right. This only ever fires once per shop: the moment it
+    // saves, 'material' gets a real key (even if that key is later toggled
+    // back to []), so it can never re-fire or clobber a shop's own later
+    // choice. Deliberately skips bulk-syncing individual items' own
+    // "Visible rooms" fields the way a manual toggle does (mqToggleCategoryRoom
+    // below) — window._mqByCategory isn't populated yet this early in the
+    // page load, and isn't needed anyway: a shop's default line items have
+    // no per-item override yet, so the widget's own fallback rule
+    // (effectiveVisibleRooms in widget.js/widgetpro.js — an item only
+    // inherits the category's hidden list when it has no explicit setting
+    // of its own) already hides them correctly from this category default
+    // alone.
+    if (categoryRooms.material === undefined) {
+      const defaultHiddenRoomIds = ['refacing', 'repainting', 'restaining'].filter(id => rooms.some(r => r.id === id));
+      if (defaultHiddenRoomIds.length) {
+        const seeded = { ...categoryRooms, material: defaultHiddenRoomIds, door: defaultHiddenRoomIds, drawer: defaultHiddenRoomIds };
+        window._mqCategoryRooms = seeded;
+        atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Category rooms': JSON.stringify(seeded) })
+          .then(() => { shop.fields['Category rooms'] = JSON.stringify(seeded); })
+          .catch(e => console.error('Failed to seed default category-room hiding', e));
+      }
+    }
   }
 
   // Tracks which project types are currently expanded, keyed by the room's
