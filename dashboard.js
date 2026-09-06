@@ -518,9 +518,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   };
 
   // Shown exactly once per shop, the first time they land on the My
-  // Products tab — explains that items can be removed per project type,
-  // and specifically warns about Box Materials/Door Styles/Drawer
-  // Configurations being linked (same three categories as
+  // Products tab — leads with the tab's main purpose (adding photos, your
+  // own upload or our library), then covers that items can be removed per
+  // project type, and specifically warns about Box Materials/Door
+  // Styles/Drawer Configurations being linked (same three categories as
   // LINKED_CABINET_CATS below). Same dismiss-once-on-the-shop-record
   // pattern as the other first-visit popups.
   window.mqShowProductsTipsModal = function() {
@@ -536,7 +537,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="font-size:40px;margin-bottom:12px">📦</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
-          You can remove any item from any project type here — just uncheck it under that item's project types.
+          <strong>This is where you add photos</strong> for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon. Click <em>"📤 Upload a photo"</em> on any item to use your own, or click <em>"📷 Choose from library"</em> to pick one of our curated photos instead — no need to find or shoot a photo yourself for every item.
+          <br><br>
+          You can also remove any item from any project type here — just uncheck it under that item's project types.
           <br><br>
           Want to remove a whole section at once instead? Each category (like Box Materials) has its own control at the top that starts out reading <strong>"Visible for all project types"</strong> — click it open, uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, hiding every item in that category for it in one click. For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new materials priced.
           <br><br>
