@@ -296,6 +296,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Every category starts collapsed — click any category's header to open just that one. With a lot of items configured, this keeps the page manageable.</p>
         <p>When a customer taps a photo to zoom in on the widget, they can swipe left/right to move through the rest of that same group (e.g. every door style, or every item in one specialty category) without closing and reopening — no setup needed here, it just works automatically for any photo uploaded on this tab.</p>
         <p>You can also control which project types each item shows up for right from here — the same setting as on the Specialty Items tab, just accessible from both places.</p>
+        <p><strong>Removing a whole section for one project type</strong> — rather than unchecking every item in a category one at a time, click the <strong>🗂️ Hidden for: ...</strong> control at the top of that category (right below the "Add a photo URL..." line) and uncheck a project type there. Every item in that category is hidden for it in one click. For example, uncheck <strong>Refacing</strong> under Box Materials — since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing under any one of the three does the same for all three automatically. An individual item can still be given its own exception afterward by unchecking or rechecking just that one item's own project types.</p>
         <p><strong>Groups</strong> — in Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
       `
     },
@@ -532,6 +533,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           You can remove any item from any project type here — just uncheck it under that item's project types.
+          <br><br>
+          Want to remove a whole section at once instead? Each category (like Box Materials) has its own <strong>🗂️ Hidden for</strong> control at the top — uncheck a project type there and every item in that category is hidden for it in one click. For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new materials priced.
           <br><br>
           One thing to know: <strong>Box Materials, Door Styles, and Drawer Configurations are connected.</strong> Remove one of these from a project type, and all three come out together — they always work as a set for cabinet pricing, so there's no way to keep just one.
           <br><br>
