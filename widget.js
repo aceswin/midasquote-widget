@@ -351,7 +351,7 @@
   // ============================================================
   // EMAIL & LEAD
   // ============================================================
-  async function saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix) {
+  async function saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix, contactRequested) {
     const { shop } = data;
     try {
       await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-lead`, {
@@ -375,9 +375,11 @@
     // never shows a number the widget itself wouldn't have shown live.
     const financingLine = mqFinancingPaymentText(prefix, low, high, total);
 
-    if (!lead._isSkip || shop['Notify on every estimate'] === 'Yes') await sendEmail(shop['Lead notify email'], `New ${quoteType} quote lead — ${lead.name || 'Anonymous visitor'}`,
+    if (!lead._isSkip || shop['Notify on every estimate'] === 'Yes') await sendEmail(shop['Lead notify email'],
+      contactRequested ? `🙋 Contact requested — ${quoteType} quote — ${lead.name || 'A visitor'}` : `New ${quoteType} quote lead — ${lead.name || 'Anonymous visitor'}`,
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2 style="color:#1a1a1a">New ${quoteType} quote lead</h2>
+        <h2 style="color:#1a1a1a">${contactRequested ? 'A customer would like to be contacted' : `New ${quoteType} quote lead`}</h2>
+        ${contactRequested ? `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-weight:600;color:#92400e">🙋 This customer clicked "I'd like to be contacted" on their quote — they're expecting to hear from you.</div>` : ''}
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Customer details</td></tr>
           <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
@@ -398,9 +400,10 @@
       const customerLineRows = (lines||[]).filter(l=>l&&l.label&&!l.bold)
         .sort((a,b)=>b.cost-a.cost)
         .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
-      await sendEmail(lead.email, `Your quote from ${shop['Shop name']}`,
+      await sendEmail(lead.email, contactRequested ? `We got your request — ${shop['Shop name']}` : `Your quote from ${shop['Shop name']}`,
         `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
           <h2 style="color:#1a1a1a">Your ${quoteType} quote from ${shop['Shop name']}</h2>
+          ${contactRequested ? `<p style="color:#444;font-size:14px;margin-bottom:16px">Thanks — we've let ${shop['Shop name']} know you'd like to be contacted, and they'll be in touch soon. Here's a copy of your estimate in the meantime.</p>` : ''}
           <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
             <div style="font-size:14px;color:#666;margin-bottom:4px">${mqShouldShowRange(prefix) ? 'Your estimated range' : 'Your estimate'}</div>
             <div style="font-size:28px;font-weight:700;color:#16a34a">${mqFmtPrice(prefix, low, high, total)}</div>
@@ -422,10 +425,10 @@
   // instead of only ever saving that one tab's result and silently
   // dropping everything built before it. Same signature as saveLead
   // itself, so every call site only needs the function name swapped.
-  async function mqSaveLeadWithCart(data, lead, quoteType, low, high, lines, roomType, total, prefix) {
+  async function mqSaveLeadWithCart(data, lead, quoteType, low, high, lines, roomType, total, prefix, contactRequested) {
     const cart = window._mqQuoteCart || [];
     if (!cart.length) {
-      return saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix);
+      return saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix, contactRequested);
     }
     const cartLow = cart.reduce((s,e) => s + (e.low||0), 0);
     const cartHigh = cart.reduce((s,e) => s + (e.high||0), 0);
@@ -440,7 +443,7 @@
       data, lead, combinedLabel,
       cartLow + low, cartHigh + high,
       combinedLines, combinedLabel,
-      cartTotal + total, prefix
+      cartTotal + total, prefix, contactRequested
     );
   }
 
@@ -5858,6 +5861,17 @@ window.mqTogDrawerConfig=(prefix)=>{
           <button class="mq-modal-btn" onclick="mqSubmitQuickEmail()">Send it →</button>
           <button class="mq-modal-skip" onclick="document.getElementById('mq-quick-email-overlay').classList.remove('show')">Cancel</button>
         </div>
+      </div>
+      <div class="mq-overlay" id="mq-contact-request-overlay">
+        <div class="mq-modal">
+          <p class="mq-modal-title">Where should we reach you?</p>
+          <p class="mq-modal-sub">Enter your email and we'll pass your quote and your request along to ${window._mqShopData ? window._mqShopData['Shop name'] : 'the shop'} right away.</p>
+          <div class="mq-modal-fields">
+            <div class="mq-modal-field"><label>Email address</label><input type="email" id="mq-contact-request-input" placeholder="jane@email.com" onkeydown="if(event.key==='Enter')mqSubmitContactRequest()"/></div>
+          </div>
+          <button class="mq-modal-btn" onclick="mqSubmitContactRequest()">Send request →</button>
+          <button class="mq-modal-skip" onclick="document.getElementById('mq-contact-request-overlay').classList.remove('show')">Cancel</button>
+        </div>
       </div>`;
     while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
   }
@@ -5872,7 +5886,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button></div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-contact-link" onclick="mqRequestContact()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">🙋 I'd like to be contacted</button> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
@@ -5980,6 +5994,43 @@ window.mqTogDrawerConfig=(prefix)=>{
     window._mqLeadEmail = email;
     document.getElementById('mq-quick-email-overlay').classList.remove('show');
     await mqSendQuoteCopy(email);
+  };
+  // "🙋 I'd like to be contacted" — separate from "📧 Email me a copy" above
+  // on purpose, even though they end up calling the same mqSaveLeadWithCart
+  // plumbing: a customer clicking THIS button is explicitly raising their
+  // hand for a callback, not just asking for their own receipt, so the shop
+  // notification email gets a distinct subject/banner (see the
+  // `contactRequested` flag threaded through saveLead) making it obvious at
+  // a glance which kind of lead this was.
+  async function mqSendContactRequest(email) {
+    const linkEl = document.getElementById('mq-sticky-contact-link');
+    const result = mqCurrentLiveResult();
+    const data = window._mqFullData;
+    if (!result || !data) return;
+    if (linkEl) linkEl.textContent = 'Sending...';
+    try {
+      await mqSaveLeadWithCart(data, { name:'', email, phone:'', _isSkip:false }, result.quoteType, result.low, result.high, result.lines, result.roomLabel, result.total, result.prefix, true);
+    } catch(e) { console.error('Contact request failed', e); }
+    if (linkEl) {
+      linkEl.textContent = '✓ Request sent!';
+      setTimeout(() => { linkEl.textContent = "🙋 I'd like to be contacted"; }, 2500);
+    }
+  }
+  window.mqRequestContact = async function() {
+    if (window._mqLeadEmail) {
+      await mqSendContactRequest(window._mqLeadEmail);
+    } else {
+      const overlay = document.getElementById('mq-contact-request-overlay');
+      if (overlay) overlay.classList.add('show');
+    }
+  };
+  window.mqSubmitContactRequest = async function() {
+    const input = document.getElementById('mq-contact-request-input');
+    const email = (input && input.value || '').trim();
+    if (!email || !email.includes('@')) { if (input) input.focus(); return; }
+    window._mqLeadEmail = email;
+    document.getElementById('mq-contact-request-overlay').classList.remove('show');
+    await mqSendContactRequest(email);
   };
   window.mqCloseStickyBar = function() {
     window._mqStickyDismissed = true;
