@@ -109,11 +109,29 @@
     window._mqRangeHigh = (100 + (parseFloat(shop['Quote range high']) || 20)) / 100;
     shop._recordId = shopRecord.id;
 
+    // Free Demo tier: set this here (not just later in renderWidget) because
+    // it needs to exist before shopPhotos gets parsed below, not after.
+    window._mqIsDemoPlan = (shop['Plan']||'') === 'Demo';
+
     // Parse the shop's saved product photos (same JSON field the dashboard's
     // My Products tab and showroom page already read) so the widget can show
     // real thumbnails instead of just text labels for unfamiliar terms.
     let shopPhotos = {};
     try { shopPhotos = shop['Photos'] ? JSON.parse(shop['Photos']) : {}; } catch(e) { shopPhotos = {}; }
+    // Free Demo tier: once the 30-day trial ends, quoting itself stays fully
+    // working (see mqCalcCabinets/mqCalcCountertops/mqCalcBoth — the old
+    // "Calculate is locked" modal was removed on purpose so a Demo shop can
+    // keep using the tool indefinitely), but every item photo disappears in
+    // favor of that item's plain placeholder icon (the same fallback already
+    // used for any item that simply has no photo yet — see the `onerror`
+    // handlers on each thumbnail, and the ⭐ placeholder for specialty items).
+    // Wiping shopPhotos here, at the single source every photoUrl in this
+    // file traces back to, is what makes that cascade everywhere (materials,
+    // doors, hinges, drawers, countertops, trim, tall cabinets, specialty
+    // items) without needing to touch each one individually. The shop's
+    // actual saved photos are untouched in Airtable/the dashboard — this
+    // only affects what the live widget renders while on Demo.
+    if (window._mqIsDemoPlan) shopPhotos = {};
     let shopFeatured = {};
     try { shopFeatured = shop['Featured items'] ? JSON.parse(shop['Featured items']) : {}; } catch(e) { shopFeatured = {}; }
     const shopBadgeLabel = (shop['Badge label'] || '').trim() || 'Best seller';
@@ -4710,14 +4728,6 @@ window.mqTogDrawerConfig=(prefix)=>{
       document.getElementById('mq-lead-overlay').classList.remove('show');
       if(pendingCb){pendingCb(lead);pendingCb=null;}
     };
-    // Free Demo tier: quoting itself is now locked (not just watermarked) —
-    // an expired-trial shop can still be browsed/configured so the widget
-    // doesn't look broken on the shop's site, but hitting any Calculate
-    // button shows this instead of the lead-capture step, so no lead is
-    // ever captured and no numbers are ever revealed for a Demo shop.
-    window.mqShowDemoLockedModal=()=>{
-      document.getElementById('mq-demo-locked-overlay')?.classList.add('show');
-    };
     window.mqShowConsultModal=()=>{
       const shop=window._mqShopData||{};
       const consultUrl=(shop['Consultation link']||'').trim();
@@ -5218,7 +5228,6 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcCabinets=()=>{
-      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       if (!mqValidateInstallQty('c')) return;
       if (!mqValidateNotEmpty('c', calcCabinet('c'))) return;
       window.mqShowLead(async lead=>{
@@ -5245,7 +5254,6 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcCountertops=()=>{
-      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       const hasSurfaces=Object.keys(surfs['ct']).filter(id=>document.getElementById('mqsc-'+id)).length>0;
       if(!hasSurfaces){alert('Please add at least one surface.');return;}
       if (!mqValidateNotEmpty('ct', calcCountertop('ct'))) return;
@@ -5270,7 +5278,6 @@ window.mqTogDrawerConfig=(prefix)=>{
     };
 
     window.mqCalcBoth=()=>{
-      if (window._mqIsDemoPlan) { window.mqShowDemoLockedModal(); return; }
       if (!mqValidateInstallQty('b')) return;
       const dryCab=calcCabinet('b'), dryCt=calcCountertop('b');
       if (!mqValidateNotEmpty('b', { low: dryCab.low+dryCt.low, high: dryCab.high+dryCt.high })) return;
@@ -5851,13 +5858,6 @@ window.mqTogDrawerConfig=(prefix)=>{
           <button class="mq-modal-btn" onclick="mqSubmitQuickEmail()">Send it →</button>
           <button class="mq-modal-skip" onclick="document.getElementById('mq-quick-email-overlay').classList.remove('show')">Cancel</button>
         </div>
-      </div>
-      <div class="mq-overlay" id="mq-demo-locked-overlay">
-        <div class="mq-modal">
-          <p class="mq-modal-title">⚡ Quoting isn't available right now</p>
-          <p class="mq-modal-sub">This shop's free trial has ended, so this tool can't generate estimates at the moment. If this is your business, upgrade to a paid plan from your dashboard to turn quoting back on.</p>
-          <button class="mq-modal-skip" onclick="document.getElementById('mq-demo-locked-overlay').classList.remove('show')">Close</button>
-        </div>
       </div>`;
     while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
   }
@@ -6266,11 +6266,13 @@ window.mqTogDrawerConfig=(prefix)=>{
 
     window._mqShopData=shop;
     window._mqFullData=data; // cached so mqStartNewEstimate can rebuild without refetching
-    // Free Demo tier: full quoting still works, but the widget carries a
-    // visible watermark and always shows MidasQuote's own library photos
-    // instead of any the shop uploaded/linked — see mqInjectDemoWatermark,
-    // mqShowRoomDescription, and mqRefreshMeasureGuide.
-    window._mqIsDemoPlan = (shop['Plan']||'') === 'Demo';
+    // window._mqIsDemoPlan was already set in loadShopData (needed earlier
+    // there, before shopPhotos got parsed) — not re-set here since `shop` is
+    // that same object either way. Free Demo tier: quoting itself still
+    // works fully (no lock on Calculate), the widget just carries a visible
+    // watermark and shows every item's plain placeholder icon instead of any
+    // photo — see mqInjectDemoWatermark, mqShowRoomDescription, and
+    // mqRefreshMeasureGuide for the rest of what Demo affects.
     injectStyles(
       shop['Brand colour']||'#1a1a1a',
       shop['Focal colour'],
