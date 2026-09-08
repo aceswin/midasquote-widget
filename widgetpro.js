@@ -6219,10 +6219,11 @@ window.mqTogDrawerConfig=(prefix)=>{
     // a browsable history so it's never "which one did I give him."
     // ============================================================
 
-    window.mqOpenProposalModal = async function(prefix) {
-      const est = (window._mqLastEstimate || {})[prefix];
-      if (!est || !est.lines || !est.lines.length) { alert('Please calculate an estimate first.'); return; }
-
+    // Shared modal shell for both "Create Proposal" (from a fresh estimate)
+    // and "Edit Proposal" (reopening a saved one from My Proposals) — only
+    // the title differs; #mq-proposal-modal-body is filled in afterward by
+    // mqRenderProposalModalBody() either way.
+    function mqRenderProposalModalShell(titleText) {
       let modal = document.getElementById('mq-proposal-modal');
       if (!modal) {
         modal = document.createElement('div');
@@ -6235,12 +6236,37 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:540px;width:100%;padding:1.75rem;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-          <div style="font-size:18px;font-weight:800;color:#111">📄 Create Proposal</div>
+          <div style="font-size:18px;font-weight:800;color:#111">${titleText}</div>
           <button onclick="mqCloseProposalModal()" style="background:none;border:none;font-size:24px;color:#9ca3af;cursor:pointer;line-height:1">&times;</button>
         </div>
         <div id="mq-proposal-modal-body"><div style="text-align:center;padding:2rem;color:#6b7280">Loading templates...</div></div>
       </div>`;
       modal.style.display = 'flex';
+      return modal;
+    }
+
+    // Turns a saved proposal's stored "Line items" back into the same
+    // {label, cost} array shape the editor works with. Stored as a
+    // JSON-stringified field in Airtable (there's no native array field
+    // type there), but handled defensively in case it ever comes back
+    // already-parsed — and falls back to a single lump-sum line rather than
+    // a blank, broken-looking editor if the field is missing or malformed.
+    function mqParseSavedLineItems(raw, fallbackLabel, fallbackAmt) {
+      if (Array.isArray(raw)) return raw.map(l => ({ label: l.label || '', cost: parseFloat(l.cost) || 0 }));
+      if (typeof raw === 'string' && raw.trim()) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed.map(l => ({ label: l.label || '', cost: parseFloat(l.cost) || 0 }));
+        } catch(e) { console.error('Could not parse this proposal\'s saved line items — falling back to one line', e); }
+      }
+      return [{ label: fallbackLabel || 'Amount', cost: parseFloat(fallbackAmt) || 0 }];
+    }
+
+    window.mqOpenProposalModal = async function(prefix) {
+      const est = (window._mqLastEstimate || {})[prefix];
+      if (!est || !est.lines || !est.lines.length) { alert('Please calculate an estimate first.'); return; }
+
+      mqRenderProposalModalShell('📄 Create Proposal');
 
       // Fetched fresh every time this opens — cheap, and avoids showing a
       // template that was just edited/deleted in the dashboard a minute ago.
@@ -6252,6 +6278,8 @@ window.mqTogDrawerConfig=(prefix)=>{
 
       window._mqProposalState = {
         prefix,
+        editingProposalId: null, // set only by mqEditProposal, below
+        projectType: null,
         templateId: (window._mqProposalTemplates[0] || {}).id || null,
         customerName: '',
         customerAddress: '',
@@ -6263,6 +6291,58 @@ window.mqTogDrawerConfig=(prefix)=>{
         // Editable copy — the original est.lines stays untouched so
         // reopening this modal always starts fresh from the real estimate.
         lines: est.lines.map(l => ({ label: l.label, cost: l.cost })),
+      };
+      mqRenderProposalModalBody();
+    };
+
+    // Reopens a previously-saved proposal (from My Proposals) pre-filled
+    // with everything it was saved with, so it can be tweaked and re-saved
+    // instead of starting over from scratch. Unlike mqOpenProposalModal,
+    // this doesn't depend on a fresh window._mqLastEstimate — a saved
+    // proposal can be edited any time, even in a brand-new visit where
+    // nothing's been calculated yet this session.
+    window.mqEditProposal = async function(id) {
+      const p = (window._mqSavedProposals || []).find(x => x.id === id);
+      if (!p) return;
+      const f = p.fields || {};
+
+      mqCloseProposalsList();
+      mqRenderProposalModalShell('✏️ Edit Proposal');
+
+      try {
+        const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/proposal-templates?shop=${encodeURIComponent(shopToken)}`, {});
+        const j = await res.json();
+        window._mqProposalTemplates = j.templates || [];
+      } catch(e) { console.error('Failed to load proposal templates', e); window._mqProposalTemplates = []; }
+
+      const templates = window._mqProposalTemplates || [];
+      // Matched by name, since only the template's name (not its id) was
+      // saved with the proposal — falls back to the first template if that
+      // one's since been renamed or deleted, same as elsewhere in this file.
+      const matched = templates.find(t => (t.fields['Template name'] || '') === (f['Template used'] || ''));
+      const template = matched || templates[0];
+
+      // Whether the deposit was waived isn't saved as its own flag — inferred
+      // instead: if this template normally charges a deposit but the saved
+      // amount was $0, the most likely explanation is it was waived for
+      // this customer, so the checkbox reflects that back rather than
+      // silently defaulting to "charges a deposit" on the very next save.
+      const templateHasDeposit = !!(template && (template.fields['Deposit value'] || 0) > 0);
+      const savedDeposit = parseFloat(f['Deposit']) || 0;
+
+      window._mqProposalState = {
+        prefix: null,
+        editingProposalId: id,
+        projectType: f['Project type'] || '',
+        templateId: template ? template.id : null,
+        customerName: f['Customer name'] || '',
+        customerAddress: f['Customer address'] || '',
+        customerPhone: f['Customer phone'] || '',
+        jobName: f['Job name'] || '',
+        description: f['Description'] || '',
+        showPrices: f['Show item prices'] !== false,
+        waiveDeposit: templateHasDeposit && savedDeposit === 0,
+        lines: mqParseSavedLineItems(f['Line items'], f['Job name'], f['Subtotal'] || f['Total']),
       };
       mqRenderProposalModalBody();
     };
@@ -6352,7 +6432,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div style="font-size:11px;color:#9ca3af;margin-top:6px">These only actually show on the proposal wherever this template's Body uses the matching {tokens} — set up in the dashboard.</div>
         </div>
 
-        <button onclick="mqGenerateProposal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Generate Proposal →</button>
+        <button onclick="mqGenerateProposal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">${state.editingProposalId ? 'Save Changes →' : 'Generate Proposal →'}</button>
       `;
     }
 
@@ -6696,7 +6776,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         jobName: state.jobName || '',
         description: state.description || '',
         templateUsed: f['Template name'] || '',
-        projectType: est.projectType || '',
+        projectType: state.projectType || est.projectType || '',
         lineItems: state.lines,
         showPrices: !!state.showPrices,
         subtotal, deposit: depositAmt, tax: taxAmt, total,
@@ -6712,6 +6792,23 @@ window.mqTogDrawerConfig=(prefix)=>{
       } catch(e) {
         console.error('Failed to save proposal', e);
         saveFailed = true;
+      }
+
+      // Editing a saved proposal doesn't update it in place (there's no
+      // update endpoint) — it saves a new record above, and once that's
+      // confirmed to have worked, quietly removes the old one so "My
+      // Proposals" doesn't end up with both the before and after version.
+      // If the new save failed, the old copy is deliberately left alone —
+      // better a stale duplicate than losing the only saved copy entirely.
+      if (!saveFailed && state.editingProposalId) {
+        try {
+          await fetchWithRetry(`${CONFIG.PROXY_WORKER}/delete-proposal`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shopToken, proposalId: state.editingProposalId }),
+          });
+          window._mqSavedProposals = (window._mqSavedProposals || []).filter(p => p.id !== state.editingProposalId);
+        } catch(e) {
+          console.error('Saved the edited proposal, but failed to remove the old version', e);
+        }
       }
 
       mqOpenProposalPrintView(printWin, {
@@ -6882,6 +6979,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             ${f['Description'] ? `<div style="font-size:12px;color:#6b7280;margin-top:2px">${(f['Description']||'').replace(/</g,'&lt;')}</div>` : ''}
             <div style="font-size:12px;color:#374151;margin-top:4px">${(f['Project type']||'').replace(/</g,'&lt;')}${f['Project type']&&f['Template used']?' · ':''}${(f['Template used']||'').replace(/</g,'&lt;')} · <strong>${CUR()}${(f['Total']||0).toFixed(2)}</strong></div>
           </div>
+          <button onclick="mqEditProposal('${p.id}')" title="Edit" style="position:absolute;top:9px;right:34px;background:none;border:none;color:#2563eb;font-size:14px;cursor:pointer;padding:2px 4px">✏️</button>
           <button onclick="mqDeleteProposal('${p.id}',event)" title="Delete" style="position:absolute;top:10px;right:10px;background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:2px 4px">✕</button>
         </div>`;
       }).join('');
