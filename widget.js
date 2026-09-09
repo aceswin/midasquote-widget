@@ -2105,8 +2105,8 @@
     // image callouts used to show below it.
     const drawerTierItems = [
       {value:'none', label:'No drawers', icon:'🚫'},
-      {value:'some', label:'Some drawers', icon:'🗄️', photoUrl:'https://widget.midasquote.com/drawer-guide/some-drawers.png'},
-      {value:'mostly', label:'Mostly drawers', icon:'🗄️', photoUrl:'https://widget.midasquote.com/drawer-guide/mostly-drawers.png'},
+      {value:'some', label:'Some drawers', icon:'🗄️', photoUrl:'https://widget.midasquote.com/drawer-guide/some-drawers.jpg'},
+      {value:'mostly', label:'Mostly drawers', icon:'🗄️', photoUrl:'https://widget.midasquote.com/drawer-guide/mostly-drawers.jpg'},
     ];
 
     // Same value indexing as mOpts/dOpts/hingeOpts above (dyn_0, dyn_1... when
