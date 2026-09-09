@@ -164,6 +164,25 @@
     try { categoryRooms = shop['Category rooms'] ? JSON.parse(shop['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
     window._mqCategoryRooms = categoryRooms;
 
+    // Which top-level quote-scope tabs (Both/Cabinets/Countertops) the shop
+    // wants visible — added 2026-09-09, Shop Info's new "🗂️ Estimator tabs"
+    // toggles. Same '{"hidden":[...],"applyToPro":bool}' JSON field widget.js
+    // reads, but MidasQuote Pro only honors it when applyToPro is explicitly
+    // true — unchecked (the default) means Pro keeps showing all three tabs
+    // regardless of what the customer-facing widget has hidden, per Jordan:
+    // "unchecked will keep it showing all."
+    let hiddenTabsRaw = [];
+    try {
+      const parsedHiddenTabs = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null;
+      hiddenTabsRaw = (parsedHiddenTabs && parsedHiddenTabs.applyToPro && Array.isArray(parsedHiddenTabs.hidden)) ? parsedHiddenTabs.hidden : [];
+    } catch(e) { hiddenTabsRaw = []; }
+    const MQ_ALL_TAB_IDS = ['both', 'cabinets', 'countertops'];
+    window._mqHiddenTabs = hiddenTabsRaw.filter(id => MQ_ALL_TAB_IDS.includes(id));
+    // Safety net: the dashboard itself refuses to let a shop hide every tab,
+    // but the widget shouldn't render a completely tab-less, broken page if
+    // corrupt/unexpected data ever got in anyway — fall back to showing all.
+    if (window._mqHiddenTabs.length >= MQ_ALL_TAB_IDS.length) window._mqHiddenTabs = [];
+
     // Per-category "Pick a collection" dropdown label (materials, doors,
     // drawers, crown, valance can each say something different).
     try { window._mqCategoryPickerLabels = shop['Category picker labels'] ? JSON.parse(shop['Category picker labels']) : {}; } catch(e) { window._mqCategoryPickerLabels = {}; }
@@ -2420,6 +2439,73 @@
   // ============================================================
   function wireWidget(data) {
     const { shop, pricing, specs, li, hasDynamic, shopPhotos } = data;
+
+    // Hide whichever top-level tabs (Both/Cabinets/Countertops) the shop has
+    // turned off on Shop Info — added 2026-09-09. Only takes effect here when
+    // the shop also checked "Apply to MidasQuote Pro too" (window._mqHiddenTabs
+    // is already [] otherwise — see loadShopData). Applied as a DOM patch
+    // right after buildWidgetHTML's markup is already in the container,
+    // rather than baked into that huge template itself — same reasoning as
+    // mqInjectDemoWatermark being applied this same way elsewhere in init().
+    // Needs to re-run every time wireWidget does (including
+    // mqStartNewEstimate, which rebuilds container.innerHTML from scratch
+    // each time).
+    (function mqApplyHiddenTabs() {
+      const hidden = window._mqHiddenTabs || [];
+      if (!hidden.length) return;
+      const ALL_TAB_IDS = ['both', 'cabinets', 'countertops'];
+      ALL_TAB_IDS.forEach(id => {
+        if (!hidden.includes(id)) return;
+        const btn = document.querySelector(`.mq-tab[onclick^="mqSwitchTab('${id}'"]`);
+        if (btn) btn.remove();
+      });
+      // .mq-tab is flex:1 in its flex:flex .mq-tab-bar. With 2 tabs left
+      // that's exactly the 50/50 split Jordan wants, so it's left alone —
+      // no override needed. With only 1 tab left, flex:1 would stretch it
+      // to the full width instead (tried and rejected — looked like a
+      // giant single bar). Rather than shrinking that lone tab down to its
+      // own natural size (also tried and rejected — looked cramped/
+      // off-balance against the rest of the widget), keep it at the same
+      // 50/50 width it'd have alongside a second tab, and fill that other
+      // half with an inert, unlabeled placeholder pill — same shape as a
+      // real tab, just blank and grey, so the bar still reads as a normal
+      // two-pill row instead of one oversized button.
+      const visibleCount = ALL_TAB_IDS.length - hidden.length;
+      if (visibleCount === 1) {
+        const tabBar = document.querySelector('.mq-tab-bar');
+        if (tabBar) {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'mq-tab mq-tab-placeholder';
+          placeholder.setAttribute('aria-hidden', 'true');
+          placeholder.style.cssText = 'cursor:default;background:#f3f4f6;border-color:#f3f4f6;box-shadow:none;pointer-events:none';
+          tabBar.appendChild(placeholder);
+        }
+      }
+      // The "Get full project quote" upsell inside the Cabinets/Countertops
+      // tabs only makes sense when the Both tab still exists to send someone
+      // to — remove it rather than leave a dead link to a tab with no button.
+      if (hidden.includes('both')) {
+        document.querySelectorAll('.mq-cta-row').forEach(row => {
+          if (row.querySelector(`[onclick^="mqSwitchTab('both'"]`)) row.remove();
+        });
+      }
+      const firstVisible = ALL_TAB_IDS.find(id => !hidden.includes(id));
+      const activeContent = document.querySelector('.mq-tab-content.active');
+      const activeContentId = activeContent ? activeContent.id.replace('mq-tab-', '') : null;
+      // If the tab that would normally default to active just got hidden,
+      // move "active" over to whichever tab is now first in line instead —
+      // otherwise the customer lands on a quote form with no tab button
+      // highlighting it (or, for Both specifically, no button at all).
+      if (activeContentId && hidden.includes(activeContentId) && firstVisible) {
+        document.querySelectorAll('.mq-tab-content').forEach(t => t.classList.remove('active'));
+        const newContent = document.getElementById('mq-tab-' + firstVisible);
+        if (newContent) newContent.classList.add('active');
+        const newBtn = document.querySelector(`.mq-tab[onclick^="mqSwitchTab('${firstVisible}'"]`);
+        if (newBtn) newBtn.classList.add('active');
+        window._mqActiveTabPrefix = firstVisible === 'both' ? 'b' : (firstVisible === 'cabinets' ? 'c' : 'ct');
+      }
+    })();
+
     // Exposed globally so the sticky estimate bar (which lives outside this
     // closure — wireWidget runs fresh on every render/new estimate) can call
     // the exact same pure calculation functions Calculate itself uses, for

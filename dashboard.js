@@ -407,14 +407,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-update-roundup';
+  const MQ_LATEST_ANNOUNCEMENT = 'sep2026-update-roundup';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p style="margin-bottom:14px"><strong>Live-updating estimates</strong> — swap a door, material, or countertop and watch the whole estimate update instantly — not just the sticky total at the bottom, the full itemized breakdown too. No need to hit Calculate again to see it reflect your latest change.</p>
-      <p style="margin-bottom:14px"><strong>Email me a copy</strong> — customers can now email themselves their current estimate anytime, right from the sticky bar. Already gave their email earlier? It sends instantly. Skipped it? A quick one-field prompt asks just for that, nothing more.</p>
-      <p style="margin-bottom:14px"><strong>Smarter price badges</strong> — $/$$/$$$ badges now reflect real standing within each collection and category, instead of being thrown off by unrelated pricier (or cheaper) items elsewhere in your catalog.</p>
-      <p style="margin-bottom:14px"><strong>Best seller badges</strong> — mark your top items (any door, material, drawer, countertop, or specialty item) with an eye-catching badge right on the widget. Customize the wording ("Best seller," "Our pick," whatever fits) and the color, both from the top of My Products — change either one later and every already-marked item updates automatically, no need to re-mark anything.</p>
+      <p style="margin-bottom:14px"><strong>Show or hide widget tabs</strong> — choose exactly which quote tabs your customers see: Full project quote, Cabinets only, and Countertops only. Turn any of them off from Shop Info → 🗂️ Estimator tabs, and whatever's left automatically fills the space. There's also a checkbox to apply the same choice to MidasQuote Pro, if you use it in-store.</p>
+      <p style="margin-bottom:14px"><strong>Financing, front and center</strong> — remind customers financing is an option right on their quote. Turn on the "Financing available" badge from Shop Info → 💳 Financing & extras, add a pre-approval link so they can apply straight away, and — if you add an interest rate and term — the badge will even show an estimated monthly payment. Set a minimum project amount too, so that number never shows up looking awkwardly small on a low-end quote.</p>
       <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
       <p style="font-size:13px;color:#4b5563;line-height:1.6">Mass price editing — update the price on multiple same-priced items all at once — and quick price edits right from the Pricing dashboard, no need to open each item individually.</p>
     `,
@@ -1029,6 +1027,40 @@ window.logoutMember = async function () {
                 </div>
                 <div class="mq-toggle on" id="mq-showroom-toggle" onclick="mqToggleShowroom()"></div>
               </div>
+              </div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('tabs')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-tabs-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                🗂️ Estimator tabs
+              </div>
+              <div id="mq-shopsec-tabs-body" style="display:none">
+              <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose which quote tabs show on your widget. Whatever's left automatically shifts over to fill the space — at least one tab must stay visible.</div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show "Full project quote" tab</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Cabinets + countertops together, in one combined quote</div>
+                </div>
+                <div class="mq-toggle on" id="mq-tab-both-toggle" onclick="mqToggleWidgetTab('both')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show "Cabinets only" tab</div>
+                </div>
+                <div class="mq-toggle on" id="mq-tab-cabinets-toggle" onclick="mqToggleWidgetTab('cabinets')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show "Countertops only" tab</div>
+                </div>
+                <div class="mq-toggle on" id="mq-tab-countertops-toggle" onclick="mqToggleWidgetTab('countertops')"></div>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer">
+                <input type="checkbox" id="mq-tabs-applypro-toggle" onchange="mqToggleWidgetTabsApplyPro(this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+                Apply to MidasQuote Pro too
+              </label>
+              <div class="mq-hint" style="display:block;margin-top:4px">Unchecked, MidasQuote Pro always keeps showing all three tabs regardless of what's hidden above.</div>
               </div>
             </div>
           </div>
@@ -2857,6 +2889,23 @@ window.logoutMember = async function () {
     set('mq-financing-apr', f['Financing APR'] != null ? f['Financing APR'] : '');
     set('mq-financing-term', f['Financing term months'] != null ? f['Financing term months'] : '');
     set('mq-financing-min', f['Financing minimum amount'] != null ? f['Financing minimum amount'] : '');
+    // Estimator tabs — 'Hidden widget tabs' is {"hidden":[...],"applyToPro":bool}.
+    // A tab's toggle is "on" (visible) unless its id is in the hidden list —
+    // default state, for shops that have never touched this, is all three on.
+    (function() {
+      let tabsCfg = { hidden: [], applyToPro: false };
+      try {
+        const parsed = f['Hidden widget tabs'] ? JSON.parse(f['Hidden widget tabs']) : null;
+        if (parsed && Array.isArray(parsed.hidden)) tabsCfg.hidden = parsed.hidden;
+        if (parsed && parsed.applyToPro) tabsCfg.applyToPro = true;
+      } catch(e) { /* keep defaults */ }
+      ['both','cabinets','countertops'].forEach(id => {
+        const t = el('mq-tab-' + id + '-toggle');
+        if (t) t.classList.toggle('on', !tabsCfg.hidden.includes(id));
+      });
+      const applyProChk = el('mq-tabs-applypro-toggle');
+      if (applyProChk) applyProChk.checked = tabsCfg.applyToPro;
+    })();
     const notifyEveryToggle = el('mq-notify-every-toggle');
     if (notifyEveryToggle) {
       notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
@@ -5938,6 +5987,54 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRec.fields['Show showroom'] = !isOn ? 'Show' : 'Hide';
       showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
+  };
+
+  // Estimator tabs (widget's Both/Cabinets/Countertops top-level tabs) —
+  // saved together as one JSON field so the "Apply to MidasQuote Pro too"
+  // checkbox always travels with the hidden list itself: 'Hidden widget
+  // tabs' = {"hidden":["cabinets",...], "applyToPro": bool}. widget.js
+  // always honors .hidden; widgetpro.js only honors it when .applyToPro
+  // is true (default/unchecked = Pro always shows all three regardless).
+  window.mqToggleWidgetTab = async function(tabId) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const toggle = el('mq-tab-' + tabId + '-toggle');
+    if (!toggle) return;
+    const isOn = toggle.classList.contains('on');
+    const willBeOn = !isOn;
+    const ALL_TAB_IDS = ['both', 'cabinets', 'countertops'];
+    if (!willBeOn) {
+      // Jordan: "they should have to show one no matter what" — block
+      // turning off the last remaining visible tab rather than letting the
+      // widget end up with nothing to show.
+      const stillOnCount = ALL_TAB_IDS.filter(id => id === tabId ? false : (el('mq-tab-' + id + '-toggle')?.classList.contains('on'))).length;
+      if (stillOnCount === 0) {
+        showMsg('mq-shop-msg', 'At least one estimator tab has to stay visible.', 'error');
+        return;
+      }
+    }
+    toggle.classList.toggle('on', willBeOn);
+    const hidden = ALL_TAB_IDS.filter(id => !(el('mq-tab-' + id + '-toggle')?.classList.contains('on')));
+    const applyToPro = !!(el('mq-tabs-applypro-toggle')?.checked);
+    try {
+      const payload = JSON.stringify({ hidden, applyToPro });
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
+      shopRec.fields['Hidden widget tabs'] = payload;
+      showMsg('mq-shop-msg', willBeOn ? `✓ "${tabId}" tab shown on widget.` : `✓ "${tabId}" tab hidden from widget.`);
+    } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  };
+  window.mqToggleWidgetTabsApplyPro = async function(checked) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const chk = el('mq-tabs-applypro-toggle');
+    const ALL_TAB_IDS = ['both', 'cabinets', 'countertops'];
+    const hidden = ALL_TAB_IDS.filter(id => !(el('mq-tab-' + id + '-toggle')?.classList.contains('on')));
+    try {
+      const payload = JSON.stringify({ hidden, applyToPro: checked });
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
+      shopRec.fields['Hidden widget tabs'] = payload;
+      showMsg('mq-shop-msg', checked ? '✓ Hidden tabs now also apply to MidasQuote Pro.' : '✓ MidasQuote Pro will show all tabs again.');
+    } catch(e) { if (chk) chk.checked = !checked; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
 
   // ============================================================
