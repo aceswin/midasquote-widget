@@ -271,13 +271,35 @@ let wizardBaseline = null;
   }
 
   // Derive baseline rates from existing lineItems for mini-wizard math
+  //
+  // "Baseline" used to be purely inferred — whichever record in a category
+  // happened to have the lowest Sort order. That broke the moment a shop
+  // single-added enough new materials/doors/hinges (the "+ Add" / "+Add
+  // batch" features number a new row by counting existing rows in that
+  // category, with no idea what number the original Pricing Setup Wizard
+  // used) — a later addition could easily land on a lower Sort order than
+  // the shop's real baseline and silently steal its spot, which is exactly
+  // what happened on Muskoka Cabinets' shop (2026-09-09): a single-added
+  // hinge, and then Plywood, both out-sorted the real baseline and got
+  // quoted against for new door styles instead of it.
+  //
+  // Fixed by pinning baseline explicitly via the "Is baseline" checkbox
+  // (set on the wizard's baseline rows when the wizard runs — see
+  // mqphFinishWizard — and backfilled for existing shops by
+  // migrateBaselinePins()), so it no longer depends on numbering staying
+  // consistent between two different features. Sort order is kept only as
+  // a fallback for a shop that hasn't been migrated yet / never ran the
+  // wizard, so this can't change anything for a shop that was never
+  // affected by the bug above.
   function getBaselineRates() {
     const materials = getByCategory('material');
     const doors     = getByCategory('door');
     const hinges    = getByCategory('hinge');
 
-    // Baseline material = first material (Sort order 1 = set in wizard as baseline)
-    const blMatName = materials[0]?.fields['Name']?.replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() || '';
+    // Baseline material = whichever material is pinned via "Is baseline",
+    // else fall back to the lowest Sort order (old behavior).
+    const pinnedMat = materials.find(r => r.fields['Is baseline']);
+    const blMatName = (pinnedMat || materials[0])?.fields['Name']?.replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() || '';
 
     // Find uppers + bases rates for baseline material
     const blUpperRec = lineItems.find(r => r.fields &&
@@ -292,13 +314,13 @@ let wizardBaseline = null;
     const blUpperRate = blUpperRec?.fields['Rate'] || 0;
     const blBaseRate  = blBaseRec?.fields['Rate']  || 0;
 
-    // Baseline door = first door style (Sort order 1)
-    const blDoor     = doors[0];
+    // Baseline door = pinned door, else first door style (Sort order)
+    const blDoor     = doors.find(r => r.fields['Is baseline']) || doors[0];
     const blDoorRate = blDoor?.fields['Rate'] || 0;
     const blDoorName = blDoor?.fields['Name'] || '';
 
-    // Baseline hinge = first hinge (rate 0)
-    const blHinge     = hinges[0];
+    // Baseline hinge = pinned hinge, else first hinge (Sort order)
+    const blHinge     = hinges.find(r => r.fields['Is baseline']) || hinges[0];
     const blHingeName = blHinge?.fields['Name'] || '';
 
     return { blMatName, blUpperRate, blBaseRate, blUpperPrice:blUpperRate*4, blBasePrice:blBaseRate*4, blDoorName, blDoorRate, blHingeName };
@@ -581,7 +603,7 @@ window.mqphGoToWizard = function() {
         const p = parseFloat(document.getElementById('mqph-bl-u-price')?.value||0);
         if (p>0&&wizardBaseline) {
           wizardBaseline.upperPrice=p; wizardBaseline.upperRate=p/4;
-          wizardItems.push({ name:wizardBaseline.matName+' — uppers', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline box rate uppers', active:true });
+          wizardItems.push({ name:wizardBaseline.matName+' — uppers', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline box rate uppers', active:true, isBaseline:true });
         }
       }
     });
@@ -608,7 +630,7 @@ window.mqphGoToWizard = function() {
         const p = parseFloat(document.getElementById('mqph-bl-b-price')?.value||0);
         if (p>0&&wizardBaseline) {
           wizardBaseline.basePrice=p; wizardBaseline.baseRate=p/4;
-          wizardItems.push({ name:wizardBaseline.matName+' — bases', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline box rate bases', active:true });
+          wizardItems.push({ name:wizardBaseline.matName+' — bases', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline box rate bases', active:true, isBaseline:true });
         }
       }
     });
@@ -678,9 +700,9 @@ window.mqphGoToWizard = function() {
         if (p>0&&wizardBaseline) {
           wizardBaseline.baseWithDoorPrice = p;
           const u = (p - wizardBaseline.basePrice) / 4;
-          wizardItems.push({ name:wizardBaseline.doorName, category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Baseline door style', active:true });
+          wizardItems.push({ name:wizardBaseline.doorName, category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Baseline door style', active:true, isBaseline:true });
           if (wizardBaseline.hingeName) {
-            wizardItems.push({ name:wizardBaseline.hingeName, category:'hinge', rate:0, unit:'per lin ft upcharge', description:'Baseline hinge — included in door price', active:true });
+            wizardItems.push({ name:wizardBaseline.hingeName, category:'hinge', rate:0, unit:'per lin ft upcharge', description:'Baseline hinge — included in door price', active:true, isBaseline:true });
           }
         }
       }
@@ -1142,7 +1164,7 @@ window.mqphGoToWizard = function() {
         await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:item.name, Category:item.category,
           Rate:item.rate, Unit:item.unit, Description:item.description||'',
-          Active:true, 'Sort order':i+1,
+          Active:true, 'Sort order':i+1, 'Is baseline': item.isBaseline === true,
         });
       } catch(e) { console.warn('Create failed:',item.name,e); }
     }
@@ -1828,7 +1850,7 @@ window.mqphGoToWizard = function() {
             ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
                 <div style="flex:1;min-width:0">
-                  <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+                  <div class="mqph-row-name">${r.fields['Name']||'—'}${['material','door','hinge'].includes(cat) ? (r.fields['Is baseline'] ? ' <span title="New items in this category are priced as an upcharge against this one" style="font-size:11px;font-weight:600;color:#92400e">⭐ Baseline</span>' : ` <button class="mqph-btn-ghost" style="font-size:11px;padding:0;color:#9ca3af;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit" onclick="mqphSetAsBaseline('${cat}','${r.id}')">☆ Set as baseline</button>`) : ''}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
                 <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : CUR() +(r.fields['Rate']||0).toLocaleString()}</div>
@@ -2538,6 +2560,94 @@ window.mqphGoToWizard = function() {
       } catch(e) { /* non-fatal — leave this material to migrate next load */ }
     }
   }
+
+  // One-time-per-shop backfill for the explicit "Is baseline" pin (see the
+  // big comment above getBaselineRates() for why this exists). For each of
+  // material/door/hinge: if nothing in that category is pinned yet, look
+  // for the row(s) whose Description carries the exact marker text the
+  // Pricing Setup Wizard writes only on its baseline rows, and pin those.
+  // If a category has no such marker (shop never ran the wizard) or
+  // already has a pin (already migrated, or a shop owner set one manually
+  // via ⭐ Set as baseline), it's left alone — getBaselineRates() keeps
+  // falling back to Sort order for anything unpinned, so this can only
+  // ever correct a category, never change one that was already fine.
+  const BASELINE_MARKERS = { material:'Baseline box rate', door:'Baseline door style', hinge:'Baseline hinge' };
+  async function migrateBaselinePins() {
+    for (const cat of Object.keys(BASELINE_MARKERS)) {
+      const rows = lineItems.filter(r => r.fields && r.fields['Category'] === cat);
+      if (rows.some(r => r.fields['Is baseline'])) continue; // already pinned — never overwrite
+      const marker = BASELINE_MARKERS[cat];
+      const candidates = rows.filter(r => (r.fields['Description']||'').startsWith(marker));
+      if (!candidates.length) continue; // no wizard-baseline marker found — leave unpinned, falls back to Sort order
+      for (const rec of candidates) {
+        try {
+          await atUpdate(LINE_ITEMS_TABLE, rec.id, {'Is baseline': true});
+          rec.fields['Is baseline'] = true;
+        } catch(e) { /* non-fatal — leave this row to migrate next load */ }
+      }
+    }
+  }
+
+  // Lets a shop owner explicitly re-pin baseline themselves (⭐ button next
+  // to each material/door/hinge row) instead of needing a dev fix if it
+  // ever drifts again. For material, both the "— uppers" and "— bases"
+  // rows of the chosen material are pinned together (and the old
+  // baseline's rows, if any, are unpinned) since a material's baseline
+  // status is really about the material as a whole, not one row of it.
+  //
+  // Material and door are safe to just re-pin with no other changes:
+  // every material's Rate is its own independent, absolute box price (not
+  // stored relative to baseline at all), and every door style's Rate is
+  // an upcharge over a bare box (also independent of which door happens
+  // to be pinned baseline) — so no other row's Rate needs to move.
+  //
+  // Hinge is genuinely different, and this is the one category where
+  // Jordan was right to ask "won't this need to realign everything?":
+  // the baseline hinge's Rate is hard-set to 0 by the wizard (its cost is
+  // already folded into the baseline door/box price, so it's "included,"
+  // not charged separately — see the wizard's Step 5 push, `rate:0`), and
+  // every OTHER hinge's Rate is an upcharge over that $0. Just moving the
+  // pin without touching Rate would leave the OLD baseline hinge stuck at
+  // $0 forever (customers would get it for free) and the NEW baseline
+  // hinge stuck at its old nonzero upcharge (customers would still get
+  // charged for the "included" hinge) — so every hinge's Rate is shifted
+  // by the new baseline's own (pre-shift) Rate: that zeroes out the new
+  // baseline and preserves the actual price relationships between every
+  // hinge exactly as they were, just re-anchored to the new $0 point.
+  window.mqphSetAsBaseline = async function(cat, recId) {
+    const rec = lineItems.find(r => r.id === recId);
+    if (!rec) return;
+    const catRows = lineItems.filter(r => r.fields && r.fields['Category'] === cat);
+    let newBaselineRows;
+    if (cat === 'material') {
+      const baseName = (rec.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim();
+      newBaselineRows = catRows.filter(r => (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() === baseName);
+    } else {
+      newBaselineRows = [rec];
+    }
+
+    if (cat === 'hinge') {
+      const shift = rec.fields['Rate'] || 0;
+      if (shift !== 0) {
+        const preview = catRows.filter(h => h.id !== rec.id).slice(0,3)
+          .map(h => `${h.fields['Name']}: ${CUR()}${(h.fields['Rate']||0).toFixed(2)} → ${CUR()}${(((h.fields['Rate']||0)-shift)).toFixed(2)}`).join('\n');
+        const ok = confirm(`"${rec.fields['Name']}" currently costs ${CUR()}${shift.toFixed(2)}/ft more than your current baseline hinge. Making it the new baseline means it becomes the "included, no extra charge" hinge — so every hinge's price shifts by ${CUR()}${shift.toFixed(2)}/ft to keep the actual price differences between hinges the same.\n\nFor example:\n${preview}${catRows.length>4?'\n…':''}\n\nContinue?`);
+        if (!ok) return;
+        for (const h of catRows) {
+          const newRate = Math.round(((h.fields['Rate']||0) - shift) * 100) / 100;
+          try { await atUpdate(LINE_ITEMS_TABLE, h.id, {Rate:newRate}); h.fields['Rate'] = newRate; }
+          catch(e) { console.error('Failed to reprice hinge', h.id, e); }
+        }
+      }
+    }
+
+    const toUnpin = catRows.filter(r => r.fields['Is baseline'] && !newBaselineRows.some(nb => nb.id === r.id));
+    try {
+      for (const r of toUnpin) { await atUpdate(LINE_ITEMS_TABLE, r.id, {'Is baseline': false}); r.fields['Is baseline'] = false; }
+      for (const r of newBaselineRows) { await atUpdate(LINE_ITEMS_TABLE, r.id, {'Is baseline': true}); r.fields['Is baseline'] = true; }
+    } catch(e) { console.error('Failed to update baseline pin', e); }
+    await loadAndRender();
+  };
 
   function buildCTHtml() {
     const materials = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&!(r.fields['Description']||'').includes('type:backsplash')&&!(r.fields['Description']||'').includes('type:cutout'))
@@ -3798,6 +3908,7 @@ window.mqphGoToWizard = function() {
   // LOAD AND RENDER
   // ============================================================
   let ctMigrationDone = false;
+  let baselinePinMigrationDone = false;
 
   async function loadAndRender() {
     const container=document.getElementById('mq-pricing-helper-v2');
@@ -3807,6 +3918,10 @@ window.mqphGoToWizard = function() {
     if (!ctMigrationDone) {
       ctMigrationDone = true; // set before awaiting so a second call can't race in
       await migrateCTPricing();
+    }
+    if (!baselinePinMigrationDone) {
+      baselinePinMigrationDone = true; // set before awaiting so a second call can't race in
+      await migrateBaselinePins();
     }
     container.innerHTML=buildEditorHTML();
     mqphRestoreExpandedCats();
