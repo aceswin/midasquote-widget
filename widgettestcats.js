@@ -2606,15 +2606,27 @@
         const btn = document.querySelector(`.mq-tab[onclick^="mqSwitchTab('${id}'"]`);
         if (btn) btn.remove();
       });
-      // .mq-tab is flex:1 in its flex:flex .mq-tab-bar, so with fewer
-      // buttons left in the row each one stretches to fill the gap — a
-      // single remaining tab ends up spanning the full widget width. Jordan
-      // asked for the opposite: whatever's left should stay its original
-      // size and just line up on the left, not balloon to fill the space.
-      const tabBar = document.querySelector('.mq-tab-bar');
-      if (tabBar) {
-        tabBar.style.justifyContent = 'flex-start';
-        tabBar.querySelectorAll('.mq-tab').forEach(btn => { btn.style.flex = '0 1 auto'; });
+      // .mq-tab is flex:1 in its flex:flex .mq-tab-bar. With 2 tabs left
+      // that's exactly the 50/50 split Jordan wants, so it's left alone —
+      // no override needed. With only 1 tab left, flex:1 would stretch it
+      // to the full width instead (tried and rejected — looked like a
+      // giant single bar). Rather than shrinking that lone tab down to its
+      // own natural size (also tried and rejected — looked cramped/
+      // off-balance against the rest of the widget), keep it at the same
+      // 50/50 width it'd have alongside a second tab, and fill that other
+      // half with an inert, unlabeled placeholder pill — same shape as a
+      // real tab, just blank and grey, so the bar still reads as a normal
+      // two-pill row instead of one oversized button.
+      const visibleCount = ALL_TAB_IDS.length - hidden.length;
+      if (visibleCount === 1) {
+        const tabBar = document.querySelector('.mq-tab-bar');
+        if (tabBar) {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'mq-tab mq-tab-placeholder';
+          placeholder.setAttribute('aria-hidden', 'true');
+          placeholder.style.cssText = 'cursor:default;background:#f3f4f6;border-color:#f3f4f6;box-shadow:none;pointer-events:none';
+          tabBar.appendChild(placeholder);
+        }
       }
       // The "Get full project quote" upsell inside the Cabinets/Countertops
       // tabs only makes sense when the Both tab still exists to send someone
@@ -6463,7 +6475,6 @@ window.mqTogDrawerConfig=(prefix)=>{
   init();
   mqInitMobileFontFix();
   mqInitBottomBounceAutoOpen();
-
 
 
 })();
