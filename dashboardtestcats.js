@@ -291,12 +291,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     products: {
       title: 'My Products',
       body: `
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:0 0 8px">📸 Photos</h4>
         <p>Add real photos for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon.</p>
-        <p>Don't have your own photo for something? Many common items already have one of our own curated photos ready to use — just pick "Choose from library" instead of uploading your own. No need to go find or shoot a photo for every single item yourself.</p>
-        <p>Every category starts collapsed — click any category's header to open just that one. With a lot of items configured, this keeps the page manageable.</p>
-        <p>When a customer taps a photo to zoom in on the widget, they can swipe left/right to move through the rest of that same group (e.g. every door style, or every item in one specialty category) without closing and reopening — no setup needed here, it just works automatically for any photo uploaded on this tab.</p>
-        <p>You can also control which project types each item shows up for right from here — the same setting as on the Specialty Items tab, just accessible from both places.</p>
-        <p><strong>Groups</strong> — in Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
+        <p>Don't have your own photo for something? Many common items already have one of our own curated photos ready to use — just pick "Choose from library" instead of uploading your own.</p>
+        <p>Every category starts collapsed — click any category's header to open just that one. When a customer taps a photo to zoom in on the widget, they can swipe left/right through the rest of that same group automatically — no setup needed here.</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🙈 Which project types see each item</h4>
+        <p><strong>One item at a time:</strong> every item has its own project-type checkboxes right here — the same setting as on the Specialty Items tab. Uncheck a type on that item and it's hidden just for that type.</p>
+        <p><strong>A whole category at once:</strong> at the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category is now hidden for those types in one click, no need to touch them individually. For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically. You can still give one item its own exception afterward by unchecking or rechecking just that item's own project types.</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Groups</h4>
+        <p>In Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
       `
     },
     showroom: {
@@ -513,9 +518,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   };
 
   // Shown exactly once per shop, the first time they land on the My
-  // Products tab — explains that items can be removed per project type,
-  // and specifically warns about Box Materials/Door Styles/Drawer
-  // Configurations being linked (same three categories as
+  // Products tab — leads with the tab's main purpose (adding photos, your
+  // own upload or our library), then covers that items can be removed per
+  // project type, and specifically warns about Box Materials/Door
+  // Styles/Drawer Configurations being linked (same three categories as
   // LINKED_CABINET_CATS below). Same dismiss-once-on-the-shop-record
   // pattern as the other first-visit popups.
   window.mqShowProductsTipsModal = function() {
@@ -531,7 +537,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="font-size:40px;margin-bottom:12px">📦</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
-          You can remove any item from any project type here — just uncheck it under that item's project types.
+          <strong>This is where you add photos</strong> for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon. Click <em>"📤 Upload a photo"</em> on any item to use your own, or click <em>"📷 Choose from library"</em> to pick one of our curated photos instead — no need to find or shoot a photo yourself for every item.
+          <br><br>
+          You can also remove any item from any project type here — just uncheck it under that item's project types.
+          <br><br>
+          Want to remove a whole section at once instead? Each category (like Box Materials) has its own control at the top that starts out reading <strong>"Visible for all project types"</strong> — click it open, uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, hiding every item in that category for it in one click. For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new materials priced.
           <br><br>
           One thing to know: <strong>Box Materials, Door Styles, and Drawer Configurations are connected.</strong> Remove one of these from a project type, and all three come out together — they always work as a set for cabinet pricing, so there's no way to keep just one.
           <br><br>
@@ -1006,6 +1016,11 @@ window.logoutMember = async function () {
                   </div>
                 </div>
                 <span class="mq-hint" style="display:block;margin-top:8px">Enter both and your widget will show customers an estimated monthly payment next to the financing badge (e.g. "as low as $123/mo – $155/mo"). Leave either blank to just show the plain badge with no number.</span>
+                <div class="mq-field" style="margin-top:12px;margin-bottom:0">
+                  <label class="mq-label">Minimum project amount to show payment <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+                  <input type="number" id="mq-financing-min" step="1" min="0" placeholder="e.g. 3000"/>
+                  <span class="mq-hint">Only show the monthly payment when the LOW end of the quote is at least this much — so a range never shows a small-looking number on its low side. Smaller quotes still show the plain "Financing available" badge with no number attached. Leave blank to always show the payment whenever rate and term are set.</span>
+                </div>
               </div>
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
@@ -1014,6 +1029,40 @@ window.logoutMember = async function () {
                 </div>
                 <div class="mq-toggle on" id="mq-showroom-toggle" onclick="mqToggleShowroom()"></div>
               </div>
+              </div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('tabs')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-tabs-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                🗂️ Estimator tabs
+              </div>
+              <div id="mq-shopsec-tabs-body" style="display:none">
+              <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose which quote tabs show on your widget. Whatever's left automatically shifts over to fill the space — at least one tab must stay visible.</div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show "Full project quote" tab</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Cabinets + countertops together, in one combined quote</div>
+                </div>
+                <div class="mq-toggle on" id="mq-tab-both-toggle" onclick="mqToggleWidgetTab('both')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show "Cabinets only" tab</div>
+                </div>
+                <div class="mq-toggle on" id="mq-tab-cabinets-toggle" onclick="mqToggleWidgetTab('cabinets')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show "Countertops only" tab</div>
+                </div>
+                <div class="mq-toggle on" id="mq-tab-countertops-toggle" onclick="mqToggleWidgetTab('countertops')"></div>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer">
+                <input type="checkbox" id="mq-tabs-applypro-toggle" onchange="mqToggleWidgetTabsApplyPro(this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+                Apply to MidasQuote Pro too
+              </label>
+              <div class="mq-hint" style="display:block;margin-top:4px">Unchecked, MidasQuote Pro always keeps showing all three tabs regardless of what's hidden above.</div>
               </div>
             </div>
           </div>
@@ -1121,6 +1170,44 @@ window.logoutMember = async function () {
                         <div style="font-size:11px;color:#6b7280;margin-top:2px">The quote widget itself — required for it to appear</div>
                       </div>
                     </label>
+                  </div>
+
+                  <!-- Header/trust bar color overrides — mostly matters when a shop is
+                       pasting onto a page with a dark or unusual background, since the
+                       defaults below are tuned to look right on a plain white page. -->
+                  <div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:1.25rem">
+                    <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">🎨 Header &amp; trust bar colors</div>
+                    <div style="font-size:11px;color:#6b7280;margin-bottom:12px">Only matters if you're pasting this onto a page with a dark or unusual background — the defaults already look right on a plain white page. Doesn't touch the widget itself, which has its own colors on the Shop Info tab.</div>
+
+                    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Quote page header</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px">
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Eyebrow text
+                        <input type="color" id="mq-embed-color-eyebrow" value="#b8763a" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Headline
+                        <input type="color" id="mq-embed-color-headline" value="#3d3830" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Paragraph text
+                        <input type="color" id="mq-embed-color-para" value="#5c5650" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">
+                        <span style="display:flex;align-items:center;gap:5px;white-space:nowrap"><input type="checkbox" id="mq-embed-bg-toggle" onchange="mqUpdateEmbedColors()" style="width:13px;height:13px"/> Background</span>
+                        <input type="color" id="mq-embed-color-headerbg" value="#1a1a1a" oninput="mqUpdateEmbedColors()" disabled style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer;opacity:0.4"/>
+                      </label>
+                    </div>
+                    <div style="font-size:10.5px;color:#9ca3af;margin:-8px 0 14px">Leave "Background" unchecked to keep this section see-through, so it just takes on whatever background your own page already has.</div>
+
+                    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Trust bar</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px">
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Background
+                        <input type="color" id="mq-embed-color-trustbg" value="#faf8f5" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6b7280">Text
+                        <input type="color" id="mq-embed-color-trusttext" value="#5c5650" oninput="mqUpdateEmbedColors()" style="width:48px;height:32px;border:1px solid #d1d5db;border-radius:6px;padding:2px;cursor:pointer"/>
+                      </label>
+                    </div>
+
+                    <button class="mq-btn mq-btn-sm" onclick="mqResetEmbedColors()">↩ Reset to defaults</button>
                   </div>
 
                   <!-- Live preview -->
@@ -2803,6 +2890,24 @@ window.logoutMember = async function () {
     set('mq-financing-link', f['Financing link']);
     set('mq-financing-apr', f['Financing APR'] != null ? f['Financing APR'] : '');
     set('mq-financing-term', f['Financing term months'] != null ? f['Financing term months'] : '');
+    set('mq-financing-min', f['Financing minimum amount'] != null ? f['Financing minimum amount'] : '');
+    // Estimator tabs — 'Hidden widget tabs' is {"hidden":[...],"applyToPro":bool}.
+    // A tab's toggle is "on" (visible) unless its id is in the hidden list —
+    // default state, for shops that have never touched this, is all three on.
+    (function() {
+      let tabsCfg = { hidden: [], applyToPro: false };
+      try {
+        const parsed = f['Hidden widget tabs'] ? JSON.parse(f['Hidden widget tabs']) : null;
+        if (parsed && Array.isArray(parsed.hidden)) tabsCfg.hidden = parsed.hidden;
+        if (parsed && parsed.applyToPro) tabsCfg.applyToPro = true;
+      } catch(e) { /* keep defaults */ }
+      ['both','cabinets','countertops'].forEach(id => {
+        const t = el('mq-tab-' + id + '-toggle');
+        if (t) t.classList.toggle('on', !tabsCfg.hidden.includes(id));
+      });
+      const applyProChk = el('mq-tabs-applypro-toggle');
+      if (applyProChk) applyProChk.checked = tabsCfg.applyToPro;
+    })();
     const notifyEveryToggle = el('mq-notify-every-toggle');
     if (notifyEveryToggle) {
       notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
@@ -2819,7 +2924,7 @@ window.logoutMember = async function () {
       'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
       'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
       'mq-shop-logo','mq-shop-disclaimer','mq-shop-projecttype-title','mq-shop-projecttype-hint','mq-shop-consult-link',
-      'mq-shop-consult-email','mq-financing-link','mq-financing-apr','mq-financing-term',
+      'mq-shop-consult-email','mq-financing-link','mq-financing-apr','mq-financing-term','mq-financing-min',
       'mq-shop-focalcolor','mq-shop-boxbordercolor','mq-shop-boxbgcolor','mq-shop-boxtextcolor'
     ];
     shopFieldIds.forEach(id => {
@@ -3138,6 +3243,41 @@ window.logoutMember = async function () {
     let categoryRooms = {};
     try { categoryRooms = f['Category rooms'] ? JSON.parse(f['Category rooms']) : {}; } catch(e) { categoryRooms = {}; }
     window._mqCategoryRooms = categoryRooms;
+
+    // Default for any shop that has NEVER touched category-level room
+    // hiding at all — checked via the 'material' key being entirely absent
+    // from the object, not just falsy/empty, since an empty array there
+    // means the shop DID interact with this and deliberately ended up at
+    // "visible everywhere" (see the "all-checked collapses back to []"
+    // comment in applyCategoryRoomChange below) — that choice must never
+    // get silently overwritten by this. Box Materials, Door Styles, and
+    // Drawer Configurations (LINKED_CABINET_CATS — always kept in sync with
+    // each other) start hidden for Refacing, Repainting, and Restaining,
+    // since those three project types reuse the customer's EXISTING
+    // box/doors/drawers rather than pricing new ones — without this, a shop
+    // has to notice and hide all three by hand before their first refacing
+    // quote looks right. This only ever fires once per shop: the moment it
+    // saves, 'material' gets a real key (even if that key is later toggled
+    // back to []), so it can never re-fire or clobber a shop's own later
+    // choice. Deliberately skips bulk-syncing individual items' own
+    // "Visible rooms" fields the way a manual toggle does (mqToggleCategoryRoom
+    // below) — window._mqByCategory isn't populated yet this early in the
+    // page load, and isn't needed anyway: a shop's default line items have
+    // no per-item override yet, so the widget's own fallback rule
+    // (effectiveVisibleRooms in widget.js/widgetpro.js — an item only
+    // inherits the category's hidden list when it has no explicit setting
+    // of its own) already hides them correctly from this category default
+    // alone.
+    if (categoryRooms.material === undefined) {
+      const defaultHiddenRoomIds = ['refacing', 'repainting', 'restaining'].filter(id => rooms.some(r => r.id === id));
+      if (defaultHiddenRoomIds.length) {
+        const seeded = { ...categoryRooms, material: defaultHiddenRoomIds, door: defaultHiddenRoomIds, drawer: defaultHiddenRoomIds };
+        window._mqCategoryRooms = seeded;
+        atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Category rooms': JSON.stringify(seeded) })
+          .then(() => { shop.fields['Category rooms'] = JSON.stringify(seeded); })
+          .catch(e => console.error('Failed to seed default category-room hiding', e));
+      }
+    }
   }
 
   // Tracks which project types are currently expanded, keyed by the room's
@@ -4320,6 +4460,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function renderSpecialty(specs, shopRecord) {
     const container = el('mq-spec-list');
     if (!container) return;
+    // renderSpecialty rebuilds the whole filter bar (project type, category,
+    // search, pro-only) from scratch every time it runs — and it runs after
+    // EVERY add/delete/reorder/category-rename, not just on first load. That
+    // used to silently snap the filters back to "All project types" / "All
+    // categories" / no search each time, so deleting one item while filtered
+    // down to a category meant losing your place and having to re-filter to
+    // delete the next one. Capture whatever's currently set before rebuilding
+    // below, then restore it after — a no-op on first render, since these
+    // elements don't exist yet.
+    const savedFilters = {
+      room: el('mq-spec-tab-filter-room')?.value || '',
+      category: el('mq-spec-tab-filter-category')?.value || '',
+      search: el('mq-spec-tab-filter-search')?.value || '',
+      proOnly: !!el('mq-spec-tab-filter-proonly')?.checked,
+    };
     // Kept in sync so mqAddVariant/mqRemoveVariant/mqSaveVariantField below
     // can find and mutate the right record's Variants JSON in memory
     // without a full reload — renderSpecialty always runs again after any
@@ -4367,7 +4522,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </label>
         </div>
       </div>
-      <div id="mq-spec-catorder-box">${mqCategoryOrderBoxHTML('')}</div>
+      <div id="mq-spec-catorder-box">${mqCategoryOrderBoxHTML(savedFilters.room)}</div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
@@ -4423,6 +4578,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </tbody>
       </table>
       </div>`;
+
+    // Restore whatever filters were set before this re-render, then reapply
+    // them to the freshly-built rows — otherwise the table would show
+    // everything (unfiltered) until the shop owner touched a filter again,
+    // even though the dropdowns themselves now look right.
+    const roomFilterEl = document.getElementById('mq-spec-tab-filter-room');
+    if (roomFilterEl) roomFilterEl.value = savedFilters.room;
+    const categoryFilterEl = document.getElementById('mq-spec-tab-filter-category');
+    if (categoryFilterEl) categoryFilterEl.value = savedFilters.category;
+    const searchFilterEl = document.getElementById('mq-spec-tab-filter-search');
+    if (searchFilterEl) searchFilterEl.value = savedFilters.search;
+    const proOnlyFilterEl = document.getElementById('mq-spec-tab-filter-proonly');
+    if (proOnlyFilterEl) proOnlyFilterEl.checked = savedFilters.proOnly;
+    if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
 
     const tbody = document.getElementById('mq-spec-tbody');
     let dragging = null;
@@ -4738,6 +4907,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Financing link':    gv('mq-financing-link'),
         'Financing APR':     gv('mq-financing-apr') === '' ? null : parseFloat(gv('mq-financing-apr')),
         'Financing term months': gv('mq-financing-term') === '' ? null : parseInt(gv('mq-financing-term'), 10),
+        'Financing minimum amount': gv('mq-financing-min') === '' ? null : parseFloat(gv('mq-financing-min')),
       };
       const currencyChanged = updatedFields['Currency symbol'] !== (shopRec.fields['Currency symbol'] || '$');
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, updatedFields);
@@ -5819,6 +5989,54 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRec.fields['Show showroom'] = !isOn ? 'Show' : 'Hide';
       showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
+  };
+
+  // Estimator tabs (widget's Both/Cabinets/Countertops top-level tabs) —
+  // saved together as one JSON field so the "Apply to MidasQuote Pro too"
+  // checkbox always travels with the hidden list itself: 'Hidden widget
+  // tabs' = {"hidden":["cabinets",...], "applyToPro": bool}. widget.js
+  // always honors .hidden; widgetpro.js only honors it when .applyToPro
+  // is true (default/unchecked = Pro always shows all three regardless).
+  window.mqToggleWidgetTab = async function(tabId) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const toggle = el('mq-tab-' + tabId + '-toggle');
+    if (!toggle) return;
+    const isOn = toggle.classList.contains('on');
+    const willBeOn = !isOn;
+    const ALL_TAB_IDS = ['both', 'cabinets', 'countertops'];
+    if (!willBeOn) {
+      // Jordan: "they should have to show one no matter what" — block
+      // turning off the last remaining visible tab rather than letting the
+      // widget end up with nothing to show.
+      const stillOnCount = ALL_TAB_IDS.filter(id => id === tabId ? false : (el('mq-tab-' + id + '-toggle')?.classList.contains('on'))).length;
+      if (stillOnCount === 0) {
+        showMsg('mq-shop-msg', 'At least one estimator tab has to stay visible.', 'error');
+        return;
+      }
+    }
+    toggle.classList.toggle('on', willBeOn);
+    const hidden = ALL_TAB_IDS.filter(id => !(el('mq-tab-' + id + '-toggle')?.classList.contains('on')));
+    const applyToPro = !!(el('mq-tabs-applypro-toggle')?.checked);
+    try {
+      const payload = JSON.stringify({ hidden, applyToPro });
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
+      shopRec.fields['Hidden widget tabs'] = payload;
+      showMsg('mq-shop-msg', willBeOn ? `✓ "${tabId}" tab shown on widget.` : `✓ "${tabId}" tab hidden from widget.`);
+    } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  };
+  window.mqToggleWidgetTabsApplyPro = async function(checked) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const chk = el('mq-tabs-applypro-toggle');
+    const ALL_TAB_IDS = ['both', 'cabinets', 'countertops'];
+    const hidden = ALL_TAB_IDS.filter(id => !(el('mq-tab-' + id + '-toggle')?.classList.contains('on')));
+    try {
+      const payload = JSON.stringify({ hidden, applyToPro: checked });
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
+      shopRec.fields['Hidden widget tabs'] = payload;
+      showMsg('mq-shop-msg', checked ? '✓ Hidden tabs now also apply to MidasQuote Pro.' : '✓ MidasQuote Pro will show all tabs again.');
+    } catch(e) { if (chk) chk.checked = !checked; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
 
   // ============================================================
@@ -7748,18 +7966,123 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   let _mqQrCustomColor = '';
   let _mqSignCustomColor = '';
   let _mqQrLibLoading = null;
+  // Quote-page-header / trust-bar color overrides for the Embed page's
+  // copy-paste snippet — blank means "use the built-in default", so a shop
+  // that never touches these pickers gets the exact same output as before
+  // this feature existed. _mqHeaderBgColor blank specifically means "no
+  // background wrapper at all" (inherit whatever the shop's own page
+  // background is) rather than falling back to a default color.
+  let _mqHeaderEyebrowColor = '';
+  let _mqHeaderHeadlineColor = '';
+  let _mqHeaderParaColor = '';
+  let _mqHeaderBgColor = '';
+  let _mqTrustBgColor = '';
+  let _mqTrustTextColor = '';
 
   let _mqHeadlineSaveTimer = null;
   function saveHeadlinesDebounced(shopRecord) {
     clearTimeout(_mqHeadlineSaveTimer);
     _mqHeadlineSaveTimer = setTimeout(async () => {
       try {
-        const payload = JSON.stringify({ graphic: _mqGraphicHeadline, qr: _mqQrHeadline, sign: _mqSignHeadline, qrColor: _mqQrCustomColor, signColor: _mqSignCustomColor });
+        const payload = JSON.stringify({
+          graphic: _mqGraphicHeadline, qr: _mqQrHeadline, sign: _mqSignHeadline,
+          qrColor: _mqQrCustomColor, signColor: _mqSignCustomColor,
+          headerColors: { eyebrow: _mqHeaderEyebrowColor, headline: _mqHeaderHeadlineColor, para: _mqHeaderParaColor, bg: _mqHeaderBgColor },
+          trustColors: { bg: _mqTrustBgColor, text: _mqTrustTextColor },
+        });
         await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Marketing headlines': payload });
         shopRecord.fields['Marketing headlines'] = payload;
       } catch(e) {}
     }, 800);
   }
+
+  // hex '#rrggbb' -> 'rgba(r,g,b,alpha)', used to derive the trust bar's
+  // border tint from whatever text color a shop picks (falls back to the
+  // original hardcoded border tint if the hex is malformed/empty).
+  function mqHexToRgba(hex, alpha) {
+    try {
+      const h = (hex || '').replace('#', '');
+      if (h.length !== 6) return `rgba(61,56,48,${alpha})`;
+      const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+      if ([r, g, b].some(n => isNaN(n))) return `rgba(61,56,48,${alpha})`;
+      return `rgba(${r},${g},${b},${alpha})`;
+    } catch (e) { return `rgba(61,56,48,${alpha})`; }
+  }
+
+  // Google Fonts import shared by both snippets below — hoisted to module
+  // scope (was a local inside initMarketingKit) since buildHeroHeaderHTML/
+  // buildTrustBarHTML now also need to run from the color-picker handlers,
+  // independent of a fresh initMarketingKit() call.
+  const mqEmbedFontLinks = `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">`;
+
+  function buildHeroHeaderHTML() {
+    const eyebrow = _mqHeaderEyebrowColor || '#b8763a';
+    const headline = _mqHeaderHeadlineColor || '#3d3830';
+    const para = _mqHeaderParaColor || '#5c5650';
+    const bgStyle = _mqHeaderBgColor ? `background:${_mqHeaderBgColor};border-radius:12px;` : '';
+    return `${mqEmbedFontLinks}
+<div style="text-align:center;padding:2rem 1rem 1.5rem;${bgStyle}font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${eyebrow};margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;gap:10px">
+    <span style="display:block;width:24px;height:1.5px;background:${eyebrow}"></span>
+    Instant Pricing
+    <span style="display:block;width:24px;height:1.5px;background:${eyebrow}"></span>
+  </div>
+  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:${headline};line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
+  <p style="font-size:14px;color:${para};line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
+</div>`;
+  }
+
+  function buildTrustBarHTML() {
+    const bg = _mqTrustBgColor || '#faf8f5';
+    const text = _mqTrustTextColor || '#5c5650';
+    const border = mqHexToRgba(text, 0.12);
+    const item = (icon, label) => `<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:${text}"><span style="font-size:15px">${icon}</span><span>${label}</span></div>`;
+    return `${mqEmbedFontLinks}
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:${bg};border:1px solid ${border};border-radius:10px;margin:30px 0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  ${item('✅', 'No commitment required')}
+  ${item('📧', 'Results sent to your inbox')}
+  ${item('🔒', 'We never sell your info')}
+  ${item('⚡', 'Instant ballpark estimate')}
+</div>`;
+  }
+
+  // Reads the color pickers on the Embed page, rebuilds both snippets, pushes
+  // the new code into the combined-embed builder + live preview, and
+  // debounce-saves the choice to Airtable. Wired to both the color inputs'
+  // oninput and the background checkbox's onchange.
+  window.mqUpdateEmbedColors = function() {
+    _mqHeaderEyebrowColor = document.getElementById('mq-embed-color-eyebrow')?.value || '';
+    _mqHeaderHeadlineColor = document.getElementById('mq-embed-color-headline')?.value || '';
+    _mqHeaderParaColor = document.getElementById('mq-embed-color-para')?.value || '';
+    const bgToggle = document.getElementById('mq-embed-bg-toggle');
+    const bgInput = document.getElementById('mq-embed-color-headerbg');
+    if (bgInput) { bgInput.disabled = !bgToggle?.checked; bgInput.style.opacity = bgToggle?.checked ? '1' : '0.4'; }
+    _mqHeaderBgColor = bgToggle?.checked ? (bgInput?.value || '') : '';
+    _mqTrustBgColor = document.getElementById('mq-embed-color-trustbg')?.value || '';
+    _mqTrustTextColor = document.getElementById('mq-embed-color-trusttext')?.value || '';
+    window._mqRawHeaderCode = buildHeroHeaderHTML();
+    window._mqRawTrustCode = buildTrustBarHTML();
+    if (typeof window.mqUpdateCombinedEmbed === 'function') window.mqUpdateCombinedEmbed();
+    if (window._mqShopRecord) saveHeadlinesDebounced(window._mqShopRecord);
+  };
+
+  // Restores every picker to the original built-in look (blank state vars
+  // fall back to the same hardcoded defaults buildHeroHeaderHTML/
+  // buildTrustBarHTML always had before this feature existed).
+  window.mqResetEmbedColors = function() {
+    const set = (id, val) => { const elx = document.getElementById(id); if (elx) elx.value = val; };
+    set('mq-embed-color-eyebrow', '#b8763a');
+    set('mq-embed-color-headline', '#3d3830');
+    set('mq-embed-color-para', '#5c5650');
+    set('mq-embed-color-headerbg', '#1a1a1a');
+    set('mq-embed-color-trustbg', '#faf8f5');
+    set('mq-embed-color-trusttext', '#5c5650');
+    const bgToggle = document.getElementById('mq-embed-bg-toggle');
+    if (bgToggle) bgToggle.checked = false;
+    window.mqUpdateEmbedColors();
+  };
 
   // Shared collapsible toggle for every card on the Marketing Kit page —
   // it was getting cluttered with everything always open at once, so each
@@ -7800,31 +8123,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
 
-    // Google Fonts import — included in both blocks independently (harmless
-    // if both end up on the page together; browsers dedupe identical
-    // stylesheet URLs, so this is safe either way).
-    const fontLinks = `<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">`;
+    // Sync the Embed page's color pickers to whatever this shop has saved
+    // (or the built-in defaults, if they've never touched them) — safe to
+    // re-run every time this function runs (first open, or after a Shop
+    // Info save), same as the rest of Marketing Kit's init.
+    (function syncEmbedColorPickers() {
+      const set = (id, val) => { const elx = document.getElementById(id); if (elx) elx.value = val; };
+      set('mq-embed-color-eyebrow', _mqHeaderEyebrowColor || '#b8763a');
+      set('mq-embed-color-headline', _mqHeaderHeadlineColor || '#3d3830');
+      set('mq-embed-color-para', _mqHeaderParaColor || '#5c5650');
+      set('mq-embed-color-headerbg', _mqHeaderBgColor || '#1a1a1a');
+      set('mq-embed-color-trustbg', _mqTrustBgColor || '#faf8f5');
+      set('mq-embed-color-trusttext', _mqTrustTextColor || '#5c5650');
+      const bgToggle = document.getElementById('mq-embed-bg-toggle');
+      const bgInput = document.getElementById('mq-embed-color-headerbg');
+      if (bgToggle) bgToggle.checked = !!_mqHeaderBgColor;
+      if (bgInput) { bgInput.disabled = !_mqHeaderBgColor; bgInput.style.opacity = _mqHeaderBgColor ? '1' : '0.4'; }
+    })();
 
-    const heroHeaderHTML = `${fontLinks}
-<div style="text-align:center;padding:2rem 1rem 1.5rem;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b8763a;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:center;gap:10px">
-    <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
-    Instant Pricing
-    <span style="display:block;width:24px;height:1.5px;background:#b8763a"></span>
-  </div>
-  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:#3d3830;line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
-  <p style="font-size:14px;color:#5c5650;line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
-</div>`;
-
-    const trustBarHTML = `${fontLinks}
-<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem;padding:14px 16px;background:#faf8f5;border:1px solid rgba(61,56,48,0.12);border-radius:10px;margin:30px 0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">✅</span><span>No commitment required</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">📧</span><span>Results sent to your inbox</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">🔒</span><span>We never sell your info</span></div>
-  <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5c5650"><span style="font-size:15px">⚡</span><span>Instant ballpark estimate</span></div>
-</div>`;
+    const heroHeaderHTML = buildHeroHeaderHTML();
+    const trustBarHTML = buildTrustBarHTML();
 
     const escapeHtml = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -9913,6 +10231,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       _mqSignHeadline = savedHeadlines.sign || '';
       _mqQrCustomColor = savedHeadlines.qrColor || '';
       _mqSignCustomColor = savedHeadlines.signColor || '';
+      const savedHeaderColors = savedHeadlines.headerColors || {};
+      _mqHeaderEyebrowColor = savedHeaderColors.eyebrow || '';
+      _mqHeaderHeadlineColor = savedHeaderColors.headline || '';
+      _mqHeaderParaColor = savedHeaderColors.para || '';
+      _mqHeaderBgColor = savedHeaderColors.bg || '';
+      const savedTrustColors = savedHeadlines.trustColors || {};
+      _mqTrustBgColor = savedTrustColors.bg || '';
+      _mqTrustTextColor = savedTrustColors.text || '';
     } catch(e) {}
     container.innerHTML = buildHTML(shopRecord.fields);
     mqInitStickyTopbar();
