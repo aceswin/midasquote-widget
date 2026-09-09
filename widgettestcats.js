@@ -2606,6 +2606,16 @@
         const btn = document.querySelector(`.mq-tab[onclick^="mqSwitchTab('${id}'"]`);
         if (btn) btn.remove();
       });
+      // .mq-tab is flex:1 in its flex:flex .mq-tab-bar, so with fewer
+      // buttons left in the row each one stretches to fill the gap — a
+      // single remaining tab ends up spanning the full widget width. Jordan
+      // asked for the opposite: whatever's left should stay its original
+      // size and just line up on the left, not balloon to fill the space.
+      const tabBar = document.querySelector('.mq-tab-bar');
+      if (tabBar) {
+        tabBar.style.justifyContent = 'flex-start';
+        tabBar.querySelectorAll('.mq-tab').forEach(btn => { btn.style.flex = '0 1 auto'; });
+      }
       // The "Get full project quote" upsell inside the Cabinets/Countertops
       // tabs only makes sense when the Both tab still exists to send someone
       // to — remove it rather than leave a dead link to a tab with no button.
@@ -6453,6 +6463,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   init();
   mqInitMobileFontFix();
   mqInitBottomBounceAutoOpen();
+
 
 
 })();
