@@ -1340,20 +1340,13 @@ window.logoutMember = async function () {
 
             <div class="mq-card" style="margin-bottom:1.5rem">
               <div class="mq-card-title">🧩 Embed on a page</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Prefer it to show up right inside a page on your own site instead of opening a new tab? Paste this code where you want it to appear — no need to pick a size, it automatically sizes itself to fit its own content.</p>
-              <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-showroom-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
-              <button class="mq-btn mq-btn-primary" id="mq-showroom-embed-copy-btn" style="width:100%">📋 Copy embed code</button>
-            </div>
-
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">🎛️ Customize the embedded look</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These four switches only affect how the showroom looks when it's <strong>embedded on your own page</strong> (above) — your standalone showroom link/popup always shows everything, exactly as it does today.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Prefer it to show up right inside a page on your own site instead of opening a new tab? Paste the code below where you want it to appear — no need to pick a size, it automatically sizes itself to fit its own content. These four switches only affect how it looks <strong>once embedded</strong> — your standalone showroom link/popup always shows everything, exactly as it does today.</p>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
-                  <div style="font-size:13px;font-weight:500;color:#111">Show logo</div>
-                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Your shop logo (or initial) in the top-left corner</div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show shop info</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Your logo, shop name, and city — the whole top-left block</div>
                 </div>
-                <div class="mq-toggle on" id="mq-showroom-embed-logo-toggle" onclick="mqShowroomToggleEmbedDisplay('logo')"></div>
+                <div class="mq-toggle on" id="mq-showroom-embed-shopinfo-toggle" onclick="mqShowroomToggleEmbedDisplay('shopInfo')"></div>
               </div>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
@@ -1369,12 +1362,16 @@ window.logoutMember = async function () {
                 </div>
                 <div class="mq-toggle on" id="mq-showroom-embed-hero-toggle" onclick="mqShowroomToggleEmbedDisplay('hero')"></div>
               </div>
-              <div class="mq-toggle-row">
+              <div class="mq-toggle-row" style="margin-bottom:1.25rem">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Show project-type filter</div>
                   <div style="font-size:12px;color:#6b7280;margin-top:2px">The Kitchen / Bathroom / etc. filter chips row</div>
                 </div>
                 <div class="mq-toggle on" id="mq-showroom-embed-filterbar-toggle" onclick="mqShowroomToggleEmbedDisplay('filterBar')"></div>
+              </div>
+              <div style="border-top:1px solid #e5e7eb;padding-top:1rem">
+                <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-showroom-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
+                <button class="mq-btn mq-btn-primary" id="mq-showroom-embed-copy-btn" style="width:100%">📋 Copy embed code</button>
               </div>
             </div>
 
@@ -6281,22 +6278,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   // Embedded-only display toggles — added 2026-09-10, alongside Jordan's
-  // ask to be able to strip the logo/nav/hero/filter bar down for a shop
-  // that wants the showroom to blend into their own page's existing
-  // header/nav instead of showing its own. Deliberately scoped to the
-  // <iframe> embed ONLY (Jordan's explicit choice over applying site-wide)
-  // — the standalone popup tab/link always shows all four, unchanged, so a
-  // shop that wants the "full" showroom experience for a direct link still
-  // gets it. See showroom.html's own read of `embedDisplay` (guarded by
-  // `MQ_SR_EMBEDDED`) for how these actually apply.
+  // ask to be able to strip the shop info/nav/hero/filter bar down for a
+  // shop that wants the showroom to blend into their own page's existing
+  // header/nav instead of showing its own. `shopInfo` covers the logo AND
+  // the shop name/city right beside it (expanded from a logo-only toggle
+  // same day, per Jordan: "include the removal of the shop name and
+  // number as part of the logo remove... like a shop info remove") — it's
+  // one combined switch, not two, since those three always sit together
+  // as one visual block. Deliberately scoped to the <iframe> embed ONLY
+  // (Jordan's explicit choice over applying site-wide) — the standalone
+  // popup tab/link always shows all four, unchanged, so a shop that wants
+  // the "full" showroom experience for a direct link still gets it. See
+  // showroom.html's own read of `embedDisplay` (guarded by
+  // `MQ_SR_EMBEDDED`) for how these actually apply. Lives inside the same
+  // "🧩 Embed on a page" card, above the code box, per Jordan's ask
+  // (2026-09-10) to see the toggles before the code rather than in a
+  // separate card below it.
   function mqShowroomRenderEmbedDisplayUI() {
     const settings = window._mqShowroomSettings || {};
-    const d = settings.embedDisplay || { logo: true, nav: true, hero: true, filterBar: true };
-    const logoToggle = el('mq-showroom-embed-logo-toggle');
+    const d = settings.embedDisplay || { shopInfo: true, nav: true, hero: true, filterBar: true };
+    const shopInfoToggle = el('mq-showroom-embed-shopinfo-toggle');
     const navToggle = el('mq-showroom-embed-nav-toggle');
     const heroToggle = el('mq-showroom-embed-hero-toggle');
     const filterToggle = el('mq-showroom-embed-filterbar-toggle');
-    if (logoToggle) logoToggle.classList.toggle('on', d.logo !== false);
+    if (shopInfoToggle) shopInfoToggle.classList.toggle('on', d.shopInfo !== false);
     if (navToggle) navToggle.classList.toggle('on', d.nav !== false);
     if (heroToggle) heroToggle.classList.toggle('on', d.hero !== false);
     if (filterToggle) filterToggle.classList.toggle('on', d.filterBar !== false);
@@ -6304,7 +6309,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   window.mqShowroomToggleEmbedDisplay = async function(key) {
     window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
-    window._mqShowroomSettings.embedDisplay = window._mqShowroomSettings.embedDisplay || { logo: true, nav: true, hero: true, filterBar: true };
+    window._mqShowroomSettings.embedDisplay = window._mqShowroomSettings.embedDisplay || { shopInfo: true, nav: true, hero: true, filterBar: true };
     const wasOn = window._mqShowroomSettings.embedDisplay[key] !== false;
     window._mqShowroomSettings.embedDisplay[key] = !wasOn;
     mqShowroomRenderEmbedDisplayUI();
@@ -6393,11 +6398,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // field. Any key not explicitly `false` defaults to shown, so a shop
       // that's never touched these switches sees zero change either way.
       embedDisplay: (settingsRaw.embedDisplay && typeof settingsRaw.embedDisplay === 'object') ? {
-        logo: settingsRaw.embedDisplay.logo !== false,
+        shopInfo: settingsRaw.embedDisplay.shopInfo !== false,
         nav: settingsRaw.embedDisplay.nav !== false,
         hero: settingsRaw.embedDisplay.hero !== false,
         filterBar: settingsRaw.embedDisplay.filterBar !== false,
-      } : { logo: true, nav: true, hero: true, filterBar: true },
+      } : { shopInfo: true, nav: true, hero: true, filterBar: true },
     };
     mqShowroomRenderModeUI();
     mqShowroomRenderButtonTargetUI();

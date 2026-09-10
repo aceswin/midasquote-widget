@@ -74,7 +74,7 @@
 <body>
 
   <div class="sr-header" id="sr-header">
-    <div class="sr-shop-info">
+    <div class="sr-shop-info" id="sr-shop-info">
       <div class="sr-shop-logo" id="sr-logo">?</div>
       <div>
         <div class="sr-shop-name" id="sr-shop-name">Loading...</div>
@@ -473,19 +473,23 @@
           // Showroom tab. Blank/missing means "use the built-in default
           // line below" — Default mode's subheading is never editable.
           customSubheading: typeof raw.customSubheading === 'string' ? raw.customSubheading : '',
-          // Embedded-only show/hide switches (logo/nav/hero/filter bar) —
-          // added 2026-09-10, set from the dashboard's Showroom tab's new
-          // "🎛️ Customize the embedded look" card. Deliberately scoped to
+          // Embedded-only show/hide switches (shop info/nav/hero/filter
+          // bar) — added 2026-09-10, set from the dashboard's Showroom
+          // tab's "🧩 Embed on a page" card. `shopInfo` covers the logo AND
+          // the shop name/city beside it as one combined block — it used
+          // to be logo-only, widened same day per Jordan: "include the
+          // removal of the shop name and number as part of the logo
+          // remove... like a shop info remove." Deliberately scoped to
           // the <iframe> embed ONLY (see MQ_SR_EMBEDDED usage below) — the
           // standalone popup tab/link this page also serves always shows
           // all four, unchanged. Any key not explicitly `false` defaults
           // to shown, so a shop that's never touched these sees no change.
           embedDisplay: (raw.embedDisplay && typeof raw.embedDisplay === 'object') ? {
-            logo: raw.embedDisplay.logo !== false,
+            shopInfo: raw.embedDisplay.shopInfo !== false,
             nav: raw.embedDisplay.nav !== false,
             hero: raw.embedDisplay.hero !== false,
             filterBar: raw.embedDisplay.filterBar !== false,
-          } : { logo: true, nav: true, hero: true, filterBar: true },
+          } : { shopInfo: true, nav: true, hero: true, filterBar: true },
         };
       } catch(e) {}
       let roomTypes = [];
@@ -511,16 +515,20 @@
       document.getElementById('sr-shop-city').textContent = [shop['City'], shop['Province/State']].filter(Boolean).join(', ');
 
       // Embedded-only display toggles — added 2026-09-10, per Jordan's ask
-      // to be able to strip logo/nav/hero down for a shop whose own page
-      // already has its own header/nav and doesn't want a second one
-      // stacked on top. Deliberately gated on MQ_SR_EMBEDDED: the
+      // to be able to strip shop info/nav/hero down for a shop whose own
+      // page already has its own header/nav and doesn't want a second one
+      // stacked on top. `sr-shop-info` is hidden as ONE block (logo + name
+      // + city together) rather than just the logo — widened same day per
+      // Jordan's follow-up ask, since those three always sit together as
+      // one visual unit; hiding just the logo would've left an orphaned
+      // name/city line behind. Deliberately gated on MQ_SR_EMBEDDED: the
       // standalone popup tab/link this same page also serves always shows
       // all three, unchanged — see catSettings.embedDisplay's parse above
-      // and dashboard.js's "🎛️ Customize the embedded look" card for where
-      // these get set. The filter-bar toggle lives inside renderFilterBar()
-      // instead, since that function already re-runs on every filter click.
+      // and dashboard.js's "🧩 Embed on a page" card for where these get
+      // set. The filter-bar toggle lives inside renderFilterBar() instead,
+      // since that function already re-runs on every filter click.
       if (MQ_SR_EMBEDDED) {
-        if (catSettings.embedDisplay.logo === false) { const logoBox = document.getElementById('sr-logo'); if (logoBox) logoBox.style.display = 'none'; }
+        if (catSettings.embedDisplay.shopInfo === false) { const infoBox = document.getElementById('sr-shop-info'); if (infoBox) infoBox.style.display = 'none'; }
         if (catSettings.embedDisplay.nav === false) { const navBar = document.getElementById('sr-nav'); if (navBar) navBar.style.display = 'none'; }
         if (catSettings.embedDisplay.hero === false) { const heroBox = document.getElementById('sr-hero'); if (heroBox) heroBox.style.display = 'none'; }
       }
