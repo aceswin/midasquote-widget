@@ -266,7 +266,12 @@
       // entirely (see buildShowroomSections) — so the whole bar is just
       // dead weight; hide it rather than show chips that do nothing.
       const mode = (SHOWROOM_DATA.catSettings && SHOWROOM_DATA.catSettings.mode === 'custom') ? 'custom' : 'default';
-      if (mode === 'custom' || !roomTypes.length) { bar.style.display = 'none'; return; }
+      // Embedded-only filter-bar toggle — checked here (rather than
+      // alongside the logo/nav/hero toggles in init()) because this
+      // function re-runs every time the filter changes (mqSetFilter), so a
+      // one-time style.display set in init() wouldn't survive that.
+      const embedHideFilterBar = MQ_SR_EMBEDDED && SHOWROOM_DATA.catSettings && SHOWROOM_DATA.catSettings.embedDisplay && SHOWROOM_DATA.catSettings.embedDisplay.filterBar === false;
+      if (mode === 'custom' || !roomTypes.length || embedHideFilterBar) { bar.style.display = 'none'; return; }
       bar.style.display = 'flex';
       const chips = [{ id: 'all', name: 'All' }, ...roomTypes];
       bar.innerHTML = chips.map(r => `<button class="sr-filter-chip${CURRENT_FILTER===r.id?' active':''}" onclick="mqSetFilter('${r.id}')">${r.name}</button>`).join('');
@@ -468,6 +473,19 @@
           // Showroom tab. Blank/missing means "use the built-in default
           // line below" — Default mode's subheading is never editable.
           customSubheading: typeof raw.customSubheading === 'string' ? raw.customSubheading : '',
+          // Embedded-only show/hide switches (logo/nav/hero/filter bar) —
+          // added 2026-09-10, set from the dashboard's Showroom tab's new
+          // "🎛️ Customize the embedded look" card. Deliberately scoped to
+          // the <iframe> embed ONLY (see MQ_SR_EMBEDDED usage below) — the
+          // standalone popup tab/link this page also serves always shows
+          // all four, unchanged. Any key not explicitly `false` defaults
+          // to shown, so a shop that's never touched these sees no change.
+          embedDisplay: (raw.embedDisplay && typeof raw.embedDisplay === 'object') ? {
+            logo: raw.embedDisplay.logo !== false,
+            nav: raw.embedDisplay.nav !== false,
+            hero: raw.embedDisplay.hero !== false,
+            filterBar: raw.embedDisplay.filterBar !== false,
+          } : { logo: true, nav: true, hero: true, filterBar: true },
         };
       } catch(e) {}
       let roomTypes = [];
@@ -491,6 +509,21 @@
       }
       document.getElementById('sr-shop-name').textContent = shop['Shop name'] || '';
       document.getElementById('sr-shop-city').textContent = [shop['City'], shop['Province/State']].filter(Boolean).join(', ');
+
+      // Embedded-only display toggles — added 2026-09-10, per Jordan's ask
+      // to be able to strip logo/nav/hero down for a shop whose own page
+      // already has its own header/nav and doesn't want a second one
+      // stacked on top. Deliberately gated on MQ_SR_EMBEDDED: the
+      // standalone popup tab/link this same page also serves always shows
+      // all three, unchanged — see catSettings.embedDisplay's parse above
+      // and dashboard.js's "🎛️ Customize the embedded look" card for where
+      // these get set. The filter-bar toggle lives inside renderFilterBar()
+      // instead, since that function already re-runs on every filter click.
+      if (MQ_SR_EMBEDDED) {
+        if (catSettings.embedDisplay.logo === false) { const logoBox = document.getElementById('sr-logo'); if (logoBox) logoBox.style.display = 'none'; }
+        if (catSettings.embedDisplay.nav === false) { const navBar = document.getElementById('sr-nav'); if (navBar) navBar.style.display = 'none'; }
+        if (catSettings.embedDisplay.hero === false) { const heroBox = document.getElementById('sr-hero'); if (heroBox) heroBox.style.display = 'none'; }
+      }
       syncStickyOffsets(); // header height depends on the real shop name/logo just set above
       document.getElementById('sr-hero-title').textContent = catSettings.mode === 'custom'
         ? `${shop['Shop name'] || 'Our'} Product Catalogue`

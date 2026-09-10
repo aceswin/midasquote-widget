@@ -1346,6 +1346,61 @@ window.logoutMember = async function () {
             </div>
 
             <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🎛️ Customize the embedded look</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These four switches only affect how the showroom looks when it's <strong>embedded on your own page</strong> (above) — your standalone showroom link/popup always shows everything, exactly as it does today.</p>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show logo</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Your shop logo (or initial) in the top-left corner</div>
+                </div>
+                <div class="mq-toggle on" id="mq-showroom-embed-logo-toggle" onclick="mqShowroomToggleEmbedDisplay('logo')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show top navigation links</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">The row of section jump-links (Box Materials, Door Styles, etc.)</div>
+                </div>
+                <div class="mq-toggle on" id="mq-showroom-embed-nav-toggle" onclick="mqShowroomToggleEmbedDisplay('nav')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show hero banner</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">The large colored "Materials & Options" banner at the top</div>
+                </div>
+                <div class="mq-toggle on" id="mq-showroom-embed-hero-toggle" onclick="mqShowroomToggleEmbedDisplay('hero')"></div>
+              </div>
+              <div class="mq-toggle-row">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show project-type filter</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">The Kitchen / Bathroom / etc. filter chips row</div>
+                </div>
+                <div class="mq-toggle on" id="mq-showroom-embed-filterbar-toggle" onclick="mqShowroomToggleEmbedDisplay('filterBar')"></div>
+              </div>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🖱️ "See our showroom" button (on the widget)</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Your widget already has its own "🖼️ See our showroom" button for customers. If you've embedded the showroom on a page of your own (above), you can send that button there instead of popping open a new tab on widget.midasquote.com. You can always have both — this only changes where the widget's own button goes; it doesn't affect whether your embedded page exists.</p>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <div id="mq-showroom-target-popup" onclick="mqShowroomSetButtonTarget('popup')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🪟 Popup (default)</div>
+                  <div style="font-size:12px;color:#6b7280">Opens your standalone showroom link in a new tab — today's behavior. Works whether or not you've embedded the showroom anywhere.</div>
+                </div>
+                <div id="mq-showroom-target-page" onclick="mqShowroomSetButtonTarget('own_page')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🔗 My own page</div>
+                  <div style="font-size:12px;color:#6b7280">Sends customers to a page on your own site instead — still opens in a new tab, so their quote stays open too. Needs the URL below.</div>
+                </div>
+              </div>
+              <div id="mq-showroom-target-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
+              <div id="mq-showroom-target-url-wrap" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">
+                <label class="mq-label">Your showroom page URL</label>
+                <p style="font-size:12px;color:#6b7280;margin:2px 0 8px">The page on your own site where you pasted the embed code above.</p>
+                <input type="url" id="mq-showroom-target-url-input" placeholder="https://yoursite.com/showroom" style="width:100%;margin-bottom:8px"/>
+                <button class="mq-btn mq-btn-sm" onclick="mqSaveShowroomButtonUrl()">Save</button>
+              </div>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1.5rem">
               <div class="mq-card-title">🎭 Showroom style</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Choose how your showroom page looks. Specialty Items show either way — everything else depends on which one's picked.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -6198,6 +6253,92 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
+  // Where the widget's own "🖼️ See our showroom" button sends customers —
+  // 'popup' (default) or 'own_page'. See the settingsRaw parse in
+  // initShowroomTab above for the field this lives in, and widget.js/
+  // widgetpro.js's buildWidgetHTML for how the button actually reads it.
+  function mqShowroomRenderButtonTargetUI() {
+    const settings = window._mqShowroomSettings || {};
+    const target = settings.buttonTarget === 'own_page' ? 'own_page' : 'popup';
+    const popupCard = el('mq-showroom-target-popup');
+    const pageCard  = el('mq-showroom-target-page');
+    if (popupCard) { popupCard.style.borderColor = target === 'popup'    ? '#1a1a1a' : '#e5e7eb'; popupCard.style.background = target === 'popup'    ? '#f9fafb' : '#fff'; }
+    if (pageCard)  { pageCard.style.borderColor  = target === 'own_page' ? '#1a1a1a' : '#e5e7eb'; pageCard.style.background  = target === 'own_page' ? '#f9fafb' : '#fff'; }
+    const urlWrap = el('mq-showroom-target-url-wrap');
+    if (urlWrap) urlWrap.style.display = target === 'own_page' ? 'block' : 'none';
+    const urlInput = el('mq-showroom-target-url-input');
+    if (urlInput && document.activeElement !== urlInput) urlInput.value = settings.buttonUrl || '';
+    const note = el('mq-showroom-target-note');
+    if (note) {
+      if (target === 'own_page' && !(settings.buttonUrl || '').trim()) {
+        note.textContent = '⚠️ No URL saved yet — the button will keep using the popup until you add one below.';
+      } else if (target === 'own_page') {
+        note.textContent = '🔗 My own page is active — the widget\'s showroom button now sends customers to your page instead of popping open a new tab on widget.midasquote.com.';
+      } else {
+        note.textContent = '🪟 Popup is active — the widget\'s showroom button opens your standalone showroom link in a new tab.';
+      }
+    }
+  }
+
+  // Embedded-only display toggles — added 2026-09-10, alongside Jordan's
+  // ask to be able to strip the logo/nav/hero/filter bar down for a shop
+  // that wants the showroom to blend into their own page's existing
+  // header/nav instead of showing its own. Deliberately scoped to the
+  // <iframe> embed ONLY (Jordan's explicit choice over applying site-wide)
+  // — the standalone popup tab/link always shows all four, unchanged, so a
+  // shop that wants the "full" showroom experience for a direct link still
+  // gets it. See showroom.html's own read of `embedDisplay` (guarded by
+  // `MQ_SR_EMBEDDED`) for how these actually apply.
+  function mqShowroomRenderEmbedDisplayUI() {
+    const settings = window._mqShowroomSettings || {};
+    const d = settings.embedDisplay || { logo: true, nav: true, hero: true, filterBar: true };
+    const logoToggle = el('mq-showroom-embed-logo-toggle');
+    const navToggle = el('mq-showroom-embed-nav-toggle');
+    const heroToggle = el('mq-showroom-embed-hero-toggle');
+    const filterToggle = el('mq-showroom-embed-filterbar-toggle');
+    if (logoToggle) logoToggle.classList.toggle('on', d.logo !== false);
+    if (navToggle) navToggle.classList.toggle('on', d.nav !== false);
+    if (heroToggle) heroToggle.classList.toggle('on', d.hero !== false);
+    if (filterToggle) filterToggle.classList.toggle('on', d.filterBar !== false);
+  }
+
+  window.mqShowroomToggleEmbedDisplay = async function(key) {
+    window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    window._mqShowroomSettings.embedDisplay = window._mqShowroomSettings.embedDisplay || { logo: true, nav: true, hero: true, filterBar: true };
+    const wasOn = window._mqShowroomSettings.embedDisplay[key] !== false;
+    window._mqShowroomSettings.embedDisplay[key] = !wasOn;
+    mqShowroomRenderEmbedDisplayUI();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Embed appearance updated.'); }
+    catch(e) { window._mqShowroomSettings.embedDisplay[key] = wasOn; mqShowroomRenderEmbedDisplayUI(); showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqShowroomSetButtonTarget = async function(target) {
+    window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    if (window._mqShowroomSettings.buttonTarget === target) return;
+    window._mqShowroomSettings.buttonTarget = target;
+    mqShowroomRenderButtonTargetUI();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', target === 'own_page' ? '✓ Showroom button now points to your own page.' : '✓ Showroom button back to popup.'); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  // No enforced format beyond a basic sanity check — this is a URL the shop
+  // types in themselves (their own site), not a closed set of choices, so
+  // free text is the right shape here (unlike e.g. pricing-helper-v2.js's
+  // Unit field). A bare domain/path with no scheme gets "https://" prepended
+  // rather than saved broken or rejected outright.
+  window.mqSaveShowroomButtonUrl = async function() {
+    const input = el('mq-showroom-target-url-input');
+    if (!input) return;
+    let url = input.value.trim();
+    if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+    input.value = url;
+    window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    window._mqShowroomSettings.buttonUrl = url;
+    mqShowroomRenderButtonTargetUI();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Showroom page URL saved.'); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
   // Build-My-Own-only subheading override. Blank clears it back to
   // showroom.html's own built-in default line ("Browse some of our past
   // projects and features...") rather than saving an empty string that
@@ -6237,8 +6378,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // Empty/missing means "use the built-in default line" (showroom.html
       // has its own copy of that default text, this never stores it).
       customSubheading: typeof settingsRaw.customSubheading === 'string' ? settingsRaw.customSubheading : '',
+      // Where the widget's own "🖼️ See our showroom" button sends customers
+      // — added 2026-09-10, alongside the showroom embed feature. 'popup'
+      // (default, for any shop that's never touched this) matches the
+      // button's original always-popup behavior; 'own_page' sends customers
+      // to buttonUrl instead — see mqShowroomSetButtonTarget /
+      // mqSaveShowroomButtonUrl below, and widget.js/widgetpro.js's own
+      // read of this same field for how the button actually uses it.
+      buttonTarget: settingsRaw.buttonTarget === 'own_page' ? 'own_page' : 'popup',
+      buttonUrl: typeof settingsRaw.buttonUrl === 'string' ? settingsRaw.buttonUrl : '',
+      // Embedded-only show/hide switches for logo/nav/hero/filter bar — see
+      // mqShowroomRenderEmbedDisplayUI/mqShowroomToggleEmbedDisplay above,
+      // and showroom.html's own MQ_SR_EMBEDDED-gated read of this same
+      // field. Any key not explicitly `false` defaults to shown, so a shop
+      // that's never touched these switches sees zero change either way.
+      embedDisplay: (settingsRaw.embedDisplay && typeof settingsRaw.embedDisplay === 'object') ? {
+        logo: settingsRaw.embedDisplay.logo !== false,
+        nav: settingsRaw.embedDisplay.nav !== false,
+        hero: settingsRaw.embedDisplay.hero !== false,
+        filterBar: settingsRaw.embedDisplay.filterBar !== false,
+      } : { logo: true, nav: true, hero: true, filterBar: true },
     };
     mqShowroomRenderModeUI();
+    mqShowroomRenderButtonTargetUI();
+    mqShowroomRenderEmbedDisplayUI();
 
     try { window._mqShowroomPhotos = shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}; } catch(e) { window._mqShowroomPhotos = {}; }
     try { window._mqShowroomHiddenItems = shopRecord.fields['Hidden'] ? JSON.parse(shopRecord.fields['Hidden']) : {}; } catch(e) { window._mqShowroomHiddenItems = {}; }
