@@ -1331,15 +1331,24 @@ window.logoutMember = async function () {
             <div class="mq-page-sub">Manage everything that can appear on your showroom page — your real priced categories (materials, doors, specialty items, etc.) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
             <div id="mq-showroom-msg"></div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">🔗 Your showroom link</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">This is a standalone page with its own link — share it anywhere, including as a page in your own website's navigation. It works on its own, with or without the widget.</p>
-              <div class="mq-embed-box"><span id="mq-showroomtab-link-text"></span><button class="mq-copy-btn" id="mq-showroomtab-copy-btn">Copy</button></div>
-              <button class="mq-btn" style="margin-top:10px" id="mq-showroomtab-open-btn">Open showroom ↗</button>
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('link')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🔗 Your showroom link</div>
+                <span id="mq-sr-arrow-link" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-link" style="display:none;padding:0 1.25rem 1.25rem">
+                <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">This is a standalone page with its own link — share it anywhere, including as a page in your own website's navigation. It works on its own, with or without the widget.</p>
+                <div class="mq-embed-box"><span id="mq-showroomtab-link-text"></span><button class="mq-copy-btn" id="mq-showroomtab-copy-btn">Copy</button></div>
+                <button class="mq-btn" style="margin-top:10px" id="mq-showroomtab-open-btn">Open showroom ↗</button>
+              </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">🧩 Embed on a page</div>
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('embed')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🧩 Embed on a page</div>
+                <span id="mq-sr-arrow-embed" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-embed" style="display:none;padding:0 1.25rem 1.25rem">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Prefer it to show up right inside a page on your own site instead of opening a new tab? Paste the code below where you want it to appear — no need to pick a size, it automatically sizes itself to fit its own content. These four switches only affect how it looks <strong>once embedded</strong> — your standalone showroom link/popup always shows everything, exactly as it does today.</p>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
@@ -1373,10 +1382,15 @@ window.logoutMember = async function () {
                 <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-showroom-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
                 <button class="mq-btn mq-btn-primary" id="mq-showroom-embed-copy-btn" style="width:100%">📋 Copy embed code</button>
               </div>
+              </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">🖱️ "See our showroom" button (on the widget)</div>
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('button')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🖱️ "See our showroom" button (on the widget)</div>
+                <span id="mq-sr-arrow-button" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-button" style="display:none;padding:0 1.25rem 1.25rem">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Your widget already has its own "🖼️ See our showroom" button for customers. If you've embedded the showroom on a page of your own (above), you can send that button there instead of popping open a new tab on widget.midasquote.com. You can always have both — this only changes where the widget's own button goes; it doesn't affect whether your embedded page exists.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
                 <div id="mq-showroom-target-popup" onclick="mqShowroomSetButtonTarget('popup')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
@@ -1395,10 +1409,15 @@ window.logoutMember = async function () {
                 <input type="url" id="mq-showroom-target-url-input" placeholder="https://yoursite.com/showroom" style="width:100%;margin-bottom:8px"/>
                 <button class="mq-btn mq-btn-sm" onclick="mqSaveShowroomButtonUrl()">Save</button>
               </div>
+              </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">🎭 Showroom style</div>
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('style')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🎭 Showroom style</div>
+                <span id="mq-sr-arrow-style" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-style" style="display:none;padding:0 1.25rem 1.25rem">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Choose how your showroom page looks. Specialty Items show either way — everything else depends on which one's picked.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
                 <div id="mq-showroom-mode-default" onclick="mqShowroomSetMode('default')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
@@ -1417,23 +1436,34 @@ window.logoutMember = async function () {
                 <input type="text" id="mq-showroom-subhead-input" maxlength="160" placeholder="Browse some of our past projects and features. Have questions? Get in touch for a full consultation." style="width:100%;margin-bottom:8px"/>
                 <button class="mq-btn mq-btn-sm" onclick="mqSaveShowroomSubheading()">Save</button>
               </div>
+              </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">📦 Your categories</div>
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('categories')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">📦 Your categories</div>
+                <span id="mq-sr-arrow-categories" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-categories" style="display:none;padding:0 1.25rem 1.25rem">
               <p id="mq-showroom-cats-intro" style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use the ▲▼ arrows to reorder. Every change saves right away — no separate "Save" button on this tab.</p>
               <div id="mq-showroom-cats"><div class="mq-loading">Loading...</div></div>
               <div id="mq-showroom-addcat-note" style="font-size:12px;color:#6b7280;display:none"></div>
               <button id="mq-showroom-addcat-btn" class="mq-btn mq-btn-primary" style="margin-top:12px" onclick="mqAddShowroomCategory()">+ New category</button>
+              </div>
             </div>
 
             <div class="mq-card" style="padding:0;overflow:hidden">
-              <div style="padding:1.25rem 1.25rem 0">
-                <div class="mq-card-title" style="margin-bottom:4px">👁️ Live preview</div>
-                <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This is your actual showroom page, loaded live — it updates automatically as you make changes above, or click refresh any time.</p>
-                <button class="mq-btn mq-btn-sm" style="margin-bottom:1rem" onclick="mqRefreshShowroomPreview()">🔄 Refresh preview</button>
+              <div onclick="mqToggleShowroomSection('preview')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">👁️ Live preview</div>
+                <span id="mq-sr-arrow-preview" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
               </div>
-              <iframe id="mq-showroom-preview-frame" style="width:100%;height:800px;border:0;border-top:1px solid #e5e7eb;display:block"></iframe>
+              <div id="mq-sr-body-preview" style="display:none">
+                <div style="padding:0 1.25rem 1rem">
+                  <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This is your actual showroom page, loaded live — it updates automatically as you make changes above, or click refresh any time.</p>
+                  <button class="mq-btn mq-btn-sm" style="margin-bottom:1rem" onclick="mqRefreshShowroomPreview()">🔄 Refresh preview</button>
+                </div>
+                <iframe id="mq-showroom-preview-frame" style="width:100%;height:800px;border:0;border-top:1px solid #e5e7eb;display:block"></iframe>
+              </div>
             </div>
           </div>
 
@@ -4926,6 +4956,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!body) return;
     body.style.display = 'block';
     if (chevron) chevron.style.transform = 'rotate(90deg)';
+  };
+
+  // Showroom tab: every card (Your showroom link, Embed on a page, "See
+  // our showroom" button, Showroom style, Your categories, Live preview)
+  // collapses/expands independently, all starting collapsed — added
+  // 2026-09-10, Jordan: "we should make these all collapsable. theres a
+  // lot going on on the page." Same click-header-to-toggle-a-body-div +
+  // rotating-arrow pattern already used for Marketing Kit's sections
+  // (mqToggleMkSection), just scoped to this tab's own id prefix
+  // (mq-sr-body-<key> / mq-sr-arrow-<key>) so the two don't collide.
+  // Collapsing a card is purely visual (display:none on its body) — it
+  // doesn't unmount or reset anything inside, so e.g. the Live Preview
+  // iframe still loads/refreshes normally (mqRefreshShowroomPreview sets
+  // its src regardless of whether the card is currently open) even while
+  // collapsed.
+  window.mqToggleShowroomSection = function(key) {
+    const body = el('mq-sr-body-' + key);
+    const arrow = el('mq-sr-arrow-' + key);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
   };
 
   window.mqToggleColorScheme = function() {
