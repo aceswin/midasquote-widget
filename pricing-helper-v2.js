@@ -2763,7 +2763,7 @@ window.mqphGoToWizard = function() {
 
     const section = (title, items, rowFn, emptyMsg) => items.length > 0
       ? `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
-         ${items.map(rowFn).join('')}`
+         <div${items.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>${items.map(rowFn).join('')}</div>`
       : `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
          <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`;
 
@@ -2985,7 +2985,7 @@ window.mqphGoToWizard = function() {
         <span style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em">${title}</span>
         ${items.length > 0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenBulkEdit('${bulkCat}')">📊 Bulk edit</button>` : ''}
       </div>
-      ${items.length > 0 ? items.map(trimRow).join('') : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
+      ${items.length > 0 ? `<div${items.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>${items.map(trimRow).join('')}</div>` : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
 
     return `
       <div class="mqph-ct-block">
