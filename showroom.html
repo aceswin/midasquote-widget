@@ -125,6 +125,30 @@
       // does nothing otherwise) — hide it immediately, don't wait on init().
       const closeLink = document.getElementById('sr-close-link');
       if (closeLink) closeLink.style.display = 'none';
+      // Shop info / nav / hero / filter bar all start hidden too, right
+      // here, synchronously — added 2026-09-10, Jordan: "it shows a
+      // question mark and loading and the box where a logo would go for a
+      // split second and if i have the hero section turned off it also
+      // shows for a second... anyway to not let any of the hidden parts
+      // show at all unless they are unhidden?" The real embedDisplay
+      // settings only arrive after init()'s shop-data fetch resolves (a
+      // real network round trip), so a section the shop actually turned
+      // OFF was genuinely on screen — the "?" logo placeholder,
+      // "Loading...", the hero banner — for however long that fetch took.
+      // Pre-hiding all four immediately, before any fetch even starts,
+      // then having init() explicitly reveal only the ones the shop left
+      // ON (see the embedDisplay block below, and renderFilterBar() for
+      // the filter bar specifically) guarantees a hidden section is NEVER
+      // visible, not even for a moment. The tradeoff: a section the shop
+      // left ON is also briefly invisible during that same fetch — no
+      // worse than the "Loading your showroom..." wait already happening
+      // in the content area below. Standalone mode is untouched — none of
+      // this runs there, so nothing about the popup/direct-link view
+      // changes.
+      ['sr-shop-info', 'sr-nav', 'sr-hero', 'sr-filter-bar'].forEach(id => {
+        const elToHide = document.getElementById(id);
+        if (elToHide) elToHide.style.display = 'none';
+      });
     }
     function mqSrReportHeight() {
       if (!MQ_SR_EMBEDDED) return;
@@ -527,10 +551,26 @@
       // and dashboard.js's "🧩 Embed on a page" card for where these get
       // set. The filter-bar toggle lives inside renderFilterBar() instead,
       // since that function already re-runs on every filter click.
+      //
+      // These three now REVEAL rather than hide — as of 2026-09-10, later
+      // same day, the pre-hide block up near MQ_SR_EMBEDDED's own
+      // definition already hid all of shop-info/nav/hero/filter-bar
+      // synchronously before this fetch even started (see the comment
+      // there for why: a section that's OFF must never flash visible
+      // during the load itself). So by the time execution reaches here,
+      // every one of these is already `display:none` — this block's job
+      // is now to explicitly un-hide whichever ones the shop actually left
+      // ON, by clearing the inline override back to '' so each element's
+      // normal CSS `display` (flex, from its own class rule) takes over
+      // again. Anything left OFF simply never gets touched here, so it
+      // stays exactly as hidden as it's been since before the fetch.
       if (MQ_SR_EMBEDDED) {
-        if (catSettings.embedDisplay.shopInfo === false) { const infoBox = document.getElementById('sr-shop-info'); if (infoBox) infoBox.style.display = 'none'; }
-        if (catSettings.embedDisplay.nav === false) { const navBar = document.getElementById('sr-nav'); if (navBar) navBar.style.display = 'none'; }
-        if (catSettings.embedDisplay.hero === false) { const heroBox = document.getElementById('sr-hero'); if (heroBox) heroBox.style.display = 'none'; }
+        const infoBox = document.getElementById('sr-shop-info');
+        if (infoBox) infoBox.style.display = catSettings.embedDisplay.shopInfo === false ? 'none' : '';
+        const navBar = document.getElementById('sr-nav');
+        if (navBar) navBar.style.display = catSettings.embedDisplay.nav === false ? 'none' : '';
+        const heroBox = document.getElementById('sr-hero');
+        if (heroBox) heroBox.style.display = catSettings.embedDisplay.hero === false ? 'none' : '';
       }
       syncStickyOffsets(); // header height depends on the real shop name/logo just set above
       document.getElementById('sr-hero-title').textContent = catSettings.mode === 'custom'
