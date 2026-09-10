@@ -1920,6 +1920,8 @@ window.mqphGoToWizard = function() {
             <div id="mqph-bulk-edit-form" style="display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
               <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:0.75rem" id="mqph-bulk-selected-count"></div>
               <div id="mqph-bulk-price-fields"></div>
+              <div id="mqph-bulk-requote-toggle" style="margin:2px 0 0"></div>
+              <div id="mqph-bulk-requote-panel" style="display:none;margin-top:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px"></div>
               <div style="margin-top:10px">
                 <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px">Or match another item's price</label>
                 <input type="text" id="mqph-bulk-match-search" placeholder="Search items to match…" oninput="mqphBulkMatchSearch(this.value)" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
@@ -2294,6 +2296,18 @@ window.mqphGoToWizard = function() {
     groupSel.value = '';
     mqphRenderBulkClusters();
     document.getElementById('mqph-bulk-edit-form').style.display = 'none';
+    // Requote (quote-a-job → back into the rate) is only wired up for
+    // Material and Door so far — same math the "+ Add" mini-wizard already
+    // uses for those two categories. Per Jordan 2026-09-10: Crown/Valance
+    // are direct per-lin-ft rates shops already know off the top of their
+    // head (no baseline math involved), so no requote helper needed there;
+    // Hinge explicitly excluded too — no bulk edit for hinges at all.
+    const toggleEl = document.getElementById('mqph-bulk-requote-toggle');
+    if (toggleEl) toggleEl.innerHTML = (cat === 'material' || cat === 'door')
+      ? `<a href="#" onclick="event.preventDefault();mqphBulkToggleRequote()" style="font-size:12px;color:#2563eb;text-decoration:none">🧮 Not sure of the price? Requote this job to calculate it →</a>`
+      : '';
+    const panelEl = document.getElementById('mqph-bulk-requote-panel');
+    if (panelEl) { panelEl.style.display = 'none'; panelEl.innerHTML = ''; }
     document.getElementById('mqph-bulk-overlay').classList.add('show');
   };
 
@@ -2377,6 +2391,10 @@ window.mqphGoToWizard = function() {
   function mqphUpdateBulkForm() {
     const form = document.getElementById('mqph-bulk-edit-form');
     const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    // Selection changed underneath it — a Requote panel left open would be
+    // quoting stale items, so collapse it rather than carry it forward.
+    const panelEl = document.getElementById('mqph-bulk-requote-panel');
+    if (panelEl) { panelEl.style.display = 'none'; panelEl.innerHTML = ''; }
     if (!selected.length) { form.style.display = 'none'; return; }
     form.style.display = 'block';
     document.getElementById('mqph-bulk-selected-count').textContent = `${selected.length} item${selected.length!==1?'s':''} selected`;
@@ -2395,6 +2413,128 @@ window.mqphGoToWizard = function() {
     const searchInput = document.getElementById('mqph-bulk-match-search');
     if (searchInput) searchInput.value = '';
   }
+
+  // Requote — Bulk Edit only, Material + Door. Same "quote a real job, we
+  // back into the rate" math as the "+ Add" mini-wizard's material/door
+  // steps (see miniWizContent/mqphMiniCalc/mqphMiniNext above) — reused
+  // here rather than re-derived, per Jordan 2026-09-10: most shops don't
+  // have their per-lin-ft upcharge reverse-engineered, but they do know
+  // what they'd quote a customer for the equivalent job. The two Material
+  // questions are shown together (not paginated into two steps like the
+  // mini-wiz) since Bulk Edit's price fields already show Uppers + Bases
+  // side by side. Result: fills the existing "New price" input(s) so the
+  // shop owner sees the number before confirming — it never writes to
+  // Airtable itself, mqphBulkApply() still owns that.
+  function mqphBulkRequoteHTML() {
+    const cat = _bulkEdit.cat;
+    if (cat !== 'material' && cat !== 'door') return '';
+    const bl = getBaselineRates();
+    if (bl.blBasePrice <= 0) {
+      return `<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px">⚠️ No baseline pricing found — run the pricing wizard first to use Requote.</div>`;
+    }
+    const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    const groupLabel = selected.length === 1 ? selected[0].label : `these ${selected.length} items`;
+
+    if (cat === 'material') {
+      return `
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Quote these two jobs exactly like you would for a customer for ${groupLabel} — we'll work out the per-linear-foot rate.</div>
+        <div class="mqph-item-block" style="margin-bottom:10px">
+          ${specBox([
+            `<strong>Upper cabinets — box only, no doors</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `No doors · Supply only · Local delivery`,
+          ])}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bulk-rq-p0" placeholder="0.00" oninput="mqphBulkRequoteCalc()"/></div>
+          <div id="mqph-bulk-rq-r0" class="mqph-result"></div>
+        </div>
+        <div class="mqph-item-block" style="margin-bottom:10px">
+          ${specBox([
+            `<strong>Base cabinets — box only, no doors</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `No doors · Supply only · Include toe kick`,
+          ])}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bulk-rq-p1" placeholder="0.00" oninput="mqphBulkRequoteCalc()"/></div>
+          <div id="mqph-bulk-rq-r1" class="mqph-result"></div>
+        </div>
+        <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="width:100%" onclick="mqphBulkRequoteApply()">Use these prices ↑</button>`;
+    }
+
+    // door
+    const baselineBoxDesc = `${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price)`;
+    return `
+      <div class="mqph-item-block" style="margin-bottom:10px">
+        <div style="font-size:12px;color:#6b7280;margin-bottom:8px;line-height:1.5">Quote the baseline base box job with ${groupLabel} added — we'll work out the upcharge.</div>
+        ${specBox([
+          `<strong>Base cabinets + door style</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${groupLabel}</span>`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
+        ])}
+        <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bulk-rq-p0" placeholder="0.00" oninput="mqphBulkRequoteCalc()"/></div>
+        <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the door upcharge per lin ft</p>
+        <div id="mqph-bulk-rq-r0" class="mqph-result"></div>
+      </div>
+      <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="width:100%" onclick="mqphBulkRequoteApply()">Use this price ↑</button>`;
+  }
+
+  window.mqphBulkToggleRequote = function() {
+    const panel = document.getElementById('mqph-bulk-requote-panel');
+    if (!panel) return;
+    const willShow = panel.style.display === 'none' || !panel.style.display;
+    if (willShow) {
+      panel.innerHTML = mqphBulkRequoteHTML();
+      panel.style.display = 'block';
+    } else {
+      panel.style.display = 'none';
+    }
+  };
+
+  window.mqphBulkRequoteCalc = function() {
+    const cat = _bulkEdit.cat;
+    const bl = getBaselineRates();
+    const reveal = (idx, rate) => {
+      const el = document.getElementById(`mqph-bulk-rq-r${idx}`);
+      if (!el) return;
+      el.textContent = (rate !== null && !isNaN(rate)) ? `${CUR()}${rate.toFixed(2)} / lin ft` : '';
+    };
+    if (cat === 'material') {
+      const p0 = parseFloat(document.getElementById('mqph-bulk-rq-p0')?.value || 0);
+      const p1 = parseFloat(document.getElementById('mqph-bulk-rq-p1')?.value || 0);
+      reveal(0, p0 > 0 ? p0 / 4 : null);
+      reveal(1, p1 > 0 ? p1 / 4 : null);
+    }
+    if (cat === 'door') {
+      const p0 = parseFloat(document.getElementById('mqph-bulk-rq-p0')?.value || 0);
+      reveal(0, p0 > 0 ? (p0 - bl.blBasePrice) / 4 : null);
+    }
+  };
+
+  // Fills the already-rendered "New price" input(s) with the computed
+  // rate(s) and collapses back down — mqphBulkApply() (the actual write)
+  // is untouched, so the shop owner still confirms via the normal button.
+  window.mqphBulkRequoteApply = function() {
+    const cat = _bulkEdit.cat;
+    const bl = getBaselineRates();
+    if (cat === 'material') {
+      const p0 = parseFloat(document.getElementById('mqph-bulk-rq-p0')?.value || 0);
+      const p1 = parseFloat(document.getElementById('mqph-bulk-rq-p1')?.value || 0);
+      if (!(p0 > 0) || !(p1 > 0)) { alert('Enter a total price for both jobs first.'); return; }
+      const upperRate = Math.round((p0/4)*100)/100;
+      const baseRate  = Math.round((p1/4)*100)/100;
+      const inp0 = document.getElementById('mqph-bulk-newprice-0');
+      const inp1 = document.getElementById('mqph-bulk-newprice-1');
+      if (inp0) inp0.value = upperRate.toFixed(2);
+      if (inp1) inp1.value = baseRate.toFixed(2);
+    } else if (cat === 'door') {
+      const p0 = parseFloat(document.getElementById('mqph-bulk-rq-p0')?.value || 0);
+      if (!(p0 > 0)) { alert('Enter a total price for the job first.'); return; }
+      const rate = Math.round(((p0 - bl.blBasePrice)/4)*100)/100;
+      const inp0 = document.getElementById('mqph-bulk-newprice-0');
+      if (inp0) inp0.value = rate.toFixed(2);
+    }
+    const panel = document.getElementById('mqph-bulk-requote-panel');
+    if (panel) panel.style.display = 'none';
+  };
 
   window.mqphBulkMatchSearch = function(val) {
     const term = (val||'').toLowerCase().trim();
