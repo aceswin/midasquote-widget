@@ -1862,6 +1862,7 @@ window.mqphGoToWizard = function() {
               }
             </div>
             <div id="mqph-cat-body-${cat}" style="display:none">
+            ${cat==='zone' ? `<div style="font-size:11px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;margin:4px 12px 8px">💡 Showing "km" but want "mi" instead (or back to km)? Click <strong>Edit</strong> on the zone below and switch the unit — it's just a label, so it's the one field that's editable there.</div>` : ''}
             <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
               <span style="cursor:pointer;flex:1" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
               <span style="cursor:pointer;min-width:80px;text-align:right" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
@@ -1870,7 +1871,7 @@ window.mqphGoToWizard = function() {
             ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
                 <div style="flex:1;min-width:0">
-                  <div class="mqph-row-name">${r.fields['Name']||'—'}${cat === 'material' ? (r.fields['Is baseline'] ? ' <span title="New items in this category are priced as an upcharge against this one" style="font-size:11px;font-weight:600;color:#92400e">⭐ Baseline</span>' : ` <button class="mqph-btn-ghost" style="font-size:11px;padding:0;color:#9ca3af;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit" onclick="mqphSetAsBaseline('${cat}','${r.id}')">☆ Set as baseline</button>`) : ''}</div>
+                  <div class="mqph-row-name">${r.fields['Name']||'—'}${['material','door','hinge'].includes(cat) && r.fields['Is baseline'] ? ' <span title="New items in this category are priced as an upcharge against this one" style="font-size:11px;font-weight:600;color:#92400e">⭐ Baseline</span>' : ''}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
                 <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : CUR() +(r.fields['Rate']||0).toLocaleString()}</div>
@@ -2129,17 +2130,25 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-item-name').value  = rec.fields['Name']||'';
     document.getElementById('mqph-item-cat').value   = rec.fields['Category']||'material';
     document.getElementById('mqph-item-rate').value  = rec.fields['Rate']||'';
+    const editCat = rec.fields['Category']||'material';
     const unit = rec.fields['Unit']||'per lin ft';
-    mqphPopulateUnitOptions(rec.fields['Category']||'material', unit);
+    mqphPopulateUnitOptions(editCat, unit);
     // Locked: whatever pricing method the item was created with is the
     // only one it can ever have — see the CAT_UNIT_OPTIONS comment above
     // and Jordan's 2026-09-09 report of a customer accidentally switching
     // a hinge from "per lin ft upcharge" to "each" and confusing pricing.
-    document.getElementById('mqph-item-unit').disabled = true;
+    //
+    // Exception: "zone" (travel zones). Its Unit is just a display label —
+    // "km" vs "mi" — with zero calculation behind it (see CAT_UNIT_OPTIONS
+    // comment), so switching it on Edit can't cause the hinge-style pricing
+    // bug. Per Jordan 2026-09-10, leave it editable there so a shop can
+    // relabel a zone from km to mi (or back) without deleting/recreating it.
+    const unitLocked = editCat !== 'zone';
+    document.getElementById('mqph-item-unit').disabled = unitLocked;
     document.getElementById('mqph-item-desc').value  = rec.fields['Description']||'';
     document.getElementById('mqph-item-active').checked = rec.fields['Active']!==false;
     const lockNote = document.getElementById('mqph-item-unit-lock-note');
-    if (lockNote) lockNote.style.display = 'block';
+    if (lockNote) lockNote.style.display = unitLocked ? 'block' : 'none';
     document.getElementById('mqph-modal-overlay').classList.add('show');
   };
 
