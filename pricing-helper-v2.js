@@ -1962,7 +1962,20 @@ window.mqphGoToWizard = function() {
           <div class="mqph-modal-body">
             <div class="mqph-field"><label>Name</label><input type="text" id="mqph-item-name"/></div>
             <div class="mqph-field"><label>Category</label>
-              <select id="mqph-item-cat" onchange="mqphOnItemCatChange()">${Object.entries(CAT_LABELS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
+              <!-- 'drawer_config' is deliberately excluded here — it shares
+                   CAT_LABELS' "🗄️ Drawer configurations" text with 'drawer'
+                   (the real priced category, with Rate/Unit) purely for
+                   display purposes elsewhere (category headers, etc.), but
+                   it isn't a priced category itself — it has no entry in
+                   CAT_UNIT_OPTIONS, and its rows are config-name chips
+                   managed only through Edit Shop Items (see the
+                   "drawer_config chips — not shown in editor" comment on
+                   the main category-list render below). Listing it here
+                   duplicated "Drawer configurations" in this dropdown
+                   (Jordan flagged 2026-09-10) and would let a shop
+                   accidentally create a malformed drawer_config row through
+                   the wrong screen. -->
+              <select id="mqph-item-cat" onchange="mqphOnItemCatChange()">${Object.entries(CAT_LABELS).filter(([v])=>v!=='drawer_config').map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
             </div>
             <div class="mqph-field"><label>Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01"/></div>
             <div class="mqph-field"><label>Unit</label>
