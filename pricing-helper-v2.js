@@ -360,6 +360,12 @@ let wizardBaseline = null;
       if (!existing[cat]) existing[cat] = [];
       existing[cat].push(r);
     });
+    // Used by the "Local delivery zone" card below — km/mi is just a display
+    // label here (see CAT_UNIT_OPTIONS comment), so a shop can pick either
+    // at setup time instead of only discovering the Edit-to-switch trick
+    // later on the Pricing page. Defaults to 'km' for anyone who doesn't
+    // touch it, matching the original hardcoded behavior.
+    const existingZoneItem = (existing['zone']||[]).find(r=>r.fields['Name']?.toLowerCase().includes('local'));
 
     return `
       <div style="margin-bottom:1.5rem">
@@ -413,8 +419,11 @@ let wizardBaseline = null;
         </div>
         <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <label style="font-size:13px;color:#374151;font-weight:500">Local radius:</label>
-          <input type="number" id="mqph-local-radius" value="${(existing['zone']||[]).find(r=>r.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15}" style="width:90px;text-align:right;font-family:inherit;font-size:14px;font-weight:600;color:#111;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-          <span style="font-size:13px;color:#6b7280;font-weight:500">km</span>
+          <input type="number" id="mqph-local-radius" value="${existingZoneItem?.fields['Rate'] || 15}" style="width:90px;text-align:right;font-family:inherit;font-size:14px;font-weight:600;color:#111;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+          <select id="mqph-local-radius-unit" style="font-size:13px;font-family:inherit;color:#374151;font-weight:500;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 8px;background:#fff">
+            <option value="km" ${(existingZoneItem?.fields['Unit']||'km')==='km'?'selected':''}>km</option>
+            <option value="mi" ${existingZoneItem?.fields['Unit']==='mi'?'selected':''}>mi</option>
+          </select>
           <button onclick="mqphSaveLocalRadius()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>
           <span id="mqph-local-radius-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
         </div>
@@ -954,14 +963,16 @@ window.mqphGoToWizard = function() {
       title:'📍 Final step — Local delivery zone',
       sub:'Set your local delivery radius so the widget knows your service area.',
       content:() => {
-        const existingRadius = getByCategory('zone').find(z=>z.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15;
+        const existingZoneRec = getByCategory('zone').find(z=>z.fields['Name']?.toLowerCase().includes('local'));
+        const existingRadius = existingZoneRec?.fields['Rate'] || 15;
+        const existingUnit = existingZoneRec?.fields['Unit'] || 'km';
         return `
           <div class="mqph-info">
             Jobs within your local radius are quoted at no extra travel charge — any delivery cost should already be built into your regular pricing. Jobs outside this area will include a note on the quote that travel charges may apply.
           </div>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
             <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">📍 Local delivery radius</div>
-            <div class="mqph-input-row"><label>No extra travel charge within this distance</label><input type="number" id="mqph-zone-r" value="${existingRadius}" style="width:130px;text-align:right"/><span class="mqph-pfx">km</span></div>
+            <div class="mqph-input-row"><label>No extra travel charge within this distance</label><input type="number" id="mqph-zone-r" value="${existingRadius}" style="width:130px;text-align:right"/><select id="mqph-zone-r-unit" style="font-size:14px;font-family:inherit;color:#374151;border:1px solid #d1d5db;border-radius:6px;padding:6px 8px"><option value="km" ${existingUnit==='km'?'selected':''}>km</option><option value="mi" ${existingUnit==='mi'?'selected':''}>mi</option></select></div>
           </div>`;
       },
       skipLabel:'Skip',
@@ -969,13 +980,15 @@ window.mqphGoToWizard = function() {
       onNext:() => {
         const gn=id=>parseFloat(document.getElementById(id)?.value||0);
         const zr=gn('mqph-zone-r');
+        const zUnit = document.getElementById('mqph-zone-r-unit')?.value || 'km';
         if(zr>0) {
           const existing = lineItems.find(r=>r.fields&&r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
           if(existing) {
-            atUpdate(LINE_ITEMS_TABLE, existing.id, {Rate:zr});
+            atUpdate(LINE_ITEMS_TABLE, existing.id, {Rate:zr, Unit:zUnit});
             existing.fields['Rate'] = zr;
+            existing.fields['Unit'] = zUnit;
           } else {
-            atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Local zone radius',Category:'zone',Rate:zr,Unit:'km',Description:'Within this distance = no travel surcharge',Active:true,'Sort order':0})
+            atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Local zone radius',Category:'zone',Rate:zr,Unit:zUnit,Description:'Within this distance = no travel surcharge',Active:true,'Sort order':0})
               .then(rec=>{ if(rec?.id) lineItems.push(rec); });
           }
         }
@@ -2052,12 +2065,14 @@ window.mqphGoToWizard = function() {
 
   window.mqphSaveLocalRadius = async function() {
     const val = parseFloat(document.getElementById('mqph-local-radius')?.value || 15);
+    const unit = document.getElementById('mqph-local-radius-unit')?.value || 'km';
     const existing = lineItems.find(r => r.fields && r.fields['Name']?.toLowerCase().includes('local') && r.fields['Category']==='zone');
     if (existing) {
-      await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate':val });
+      await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate':val, 'Unit':unit });
       existing.fields['Rate'] = val;
+      existing.fields['Unit'] = unit;
     } else {
-      const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':'Local zone radius', 'Category':'zone', 'Rate':val, 'Unit':'km', 'Description':'Within this distance = no travel surcharge', 'Active':true, 'Sort order':0 });
+      const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':'Local zone radius', 'Category':'zone', 'Rate':val, 'Unit':unit, 'Description':'Within this distance = no travel surcharge', 'Active':true, 'Sort order':0 });
       if (rec?.id) lineItems.push(rec);
     }
     const saved = document.getElementById('mqph-local-radius-saved');
