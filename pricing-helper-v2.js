@@ -1868,6 +1868,7 @@ window.mqphGoToWizard = function() {
               <span style="cursor:pointer;min-width:80px;text-align:right" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
               ${['door','material'].includes(cat) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenBulkEdit('${cat}')">📊 Bulk edit</button>` : ''}
             </div>
+            <div${recs.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>
             ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
                 <div style="flex:1;min-width:0">
@@ -1880,6 +1881,7 @@ window.mqphGoToWizard = function() {
                 <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
                 <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
               </div>`).join('')}
+            </div>
             </div>
           </div>`).join('')}
       `}
@@ -2444,9 +2446,16 @@ window.mqphGoToWizard = function() {
   // customers see on the widget. Purely a convenience for finding/editing
   // items in the dashboard (e.g. sort a big door list alphabetically to
   // find one, then it's still in its normal custom order for customers).
-  let _mqphSortState = {}; // cat -> {field:'default'|'name'|'price', dir:'asc'|'desc'}
+  //
+  // Default (before a shop owner clicks a column header) is price,
+  // lowest→highest — per Jordan 2026-09-10: he'd rather a section open
+  // already sorted cheapest-first than in whatever order items happened to
+  // get added in. `MQPH_DEFAULT_SORT` is that starting state; "Sort order"
+  // (the original custom/import order) is still reachable as a 3rd click.
+  const MQPH_DEFAULT_SORT = {field:'price', dir:'asc'};
+  let _mqphSortState = {}; // cat -> {field:'default'|'name'|'price', dir:'asc'|'desc'} — unset means MQPH_DEFAULT_SORT
   function mqphSortRecs(cat, recs) {
-    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const state = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
     const sorted = [...recs];
     if (state.field === 'name') sorted.sort((a,b) => (a.fields['Name']||'').localeCompare(b.fields['Name']||''));
     else if (state.field === 'price') sorted.sort((a,b) => (a.fields['Rate']||0) - (b.fields['Rate']||0));
@@ -2455,16 +2464,16 @@ window.mqphGoToWizard = function() {
     return sorted;
   }
   function mqphSortArrow(cat, field) {
-    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const state = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
     if (state.field !== field) return '<span style="opacity:0.35">↕</span>';
     return state.dir === 'asc' ? '↑' : '↓';
   }
   window.mqphSetSort = function(cat, field) {
-    const current = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const current = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
     if (current.field === field) {
-      // 3rd click cycles back to default order — asc, then desc, then back
-      // to normal, without needing a dedicated "Order" label taking up
-      // space of its own.
+      // 3rd click cycles back to the items' original custom/import order —
+      // asc, then desc, then back to normal, without needing a dedicated
+      // "Order" label taking up space of its own.
       _mqphSortState[cat] = current.dir === 'asc' ? { field, dir:'desc' } : { field:'default', dir:'asc' };
     } else {
       _mqphSortState[cat] = { field, dir:'asc' };
