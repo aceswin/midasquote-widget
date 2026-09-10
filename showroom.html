@@ -81,7 +81,7 @@
         <div class="sr-shop-city" id="sr-shop-city"></div>
       </div>
     </div>
-    <a href="javascript:window.close()" class="sr-back">← Close</a>
+    <a href="javascript:window.close()" class="sr-back" id="sr-close-link">← Close</a>
   </div>
 
   <div class="sr-hero" id="sr-hero">
@@ -108,6 +108,42 @@
     // with a hardcoded token, which meant anyone could read it straight out
     // of View Source on a fully public, unauthenticated page. Never again.
     const CONFIG = { PROXY_WORKER: 'https://midasquote-airtable-proxy.jordan132001.workers.dev' };
+
+    // Embeddable-on-a-page support, added 2026-09-10. This page has always
+    // worked as its own standalone tab (shop's "Open showroom ↗" button /
+    // copy-paste link) — that's untouched. This block ONLY adds support for
+    // ALSO dropping it into an <iframe> on a shop's own site (dashboard.js's
+    // Showroom tab hands out that iframe snippet). No height is ever picked
+    // by the shop — instead this page measures its own rendered height and
+    // posts it up to the parent page, which resizes the iframe to match, so
+    // it always looks like a normal part of the page instead of a fixed box
+    // with its own scrollbar. Standalone mode (window.self === window.top)
+    // is completely unaffected — every line below is a no-op there.
+    const MQ_SR_EMBEDDED = window.self !== window.top;
+    if (MQ_SR_EMBEDDED) {
+      // "← Close" only makes sense as its own tab (window.close() silently
+      // does nothing otherwise) — hide it immediately, don't wait on init().
+      const closeLink = document.getElementById('sr-close-link');
+      if (closeLink) closeLink.style.display = 'none';
+    }
+    function mqSrReportHeight() {
+      if (!MQ_SR_EMBEDDED) return;
+      try { window.parent.postMessage({ type: 'midasquote-showroom-height', height: document.documentElement.scrollHeight }, '*'); } catch(e) {}
+    }
+    if (MQ_SR_EMBEDDED) {
+      // ResizeObserver catches every reason the page's height can change —
+      // initial render, switching the filter/nav, and images loading in
+      // asynchronously after the shop's photos resolve — without needing a
+      // manual mqSrReportHeight() call wired into each of those individually.
+      if (window.ResizeObserver) {
+        new ResizeObserver(mqSrReportHeight).observe(document.documentElement);
+      } else {
+        // Old-browser fallback — no ResizeObserver support.
+        window.addEventListener('resize', mqSrReportHeight);
+        setInterval(mqSrReportHeight, 800);
+      }
+      window.addEventListener('load', mqSrReportHeight);
+    }
 
     // Fallback project types — only used if a shop has never customized
     // "Room types" at all, matching the same default list the widget and

@@ -1339,6 +1339,13 @@ window.logoutMember = async function () {
             </div>
 
             <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🧩 Embed on a page</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Prefer it to show up right inside a page on your own site instead of opening a new tab? Paste this code where you want it to appear — no need to pick a size, it automatically sizes itself to fit its own content.</p>
+              <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-showroom-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
+              <button class="mq-btn mq-btn-primary" id="mq-showroom-embed-copy-btn" style="width:100%">📋 Copy embed code</button>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1.5rem">
               <div class="mq-card-title">🎭 Showroom style</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Choose how your showroom page looks. Specialty Items show either way — everything else depends on which one's picked.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -6242,6 +6249,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (linkText) linkText.textContent = showroomUrl;
     if (copyBtn)  copyBtn.onclick = () => mqCopyText(showroomUrl, copyBtn);
     if (openBtn)  openBtn.onclick = () => window.open(showroomUrl, '_blank');
+
+    // Embed-on-a-page snippet — added 2026-09-10, alongside (not replacing)
+    // the standalone link above. An <iframe> works here because
+    // showroom.html is already fully self-contained (pulls its own data
+    // from ?shop=TOKEN, same as the standalone page/preview iframe below
+    // already do) — no separate JS-mount build needed the way widget.js's
+    // own embed does. Deliberately gives no height/size field to fill in:
+    // showroom.html measures its own rendered height (via a ResizeObserver
+    // added there) and posts it up through this snippet's tiny listener
+    // script, which resizes the iframe to match — so a non-technical shop
+    // owner just pastes one block and it looks right, no guessing a pixel
+    // height. `scrolling="no"` + no inner overflow is safe specifically
+    // because the iframe is always exactly as tall as its content.
+    const showroomEmbedCode = `<iframe id="midasquote-showroom" src="${showroomUrl}" style="width:100%;border:none;display:block" scrolling="no"></iframe>\n<scr` + `ipt>(function(){window.addEventListener('message',function(e){if(e.data&&e.data.type==='midasquote-showroom-height'){var f=document.getElementById('midasquote-showroom');if(f)f.style.height=e.data.height+'px';}});})();</scr` + `ipt>`;
+    const embedDisplay = el('mq-showroom-embed-display');
+    const embedCopyBtn = el('mq-showroom-embed-copy-btn');
+    if (embedDisplay) embedDisplay.textContent = showroomEmbedCode;
+    if (embedCopyBtn) embedCopyBtn.onclick = () => mqCopyText(showroomEmbedCode, embedCopyBtn);
 
     const frame = el('mq-showroom-preview-frame');
     if (frame) frame.src = showroomUrl + '&_r=' + Date.now();
