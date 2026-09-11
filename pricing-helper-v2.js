@@ -1005,8 +1005,8 @@ window.mqphGoToWizard = function() {
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
             <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔽 Base cabinets — install only</div>
             <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)} · Include toe kick install</div>
-            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors, include toe kick)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles, include toe kick)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div id="mqph-r-install" class="mqph-result"></div>
           <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
@@ -2170,7 +2170,10 @@ window.mqphGoToWizard = function() {
                 <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : CUR() +(r.fields['Rate']||0).toLocaleString()}</div>
                 <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
                 <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
-                <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
+                ${cat==='install'
+                  ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenInstallRequote()">Edit</button>`
+                  : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>`
+                }
                 <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
               </div>`).join('')}
             </div>
@@ -2239,8 +2242,8 @@ window.mqphGoToWizard = function() {
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔽 Base cabinets — install only</div>
               <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)} · Include toe kick install</div>
-              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors, include toe kick)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles, include toe kick)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
             </div>
             <div id="mqph-r-install" class="mqph-result"></div>
             <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
@@ -2283,7 +2286,7 @@ window.mqphGoToWizard = function() {
           </div>
           <div class="mqph-modal-body">
             <div class="mqph-field"><label>Name</label><input type="text" id="mqph-item-name"/>
-              <div id="mqph-item-name-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked while editing — box materials and drawer configs are matched to their paired row (uppers/bases, or some/mostly drawers) by parsing this exact name, so renaming one side without the other would break that pairing and silently mis-price the widget. Delete and re-add both halves together if it truly needs a new name.</div>
+              <div id="mqph-item-name-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4"></div>
             </div>
             <div class="mqph-field"><label>Category</label>
               <!-- 'drawer_config' is deliberately excluded here — it shares
@@ -2770,10 +2773,27 @@ window.mqphGoToWizard = function() {
     // `Linked door style` fragility that used to make that unsafe is now
     // handled by auto-propagating a door rename into every linked trim
     // item, not by locking it.
-    const nameLocked = ['material','drawer'].includes(rec.fields['Category']);
+    // Install — locked 2026-09-12 too, for the same reason as material/
+    // drawer above: mqphOpenInstallRequote/mqphSaveInstallRequote and
+    // widget.js/widgetpro.js all look up an install rate by one of its 5
+    // fixed Name strings ('Install — uppers (no doors)', etc. — see the
+    // CAT_LABELS/upsert comments near mqphSaveInstallRequote), so a
+    // rename would silently orphan that rate from every place that reads
+    // it by name. In practice this rarely gets reached — the per-row Edit
+    // button for install rows now opens mqphOpenInstallRequote() instead
+    // of this raw modal (see the category-row template) — but locked here
+    // too as a defensive backstop, same layered pattern as Category's lock
+    // applying to both Add and Edit even though most entry points are
+    // already gated.
+    const nameLocked = ['material','drawer','install'].includes(rec.fields['Category']);
     document.getElementById('mqph-item-name').disabled = nameLocked;
     const nameLockNote = document.getElementById('mqph-item-name-lock-note');
-    if (nameLockNote) nameLockNote.style.display = nameLocked ? 'block' : 'none';
+    if (nameLockNote) {
+      nameLockNote.textContent = rec.fields['Category'] === 'install'
+        ? '🔒 Locked while editing — install & removal rates are matched to the widget\'s pricing by this exact name, so renaming one would silently stop it from being priced. Use the "✏️ Edit install/removal rates" panel instead to change the price.'
+        : '🔒 Locked while editing — box materials and drawer configs are matched to their paired row (uppers/bases, or some/mostly drawers) by parsing this exact name, so renaming one side without the other would break that pairing and silently mis-price the widget. Delete and re-add both halves together if it truly needs a new name.';
+      nameLockNote.style.display = nameLocked ? 'block' : 'none';
+    }
     document.getElementById('mqph-item-cat').value   = rec.fields['Category']||'material';
     // Locked, no exception (unlike Unit below) — Category changes what an
     // item's Rate/Unit actually MEAN (a box material's rate is a flat
