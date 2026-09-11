@@ -1092,6 +1092,60 @@ window.mqphGoToWizard = function() {
     }
   };
 
+  // Install/removal requote flow — Jordan 2026-09-11: deleting ANY single
+  // install/removal rate now cascade-deletes the whole category (see
+  // mqphDelete below), since the widget needs the full set to price every
+  // job type accurately. Once the category is empty, this is how a shop
+  // gets it back — same 5-input quote as wizard Step 9, reusing
+  // mqphCalcInstall() for the live calc since that function has no
+  // wizard-state dependency of its own.
+  window.mqphOpenInstallRequote = function() {
+    ['mqph-inst-u-nd','mqph-inst-u-wd','mqph-inst-b-nd','mqph-inst-b-wd','mqph-removal'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const res1 = document.getElementById('mqph-r-install'); if (res1) res1.style.display = 'none';
+    const res2 = document.getElementById('mqph-r-removal'); if (res2) res2.style.display = 'none';
+    const hint = document.getElementById('mqph-removal-hint'); if (hint) hint.textContent = '';
+    document.getElementById('mqph-install-requote-overlay')?.classList.add('show');
+  };
+
+  window.mqphCloseInstallRequote = function() {
+    document.getElementById('mqph-install-requote-overlay')?.classList.remove('show');
+  };
+
+  window.mqphSaveInstallRequote = async function() {
+    const und=parseFloat(document.getElementById('mqph-inst-u-nd')?.value||0);
+    const uwd=parseFloat(document.getElementById('mqph-inst-u-wd')?.value||0);
+    const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
+    const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
+    const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
+    if (!(und>0) && !(uwd>0) && !(bnd>0) && !(bwd>0) && !(rem>0)) { alert('Enter at least one rate before saving.'); return; }
+    const items = [];
+    let sort = lineItems.length + 1;
+    // Mirrors wizard Step 9's onNext exactly (same names/units/descriptions/
+    // auto-calculated some-mostly-drawers percentages), just writing
+    // straight to Airtable instead of queuing into wizardItems.
+    if(und>0) items.push({ shop:[shopRecord._recordId], Name:'Install — uppers (no doors)',   Category:'install', Rate:Math.round((und/4)*100)/100, Unit:'per lin ft', Description:'Upper box install, no doors', Active:true, 'Sort order':sort++ });
+    if(uwd>0) items.push({ shop:[shopRecord._recordId], Name:'Install — uppers (with doors)', Category:'install', Rate:Math.round((uwd/4)*100)/100, Unit:'per lin ft', Description:'Upper install with doors hung', Active:true, 'Sort order':sort++ });
+    if(bnd>0) items.push({ shop:[shopRecord._recordId], Name:'Install — bases (no doors)',    Category:'install', Rate:Math.round((bnd/4)*100)/100, Unit:'per lin ft', Description:'Base box install, no doors', Active:true, 'Sort order':sort++ });
+    if(bwd>0) {
+      const bwdRate = Math.round((bwd/4)*100)/100;
+      items.push({ shop:[shopRecord._recordId], Name:'Install — bases (with doors)',     Category:'install', Rate:bwdRate, Unit:'per lin ft', Description:'Base install with doors hung', Active:true, 'Sort order':sort++ });
+      items.push({ shop:[shopRecord._recordId], Name:'Install — bases (some drawers)',   Category:'install', Rate:Math.round(bwdRate*1.10*100)/100, Unit:'per lin ft', Description:'Base install with some drawers (+10% over with-doors rate)', Active:true, 'Sort order':sort++ });
+      items.push({ shop:[shopRecord._recordId], Name:'Install — bases (mostly drawers)', Category:'install', Rate:Math.round(bwdRate*1.15*100)/100, Unit:'per lin ft', Description:'Base install with mostly drawers (+15% over with-doors rate)', Active:true, 'Sort order':sort++ });
+    }
+    if(rem>0) items.push({ shop:[shopRecord._recordId], Name:'Cabinet removal', Category:'install', Rate:Math.round((rem/4)*100)/100, Unit:'per lin ft', Description:'Remove & dispose existing cabinets', Active:true, 'Sort order':sort++ });
+    const btn = document.getElementById('mqph-install-requote-save');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      for (const fields of items) { const rec = await atCreate(LINE_ITEMS_TABLE, fields); if (rec?.id) lineItems.push(rec); }
+      mqphCloseInstallRequote();
+      await loadAndRender();
+    } catch(e) {
+      alert('Something went wrong saving these — please try again. Anything already created stayed saved, so check Pricing before re-running to avoid duplicates.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Save install/removal rates →'; }
+    }
+  };
+
   // ============================================================
   // WIZARD NAV
   // ============================================================
@@ -1863,12 +1917,12 @@ window.mqphGoToWizard = function() {
           <button class="mqph-btn mqph-btn-primary" onclick="mqphStartItemSetup()">Set up shop items →</button>
         </div>` : `
 
-        ${['material','door','drawer','hinge','zone','install','other','tax'].filter(cat => groups[cat]).map(cat => [cat, groups[cat]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
+        ${['material','door','drawer','hinge','zone','install','other','tax'].filter(cat => groups[cat] || cat==='install').map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
           <div class="mqph-cat-block">
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
               <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
               ${cat==='install'
-                ? ''
+                ? (recs.length===0 ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenInstallRequote()">🔧 Requote install/removal rates</button>` : '')
                 : MINI_WIZ_CATS.includes(cat)
                   ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
                   : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
@@ -1876,6 +1930,9 @@ window.mqphGoToWizard = function() {
             </div>
             <div id="mqph-cat-body-${cat}" style="display:none">
             ${cat==='zone' ? `<div style="font-size:11px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;margin:4px 12px 8px">💡 Showing "km" but want "mi" instead (or back to km)? Click <strong>Edit</strong> on the zone below and switch the unit — it's just a label, so it's the one field that's editable there.</div>` : ''}
+            ${cat==='install' && recs.length===0 ? `
+            <div style="padding:16px 12px;font-size:12px;color:#6b7280;line-height:1.5">All installation & removal rates were deleted. Click <strong>"🔧 Requote install/removal rates"</strong> above to quote them again — the widget needs these to price install-only and removal jobs.</div>
+            ` : `
             <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
               <span style="cursor:pointer;flex:1;${mqphSortLabelStyle(cat,'name')}" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
               <span style="cursor:pointer;min-width:80px;text-align:right;${mqphSortLabelStyle(cat,'price')}" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
@@ -1895,6 +1952,7 @@ window.mqphGoToWizard = function() {
                 <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
               </div>`).join('')}
             </div>
+            `}
             </div>
           </div>`).join('')}
       `}
@@ -1929,6 +1987,45 @@ window.mqphGoToWizard = function() {
               </div>
               <button class="mqph-btn mqph-btn-primary" style="margin-top:1rem;width:100%" onclick="mqphBulkApply()">Update selected items →</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Install/removal requote overlay — appears only once Jordan's
+           cascade-delete (see mqphDelete) has cleared the whole Install &
+           Removal category, via the "🔧 Requote install/removal rates"
+           button that takes the place of that category's normal "+ Add"
+           button when it's empty. Reuses the exact same 5 input ids and
+           mqphCalcInstall() live-calc as wizard Step 9 — mqphCalcInstall
+           has no wizard-state dependency, it only reads these DOM ids — so
+           the shop can requote the whole install/removal set without
+           re-running the full pricing wizard. Added 2026-09-11. -->
+      <div class="mqph-overlay" id="mqph-install-requote-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3>🔧 Requote install/removal rates</h3></div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseInstallRequote()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <p style="font-size:13px;color:#6b7280;margin:0 0 1rem;line-height:1.5">Quote install-only prices — no supply, just labour. Use the same 4 lin ft spec as the rest of your pricing. Leave any box blank to skip that rate.</p>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔼 Upper cabinets — install only</div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔽 Base cabinets — install only</div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            </div>
+            <div id="mqph-r-install" class="mqph-result"></div>
+            <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal & disposal</div>
+            <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet (${mqphMm(48).toLocaleString()}mm) of base cabinets with doors?</label></div>
+            <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Include your cost to haul away and dispose of the old cabinets. <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
+            <div class="mqph-input-row"><label>Removal & disposal price for 4ft (${mqphMm(48).toLocaleString()}mm) job</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div id="mqph-r-removal" class="mqph-result"></div>
+            <button class="mqph-btn mqph-btn-primary" id="mqph-install-requote-save" style="margin-top:1.25rem;width:100%" onclick="mqphSaveInstallRequote()">Save install/removal rates →</button>
           </div>
         </div>
       </div>
@@ -2463,9 +2560,25 @@ window.mqphGoToWizard = function() {
           (r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() === baseName);
       }
     }
+    // Installation & removal rates all work together to cover every job
+    // type the widget can quote (uppers/bases, with/without doors, some/
+    // mostly drawers, removal) — deleting only one would leave the widget
+    // with no accurate install price for whatever job needs the missing
+    // rate. Per Jordan 2026-09-11: warn that deleting any one install/
+    // removal rate deletes the whole set, then let the shop requote all of
+    // them at once via the "🔧 Requote install/removal rates" button that
+    // takes the "+ Add" button's place once the category is empty (see
+    // mqphOpenInstallRequote above).
+    let installSiblings = [];
+    if (rec && rec.fields && rec.fields['Category'] === 'install') {
+      installSiblings = lineItems.filter(r => r.id !== id && r.fields && r.fields['Category'] === 'install');
+    }
+
     const confirmMsg = drawerPartner
       ? `Delete this item? Its paired rate — "${drawerPartner.fields['Name']}" — is calculated together with this one and can't be split apart, so it'll be deleted too.`
-      : 'Delete this item?';
+      : installSiblings.length > 0
+        ? `Delete this item? Your installation & removal rates work together — the widget picks whichever one matches a job, so having only some of them would make its install pricing inaccurate. Deleting this one will delete all ${installSiblings.length + 1} installation & removal rates together. You can requote them anytime after, using the button that'll appear here.`
+        : 'Delete this item?';
     if (!confirm(confirmMsg)) return;
     try {
       // Same door → linked-crown/valance cleanup as mqphDeleteChip, for
@@ -2489,6 +2602,7 @@ window.mqphGoToWizard = function() {
       }
       await atDelete(LINE_ITEMS_TABLE,id);
       if (drawerPartner) { try { await atDelete(LINE_ITEMS_TABLE, drawerPartner.id); } catch(e) {} }
+      for (const sib of installSiblings) { try { await atDelete(LINE_ITEMS_TABLE, sib.id); } catch(e) {} }
       await loadAndRender();
     } catch(e) { alert('Error deleting.'); }
   };
