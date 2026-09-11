@@ -2073,6 +2073,7 @@ window.mqphGoToWizard = function() {
                    accidentally create a malformed drawer_config row through
                    the wrong screen. -->
               <select id="mqph-item-cat" onchange="mqphOnItemCatChange()">${Object.entries(CAT_LABELS).filter(([v])=>v!=='drawer_config').map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
+              <div id="mqph-item-cat-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked while editing — an item's category can't be changed after it's created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material's rate is a flat price, a door style's is an upcharge, a drawer config's rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.</div>
             </div>
             <div class="mqph-field"><label>Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01" oninput="mqphEditRequoteFromRate()"/></div>
             <div id="mqph-edit-requote-wrap"></div>
@@ -2243,6 +2244,7 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-modal-title').textContent = 'Add item';
     document.getElementById('mqph-item-name').value = '';
     document.getElementById('mqph-item-cat').value = cat || 'material';
+    document.getElementById('mqph-item-cat').disabled = false;
     document.getElementById('mqph-item-rate').value = '';
     mqphPopulateUnitOptions(cat || 'material', (CAT_UNIT_OPTIONS[cat||'material']||ALL_UNIT_OPTIONS)[0]);
     document.getElementById('mqph-item-unit').disabled = false;
@@ -2250,6 +2252,8 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-item-active').checked = true;
     const lockNote = document.getElementById('mqph-item-unit-lock-note');
     if (lockNote) lockNote.style.display = 'none';
+    const catLockNote = document.getElementById('mqph-item-cat-lock-note');
+    if (catLockNote) catLockNote.style.display = 'none';
     // Add never reaches material/door/drawer (those categories' "+ Add"
     // opens the mini-wizard instead — see MINI_WIZ_CATS), so there's never
     // a rec to reverse-calculate a quote from here. Clear defensively
@@ -2487,6 +2491,21 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-modal-title').textContent = 'Edit item';
     document.getElementById('mqph-item-name').value  = rec.fields['Name']||'';
     document.getElementById('mqph-item-cat').value   = rec.fields['Category']||'material';
+    // Locked, no exception (unlike Unit below) — Category changes what an
+    // item's Rate/Unit actually MEAN (a box material's rate is a flat
+    // price; a door style's is an upcharge over baseline; a drawer
+    // config's depends on its paired "some"/"mostly" rate; an install
+    // rate is one of a matched set) and every one of those meanings is
+    // wired to Category-specific math and lookups elsewhere in this file
+    // (getBaselineRates, the drawer-pairing delete/requote logic, the
+    // install-cascade delete/requote logic, etc.) — switching Category on
+    // an existing record would keep the same stored Rate but reinterpret
+    // it under a different formula, silently mispricing the widget with
+    // no warning. Per Jordan 2026-09-11: "categories should be locked...
+    // i dont think any item should be able to change its category."
+    document.getElementById('mqph-item-cat').disabled = true;
+    const catLockNote = document.getElementById('mqph-item-cat-lock-note');
+    if (catLockNote) catLockNote.style.display = 'block';
     document.getElementById('mqph-item-rate').value  = rec.fields['Rate']||'';
     const editCat = rec.fields['Category']||'material';
     const unit = rec.fields['Unit']||'per lin ft';
