@@ -379,7 +379,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">👋</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
@@ -426,7 +426,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:2rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:14px">${MQ_ANNOUNCEMENT_CONTENT.title}</div>
         <div style="font-size:14px;color:#374151;line-height:1.7;text-align:left;margin-bottom:1.5rem">${MQ_ANNOUNCEMENT_CONTENT.body}</div>
         <button onclick="mqCloseAnnouncementModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it</button>
@@ -487,7 +487,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">⭐</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
@@ -531,7 +531,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">📦</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">

@@ -216,12 +216,12 @@
       return allRoomIds.filter(id => !hiddenForCategory.includes(id));
     }
 
-    function mqLightbox(src, label) {
+    function mqLightbox(src, label, evt) {
       let lb = document.getElementById('sr-lightbox');
       if (!lb) {
         lb = document.createElement('div');
         lb.id = 'sr-lightbox';
-        lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:1rem';
+        lb.style.cssText = 'display:none;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:1rem';
         lb.onclick = () => lb.style.display = 'none';
         lb.innerHTML = `
           <img id="sr-lb-img" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"/>
@@ -231,6 +231,35 @@
       }
       document.getElementById('sr-lb-img').src = src;
       document.getElementById('sr-lb-label').textContent = label;
+      // Standalone (a popped-open tab, or the direct showroom link) has a
+      // real scrollable window, so a normal `position:fixed;inset:0`
+      // overlay covers whatever's currently on screen, same as any other
+      // lightbox. Embedded via <iframe> is different: this page has no
+      // scrollbar of its own — the iframe is resized (see MQ_SR_EMBEDDED
+      // below) to be exactly as tall as ALL of its content, so the shop's
+      // own page is what scrolls, never this document. "Fixed" positioning
+      // inside that kind of iframe is fixed relative to the IFRAME'S OWN
+      // (huge) content box, not to whatever portion of it the customer is
+      // actually looking at — so it always opened pinned near the very top
+      // of the whole embed, however far down the page the photo actually
+      // was. Anchoring the overlay to the clicked photo's own position
+      // instead makes it open exactly where the customer already is, no
+      // scrolling needed either way.
+      if (MQ_SR_EMBEDDED && evt && evt.currentTarget) {
+        const rect = evt.currentTarget.getBoundingClientRect();
+        const anchorTop = Math.max(0, (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - 24);
+        lb.style.position = 'absolute';
+        lb.style.top = anchorTop + 'px';
+        lb.style.left = '0';
+        lb.style.right = '0';
+        lb.style.bottom = '';
+      } else {
+        lb.style.position = 'fixed';
+        lb.style.top = '0';
+        lb.style.left = '0';
+        lb.style.right = '0';
+        lb.style.bottom = '0';
+      }
       lb.style.display = 'flex';
     }
     window.mqLightbox = mqLightbox;
@@ -254,7 +283,7 @@
       const photoUrl = photos[photoKey];
       const safeName = (name||'').replace(/'/g, "\\'");
       const imgHtml = photoUrl
-        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}')" onerror="this.style.display='none'">`
+        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}',event)" onerror="this.style.display='none'">`
         : `<div style="width:100%;height:160px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gray-400)">📷</div>`;
       return `<div class="sr-card"><div class="sr-card-img" style="padding:0">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div></div></div>`;
     }
@@ -269,7 +298,7 @@
       const photoUrl = item.photo || '';
       const safeName = (item.name||'').replace(/'/g, "\\'");
       const imgHtml = photoUrl
-        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}')" onerror="this.style.display='none'">`
+        ? `<img src="${photoUrl}" style="width:100%;height:160px;object-fit:cover;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${safeName}',event)" onerror="this.style.display='none'">`
         : `<div style="width:100%;height:160px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gray-400)">📷</div>`;
       // Name is optional on this kind of item — skip the name row entirely
       // rather than showing an empty line when a shop hasn't named it yet.
@@ -406,7 +435,7 @@
             const photoUrl = photos[s.photoKey];
             const emoji = getIcon(s.name);
             return `<div class="sr-spec-card">
-              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${s.name.replace(/'/g,"\\'")}')"/>` : `<div class="sr-spec-icon">${emoji}</div>`}
+              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;cursor:zoom-in" onclick="mqLightbox('${photoUrl}','${s.name.replace(/'/g,"\\'")}',event)"/>` : `<div class="sr-spec-icon">${emoji}</div>`}
               <div class="sr-spec-name">${s.name}</div>
             </div>`;
           }).join('')}</div>
