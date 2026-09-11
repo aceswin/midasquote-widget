@@ -2125,15 +2125,17 @@ window.mqphGoToWizard = function() {
           <button class="mqph-btn mqph-btn-primary" onclick="mqphStartItemSetup()">Set up shop items →</button>
         </div>` : `
 
-        ${['material','door','drawer','hinge','zone','install'].map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install'].includes(cat))).map(([cat,recs]) => `
+        ${['material','door','drawer','hinge','zone','install'].map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
           <div class="mqph-cat-block">
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
               <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
               ${cat==='install'
                 ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenInstallRequote()">${recs.length===0 ? '🔧 Requote install/removal rates' : '✏️ Edit install/removal rates'}</button>`
-                : MINI_WIZ_CATS.includes(cat)
-                  ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
-                  : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
+                : cat==='zone'
+                  ? (recs.length===0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('zone')">+ Add</button>` : '')
+                  : MINI_WIZ_CATS.includes(cat)
+                    ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
+                    : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
               }
             </div>
             <div id="mqph-cat-body-${cat}" style="display:none">
@@ -2297,7 +2299,7 @@ window.mqphGoToWizard = function() {
                    (Jordan flagged 2026-09-10) and would let a shop
                    accidentally create a malformed drawer_config row through
                    the wrong screen. -->
-              <select id="mqph-item-cat" onchange="mqphOnItemCatChange()">${Object.entries(CAT_LABELS).filter(([v])=>v!=='drawer_config').map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
+              <select id="mqph-item-cat" onchange="mqphOnItemCatChange()">${Object.entries(CAT_LABELS).filter(([v])=>!['drawer_config','other','tax'].includes(v)).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
               <div id="mqph-item-cat-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked while editing — an item's category can't be changed after it's created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material's rate is a flat price, a door style's is an upcharge, a drawer config's rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.</div>
             </div>
             <div class="mqph-field"><label>Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01" oninput="mqphEditRequoteFromRate()"/></div>
