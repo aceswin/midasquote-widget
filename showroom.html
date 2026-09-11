@@ -221,46 +221,81 @@
       if (!lb) {
         lb = document.createElement('div');
         lb.id = 'sr-lightbox';
-        lb.style.cssText = 'display:none;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:1rem';
+        lb.style.cssText = 'display:none;background:rgba(0,0,0,0.85);z-index:9999;cursor:zoom-out';
+        // Clicking ANYWHERE on the veil closes it (including the empty
+        // dark space around the photo, not just the photo itself) — the
+        // "×" button below is a second, more obvious way to do the same
+        // thing for anyone who doesn't notice the "click anywhere" hint.
         lb.onclick = () => lb.style.display = 'none';
         lb.innerHTML = `
-          <img id="sr-lb-img" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"/>
-          <div id="sr-lb-label" style="color:#fff;font-size:15px;font-weight:500;text-align:center"></div>
-          <div style="color:rgba(255,255,255,0.4);font-size:12px">Click anywhere to close</div>`;
+          <div id="sr-lb-inner" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;padding:1.5rem">
+            <div style="position:relative;max-width:100%;display:inline-block">
+              <img id="sr-lb-img" style="display:block;max-width:100%;max-height:80vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"/>
+              <button type="button" aria-label="Close" onclick="event.stopPropagation();document.getElementById('sr-lightbox').style.display='none'" style="position:absolute;top:-14px;right:-14px;width:30px;height:30px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:18px;line-height:1;color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+            </div>
+            <div id="sr-lb-label" style="color:#fff;font-size:15px;font-weight:500;text-align:center"></div>
+            <div style="color:rgba(255,255,255,0.4);font-size:12px">Click anywhere to close</div>
+          </div>`;
         document.body.appendChild(lb);
       }
       document.getElementById('sr-lb-img').src = src;
       document.getElementById('sr-lb-label').textContent = label;
+      const inner = document.getElementById('sr-lb-inner');
       // Standalone (a popped-open tab, or the direct showroom link) has a
       // real scrollable window, so a normal `position:fixed;inset:0`
       // overlay covers whatever's currently on screen, same as any other
-      // lightbox. Embedded via <iframe> is different: this page has no
-      // scrollbar of its own — the iframe is resized (see MQ_SR_EMBEDDED
-      // below) to be exactly as tall as ALL of its content, so the shop's
-      // own page is what scrolls, never this document. "Fixed" positioning
-      // inside that kind of iframe is fixed relative to the IFRAME'S OWN
-      // (huge) content box, not to whatever portion of it the customer is
-      // actually looking at — so it always opened pinned near the very top
-      // of the whole embed, however far down the page the photo actually
-      // was. Anchoring the overlay to the clicked photo's own position
-      // instead makes it open exactly where the customer already is, no
-      // scrolling needed either way.
+      // lightbox — clicking anywhere on it (it fills the whole visible
+      // window) already closes it. Embedded via <iframe> is different:
+      // this page has no scrollbar of its own — the iframe is resized
+      // (see MQ_SR_EMBEDDED below) to be exactly as tall as ALL of its
+      // content, so the shop's own page is what scrolls, never this
+      // document. Two things follow from that: (1) "fixed" positioning
+      // pins to the IFRAME'S OWN (huge) content box, not to whatever
+      // portion of it the customer is actually looking at, so it used to
+      // open pinned near the very top of the whole embed, however far
+      // down the page the photo actually was; and (2) if the veil were
+      // only sized to fit the photo (rather than the whole embed), most
+      // of the page would sit OUTSIDE it, so clicking "elsewhere" on the
+      // page wouldn't reach the veil's own onclick at all. Both are fixed
+      // the same way: the veil is stretched to cover the ENTIRE embedded
+      // page (so a click anywhere on it, near the photo or far from it,
+      // closes the lightbox), while the actual photo is anchored inside
+      // that veil at the exact spot the customer clicked, so it appears
+      // right there with no scrolling needed either way.
       if (MQ_SR_EMBEDDED && evt && evt.currentTarget) {
         const rect = evt.currentTarget.getBoundingClientRect();
-        const anchorTop = Math.max(0, (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - 24);
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+        const anchorTop = Math.max(0, scrollY + rect.top - 24);
+        const fullHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
         lb.style.position = 'absolute';
-        lb.style.top = anchorTop + 'px';
+        lb.style.top = '0';
         lb.style.left = '0';
         lb.style.right = '0';
         lb.style.bottom = '';
+        lb.style.height = fullHeight + 'px';
+        if (inner) {
+          inner.style.position = 'absolute';
+          inner.style.top = anchorTop + 'px';
+          inner.style.left = '0';
+          inner.style.right = '0';
+          inner.style.height = '';
+        }
       } else {
         lb.style.position = 'fixed';
         lb.style.top = '0';
         lb.style.left = '0';
         lb.style.right = '0';
         lb.style.bottom = '0';
+        lb.style.height = '';
+        if (inner) {
+          inner.style.position = '';
+          inner.style.top = '';
+          inner.style.left = '';
+          inner.style.right = '';
+          inner.style.height = '100%';
+        }
       }
-      lb.style.display = 'flex';
+      lb.style.display = 'block';
     }
     window.mqLightbox = mqLightbox;
 
