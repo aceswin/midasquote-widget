@@ -2303,13 +2303,13 @@ window.mqphGoToWizard = function() {
                    accidentally create a malformed drawer_config row through
                    the wrong screen. -->
               <select id="mqph-item-cat" onchange="mqphOnItemCatChange()">${Object.entries(CAT_LABELS).filter(([v])=>!['drawer_config','other','tax'].includes(v)).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
-              <div id="mqph-item-cat-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked while editing — an item's category can't be changed after it's created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material's rate is a flat price, a door style's is an upcharge, a drawer config's rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.</div>
+              <div id="mqph-item-cat-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked — an item's category can't be changed after it's created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material's rate is a flat price, a door style's is an upcharge, a drawer config's rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.</div>
             </div>
-            <div class="mqph-field"><label>Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01" oninput="mqphEditRequoteFromRate()"/></div>
+            <div class="mqph-field"><label id="mqph-item-rate-label">Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01" oninput="mqphEditRequoteFromRate()"/></div>
             <div id="mqph-edit-requote-wrap"></div>
             <div class="mqph-field"><label>Unit</label>
               <select id="mqph-item-unit"></select>
-              <div id="mqph-item-unit-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked while editing — an item's pricing method can't be changed after it's created (this is what let a hinge get accidentally switched to "each" and confuse pricing). Delete and re-add the item if it truly needs to be priced differently.</div>
+              <div id="mqph-item-unit-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked — an item's pricing method can't be changed after it's created (this is what let a hinge get accidentally switched to "each" and confuse pricing). Delete and re-add the item if it truly needs to be priced differently.</div>
             </div>
             <div class="mqph-field"><label>Description (optional)</label><textarea id="mqph-item-desc"></textarea></div>
             <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
@@ -2471,6 +2471,16 @@ window.mqphGoToWizard = function() {
   // 2026-09-10. If `selected` isn't in that category's normal list — an
   // old/odd item — it's added anyway so opening the modal never silently
   // swaps an item's unit out from under it just by rendering the dropdown.
+  // Travel zones store a distance (km/mi), not a dollar amount — the
+  // "Rate" field's label needs to say so, since a bare "Rate ($)" with a
+  // dollar-sign prefix reads as a price and confused Jordan when he opened
+  // his "Local zone radius" item and saw "$" next to a plain distance
+  // number. Every other category still uses a real Rate ($/lin ft, %,
+  // flat, etc.), so this only swaps the label for `zone`.
+  function mqphRateLabel(cat) {
+    return cat === 'zone' ? 'Distance' : `Rate (${CUR()})`;
+  }
+
   function mqphPopulateUnitOptions(cat, selected) {
     const sel = document.getElementById('mqph-item-unit');
     if (!sel) return;
@@ -2511,6 +2521,8 @@ window.mqphGoToWizard = function() {
     // just redundantly re-displaying a decision already made.
     document.getElementById('mqph-item-cat').disabled = true;
     document.getElementById('mqph-item-rate').value = '';
+    const rateLabelEl = document.getElementById('mqph-item-rate-label');
+    if (rateLabelEl) rateLabelEl.textContent = mqphRateLabel(cat || 'material');
     mqphPopulateUnitOptions(cat || 'material', (CAT_UNIT_OPTIONS[cat||'material']||ALL_UNIT_OPTIONS)[0]);
     document.getElementById('mqph-item-unit').disabled = false;
     document.getElementById('mqph-item-desc').value = '';
@@ -2790,8 +2802,8 @@ window.mqphGoToWizard = function() {
     const nameLockNote = document.getElementById('mqph-item-name-lock-note');
     if (nameLockNote) {
       nameLockNote.textContent = rec.fields['Category'] === 'install'
-        ? '🔒 Locked while editing — install & removal rates are matched to the widget\'s pricing by this exact name, so renaming one would silently stop it from being priced. Use the "✏️ Edit install/removal rates" panel instead to change the price.'
-        : '🔒 Locked while editing — box materials and drawer configs are matched to their paired row (uppers/bases, or some/mostly drawers) by parsing this exact name, so renaming one side without the other would break that pairing and silently mis-price the widget. Delete and re-add both halves together if it truly needs a new name.';
+        ? '🔒 Locked — install & removal rates are matched to the widget\'s pricing by this exact name, so renaming one would silently stop it from being priced. Use the "✏️ Edit install/removal rates" panel instead to change the price.'
+        : '🔒 Locked — box materials and drawer configs are matched to their paired row (uppers/bases, or some/mostly drawers) by parsing this exact name, so renaming one side without the other would break that pairing and silently mis-price the widget. Delete and re-add both halves together if it truly needs a new name.';
       nameLockNote.style.display = nameLocked ? 'block' : 'none';
     }
     document.getElementById('mqph-item-cat').value   = rec.fields['Category']||'material';
@@ -2810,10 +2822,12 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-item-cat').disabled = true;
     const catLockNote = document.getElementById('mqph-item-cat-lock-note');
     if (catLockNote) {
-      catLockNote.textContent = '🔒 Locked while editing — an item\'s category can\'t be changed after it\'s created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material\'s rate is a flat price, a door style\'s is an upcharge, a drawer config\'s rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.';
+      catLockNote.textContent = '🔒 Locked — an item\'s category can\'t be changed after it\'s created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material\'s rate is a flat price, a door style\'s is an upcharge, a drawer config\'s rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.';
       catLockNote.style.display = 'block';
     }
     document.getElementById('mqph-item-rate').value  = rec.fields['Rate']||'';
+    const rateLabelEl = document.getElementById('mqph-item-rate-label');
+    if (rateLabelEl) rateLabelEl.textContent = mqphRateLabel(rec.fields['Category']||'material');
     const editCat = rec.fields['Category']||'material';
     const unit = rec.fields['Unit']||'per lin ft';
     mqphPopulateUnitOptions(editCat, unit);
