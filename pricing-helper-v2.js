@@ -1251,6 +1251,15 @@ window.mqphGoToWizard = function() {
     if(back) back.style.display=idx===0?'none':'inline-block';
     if(next){ if(steps[idx].nextLabel){next.textContent=steps[idx].nextLabel;next.style.display='inline-block';}else next.style.display='none'; }
     if(skip){ skip.style.display=steps[idx].skipLabel?'inline-block':'none'; if(steps[idx].skipLabel) skip.textContent=steps[idx].skipLabel; }
+    // Per Jordan 2026-09-12: "every new step should bring you to the
+    // top of the step" — without this, the page kept whatever scroll
+    // position it had from the PREVIOUS step, which could land partway
+    // down or at the very bottom of the new (often shorter or taller)
+    // step's content instead of showing its title from the top. Scrolls
+    // the wizard card's own header into view, not just window.scrollTo,
+    // so this still does the right thing regardless of where the wizard
+    // sits on the page.
+    document.querySelector('.mqph-wizard-header')?.scrollIntoView({block:'start'});
   }
 
   window.mqphExitWizard = function() {
@@ -1743,14 +1752,27 @@ window.mqphGoToWizard = function() {
         const upperRate = Math.round((miniWiz.p0 / 4) * 100) / 100;
         const baseRate  = Math.round((miniWiz.p1 / 4) * 100) / 100;
         const sortBase  = lineItems.filter(r=>r.fields&&r.fields['Category']==='material').length;
+        // Per Jordan 2026-09-12 (hit this for real on hinge — see the
+        // door branch below and the category-always-visible fix a few
+        // hundred lines up): if this is the shop's very first material
+        // (category was completely empty before this save), pin it
+        // baseline immediately rather than leaving it unpinned — there's
+        // nothing else in the category to compare it to, it's trivially
+        // both the only option and the cheapest one. Material is safe to
+        // just pin outright with no other math involved (its Rate is its
+        // own absolute box price, never relative to baseline — same
+        // reasoning as the "Is baseline" entry's material/door bullet).
+        const isFirstOfCat = sortBase === 0;
 
         const upperRec = await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:`${name} — uppers`, Category:'material',
           Rate:upperRate, Unit:'per lin ft — uppers', Description:'Box material rate uppers', Active:true, 'Sort order':sortBase+1,
+          ...(isFirstOfCat ? {'Is baseline': true} : {}),
         });
         const baseRec = await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:`${name} — bases`, Category:'material',
           Rate:baseRate, Unit:'per lin ft — bases', Description:'Box material rate bases', Active:true, 'Sort order':sortBase+2,
+          ...(isFirstOfCat ? {'Is baseline': true} : {}),
         });
         if (upperRec?.id) lineItems.push(upperRec);
         if (baseRec?.id)  lineItems.push(baseRec);
@@ -1759,9 +1781,15 @@ window.mqphGoToWizard = function() {
       if (cat === 'door') {
         const rate = Math.round(((p - bl.blBasePrice) / 4) * 100) / 100;
         const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='door').length;
+        // Same "first item in an empty category becomes baseline
+        // automatically" reasoning as material just above — door's Rate
+        // is likewise its own independent upcharge, safe to pin with no
+        // other row needing to change.
+        const isFirstOfCat = sortBase === 0;
         const rec = await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:name, Category:'door',
           Rate:rate, Unit:'per lin ft upcharge', Description:'Door style upcharge', Active:true, 'Sort order':sortBase+1,
+          ...(isFirstOfCat ? {'Is baseline': true} : {}),
         });
         if (rec?.id) lineItems.push(rec);
       }
@@ -1770,9 +1798,46 @@ window.mqphGoToWizard = function() {
         const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
         const rate = Math.round(((p - baseWithDoor) / 4) * 100) / 100;
         const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='hinge').length;
+        const isFirstOfCat = sortBase === 0;
+        // Per Jordan 2026-09-12: adding the shop's first hinge back into
+        // a completely empty category (e.g. after deleting the old
+        // baseline hinge) has to become the new $0 baseline outright —
+        // there's nothing else in the category for it to be an upcharge
+        // over. But unlike material/door, just storing `rate` as-is and
+        // pinning it would be WRONG: `rate` was computed against the OLD
+        // baseline reference (`baseWithDoor`, which already has the OLD
+        // baseline hinge's real dollar value folded into `bl.blDoorRate`
+        // — see the chat reply for this session for the full derivation),
+        // so it represents "how much more/less this hinge costs than
+        // what's currently baked into every door's price as free" — not
+        // this hinge's own upcharge over itself. The correct new baseline
+        // hinge Rate is exactly 0 (it always is), and that same `rate`
+        // value is exactly the amount every door's own Rate needs to move
+        // by to stay accurate to the swap (their price included the OLD
+        // hinge's value; shifting by `rate` re-bases them onto the new
+        // one) — reusing the identical shift math the active baseline-
+        // delete flow's hinge branch uses below in
+        // mqphConfirmBaselineDelete, just triggered from this entry point
+        // instead of that one.
+        const doors = lineItems.filter(r => r.fields && r.fields['Category'] === 'door');
+        if (isFirstOfCat && rate !== 0 && doors.length) {
+          const preview = doors.slice(0,3)
+            .map(d => `${d.fields['Name']}: ${CUR()}${(d.fields['Rate']||0).toFixed(2)}/lin ft → ${CUR()}${(((d.fields['Rate']||0)+rate)).toFixed(2)}/lin ft`).join('\n');
+          const ok = confirm(`This becomes your new baseline hinge, priced at exactly ${CUR()}0 (included, not charged separately) — and since your door prices were quoted assuming your OLD baseline hinge, every door's price needs to shift by ${CUR()}${rate.toFixed(2)}/lin ft to stay accurate to this hinge's real cost.\n\nFor example:\n${preview}${doors.length>3?'\n…':''}\n\nContinue?`);
+          if (!ok) {
+            if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Save →'; }
+            return;
+          }
+          for (const d of doors) {
+            const newRate = Math.round(((d.fields['Rate']||0) + rate) * 100) / 100;
+            try { await atUpdate(LINE_ITEMS_TABLE, d.id, {Rate:newRate}); d.fields['Rate'] = newRate; }
+            catch(e) { console.error('Failed to reprice door for new baseline hinge', d.id, e); }
+          }
+        }
         const rec = await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:name, Category:'hinge',
-          Rate:rate, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':sortBase+1,
+          Rate:isFirstOfCat ? 0 : rate, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':sortBase+1,
+          ...(isFirstOfCat ? {'Is baseline': true} : {}),
         });
         if (rec?.id) lineItems.push(rec);
       }
@@ -1998,7 +2063,7 @@ window.mqphGoToWizard = function() {
           <button class="mqph-btn mqph-btn-primary" onclick="mqphStartItemSetup()">Set up shop items →</button>
         </div>` : `
 
-        ${['material','door','drawer','hinge','zone','install','other','tax'].filter(cat => groups[cat] || cat==='install').map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
+        ${['material','door','drawer','hinge','zone','install','other','tax'].map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
           <div class="mqph-cat-block">
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
               <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
@@ -2013,6 +2078,18 @@ window.mqphGoToWizard = function() {
             ${cat==='zone' ? `<div style="font-size:11px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;margin:4px 12px 8px">💡 Showing "km" but want "mi" instead (or back to km)? Click <strong>Edit</strong> on the zone below and switch the unit — it's just a label, so it's the one field that's editable there.</div>` : ''}
             ${cat==='install' && recs.length===0 ? `
             <div style="padding:16px 12px;font-size:12px;color:#6b7280;line-height:1.5">All installation & removal rates were deleted. Click <strong>"🔧 Requote install/removal rates"</strong> above to quote them again — the widget needs these to price install-only and removal jobs.</div>
+            ` : recs.length===0 ? `
+            <!-- Per Jordan 2026-09-12: a category that's dropped to zero
+                 items (e.g. its last item got deleted) used to disappear
+                 from this page ENTIRELY — header, "+ Add" button and all —
+                 since the outer category list used to only render a
+                 category that already had at least one item. That left no
+                 way back in except through Airtable directly. Every
+                 category above now always renders its header/button (see
+                 the removed filter a few lines up); this is just the
+                 friendlier empty body to go with it, in place of a bare
+                 Name/Price column-header row with nothing under it. -->
+            <div style="padding:16px 12px;font-size:12px;color:#6b7280;line-height:1.5">No ${(CAT_LABELS[cat]||cat).replace(/^\S+\s/,'').toLowerCase()} yet. Use the "+ Add" button above to add one.</div>
             ` : `
             <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
               <span style="cursor:pointer;flex:1;${mqphSortLabelStyle(cat,'name')}" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
@@ -2923,14 +3000,33 @@ window.mqphGoToWizard = function() {
     // mqphSetAsBaseline above: shift EVERY hinge's Rate by the new
     // baseline's own pre-shift Rate, so it zeroes out and every other
     // hinge's price relative to it is unchanged, just re-anchored.
+    // Per Jordan 2026-09-12: this alone isn't enough — every DOOR's own
+    // stored Rate already has the OLD baseline hinge's real dollar value
+    // baked into it (every door was quoted "box + this door + the
+    // CURRENT baseline hinge" as one reference job — see
+    // mqphEditRequoteSpec's door branch/the job-spec box wording), so
+    // swapping which hinge is baseline without also moving doors would
+    // leave every door quietly over- or under-priced by the real
+    // difference between the old and new baseline hinge. `shift` here is
+    // exactly that difference (the picked hinge's Rate relative to the
+    // OLD baseline, same quantity used to zero out every other hinge —
+    // see the identical derivation on the mini-wizard's own hinge branch
+    // above, mqphMiniNext), so every door's Rate shifts by the same
+    // amount, in the same direction hinge Rates shift the OPPOSITE way
+    // (hinges: −shift, so they re-anchor to the new $0; doors: +shift,
+    // so their price keeps reflecting this hinge's real cost instead of
+    // the old one's).
     if (s.cat === 'hinge' && picked) {
       const catRows = lineItems.filter(r => r.fields && r.fields['Category'] === 'hinge' && r.id !== s.id);
+      const doors = lineItems.filter(r => r.fields && r.fields['Category'] === 'door');
       const shift = picked.price || 0;
       if (shift !== 0) {
         const others = catRows.filter(h => h.id !== picked.key);
-        const preview = others.slice(0,3)
+        const hingePreview = others.slice(0,2)
           .map(h => `${h.fields['Name']}: ${CUR()}${(h.fields['Rate']||0).toFixed(2)} → ${CUR()}${((h.fields['Rate']||0)-shift).toFixed(2)}`).join('\n');
-        const ok = confirm(`Making "${picked.label}" the new baseline hinge shifts every other hinge's price by ${CUR()}${shift.toFixed(2)} so nothing actually changes relative to each other — just re-anchored to the new ${CUR()}0 point.\n\nFor example:\n${preview}${others.length>3?'\n…':''}\n\nContinue?`);
+        const doorPreview = doors.slice(0,2)
+          .map(d => `${d.fields['Name']}: ${CUR()}${(d.fields['Rate']||0).toFixed(2)}/lin ft → ${CUR()}${(((d.fields['Rate']||0)+shift)).toFixed(2)}/lin ft`).join('\n');
+        const ok = confirm(`Making "${picked.label}" the new baseline hinge (priced at ${CUR()}0, included) shifts every other hinge's price by ${CUR()}${shift.toFixed(2)} — nothing actually changes relative to each other, just re-anchored — AND shifts every door's price by the same amount, since your door prices were quoted assuming the OLD baseline hinge and need to stay accurate to this one's real cost.\n\nFor example:\n${hingePreview}${others.length>2?'\n…':''}\n${doorPreview}${doors.length>2?'\n…':''}\n\nContinue?`);
         if (!ok) return;
       }
     }
@@ -2966,6 +3062,14 @@ window.mqphGoToWizard = function() {
             for (const h of catRows) {
               const newRate = Math.round(((h.fields['Rate']||0) - shift) * 100) / 100;
               try { await atUpdate(LINE_ITEMS_TABLE, h.id, {Rate:newRate}); } catch(e) { console.error('Failed to reprice hinge', h.id, e); }
+            }
+            // See the big comment above this function for why doors need
+            // to move too, not just other hinges — same `shift` value,
+            // opposite direction from the hinge rebalance just above.
+            const doors = lineItems.filter(r => r.fields && r.fields['Category'] === 'door');
+            for (const d of doors) {
+              const newRate = Math.round(((d.fields['Rate']||0) + shift) * 100) / 100;
+              try { await atUpdate(LINE_ITEMS_TABLE, d.id, {Rate:newRate}); } catch(e) { console.error('Failed to reprice door for new baseline hinge', d.id, e); }
             }
           }
         }
@@ -3445,6 +3549,34 @@ window.mqphGoToWizard = function() {
   window.mqphToggle = async function(id, el) {
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
     const val = !rec.fields['Active'];
+    // Turning an item OFF drops it from pricing exactly the same way
+    // deleting it does (getByCategory()/getBaselineRates() both filter
+    // out Active===false rows) — but bypasses every safety net built
+    // for Delete (the install cascade-warning, the baseline material/
+    // door/hinge picker). Per Jordan 2026-09-12 ("we shouldnt let them
+    // toggle off any install items... that would be the same as kindof
+    // deleting them"), block turning OFF (not on) for:
+    //  - any Installation & Removal rate — the widget needs the
+    //    complete set of 7 to price every job type; Delete (which
+    //    cascades and offers the Requote flow) is the safe path.
+    //  - whichever material/door/hinge row is the CURRENTLY PINNED
+    //    baseline — same reasoning as the active baseline-delete flow
+    //    above: silently dropping it out of getBaselineRates() by
+    //    toggling it off would fall back to Sort order with no warning
+    //    and no picker, exactly the bug that flow exists to prevent. A
+    //    non-baseline material/door/hinge row can still be toggled off
+    //    freely — this only blocks the one row currently defining the
+    //    reference price for its category.
+    if (!val) {
+      if (rec.fields['Category'] === 'install') {
+        alert("Installation & removal rates can't be turned off individually — the widget needs the complete set of 7 to price every job type accurately. Use Delete instead (it'll warn you and offer to requote the whole set).");
+        return;
+      }
+      if (rec.fields['Is baseline'] && ['material','door','hinge'].includes(rec.fields['Category'])) {
+        alert("This is your current baseline — every other price in this category is calculated relative to it, so it can't be turned off. Use Delete instead, which will let you pick what becomes the new baseline first.");
+        return;
+      }
+    }
     el.classList.toggle('on',val); rec.fields['Active']=val;
     await atUpdate(LINE_ITEMS_TABLE,id,{Active:val});
   };
