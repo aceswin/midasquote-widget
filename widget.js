@@ -2391,6 +2391,22 @@
     const financingMinRaw = parseFloat(shop['Financing minimum amount']);
     window._mqFinancingMinAmount = !isNaN(financingMinRaw) && financingMinRaw > 0 ? financingMinRaw : 0;
 
+    // Showroom button destination — where the "🖼️ See our showroom" link
+    // right below sends customers. Added 2026-09-10, alongside the new
+    // showroom <iframe> embed option: a shop that's embedded the showroom
+    // on their own site can now point this button there instead of popping
+    // open widget.midasquote.com. Defaults to the popup (unchanged behavior)
+    // unless the shop has explicitly picked "my own page" on the Showroom
+    // tab AND filled in a URL — see mqShowroomSetButtonTarget in
+    // dashboard.js. Stored inside the same 'Showroom category settings' JSON
+    // blob the showroom style (mode/order/names/hidden) already lives in, so
+    // no new Airtable field was needed for this.
+    let showroomSettings = {};
+    try { showroomSettings = shop['Showroom category settings'] ? JSON.parse(shop['Showroom category settings']) : {}; } catch(e) { showroomSettings = {}; }
+    const showroomPopupUrl = `https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}`;
+    const showroomOwnUrl = (showroomSettings.buttonTarget === 'own_page' && typeof showroomSettings.buttonUrl === 'string') ? showroomSettings.buttonUrl.trim() : '';
+    const showroomHref = showroomOwnUrl || showroomPopupUrl;
+
     return `
       <div class="mq-header">
         ${logoHTML}
@@ -2398,7 +2414,7 @@
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
         </div>
-        ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:${shop['Brand colour']||'#1a1a1a'};border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15);margin-left:auto" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
+        ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="${showroomHref}" target="_blank" style="font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:${shop['Brand colour']||'#1a1a1a'};border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15);margin-left:auto" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
       </div>
       <div class="mq-powered-by" style="margin-top:10px;padding-top:0;border-top:none;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
       <div class="mq-tab-bar">
@@ -2691,6 +2707,18 @@
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
       let installUWithDoors=0, installUNoDoors=0, installBWithDoors=0, installBNoDoors=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
+      // Which `mat` key is the shop's actual pinned baseline material — per
+      // Jordan 2026-09-12: the Tall Cabinet material-upcharge calc below
+      // used to grab `Object.keys(mat)[0]` (whichever material happens to
+      // be first by "Sort order", completely ignoring the real "Is
+      // baseline" pin every other category already respects via
+      // getBaselineRates() in pricing-helper-v2.js). Those two can easily
+      // disagree — that's the whole reason the pin exists instead of just
+      // trusting Sort order — so Tall Cabinet quotes could silently use the
+      // wrong reference material for any shop where they don't match. Set
+      // here, inside the same loop that already has each material's `Is
+      // baseline` field, so it's available wherever `mat` is used downstream.
+      let blMatKey = null;
 
       if (hasDynamic) {
         li.materials.forEach((m,i) => {
@@ -2699,6 +2727,10 @@
           const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
           const fallbackRate = m['Rate'] || 0;
           mat[`dyn_${i}`] = { label:baseName, rateU:uItem?uItem['Rate']||0:fallbackRate, rateB:bItem?bItem['Rate']||0:fallbackRate };
+          // 'Is baseline' is written on both the uppers and bases rows of
+          // the pinned material together (see pricing-helper-v2.js), so
+          // either one being true here is enough to mark this material key.
+          if (m['Is baseline'] || uItem?.['Is baseline'] || bItem?.['Is baseline']) blMatKey = `dyn_${i}`;
         });
         li.doorStyles.forEach((d,i) => { door[`dyn_${i}`] = { label:d['Name'], rate:d['Rate']||0 }; });
         li.drawers.forEach(d => {
@@ -2750,7 +2782,13 @@
         removalRate    = pricing['Removal rate']||18;
         taxRate        = (pricing['Tax rate']||5)/100;
       }
-      return { mat, door, drawer, hinge, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
+      // No pin found (shop never migrated, or is on the hardcoded-catalog
+      // fallback branch above, which has no 'Is baseline' concept at all) —
+      // fall back to the old first-by-Sort-order behavior rather than
+      // leaving blMatKey null, same defensive fallback getBaselineRates()
+      // itself uses in pricing-helper-v2.js.
+      if (!blMatKey) blMatKey = Object.keys(mat)[0];
+      return { mat, door, drawer, hinge, blMatKey, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
     }
 
     // Legacy global fallback rates (used only if a material has no per-material
@@ -2900,7 +2938,82 @@
     // specialty item with variants (0 = the default, same convention as
     // every other picker in the widget). Positional, same as specQty/
     // installQty above — index i lines up with specs[i].
-    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);installQty[p]=new Array(specs.length).fill(0);specVariant[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
+    // specQty[prefix][i] is a plain number for an item with no variants
+    // (unchanged, original behavior) — but for an item WITH variants, it's
+    // now an array of numbers, one slot per variant, so each variant can
+    // carry its own separate quantity (Jordan, 2026-09-12: "each variant
+    // to be treated as their own items" — e.g. 2 recycling pullouts + 1
+    // garbage pullout under one "Pullouts" specialty item, each priced and
+    // quoted separately). Before this, picking a different variant chip
+    // just swapped which price was "active" against one shared quantity.
+    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=specs.map(s=>(s.variants&&s.variants.length)?new Array(s.variants.length).fill(0):0);installQty[p]=new Array(specs.length).fill(0);specVariant[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
+
+    // --- specQty per-item helpers -------------------------------------
+    // Centralize every read/write of a specialty item's quantity so the
+    // "plain number, or array-per-variant" shape above only has to be
+    // handled correctly once. mqSpecQtyGet/Set operate on whichever
+    // variant is currently the ACTIVE one in the UI (i.e. whichever chip
+    // was last clicked) — this is what the single quantity input box
+    // under the chips reads from and writes to, per Jordan's pick: same
+    // chip picker as before, but each chip now remembers its own number.
+    function mqSpecActiveVi(prefix, i) { return (specVariant[prefix] && specVariant[prefix][i]) || 0; }
+    function mqSpecQtyGet(prefix, i) {
+      const q = specQty[prefix] && specQty[prefix][i];
+      if (Array.isArray(q)) return q[mqSpecActiveVi(prefix, i)] || 0;
+      return q || 0;
+    }
+    function mqSpecQtySet(prefix, i, val) {
+      if (!specQty[prefix]) return;
+      const q = specQty[prefix][i];
+      if (Array.isArray(q)) q[mqSpecActiveVi(prefix, i)] = val;
+      else specQty[prefix][i] = val;
+    }
+    // Total quantity across every variant of this item (or just the plain
+    // number for a non-variant item) — used anywhere the OLD code checked
+    // "is this item selected at all" (highlighting the card, the empty-
+    // quote validation message, the install-qty validation gate) — those
+    // checks need to know about every variant, not just whichever one
+    // happens to be showing in the qty box right now.
+    function mqSpecQtyTotal(prefix, i) {
+      const q = specQty[prefix] && specQty[prefix][i];
+      if (Array.isArray(q)) return q.reduce((a,b)=>a+(b||0), 0);
+      return q || 0;
+    }
+    function mqSpecQtyResetAll(prefix, i) {
+      if (!specQty[prefix]) return;
+      const q = specQty[prefix][i];
+      if (Array.isArray(q)) { for (let k=0;k<q.length;k++) q[k]=0; }
+      else specQty[prefix][i] = 0;
+    }
+    // Small "12 sf" / "2×" badge shown on a variant chip once it has a
+    // quantity entered, so a customer switching between chips can see at a
+    // glance which ones they've already added to this quote, instead of
+    // having to click through every chip to check. Updates just the one
+    // badge span rather than re-rendering the whole chip row, so it never
+    // resets that row's own scroll position mid-typing.
+    function mqUpdateSpecVariantBadge(prefix, i) {
+      const s = specs[i];
+      if (!s || !s.variants || !s.variants.length) return;
+      const row = document.getElementById(`mq-spec-variants-${prefix}-${i}`);
+      if (!row) return;
+      const qtyArr = specQty[prefix] && specQty[prefix][i];
+      row.querySelectorAll('.mq-vpicker-variant-chip').forEach((chip, vi) => {
+        const q = Array.isArray(qtyArr) ? (qtyArr[vi] || 0) : 0;
+        let badge = chip.querySelector('.mq-spec-variant-qty-badge');
+        if (q > 0) {
+          const unitSuffix = s.perSqFt ? ' sf' : (s.perFt ? ' ft' : '×');
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'mq-spec-variant-qty-badge';
+            badge.style.cssText = 'display:inline-block;margin-left:4px;padding:1px 5px;border-radius:8px;background:#111;color:#fff;font-size:10px;font-weight:700;vertical-align:middle';
+            chip.appendChild(badge);
+          }
+          badge.textContent = `${q}${unitSuffix}`;
+        } else if (badge) {
+          badge.remove();
+        }
+      });
+    }
 
     function fmt(n){return CUR() +Math.round(n).toLocaleString();}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
@@ -2970,11 +3083,12 @@
         el.style.display = visible ? '' : 'none';
         if (!visible) {
           const idx = parseInt(el.id.split('-').pop(), 10);
-          if (specQty[prefix] && specQty[prefix][idx] > 0) {
-            specQty[prefix][idx] = 0;
+          if (mqSpecQtyTotal(prefix, idx) > 0) {
+            mqSpecQtyResetAll(prefix, idx);
             const qtyInput = document.getElementById(`mq-qty-${prefix}-${idx}`);
             if (qtyInput) qtyInput.value = 0;
             el.classList.remove('on');
+            mqUpdateSpecVariantBadge(prefix, idx);
           }
           if (installQty[prefix] && installQty[prefix][idx] > 0) {
             installQty[prefix][idx] = 0;
@@ -4175,7 +4289,12 @@
       return {
         fields,
         diffOn: !!diffOn[prefix],
-        specQty: [...(specQty[prefix] || [])],
+        // A per-variant entry is itself an array, so a plain shallow spread
+        // would hand back the SAME nested arrays the live form keeps
+        // mutating — cloning one level deep here keeps this snapshot a
+        // true point-in-time copy, same as every other field captured
+        // above.
+        specQty: (specQty[prefix] || []).map(q => Array.isArray(q) ? [...q] : q),
         installQty: [...(installQty[prefix] || [])],
         specVariant: [...(specVariant[prefix] || [])],
         tallCabs: tallCabSnaps,
@@ -4197,11 +4316,22 @@
       // still needs validating — then keep the visible quantity box and
       // "on" highlight in sync by hand.
       (snapshot.specQty || []).forEach((qty, i) => {
-        if (!qty || !specQty[prefix]) return;
-        specQty[prefix][i] = qty;
+        if (!specQty[prefix]) return;
+        if (Array.isArray(qty)) {
+          if (!qty.some(v => v > 0)) return;
+          specQty[prefix][i] = [...qty];
+        } else {
+          if (!qty) return;
+          specQty[prefix][i] = qty;
+        }
+        // Restores whichever variant happens to be the currently-active
+        // one at this point (still index 0, until the specVariant restore
+        // below runs) — the specVariant pass right after this corrects the
+        // box to show whichever variant was actually last selected.
         const el = document.getElementById(`mq-qty-${prefix}-${i}`);
-        if (el) el.value = qty;
-        document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on', qty > 0);
+        if (el) el.value = mqSpecQtyGet(prefix, i);
+        document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on', mqSpecQtyTotal(prefix, i) > 0);
+        mqUpdateSpecVariantBadge(prefix, i);
       });
       (snapshot.installQty || []).forEach((qty, i) => {
         if (!qty || !installQty[prefix]) return;
@@ -4472,10 +4602,11 @@
       // unrelated project.
       if (specQty[prefix]) {
         Object.keys(specQty[prefix]).forEach(i => {
-          specQty[prefix][i] = 0;
+          mqSpecQtyResetAll(prefix, i);
           const qtyInput = document.getElementById(`mq-qty-${prefix}-${i}`);
           if (qtyInput) qtyInput.value = 0;
           document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.remove('on');
+          mqUpdateSpecVariantBadge(prefix, i);
           const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
           if (modeSel) modeSel.selectedIndex = 0; // back to the "Choose one" placeholder
           if (installQty[prefix]) installQty[prefix][i] = 0;
@@ -4605,16 +4736,17 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(wrap) wrap.style.display=tier==='none'?'none':'block';
     };
 
-    window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-specQty[prefix][i]);};
+    window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
     window.mqAdjQty=(prefix,i,d)=>{
       if (d > 0 && !mqSpecModeChosen(prefix,i)) return;
       const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
-      let next = Math.max(0, specQty[prefix][i] + d);
+      let next = Math.max(0, mqSpecQtyGet(prefix,i) + d);
       if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
-      specQty[prefix][i]=next;
+      mqSpecQtySet(prefix,i,next);
       const el=document.getElementById(`mq-qty-${prefix}-${i}`);
-      if(el) { el.value=specQty[prefix][i]; el.dispatchEvent(new Event('input', { bubbles: true })); }
-      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',specQty[prefix][i]>0);
+      if(el) { el.value=next; el.dispatchEvent(new Event('input', { bubbles: true })); }
+      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',mqSpecQtyTotal(prefix,i)>0);
+      mqUpdateSpecVariantBadge(prefix,i);
     };
     window.mqSetQty=(prefix,i,val)=>{
       const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
@@ -4626,8 +4758,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         if(el) el.value = 0;
         return;
       }
-      specQty[prefix][i]=n;
-      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
+      mqSpecQtySet(prefix,i,n);
+      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',mqSpecQtyTotal(prefix,i)>0);
+      mqUpdateSpecVariantBadge(prefix,i);
     };
 
     // Handles a click on one variant chip (e.g. picking "Oak" under a
@@ -4637,6 +4770,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     // below need no awareness that variants exist at all; they just keep
     // reading s.price like they always have. Only the visual thumb/badge
     // block and the picker's own selected-chip highlight need a DOM update.
+    // Each variant now also remembers its own quantity (Jordan, 2026-09-12)
+    // — switching chips swaps which variant's own number is shown/edited in
+    // the one qty box below, instead of a single quantity shared by every
+    // variant of this item.
     window.mqPickSpecVariant = function(prefix, i, vi) {
       const s = specs[i];
       const v = s && s.variants && s.variants[vi];
@@ -4656,6 +4793,8 @@ window.mqTogDrawerConfig=(prefix)=>{
           chip.classList.toggle('selected', idx === vi);
         });
       }
+      const qtyEl = document.getElementById(`mq-qty-${prefix}-${i}`);
+      if (qtyEl) { qtyEl.value = mqSpecQtyGet(prefix, i); qtyEl.dispatchEvent(new Event('input', { bubbles: true })); }
     };
 
     // Shows/hides the extra install-quantity row (only rendered at all when
@@ -4875,7 +5014,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
+      const {mat,door,drawer,hinge,blMatKey,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
       // If the Cabinet measurements section is hidden (no real box material
       // for the current project type), treat linear footage as 0 regardless
       // of whatever's still sitting in those inputs — otherwise a hidden
@@ -4989,7 +5128,11 @@ window.mqTogDrawerConfig=(prefix)=>{
         // Material upcharge: difference above baseline material, per lin ft × tcLinFt × 2 (uppers + bases height equiv)
         const matKey = diffOn[prefix] ? gv(`mq-${prefix}-b-mat`) : gv(`mq-${prefix}-mat`);
         const tcMatRates = getMaterialRates(matKey, mat);
-        const blMatRates = getMaterialRates(Object.keys(mat)[0], mat);
+        // Fixed 2026-09-12: was `Object.keys(mat)[0]` (first material by
+        // Sort order, ignoring the real 'Is baseline' pin) — see the
+        // blMatKey comment in P() above for why that could silently use
+        // the wrong reference material.
+        const blMatRates = getMaterialRates(blMatKey, mat);
         const matUpcharge = Math.max(0, tcMatRates.rateB - blMatRates.rateB) * tcLinFt * 2;
         tcUnitPrice += matUpcharge;
         // Install: base install rate × tcLinFt × 2 if supply + install — door-aware, same as regular bases
@@ -5034,49 +5177,65 @@ window.mqTogDrawerConfig=(prefix)=>{
 
       let specTotal=0;
       specs.forEach((s,i)=>{
-        if(!specQty[prefix][i]) return;
-        const supplyQty = specQty[prefix][i];
-        // A tiny order can still cost the shop full price to make (a small
-        // door takes a full sheet and the same labor as a bigger one) — the
-        // minimum only applies to size-based items (perFt/perSqFt), same as
-        // the dashboard only shows the field then.
-        let supplyCost = s.price * supplyQty;
-        if ((s.perFt || s.perSqFt) && s.minPrice > 0) supplyCost = Math.max(supplyCost, s.minPrice);
-        const supplyQtyLabel = s.perSqFt?`${supplyQty} sqft`:(s.perFt?`${supplyQty} ft`:(supplyQty>1?`× ${supplyQty}`:''));
-        // Fold the currently-picked variant's own name into the line-item
-        // text (e.g. "Crown Molding — Oak") so the actual quote/lead always
-        // says which option was chosen — items with no variants are
-        // completely unaffected (itemLabel === s.label).
-        const itemLabel = s.variantLabel ? `${s.label} — ${s.variantLabel}` : s.label;
+        // An item with variants now charges for EVERY variant that has its
+        // own quantity set (Jordan, 2026-09-12: "each variant to be
+        // treated as their own items" — e.g. 2 recycling pullouts + 1
+        // garbage pullout under one "Pullouts" item, each its own line at
+        // its own price), not just whichever variant chip is currently
+        // showing. A plain item with no variants prices exactly as before.
+        const qtyArr = specQty[prefix][i];
+        const supplyEntries = Array.isArray(qtyArr)
+          ? s.variants.map((v,vi)=>({
+              price: v.price || 0,
+              minPrice: v.min || 0,
+              label: v.label ? `${s.label} — ${v.label}` : s.label,
+              qty: qtyArr[vi] || 0,
+            })).filter(e => e.qty > 0)
+          : (qtyArr > 0 ? [{ price: s.price, minPrice: s.minPrice, label: s.label, qty: qtyArr }] : []);
+        if (!supplyEntries.length) return;
 
-        if (!s.offersInstallChoice) {
-          specTotal += supplyCost;
-          lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel})`:itemLabel,cost:Math.round(supplyCost)});
-          return;
-        }
-
-        const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+        const modeSel = s.offersInstallChoice ? document.getElementById(`mq-spec-mode-${prefix}-${i}`) : null;
         const mode = modeSel ? modeSel.value : 'supply';
-        if (mode !== 'install') {
+        const doInstall = s.offersInstallChoice && mode === 'install';
+        const supplySuffix = s.offersInstallChoice ? (doInstall ? ' — Supply' : ' — Supply only') : '';
+
+        // Supply — one line per variant that has a quantity (or the one
+        // line a non-variant item has always had).
+        supplyEntries.forEach(entry => {
+          // A tiny order can still cost the shop full price to make (a
+          // small door takes a full sheet and the same labor as a bigger
+          // one) — the minimum only applies to size-based items
+          // (perFt/perSqFt), same as the dashboard only shows the field
+          // then.
+          let supplyCost = entry.price * entry.qty;
+          if ((s.perFt || s.perSqFt) && entry.minPrice > 0) supplyCost = Math.max(supplyCost, entry.minPrice);
+          const supplyQtyLabel = s.perSqFt?`${entry.qty} sqft`:(s.perFt?`${entry.qty} ft`:(entry.qty>1?`× ${entry.qty}`:''));
           specTotal += supplyCost;
-          lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel}) — Supply only`:`${itemLabel} — Supply only`,cost:Math.round(supplyCost)});
-          return;
-        }
+          lines.push({label:supplyQtyLabel?`${entry.label} (${supplyQtyLabel})${supplySuffix}`:`${entry.label}${supplySuffix}`,cost:Math.round(supplyCost)});
+        });
+
+        if (!doInstall) return;
 
         // Install price is its own rate, never a replacement for supply —
         // "6 sqft supply + 12 sqft install" means both get charged and
         // added together, not one overriding the other. Two separate line
         // items too, so the customer can actually see the math instead of
-        // one merged, unexplained number.
+        // one merged, unexplained number. Install stays ONE shared
+        // quantity/line for the whole item, even across multiple variants
+        // (Jordan, 2026-09-12 — install price/min are item-level, not
+        // per-variant, same as they always have been; see the Variants
+        // parsing comment above where these get built) — when install's
+        // pricing method matches supply's, its quantity is simply every
+        // variant's supply quantity added together.
         const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
         const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
-        const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : supplyQty;
+        const totalSupplyQty = supplyEntries.reduce((a,e)=>a+e.qty, 0);
+        const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : totalSupplyQty;
         let installCost = s.installPrice * installQtyVal;
         if ((s.installPerFt || s.installPerSqFt) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
         const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
-        specTotal += supplyCost + installCost;
-        lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel}) — Supply`:`${itemLabel} — Supply`,cost:Math.round(supplyCost)});
-        lines.push({label:installQtyLabel?`${itemLabel} (${installQtyLabel}) — Install`:`${itemLabel} — Install`,cost:Math.round(installCost)});
+        specTotal += installCost;
+        lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
       });
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
@@ -5727,7 +5886,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const row = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
         if (!row) continue; // methods match — no separate field, nothing extra to check
 
-        const supplyQty = specQty[prefix][i] || 0;
+        const supplyQty = mqSpecQtyTotal(prefix, i); // sum across every variant, not just the one showing
         const instQty = installQty[prefix][i] || 0;
         if (supplyQty === 0 && instQty === 0) continue; // genuinely not selected at all
 
