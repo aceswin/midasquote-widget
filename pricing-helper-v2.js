@@ -677,7 +677,7 @@ window.mqphGoToWizard = function() {
               <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
               ${specBox([
                 `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
-                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · Supply only`,
+                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · Supply only · Include toe kick`,
               ])}
               <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcMatUp(${idx})"/></div>
               <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
@@ -718,7 +718,7 @@ window.mqphGoToWizard = function() {
             `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
             `Door style: <span class="mqph-spec-tag">${doorName}</span> · <span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span>`,
-            `Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only`,
+            `Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only · Include toe kick`,
           ])}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-door-baseline" placeholder="0.00" oninput="mqphCalcDoorBaseline()"/></div>
           <div id="mqph-r-door-baseline" class="mqph-result"></div>`;
@@ -753,7 +753,7 @@ window.mqphGoToWizard = function() {
               ${specBox([
                 `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                 `Material: <span class="mqph-spec-tag">${matName}</span> · Door: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
-                `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only`,
+                `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only · Include toe kick`,
               ])}
               <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
               <div id="mqph-r-door-${idx}" class="mqph-result"></div>
@@ -792,7 +792,7 @@ window.mqphGoToWizard = function() {
               ${specBox([
                 `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                 `Material: <span class="mqph-spec-tag">${matName}</span> · Door: <span class="mqph-spec-tag">${doorName}</span>`,
-                `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${blHingeName}) · No drawers · Supply only`,
+                `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${blHingeName}) · No drawers · Supply only · Include toe kick`,
               ])}
               <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
               <div id="mqph-r-hinge-${idx}" class="mqph-result"></div>
@@ -831,7 +831,7 @@ window.mqphGoToWizard = function() {
                 ${specBox([
                   `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                   `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
-                  `<strong>1 top drawer per cabinet · Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+                  `<strong>1 top drawer per cabinet · Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick</strong>`,
                 ])}
                 <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-drawer1-${idx}" placeholder="0.00" oninput="mqphCalcDrawer1(${idx})"/></div>
                 <div id="mqph-r-drawer1-${idx}" class="mqph-result"></div>
@@ -867,7 +867,7 @@ window.mqphGoToWizard = function() {
                 ${specBox([
                   `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                   `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
-                  `<strong>Full drawer bank (3 per cabinet) · Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+                  `<strong>Full drawer bank (3 per cabinet) · Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick</strong>`,
                 ])}
                 ${p1>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:10px">1-drawer quote was ${CUR()}${p1.toLocaleString()} — bank quote should be higher.</p>`:''}
                 <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-drawer3-${idx}" placeholder="0.00" oninput="mqphCalcDrawer3(${idx})"/></div>
@@ -1353,7 +1353,7 @@ window.mqphGoToWizard = function() {
           `<strong>Base cabinets + new door style</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${name}</span>`,
-          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only · Include toe kick`,
         ])}
         ${matchBlock}
         <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
@@ -1373,7 +1373,7 @@ window.mqphGoToWizard = function() {
           `<strong>Base cabinets + baseline door + new hinge</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${bl.blDoorName}</span>`,
-          `Hinges: <span class="mqph-spec-tag">${name}</span> · No drawers · Supply only`,
+          `Hinges: <span class="mqph-spec-tag">${name}</span> · No drawers · Supply only · Include toe kick`,
         ])}
         ${matchBlock}
         <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
@@ -1393,7 +1393,7 @@ window.mqphGoToWizard = function() {
             `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
-            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick</strong>`,
           ])}
           ${matchBlock}
           <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
@@ -1411,7 +1411,7 @@ window.mqphGoToWizard = function() {
             `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
-            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick</strong>`,
           ])}
           ${p0>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">1-drawer quote was ${CUR()}${p0.toLocaleString()} — bank quote should be higher.</p>`:''}
           ${matchBlock}
@@ -2180,19 +2180,35 @@ window.mqphGoToWizard = function() {
   // mqphSaveItem() still owns that (it just reads whatever's currently in
   // Rate, same as always).
   //
-  // Hinge is deliberately excluded — same scoping Jordan gave Bulk Edit's
-  // Requote on 2026-09-10 ("no need for bulk edit there"), and he didn't
-  // name hinge in this request either.
+  // UPDATE (2026-09-11) — hinge is now included too, per Jordan's
+  // follow-up ask ("i also noticed hinges isnt showing its requote
+  // option, can we also allow it"). The BASELINE hinge specifically is
+  // still excluded from the interactive panel (see the `Is baseline`
+  // check below) — its Rate is deliberately pinned at exactly 0 (its cost
+  // is already folded into the baseline door price, not charged
+  // separately — see the "Is baseline" entry in the persistent-fixes
+  // checklist), and letting a shop type an arbitrary job price in here
+  // would silently give it a nonzero rate, breaking that invariant. Every
+  // other hinge reverses the same way door does.
   //
   // Material and door reverse cleanly (one real quote in, one number out).
-  // Drawer's "mostly drawers" rate doesn't: it's the wizard's own average
-  // of two separate quotes (1-drawer + full bank) and only the blended
-  // result was ever saved, so there's no way back to the original two
-  // numbers — this shows the combined effective price instead, labeled as
-  // such rather than presented as a real quote.
+  // Drawer's "mostly drawers" rate is trickier: it's the wizard's own
+  // average of two separate quotes (1-drawer + full bank), and only the
+  // blended result was ever saved on the "mostly drawers" record itself —
+  // BUT the 1-drawer quote can be recovered exactly from the paired
+  // "some drawers" record's own rate (their formulas share that same
+  // number). UPDATE (2026-09-11): when that paired record still exists,
+  // this now shows the actual drawer-bank quote (editable, so a shop can
+  // requote it if they got it wrong or prices changed) instead of the
+  // blended effective price — per Jordan: "id rather it show their quote
+  // for the drawer bank because thats whats used to get the blended
+  // rate." Falls back to the old blended-effective-price display only if
+  // the paired "some drawers" record is missing (can mostly only happen
+  // on old data from before the two were required to stay paired — see
+  // mqphDelete's drawer-pair cascade above).
   function mqphEditRequoteSpec(rec) {
     const cat = rec.fields['Category'];
-    if (!['material','door','drawer'].includes(cat)) return null;
+    if (!['material','door','drawer','hinge'].includes(cat)) return null;
     const bl = getBaselineRates();
     const name = rec.fields['Name'] || '';
     const unit = rec.fields['Unit'] || '';
@@ -2226,7 +2242,7 @@ window.mqphGoToWizard = function() {
           `<strong>Base cabinets + this door style</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${name}</span>`,
-          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only · Include toe kick`,
         ]),
         rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
         priceToRate: (price) => (price - bl.blBasePrice) / 4,
@@ -2234,33 +2250,82 @@ window.mqphGoToWizard = function() {
     }
 
     // drawer
-    if (bl.blBasePrice <= 0) return { noBaseline: true };
-    const isMostly = /mostly drawers\s*$/i.test(name);
-    const drawerName = name.replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() || 'this drawer config';
-    if (isMostly) {
+    if (cat === 'drawer') {
+      if (bl.blBasePrice <= 0) return { noBaseline: true };
+      const isMostly = /mostly drawers\s*$/i.test(name);
+      const drawerName = name.replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() || 'this drawer config';
+      if (isMostly) {
+        // Recover the paired "some drawers" record's own quote — its rate
+        // gives us the 1-drawer job price exactly (someRate = (p1 -
+        // basePrice)/4, so p1 = someRate*4 + basePrice), which is the
+        // missing piece needed to pull the drawer-bank quote back out of
+        // this "mostly" rate (a plain average of the two).
+        const someRec = lineItems.find(r => r.fields &&
+          r.fields['Category'] === 'drawer' &&
+          (r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() === drawerName &&
+          /some drawers\s*$/i.test(r.fields['Name']||''));
+        if (someRec) {
+          const p1 = (someRec.fields['Rate']||0) * 4 + bl.blBasePrice;
+          return {
+            priceLabel: 'Your total price for the full drawer bank job?',
+            hint: `In plain terms: this rate is a blend of two quotes — 1 drawer per cabinet, and a full 3-drawer bank — averaged together. We already know your 1-drawer quote from the "${drawerName} — some drawers" rate, so this box shows your drawer-bank quote specifically. Change it here if you quoted it wrong or prices changed, and we'll re-blend the two to update the rate.`,
+            spec: specBox([
+              `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong>`,
+              `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+              `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · No doors · No drawer fronts · Supply only · Include toe kick`,
+            ]),
+            rateToPrice: (rate) => 2 * (rate * 4 + bl.blBasePrice) - p1,
+            priceToRate: (price) => ((p1 + price) / 2 - bl.blBasePrice) / 4,
+          };
+        }
+        // No paired "some drawers" record found (old data from before the
+        // pair became required together — see mqphDelete above) — fall
+        // back to showing the blended effective price, same as before
+        // this feature could recover the real drawer-bank quote.
+        return {
+          priceLabel: 'Combined effective job price for this rate',
+          hint: `In plain terms: this rate is a blend of two quotes — 1 drawer per cabinet, and a full 3-drawer bank — averaged together, and only the blended result was ever saved (we couldn't find a matching "${drawerName} — some drawers" rate to recover your original drawer-bank quote from). This is that combined effective price, not one real quote. We subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the rate.`,
+          spec: specBox([
+            `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong> — averaged with the 1-drawer quote`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · No doors · No drawer fronts · Supply only · Include toe kick`,
+          ]),
+          rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
+          priceToRate: (price) => (price - bl.blBasePrice) / 4,
+          isBlended: true,
+        };
+      }
       return {
-        priceLabel: 'Combined effective job price for this rate',
-        hint: `This rate is an average of two quotes (1 top drawer per cabinet, and a full 3-drawer bank) — only the blended result was ever saved, so this is that combined effective price, not one real quote. We subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the rate.`,
+        priceLabel: 'Your total price for this job?',
+        hint: `We'll subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the upcharge.`,
         spec: specBox([
-          `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong> — averaged with the 1-drawer quote`,
+          `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
-          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · No doors · No drawer fronts · Supply only`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick`,
         ]),
         rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
         priceToRate: (price) => (price - bl.blBasePrice) / 4,
-        isBlended: true,
       };
     }
+
+    // hinge — the baseline hinge itself is excluded (see the comment block
+    // above this function for why); every other hinge reverses the same
+    // way door does, over the base+baseline-door job instead of the bare
+    // base box.
+    if (rec.fields['Is baseline']) return { baselineHinge: true };
+    if (bl.blBasePrice <= 0) return { noBaseline: true };
+    const baseWithDoorPrice = bl.blBasePrice + bl.blDoorRate * 4;
     return {
       priceLabel: 'Your total price for this job?',
-      hint: `We'll subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the upcharge.`,
+      hint: `We'll subtract ${CUR()}${baseWithDoorPrice.toLocaleString()} (your ${bl.blMatName} base box + ${bl.blDoorName||'baseline door'}) and divide by 4 to get the upcharge.`,
       spec: specBox([
-        `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
+        `<strong>Base cabinets + baseline door + this hinge</strong>`,
         `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
-        `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · Include slides/guides · No doors · No drawer fronts · Supply only`,
+        `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${bl.blDoorName||'baseline door'}</span>`,
+        `Hinges: <span class="mqph-spec-tag">${name}</span> (instead of ${bl.blHingeName||'baseline hinge'}) · No drawers · Supply only · Include toe kick`,
       ]),
-      rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
-      priceToRate: (price) => (price - bl.blBasePrice) / 4,
+      rateToPrice: (rate) => rate * 4 + baseWithDoorPrice,
+      priceToRate: (price) => (price - baseWithDoorPrice) / 4,
     };
   }
 
@@ -2278,6 +2343,10 @@ window.mqphGoToWizard = function() {
     if (!cfg) { wrap.innerHTML = ''; return; }
     if (cfg.noBaseline) {
       wrap.innerHTML = `<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin:-4px 0 1rem">⚠️ No baseline pricing found — run the pricing wizard first to see this rate's original quote.</div>`;
+      return;
+    }
+    if (cfg.baselineHinge) {
+      wrap.innerHTML = `<div style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;margin:-4px 0 1rem">⭐ This is your baseline hinge — its rate always stays ${CUR()}0 because its cost is already built into the baseline door price, not charged on top of it, so there's no separate quote to show here.</div>`;
       return;
     }
     _mqphEditRequote = cfg;
@@ -2377,11 +2446,30 @@ window.mqphGoToWizard = function() {
   };
 
   window.mqphDelete = async function(id) {
-    if (!confirm('Delete this item?')) return;
+    const rec = lineItems.find(r => r.id === id);
+    // Drawer "some" and "mostly" rates are two halves of one calculation —
+    // "mostly drawers"' rate is a blend that depends on the "some drawers"
+    // rate for the same config to make sense (see mqphEditRequoteSpec
+    // below, which reads the paired item back out to recover the original
+    // drawer-bank quote) — deleting only one half leaves the other
+    // pointing at a quote that no longer fully exists. Per Jordan
+    // 2026-09-11: warn that the partner rate goes too, then delete both.
+    let drawerPartner = null;
+    if (rec && rec.fields && rec.fields['Category'] === 'drawer') {
+      const baseName = (rec.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
+      if (baseName) {
+        drawerPartner = lineItems.find(r => r.id !== id && r.fields &&
+          r.fields['Category'] === 'drawer' &&
+          (r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() === baseName);
+      }
+    }
+    const confirmMsg = drawerPartner
+      ? `Delete this item? Its paired rate — "${drawerPartner.fields['Name']}" — is calculated together with this one and can't be split apart, so it'll be deleted too.`
+      : 'Delete this item?';
+    if (!confirm(confirmMsg)) return;
     try {
       // Same door → linked-crown/valance cleanup as mqphDeleteChip, for
       // this second, more generic delete path.
-      const rec = lineItems.find(r => r.id === id);
       if (rec && rec.fields && rec.fields['Category'] === 'door') {
         const doorName = rec.fields['Name'] || '';
         if (doorName) {
@@ -2399,7 +2487,9 @@ window.mqphGoToWizard = function() {
           }
         }
       }
-      await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender();
+      await atDelete(LINE_ITEMS_TABLE,id);
+      if (drawerPartner) { try { await atDelete(LINE_ITEMS_TABLE, drawerPartner.id); } catch(e) {} }
+      await loadAndRender();
     } catch(e) { alert('Error deleting.'); }
   };
 
@@ -2642,7 +2732,7 @@ window.mqphGoToWizard = function() {
           `<strong>Base cabinets + door style</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${groupLabel}</span>`,
-          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only · Include toe kick`,
         ])}
         <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bulk-rq-p0" placeholder="0.00" oninput="mqphBulkRequoteCalc()"/></div>
         <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the door upcharge per lin ft</p>
