@@ -1877,8 +1877,8 @@ window.mqphGoToWizard = function() {
             <div id="mqph-cat-body-${cat}" style="display:none">
             ${cat==='zone' ? `<div style="font-size:11px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;margin:4px 12px 8px">💡 Showing "km" but want "mi" instead (or back to km)? Click <strong>Edit</strong> on the zone below and switch the unit — it's just a label, so it's the one field that's editable there.</div>` : ''}
             <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
-              <span style="cursor:pointer;flex:1" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
-              <span style="cursor:pointer;min-width:80px;text-align:right" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
+              <span style="cursor:pointer;flex:1;${mqphSortLabelStyle(cat,'name')}" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
+              <span style="cursor:pointer;min-width:80px;text-align:right;${mqphSortLabelStyle(cat,'price')}" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
               ${['door','material'].includes(cat) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenBulkEdit('${cat}')">📊 Bulk edit</button>` : ''}
             </div>
             <div${recs.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>
@@ -1977,7 +1977,8 @@ window.mqphGoToWizard = function() {
                    the wrong screen. -->
               <select id="mqph-item-cat" onchange="mqphOnItemCatChange()">${Object.entries(CAT_LABELS).filter(([v])=>v!=='drawer_config').map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
             </div>
-            <div class="mqph-field"><label>Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01"/></div>
+            <div class="mqph-field"><label>Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01" oninput="mqphEditRequoteFromRate()"/></div>
+            <div id="mqph-edit-requote-wrap"></div>
             <div class="mqph-field"><label>Unit</label>
               <select id="mqph-item-unit"></select>
               <div id="mqph-item-unit-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked while editing — an item's pricing method can't be changed after it's created (this is what let a hinge get accidentally switched to "each" and confuse pricing). Delete and re-add the item if it truly needs to be priced differently.</div>
@@ -2152,7 +2153,166 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-item-active').checked = true;
     const lockNote = document.getElementById('mqph-item-unit-lock-note');
     if (lockNote) lockNote.style.display = 'none';
+    // Add never reaches material/door/drawer (those categories' "+ Add"
+    // opens the mini-wizard instead — see MINI_WIZ_CATS), so there's never
+    // a rec to reverse-calculate a quote from here. Clear defensively
+    // anyway in case a leftover panel from a prior Edit is still in the DOM.
+    mqphRenderEditRequote(null);
     document.getElementById('mqph-modal-overlay').classList.add('show');
+  };
+
+  // ============================================================
+  // EDIT MODAL — "see the original quote behind this rate" panel
+  // ============================================================
+  // Material, door and drawer rates aren't numbers a shop owner ever typed
+  // directly — they're back-derived from a real job quote using the same
+  // 4-lin-ft baseline spec the wizard/mini-wiz/Bulk-Edit-Requote all use
+  // (see getBaselineRates()). Per Jordan 2026-09-11 ("seeing the linear
+  // foot upcharge can be confusing, because its unrelatable... let them
+  // see their original quote"), this reverse-calculates that job total and
+  // shows it right in the Edit modal, pre-filled from the item's current
+  // Rate. He confirmed (2026-09-11, AskUserQuestion) he wants it
+  // interactive rather than read-only — same idea as Bulk Edit's Requote,
+  // just built into every Edit instead of hidden behind a toggle — so
+  // typing a new job total here writes straight back into the Rate field
+  // above, and editing Rate directly updates this total right back. Either
+  // field can drive the other; nothing here writes to Airtable itself,
+  // mqphSaveItem() still owns that (it just reads whatever's currently in
+  // Rate, same as always).
+  //
+  // Hinge is deliberately excluded — same scoping Jordan gave Bulk Edit's
+  // Requote on 2026-09-10 ("no need for bulk edit there"), and he didn't
+  // name hinge in this request either.
+  //
+  // Material and door reverse cleanly (one real quote in, one number out).
+  // Drawer's "mostly drawers" rate doesn't: it's the wizard's own average
+  // of two separate quotes (1-drawer + full bank) and only the blended
+  // result was ever saved, so there's no way back to the original two
+  // numbers — this shows the combined effective price instead, labeled as
+  // such rather than presented as a real quote.
+  function mqphEditRequoteSpec(rec) {
+    const cat = rec.fields['Category'];
+    if (!['material','door','drawer'].includes(cat)) return null;
+    const bl = getBaselineRates();
+    const name = rec.fields['Name'] || '';
+    const unit = rec.fields['Unit'] || '';
+
+    if (cat === 'material') {
+      const isUpper = /uppers/i.test(unit) || /—\s*uppers\s*$/i.test(name);
+      const matName = name.replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim() || 'this material';
+      return {
+        priceLabel: 'Your total price for this job?',
+        hint: null,
+        spec: specBox(isUpper ? [
+          `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · Supply only`,
+        ] : [
+          `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · Supply only · Include toe kick`,
+        ]),
+        rateToPrice: (rate) => rate * 4,
+        priceToRate: (price) => price / 4,
+      };
+    }
+
+    if (cat === 'door') {
+      if (bl.blBasePrice <= 0) return { noBaseline: true };
+      return {
+        priceLabel: 'Your total price for this job?',
+        hint: `We'll subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the upcharge.`,
+        spec: specBox([
+          `<strong>Base cabinets + this door style</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${name}</span>`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
+        ]),
+        rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
+        priceToRate: (price) => (price - bl.blBasePrice) / 4,
+      };
+    }
+
+    // drawer
+    if (bl.blBasePrice <= 0) return { noBaseline: true };
+    const isMostly = /mostly drawers\s*$/i.test(name);
+    const drawerName = name.replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() || 'this drawer config';
+    if (isMostly) {
+      return {
+        priceLabel: 'Combined effective job price for this rate',
+        hint: `This rate is an average of two quotes (1 top drawer per cabinet, and a full 3-drawer bank) — only the blended result was ever saved, so this is that combined effective price, not one real quote. We subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the rate.`,
+        spec: specBox([
+          `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong> — averaged with the 1-drawer quote`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · No doors · No drawer fronts · Supply only`,
+        ]),
+        rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
+        priceToRate: (price) => (price - bl.blBasePrice) / 4,
+        isBlended: true,
+      };
+    }
+    return {
+      priceLabel: 'Your total price for this job?',
+      hint: `We'll subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the upcharge.`,
+      spec: specBox([
+        `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
+        `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+        `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · Include slides/guides · No doors · No drawer fronts · Supply only`,
+      ]),
+      rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
+      priceToRate: (price) => (price - bl.blBasePrice) / 4,
+    };
+  }
+
+  // Holds the active conversion functions for whatever's open in the Edit
+  // modal right now — null when the panel isn't showing (wrong category,
+  // or no baseline yet), so the two oninput handlers below become no-ops.
+  let _mqphEditRequote = null;
+
+  function mqphRenderEditRequote(rec) {
+    const wrap = document.getElementById('mqph-edit-requote-wrap');
+    if (!wrap) return;
+    _mqphEditRequote = null;
+    if (!rec) { wrap.innerHTML = ''; return; }
+    const cfg = mqphEditRequoteSpec(rec);
+    if (!cfg) { wrap.innerHTML = ''; return; }
+    if (cfg.noBaseline) {
+      wrap.innerHTML = `<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin:-4px 0 1rem">⚠️ No baseline pricing found — run the pricing wizard first to see this rate's original quote.</div>`;
+      return;
+    }
+    _mqphEditRequote = cfg;
+    const currentRate = parseFloat(document.getElementById('mqph-item-rate')?.value || 0);
+    const price = currentRate ? cfg.rateToPrice(currentRate) : 0;
+    wrap.innerHTML = `
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin:-4px 0 1rem">
+        <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🧮 ${cfg.isBlended ? 'Reverse-calculated effective quote' : 'Original quote for this rate'}</div>
+        ${cfg.spec}
+        <div class="mqph-input-row"><label>${cfg.priceLabel}</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-edit-rq-price" value="${price>0?price.toFixed(2):''}" placeholder="0.00" oninput="mqphEditRequoteFromPrice()"/></div>
+        ${cfg.hint ? `<p class="mqph-calc-hint" style="margin-bottom:0">${cfg.hint}</p>` : ''}
+      </div>`;
+  }
+
+  // Typing a new job total here recalculates Rate above — doesn't touch
+  // Airtable, just fills the input; Save still owns the actual write.
+  window.mqphEditRequoteFromPrice = function() {
+    if (!_mqphEditRequote) return;
+    const priceInp = document.getElementById('mqph-edit-rq-price');
+    const rateInp = document.getElementById('mqph-item-rate');
+    if (!priceInp || !rateInp) return;
+    const price = parseFloat(priceInp.value || 0);
+    if (!price) return;
+    rateInp.value = (Math.round(_mqphEditRequote.priceToRate(price) * 100) / 100).toFixed(2);
+  };
+
+  // The reverse direction — editing Rate directly keeps the quote total
+  // above it honest instead of going stale/contradictory.
+  window.mqphEditRequoteFromRate = function() {
+    if (!_mqphEditRequote) return;
+    const priceInp = document.getElementById('mqph-edit-rq-price');
+    const rateInp = document.getElementById('mqph-item-rate');
+    if (!priceInp || !rateInp) return;
+    const rate = parseFloat(rateInp.value || 0);
+    priceInp.value = rate ? (Math.round(_mqphEditRequote.rateToPrice(rate) * 100) / 100).toFixed(2) : '';
   };
 
   window.mqphOpenEdit = function(id) {
@@ -2181,6 +2341,7 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-item-active').checked = rec.fields['Active']!==false;
     const lockNote = document.getElementById('mqph-item-unit-lock-note');
     if (lockNote) lockNote.style.display = unitLocked ? 'block' : 'none';
+    mqphRenderEditRequote(rec);
     document.getElementById('mqph-modal-overlay').classList.add('show');
   };
 
@@ -2615,12 +2776,13 @@ window.mqphGoToWizard = function() {
   // items in the dashboard (e.g. sort a big door list alphabetically to
   // find one, then it's still in its normal custom order for customers).
   //
-  // Default (before a shop owner clicks a column header) is price,
-  // lowest→highest — per Jordan 2026-09-10: he'd rather a section open
-  // already sorted cheapest-first than in whatever order items happened to
-  // get added in. `MQPH_DEFAULT_SORT` is that starting state; "Sort order"
-  // (the original custom/import order) is still reachable as a 3rd click.
-  const MQPH_DEFAULT_SORT = {field:'price', dir:'asc'};
+  // Default (before a shop owner clicks a column header) is alphabetical
+  // by name — per Jordan 2026-09-11, reversing the 2026-09-10 price-first
+  // default: with a lot going on on this page, A→Z is the more findable
+  // starting order than cheapest-first. `MQPH_DEFAULT_SORT` is that
+  // starting state; "Sort order" (the original custom/import order) is
+  // still reachable as a 3rd click, same as before.
+  const MQPH_DEFAULT_SORT = {field:'name', dir:'asc'};
   let _mqphSortState = {}; // cat -> {field:'default'|'name'|'price', dir:'asc'|'desc'} — unset means MQPH_DEFAULT_SORT
   function mqphSortRecs(cat, recs) {
     const state = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
@@ -2635,6 +2797,16 @@ window.mqphGoToWizard = function() {
     const state = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
     if (state.field !== field) return '<span style="opacity:0.35">↕</span>';
     return state.dir === 'asc' ? '↑' : '↓';
+  }
+  // Which column is actually driving the current sort gets called out in
+  // color (not just the ↑/↓ vs ↕ arrow, which is easy to miss at a glance
+  // on a busy page) — per Jordan 2026-09-11 ("highlight the method thats
+  // currently being used for sorting"). Reuses the same blue already used
+  // for links/active state elsewhere in this file (e.g. the default-chip
+  // and re-run-wizard link), so it reads as "active" rather than an error.
+  function mqphSortLabelStyle(cat, field) {
+    const state = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
+    return state.field === field ? 'color:#1d4ed8' : '';
   }
   window.mqphSetSort = function(cat, field) {
     const current = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
