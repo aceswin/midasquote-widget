@@ -997,21 +997,18 @@ window.mqphGoToWizard = function() {
         sub:'Quote install-only prices — no supply, just labour. Use the same 4 lin ft spec.',
         content:() => `
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔼 Upper cabinets — install only</div>
-            <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}</div>
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔼 Upper cabinets — install only</div>
             <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
             <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔽 Base cabinets — install only</div>
-            <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}</div>
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔽 Base cabinets — install only</div>
             <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
             <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div id="mqph-r-install" class="mqph-result"></div>
           <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
-          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🗑️ Cabinet removal & disposal</div>
-          <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}</div>
+          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal & disposal</div>
           <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet (${mqphMm(48).toLocaleString()}mm) of base cabinets with doors?</label></div>
           <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Include your cost to haul away and dispose of the old cabinets. <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
           <div class="mqph-input-row"><label>Removal & disposal price for 4ft (${mqphMm(48).toLocaleString()}mm) job</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
@@ -1182,32 +1179,11 @@ window.mqphGoToWizard = function() {
   // mqphCalcInstall() for the live calc since that function has no
   // wizard-state dependency of its own.
   window.mqphOpenInstallRequote = function() {
-    // Per Jordan 2026-09-12 ("if they go to edit install rates it should
-    // be showing the original quotes... so they can requote to edit"):
-    // this modal now doubles as the "edit install rates" entry point
-    // (see the button in buildEditorHTML's category header, no longer
-    // gated to only the empty-category case) — so when rates already
-    // exist, pre-fill each box with the ORIGINAL quoted job total those
-    // rates came from, same "reverse rate × 4 = job price" math every
-    // other Requote panel in this file already uses, instead of always
-    // opening to 5 blank fields. Matched by each rate's fixed Name
-    // (Sort order/Description can vary, Name doesn't). The two derived
-    // some/mostly-drawers rates have no input box of their own — they're
-    // always recomputed from the "bases, with doors" box on save, same
-    // as they always have been.
-    const findRate = (name) => lineItems.find(r => r.fields && r.fields['Category']==='install' && r.fields['Name']===name);
-    const prefill = (id, name) => {
-      const el = document.getElementById(id); if (!el) return;
-      const rec = findRate(name);
-      el.value = rec ? (Math.round((rec.fields['Rate']||0) * 4 * 100) / 100) : '';
-    };
-    prefill('mqph-inst-u-nd', 'Install — uppers (no doors)');
-    prefill('mqph-inst-u-wd', 'Install — uppers (with doors)');
-    prefill('mqph-inst-b-nd', 'Install — bases (no doors)');
-    prefill('mqph-inst-b-wd', 'Install — bases (with doors)');
-    prefill('mqph-removal',   'Cabinet removal');
+    ['mqph-inst-u-nd','mqph-inst-u-wd','mqph-inst-b-nd','mqph-inst-b-wd','mqph-removal'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const res1 = document.getElementById('mqph-r-install'); if (res1) res1.style.display = 'none';
+    const res2 = document.getElementById('mqph-r-removal'); if (res2) res2.style.display = 'none';
+    const hint = document.getElementById('mqph-removal-hint'); if (hint) hint.textContent = '';
     document.getElementById('mqph-install-requote-overlay')?.classList.add('show');
-    mqphCalcInstall();
   };
 
   window.mqphCloseInstallRequote = function() {
@@ -1220,68 +1196,30 @@ window.mqphGoToWizard = function() {
     const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
     const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
     const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
-
-    const hasExisting = lineItems.some(r => r.fields && r.fields['Category']==='install');
-    const allBlank = !(und>0) && !(uwd>0) && !(bnd>0) && !(bwd>0) && !(rem>0);
-    if (!hasExisting && allBlank) { alert('Enter at least one rate before saving.'); return; }
-    if (hasExisting && allBlank) {
-      if (!confirm('Every box is blank — this will delete all your remaining installation & removal rates. Continue?')) return;
+    if (!(und>0) && !(uwd>0) && !(bnd>0) && !(bwd>0) && !(rem>0)) { alert('Enter at least one rate before saving.'); return; }
+    const items = [];
+    let sort = lineItems.length + 1;
+    // Mirrors wizard Step 9's onNext exactly (same names/units/descriptions/
+    // auto-calculated some-mostly-drawers percentages), just writing
+    // straight to Airtable instead of queuing into wizardItems.
+    if(und>0) items.push({ shop:[shopRecord._recordId], Name:'Install — uppers (no doors)',   Category:'install', Rate:Math.round((und/4)*100)/100, Unit:'per lin ft', Description:'Upper box install, no doors', Active:true, 'Sort order':sort++ });
+    if(uwd>0) items.push({ shop:[shopRecord._recordId], Name:'Install — uppers (with doors)', Category:'install', Rate:Math.round((uwd/4)*100)/100, Unit:'per lin ft', Description:'Upper install with doors hung', Active:true, 'Sort order':sort++ });
+    if(bnd>0) items.push({ shop:[shopRecord._recordId], Name:'Install — bases (no doors)',    Category:'install', Rate:Math.round((bnd/4)*100)/100, Unit:'per lin ft', Description:'Base box install, no doors', Active:true, 'Sort order':sort++ });
+    if(bwd>0) {
+      const bwdRate = Math.round((bwd/4)*100)/100;
+      items.push({ shop:[shopRecord._recordId], Name:'Install — bases (with doors)',     Category:'install', Rate:bwdRate, Unit:'per lin ft', Description:'Base install with doors hung', Active:true, 'Sort order':sort++ });
+      items.push({ shop:[shopRecord._recordId], Name:'Install — bases (some drawers)',   Category:'install', Rate:Math.round(bwdRate*1.10*100)/100, Unit:'per lin ft', Description:'Base install with some drawers (+10% over with-doors rate)', Active:true, 'Sort order':sort++ });
+      items.push({ shop:[shopRecord._recordId], Name:'Install — bases (mostly drawers)', Category:'install', Rate:Math.round(bwdRate*1.15*100)/100, Unit:'per lin ft', Description:'Base install with mostly drawers (+15% over with-doors rate)', Active:true, 'Sort order':sort++ });
     }
-
+    if(rem>0) items.push({ shop:[shopRecord._recordId], Name:'Cabinet removal', Category:'install', Rate:Math.round((rem/4)*100)/100, Unit:'per lin ft', Description:'Remove & dispose existing cabinets', Active:true, 'Sort order':sort++ });
     const btn = document.getElementById('mqph-install-requote-save');
     if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-
-    // Per Jordan 2026-09-12: this modal now also serves as "edit install
-    // rates" (see mqphOpenInstallRequote's pre-fill above), not just the
-    // empty-category recovery flow it shipped as on 2026-09-11 — so
-    // saving now UPDATES a rate that already exists (matched by its
-    // fixed Name) instead of always creating a new row alongside it, and
-    // clearing a box back to blank deletes that one rate. Mirrors every
-    // other Requote/Edit panel in this file: edit in place, don't
-    // duplicate.
-    async function upsert(name, jobPriceOrRate, description, isRawRate) {
-      const existing = lineItems.find(r => r.fields && r.fields['Category']==='install' && r.fields['Name']===name);
-      const hasValue = isRawRate ? jobPriceOrRate !== null : jobPriceOrRate > 0;
-      if (hasValue) {
-        const rate = isRawRate ? jobPriceOrRate : Math.round((jobPriceOrRate/4)*100)/100;
-        if (existing) {
-          await atUpdate(LINE_ITEMS_TABLE, existing.id, {Rate:rate});
-          existing.fields['Rate'] = rate;
-        } else {
-          const sort = lineItems.filter(r=>r.fields&&r.fields['Category']==='install').length + 1;
-          const rec = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:name, Category:'install', Rate:rate, Unit:'per lin ft', Description:description, Active:true, 'Sort order':sort });
-          if (rec?.id) lineItems.push(rec);
-        }
-      } else if (existing) {
-        await atDelete(LINE_ITEMS_TABLE, existing.id);
-        const idx = lineItems.indexOf(existing); if (idx !== -1) lineItems.splice(idx, 1);
-      }
-    }
-
     try {
-      await upsert('Install — uppers (no doors)',   und, 'Upper box install, no doors');
-      await upsert('Install — uppers (with doors)', uwd, 'Upper install with doors hung');
-      await upsert('Install — bases (no doors)',    bnd, 'Base box install, no doors');
-      if (bwd > 0) {
-        const bwdRate = Math.round((bwd/4)*100)/100;
-        await upsert('Install — bases (with doors)',     bwd, 'Base install with doors hung');
-        await upsert('Install — bases (some drawers)',   Math.round(bwdRate*1.10*100)/100, 'Base install with some drawers (+10% over with-doors rate)', true);
-        await upsert('Install — bases (mostly drawers)', Math.round(bwdRate*1.15*100)/100, 'Base install with mostly drawers (+15% over with-doors rate)', true);
-      } else {
-        // Cleared back to blank — the two auto-calculated drawer rates
-        // only ever exist because of this one, so they go too, same
-        // "all 7 travel together" relationship the delete-cascade
-        // already enforces elsewhere.
-        await upsert('Install — bases (with doors)',     0, '');
-        await upsert('Install — bases (some drawers)',   null, '', true);
-        await upsert('Install — bases (mostly drawers)', null, '', true);
-      }
-      await upsert('Cabinet removal', rem, 'Remove & dispose existing cabinets');
-
+      for (const fields of items) { const rec = await atCreate(LINE_ITEMS_TABLE, fields); if (rec?.id) lineItems.push(rec); }
       mqphCloseInstallRequote();
       await loadAndRender();
     } catch(e) {
-      alert('Something went wrong saving these — please try again. Anything already saved stayed saved, so check Pricing before re-running to avoid duplicates.');
+      alert('Something went wrong saving these — please try again. Anything already created stayed saved, so check Pricing before re-running to avoid duplicates.');
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = 'Save install/removal rates →'; }
     }
@@ -2130,7 +2068,7 @@ window.mqphGoToWizard = function() {
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
               <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
               ${cat==='install'
-                ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenInstallRequote()">${recs.length===0 ? '🔧 Requote install/removal rates' : '✏️ Edit install/removal rates'}</button>`
+                ? (recs.length===0 ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenInstallRequote()">🔧 Requote install/removal rates</button>` : '')
                 : MINI_WIZ_CATS.includes(cat)
                   ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
                   : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
@@ -2229,21 +2167,18 @@ window.mqphGoToWizard = function() {
           <div class="mqph-modal-body">
             <p style="font-size:13px;color:#6b7280;margin:0 0 1rem;line-height:1.5">Quote install-only prices — no supply, just labour. Use the same 4 lin ft spec as the rest of your pricing. Leave any box blank to skip that rate.</p>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔼 Upper cabinets — install only</div>
-              <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}</div>
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔼 Upper cabinets — install only</div>
               <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
               <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔽 Base cabinets — install only</div>
-              <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}</div>
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔽 Base cabinets — install only</div>
               <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
               <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
             </div>
             <div id="mqph-r-install" class="mqph-result"></div>
             <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
-            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🗑️ Cabinet removal & disposal</div>
-            <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}</div>
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal & disposal</div>
             <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet (${mqphMm(48).toLocaleString()}mm) of base cabinets with doors?</label></div>
             <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Include your cost to haul away and dispose of the old cabinets. <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
             <div class="mqph-input-row"><label>Removal & disposal price for 4ft (${mqphMm(48).toLocaleString()}mm) job</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
