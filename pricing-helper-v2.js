@@ -2244,7 +2244,16 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-modal-title').textContent = 'Add item';
     document.getElementById('mqph-item-name').value = '';
     document.getElementById('mqph-item-cat').value = cat || 'material';
-    document.getElementById('mqph-item-cat').disabled = false;
+    // Locked here too, not just on Edit — per Jordan 2026-09-11: "when
+    // adding new they shouldnt be able to choose right? because if youre
+    // adding a door, youre adding a door... you shouldnt be able to tell
+    // it its a door [from some other category's Add button]." Confirmed
+    // this is safe: mqphOpenAdd has exactly one call site in the whole
+    // file (each category header's own "+ Add" button, passing its own
+    // `cat`), so the category is always already decided by which button
+    // was clicked — the dropdown was never actually choosing anything,
+    // just redundantly re-displaying a decision already made.
+    document.getElementById('mqph-item-cat').disabled = true;
     document.getElementById('mqph-item-rate').value = '';
     mqphPopulateUnitOptions(cat || 'material', (CAT_UNIT_OPTIONS[cat||'material']||ALL_UNIT_OPTIONS)[0]);
     document.getElementById('mqph-item-unit').disabled = false;
@@ -2253,7 +2262,10 @@ window.mqphGoToWizard = function() {
     const lockNote = document.getElementById('mqph-item-unit-lock-note');
     if (lockNote) lockNote.style.display = 'none';
     const catLockNote = document.getElementById('mqph-item-cat-lock-note');
-    if (catLockNote) catLockNote.style.display = 'none';
+    if (catLockNote) {
+      catLockNote.textContent = `🔒 Adding a "${CAT_LABELS[cat || 'material']}" item — set by the "+ Add" button you clicked. To add a different kind of item, use that category's own "+ Add" button instead.`;
+      catLockNote.style.display = 'block';
+    }
     // Add never reaches material/door/drawer (those categories' "+ Add"
     // opens the mini-wizard instead — see MINI_WIZ_CATS), so there's never
     // a rec to reverse-calculate a quote from here. Clear defensively
@@ -2505,7 +2517,10 @@ window.mqphGoToWizard = function() {
     // i dont think any item should be able to change its category."
     document.getElementById('mqph-item-cat').disabled = true;
     const catLockNote = document.getElementById('mqph-item-cat-lock-note');
-    if (catLockNote) catLockNote.style.display = 'block';
+    if (catLockNote) {
+      catLockNote.textContent = '🔒 Locked while editing — an item\'s category can\'t be changed after it\'s created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material\'s rate is a flat price, a door style\'s is an upcharge, a drawer config\'s rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.';
+      catLockNote.style.display = 'block';
+    }
     document.getElementById('mqph-item-rate').value  = rec.fields['Rate']||'';
     const editCat = rec.fields['Category']||'material';
     const unit = rec.fields['Unit']||'per lin ft';
@@ -2537,6 +2552,17 @@ window.mqphGoToWizard = function() {
     if (!name) { alert('Please enter a name.'); return; }
     const category = document.getElementById('mqph-item-cat').value;
     if (!currentEditId && !mqphWarnIfDuplicate(category, name)) return;
+    // Smart door rename — per Jordan 2026-09-11: "yes lets make door
+    // change names smart." Crown/Valance trim items link to a door style
+    // by storing its NAME as plain text in `Linked door style` (not a
+    // record ID — see the door → trim cleanup inside mqphDelete above),
+    // so a plain rename would otherwise silently orphan that link. Snapshot
+    // the door's pre-save name here (Category is locked on Edit, so
+    // `category` above is guaranteed to match `oldRec`'s if this is an
+    // edit) and propagate the rename into every linked trim item's array
+    // after the save succeeds, below.
+    const oldRec = currentEditId ? lineItems.find(r => r.id === currentEditId) : null;
+    const oldDoorName = (oldRec && oldRec.fields && oldRec.fields['Category'] === 'door') ? (oldRec.fields['Name'] || '') : '';
     const fields = {
       shop:[shopRecord._recordId], Name:name,
       Category:category,
@@ -2548,6 +2574,20 @@ window.mqphGoToWizard = function() {
     try {
       if (currentEditId) { await atUpdate(LINE_ITEMS_TABLE,currentEditId,fields); }
       else { fields['Sort order']=lineItems.length+1; await atCreate(LINE_ITEMS_TABLE,fields); }
+      if (oldDoorName && oldDoorName !== name) {
+        const linkedTrims = lineItems.filter(r => {
+          if (!r.fields || r.fields['Category'] !== 'trim') return false;
+          let linked = [];
+          try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+          return linked.includes(oldDoorName);
+        });
+        for (const t of linkedTrims) {
+          let linked = [];
+          try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+          const renamed = linked.map(n => n === oldDoorName ? name : n);
+          try { await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(renamed) }); } catch(e) { console.error('Failed to propagate door rename to linked trim', e); }
+        }
+      }
       mqphCloseModal(); await loadAndRender();
     } catch(e) { alert('Error saving. Please try again.'); }
   };
