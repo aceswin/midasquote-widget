@@ -833,7 +833,7 @@
       #midasquote-widget .mq-shape-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 16px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;min-width:84px}
       #midasquote-widget .mq-shape-btn svg{display:block}
       #midasquote-widget .mq-shape-btn.active{border-color:${bc};color:${bc};background:#f8faff}
-      #midasquote-widget .mq-leg-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+      #midasquote-widget .mq-leg-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
       #midasquote-widget .mq-divider{height:1px;background:#e5e7eb;margin:1rem 0}
       #midasquote-widget .mq-check-row{display:flex;align-items:center;gap:8px;font-size:14px;color:#111;cursor:pointer;padding:5px 0}
       #midasquote-widget .mq-loading{display:none;text-align:center;padding:2rem;color:#4b5563;font-size:14px}
@@ -5643,7 +5643,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // L-Shape = 2, U-Shape = 3. This builds one section's input row.
     function mqSurfLegRowHtml(id, i, val) {
       return `<div class="mq-leg-row">
-        <div style="flex:1;display:flex;align-items:center"><input type="number" id="mqsw-${id}-${i}" placeholder="e.g. 120" value="${val||''}" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsw-${id}-${i}`, 'inches', 'Section length')}</div>
+        <div style="display:flex;align-items:center"><input type="number" id="mqsw-${id}-${i}" placeholder="e.g. 120" value="${val||''}" oninput="mqCalcSurfDims('${id}')" style="width:150px;min-width:0"/>${calcBtn(`mqsw-${id}-${i}`, 'inches', 'Section length')}</div>
         <span style="font-size:13px;color:#6b7280;white-space:nowrap">Section ${i+1}</span>
       </div>`;
     }
@@ -5712,7 +5712,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter section length(s)</div></div>
         </div>
         <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
-          <select id="mqssi-${id}" style="width:100%;min-width:160px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
+          <select id="mqssi-${id}" style="max-width:260px;min-width:160px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
         <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
           ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
           <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
@@ -5723,7 +5723,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div id="mqscuts-${id}" style="display:none;margin-top:8px;margin-bottom:0.75rem;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Backsplash</label>
-          <select id="mqsbs-${id}" style="min-width:160px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select>
+          <select id="mqsbs-${id}" style="max-width:260px;min-width:160px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select>
         </div>
         <div id="mqs-bsft-block-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
           <div style="font-size:14px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
