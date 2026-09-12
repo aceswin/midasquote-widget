@@ -380,7 +380,33 @@
           quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines,
         }),
       });
-    } catch(e) { console.error('Lead save failed', e); }
+    } catch(e) {
+      console.error('Lead save failed', e);
+      // The dashboard's Leads tab is built entirely from what got saved to
+      // Airtable above — if that save just failed (after 3 retries), this
+      // lead would otherwise vanish completely with zero trace anywhere,
+      // even though the customer's confirmation email below still sends
+      // fine (a separate, unrelated call). Since email is the one delivery
+      // path we know works, fire an extra "this one didn't save" alert to
+      // the shop so nothing is silently lost while the real cause of the
+      // save failure gets fixed. Best-effort only — if this ALSO fails,
+      // there's nothing further to fall back to; already logged above.
+      if (shop && shop['Lead notify email']) {
+        sendEmail(shop['Lead notify email'], `⚠ A lead failed to save automatically — ${quoteType} quote`,
+          `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+            <h2 style="color:#b91c1c">A quote lead didn't save to your dashboard</h2>
+            <p style="color:#444;font-size:14px">Everything below came through fine, but saving it to your Leads tab failed after retrying. Here's what we have — you may want to add it manually.</p>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0">
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Quote type</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${quoteType || 'Not provided'}${roomType ? ' — ' + roomType : ''}</td></tr>
+              <tr><td style="padding:6px 8px;color:#666">Estimate</td><td style="padding:6px 8px">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
+            </table>
+          </div>`
+        ).catch(()=>{});
+      }
+    }
 
     const lineRows = (lines||[])
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
@@ -804,6 +830,12 @@
       #midasquote-widget .mq-surface-num{width:24px;height:24px;border-radius:50%;background:${bc};color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
       #midasquote-widget .mq-remove-btn{font-size:13px;color:#4b5563;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:inherit}
       #midasquote-widget .mq-add-surface-btn{width:100%;padding:10px;font-size:14px;border:1px dashed #d1d5db;border-radius:8px;background:none;color:#4b5563;cursor:pointer;margin-top:4px;font-family:inherit}
+      #midasquote-widget .mq-shape-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;min-width:76px}
+      #midasquote-widget .mq-shape-btn svg{display:block}
+      #midasquote-widget .mq-shape-btn.active{border-color:${bc};color:${bc};background:#f8faff}
+      #midasquote-widget .mq-leg-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+      #midasquote-widget .mq-leg-remove{font-size:16px;line-height:1;color:#9ca3af;background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0}
+      #midasquote-widget .mq-add-leg-btn{padding:7px 12px;font-size:13px;border:1px dashed #d1d5db;border-radius:6px;background:none;color:#4b5563;cursor:pointer;font-family:inherit;margin-top:2px}
       #midasquote-widget .mq-divider{height:1px;background:#e5e7eb;margin:1rem 0}
       #midasquote-widget .mq-check-row{display:flex;align-items:center;gap:8px;font-size:14px;color:#111;cursor:pointer;padding:5px 0}
       #midasquote-widget .mq-loading{display:none;text-align:center;padding:2rem;color:#4b5563;font-size:14px}
@@ -2391,6 +2423,22 @@
     const financingMinRaw = parseFloat(shop['Financing minimum amount']);
     window._mqFinancingMinAmount = !isNaN(financingMinRaw) && financingMinRaw > 0 ? financingMinRaw : 0;
 
+    // Showroom button destination — where the "🖼️ See our showroom" link
+    // right below sends customers. Added 2026-09-10, alongside the new
+    // showroom <iframe> embed option: a shop that's embedded the showroom
+    // on their own site can now point this button there instead of popping
+    // open widget.midasquote.com. Defaults to the popup (unchanged behavior)
+    // unless the shop has explicitly picked "my own page" on the Showroom
+    // tab AND filled in a URL — see mqShowroomSetButtonTarget in
+    // dashboard.js. Stored inside the same 'Showroom category settings' JSON
+    // blob the showroom style (mode/order/names/hidden) already lives in, so
+    // no new Airtable field was needed for this.
+    let showroomSettings = {};
+    try { showroomSettings = shop['Showroom category settings'] ? JSON.parse(shop['Showroom category settings']) : {}; } catch(e) { showroomSettings = {}; }
+    const showroomPopupUrl = `https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}`;
+    const showroomOwnUrl = (showroomSettings.buttonTarget === 'own_page' && typeof showroomSettings.buttonUrl === 'string') ? showroomSettings.buttonUrl.trim() : '';
+    const showroomHref = showroomOwnUrl || showroomPopupUrl;
+
     return `
       <div class="mq-header">
         ${logoHTML}
@@ -2398,7 +2446,7 @@
           <div class="mq-shop-name">${shop['Shop name']||''}</div>
           <div class="mq-shop-sub">${shop['City']||''} &nbsp;·&nbsp; ${shop['Phone']||''}</div>
         </div>
-        ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="https://widget.midasquote.com/showroom.html?shop=${shop['Shop token']}" target="_blank" style="font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:${shop['Brand colour']||'#1a1a1a'};border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15);margin-left:auto" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
+        ${shop['Show showroom'] !== 'Hide' && shop['Shop token'] ? `<a href="${showroomHref}" target="_blank" style="font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:${shop['Brand colour']||'#1a1a1a'};border-radius:8px;padding:7px 14px;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:6px;transition:opacity 0.15s;box-shadow:0 8px 24px rgba(0,0,0,0.30),0 2px 6px rgba(0,0,0,0.15);margin-left:auto" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🖼️ See our showroom</a>` : ''}
       </div>
       <div class="mq-powered-by" style="margin-top:10px;padding-top:0;border-top:none;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
       <div class="mq-tab-bar">
@@ -2691,6 +2739,18 @@
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
       let installUWithDoors=0, installUNoDoors=0, installBWithDoors=0, installBNoDoors=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
+      // Which `mat` key is the shop's actual pinned baseline material — per
+      // Jordan 2026-09-12: the Tall Cabinet material-upcharge calc below
+      // used to grab `Object.keys(mat)[0]` (whichever material happens to
+      // be first by "Sort order", completely ignoring the real "Is
+      // baseline" pin every other category already respects via
+      // getBaselineRates() in pricing-helper-v2.js). Those two can easily
+      // disagree — that's the whole reason the pin exists instead of just
+      // trusting Sort order — so Tall Cabinet quotes could silently use the
+      // wrong reference material for any shop where they don't match. Set
+      // here, inside the same loop that already has each material's `Is
+      // baseline` field, so it's available wherever `mat` is used downstream.
+      let blMatKey = null;
 
       if (hasDynamic) {
         li.materials.forEach((m,i) => {
@@ -2699,6 +2759,10 @@
           const bItem = li.rawMaterials.find(r => r['Name'].replace(/\s*—\s*(uppers|bases).*$/i,'').trim() === baseName && r['Unit']?.includes('bases'));
           const fallbackRate = m['Rate'] || 0;
           mat[`dyn_${i}`] = { label:baseName, rateU:uItem?uItem['Rate']||0:fallbackRate, rateB:bItem?bItem['Rate']||0:fallbackRate };
+          // 'Is baseline' is written on both the uppers and bases rows of
+          // the pinned material together (see pricing-helper-v2.js), so
+          // either one being true here is enough to mark this material key.
+          if (m['Is baseline'] || uItem?.['Is baseline'] || bItem?.['Is baseline']) blMatKey = `dyn_${i}`;
         });
         li.doorStyles.forEach((d,i) => { door[`dyn_${i}`] = { label:d['Name'], rate:d['Rate']||0 }; });
         li.drawers.forEach(d => {
@@ -2750,7 +2814,13 @@
         removalRate    = pricing['Removal rate']||18;
         taxRate        = (pricing['Tax rate']||5)/100;
       }
-      return { mat, door, drawer, hinge, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
+      // No pin found (shop never migrated, or is on the hardcoded-catalog
+      // fallback branch above, which has no 'Is baseline' concept at all) —
+      // fall back to the old first-by-Sort-order behavior rather than
+      // leaving blMatKey null, same defensive fallback getBaselineRates()
+      // itself uses in pricing-helper-v2.js.
+      if (!blMatKey) blMatKey = Object.keys(mat)[0];
+      return { mat, door, drawer, hinge, blMatKey, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
     }
 
     // Legacy global fallback rates (used only if a material has no per-material
@@ -2900,7 +2970,82 @@
     // specialty item with variants (0 = the default, same convention as
     // every other picker in the widget). Positional, same as specQty/
     // installQty above — index i lines up with specs[i].
-    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=new Array(specs.length).fill(0);installQty[p]=new Array(specs.length).fill(0);specVariant[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
+    // specQty[prefix][i] is a plain number for an item with no variants
+    // (unchanged, original behavior) — but for an item WITH variants, it's
+    // now an array of numbers, one slot per variant, so each variant can
+    // carry its own separate quantity (Jordan, 2026-09-12: "each variant
+    // to be treated as their own items" — e.g. 2 recycling pullouts + 1
+    // garbage pullout under one "Pullouts" specialty item, each priced and
+    // quoted separately). Before this, picking a different variant chip
+    // just swapped which price was "active" against one shared quantity.
+    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=specs.map(s=>(s.variants&&s.variants.length)?new Array(s.variants.length).fill(0):0);installQty[p]=new Array(specs.length).fill(0);specVariant[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
+
+    // --- specQty per-item helpers -------------------------------------
+    // Centralize every read/write of a specialty item's quantity so the
+    // "plain number, or array-per-variant" shape above only has to be
+    // handled correctly once. mqSpecQtyGet/Set operate on whichever
+    // variant is currently the ACTIVE one in the UI (i.e. whichever chip
+    // was last clicked) — this is what the single quantity input box
+    // under the chips reads from and writes to, per Jordan's pick: same
+    // chip picker as before, but each chip now remembers its own number.
+    function mqSpecActiveVi(prefix, i) { return (specVariant[prefix] && specVariant[prefix][i]) || 0; }
+    function mqSpecQtyGet(prefix, i) {
+      const q = specQty[prefix] && specQty[prefix][i];
+      if (Array.isArray(q)) return q[mqSpecActiveVi(prefix, i)] || 0;
+      return q || 0;
+    }
+    function mqSpecQtySet(prefix, i, val) {
+      if (!specQty[prefix]) return;
+      const q = specQty[prefix][i];
+      if (Array.isArray(q)) q[mqSpecActiveVi(prefix, i)] = val;
+      else specQty[prefix][i] = val;
+    }
+    // Total quantity across every variant of this item (or just the plain
+    // number for a non-variant item) — used anywhere the OLD code checked
+    // "is this item selected at all" (highlighting the card, the empty-
+    // quote validation message, the install-qty validation gate) — those
+    // checks need to know about every variant, not just whichever one
+    // happens to be showing in the qty box right now.
+    function mqSpecQtyTotal(prefix, i) {
+      const q = specQty[prefix] && specQty[prefix][i];
+      if (Array.isArray(q)) return q.reduce((a,b)=>a+(b||0), 0);
+      return q || 0;
+    }
+    function mqSpecQtyResetAll(prefix, i) {
+      if (!specQty[prefix]) return;
+      const q = specQty[prefix][i];
+      if (Array.isArray(q)) { for (let k=0;k<q.length;k++) q[k]=0; }
+      else specQty[prefix][i] = 0;
+    }
+    // Small "12 sf" / "2×" badge shown on a variant chip once it has a
+    // quantity entered, so a customer switching between chips can see at a
+    // glance which ones they've already added to this quote, instead of
+    // having to click through every chip to check. Updates just the one
+    // badge span rather than re-rendering the whole chip row, so it never
+    // resets that row's own scroll position mid-typing.
+    function mqUpdateSpecVariantBadge(prefix, i) {
+      const s = specs[i];
+      if (!s || !s.variants || !s.variants.length) return;
+      const row = document.getElementById(`mq-spec-variants-${prefix}-${i}`);
+      if (!row) return;
+      const qtyArr = specQty[prefix] && specQty[prefix][i];
+      row.querySelectorAll('.mq-vpicker-variant-chip').forEach((chip, vi) => {
+        const q = Array.isArray(qtyArr) ? (qtyArr[vi] || 0) : 0;
+        let badge = chip.querySelector('.mq-spec-variant-qty-badge');
+        if (q > 0) {
+          const unitSuffix = s.perSqFt ? ' sf' : (s.perFt ? ' ft' : '×');
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'mq-spec-variant-qty-badge';
+            badge.style.cssText = 'display:inline-block;margin-left:4px;padding:1px 5px;border-radius:8px;background:#111;color:#fff;font-size:10px;font-weight:700;vertical-align:middle';
+            chip.appendChild(badge);
+          }
+          badge.textContent = `${q}${unitSuffix}`;
+        } else if (badge) {
+          badge.remove();
+        }
+      });
+    }
 
     function fmt(n){return CUR() +Math.round(n).toLocaleString();}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
@@ -2970,11 +3115,12 @@
         el.style.display = visible ? '' : 'none';
         if (!visible) {
           const idx = parseInt(el.id.split('-').pop(), 10);
-          if (specQty[prefix] && specQty[prefix][idx] > 0) {
-            specQty[prefix][idx] = 0;
+          if (mqSpecQtyTotal(prefix, idx) > 0) {
+            mqSpecQtyResetAll(prefix, idx);
             const qtyInput = document.getElementById(`mq-qty-${prefix}-${idx}`);
             if (qtyInput) qtyInput.value = 0;
             el.classList.remove('on');
+            mqUpdateSpecVariantBadge(prefix, idx);
           }
           if (installQty[prefix] && installQty[prefix][idx] > 0) {
             installQty[prefix][idx] = 0;
@@ -3149,14 +3295,23 @@
       if (!url) return null;
       const u = String(url).trim();
       let m;
+      // Autoplay note: every embed below gets `autoplay=1` PLUS that
+      // provider's own mute param. Real browsers (Chrome/Safari/Firefox)
+      // block autoplay-WITH-SOUND outright for a customer's first visit —
+      // there's no query param or attribute that overrides that, it's a
+      // platform policy, not something this codebase can flip on. Muted
+      // autoplay is the one thing that's actually guaranteed to work
+      // everywhere, so that's what ships — each provider's own player still
+      // shows a visible, one-tap unmute/volume control, so sound is always
+      // just one click away, never fully blocked.
       if ((m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/i))) {
-        return { embedSrc: `https://www.youtube.com/embed/${m[1]}` };
+        return { embedSrc: `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1` };
       }
       if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i))) {
-        return { embedSrc: `https://player.vimeo.com/video/${m[1]}` };
+        return { embedSrc: `https://player.vimeo.com/video/${m[1]}?autoplay=1&muted=1` };
       }
       if ((m = u.match(/loom\.com\/share\/([a-zA-Z0-9]+)/i))) {
-        return { embedSrc: `https://www.loom.com/embed/${m[1]}` };
+        return { embedSrc: `https://www.loom.com/embed/${m[1]}?autoplay=1&muted=1` };
       }
       if (/\.(mp4|webm|mov|m4v)(\?.*)?(#.*)?$/i.test(u)) {
         return { directFile: true };
@@ -3173,6 +3328,15 @@
         const v = document.createElement('video');
         v.src = originalUrl;
         v.controls = true;
+        // Autoplay + muted + playsinline is the combination every mobile
+        // and desktop browser actually honors on a customer's first visit
+        // (unmuted autoplay is blocked outright — see the comment in
+        // mqVideoEmbedInfo above). `controls` stays on, so the browser's
+        // own native volume/unmute button is right there in the player —
+        // sound is one tap away, not hidden behind anything custom-built.
+        v.autoplay = true;
+        v.muted = true;
+        v.playsInline = true;
         v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000';
         holder.appendChild(v);
       } else {
@@ -4175,7 +4339,12 @@
       return {
         fields,
         diffOn: !!diffOn[prefix],
-        specQty: [...(specQty[prefix] || [])],
+        // A per-variant entry is itself an array, so a plain shallow spread
+        // would hand back the SAME nested arrays the live form keeps
+        // mutating — cloning one level deep here keeps this snapshot a
+        // true point-in-time copy, same as every other field captured
+        // above.
+        specQty: (specQty[prefix] || []).map(q => Array.isArray(q) ? [...q] : q),
         installQty: [...(installQty[prefix] || [])],
         specVariant: [...(specVariant[prefix] || [])],
         tallCabs: tallCabSnaps,
@@ -4197,11 +4366,22 @@
       // still needs validating — then keep the visible quantity box and
       // "on" highlight in sync by hand.
       (snapshot.specQty || []).forEach((qty, i) => {
-        if (!qty || !specQty[prefix]) return;
-        specQty[prefix][i] = qty;
+        if (!specQty[prefix]) return;
+        if (Array.isArray(qty)) {
+          if (!qty.some(v => v > 0)) return;
+          specQty[prefix][i] = [...qty];
+        } else {
+          if (!qty) return;
+          specQty[prefix][i] = qty;
+        }
+        // Restores whichever variant happens to be the currently-active
+        // one at this point (still index 0, until the specVariant restore
+        // below runs) — the specVariant pass right after this corrects the
+        // box to show whichever variant was actually last selected.
         const el = document.getElementById(`mq-qty-${prefix}-${i}`);
-        if (el) el.value = qty;
-        document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on', qty > 0);
+        if (el) el.value = mqSpecQtyGet(prefix, i);
+        document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on', mqSpecQtyTotal(prefix, i) > 0);
+        mqUpdateSpecVariantBadge(prefix, i);
       });
       (snapshot.installQty || []).forEach((qty, i) => {
         if (!qty || !installQty[prefix]) return;
@@ -4235,10 +4415,20 @@
       // id. The material field has to go first — its onchange cascade is
       // what (re)builds the edge/addon/cutout sub-fields inside the card,
       // so every other captured field for those needs that structure to
-      // already exist before it can find its element by id.
+      // already exist before it can find its element by id. A surface's
+      // section-length inputs (mqsw-ID-0, -1, -2, ...) are similarly
+      // dynamically built — a fresh card always starts with just 1 (see
+      // addSurfaceInternal), so an L/U/multi-section surface needs its
+      // section-row count restored FIRST too, before those fields exist
+      // to restore values into.
       (snapshot.surfaces || []).forEach(surfFields => {
         addSurfaceInternal(prefix);
         const newId = `s${prefix}${surfCounts[prefix]}`;
+        const legIdxes = surfFields
+          .map(f => (f.template.match(/^mqsw-§-(\d+)$/) || [])[1])
+          .filter(v => v !== undefined)
+          .map(Number);
+        mqSurfRenderLegs(newId, legIdxes.length ? Math.max(...legIdxes) + 1 : 1);
         const matField = surfFields.find(f => f.template.startsWith('mqsm-'));
         const restoreOne = f => mqRestoreFieldValue(f.template.split('§').join(newId), f.value);
         if (matField) restoreOne(matField);
@@ -4472,10 +4662,11 @@
       // unrelated project.
       if (specQty[prefix]) {
         Object.keys(specQty[prefix]).forEach(i => {
-          specQty[prefix][i] = 0;
+          mqSpecQtyResetAll(prefix, i);
           const qtyInput = document.getElementById(`mq-qty-${prefix}-${i}`);
           if (qtyInput) qtyInput.value = 0;
           document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.remove('on');
+          mqUpdateSpecVariantBadge(prefix, i);
           const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
           if (modeSel) modeSel.selectedIndex = 0; // back to the "Choose one" placeholder
           if (installQty[prefix]) installQty[prefix][i] = 0;
@@ -4605,16 +4796,17 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(wrap) wrap.style.display=tier==='none'?'none':'block';
     };
 
-    window.mqToggleSpec=(prefix,i)=>{if(specQty[prefix][i]===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-specQty[prefix][i]);};
+    window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
     window.mqAdjQty=(prefix,i,d)=>{
       if (d > 0 && !mqSpecModeChosen(prefix,i)) return;
       const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
-      let next = Math.max(0, specQty[prefix][i] + d);
+      let next = Math.max(0, mqSpecQtyGet(prefix,i) + d);
       if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
-      specQty[prefix][i]=next;
+      mqSpecQtySet(prefix,i,next);
       const el=document.getElementById(`mq-qty-${prefix}-${i}`);
-      if(el) { el.value=specQty[prefix][i]; el.dispatchEvent(new Event('input', { bubbles: true })); }
-      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',specQty[prefix][i]>0);
+      if(el) { el.value=next; el.dispatchEvent(new Event('input', { bubbles: true })); }
+      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',mqSpecQtyTotal(prefix,i)>0);
+      mqUpdateSpecVariantBadge(prefix,i);
     };
     window.mqSetQty=(prefix,i,val)=>{
       const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
@@ -4626,8 +4818,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         if(el) el.value = 0;
         return;
       }
-      specQty[prefix][i]=n;
-      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',n>0);
+      mqSpecQtySet(prefix,i,n);
+      document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.toggle('on',mqSpecQtyTotal(prefix,i)>0);
+      mqUpdateSpecVariantBadge(prefix,i);
     };
 
     // Handles a click on one variant chip (e.g. picking "Oak" under a
@@ -4637,6 +4830,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     // below need no awareness that variants exist at all; they just keep
     // reading s.price like they always have. Only the visual thumb/badge
     // block and the picker's own selected-chip highlight need a DOM update.
+    // Each variant now also remembers its own quantity (Jordan, 2026-09-12)
+    // — switching chips swaps which variant's own number is shown/edited in
+    // the one qty box below, instead of a single quantity shared by every
+    // variant of this item.
     window.mqPickSpecVariant = function(prefix, i, vi) {
       const s = specs[i];
       const v = s && s.variants && s.variants[vi];
@@ -4656,6 +4853,8 @@ window.mqTogDrawerConfig=(prefix)=>{
           chip.classList.toggle('selected', idx === vi);
         });
       }
+      const qtyEl = document.getElementById(`mq-qty-${prefix}-${i}`);
+      if (qtyEl) { qtyEl.value = mqSpecQtyGet(prefix, i); qtyEl.dispatchEvent(new Event('input', { bubbles: true })); }
     };
 
     // Shows/hides the extra install-quantity row (only rendered at all when
@@ -4875,7 +5074,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
+      const {mat,door,drawer,hinge,blMatKey,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
       // If the Cabinet measurements section is hidden (no real box material
       // for the current project type), treat linear footage as 0 regardless
       // of whatever's still sitting in those inputs — otherwise a hidden
@@ -4989,7 +5188,11 @@ window.mqTogDrawerConfig=(prefix)=>{
         // Material upcharge: difference above baseline material, per lin ft × tcLinFt × 2 (uppers + bases height equiv)
         const matKey = diffOn[prefix] ? gv(`mq-${prefix}-b-mat`) : gv(`mq-${prefix}-mat`);
         const tcMatRates = getMaterialRates(matKey, mat);
-        const blMatRates = getMaterialRates(Object.keys(mat)[0], mat);
+        // Fixed 2026-09-12: was `Object.keys(mat)[0]` (first material by
+        // Sort order, ignoring the real 'Is baseline' pin) — see the
+        // blMatKey comment in P() above for why that could silently use
+        // the wrong reference material.
+        const blMatRates = getMaterialRates(blMatKey, mat);
         const matUpcharge = Math.max(0, tcMatRates.rateB - blMatRates.rateB) * tcLinFt * 2;
         tcUnitPrice += matUpcharge;
         // Install: base install rate × tcLinFt × 2 if supply + install — door-aware, same as regular bases
@@ -5034,49 +5237,65 @@ window.mqTogDrawerConfig=(prefix)=>{
 
       let specTotal=0;
       specs.forEach((s,i)=>{
-        if(!specQty[prefix][i]) return;
-        const supplyQty = specQty[prefix][i];
-        // A tiny order can still cost the shop full price to make (a small
-        // door takes a full sheet and the same labor as a bigger one) — the
-        // minimum only applies to size-based items (perFt/perSqFt), same as
-        // the dashboard only shows the field then.
-        let supplyCost = s.price * supplyQty;
-        if ((s.perFt || s.perSqFt) && s.minPrice > 0) supplyCost = Math.max(supplyCost, s.minPrice);
-        const supplyQtyLabel = s.perSqFt?`${supplyQty} sqft`:(s.perFt?`${supplyQty} ft`:(supplyQty>1?`× ${supplyQty}`:''));
-        // Fold the currently-picked variant's own name into the line-item
-        // text (e.g. "Crown Molding — Oak") so the actual quote/lead always
-        // says which option was chosen — items with no variants are
-        // completely unaffected (itemLabel === s.label).
-        const itemLabel = s.variantLabel ? `${s.label} — ${s.variantLabel}` : s.label;
+        // An item with variants now charges for EVERY variant that has its
+        // own quantity set (Jordan, 2026-09-12: "each variant to be
+        // treated as their own items" — e.g. 2 recycling pullouts + 1
+        // garbage pullout under one "Pullouts" item, each its own line at
+        // its own price), not just whichever variant chip is currently
+        // showing. A plain item with no variants prices exactly as before.
+        const qtyArr = specQty[prefix][i];
+        const supplyEntries = Array.isArray(qtyArr)
+          ? s.variants.map((v,vi)=>({
+              price: v.price || 0,
+              minPrice: v.min || 0,
+              label: v.label ? `${s.label} — ${v.label}` : s.label,
+              qty: qtyArr[vi] || 0,
+            })).filter(e => e.qty > 0)
+          : (qtyArr > 0 ? [{ price: s.price, minPrice: s.minPrice, label: s.label, qty: qtyArr }] : []);
+        if (!supplyEntries.length) return;
 
-        if (!s.offersInstallChoice) {
-          specTotal += supplyCost;
-          lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel})`:itemLabel,cost:Math.round(supplyCost)});
-          return;
-        }
-
-        const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+        const modeSel = s.offersInstallChoice ? document.getElementById(`mq-spec-mode-${prefix}-${i}`) : null;
         const mode = modeSel ? modeSel.value : 'supply';
-        if (mode !== 'install') {
+        const doInstall = s.offersInstallChoice && mode === 'install';
+        const supplySuffix = s.offersInstallChoice ? (doInstall ? ' — Supply' : ' — Supply only') : '';
+
+        // Supply — one line per variant that has a quantity (or the one
+        // line a non-variant item has always had).
+        supplyEntries.forEach(entry => {
+          // A tiny order can still cost the shop full price to make (a
+          // small door takes a full sheet and the same labor as a bigger
+          // one) — the minimum only applies to size-based items
+          // (perFt/perSqFt), same as the dashboard only shows the field
+          // then.
+          let supplyCost = entry.price * entry.qty;
+          if ((s.perFt || s.perSqFt) && entry.minPrice > 0) supplyCost = Math.max(supplyCost, entry.minPrice);
+          const supplyQtyLabel = s.perSqFt?`${entry.qty} sqft`:(s.perFt?`${entry.qty} ft`:(entry.qty>1?`× ${entry.qty}`:''));
           specTotal += supplyCost;
-          lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel}) — Supply only`:`${itemLabel} — Supply only`,cost:Math.round(supplyCost)});
-          return;
-        }
+          lines.push({label:supplyQtyLabel?`${entry.label} (${supplyQtyLabel})${supplySuffix}`:`${entry.label}${supplySuffix}`,cost:Math.round(supplyCost)});
+        });
+
+        if (!doInstall) return;
 
         // Install price is its own rate, never a replacement for supply —
         // "6 sqft supply + 12 sqft install" means both get charged and
         // added together, not one overriding the other. Two separate line
         // items too, so the customer can actually see the math instead of
-        // one merged, unexplained number.
+        // one merged, unexplained number. Install stays ONE shared
+        // quantity/line for the whole item, even across multiple variants
+        // (Jordan, 2026-09-12 — install price/min are item-level, not
+        // per-variant, same as they always have been; see the Variants
+        // parsing comment above where these get built) — when install's
+        // pricing method matches supply's, its quantity is simply every
+        // variant's supply quantity added together.
         const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
         const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
-        const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : supplyQty;
+        const totalSupplyQty = supplyEntries.reduce((a,e)=>a+e.qty, 0);
+        const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : totalSupplyQty;
         let installCost = s.installPrice * installQtyVal;
         if ((s.installPerFt || s.installPerSqFt) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
         const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
-        specTotal += supplyCost + installCost;
-        lines.push({label:supplyQtyLabel?`${itemLabel} (${supplyQtyLabel}) — Supply`:`${itemLabel} — Supply`,cost:Math.round(supplyCost)});
-        lines.push({label:installQtyLabel?`${itemLabel} (${installQtyLabel}) — Install`:`${itemLabel} — Install`,cost:Math.round(installCost)});
+        specTotal += installCost;
+        lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
       });
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
@@ -5185,19 +5404,25 @@ window.mqTogDrawerConfig=(prefix)=>{
         const siOv=gv('mqssi-'+id), si=siOv==='inherit'?gv(ctSiId):(siOv||'supply');
         const m=CT_MAT[mat]||null;
         if (!m) return;
-        const w=gn('mqsw-'+id,0), d=gn('mqsd-'+id,ctDepth);
-        const sqft=(w*(d||ctDepth))/144;
-        const linFt=w/12;
+        const legs=mqSurfGetLegs(id);
+        const totalLen=legs.reduce((a,b)=>a+b,0);
+        const d=gn('mqsd-'+id,ctDepth);
+        // Same L/U/multi-section overlap correction as mqCalcSurfDims'
+        // live preview — see that function's comment for the reasoning.
+        const corners=Math.max(0,legs.length-1);
+        const sqft=Math.max(0,(totalLen*(d||ctDepth))-(corners*(d||ctDepth)*(d||ctDepth)))/144;
+        const linFt=totalLen/12;
         // Real (unclamped) cost for this surface — pooled into this
         // material's running total below, same as the cabinet-run block
         // above, so the minimum (if any) applies once across every counter
         // of this material rather than per surface. Only pooled once the
-        // customer has actually entered a size (w > 0) — a surface card
-        // added but still at its default 0 width shouldn't nudge the pool
-        // toward a minimum charge for a counter that isn't really there yet.
+        // customer has actually entered a size (totalLen > 0) — a surface
+        // card added but with every section still blank shouldn't nudge
+        // the pool toward a minimum charge for a counter that isn't
+        // really there yet.
         const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
         const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
-        if (w > 0) {
+        if (totalLen > 0) {
           const pool = poolFor(mat, m);
           pool.rawSupply += supplyCost; pool.hasSupply = true;
           if (si==='install') { pool.rawInstall += installCost; pool.hasInstall = true; }
@@ -5399,6 +5624,76 @@ window.mqTogDrawerConfig=(prefix)=>{
       });
     };
 
+    // Small inline line-diagrams for the 3 quick-pick countertop shapes —
+    // plain SVG outlines, no image/library needed, `stroke="currentColor"`
+    // so they pick up the button's own text color (gray normally, brand
+    // blue once picked) — just enough for a customer to tell L from U from
+    // Straight at a glance instead of only reading the label.
+    const MQ_SHAPE_ICON_STRAIGHT = '<svg width="28" height="20" viewBox="0 0 28 20" fill="none"><rect x="2" y="6" width="24" height="8" rx="1" stroke="currentColor" stroke-width="2"/></svg>';
+    const MQ_SHAPE_ICON_L = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M2 2 L10 2 L10 18 L26 18 L26 26 L2 26 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
+    const MQ_SHAPE_ICON_U = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M2 2 L10 2 L10 14 L18 14 L18 2 L26 2 L26 26 L2 26 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
+    function mqShapeBtnHtml(id, legs, label, icon) {
+      return `<button type="button" class="mq-shape-btn" id="mqs-shapebtn-${id}-${legs}" onclick="mqSurfSetShape('${id}',${legs})">${icon}<span>${label}</span></button>`;
+    }
+    // A countertop surface is a chain of 1+ straight "sections" — 1 section
+    // is a plain rectangle, 2 is an L, 3 is a U, and the same math just
+    // keeps extending for a customer's "+ Add another section" beyond that
+    // (a galley/wrap-around run, etc.) — no separate "custom shape" code
+    // path needed. This builds one section's input row; showRemove is false
+    // for a lone section (a surface always needs at least one).
+    function mqSurfLegRowHtml(id, i, val, showRemove) {
+      return `<div class="mq-leg-row">
+        <div style="flex:1;display:flex;align-items:center"><input type="number" id="mqsw-${id}-${i}" placeholder="e.g. 120" value="${val||''}" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsw-${id}-${i}`, 'inches', 'Section length')}</div>
+        <span style="font-size:13px;color:#6b7280;white-space:nowrap">Section ${i+1}</span>
+        ${showRemove ? `<button type="button" class="mq-leg-remove" onclick="mqSurfRemoveLeg('${id}',${i})" aria-label="Remove section">✕</button>` : ''}
+      </div>`;
+    }
+    // Renders exactly `values.length` section rows (capped 1-10) and syncs
+    // which shape button (if any) shows as picked — 1/2/3 sections match
+    // Straight/L/U; 4+ is a custom chain, so none of the three presets stay
+    // highlighted once a customer's added more sections than U has.
+    function mqSurfRenderLegValues(id, values) {
+      const wrap = document.getElementById(`mqs-legs-${id}`);
+      if (!wrap) return;
+      const n = Math.max(1, Math.min(10, values.length));
+      const vals = values.slice(0, n);
+      wrap.innerHTML = vals.map((v,i) => mqSurfLegRowHtml(id, i, v, n>1)).join('');
+      [1,2,3].forEach(k => {
+        const btn = document.getElementById(`mqs-shapebtn-${id}-${k}`);
+        if (btn) btn.classList.toggle('active', k === n);
+      });
+      mqCalcSurfDims(id);
+    }
+    // Resizes to `count` sections, preserving whatever a customer already
+    // typed for sections that survive the resize — picking L then U keeps
+    // section 1 & 2's numbers instead of clearing everything.
+    function mqSurfRenderLegs(id, count) {
+      const wrap = document.getElementById(`mqs-legs-${id}`);
+      const existing = wrap ? Array.from(wrap.querySelectorAll('input')).map(inp => inp.value) : [];
+      const n = Math.max(1, Math.min(10, count));
+      mqSurfRenderLegValues(id, Array.from({length:n}, (_,i) => existing[i] || ''));
+    }
+    window.mqSurfSetShape = (id, legs) => mqSurfRenderLegs(id, legs);
+    window.mqSurfAddLeg = (id) => {
+      const current = document.querySelectorAll(`#mqs-legs-${id} input`).length || 1;
+      mqSurfRenderLegs(id, current + 1);
+    };
+    window.mqSurfRemoveLeg = (id, idx) => {
+      const wrap = document.getElementById(`mqs-legs-${id}`);
+      if (!wrap) return;
+      const values = Array.from(wrap.querySelectorAll('input')).map(inp => inp.value);
+      values.splice(idx, 1);
+      if (!values.length) values.push('');
+      mqSurfRenderLegValues(id, values);
+    };
+    // Reads every section-length input for a surface, in DOM order, as
+    // numbers (blank/invalid → 0). Shared by the live-preview calc
+    // (mqCalcSurfDims), the real pricing pass (calcCountertop), and the
+    // backsplash-footage readout (mqRefreshSurfBsFt) so all three always
+    // agree on what's actually been typed in.
+    function mqSurfGetLegs(id) {
+      return Array.from(document.querySelectorAll(`#mqs-legs-${id} input`)).map(inp => parseFloat(inp.value) || 0);
+    }
     function addSurfaceInternal(prefix,name){
       surfCounts[prefix]++;
       const id=`s${prefix}${surfCounts[prefix]}`;
@@ -5414,11 +5709,23 @@ window.mqTogDrawerConfig=(prefix)=>{
           <input id="mqsn-${id}" value="${n}" style="font-size:16px;font-weight:500;color:#111;background:none;border:none;outline:none;flex:1;font-family:inherit"/>
           <button class="mq-remove-btn" onclick="mqRemoveSurf('${prefix}','${id}')">Remove</button>
         </div>
+        <div class="mq-field" style="margin-bottom:0.75rem">
+          <label class="mq-label">Shape</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${mqShapeBtnHtml(id,1,'Straight',MQ_SHAPE_ICON_STRAIGHT)}
+            ${mqShapeBtnHtml(id,2,'L-Shape',MQ_SHAPE_ICON_L)}
+            ${mqShapeBtnHtml(id,3,'U-Shape',MQ_SHAPE_ICON_U)}
+          </div>
+        </div>
+        <div class="mq-field" style="margin-bottom:0.75rem">
+          <label class="mq-label">Section length(s) (inches) — measure each section to its outside corner</label>
+          <div id="mqs-legs-${id}"></div>
+          <button type="button" class="mq-add-leg-btn" onclick="mqSurfAddLeg('${id}')">+ Add another section</button>
+        </div>
         <div class="mq-grid3" style="margin-bottom:1rem">
-          <div class="mq-field"><label class="mq-label">Width (inches)</label><div style="display:flex;align-items:center"><input type="number" id="mqsw-${id}" placeholder="e.g. 120" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsw-${id}`, 'inches', 'Surface width')}</div></div>
           <div class="mq-field"><label class="mq-label">Depth (inches)</label><div style="display:flex;align-items:center"><input type="number" id="mqsd-${id}" placeholder="${ctDepth}" value="${ctDepth}" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsd-${id}`, 'inches', 'Surface depth')}</div></div>
-          <div class="mq-field"><label class="mq-label" style="color:#16a34a">Auto-calculated</label>
-            <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter width & depth</div></div>
+          <div class="mq-field" style="grid-column:span 2;min-width:0"><label class="mq-label" style="color:#16a34a">Auto-calculated</label>
+            <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter section length(s)</div></div>
         </div>
         <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
           <select id="mqssi-${id}" style="width:100%;min-width:160px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
@@ -5439,6 +5746,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mqs-bsft-net-${id}">0</strong> ft</div>
         </div>`;
       document.getElementById(containerId)?.appendChild(card);
+      mqSurfRenderLegs(id, 1);
       window.mqRefreshBsOpts(`mqsm-${id}`, `mqsbs-${id}`);
       window.mqRefreshCutoutOpts(`mqsm-${id}`, `mqscuts-${id}`);
       window.mqRefreshCtAddons(`mqsm-${id}`, `mqs-edge-${id}`, `mqs-addons-${id}`);
@@ -5460,15 +5768,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
     };
     window.mqCalcSurfDims=(id)=>{
-      const w=parseFloat(document.getElementById(`mqsw-${id}`)?.value||0);
+      const legs=mqSurfGetLegs(id);
+      const totalLen=legs.reduce((a,b)=>a+b,0);
       const d=parseFloat(document.getElementById(`mqsd-${id}`)?.value||ctDepth);
       const el=document.getElementById(`mqsdims-${id}`);
-      if(el&&w>0){
-        const sqft=Math.round((w*d)/144*10)/10;
-        const linFt=Math.round(w/12*10)/10;
+      if(el&&totalLen>0){
+        // L/U/multi-section math: every section is measured to its own
+        // outside corner, so naively summing each section's (length ×
+        // depth) rectangle double-counts one depth-by-depth square per
+        // inside corner (a chain of N sections has N-1 corners) — subtract
+        // that overlap to get the real total area. Perimeter (lin ft, used
+        // for edge/backsplash pricing) has no such overlap — it's just the
+        // sum of every section's own outer length.
+        const corners=Math.max(0,legs.length-1);
+        const sqft=Math.round(Math.max(0,(totalLen*d)-(corners*d*d))/144*10)/10;
+        const linFt=Math.round(totalLen/12*10)/10;
         el.textContent=`${sqft} sqft · ${linFt} lin ft`;
         el.style.color='#16a34a';
-      } else if(el){el.textContent='Enter width & depth';el.style.color='#4b5563';}
+      } else if(el){el.textContent='Enter section length(s)';el.style.color='#4b5563';}
       window.mqRefreshSurfBsFt(id);
     };
     window.mqTogCabCuts=(prefix)=>{
@@ -5611,8 +5928,8 @@ window.mqTogDrawerConfig=(prefix)=>{
       const hasBs = bsSel && bsSel.value !== 'none';
       block.style.display = hasBs ? 'block' : 'none';
       if (!hasBs) return;
-      const w = gn(`mqsw-${id}`, 0);
-      const baseFt = Math.round((w/12)*10)/10;
+      const totalLen = mqSurfGetLegs(id).reduce((a,b)=>a+b,0);
+      const baseFt = Math.round((totalLen/12)*10)/10;
       const sides = gn(`mqs-bs-sides-${id}`, 0);
       const subtractFt = gn(`mqs-bs-subtract-${id}`, 0);
       const autoFt = Math.round((baseFt + sides*2)*10)/10;
@@ -5727,7 +6044,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const row = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
         if (!row) continue; // methods match — no separate field, nothing extra to check
 
-        const supplyQty = specQty[prefix][i] || 0;
+        const supplyQty = mqSpecQtyTotal(prefix, i); // sum across every variant, not just the one showing
         const instQty = installQty[prefix][i] || 0;
         if (supplyQty === 0 && instQty === 0) continue; // genuinely not selected at all
 
