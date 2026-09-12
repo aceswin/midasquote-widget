@@ -342,8 +342,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Groups</h4>
         <p>In Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
 
-        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🏆 Best sellers & Pro-only items</h4>
-        <p><strong>⭐ Pro only</strong> filter — filters this view by the same Pro-only setting from Specialty Items.</p>
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🏆 Best sellers</h4>
         <p><strong>🏆 Best seller badge</strong> — mark any item's photo to show a small badge on the widget; the badge's label (default "Best seller") is customizable from Marketing Kit.</p>
       `
     },

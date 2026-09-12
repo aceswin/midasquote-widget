@@ -61,24 +61,35 @@
     .sr-divider { height: 1px; background: var(--gray-200); margin: 3rem 0; }
     .sr-footer { background: var(--white); border-top: 1px solid var(--gray-200); padding: 1.5rem 2rem; text-align: center; font-size: 12px; color: var(--gray-400); }
     .sr-footer a { color: var(--gray-600); text-decoration: none; }
-    /* Lightbox prev/next arrows: on desktop these are pinned OUTSIDE the
-       widest a zoomed photo can ever get (the img's own 75vw max-width),
-       not hugging the current photo's actual edges — otherwise a portrait
-       photo pulls both buttons in narrow and a landscape one pushes them
-       back out, so a shop owner or customer trying to click through
-       several photos quickly has to keep re-aiming for a moving target.
-       `right:50%`/`left:50%` anchor each button to #sr-lb-photowrap's own
-       horizontal CENTER (which stays screen-centered regardless of the
-       photo's actual rendered width, since the photo itself is always
-       centered) rather than to its edges, and `translate()`'s vw-based
-       offset moves it a FIXED distance from there — 37.5vw is exactly
-       half of the img's 75vw cap, so the button sits just past where even
-       the widest possible photo could reach, then 30px further for a
-       bit of breathing room. See the mobile override below for why this
-       is desktop-only. */
+    /* Lightbox prev/next arrows: pinned OUTSIDE the widest a zoomed photo
+       can ever get (the img's own 75vw max-width), not hugging the current
+       photo's actual edges — otherwise a portrait photo pulls both buttons
+       in narrow and a landscape one pushes them back out, so someone
+       clicking through several photos quickly has to keep re-aiming for a
+       moving target. `right:50%`/`left:50%` anchor each button to
+       #sr-lb-photowrap's own horizontal CENTER (which stays screen-
+       centered regardless of the photo's actual rendered width, since the
+       photo itself is always centered) rather than to its edges, and
+       `translate()`'s offset moves it a FIXED distance from there.
+       37.5vw is exactly half of the img's 75vw cap, so on a screen wide
+       enough, the button sits just past where even the widest possible
+       photo could reach, then 30px further for breathing room — same
+       math as before. The `min(..., 50vw - 30px)` NEW as of 2026-09-12:
+       on a narrow phone/tablet, 37.5vw alone can be wider than the screen
+       itself (previously handled by a separate mobile override that
+       hugged the photo's own edges instead — which meant the buttons
+       still moved as photo aspect ratio changed, just now within a
+       smaller range, which is exactly the "still jumps around on mobile"
+       Jordan reported). `min()` picks whichever is smaller: the desktop-
+       style "just past the photo" distance, or a flat 30px-from-the-
+       actual-screen-edge distance — so on any screen too narrow for the
+       first number to fit, the buttons fall back to sitting a constant
+       30px from the true edge, which (unlike the old per-photo edge-hug)
+       never moves as the photo's own width changes. One rule now covers
+       desktop, tablet, and mobile with no breakpoint needed. */
     #sr-lb-prev, #sr-lb-next { position: absolute; top: 50%; }
-    #sr-lb-prev { right: 50%; left: auto; transform: translate(calc(-37.5vw - 30px), -50%); }
-    #sr-lb-next { left: 50%; right: auto; transform: translate(calc(37.5vw + 30px), -50%); }
+    #sr-lb-prev { right: 50%; left: auto; transform: translate(calc(-1 * min(37.5vw + 30px, 50vw - 30px)), -50%); }
+    #sr-lb-next { left: 50%; right: auto; transform: translate(min(37.5vw + 30px, 50vw - 30px), -50%); }
     @media (max-width: 600px) {
       .sr-header { padding: 1rem; }
       .sr-hero { padding: 2.5rem 1.25rem; }
@@ -86,14 +97,6 @@
       .sr-content { padding: 2rem 1.25rem 4rem; }
       .sr-grid { grid-template-columns: repeat(2, 1fr); }
       .sr-spec-grid { grid-template-columns: repeat(2, 1fr); }
-      /* On a narrow screen, half the widest photo's width alone can be
-         wider than the screen itself, so the desktop rule above would push
-         these off-screen entirely. Touch swipe is the primary way to move
-         between photos here anyway (see the touchstart/touchend listeners
-         below) — the buttons are just a secondary, tappable option, so on
-         mobile they go back to hugging the actual photo's own edges. */
-      #sr-lb-prev { right: auto; left: -14px; transform: translateY(-50%); }
-      #sr-lb-next { left: auto; right: -14px; transform: translateY(-50%); }
     }
   </style>
 </head>
