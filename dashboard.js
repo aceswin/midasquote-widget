@@ -674,6 +674,18 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-table{width:100%;border-collapse:collapse}
       #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:left}
       #midasquote-dashboard .mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:#111}
+      /* Leads table only (the new checkbox column pushed it wider than the
+         card — Jordan reported the last column bleeding past the right
+         edge, 2026-09-12). Tighter padding just on this table's cells
+         claws back enough width that the row fits without needing the
+         .mq-table-wrap horizontal scrollbar in the first place. Scoped to
+         .mq-table-compact specifically so Specialty Items/Line Items/
+         Proposal Templates — which already fit fine — keep their normal
+         spacing. */
+      #midasquote-dashboard .mq-table-compact th,
+      #midasquote-dashboard .mq-table-compact td{padding-left:8px;padding-right:8px}
+      #midasquote-dashboard .mq-table-compact th:first-child,
+      #midasquote-dashboard .mq-table-compact td:first-child{padding-left:12px}
       /* The Specialty Items table has more columns than any other table on
          the dashboard (11, even after removing the standalone Variants
          column) — the base 16px horizontal cell padding that's fine for
@@ -3907,7 +3919,7 @@ window.logoutMember = async function () {
       const sessionBadge = badgeText
         ? `<span title="Session ${f['Session ID']}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">${badgeText}</span>`
         : '';
-      const selectCell = selectable ? `<td><input type="checkbox" class="mq-lead-check" value="${r.id}" onchange="mqLeadCheckboxChanged()"></td>` : '';
+      const selectCell = selectable ? `<td style="width:1%;white-space:nowrap"><input type="checkbox" class="mq-lead-check" value="${r.id}" onchange="mqLeadCheckboxChanged()"></td>` : '';
       return `<tr>
         ${selectCell}
         <td>${formatLeadDate(r.createdTime)}</td>
@@ -3930,8 +3942,9 @@ window.logoutMember = async function () {
       </tr>`;
     }).join('');
     const th = (field, label) => `<th onclick="mqSortLeads('${field}')" style="cursor:pointer;user-select:none;white-space:nowrap">${label}${sortArrow(field)}</th>`;
-    const selectHeaderCell = selectable ? `<th style="width:1%"><input type="checkbox" id="mq-lead-select-all" onchange="mqToggleAllLeadCheckboxes(this)" title="Select all"></th>` : '';
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${selectHeaderCell}${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    const selectHeaderCell = selectable ? `<th style="width:1%;white-space:nowrap"><input type="checkbox" id="mq-lead-select-all" onchange="mqToggleAllLeadCheckboxes(this)" title="Select all"></th>` : '';
+    const tableClass = selectable ? 'mq-table mq-table-compact' : 'mq-table';
+    return `<div class="mq-table-wrap"><table class="${tableClass}"><thead><tr>${selectHeaderCell}${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
