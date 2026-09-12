@@ -2521,7 +2521,7 @@
       <div class="mq-tab-content" id="mq-tab-countertops">
         ${priceLegendHTML()}
         <div class="mq-sec">
-          <p class="mq-sec-title">Countertop surfaces</p>
+          <p class="mq-sec-title" id="mq-ct-surfaces-title">Countertop surfaces</p>
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
           <div class="mq-empty-calc-msg" id="mq-ct-surface-add-msg" style="display:none"></div>
@@ -5982,11 +5982,18 @@ window.mqTogDrawerConfig=(prefix)=>{
         });
       }
       const newId = addSurfaceInternal(prefix);
-      // Bring the newly-added surface to "eye level" instead of leaving
-      // it to render off-screen below the collapsed rows above it —
-      // Jordan: "bring you to eye level with the newly added surface."
+      // Bring the surfaces list to "eye level" so the customer can see
+      // their new surface actually got added — scrolling to the SECTION
+      // HEADING (not the new card itself) keeps it as a fixed anchor near
+      // the top of the screen, so any earlier surfaces (now collapsed
+      // just above the new one) stay visible too, instead of the new
+      // card alone filling the screen with no context above it. Jordan:
+      // "id like it to put the 'countertop surfaces' heading as the focal
+      // point, so just a little higher, so the user sees that their first
+      // item was added."
+      const titleEl = document.getElementById(prefix==='ct' ? 'mq-ct-surfaces-title' : 'mq-b-ct-surfaces-title');
       const newCard = document.getElementById('mqsc-'+newId);
-      if (newCard) newCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+      (titleEl || newCard)?.scrollIntoView({behavior:'smooth', block:'start'});
     };
     window.mqRemoveSurf=(prefix,id)=>{
       const c=document.getElementById('mqsc-'+id);if(c)c.remove();
@@ -6020,10 +6027,12 @@ window.mqTogDrawerConfig=(prefix)=>{
           window.mqAddSurface('b');
           surfContainer.dataset.autoAdded = 'true';
         } else if (surfContainer) {
-          // Surface(s) already exist from an earlier uncheck — bring
-          // them back into view instead of piling on a redundant blank
-          // one.
-          surfContainer.scrollIntoView({behavior:'smooth', block:'center'});
+          // Surface(s) already exist from an earlier uncheck — bring the
+          // section's heading into view (same focal point every other add
+          // scrolls to, see mqAddSurface) instead of piling on a redundant
+          // blank one.
+          const titleEl = document.getElementById('mq-b-ct-surfaces-title');
+          (titleEl || surfContainer).scrollIntoView({behavior:'smooth', block:'start'});
         }
       }
     };
