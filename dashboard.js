@@ -7008,7 +7008,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqUpdateLeadStatus = async function(id, status) {
     try {
       await atUpdate(CONFIG.LEADS_TABLE, id, { 'Status': status });
-    } catch(e) { console.error('Failed to update lead status', e); }
+      const lead = (window._mqLeads || []).find(r => r.id === id);
+      if (lead) lead.fields['Status'] = status;
+      renderStats(window._mqLeads || []);
+      el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads || [], 5);
+      mqFilterLeads();
+      showMsg('mq-leads-msg', '✓ Status updated.');
+    } catch(e) {
+      console.error('Failed to update lead status', e);
+      showMsg('mq-leads-msg', 'Error saving status — please try again.', 'error');
+    }
   };
 
   window.mqSaveAllSpecItems = async function() {
