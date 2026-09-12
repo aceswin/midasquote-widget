@@ -32,15 +32,39 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
   const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
+  // Airtable only ever returns up to 100 records per request, no matter
+  // what maxRecords says — it signals "there's more" by including an
+  // `offset` in the response, which you're expected to pass back in to
+  // get the next page. This used to just take that first 100-record page
+  // and stop, so ANY table that grew past 100 rows for a shop (Leads was
+  // the one Jordan actually hit, 2026-09-12) silently hid everything past
+  // the 100th — new leads stopped appearing, deleting one just let the
+  // next-oldest slide in to refill the count back to 100, and Jordan
+  // advertises unlimited specialty items/pricing items, which this same
+  // cap would have quietly broken too once a shop's catalog grew past it.
+  // Now follows `offset` until Airtable stops sending one, so every
+  // caller always gets the shop's FULL matching set. The 50-page ceiling
+  // (5,000 records) is just a defensive backstop against an infinite loop
+  // if Airtable ever returned a malformed/repeating offset — no real shop
+  // is anywhere near that many rows in any one table.
   async function atGet(table, formula) {
-    const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
-    const res = await fetch(url, { headers: AT_HEADS });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
-    }
-    const data = await res.json();
-    return data.records || [];
+    let allRecords = [];
+    let offset;
+    let pages = 0;
+    do {
+      const offsetParam = offset ? `&offset=${offset}` : '';
+      const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100${offsetParam}`;
+      const res = await fetch(url, { headers: AT_HEADS });
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
+      }
+      const data = await res.json();
+      allRecords = allRecords.concat(data.records || []);
+      offset = data.offset;
+      pages++;
+    } while (offset && pages < 50);
+    return allRecords;
   }
 
   async function atUpdate(table, id, fields) {

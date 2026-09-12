@@ -40,15 +40,35 @@ let wizardBaseline = null;
   // already-loaded shop record) before loadAndRender() ever runs.
   function CUR() { return (shopRecord && shopRecord.fields && shopRecord.fields['Currency symbol']) || '$'; }
 
+  // Same fix as dashboard.js's atGet (2026-09-12) — Airtable only ever
+  // returns up to 100 records per request no matter what maxRecords says,
+  // signalling more via an `offset` you pass back in for the next page.
+  // This used to take one page (and, since maxRecords=200 here was never
+  // actually reachable without following that offset, was really no
+  // different from a 100-record cap in practice) and stop, which would
+  // have silently capped a shop's Line Items once their catalog — doors,
+  // materials, hinges, drawer configs, countertops — grew past 100 rows.
+  // Jordan advertises unlimited items, so this needs to have no ceiling.
+  // 50-page (5,000 record) backstop is just against a runaway loop, not a
+  // real limit any shop's Line Items table would ever approach.
   async function atGet(table, formula) {
-    const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
-    const res = await fetch(url, { headers: AT_HEADS() });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
-    }
-    const data = await res.json();
-    return data.records || [];
+    let allRecords = [];
+    let offset;
+    let pages = 0;
+    do {
+      const offsetParam = offset ? `&offset=${offset}` : '';
+      const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100${offsetParam}`;
+      const res = await fetch(url, { headers: AT_HEADS() });
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
+      }
+      const data = await res.json();
+      allRecords = allRecords.concat(data.records || []);
+      offset = data.offset;
+      pages++;
+    } while (offset && pages < 50);
+    return allRecords;
   }
   async function atCreate(table, fields) {
     // typecast:true lets Airtable auto-add a new option to a Single Select
