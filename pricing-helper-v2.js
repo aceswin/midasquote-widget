@@ -40,24 +40,35 @@ let wizardBaseline = null;
   // already-loaded shop record) before loadAndRender() ever runs.
   function CUR() { return (shopRecord && shopRecord.fields && shopRecord.fields['Currency symbol']) || '$'; }
 
-  // Same fix as dashboard.js's atGet (2026-09-12) — Airtable only ever
-  // returns up to 100 records per request no matter what maxRecords says,
-  // signalling more via an `offset` you pass back in for the next page.
-  // This used to take one page (and, since maxRecords=200 here was never
-  // actually reachable without following that offset, was really no
-  // different from a 100-record cap in practice) and stop, which would
-  // have silently capped a shop's Line Items once their catalog — doors,
-  // materials, hinges, drawer configs, countertops — grew past 100 rows.
-  // Jordan advertises unlimited items, so this needs to have no ceiling.
-  // 50-page (5,000 record) backstop is just against a runaway loop, not a
-  // real limit any shop's Line Items table would ever approach.
+  // Same fix as dashboard.js's atGet (2026-09-12) — Airtable returns up to
+  // 100 records per request, signalling more via an `offset` you pass back
+  // in for the next page. This used to take one page (and, since
+  // maxRecords=200 here was never actually reachable without following
+  // that offset, was really no different from a 100-record cap in
+  // practice) and stop, which would have silently capped a shop's Line
+  // Items once their catalog — doors, materials, hinges, drawer configs,
+  // countertops — grew past 100 rows. Jordan advertises unlimited items,
+  // so this needs to have no ceiling.
+  //
+  // First same-day attempt at this fix added the offset-following loop
+  // below but kept a `maxRecords` request param (200, changed from the
+  // original) — a DIFFERENT parameter from `pageSize`. `pageSize` caps
+  // records per page (max 100); `maxRecords` caps the TOTAL records
+  // returned across every page combined. With any `maxRecords` set,
+  // Airtable stops including `offset` once it hits that total, so the loop
+  // below still exited after hitting the cap regardless of its value —
+  // reproducing the same ceiling despite the "fix." Corrected same day to
+  // `pageSize=100` with no `maxRecords` at all, so there's no overall cap
+  // and the loop actually reaches every page. The 50-page (5,000 record)
+  // backstop is just against a runaway loop, not a real limit any shop's
+  // Line Items table would ever approach.
   async function atGet(table, formula) {
     let allRecords = [];
     let offset;
     let pages = 0;
     do {
       const offsetParam = offset ? `&offset=${offset}` : '';
-      const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100${offsetParam}`;
+      const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100${offsetParam}`;
       const res = await fetch(url, { headers: AT_HEADS() });
       if (!res.ok) {
         const errBody = await res.text().catch(() => '');
