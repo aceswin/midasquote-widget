@@ -2260,7 +2260,7 @@ window.logoutMember = async function () {
           html
         })
       });
-      if (statusEl) { statusEl.textContent = "✓ Sent! We'll get back to you soon."; statusEl.style.color = '#166534'; }
+      if (statusEl) { statusEl.textContent = "✓ Sent! We'll get back to you soon — if you don't hear from us in a day or two, please check your spam/junk folder too, just in case."; statusEl.style.color = '#166534'; }
       if (messageEl) messageEl.value = '';
     } catch(e) {
       if (statusEl) { statusEl.textContent = 'Something went wrong sending that — please try again.'; statusEl.style.color = '#dc2626'; }
