@@ -830,6 +830,11 @@
       #midasquote-widget .mq-surface-num{width:24px;height:24px;border-radius:50%;background:${bc};color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
       #midasquote-widget .mq-remove-btn{font-size:13px;color:#4b5563;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:inherit}
       #midasquote-widget .mq-add-surface-btn{width:100%;padding:10px;font-size:14px;border:1px dashed #d1d5db;border-radius:8px;background:none;color:#4b5563;cursor:pointer;margin-top:4px;font-family:inherit}
+      #midasquote-widget .mq-surface-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;background:#f9fafb}
+      #midasquote-widget .mq-surface-summary-info{flex:1;min-width:0;font-size:14px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+      #midasquote-widget .mq-surface-summary-actions{display:flex;gap:8px;flex-shrink:0}
+      #midasquote-widget .mq-summary-btn{padding:6px 12px;font-size:13px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap}
+      #midasquote-widget .mq-summary-btn-danger{color:#dc2626;border-color:#fca5a5}
       #midasquote-widget .mq-shape-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 16px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;min-width:84px}
       #midasquote-widget .mq-shape-btn svg{display:block}
       #midasquote-widget .mq-shape-btn.active{border-color:${bc};color:${bc};background:#f8faff}
@@ -4420,7 +4425,13 @@
       // section-row count restored FIRST too, before those fields exist
       // to restore values into.
       (snapshot.surfaces || []).forEach(surfFields => {
-        addSurfaceInternal(prefix);
+        // Goes through mqAddSurface (not the raw internal call) so that,
+        // same as a customer clicking "+ Add another surface" by hand,
+        // restoring 2+ surfaces after a tab switch collapses each one back
+        // to its one-line summary row once the NEXT one is created —
+        // leaving only the last restored surface open, matching how the
+        // list would look if the customer had just finished building it.
+        window.mqAddSurface(prefix);
         const newId = `s${prefix}${surfCounts[prefix]}`;
         const legIdxes = surfFields
           .map(f => (f.template.match(/^mqsw-§-(\d+)$/) || [])[1])
@@ -5687,7 +5698,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const n=name||`Surface ${surfCounts[prefix]}`;
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
       const card=document.createElement('div');
-      card.className='mq-surface-card';card.id='mqsc-'+id;
+      card.className='mq-surface-card';card.id='mqsc-'+id;card.dataset.prefix=prefix;
       card.innerHTML=`
         <div class="mq-surface-header">
           <div class="mq-surface-num">${surfCounts[prefix]}</div>
@@ -5704,15 +5715,19 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Section length(s) (inches) — measure each section to its outside corner</label>
-          <div id="mqs-legs-${id}"></div>
+          <div id="mqs-legs-${id}" style="display:flex;flex-wrap:wrap;gap:12px"></div>
         </div>
         <div class="mq-grid3" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">Depth (inches)</label><div style="display:flex;align-items:center"><input type="number" id="mqsd-${id}" placeholder="${ctDepth}" value="${ctDepth}" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsd-${id}`, 'inches', 'Surface depth')}</div></div>
           <div class="mq-field" style="grid-column:span 2;min-width:0"><label class="mq-label" style="color:#16a34a">Auto-calculated</label>
             <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter section length(s)</div></div>
         </div>
-        <div class="mq-field" style="margin-bottom:0.75rem"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
-          <select id="mqssi-${id}" style="max-width:260px;min-width:160px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
+        <div class="mq-grid2" style="margin-bottom:1rem">
+          <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
+            <select id="mqssi-${id}" style="max-width:260px;min-width:140px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
+          <div class="mq-field"><label class="mq-label">Backsplash</label>
+            <select id="mqsbs-${id}" style="max-width:260px;min-width:140px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select></div>
+        </div>
         <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
           ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
           <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
@@ -5721,10 +5736,6 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div class="mq-divider"></div>
         <label class="mq-check-row"><input type="checkbox" id="mqsco-${id}" onchange="mqTogCuts('${id}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Cutouts needed (sink, etc.)</label>
         <div id="mqscuts-${id}" style="display:none;margin-top:8px;margin-bottom:0.75rem;padding:10px 12px;background:#f9fafb;border-radius:6px"></div>
-        <div class="mq-field" style="margin-bottom:0.75rem">
-          <label class="mq-label">Backsplash</label>
-          <select id="mqsbs-${id}" style="max-width:260px;min-width:160px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select>
-        </div>
         <div id="mqs-bsft-block-${id}" style="display:none;margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
           <div style="font-size:14px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
           <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mqs-bsft-net-${id}">0</strong> ft</div>
@@ -5738,8 +5749,89 @@ window.mqTogDrawerConfig=(prefix)=>{
       mqRefreshAllPickerVisibility(prefix);
     }
 
-    window.mqAddSurface=(prefix)=>addSurfaceInternal(prefix);
-    window.mqRemoveSurf=(prefix,id)=>{const c=document.getElementById('mqsc-'+id);if(c)c.remove();delete surfs[prefix][id];};
+    // Builds the one-line "Surface 1 — L-Shape · 25.7 sqft · Granite — Mid
+    // · Supply + install" summary text shown once a surface is collapsed,
+    // reusing whatever's already on the card (name field, the live
+    // Auto-calculated readout, the chosen material/install) instead of
+    // recomputing any of it separately.
+    function mqSurfSummaryText(id) {
+      const name = gv(`mqsn-${id}`) || 'Surface';
+      const legCount = mqSurfGetLegs(id).length;
+      const shapeLabel = legCount===1?'Straight':legCount===2?'L-Shape':legCount===3?'U-Shape':`${legCount}-section`;
+      const dims = (document.getElementById(`mqsdims-${id}`)?.textContent||'').trim();
+      const matVal = gv(`mqsm-${id}`);
+      const matLabel = (matVal && matVal!=='none') ? (CT_MAT[matVal]?.label||'') : '';
+      const siVal = gv(`mqssi-${id}`);
+      const siLabel = siVal==='install'?'Supply + install':siVal==='inherit'?'Same as project':'Supply only';
+      const parts = [shapeLabel];
+      if (dims && !/enter section/i.test(dims)) parts.push(dims);
+      if (matLabel) parts.push(matLabel);
+      parts.push(siLabel);
+      return { name, line: parts.join(' · ') };
+    }
+    // Collapses a surface's full form into a compact one-line summary row
+    // sitting right where the card was — the card itself is only hidden
+    // (never removed), so every pricing function that reads its inputs by
+    // id keeps working exactly as before, collapsed or not.
+    window.mqCollapseSurf = (id) => {
+      const card = document.getElementById('mqsc-'+id);
+      if (!card || card.style.display === 'none') return;
+      const prefix = card.dataset.prefix;
+      const { name, line } = mqSurfSummaryText(id);
+      let row = document.getElementById('mqsr-'+id);
+      if (!row) {
+        row = document.createElement('div');
+        row.className = 'mq-surface-summary';
+        row.id = 'mqsr-'+id;
+        card.parentNode.insertBefore(row, card);
+      }
+      row.innerHTML = `
+        <div class="mq-surface-summary-info" onclick="mqExpandSurf('${id}')"><strong>${name}</strong> — ${line}</div>
+        <div class="mq-surface-summary-actions">
+          <button type="button" class="mq-summary-btn" onclick="mqExpandSurf('${id}')">Edit</button>
+          <button type="button" class="mq-summary-btn mq-summary-btn-danger" onclick="mqRemoveSurf('${prefix}','${id}')">Remove</button>
+        </div>`;
+      row.style.display = 'flex';
+      card.style.display = 'none';
+    };
+    // Opens a surface's full form back up, collapsing whichever other
+    // surface in the same list is currently open first (only one open at
+    // a time keeps the list short instead of every surface's full form
+    // stacking up the page).
+    window.mqExpandSurf = (id) => {
+      const card = document.getElementById('mqsc-'+id);
+      if (!card) return;
+      const container = card.parentNode;
+      if (container) {
+        Array.from(container.querySelectorAll('.mq-surface-card')).forEach(c => {
+          if (c.id !== card.id && c.style.display !== 'none') mqCollapseSurf(c.id.replace('mqsc-',''));
+        });
+      }
+      const row = document.getElementById('mqsr-'+id);
+      if (row) row.style.display = 'none';
+      card.style.display = '';
+      card.scrollIntoView({behavior:'smooth', block:'nearest'});
+    };
+    window.mqAddSurface=(prefix)=>{
+      const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
+      const container = document.getElementById(containerId);
+      // Collapse whatever's currently open first — this is the "save it"
+      // step Jordan asked for, just automatic rather than a separate
+      // button: adding another surface tucks the finished one into a
+      // one-line row instead of leaving every surface's full form open
+      // and stacking down the page.
+      if (container) {
+        Array.from(container.querySelectorAll('.mq-surface-card')).forEach(c => {
+          if (c.style.display !== 'none') mqCollapseSurf(c.id.replace('mqsc-',''));
+        });
+      }
+      addSurfaceInternal(prefix);
+    };
+    window.mqRemoveSurf=(prefix,id)=>{
+      const c=document.getElementById('mqsc-'+id);if(c)c.remove();
+      const r=document.getElementById('mqsr-'+id);if(r)r.remove();
+      delete surfs[prefix][id];
+    };
     window.mqTogUseCab=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       const matDiv  = document.getElementById(`mq-${prefix}-cab-mat`);
