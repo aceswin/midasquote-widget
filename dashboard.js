@@ -2228,11 +2228,25 @@ window.logoutMember = async function () {
     if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
     if (statusEl) statusEl.textContent = '';
     try {
+      // The `replyTo` field below is sent to the email Worker, but as of
+      // 2026-09-12 it's confirmed NOT actually reaching the outgoing
+      // email — Jordan checked a real support message and hitting Reply
+      // addressed it back to quotes@midasquote.com instead of the
+      // submitter, meaning the Worker either drops or never applies this
+      // field. That's a fix that needs the Worker's own source (not in
+      // this workspace) to diagnose properly. In the meantime, this
+      // "↩ Reply to <email>" button is a working stopgap: a plain mailto
+      // link, pre-addressed and pre-subjected, so one click opens a new,
+      // correctly-addressed message instead of having to copy the email
+      // out of the "From:" line above by hand.
+      const emailSafe = String(email).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      const mailtoHref = `mailto:${emailSafe}?subject=${encodeURIComponent(`Re: [${topic}] ${shopName}`)}`;
       const html = `
         <p><strong>Topic:</strong> ${topic}</p>
         <p><strong>From:</strong> ${email}</p>
         <p><strong>Shop name:</strong> ${shopName}</p>
         <p><strong>Shop token:</strong> ${shopToken}</p>
+        <p style="margin:14px 0"><a href="${mailtoHref}" style="display:inline-block;background:#1a1a1a;color:#fff;padding:9px 18px;border-radius:6px;text-decoration:none;font-weight:600;font-family:sans-serif">↩ Reply to ${email}</a></p>
         <p><strong>Message:</strong></p>
         <p>${message.replace(/</g,'&lt;').replace(/\n/g, '<br>')}</p>
       `;
