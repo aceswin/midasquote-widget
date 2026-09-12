@@ -825,16 +825,21 @@
       #midasquote-widget .mq-modal-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
       #midasquote-widget .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
       #midasquote-widget .mq-modal-skip{width:100%;padding:8px;font-size:14px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
-      #midasquote-widget .mq-surface-card{border:1px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:10px}
-      #midasquote-widget .mq-surface-header{display:flex;align-items:center;gap:8px;margin-bottom:1rem}
-      #midasquote-widget .mq-surface-num{width:24px;height:24px;border-radius:50%;background:${bc};color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+      #midasquote-widget .mq-surface-card{border:1px solid #e5e7eb;border-left:4px solid ${bc};border-radius:12px;padding:1.25rem;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04)}
+      #midasquote-widget .mq-surface-header{display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding-bottom:0.85rem;border-bottom:1px solid #f3f4f6}
+      #midasquote-widget .mq-surface-num{width:26px;height:26px;border-radius:50%;background:${bc};color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
       #midasquote-widget .mq-remove-btn{font-size:13px;color:#4b5563;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:inherit}
-      #midasquote-widget .mq-add-surface-btn{width:100%;padding:10px;font-size:14px;border:1px dashed #d1d5db;border-radius:8px;background:none;color:#4b5563;cursor:pointer;margin-top:4px;font-family:inherit}
-      #midasquote-widget .mq-surface-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;background:#f9fafb}
+      #midasquote-widget .mq-remove-btn:hover{background:#f9fafb;border-color:#d1d5db}
+      #midasquote-widget .mq-add-surface-btn{width:100%;padding:12px;font-size:14.5px;font-weight:700;border:none;border-radius:9px;background:${focalColor};color:#fff;cursor:pointer;margin-top:6px;font-family:inherit;box-shadow:0 2px 6px rgba(0,0,0,0.14);transition:transform .12s ease,box-shadow .12s ease}
+      #midasquote-widget .mq-add-surface-btn:hover{box-shadow:0 4px 12px rgba(0,0,0,0.18);transform:translateY(-1px)}
+      #midasquote-widget .mq-add-surface-btn:active{transform:translateY(0);box-shadow:0 1px 3px rgba(0,0,0,0.14)}
+      #midasquote-widget .mq-surface-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border:1px solid #e5e7eb;border-left:4px solid ${bc};border-radius:10px;margin-bottom:10px;background:#f9fafb;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
       #midasquote-widget .mq-surface-summary-info{flex:1;min-width:0;font-size:14px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
       #midasquote-widget .mq-surface-summary-actions{display:flex;gap:8px;flex-shrink:0}
       #midasquote-widget .mq-summary-btn{padding:6px 12px;font-size:13px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap}
+      #midasquote-widget .mq-summary-btn:hover{background:#f3f4f6}
       #midasquote-widget .mq-summary-btn-danger{color:#dc2626;border-color:#fca5a5}
+      #midasquote-widget .mq-summary-btn-danger:hover{background:#fef2f2}
       #midasquote-widget .mq-shape-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 16px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;min-width:84px}
       #midasquote-widget .mq-shape-btn svg{display:block}
       #midasquote-widget .mq-shape-btn.active{border-color:${bc};color:${bc};background:#f8faff}
