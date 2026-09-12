@@ -380,7 +380,33 @@
           quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines,
         }),
       });
-    } catch(e) { console.error('Lead save failed', e); }
+    } catch(e) {
+      console.error('Lead save failed', e);
+      // The dashboard's Leads tab is built entirely from what got saved to
+      // Airtable above — if that save just failed (after 3 retries), this
+      // lead would otherwise vanish completely with zero trace anywhere,
+      // even though the customer's confirmation email below still sends
+      // fine (a separate, unrelated call). Since email is the one delivery
+      // path we know works, fire an extra "this one didn't save" alert to
+      // the shop so nothing is silently lost while the real cause of the
+      // save failure gets fixed. Best-effort only — if this ALSO fails,
+      // there's nothing further to fall back to; already logged above.
+      if (shop && shop['Lead notify email']) {
+        sendEmail(shop['Lead notify email'], `⚠ A lead failed to save automatically — ${quoteType} quote`,
+          `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+            <h2 style="color:#b91c1c">A quote lead didn't save to your dashboard</h2>
+            <p style="color:#444;font-size:14px">Everything below came through fine, but saving it to your Leads tab failed after retrying. Here's what we have — you may want to add it manually.</p>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0">
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Quote type</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${quoteType || 'Not provided'}${roomType ? ' — ' + roomType : ''}</td></tr>
+              <tr><td style="padding:6px 8px;color:#666">Estimate</td><td style="padding:6px 8px">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
+            </table>
+          </div>`
+        ).catch(()=>{});
+      }
+    }
 
     const lineRows = (lines||[])
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
@@ -3263,14 +3289,23 @@
       if (!url) return null;
       const u = String(url).trim();
       let m;
+      // Autoplay note: every embed below gets `autoplay=1` PLUS that
+      // provider's own mute param. Real browsers (Chrome/Safari/Firefox)
+      // block autoplay-WITH-SOUND outright for a customer's first visit —
+      // there's no query param or attribute that overrides that, it's a
+      // platform policy, not something this codebase can flip on. Muted
+      // autoplay is the one thing that's actually guaranteed to work
+      // everywhere, so that's what ships — each provider's own player still
+      // shows a visible, one-tap unmute/volume control, so sound is always
+      // just one click away, never fully blocked.
       if ((m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/i))) {
-        return { embedSrc: `https://www.youtube.com/embed/${m[1]}` };
+        return { embedSrc: `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1` };
       }
       if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i))) {
-        return { embedSrc: `https://player.vimeo.com/video/${m[1]}` };
+        return { embedSrc: `https://player.vimeo.com/video/${m[1]}?autoplay=1&muted=1` };
       }
       if ((m = u.match(/loom\.com\/share\/([a-zA-Z0-9]+)/i))) {
-        return { embedSrc: `https://www.loom.com/embed/${m[1]}` };
+        return { embedSrc: `https://www.loom.com/embed/${m[1]}?autoplay=1&muted=1` };
       }
       if (/\.(mp4|webm|mov|m4v)(\?.*)?(#.*)?$/i.test(u)) {
         return { directFile: true };
@@ -3287,6 +3322,15 @@
         const v = document.createElement('video');
         v.src = originalUrl;
         v.controls = true;
+        // Autoplay + muted + playsinline is the combination every mobile
+        // and desktop browser actually honors on a customer's first visit
+        // (unmuted autoplay is blocked outright — see the comment in
+        // mqVideoEmbedInfo above). `controls` stays on, so the browser's
+        // own native volume/unmute button is right there in the player —
+        // sound is one tap away, not hidden behind anything custom-built.
+        v.autoplay = true;
+        v.muted = true;
+        v.playsInline = true;
         v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000';
         holder.appendChild(v);
       } else {

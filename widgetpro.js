@@ -3089,14 +3089,23 @@
       if (!url) return null;
       const u = String(url).trim();
       let m;
+      // Autoplay note: every embed below gets `autoplay=1` PLUS that
+      // provider's own mute param. Real browsers (Chrome/Safari/Firefox)
+      // block autoplay-WITH-SOUND outright for a customer's first visit —
+      // there's no query param or attribute that overrides that, it's a
+      // platform policy, not something this codebase can flip on. Muted
+      // autoplay is the one thing that's actually guaranteed to work
+      // everywhere, so that's what ships — each provider's own player still
+      // shows a visible, one-tap unmute/volume control, so sound is always
+      // just one click away, never fully blocked.
       if ((m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/i))) {
-        return { embedSrc: `https://www.youtube.com/embed/${m[1]}` };
+        return { embedSrc: `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1` };
       }
       if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i))) {
-        return { embedSrc: `https://player.vimeo.com/video/${m[1]}` };
+        return { embedSrc: `https://player.vimeo.com/video/${m[1]}?autoplay=1&muted=1` };
       }
       if ((m = u.match(/loom\.com\/share\/([a-zA-Z0-9]+)/i))) {
-        return { embedSrc: `https://www.loom.com/embed/${m[1]}` };
+        return { embedSrc: `https://www.loom.com/embed/${m[1]}?autoplay=1&muted=1` };
       }
       if (/\.(mp4|webm|mov|m4v)(\?.*)?(#.*)?$/i.test(u)) {
         return { directFile: true };
@@ -3113,6 +3122,15 @@
         const v = document.createElement('video');
         v.src = originalUrl;
         v.controls = true;
+        // Autoplay + muted + playsinline is the combination every mobile
+        // and desktop browser actually honors on a customer's first visit
+        // (unmuted autoplay is blocked outright — see the comment in
+        // mqVideoEmbedInfo above). `controls` stays on, so the browser's
+        // own native volume/unmute button is right there in the player —
+        // sound is one tap away, not hidden behind anything custom-built.
+        v.autoplay = true;
+        v.muted = true;
+        v.playsInline = true;
         v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000';
         holder.appendChild(v);
       } else {
