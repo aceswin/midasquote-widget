@@ -61,6 +61,24 @@
     .sr-divider { height: 1px; background: var(--gray-200); margin: 3rem 0; }
     .sr-footer { background: var(--white); border-top: 1px solid var(--gray-200); padding: 1.5rem 2rem; text-align: center; font-size: 12px; color: var(--gray-400); }
     .sr-footer a { color: var(--gray-600); text-decoration: none; }
+    /* Lightbox prev/next arrows: on desktop these are pinned OUTSIDE the
+       widest a zoomed photo can ever get (the img's own 75vw max-width),
+       not hugging the current photo's actual edges — otherwise a portrait
+       photo pulls both buttons in narrow and a landscape one pushes them
+       back out, so a shop owner or customer trying to click through
+       several photos quickly has to keep re-aiming for a moving target.
+       `right:50%`/`left:50%` anchor each button to #sr-lb-photowrap's own
+       horizontal CENTER (which stays screen-centered regardless of the
+       photo's actual rendered width, since the photo itself is always
+       centered) rather than to its edges, and `translate()`'s vw-based
+       offset moves it a FIXED distance from there — 37.5vw is exactly
+       half of the img's 75vw cap, so the button sits just past where even
+       the widest possible photo could reach, then 30px further for a
+       bit of breathing room. See the mobile override below for why this
+       is desktop-only. */
+    #sr-lb-prev, #sr-lb-next { position: absolute; top: 50%; }
+    #sr-lb-prev { right: 50%; left: auto; transform: translate(calc(-37.5vw - 30px), -50%); }
+    #sr-lb-next { left: 50%; right: auto; transform: translate(calc(37.5vw + 30px), -50%); }
     @media (max-width: 600px) {
       .sr-header { padding: 1rem; }
       .sr-hero { padding: 2.5rem 1.25rem; }
@@ -68,6 +86,14 @@
       .sr-content { padding: 2rem 1.25rem 4rem; }
       .sr-grid { grid-template-columns: repeat(2, 1fr); }
       .sr-spec-grid { grid-template-columns: repeat(2, 1fr); }
+      /* On a narrow screen, half the widest photo's width alone can be
+         wider than the screen itself, so the desktop rule above would push
+         these off-screen entirely. Touch swipe is the primary way to move
+         between photos here anyway (see the touchstart/touchend listeners
+         below) — the buttons are just a secondary, tappable option, so on
+         mobile they go back to hugging the actual photo's own edges. */
+      #sr-lb-prev { right: auto; left: -14px; transform: translateY(-50%); }
+      #sr-lb-next { left: auto; right: -14px; transform: translateY(-50%); }
     }
   </style>
 </head>
@@ -252,8 +278,8 @@
             <div id="sr-lb-photowrap" style="position:relative;max-width:100%;display:inline-block">
               <img id="sr-lb-img" style="display:block;max-width:75vw;max-height:60vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"/>
               <button type="button" aria-label="Close" onclick="event.stopPropagation();document.getElementById('sr-lightbox').style.display='none'" style="position:absolute;top:-14px;right:-14px;width:30px;height:30px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:18px;line-height:1;color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
-              <button type="button" id="sr-lb-prev" aria-label="Previous photo" onclick="event.stopPropagation();mqLightboxNav(-1)" style="display:none;position:absolute;top:50%;left:-14px;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:20px;line-height:1;color:#111;cursor:pointer;align-items:center;justify-content:center;padding:0">‹</button>
-              <button type="button" id="sr-lb-next" aria-label="Next photo" onclick="event.stopPropagation();mqLightboxNav(1)" style="display:none;position:absolute;top:50%;right:-14px;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:20px;line-height:1;color:#111;cursor:pointer;align-items:center;justify-content:center;padding:0">›</button>
+              <button type="button" id="sr-lb-prev" aria-label="Previous photo" onclick="event.stopPropagation();mqLightboxNav(-1)" style="display:none;width:36px;height:36px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:20px;line-height:1;color:#111;cursor:pointer;align-items:center;justify-content:center;padding:0">‹</button>
+              <button type="button" id="sr-lb-next" aria-label="Next photo" onclick="event.stopPropagation();mqLightboxNav(1)" style="display:none;width:36px;height:36px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:20px;line-height:1;color:#111;cursor:pointer;align-items:center;justify-content:center;padding:0">›</button>
             </div>
             <div id="sr-lb-label" style="color:#fff;font-size:15px;font-weight:500;text-align:center"></div>
             <div style="color:rgba(255,255,255,0.4);font-size:12px">Click anywhere to close</div>
