@@ -2246,7 +2246,13 @@ window.logoutMember = async function () {
           html
         })
       });
-      if (statusEl) { statusEl.textContent = "✓ Sent! We'll get back to you soon — if you don't hear from us in a day or two, please check your spam/junk folder too, just in case."; statusEl.style.color = '#166534'; }
+      if (statusEl) {
+        statusEl.style.color = '';
+        statusEl.innerHTML = '<div style="color:#166534;font-weight:700;font-size:14px;margin-bottom:6px">✓ Sent!</div>'
+          + '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.5;color:#78350f;font-weight:600">'
+          + '📩 If you don\'t receive an email in 24 hours, please check your <u>spam/junk folder</u>.'
+          + '</div>';
+      }
       if (messageEl) messageEl.value = '';
     } catch(e) {
       if (statusEl) { statusEl.textContent = 'Something went wrong sending that — please try again.'; statusEl.style.color = '#dc2626'; }
