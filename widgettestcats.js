@@ -671,6 +671,7 @@
       @keyframes mqShakeChoice{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
       #midasquote-widget .mq-spec-mode-select.mq-needs-choice{animation:mqShakeChoice 0.4s ease;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
       #midasquote-widget input.mq-needs-choice{animation:mqShakeChoice 0.4s ease;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
+      #midasquote-widget .mq-vpicker-row.mq-needs-choice{animation:mqShakeChoice 0.4s ease;box-shadow:0 0 0 3px rgba(220,38,38,0.25);border-radius:8px}
       #midasquote-widget .mq-vpicker-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:116px;height:116px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
@@ -2523,6 +2524,7 @@
           <p class="mq-sec-title">Countertop surfaces</p>
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
+          <div class="mq-empty-calc-msg" id="mq-ct-surface-add-msg" style="display:none"></div>
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
         <button class="mq-calc-btn" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
@@ -2612,6 +2614,7 @@
         <div class="mq-sec"><p class="mq-sec-title" id="mq-b-ct-surfaces-title">Additional countertop surfaces</p>
           <div id="mq-b-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
+          <div class="mq-empty-calc-msg" id="mq-b-surface-add-msg" style="display:none"></div>
         </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
@@ -4469,7 +4472,7 @@
         // to its one-line summary row once the NEXT one is created —
         // leaving only the last restored surface open, matching how the
         // list would look if the customer had just finished building it.
-        window.mqAddSurface(prefix);
+        window.mqAddSurface(prefix, true); // bypass validation — see comment in mqAddSurface
         const newId = `s${prefix}${surfCounts[prefix]}`;
         const legIdxes = surfFields
           .map(f => (f.template.match(/^mqsw-§-(\d+)$/) || [])[1])
@@ -5899,9 +5902,75 @@ window.mqTogDrawerConfig=(prefix)=>{
       card.style.display = '';
       card.scrollIntoView({behavior:'smooth', block:'nearest'});
     };
-    window.mqAddSurface=(prefix)=>{
+    // Shakes/highlights whichever piece(s) of the currently-open surface
+    // are still missing before another surface can be added — Jordan:
+    // "block them from adding a surface when they havent filled out the
+    // required dimensions and or havent picked the surface type... so
+    // needs to give a shake and the appropriate message." A brand-new,
+    // still-empty surface always has SOME material technically selected
+    // (the picker auto-selects 'none', first in the list — see
+    // ctMatItems/sortBadgeAndGroupItems), so "picked the surface type" is
+    // checked as "picked something other than None," not just "a value
+    // exists." Same shake/highlight pattern already used for specialty
+    // items and quantity fields (mqSpecModeChosen/mqValidateInstallQty)
+    // and the same message-box pattern Calculate uses
+    // (mqValidateNotEmpty) — just pointed at this specific surface.
+    function mqSurfValidateBeforeAdd(id, prefix) {
+      const shake = (el) => {
+        if (!el) return;
+        el.classList.remove('mq-needs-choice');
+        void el.offsetWidth; // restart the animation if it's already mid-shake
+        el.classList.add('mq-needs-choice');
+        setTimeout(() => el.classList.remove('mq-needs-choice'), 700);
+      };
+      const legs = mqSurfGetLegs(id);
+      const missingDims = legs.length === 0 || legs.some(v => !(v > 0));
+      const matVal = gv(`mqsm-${id}`);
+      const missingMaterial = !matVal || matVal === 'none';
+      if (!missingDims && !missingMaterial) return true;
+      let scrollTarget = null;
+      if (missingDims) {
+        const legInputs = document.querySelectorAll(`#mqs-legs-${id} input`);
+        legInputs.forEach(inp => { if (!(parseFloat(inp.value) > 0)) shake(inp); });
+        scrollTarget = scrollTarget || document.getElementById(`mqs-legs-${id}`);
+      }
+      if (missingMaterial) {
+        const matRow = document.getElementById(`mq-vprow-mqsm-${id}`);
+        shake(matRow);
+        scrollTarget = scrollTarget || matRow;
+      }
+      if (scrollTarget) scrollTarget.scrollIntoView({behavior:'smooth', block:'center'});
+      const msgEl = document.getElementById(`mq-${prefix}-surface-add-msg`);
+      if (msgEl) {
+        msgEl.textContent = (missingDims && missingMaterial)
+          ? "Please finish this surface first — enter its section length(s) and choose a material — before adding another."
+          : missingDims
+            ? "Please enter this surface's section length(s) before adding another."
+            : "Please choose a material for this surface before adding another.";
+        msgEl.style.display = 'block';
+        clearTimeout(msgEl._mqHideTimer);
+        msgEl._mqHideTimer = setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+      }
+      return false;
+    }
+    window.mqAddSurface=(prefix, skipValidation)=>{
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
       const container = document.getElementById(containerId);
+      // Whichever surface is currently open (if any) has to actually be
+      // filled in before another one can be added — otherwise it's too
+      // easy to stack up several half-entered surfaces and end up with a
+      // silently too-low total. skipValidation lets internal callers (the
+      // snapshot-restore replay below) bypass this — a surface being
+      // restored is replaying whatever was already committed to the cart,
+      // valid or not, and blocking that replay would silently drop
+      // surfaces again, the exact bug the restore-on-tab-switch fix above
+      // exists to prevent.
+      const openCard = container
+        ? Array.from(container.querySelectorAll('.mq-surface-card')).find(c => c.style.display !== 'none')
+        : null;
+      if (!skipValidation && openCard && !mqSurfValidateBeforeAdd(openCard.id.replace('mqsc-',''), prefix)) return;
+      const msgEl = document.getElementById(`mq-${prefix}-surface-add-msg`);
+      if (msgEl) msgEl.style.display = 'none';
       // Collapse whatever's currently open first — this is the "save it"
       // step Jordan asked for, just automatic rather than a separate
       // button: adding another surface tucks the finished one into a
