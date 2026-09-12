@@ -830,7 +830,7 @@
       #midasquote-widget .mq-surface-num{width:24px;height:24px;border-radius:50%;background:${bc};color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
       #midasquote-widget .mq-remove-btn{font-size:13px;color:#4b5563;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:inherit}
       #midasquote-widget .mq-add-surface-btn{width:100%;padding:10px;font-size:14px;border:1px dashed #d1d5db;border-radius:8px;background:none;color:#4b5563;cursor:pointer;margin-top:4px;font-family:inherit}
-      #midasquote-widget .mq-shape-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;min-width:76px}
+      #midasquote-widget .mq-shape-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 16px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;min-width:84px}
       #midasquote-widget .mq-shape-btn svg{display:block}
       #midasquote-widget .mq-shape-btn.active{border-color:${bc};color:${bc};background:#f8faff}
       #midasquote-widget .mq-leg-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -5629,11 +5629,74 @@ window.mqTogDrawerConfig=(prefix)=>{
     // so they pick up the button's own text color (gray normally, brand
     // blue once picked) — just enough for a customer to tell L from U from
     // Straight at a glance instead of only reading the label.
-    const MQ_SHAPE_ICON_STRAIGHT = '<svg width="28" height="20" viewBox="0 0 28 20" fill="none"><rect x="2" y="6" width="24" height="8" rx="1" stroke="currentColor" stroke-width="2"/></svg>';
-    const MQ_SHAPE_ICON_L = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M2 2 L10 2 L10 18 L26 18 L26 26 L2 26 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
-    const MQ_SHAPE_ICON_U = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M2 2 L10 2 L10 14 L18 14 L18 2 L26 2 L26 26 L2 26 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>';
+    // Sized up (36px, was 28px) and numbered per-leg to match the numbered
+    // section inputs below them — a customer can now see at a glance which
+    // typed length maps to which part of the shape, not just guess from
+    // top-to-bottom order.
+    const MQ_SHAPE_ICON_STRAIGHT = '<svg width="36" height="24" viewBox="0 0 36 24" fill="none"><rect x="3" y="8" width="30" height="8" rx="1" stroke="currentColor" stroke-width="2"/><text x="18" y="14.5" font-size="8" fill="currentColor" text-anchor="middle" font-weight="700">1</text></svg>';
+    const MQ_SHAPE_ICON_L = '<svg width="36" height="36" viewBox="0 0 34 34" fill="none"><path d="M3 3 L12 3 L12 21 L31 21 L31 31 L3 31 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><text x="7.5" y="14" font-size="8" fill="currentColor" text-anchor="middle" font-weight="700">1</text><text x="21" y="27.5" font-size="8" fill="currentColor" text-anchor="middle" font-weight="700">2</text></svg>';
+    const MQ_SHAPE_ICON_U = '<svg width="36" height="36" viewBox="0 0 34 34" fill="none"><path d="M3 3 L12 3 L12 17 L22 17 L22 3 L31 3 L31 31 L3 31 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><text x="7.5" y="25" font-size="8" fill="currentColor" text-anchor="middle" font-weight="700">1</text><text x="17" y="27.5" font-size="8" fill="currentColor" text-anchor="middle" font-weight="700">2</text><text x="26.5" y="25" font-size="8" fill="currentColor" text-anchor="middle" font-weight="700">3</text></svg>';
     function mqShapeBtnHtml(id, legs, label, icon) {
       return `<button type="button" class="mq-shape-btn" id="mqs-shapebtn-${id}-${legs}" onclick="mqSurfSetShape('${id}',${legs})">${icon}<span>${label}</span></button>`;
+    }
+    // Sections alternate vertical/horizontal, and vertical ones flip
+    // down→up→down… each time — the exact same left-column/bottom-row/
+    // right-column pattern the L and U shape-icon SVGs above already use
+    // (section 1 down, section 2 right, section 3 up), just continuing
+    // indefinitely for a 4th/5th/etc. section into a comb/serpentine shape.
+    // Shared by the live-growing diagram below so it always matches what
+    // the L/U icons already taught the customer to expect.
+    function mqSurfLegDirection(i) {
+      if (i % 2 === 1) return 'right';
+      return (Math.floor(i/2) % 2 === 0) ? 'down' : 'up';
+    }
+    // The live "shape so far" diagram shown above the section-length list.
+    // This is a topology sketch, not a scaled floor plan — every section
+    // draws the same length on screen no matter what a customer has typed
+    // — so it never needs to know actual inches, only how many sections
+    // exist. Ends in a clickable "+" at the open end so growing the shape
+    // happens right on the picture instead of a separate text button; the
+    // existing ✕ on each section row (mqSurfLegRowHtml) still handles
+    // removing any specific section.
+    function mqSurfBuildDiagramSvg(id, n) {
+      const UNIT = 34, PAD = 24;
+      let x = 0, y = 0;
+      const pts = [{x,y}];
+      for (let i=0;i<n;i++) {
+        const dir = mqSurfLegDirection(i);
+        if (dir==='right') x += UNIT; else if (dir==='down') y += UNIT; else y -= UNIT;
+        pts.push({x,y});
+      }
+      const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+      const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+      const offX=PAD-minX, offY=PAD-minY;
+      const w=Math.round(maxX-minX+PAD*2), h=Math.round(maxY-minY+PAD*2);
+      const sp=pts.map(p=>({x:p.x+offX,y:p.y+offY}));
+      const polyPts=sp.map(p=>`${p.x},${p.y}`).join(' ');
+      let mid='';
+      for (let i=0;i<n;i++) {
+        const a=sp[i], b=sp[i+1], dir=mqSurfLegDirection(i);
+        const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+        const lx = dir==='right' ? mx : mx+14;
+        const ly = dir==='right' ? my+17 : my+4;
+        mid += `<text x="${lx}" y="${ly}" font-size="13" font-weight="700" fill="currentColor" text-anchor="middle">${i+1}</text>`;
+      }
+      let joints='';
+      for (let i=1;i<n;i++) joints += `<circle cx="${sp[i].x}" cy="${sp[i].y}" r="3" fill="currentColor"/>`;
+      const end=sp[n];
+      const plus = `<g onclick="mqSurfAddLeg('${id}')" style="cursor:pointer" role="button" aria-label="Add another section">
+        <circle cx="${end.x}" cy="${end.y}" r="12" fill="${(shop['Brand colour']||'#1a1a1a').replace(/"/g,'&quot;')}"/>
+        <line x1="${end.x-5}" y1="${end.y}" x2="${end.x+5}" y2="${end.y}" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        <line x1="${end.x}" y1="${end.y-5}" x2="${end.x}" y2="${end.y+5}" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      </g>`;
+      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="color:#4b5563;display:block;margin:0 auto">
+        <polyline points="${polyPts}" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+        ${joints}${mid}${plus}
+      </svg>`;
+    }
+    function mqSurfRenderDiagram(id, n) {
+      const holder = document.getElementById(`mqs-diagram-${id}`);
+      if (holder) holder.innerHTML = mqSurfBuildDiagramSvg(id, n);
     }
     // A countertop surface is a chain of 1+ straight "sections" — 1 section
     // is a plain rectangle, 2 is an L, 3 is a U, and the same math just
@@ -5662,6 +5725,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const btn = document.getElementById(`mqs-shapebtn-${id}-${k}`);
         if (btn) btn.classList.toggle('active', k === n);
       });
+      mqSurfRenderDiagram(id, n);
       mqCalcSurfDims(id);
     }
     // Resizes to `count` sections, preserving whatever a customer already
@@ -5717,10 +5781,13 @@ window.mqTogDrawerConfig=(prefix)=>{
             ${mqShapeBtnHtml(id,3,'U-Shape',MQ_SHAPE_ICON_U)}
           </div>
         </div>
+        <div class="mq-field" style="margin-bottom:0.5rem">
+          <div id="mqs-diagram-${id}" style="padding:6px 0"></div>
+          <div style="font-size:12px;color:#9ca3af;text-align:center">Tap the + on the shape to add another section</div>
+        </div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Section length(s) (inches) — measure each section to its outside corner</label>
           <div id="mqs-legs-${id}"></div>
-          <button type="button" class="mq-add-leg-btn" onclick="mqSurfAddLeg('${id}')">+ Add another section</button>
         </div>
         <div class="mq-grid3" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">Depth (inches)</label><div style="display:flex;align-items:center"><input type="number" id="mqsd-${id}" placeholder="${ctDepth}" value="${ctDepth}" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsd-${id}`, 'inches', 'Surface depth')}</div></div>
