@@ -834,8 +834,6 @@
       #midasquote-widget .mq-shape-btn svg{display:block}
       #midasquote-widget .mq-shape-btn.active{border-color:${bc};color:${bc};background:#f8faff}
       #midasquote-widget .mq-leg-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-      #midasquote-widget .mq-leg-remove{font-size:16px;line-height:1;color:#9ca3af;background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0}
-      #midasquote-widget .mq-add-leg-btn{padding:7px 12px;font-size:13px;border:1px dashed #d1d5db;border-radius:6px;background:none;color:#4b5563;cursor:pointer;font-family:inherit;margin-top:2px}
       #midasquote-widget .mq-divider{height:1px;background:#e5e7eb;margin:1rem 0}
       #midasquote-widget .mq-check-row{display:flex;align-items:center;gap:8px;font-size:14px;color:#111;cursor:pointer;padding:5px 0}
       #midasquote-widget .mq-loading{display:none;text-align:center;padding:2rem;color:#4b5563;font-size:14px}
@@ -5639,117 +5637,40 @@ window.mqTogDrawerConfig=(prefix)=>{
     function mqShapeBtnHtml(id, legs, label, icon) {
       return `<button type="button" class="mq-shape-btn" id="mqs-shapebtn-${id}-${legs}" onclick="mqSurfSetShape('${id}',${legs})">${icon}<span>${label}</span></button>`;
     }
-    // Sections alternate vertical/horizontal, and vertical ones flip
-    // down→up→down… each time — the exact same left-column/bottom-row/
-    // right-column pattern the L and U shape-icon SVGs above already use
-    // (section 1 down, section 2 right, section 3 up), just continuing
-    // indefinitely for a 4th/5th/etc. section into a comb/serpentine shape.
-    // Shared by the live-growing diagram below so it always matches what
-    // the L/U icons already taught the customer to expect.
-    function mqSurfLegDirection(i) {
-      if (i % 2 === 1) return 'right';
-      return (Math.floor(i/2) % 2 === 0) ? 'down' : 'up';
-    }
-    // The live "shape so far" diagram shown above the section-length list.
-    // This is a topology sketch, not a scaled floor plan — every section
-    // draws the same length on screen no matter what a customer has typed
-    // — so it never needs to know actual inches, only how many sections
-    // exist. Ends in a clickable "+" at the open end so growing the shape
-    // happens right on the picture instead of a separate text button; the
-    // existing ✕ on each section row (mqSurfLegRowHtml) still handles
-    // removing any specific section.
-    function mqSurfBuildDiagramSvg(id, n) {
-      const UNIT = 34, PAD = 24;
-      let x = 0, y = 0;
-      const pts = [{x,y}];
-      for (let i=0;i<n;i++) {
-        const dir = mqSurfLegDirection(i);
-        if (dir==='right') x += UNIT; else if (dir==='down') y += UNIT; else y -= UNIT;
-        pts.push({x,y});
-      }
-      const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
-      const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
-      const offX=PAD-minX, offY=PAD-minY;
-      const w=Math.round(maxX-minX+PAD*2), h=Math.round(maxY-minY+PAD*2);
-      const sp=pts.map(p=>({x:p.x+offX,y:p.y+offY}));
-      const polyPts=sp.map(p=>`${p.x},${p.y}`).join(' ');
-      let mid='';
-      for (let i=0;i<n;i++) {
-        const a=sp[i], b=sp[i+1], dir=mqSurfLegDirection(i);
-        const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
-        const lx = dir==='right' ? mx : mx+14;
-        const ly = dir==='right' ? my+17 : my+4;
-        mid += `<text x="${lx}" y="${ly}" font-size="13" font-weight="700" fill="currentColor" text-anchor="middle">${i+1}</text>`;
-      }
-      let joints='';
-      for (let i=1;i<n;i++) joints += `<circle cx="${sp[i].x}" cy="${sp[i].y}" r="3" fill="currentColor"/>`;
-      const end=sp[n];
-      const plus = `<g onclick="mqSurfAddLeg('${id}')" style="cursor:pointer" role="button" aria-label="Add another section">
-        <circle cx="${end.x}" cy="${end.y}" r="12" fill="${(shop['Brand colour']||'#1a1a1a').replace(/"/g,'&quot;')}"/>
-        <line x1="${end.x-5}" y1="${end.y}" x2="${end.x+5}" y2="${end.y}" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        <line x1="${end.x}" y1="${end.y-5}" x2="${end.x}" y2="${end.y+5}" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-      </g>`;
-      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="color:#4b5563;display:block;margin:0 auto">
-        <polyline points="${polyPts}" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
-        ${joints}${mid}${plus}
-      </svg>`;
-    }
-    function mqSurfRenderDiagram(id, n) {
-      const holder = document.getElementById(`mqs-diagram-${id}`);
-      if (holder) holder.innerHTML = mqSurfBuildDiagramSvg(id, n);
-    }
-    // A countertop surface is a chain of 1+ straight "sections" — 1 section
-    // is a plain rectangle, 2 is an L, 3 is a U, and the same math just
-    // keeps extending for a customer's "+ Add another section" beyond that
-    // (a galley/wrap-around run, etc.) — no separate "custom shape" code
-    // path needed. This builds one section's input row; showRemove is false
-    // for a lone section (a surface always needs at least one).
-    function mqSurfLegRowHtml(id, i, val, showRemove) {
+    // A countertop surface is 1, 2, or 3 straight "sections," each measured
+    // to its own outside corner (standard countertop-trade convention) —
+    // count is fixed by whichever shape a customer picks: Straight = 1,
+    // L-Shape = 2, U-Shape = 3. This builds one section's input row.
+    function mqSurfLegRowHtml(id, i, val) {
       return `<div class="mq-leg-row">
         <div style="flex:1;display:flex;align-items:center"><input type="number" id="mqsw-${id}-${i}" placeholder="e.g. 120" value="${val||''}" oninput="mqCalcSurfDims('${id}')" style="flex:1;min-width:0"/>${calcBtn(`mqsw-${id}-${i}`, 'inches', 'Section length')}</div>
         <span style="font-size:13px;color:#6b7280;white-space:nowrap">Section ${i+1}</span>
-        ${showRemove ? `<button type="button" class="mq-leg-remove" onclick="mqSurfRemoveLeg('${id}',${i})" aria-label="Remove section">✕</button>` : ''}
       </div>`;
     }
-    // Renders exactly `values.length` section rows (capped 1-10) and syncs
-    // which shape button (if any) shows as picked — 1/2/3 sections match
-    // Straight/L/U; 4+ is a custom chain, so none of the three presets stay
-    // highlighted once a customer's added more sections than U has.
+    // Renders exactly `values.length` section rows (1-3) and syncs which
+    // shape button shows as picked.
     function mqSurfRenderLegValues(id, values) {
       const wrap = document.getElementById(`mqs-legs-${id}`);
       if (!wrap) return;
-      const n = Math.max(1, Math.min(10, values.length));
+      const n = Math.max(1, Math.min(3, values.length));
       const vals = values.slice(0, n);
-      wrap.innerHTML = vals.map((v,i) => mqSurfLegRowHtml(id, i, v, n>1)).join('');
+      wrap.innerHTML = vals.map((v,i) => mqSurfLegRowHtml(id, i, v)).join('');
       [1,2,3].forEach(k => {
         const btn = document.getElementById(`mqs-shapebtn-${id}-${k}`);
         if (btn) btn.classList.toggle('active', k === n);
       });
-      mqSurfRenderDiagram(id, n);
       mqCalcSurfDims(id);
     }
-    // Resizes to `count` sections, preserving whatever a customer already
-    // typed for sections that survive the resize — picking L then U keeps
-    // section 1 & 2's numbers instead of clearing everything.
+    // Switches to `count` sections (1/2/3), preserving whatever a customer
+    // already typed for sections that survive the switch — picking L then U
+    // keeps section 1 & 2's numbers instead of clearing everything.
     function mqSurfRenderLegs(id, count) {
       const wrap = document.getElementById(`mqs-legs-${id}`);
       const existing = wrap ? Array.from(wrap.querySelectorAll('input')).map(inp => inp.value) : [];
-      const n = Math.max(1, Math.min(10, count));
+      const n = Math.max(1, Math.min(3, count));
       mqSurfRenderLegValues(id, Array.from({length:n}, (_,i) => existing[i] || ''));
     }
     window.mqSurfSetShape = (id, legs) => mqSurfRenderLegs(id, legs);
-    window.mqSurfAddLeg = (id) => {
-      const current = document.querySelectorAll(`#mqs-legs-${id} input`).length || 1;
-      mqSurfRenderLegs(id, current + 1);
-    };
-    window.mqSurfRemoveLeg = (id, idx) => {
-      const wrap = document.getElementById(`mqs-legs-${id}`);
-      if (!wrap) return;
-      const values = Array.from(wrap.querySelectorAll('input')).map(inp => inp.value);
-      values.splice(idx, 1);
-      if (!values.length) values.push('');
-      mqSurfRenderLegValues(id, values);
-    };
     // Reads every section-length input for a surface, in DOM order, as
     // numbers (blank/invalid → 0). Shared by the live-preview calc
     // (mqCalcSurfDims), the real pricing pass (calcCountertop), and the
@@ -5780,10 +5701,6 @@ window.mqTogDrawerConfig=(prefix)=>{
             ${mqShapeBtnHtml(id,2,'L-Shape',MQ_SHAPE_ICON_L)}
             ${mqShapeBtnHtml(id,3,'U-Shape',MQ_SHAPE_ICON_U)}
           </div>
-        </div>
-        <div class="mq-field" style="margin-bottom:0.5rem">
-          <div id="mqs-diagram-${id}" style="padding:6px 0"></div>
-          <div style="font-size:12px;color:#9ca3af;text-align:center">Tap the + on the shape to add another section</div>
         </div>
         <div class="mq-field" style="margin-bottom:0.75rem">
           <label class="mq-label">Section length(s) (inches) — measure each section to its outside corner</label>
