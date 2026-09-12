@@ -841,6 +841,7 @@ window.logoutMember = async function () {
             </div>
             <div id="mq-leads-msg"></div>
             <div style="margin-bottom:1rem;text-align:right">
+              <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSelectedLeads()" style="margin-right:8px">🗑️ Delete selected</button>
               <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteAllLeads()">🗑️ Clear all leads</button>
             </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
@@ -3861,7 +3862,7 @@ window.logoutMember = async function () {
     return `${datePart} · ${timePart}`;
   }
 
-  function renderLeads(leads, limit) {
+  function renderLeads(leads, limit, selectable) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
 
     // Group leads sharing a Session ID so multi-attempt visitors get a clear
@@ -3906,7 +3907,9 @@ window.logoutMember = async function () {
       const sessionBadge = badgeText
         ? `<span title="Session ${f['Session ID']}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">${badgeText}</span>`
         : '';
+      const selectCell = selectable ? `<td><input type="checkbox" class="mq-lead-check" value="${r.id}" onchange="mqLeadCheckboxChanged()"></td>` : '';
       return `<tr>
+        ${selectCell}
         <td>${formatLeadDate(r.createdTime)}</td>
         <td><strong>${f['Customer name'] || '—'}</strong>${sessionBadge ? '<br>'+sessionBadge : ''}</td>
         <td>${f['Customer email'] || '—'}</td>
@@ -3927,7 +3930,8 @@ window.logoutMember = async function () {
       </tr>`;
     }).join('');
     const th = (field, label) => `<th onclick="mqSortLeads('${field}')" style="cursor:pointer;user-select:none;white-space:nowrap">${label}${sortArrow(field)}</th>`;
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    const selectHeaderCell = selectable ? `<th style="width:1%"><input type="checkbox" id="mq-lead-select-all" onchange="mqToggleAllLeadCheckboxes(this)" title="Select all"></th>` : '';
+    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${selectHeaderCell}${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
@@ -8233,6 +8237,58 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { showMsg('mq-leads-msg', 'Error deleting leads.', 'error'); }
   };
 
+  // Keeps the header "select all" checkbox in sync with whatever's
+  // actually checked below it — ticks itself when every visible row is
+  // checked, clears when none are, and shows the native indeterminate
+  // dash in between. Reads only currently-rendered `.mq-lead-check`
+  // boxes, so it automatically respects whatever status filter is active
+  // (mqFilterLeads only ever renders the filtered subset to begin with).
+  window.mqLeadCheckboxChanged = function() {
+    const boxes = Array.from(document.querySelectorAll('.mq-lead-check'));
+    const headerCb = el('mq-lead-select-all');
+    if (!headerCb) return;
+    const checkedCount = boxes.filter(b => b.checked).length;
+    headerCb.checked = boxes.length > 0 && checkedCount === boxes.length;
+    headerCb.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+  };
+
+  window.mqToggleAllLeadCheckboxes = function(headerCb) {
+    document.querySelectorAll('.mq-lead-check').forEach(cb => { cb.checked = headerCb.checked; });
+  };
+
+  window.mqDeleteSelectedLeads = async function() {
+    const ids = Array.from(document.querySelectorAll('.mq-lead-check:checked')).map(cb => cb.value);
+    if (!ids.length) { showMsg('mq-leads-msg', 'Select at least one lead first — check the boxes on the left of each row.', 'error'); return; }
+    const n = ids.length;
+    if (!confirm(`Delete ${n} selected lead${n===1?'':'s'}? This cannot be undone.`)) return;
+    showMsg('mq-leads-msg', `Deleting ${n} lead${n===1?'':'s'}...`);
+    try {
+      for (const id of ids) {
+        await atDelete(CONFIG.LEADS_TABLE, id);
+      }
+      window._mqLeads = (window._mqLeads || []).filter(r => !ids.includes(r.id));
+      renderStats(window._mqLeads);
+      el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
+      mqFilterLeads();
+      showMsg('mq-leads-msg', `✓ Deleted ${n} lead${n===1?'':'s'}.`);
+    } catch(e) {
+      // Some deletes in the loop above may have already succeeded before
+      // this one failed — re-render from whatever Airtable actually has
+      // rather than trusting local state, so the table doesn't lie about
+      // what's left.
+      showMsg('mq-leads-msg', 'Error deleting one or more selected leads — refreshing to show what actually remains.', 'error');
+      try {
+        const shopToken = window._mqShopRecord?.fields?.['Shop token'];
+        if (shopToken) {
+          window._mqLeads = sortLeadsArray(await loadLeads(shopToken));
+          renderStats(window._mqLeads);
+          el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
+          mqFilterLeads();
+        }
+      } catch(e2) {}
+    }
+  };
+
   // ============================================================
   // MY PRODUCTS
   // ============================================================
@@ -8243,7 +8299,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let leads = window._mqLeads || [];
     if (filter) leads = leads.filter(r => r.fields['Status'] === filter);
     leads = sortLeadsArray(leads);
-    el('mq-leads-table').innerHTML = renderLeads(leads);
+    el('mq-leads-table').innerHTML = renderLeads(leads, null, true);
   };
 
   // ============================================================
@@ -10571,7 +10627,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window._mqLeads = sortLeadsArray(leads);
     renderStats(window._mqLeads);
     el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
-    el('mq-leads-table').innerHTML = renderLeads(window._mqLeads);
+    el('mq-leads-table').innerHTML = renderLeads(window._mqLeads, null, true);
 
     const specs = await ensureSpecialtyDefaults(shopRecord);
     renderSpecialty(specs, shopRecord);
