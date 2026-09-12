@@ -419,7 +419,7 @@ let wizardBaseline = null;
     // of the stale in-memory copy — cheap, and only happens on the rare
     // render where drift was actually found.
     if (notices.length) {
-      const recs = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._shopName}", ARRAYJOIN({shop}))`);
+      const recs = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
       lineItems = recs.filter(r => r.fields);
     }
     return notices;
@@ -5143,7 +5143,7 @@ window.mqphGoToWizard = function() {
   async function loadAndRender() {
     const container=document.getElementById('mq-pricing-helper-v2');
     if(!container) return;
-    const recs=await atGet(LINE_ITEMS_TABLE,`FIND("${shopRecord._shopName}", ARRAYJOIN({shop}))`);
+    const recs=await atGet(LINE_ITEMS_TABLE,`FIND("${shopRecord._shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     lineItems=recs.filter(r=>r.fields);
     if (!ctMigrationDone) {
       ctMigrationDone = true; // set before awaiting so a second call can't race in
@@ -5170,7 +5170,7 @@ window.mqphGoToWizard = function() {
     shopRecord = {
       ...passedShopRecord,
       _recordId: passedShopRecord.id,
-      _shopName: (passedShopRecord.fields && passedShopRecord.fields['Shop name']) || '',
+      _shopToken: (passedShopRecord.fields && passedShopRecord.fields['Shop token']) || '',
       _baseId:   'app4zrMlVLwF2xn4h',
       _token:    'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
       _pricingTable: 'tblu6AYZs8h7SIaQl',

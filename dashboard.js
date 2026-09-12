@@ -2488,13 +2488,13 @@ window.logoutMember = async function () {
     return recs.length ? recs[0] : null;
   }
 
-  async function loadLeads(shopName) {
-    const recs = await atGet(CONFIG.LEADS_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+  async function loadLeads(shopToken) {
+    const recs = await atGet(CONFIG.LEADS_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     return recs;
   }
 
-  async function loadSpecialty(shopName) {
-    const recs = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+  async function loadSpecialty(shopToken) {
+    const recs = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
 
@@ -2506,8 +2506,8 @@ window.logoutMember = async function () {
   ];
 
   async function ensureSpecialtyDefaults(shopRecord) {
-    const shopName = shopRecord.fields['Shop name'];
-    const existing = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+    const shopToken = shopRecord.fields['Shop token'];
+    const existing = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     if (existing.length > 0) return existing;
     // New shop — create default list
     const created = [];
@@ -3981,8 +3981,8 @@ window.logoutMember = async function () {
     if (typeof window.mqRefreshCategoryOrderBox === 'function') window.mqRefreshCategoryOrderBox();
   };
 
-  async function loadProposalTemplates(shopName) {
-    const recs = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+  async function loadProposalTemplates(shopToken) {
+    const recs = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
 
@@ -4302,7 +4302,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     try {
-      const existing = await loadProposalTemplates(shopRec.fields['Shop name']);
+      const existing = await loadProposalTemplates(shopRec.fields['Shop token']);
       await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
         'Shop': [shopRec.id],
         'Template name': 'New template',
@@ -4317,7 +4317,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Body': PROPOSAL_BODY_STANDARD,
         'Sort order': existing.length,
       });
-      const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
+      const templates = await loadProposalTemplates(shopRec.fields['Shop token']);
       renderProposalTemplates(templates, shopRec);
       showMsg('mq-prop-msg', '✓ Template added — edit its name and settings below.');
     } catch(e) { showMsg('mq-prop-msg', 'Error adding template.', 'error'); }
@@ -4328,7 +4328,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const shopRec = window._mqShopRecord;
     try {
       await atDelete(CONFIG.PROPOSAL_TEMPLATES_TABLE, id);
-      const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
+      const templates = await loadProposalTemplates(shopRec.fields['Shop token']);
       renderProposalTemplates(templates, shopRec);
       showMsg('mq-prop-msg', '✓ Template deleted.');
     } catch(e) { showMsg('mq-prop-msg', 'Error deleting template.', 'error'); }
@@ -5047,7 +5047,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // full page reload. Force both to rebuild right away instead, the
       // same way Marketing Kit already does above.
       if (currencyChanged) {
-        loadSpecialty(shopRec.fields['Shop name']).then(specs => renderSpecialty(specs, shopRec)).catch(()=>{});
+        loadSpecialty(shopRec.fields['Shop token']).then(specs => renderSpecialty(specs, shopRec)).catch(()=>{});
         const helperContainer = document.getElementById('mq-pricing-helper-v2');
         if (helperContainer && helperContainer.dataset.loaded && window.mqph2Init) {
           window.mqph2Init(shopRec, window._mqPricingRecord);
@@ -5581,7 +5581,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) {}
 
     // Load specialty items
-    const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+    const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)})), {Active})`);
     // Stored globally in the same {id, ids, visibleRooms} shape as byCategory
     // items, so the bulk-sync logic can treat specialty items identically.
     window._mqSpecItemsList = specItems.map(r => ({ id: r.id, ids: [r.id], visibleRooms: r.fields['Visible rooms'] }));
@@ -6507,8 +6507,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (wrap) wrap.innerHTML = '<div class="mq-loading">Loading your products...</div>';
 
     const [lineItems, specItems] = await Promise.all([
-      atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`),
-      atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`),
+      atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`),
+      atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)})), {Active})`),
     ]);
     window._mqShowroomByCategory = buildShowroomLineItemCategories(lineItems);
     window._mqShowroomSpecItems = specItems;
@@ -7785,7 +7785,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   async function pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms) {
     const result = { created: false, replaced: false, roomsAdded: 0, error: false };
     try {
-      const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+      const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
       // Match by tag first, but also fall back to an exact name match —
       // catches orphaned rows left behind by manual Airtable edits that
       // never got (or lost) their tracking tag, so they don't silently
@@ -8073,7 +8073,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!confirm('Delete this specialty item?')) return;
     try {
       await atDelete(CONFIG.SPECIALTY_TABLE, id);
-      const specs = await loadSpecialty(window._mqShopRecord.fields['Shop name']);
+      const specs = await loadSpecialty(window._mqShopRecord.fields['Shop token']);
       renderSpecialty(specs, window._mqShopRecord);
       showMsg('mq-spec-msg', '✓ Item deleted.');
     } catch(e) { showMsg('mq-spec-msg', 'Error deleting item.', 'error'); }
@@ -8083,7 +8083,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     try {
-      const existing = await loadSpecialty(shopRec.fields['Shop name']);
+      const existing = await loadSpecialty(shopRec.fields['Shop token']);
       // Strictly lower than the current lowest Sort order — not just 0 —
       // so a brand new item always lands unambiguously first, even if
       // other items also happen to be sitting at 0 already.
@@ -8096,7 +8096,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Per linear foot': false,
         'Sort order': minSort - 1,
       });
-      const specs = await loadSpecialty(shopRec.fields['Shop name']);
+      const specs = await loadSpecialty(shopRec.fields['Shop token']);
       renderSpecialty(specs, shopRec);
       showMsg('mq-spec-msg', '✓ Item added at the top — edit the name and price below.');
       // Scroll to it and focus the name field so it's impossible to miss,
@@ -10525,7 +10525,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (navTemplates) navTemplates.style.display = 'flex';
     }
 
-    const leads = await loadLeads(shopRecord.fields['Shop name']);
+    const leads = await loadLeads(shopRecord.fields['Shop token']);
     window._mqLeads = sortLeadsArray(leads);
     renderStats(window._mqLeads);
     el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
@@ -10535,7 +10535,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     renderSpecialty(specs, shopRecord);
 
     // Load line items for My Products tab
-    const lineItems = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+    const lineItems = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
     window._mqLineItems = lineItems;
   }
 
@@ -10658,7 +10658,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const leadsTable = document.getElementById('mq-leads-table');
       if (leadsTable && window._mqShopRecord && mqShouldRefetch('leads')) {
         leadsTable.innerHTML = '<div class="mq-loading">Refreshing leads...</div>';
-        loadLeads(window._mqShopRecord.fields['Shop name']).then(leads => {
+        loadLeads(window._mqShopRecord.fields['Shop token']).then(leads => {
           window._mqLeads = sortLeadsArray(leads);
           renderStats(window._mqLeads);
           const recentEl = document.getElementById('mq-recent-leads');
@@ -10671,7 +10671,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const specList = document.getElementById('mq-spec-list');
       if (specList && window._mqShopRecord && mqShouldRefetch('specialty')) {
         specList.innerHTML = '<div class="mq-loading">Refreshing specialty items...</div>';
-        loadSpecialty(window._mqShopRecord.fields['Shop name']).then(specs => {
+        loadSpecialty(window._mqShopRecord.fields['Shop token']).then(specs => {
           renderSpecialty(specs, window._mqShopRecord);
         });
       }
@@ -10684,7 +10684,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (propList && window._mqShopRecord && mqShouldRefetch('proposals')) {
         propList.innerHTML = '<div class="mq-loading">Loading proposal templates...</div>';
         ensureProposalTemplatesSeeded(window._mqShopRecord).then(() =>
-          loadProposalTemplates(window._mqShopRecord.fields['Shop name'])
+          loadProposalTemplates(window._mqShopRecord.fields['Shop token'])
         ).then(templates => {
           renderProposalTemplates(templates, window._mqShopRecord);
         });
@@ -10697,7 +10697,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const shopToken = window._mqShopRecord.fields['Shop token'];
         Promise.all([
           loadShop(shopToken), // refetch the shop record itself fresh — this is where Photos/Hidden actually live, and a push from elsewhere (like the Templates admin tool) wouldn't otherwise show up until a full page reload
-          atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`),
+          atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`),
         ]).then(([freshShop, lineItems]) => {
           if (freshShop) window._mqShopRecord = freshShop;
           window._mqLineItems = lineItems;
