@@ -840,6 +840,18 @@
       #midasquote-widget .mq-summary-btn:hover{background:#f3f4f6}
       #midasquote-widget .mq-summary-btn-danger{color:#dc2626;border-color:#fca5a5}
       #midasquote-widget .mq-summary-btn-danger:hover{background:#fef2f2}
+      #midasquote-widget .mq-surface-preview{position:relative;flex-shrink:0;width:36px;height:36px;border-radius:8px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center}
+      #midasquote-widget .mq-surface-preview-photo{width:100%;height:100%;object-fit:cover;display:block}
+      #midasquote-widget .mq-surface-preview-shape{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:#fff;border:1.5px solid #e5e7eb;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#6b7280;box-shadow:0 1px 2px rgba(0,0,0,0.12)}
+      #midasquote-widget .mq-surface-preview-shape svg{width:11px;height:11px;display:block}
+      #midasquote-widget .mq-surface-preview-shape-solo{position:static;width:22px;height:22px;background:none;border:none;box-shadow:none;margin:0 auto}
+      #midasquote-widget .mq-surface-preview-shape-solo svg{width:20px;height:20px}
+      #midasquote-widget .mq-surface-summary-media{position:relative;flex-shrink:0;width:44px;height:44px;border-radius:8px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center;cursor:pointer}
+      #midasquote-widget .mq-surface-summary-photo{width:100%;height:100%;object-fit:cover;display:block}
+      #midasquote-widget .mq-surface-summary-shape{position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;background:#fff;border:1.5px solid #e5e7eb;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#6b7280;box-shadow:0 1px 2px rgba(0,0,0,0.12)}
+      #midasquote-widget .mq-surface-summary-shape svg{width:12px;height:12px;display:block}
+      #midasquote-widget .mq-surface-summary-shape-solo{position:static;width:26px;height:26px;background:none;border:none;box-shadow:none;margin:0 auto}
+      #midasquote-widget .mq-surface-summary-shape-solo svg{width:24px;height:24px}
       #midasquote-widget .mq-shape-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 16px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;min-width:84px}
       #midasquote-widget .mq-shape-btn svg{display:block}
       #midasquote-widget .mq-shape-btn.active{border-color:${bc};color:${bc};background:#f8faff}
@@ -3080,6 +3092,27 @@
       el.classList.add('active');
       if (id === 'cabinets') { mqRenumberSteps('c'); window.mqUpdateStepFocus('c'); }
       else if (id === 'both') { window.mqTogUseCab('b'); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
+      else if (id === 'countertops' && tabActuallyChanged) {
+        // The standalone Countertops tab has no room dropdown, so it never
+        // gets the "reselect your room — mqOnProjectTypeChange finds the
+        // matching cart entry and restores it" treatment Cabinets/Both get.
+        // Without this, a committed Countertops quote — which
+        // mqResetCountertopStandalone wipes from the form the instant it's
+        // committed, a few lines up — had NO way back: switching to
+        // another tab and back showed a genuinely empty tab (just the
+        // "+ Add another surface" button), with surfCounts still climbing
+        // from whatever surfaces existed before. This is that same
+        // restore, just triggered by re-entering the tab instead of by a
+        // room change, since Countertops only ever has one "instance" to
+        // restore (no per-room entries to choose between).
+        const idx = (window._mqQuoteCart||[]).findIndex(e => e.prefix === 'ct');
+        if (idx >= 0) {
+          const entry = window._mqQuoteCart[idx];
+          window._mqQuoteCart.splice(idx, 1);
+          mqRenderQuoteCart();
+          mqRestoreFormState('ct', entry.formSnapshot);
+        }
+      }
       // Once the customer has calculated anything at all, the sticky bar's
       // live-typing tracker (window._mqStickyPrefix) needs to follow
       // whichever tab is now active — otherwise it stays locked to
@@ -5653,6 +5686,44 @@ window.mqTogDrawerConfig=(prefix)=>{
     function mqShapeBtnHtml(id, legs, label, icon) {
       return `<button type="button" class="mq-shape-btn" id="mqs-shapebtn-${id}-${legs}" onclick="mqSurfSetShape('${id}',${legs})">${icon}<span>${label}</span></button>`;
     }
+    // Plain (no corner-number) versions of the same 3 shape outlines,
+    // used for the small live "what does this surface look like" preview
+    // shown on the open card's header and on its collapsed summary row —
+    // Jordan asked for the Countertops section to feel as visual as the
+    // Cabinets tab ("so much nice images"), plus a photo of the chosen
+    // material once one's picked (reusing the same photoUrl already shown
+    // on the Material picker's own chips, so no new image assets needed).
+    const MQ_SHAPE_ICON_STRAIGHT_PLAIN = '<svg viewBox="0 0 36 24" fill="none"><rect x="3" y="8" width="30" height="8" rx="1" stroke="currentColor" stroke-width="2.4"/></svg>';
+    const MQ_SHAPE_ICON_L_PLAIN = '<svg viewBox="0 0 34 34" fill="none"><path d="M3 3 L12 3 L12 21 L31 21 L31 31 L3 31 Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+    const MQ_SHAPE_ICON_U_PLAIN = '<svg viewBox="0 0 34 34" fill="none"><path d="M3 3 L12 3 L12 17 L22 17 L22 3 L31 3 L31 31 L3 31 Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+    function mqSurfShapeIcon(legCount) {
+      return legCount===1 ? MQ_SHAPE_ICON_STRAIGHT_PLAIN : legCount===2 ? MQ_SHAPE_ICON_L_PLAIN : MQ_SHAPE_ICON_U_PLAIN;
+    }
+    // Builds the inner HTML for one of these preview boxes: the chosen
+    // material's real photo filling the box with a small shape-outline
+    // badge in the corner once a material's picked, or just the shape
+    // outline centered on its own before that (a surface always has SOME
+    // shape from the moment it's created, but no material until chosen).
+    function mqSurfPreviewHtml(id) {
+      const legCount = Math.max(1, mqSurfGetLegs(id).length);
+      const shapeIcon = mqSurfShapeIcon(legCount);
+      const matVal = gv(`mqsm-${id}`);
+      const matEntry = (matVal && matVal !== 'none') ? (CT_MAT[matVal] || null) : null;
+      const matPhoto = matEntry ? (matEntry.photoUrl || '') : '';
+      return { shapeIcon, matPhoto };
+    }
+    // Refreshes the live preview on the OPEN card's header — called on
+    // creation and again any time the shape, section lengths, or material
+    // change, so it always reflects what's currently picked rather than
+    // going stale the moment someone edits a field.
+    window.mqSurfUpdatePreview = (id) => {
+      const el = document.getElementById(`mqs-preview-${id}`);
+      if (!el) return;
+      const { shapeIcon, matPhoto } = mqSurfPreviewHtml(id);
+      el.innerHTML = matPhoto
+        ? `<img class="mq-surface-preview-photo" src="${matPhoto}" alt="" onerror="this.remove()"/><div class="mq-surface-preview-shape">${shapeIcon}</div>`
+        : `<div class="mq-surface-preview-shape mq-surface-preview-shape-solo">${shapeIcon}</div>`;
+    };
     // A countertop surface is 1, 2, or 3 straight "sections," each measured
     // to its own outside corner (standard countertop-trade convention) —
     // count is fixed by whichever shape a customer picks: Straight = 1,
@@ -5707,6 +5778,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       card.innerHTML=`
         <div class="mq-surface-header">
           <div class="mq-surface-num">${surfCounts[prefix]}</div>
+          <div class="mq-surface-preview" id="mqs-preview-${id}"></div>
           <input id="mqsn-${id}" value="${n}" style="font-size:16px;font-weight:500;color:#111;background:none;border:none;outline:none;flex:1;font-family:inherit"/>
           <button class="mq-remove-btn" onclick="mqRemoveSurf('${prefix}','${id}')">Remove</button>
         </div>
@@ -5735,7 +5807,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
         <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
           ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
-          <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}')" style="display:none">${ctMatOpts()}</select></div>
+          <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}');mqSurfUpdatePreview('${id}')" style="display:none">${ctMatOpts()}</select></div>
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
@@ -5751,7 +5823,9 @@ window.mqTogDrawerConfig=(prefix)=>{
       window.mqRefreshCutoutOpts(`mqsm-${id}`, `mqscuts-${id}`);
       window.mqRefreshCtAddons(`mqsm-${id}`, `mqs-edge-${id}`, `mqs-addons-${id}`);
       window.mqRefreshSurfBsFt(id);
+      window.mqSurfUpdatePreview(id);
       mqRefreshAllPickerVisibility(prefix);
+      return id;
     }
 
     // Builds the one-line "Surface 1 — L-Shape · 25.7 sqft · Granite — Mid
@@ -5772,7 +5846,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (dims && !/enter section/i.test(dims)) parts.push(dims);
       if (matLabel) parts.push(matLabel);
       parts.push(siLabel);
-      return { name, line: parts.join(' · ') };
+      // Same shape-icon/material-photo pair the open card's own live
+      // preview uses, so a surface looks like "the same thing" whether
+      // it's expanded or tucked into its one-line summary row.
+      const { shapeIcon, matPhoto } = mqSurfPreviewHtml(id);
+      return { name, line: parts.join(' · '), shapeIcon, matPhoto };
     }
     // Collapses a surface's full form into a compact one-line summary row
     // sitting right where the card was — the card itself is only hidden
@@ -5782,7 +5860,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       const card = document.getElementById('mqsc-'+id);
       if (!card || card.style.display === 'none') return;
       const prefix = card.dataset.prefix;
-      const { name, line } = mqSurfSummaryText(id);
+      const { name, line, shapeIcon, matPhoto } = mqSurfSummaryText(id);
+      const media = matPhoto
+        ? `<div class="mq-surface-summary-media" onclick="mqExpandSurf('${id}')"><img class="mq-surface-summary-photo" src="${matPhoto}" alt="" onerror="this.remove()"/><div class="mq-surface-summary-shape">${shapeIcon}</div></div>`
+        : `<div class="mq-surface-summary-media" onclick="mqExpandSurf('${id}')"><div class="mq-surface-summary-shape mq-surface-summary-shape-solo">${shapeIcon}</div></div>`;
       let row = document.getElementById('mqsr-'+id);
       if (!row) {
         row = document.createElement('div');
@@ -5791,6 +5872,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         card.parentNode.insertBefore(row, card);
       }
       row.innerHTML = `
+        ${media}
         <div class="mq-surface-summary-info" onclick="mqExpandSurf('${id}')"><strong>${name}</strong> — ${line}</div>
         <div class="mq-surface-summary-actions">
           <button type="button" class="mq-summary-btn" onclick="mqExpandSurf('${id}')">Edit</button>
@@ -5830,7 +5912,12 @@ window.mqTogDrawerConfig=(prefix)=>{
           if (c.style.display !== 'none') mqCollapseSurf(c.id.replace('mqsc-',''));
         });
       }
-      addSurfaceInternal(prefix);
+      const newId = addSurfaceInternal(prefix);
+      // Bring the newly-added surface to "eye level" instead of leaving
+      // it to render off-screen below the collapsed rows above it —
+      // Jordan: "bring you to eye level with the newly added surface."
+      const newCard = document.getElementById('mqsc-'+newId);
+      if (newCard) newCard.scrollIntoView({behavior:'smooth', block:'nearest'});
     };
     window.mqRemoveSurf=(prefix,id)=>{
       const c=document.getElementById('mqsc-'+id);if(c)c.remove();
@@ -5868,6 +5955,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         el.style.color='#16a34a';
       } else if(el){el.textContent='Enter section length(s)';el.style.color='#4b5563';}
       window.mqRefreshSurfBsFt(id);
+      window.mqSurfUpdatePreview(id);
     };
     window.mqTogCabCuts=(prefix)=>{
       const coId   = prefix==='ct'?'mq-ct-cab-co':`mq-${prefix}-cab-co`;
