@@ -4118,6 +4118,19 @@
         if (useCabWrapCt) useCabWrapCt.style.display = cabActive ? 'flex' : 'none';
         if (!cabActive && useCabCbCt && useCabCbCt.checked) {
           useCabCbCt.checked = false;
+          // Marks that THIS is why it's unchecked — there's no cabinet
+          // run to measure from, not a deliberate customer choice — so
+          // it can tell the difference below from someone who unchecked
+          // it themselves while cabinets were already present.
+          useCabCbCt.dataset.forcedOffByNoCabinets = 'true';
+          window.mqTogUseCab('b');
+        } else if (cabActive && useCabCbCt && !useCabCbCt.checked && useCabCbCt.dataset.forcedOffByNoCabinets === 'true') {
+          // Cabinets are back (room switched again) and this box is only
+          // unchecked because of that earlier no-cabinets forcing, not
+          // because the customer chose that themselves — put it back the
+          // way it'd normally default, rather than leaving it stuck off.
+          useCabCbCt.checked = true;
+          useCabCbCt.dataset.forcedOffByNoCabinets = 'false';
           window.mqTogUseCab('b');
         }
         if (surfTitle) surfTitle.textContent = (cabActive && useCabCbCt?.checked) ? 'Additional countertop surfaces' : 'Countertop surfaces';
@@ -5769,6 +5782,24 @@ window.mqTogDrawerConfig=(prefix)=>{
     function mqSurfGetLegs(id) {
       return Array.from(document.querySelectorAll(`#mqs-legs-${id} input`)).map(inp => parseFloat(inp.value) || 0);
     }
+    // Re-derives every surface card's numbered circle badge from its
+    // actual position in the list (1st, 2nd, 3rd...) — same pattern
+    // already used for tall cabinets (renumberTallCabs). Needed because
+    // the badge was previously just whatever surfCounts[prefix] happened
+    // to be at creation time, and that counter never resets and keeps
+    // climbing across tab switches (each restore recreates surfaces from
+    // scratch through addSurfaceInternal, burning more counter values
+    // every round trip) — so a customer's "Surface 2" could come back
+    // showing "4" after leaving and returning to a tab, even though it's
+    // still the 2nd surface in the list. Jordan: "it shows it as number
+    // 2. but then if i skip over to both tab... and then come back to
+    // countertops only it shows the 2 as 4 now."
+    function mqRenumberSurfaces(prefix) {
+      const containerId = prefix==='ct' ? 'mq-ct-surfaces' : 'mq-'+prefix+'-ct-surfaces';
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.querySelectorAll('.mq-surface-num').forEach((el,i) => { el.textContent = i+1; });
+    }
     function addSurfaceInternal(prefix,name){
       surfCounts[prefix]++;
       const id=`s${prefix}${surfCounts[prefix]}`;
@@ -5828,6 +5859,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       window.mqRefreshSurfBsFt(id);
       window.mqSurfUpdatePreview(id);
       mqRefreshAllPickerVisibility(prefix);
+      mqRenumberSurfaces(prefix);
       return id;
     }
 
@@ -5999,6 +6031,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const c=document.getElementById('mqsc-'+id);if(c)c.remove();
       const r=document.getElementById('mqsr-'+id);if(r)r.remove();
       delete surfs[prefix][id];
+      mqRenumberSurfaces(prefix);
     };
     window.mqTogUseCab=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
