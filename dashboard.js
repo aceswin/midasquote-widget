@@ -852,8 +852,8 @@ window.logoutMember = async function () {
               </select>
             </div>
             <div id="mq-leads-msg"></div>
-            <div style="margin-bottom:1rem;text-align:right">
-              <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSelectedLeads()" style="margin-right:8px">🗑️ Delete selected</button>
+            <div style="margin-bottom:1rem;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px">
+              <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSelectedLeads()">🗑️ Delete selected</button>
               <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteAllLeads()">🗑️ Clear all leads</button>
             </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
