@@ -238,34 +238,47 @@
           </div>`;
         document.body.appendChild(lb);
       }
-      document.getElementById('sr-lb-img').src = src;
+      const img = document.getElementById('sr-lb-img');
+      img.src = src;
       document.getElementById('sr-lb-label').textContent = label;
       const inner = document.getElementById('sr-lb-inner');
       // Standalone (a popped-open tab, or the direct showroom link) has a
       // real scrollable window, so a normal `position:fixed;inset:0`
       // overlay covers whatever's currently on screen, same as any other
       // lightbox — clicking anywhere on it (it fills the whole visible
-      // window) already closes it. Embedded via <iframe> is different:
-      // this page has no scrollbar of its own — the iframe is resized
-      // (see MQ_SR_EMBEDDED below) to be exactly as tall as ALL of its
-      // content, so the shop's own page is what scrolls, never this
-      // document. Two things follow from that: (1) "fixed" positioning
-      // pins to the IFRAME'S OWN (huge) content box, not to whatever
-      // portion of it the customer is actually looking at, so it used to
-      // open pinned near the very top of the whole embed, however far
-      // down the page the photo actually was; and (2) if the veil were
-      // only sized to fit the photo (rather than the whole embed), most
-      // of the page would sit OUTSIDE it, so clicking "elsewhere" on the
-      // page wouldn't reach the veil's own onclick at all. Both are fixed
-      // the same way: the veil is stretched to cover the ENTIRE embedded
-      // page (so a click anywhere on it, near the photo or far from it,
-      // closes the lightbox), while the actual photo is anchored inside
-      // that veil at the exact spot the customer clicked, so it appears
-      // right there with no scrolling needed either way.
+      // window) already closes it, and the CSS `max-height:60vh` on the
+      // image itself is measuring a real viewport, so it just works.
+      // Embedded via <iframe> is different in TWO ways that both matter
+      // here: this page has no scrollbar of its own — the iframe is
+      // resized (see MQ_SR_EMBEDDED below) to be exactly as tall as ALL
+      // of its content, so the shop's own page is what scrolls, never
+      // this document. That means (1) "fixed" positioning pins to the
+      // IFRAME'S OWN (huge) content box, not to whatever portion of it
+      // the customer is actually looking at — fixed by anchoring the
+      // photo near the customer's own click instead of using `fixed` at
+      // all; and (2), easy to miss: `vh` itself is measuring that same
+      // huge content height in here, NOT the customer's actual screen —
+      // so a `max-height:60vh` cap that behaves perfectly in standalone
+      // mode can still render a genuinely oversized image in embedded
+      // mode on a long showroom page, however small the percentage
+      // looks. `window.screen.height` is a real device measurement,
+      // unaffected by this document's own height, so it's used instead
+      // to size the embedded zoom to something that actually fits a
+      // real screen.
       if (MQ_SR_EMBEDDED && evt && evt.currentTarget) {
+        const screenH = (window.screen && window.screen.height) || 900;
+        const capPx = Math.max(280, Math.round(screenH * 0.5));
+        img.style.maxHeight = capPx + 'px';
         const rect = evt.currentTarget.getBoundingClientRect();
         const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
-        const anchorTop = Math.max(0, scrollY + rect.top - 24);
+        // Center the zoom on the clicked photo's own vertical midpoint
+        // (roughly — nudged up a bit for the label/hint text below the
+        // image) rather than starting right below it, so with a real,
+        // screen-sized cap now in place it opens centered on roughly
+        // where the customer is already looking instead of running off
+        // the bottom of the screen.
+        const clickMidY = scrollY + rect.top + (rect.height / 2);
+        const anchorTop = Math.max(0, clickMidY - (capPx / 2) - 40);
         const fullHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
         lb.style.position = 'absolute';
         lb.style.top = '0';
@@ -281,6 +294,7 @@
           inner.style.height = '';
         }
       } else {
+        img.style.maxHeight = '';
         lb.style.position = 'fixed';
         lb.style.top = '0';
         lb.style.left = '0';
