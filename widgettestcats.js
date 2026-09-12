@@ -4120,7 +4120,7 @@
           useCabCbCt.checked = false;
           window.mqTogUseCab('b');
         }
-        if (surfTitle) surfTitle.textContent = cabActive ? 'Additional countertop surfaces' : 'Countertop surfaces';
+        if (surfTitle) surfTitle.textContent = (cabActive && useCabCbCt?.checked) ? 'Additional countertop surfaces' : 'Countertop surfaces';
         if (!cabActive && surfContainer && !surfContainer.children.length) {
           // Only fires when there's truly nothing there yet — marked so we
           // know to clean it back up if a project type WITH cabinets gets
@@ -5997,11 +5997,34 @@ window.mqTogDrawerConfig=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       const matDiv  = document.getElementById(`mq-${prefix}-cab-mat`);
       if(matDiv) matDiv.style.display=checked?'block':'none';
+      const surfTitleEl = prefix==='b' ? document.getElementById('mq-b-ct-surfaces-title') : null;
+      if (surfTitleEl) surfTitleEl.textContent = checked ? 'Additional countertop surfaces' : 'Countertop surfaces';
       if(checked) {
         window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
         window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
         window.mqRefreshCtAddons(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-edge`, `mq-${prefix}-cab-addons`);
         window.mqRefreshBsFt(prefix);
+        // Cabinet measurements are back in play — if a surface got
+        // auto-added purely because this box was unchecked, clear it
+        // back out so the section goes back to being genuinely
+        // empty/optional, same cleanup the "no cabinets in this room at
+        // all" case already does elsewhere.
+        const surfContainer = document.getElementById(`mq-${prefix}-ct-surfaces`);
+        if (surfContainer && surfContainer.dataset.autoAdded === 'true') {
+          surfContainer.innerHTML = '';
+          surfContainer.dataset.autoAdded = 'false';
+        }
+      } else if (prefix === 'b') {
+        const surfContainer = document.getElementById('mq-b-ct-surfaces');
+        if (surfContainer && !surfContainer.children.length) {
+          window.mqAddSurface('b');
+          surfContainer.dataset.autoAdded = 'true';
+        } else if (surfContainer) {
+          // Surface(s) already exist from an earlier uncheck — bring
+          // them back into view instead of piling on a redundant blank
+          // one.
+          surfContainer.scrollIntoView({behavior:'smooth', block:'center'});
+        }
       }
     };
     window.mqCalcSurfDims=(id)=>{
