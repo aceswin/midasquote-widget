@@ -32,6 +32,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
   const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
+  // This script's own URL, captured while it's still executing at its own
+  // top level (document.currentScript only resolves correctly here, not
+  // later inside an async function) — used by mqCheckForNewerDeploy below
+  // to re-fetch itself and check whether a newer version has been deployed
+  // since this tab loaded.
+  const MQ_DASHBOARD_SCRIPT_URL = document.currentScript ? document.currentScript.src : '';
+
   // Airtable returns up to 100 records per request and signals "there's
   // more" via an `offset` in the response, which you pass back in to get
   // the next page. This used to just take that first 100-record page and
@@ -10672,6 +10679,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return true;
   }
 
+  // Detects a newer dashboard.js deploy and reloads the page to pick it
+  // up — the in-memory MQ_LATEST_ANNOUNCEMENT re-check right below this
+  // only ever compares against whatever version THIS already-loaded copy
+  // of the script knows about, so a tab open since before a deploy can
+  // click around forever and never learn a newer announcement exists.
+  // Fetches this same script fresh (cache:'no-store' — bypasses any
+  // browser/CDN cache so it's never fooled by a stale copy), pulls out
+  // just the version marker via regex (no need to execute the file), and
+  // reloads only if that marker actually changed. Throttled through the
+  // same mqShouldRefetch used for Airtable data above, so rapid tab
+  // clicking doesn't refetch the whole script on every single click.
+  async function mqCheckForNewerDeploy() {
+    if (!MQ_DASHBOARD_SCRIPT_URL || !mqShouldRefetch('dashboardVersionCheck', 20000)) return;
+    try {
+      const res = await fetch(MQ_DASHBOARD_SCRIPT_URL, { cache: 'no-store' });
+      if (!res.ok) return;
+      const text = await res.text();
+      const m = text.match(/const MQ_LATEST_ANNOUNCEMENT = '([^']+)';/);
+      if (m && m[1] && m[1] !== MQ_LATEST_ANNOUNCEMENT) window.location.reload();
+    } catch (e) {
+      // Offline / blocked request / whatever — just skip, try again next
+      // tab switch. Never blocks or breaks normal navigation.
+    }
+  }
+
   // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
@@ -10685,6 +10717,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (window._mqShopRecord && window._mqShopRecord.fields['Welcome popup seen'] && window._mqShopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
       window.mqShowAnnouncementModal();
     }
+    mqCheckForNewerDeploy();
     mqToggleFloatingSave(MQ_PAGE_SAVE_ACTIONS[page] || null);
     if (page === 'marketing' || page === 'embed') {
       const socialEl = document.getElementById('mq-mk-social');
