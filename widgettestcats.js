@@ -5833,15 +5833,15 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div class="mq-field" style="grid-column:span 2;min-width:0"><label class="mq-label" style="color:#16a34a">Auto-calculated</label>
             <div style="font-size:14px;color:#4b5563;padding:7px 0" id="mqsdims-${id}">Enter section length(s)</div></div>
         </div>
+        <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
+          ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
+          <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}');mqSurfUpdatePreview('${id}')" style="display:none">${ctMatOpts()}</select></div>
         <div class="mq-grid2" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
             <select id="mqssi-${id}" style="max-width:260px;min-width:140px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
           <div class="mq-field"><label class="mq-label">Backsplash</label>
             <select id="mqsbs-${id}" style="max-width:260px;min-width:140px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select></div>
         </div>
-        <div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Material</label>
-          ${pickerRow(`mqsm-${id}`, ctMatItems(), null, 'countertop')}
-          <select id="mqsm-${id}" onchange="mqRefreshBsOpts('mqsm-${id}','mqsbs-${id}');mqRefreshCutoutOpts('mqsm-${id}','mqscuts-${id}');mqRefreshCtAddons('mqsm-${id}','mqs-edge-${id}','mqs-addons-${id}');mqRefreshSurfBsFt('${id}');mqSurfUpdatePreview('${id}')" style="display:none">${ctMatOpts()}</select></div>
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
