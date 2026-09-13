@@ -841,6 +841,10 @@
       #midasquote-widget .mq-summary-btn:hover{background:#f3f4f6}
       #midasquote-widget .mq-summary-btn-danger{color:#dc2626;border-color:#fca5a5}
       #midasquote-widget .mq-summary-btn-danger:hover{background:#fef2f2}
+      #midasquote-widget .mq-surface-summary.mq-just-stored{animation:mqSurfaceStoredPulse 1.8s ease}
+      @keyframes mqSurfaceStoredPulse{0%{background:#dcfce7;box-shadow:0 0 0 3px rgba(34,197,94,0.35)}100%{background:#f9fafb;box-shadow:0 1px 2px rgba(0,0,0,0.04)}}
+      #midasquote-widget .mq-surface-toast{max-height:0;overflow:hidden;opacity:0;font-size:13px;font-weight:600;color:#15803d;background:#f0fdf4;border:1.5px solid #86efac;border-radius:6px;padding:0 12px;margin:0;box-sizing:border-box;transition:opacity .25s ease,max-height .25s ease,padding .25s ease,margin .25s ease}
+      #midasquote-widget .mq-surface-toast.mq-surface-toast-show{max-height:60px;opacity:1;padding:8px 12px;margin:8px 0}
       #midasquote-widget .mq-surface-preview{position:relative;flex-shrink:0;width:36px;height:36px;border-radius:8px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center}
       #midasquote-widget .mq-surface-preview-photo{width:100%;height:100%;object-fit:cover;display:block}
       #midasquote-widget .mq-surface-preview-shape{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:#fff;border:1.5px solid #e5e7eb;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#6b7280;box-shadow:0 1px 2px rgba(0,0,0,0.12)}
@@ -4478,6 +4482,11 @@
       // addSurfaceInternal), so an L/U/multi-section surface needs its
       // section-row count restored FIRST too, before those fields exist
       // to restore values into.
+      // Suppress the "stored" toast/highlight for the whole replay below —
+      // mqAddSurface collapses whichever surface was open right before it,
+      // so recreating 2+ saved surfaces here would otherwise flash several
+      // "stored" confirmations the customer never actually triggered.
+      window._mqRestoringSurfaces = true;
       (snapshot.surfaces || []).forEach(surfFields => {
         // Goes through mqAddSurface (not the raw internal call) so that,
         // same as a customer clicking "+ Add another surface" by hand,
@@ -4498,6 +4507,7 @@
         surfFields.filter(f => f !== matField).forEach(restoreOne);
         window.mqRefreshSurfBsFt(newId);
       });
+      window._mqRestoringSurfaces = false;
       mqRefreshAllPickerVisibility(prefix);
       mqRefreshBsFt(prefix);
     }
@@ -5915,6 +5925,14 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>`;
       row.style.display = 'flex';
       card.style.display = 'none';
+      if (!window._mqRestoringSurfaces) {
+        row.classList.remove('mq-just-stored');
+        void row.offsetWidth; // restart the pulse if this row was already mid-flash
+        row.classList.add('mq-just-stored');
+        clearTimeout(row._mqStoredFlashTimer);
+        row._mqStoredFlashTimer = setTimeout(() => row.classList.remove('mq-just-stored'), 1900);
+        mqShowSurfaceToast(prefix, `${name} stored`);
+      }
     };
     // Opens a surface's full form back up, collapsing whichever other
     // surface in the same list is currently open first (only one open at
@@ -5947,6 +5965,31 @@ window.mqTogDrawerConfig=(prefix)=>{
     // items and quantity fields (mqSpecModeChosen/mqValidateInstallQty)
     // and the same message-box pattern Calculate uses
     // (mqValidateNotEmpty) — just pointed at this specific surface.
+    // Brief "stored"/"removed" confirmation toast for the surfaces list —
+    // Jordan: "can something clean flash for a second or 2 saying 'Surface
+    // 1 stored' then next one 'Surface 2 stored' ... same if they remove
+    // it... 'Surface 2 removed'." Reuses whichever surface's own name field
+    // is current at the moment it fires, so a renamed surface (e.g.
+    // "Kitchen island") shows its real name instead of always "Surface N".
+    // Lazily creates one toast element per surfaces list (ct / b) the first
+    // time it's needed, right under that list, so no extra markup has to be
+    // pre-declared in every tab template.
+    function mqShowSurfaceToast(prefix, text) {
+      const containerId = prefix==='ct' ? 'mq-ct-surfaces' : 'mq-'+prefix+'-ct-surfaces';
+      const container = document.getElementById(containerId);
+      if (!container || !container.parentNode) return;
+      let toast = document.getElementById(`mq-${prefix}-surface-toast`);
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'mq-surface-toast';
+        toast.id = `mq-${prefix}-surface-toast`;
+        container.parentNode.insertBefore(toast, container.nextSibling);
+      }
+      clearTimeout(toast._mqHideTimer);
+      toast.textContent = `✓ ${text}`;
+      toast.classList.add('mq-surface-toast-show');
+      toast._mqHideTimer = setTimeout(() => { toast.classList.remove('mq-surface-toast-show'); }, 1800);
+    }
     function mqSurfValidateBeforeAdd(id, prefix) {
       const shake = (el) => {
         if (!el) return;
@@ -6028,10 +6071,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       (titleEl || newCard)?.scrollIntoView({behavior:'smooth', block:'start'});
     };
     window.mqRemoveSurf=(prefix,id)=>{
+      const removedName = gv(`mqsn-${id}`) || 'Surface';
       const c=document.getElementById('mqsc-'+id);if(c)c.remove();
       const r=document.getElementById('mqsr-'+id);if(r)r.remove();
       delete surfs[prefix][id];
       mqRenumberSurfaces(prefix);
+      mqShowSurfaceToast(prefix, `${removedName} removed`);
     };
     window.mqTogUseCab=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
