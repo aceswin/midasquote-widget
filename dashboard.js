@@ -451,14 +451,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'sep2026-update-roundup';
+  const MQ_LATEST_ANNOUNCEMENT = 'sep2026-countertop-shapes';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p style="margin-bottom:14px"><strong>Show or hide widget tabs</strong> — choose exactly which quote tabs your customers see: Full project quote, Cabinets only, and Countertops only. Turn any of them off from Shop Info → 🗂️ Estimator tabs, and whatever's left automatically fills the space. There's also a checkbox to apply the same choice to MidasQuote Pro, if you use it in-store.</p>
-      <p style="margin-bottom:14px"><strong>Financing, front and center</strong> — remind customers financing is an option right on their quote. Turn on the "Financing available" badge from Shop Info → 💳 Financing & extras, add a pre-approval link so they can apply straight away, and — if you add an interest rate and term — the badge will even show an estimated monthly payment. Set a minimum project amount too, so that number never shows up looking awkwardly small on a low-end quote.</p>
+      <p style="margin-bottom:14px"><strong>Countertop shapes</strong> — customers quoting a countertop can now choose Straight, L-Shape, or U-Shape and measure each section on its own, instead of trying to boil an irregular counter down into one combined number. It's a quicker, more accurate way for them to get you measurements you can actually trust.</p>
+      <p style="margin-bottom:14px;padding:12px 14px;background:#f9fafb;border-radius:8px;font-size:13px;color:#4b5563;line-height:1.6">📬 <strong>Quick reminder:</strong> replies to your support form submissions occasionally land in junk or spam mail instead of your inbox. If you've submitted a request and haven't heard back, it's worth a quick check there before following up again.</p>
       <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
-      <p style="font-size:13px;color:#4b5563;line-height:1.6">Mass price editing — update the price on multiple same-priced items all at once — and quick price edits right from the Pricing dashboard, no need to open each item individually.</p>
+      <p style="font-size:13px;color:#4b5563;line-height:1.6">More countertop updates — photos and videos walking customers through exactly how to measure their space, plus new options for refacing-style projects using specialty item variants.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
