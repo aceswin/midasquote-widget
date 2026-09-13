@@ -841,10 +841,9 @@
       #midasquote-widget .mq-summary-btn:hover{background:#f3f4f6}
       #midasquote-widget .mq-summary-btn-danger{color:#dc2626;border-color:#fca5a5}
       #midasquote-widget .mq-summary-btn-danger:hover{background:#fef2f2}
-      #midasquote-widget .mq-surface-summary.mq-just-stored{animation:mqSurfaceStoredPulse 1.8s ease}
-      @keyframes mqSurfaceStoredPulse{0%{background:#dcfce7;box-shadow:0 0 0 3px rgba(34,197,94,0.35)}100%{background:#f9fafb;box-shadow:0 1px 2px rgba(0,0,0,0.04)}}
-      #midasquote-widget .mq-surface-toast{max-height:0;overflow:hidden;opacity:0;font-size:13px;font-weight:600;color:#15803d;background:#f0fdf4;border:1.5px solid #86efac;border-radius:6px;padding:0 12px;margin:0;box-sizing:border-box;transition:opacity .25s ease,max-height .25s ease,padding .25s ease,margin .25s ease}
-      #midasquote-widget .mq-surface-toast.mq-surface-toast-show{max-height:60px;opacity:1;padding:8px 12px;margin:8px 0}
+      #midasquote-widget .mq-surface-summary.mq-just-stored{background:#f0fdf4;border-color:#86efac;box-shadow:0 0 0 2px rgba(34,197,94,0.3)}
+      #midasquote-widget .mq-surface-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.92);opacity:0;pointer-events:none;z-index:100000;font-size:15px;font-weight:700;color:#15803d;background:#fff;border:2px solid #86efac;border-radius:14px;padding:16px 26px;box-shadow:0 12px 40px rgba(0,0,0,0.22);transition:opacity .2s ease,transform .2s ease;text-align:center}
+      #midasquote-widget .mq-surface-toast.mq-surface-toast-show{opacity:1;transform:translate(-50%,-50%) scale(1)}
       #midasquote-widget .mq-surface-preview{position:relative;flex-shrink:0;width:36px;height:36px;border-radius:8px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center}
       #midasquote-widget .mq-surface-preview-photo{width:100%;height:100%;object-fit:cover;display:block}
       #midasquote-widget .mq-surface-preview-shape{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;background:#fff;border:1.5px solid #e5e7eb;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#6b7280;box-shadow:0 1px 2px rgba(0,0,0,0.12)}
@@ -5925,12 +5924,13 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>`;
       row.style.display = 'flex';
       card.style.display = 'none';
+      // Stored surfaces stay highlighted permanently (not just a brief
+      // flash) so they're easy to spot in the list at a glance — Jordan:
+      // "i want it to stay highlighted so they see it." Applies every time
+      // a surface is collapsed, restore included, since it's just marking
+      // "this row holds saved data," not "you just did something."
+      row.classList.add('mq-just-stored');
       if (!window._mqRestoringSurfaces) {
-        row.classList.remove('mq-just-stored');
-        void row.offsetWidth; // restart the pulse if this row was already mid-flash
-        row.classList.add('mq-just-stored');
-        clearTimeout(row._mqStoredFlashTimer);
-        row._mqStoredFlashTimer = setTimeout(() => row.classList.remove('mq-just-stored'), 1900);
         mqShowSurfaceToast(prefix, `${name} stored`);
       }
     };
