@@ -2589,7 +2589,7 @@
           <div class="mq-empty-calc-msg" id="mq-ct-surface-add-msg" style="display:none"></div>
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
         </div>
-        <button class="mq-calc-btn" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
+        <button class="mq-calc-btn mq-calc-btn-both" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
         <div class="mq-empty-calc-msg" id="mq-ct-empty-calc-msg" style="display:none">No selections have been made, or no linear feet was entered — please double-check before calculating.</div>
         <div class="mq-loading" id="mq-ct-loading">Building your estimate...</div>
         <div class="mq-result" id="mq-ct-result">
@@ -2609,9 +2609,6 @@
           </div>
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
-          <div class="mq-cta-row">
-            <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
-          </div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -2763,9 +2760,10 @@
           tabBar.appendChild(placeholder);
         }
       }
-      // The "Get full project quote" upsell inside the Cabinets/Countertops
-      // tabs only makes sense when the Both tab still exists to send someone
-      // to — remove it rather than leave a dead link to a tab with no button.
+      // The "Get full project quote" upsell inside the Cabinets tab (the
+      // Countertops tab's own copy was removed per Jordan's request) only
+      // makes sense when the Both tab still exists to send someone to —
+      // remove it rather than leave a dead link to a tab with no button.
       if (hidden.includes('both')) {
         document.querySelectorAll('.mq-cta-row').forEach(row => {
           if (row.querySelector(`[onclick^="mqSwitchTab('both'"]`)) row.remove();
