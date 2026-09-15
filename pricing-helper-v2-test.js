@@ -2473,22 +2473,6 @@ window.mqphGoToWizard = function() {
     if (saved) { saved.style.display='inline'; setTimeout(()=>saved.style.display='none',2000); }
   };
 
-  window.mqphSaveCTRemoval = async function() {
-    const val = parseFloat(document.getElementById('mqph-ct-removal-rate')?.value || 0);
-    const unit = document.getElementById('mqph-ct-removal-unit')?.value || 'sqft';
-    const existing = lineItems.find(r => r.fields && r.fields['Category']==='other' && r.fields['Name']==='Countertop removal');
-    if (existing) {
-      await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate':val, 'Unit':unit });
-      existing.fields['Rate'] = val;
-      existing.fields['Unit'] = unit;
-    } else {
-      const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':'Countertop removal', 'Category':'other', 'Rate':val, 'Unit':unit, 'Description':'Remove & dispose existing countertop', 'Active':true, 'Sort order':0 });
-      if (rec?.id) lineItems.push(rec);
-    }
-    const saved = document.getElementById('mqph-ct-removal-saved');
-    if (saved) { saved.style.display='inline'; setTimeout(()=>saved.style.display='none',2000); }
-  };
-
   window.mqphStartItemSetup = async function() {
     const hasHinge   = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='hinge');
     const hasInstall = lineItems.filter(r=>r.fields).some(r=>r.fields['Category']==='install');
@@ -3929,17 +3913,6 @@ window.mqphGoToWizard = function() {
   function buildCTHtml() {
     const materials = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&!(r.fields['Description']||'').includes('type:backsplash')&&!(r.fields['Description']||'').includes('type:cutout'))
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
-    // Countertop removal — a single shop-wide rate + unit, same
-    // find-or-create pattern as mqphSaveLocalRadius (one record, not a
-    // whole item type). Stored under Category:'other' (not 'countertop')
-    // so it never gets swept into the material list/dropdown — widget.js
-    // finds it the same way it already finds "Cabinet removal": by
-    // scanning li.otherItems for a name match. Jordan: "in the pricing
-    // part let them decide how to price, linear or square foot just like
-    // installation is priced" — hence the unit choice, mirroring the
-    // supply/install rate-unit selects on each countertop material above.
-    const ctRemovalItem = lineItems.find(r=>r.fields&&r.fields['Category']==='other'&&r.fields['Name']==='Countertop removal');
-
     function matRow(r) {
       const unitParts = (r.fields['Unit']||'sqft|sqft').split('|');
       const su = (unitParts[0]||'sqft').trim();
@@ -4024,21 +3997,6 @@ window.mqphGoToWizard = function() {
           Each material now carries its own backsplash height options and cutout pricing — no more separate backsplash/cutout items to keep in sync. Add a material below, then set its backsplash heights and cutout rates right inside it. Each material also has its own optional minimum charge per counter (separately for supply and install) — set one when a small counter still means ordering a full sheet.
         </div>
         ${section('Materials', materials, matRow, 'No materials yet — add your first countertop material.')}
-        <div style="padding:12px 16px;background:#f9fafb;border-top:1px solid #f3f4f6;border-bottom:1px solid #f3f4f6">
-          <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">🗑️ Countertop removal</div>
-          <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">What you'd charge to remove &amp; dispose of an existing countertop. Customers can opt into this per surface in the widget, right after choosing supply or supply + install. Leave the rate at 0 to not offer removal.</div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <span style="font-size:13px;color:#6b7280">${CUR()}</span>
-            <input type="number" id="mqph-ct-removal-rate" value="${ctRemovalItem?.fields['Rate']||0}" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;font-weight:600;color:#111;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-            <span style="font-size:13px;color:#6b7280">per</span>
-            <select id="mqph-ct-removal-unit" style="font-size:13px;font-family:inherit;color:#374151;font-weight:500;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 8px;background:#fff">
-              <option value="sqft" ${(ctRemovalItem?.fields['Unit']||'sqft')==='sqft'?'selected':''}>sqft</option>
-              <option value="lin ft" ${ctRemovalItem?.fields['Unit']==='lin ft'?'selected':''}>lin ft</option>
-            </select>
-            <button onclick="mqphSaveCTRemoval()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>
-            <span id="mqph-ct-removal-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
-          </div>
-        </div>
         <div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between">
           <span>Edges &amp; addons</span>
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenAddonAdd()">+ New edge/addon</button>
@@ -4103,6 +4061,19 @@ window.mqphGoToWizard = function() {
                 <span style="font-size:12px;color:#6b7280;white-space:nowrap" title="Same idea as the supply minimum, but for install labor — a small counter can still take as long to template and install as a bigger one. Leave at 0 for no minimum.">Minimum charge per counter ⓘ</span>
                 <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-ct-install-min" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+              </div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Removal rate</div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">What to charge to remove &amp; dispose of an existing countertop in THIS material — granite removal can cost more than laminate. Customers can opt into this per surface in the widget, right after choosing supply or supply + install. Leave at 0 to not offer removal for this material.</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-removal-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">per</span>
+                <select id="mqph-ct-removal-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                  <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
+                </select>
+                ${mqphRateCalcIconHTML('mqph-ct-removal-rate', 'mqph-ct-removal-unit')}
               </div>
             </div>
 
@@ -4732,6 +4703,8 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-ct-install-rate').value = '';
     document.getElementById('mqph-ct-install-unit').value = 'sqft';
     document.getElementById('mqph-ct-install-min').value = '';
+    document.getElementById('mqph-ct-removal-rate').value = '';
+    document.getElementById('mqph-ct-removal-unit').value = 'sqft';
     document.getElementById('mqph-ct-active').checked = true;
     // Default row — auto-sync flags update it live as user types rates above
     currentBsOptions = [{ label:'4" standard', heightIn:4, supplyRate:0, supplyUnit:'sqft', installRate:0, installUnit:'sqft', _supplyAutoSync:true, _installAutoSync:true }];
@@ -4785,6 +4758,8 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-ct-install-rate').value = matInstall||'';
     document.getElementById('mqph-ct-install-unit').value = matInstallUnit;
     document.getElementById('mqph-ct-install-min').value = rec.fields['Install minimum price']||'';
+    document.getElementById('mqph-ct-removal-rate').value = rec.fields['Countertop removal rate']||'';
+    document.getElementById('mqph-ct-removal-unit').value = rec.fields['Countertop removal unit']||'sqft';
     document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
     mqphRenderBsList();
     mqphRenderCutoutList();
@@ -4817,6 +4792,8 @@ window.mqphGoToWizard = function() {
         supplyMin: parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
         installRate: parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
         installMin: parseFloat(document.getElementById('mqph-ct-install-min').value||0),
+        removalRate: parseFloat(document.getElementById('mqph-ct-removal-rate').value||0),
+        removalUnit: document.getElementById('mqph-ct-removal-unit').value,
         unit: `${su}|${iu}`,
         bsOptions: cleanBsOptions,
         cutoutOptions: cleanCutoutOptions,
@@ -4835,6 +4812,8 @@ window.mqphGoToWizard = function() {
       'Minimum price':parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
       'Install rate':parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
       'Install minimum price':parseFloat(document.getElementById('mqph-ct-install-min').value||0),
+      'Countertop removal rate':parseFloat(document.getElementById('mqph-ct-removal-rate').value||0),
+      'Countertop removal unit':document.getElementById('mqph-ct-removal-unit').value,
       Unit:`${su}|${iu}`, Description:'type:material',
       'Backsplash options': JSON.stringify(cleanBsOptions),
       'Cutout options': JSON.stringify(cleanCutoutOptions),
@@ -4924,6 +4903,7 @@ window.mqphGoToWizard = function() {
         shop:[shopRecord._recordId], Name:nm, Category:'countertop',
         Rate: ctBulk.supplyRate, 'Minimum price': ctBulk.supplyMin,
         'Install rate': ctBulk.installRate, 'Install minimum price': ctBulk.installMin, Unit: ctBulk.unit,
+        'Countertop removal rate': ctBulk.removalRate, 'Countertop removal unit': ctBulk.removalUnit,
         Description:'type:material',
         'Backsplash options': JSON.stringify(ctBulk.bsOptions),
         'Cutout options': JSON.stringify(ctBulk.cutoutOptions),

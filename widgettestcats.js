@@ -916,14 +916,6 @@
   // MODULE-LEVEL CT_MAT — populated before buildWidgetHTML runs
   // ============================================================
   let CT_MAT = {};
-  // Countertop removal rate/unit, resolved from li.otherItems the same way
-  // CT_MAT is resolved above -- hasCtRemoval() is called from buildWidgetHTML
-  // and addSurfaceInternal, neither of which has `li` in scope (that only
-  // exists inside wireWidget's own destructure of `data`), so this mirrors
-  // the CT_MAT/buildCTMAT pattern: resolved once via buildCTRemoval(data)
-  // wherever buildCTMAT(data) already runs, then read from these outer-scope
-  // vars everywhere else instead of touching `li` directly.
-  let CT_REMOVAL_RATE = 0, CT_REMOVAL_UNIT = 'sqft';
 
   // Countertop installation is priced independently from cabinet installation
   // (a shop could sub out cabinet install but do their own countertop work,
@@ -933,23 +925,21 @@
     return Object.values(CT_MAT).some(m => (m.pi||0) > 0);
   }
 
-  // Countertop removal is a single shop-wide rate+unit (not per-material,
-  // unlike CT_MAT) — configured once on the Pricing tab (see
-  // pricing-helper-v2.js's mqphSaveCTRemoval) and looked up here the same
-  // way "Cabinet removal" already is: a name match inside li.otherItems.
-  // The removal selector only renders at all once a shop has actually set
-  // a rate > 0 — otherwise every countertop surface would show a
-  // "Yes/No" removal choice that silently adds $0, which is more
-  // confusing than just not offering it yet.
+  // Countertop removal is priced PER MATERIAL (granite removal can cost more
+  // than laminate), not a single shop-wide rate — each CT_MAT entry carries
+  // its own removalRate/removalUnit, set alongside supply/install rate on
+  // the Pricing tab's "Add/Edit countertop material" modal (see
+  // pricing-helper-v2.js's mqphSaveCTItem, 'Countertop removal rate'/'Countertop removal unit'
+  // fields) and resolved into CT_MAT by buildCTMAT below, same as ps/pi.
+  // The removal selector only renders at all once ANY material has a rate
+  // set > 0 (mirrors hasCountertopInstall's own all-materials check) —
+  // otherwise every countertop surface would show a "Yes/No" removal
+  // choice that silently adds $0, which is more confusing than just not
+  // offering it yet. Which specific rate actually applies is resolved
+  // per-surface in calcCountertop, off whichever material that surface
+  // has selected.
   function hasCtRemoval() {
-    return CT_REMOVAL_RATE > 0;
-  }
-
-  function buildCTRemoval(data) {
-    const { li } = data;
-    const item = li.otherItems.find(i => i['Name']?.toLowerCase().includes('countertop removal'));
-    CT_REMOVAL_RATE = item ? (item['Rate']||0) : 0;
-    CT_REMOVAL_UNIT = item?.['Unit'] === 'lin ft' ? 'linft' : 'sqft';
+    return Object.values(CT_MAT).some(m => (m.removalRate||0) > 0);
   }
 
   function buildCTMAT(data) {
@@ -990,6 +980,10 @@
             // calcCountertop). 0/undefined means no minimum, same as always.
             min:         item['Minimum price']||0,
             installMin:  item['Install minimum price']||0,
+            // Per-material removal rate/unit -- see hasCtRemoval's comment
+            // above for why this replaced a single shop-wide rate.
+            removalRate: item['Countertop removal rate']||0,
+            removalUnit: item['Countertop removal unit']==='lin ft' ? 'linft' : 'sqft',
             supplyUnit:  (unitParts[0]||'sqft').trim(),
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
@@ -2793,7 +2787,7 @@
 
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
-      let installUWithDoors=0, installUNoDoors=0, installBWithDoors=0, installBNoDoors=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0, ctRemovalRate=0, ctRemovalUnit='sqft';
+      let installUWithDoors=0, installUNoDoors=0, installBWithDoors=0, installBNoDoors=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
       // Which `mat` key is the shop's actual pinned baseline material — per
       // Jordan 2026-09-12: the Tall Cabinet material-upcharge calc below
       // used to grab `Object.keys(mat)[0]` (whichever material happens to
@@ -2874,16 +2868,8 @@
       // fall back to the old first-by-Sort-order behavior rather than
       // leaving blMatKey null, same defensive fallback getBaselineRates()
       // itself uses in pricing-helper-v2.js.
-      // Countertop removal — independent of the hasDynamic/legacy branch
-      // above (a shop can have zero cabinet materials, e.g. a
-      // countertops-only shop, and still want this priced), so it's
-      // resolved once here rather than duplicated in both branches.
-      const ctRem = li.otherItems.find(i => i['Name']?.toLowerCase().includes('countertop removal'));
-      ctRemovalRate = ctRem ? (ctRem['Rate']||0) : 0;
-      ctRemovalUnit = ctRem?.['Unit'] === 'lin ft' ? 'linft' : 'sqft';
-
       if (!blMatKey) blMatKey = Object.keys(mat)[0];
-      return { mat, door, drawer, hinge, blMatKey, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate, ctRemovalRate, ctRemovalUnit };
+      return { mat, door, drawer, hinge, blMatKey, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
     }
 
     // Legacy global fallback rates (used only if a material has no per-material
@@ -5187,7 +5173,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,blMatKey,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate,ctRemovalRate,ctRemovalUnit}=P();
+      const {mat,door,drawer,hinge,blMatKey,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
       // If the Cabinet measurements section is hidden (no real box material
       // for the current project type), treat linear footage as 0 regardless
       // of whatever's still sitting in those inputs — otherwise a hidden
@@ -5436,7 +5422,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           return {lines:[],sub:0,total:0,low:0,high:0};
         }
       }
-      const {removalRate,ctRemovalRate,ctRemovalUnit}=P();
+      const {removalRate}=P();
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
 
@@ -5504,7 +5490,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             const coChecked = document.getElementById(coId)?.checked;
             const cutoutCost = coChecked ? cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`${cutsId}-q-${i}`)*(o.rate||0),0) : 0;
             const removalChecked = gv(removalId) === 'yes';
-            const removalCost = removalChecked ? (ctRemovalUnit==='linft' ? linFt : sqft) * ctRemovalRate : 0;
+            const removalCost = removalChecked ? (m.removalUnit==='linft' ? linFt : sqft) * (m.removalRate||0) : 0;
             const addonsRes = ctAddonsCost(m, `mq-${prefix}-cab-edge-sel`, `mq-${prefix}-cab-addons-a`, linFt, sqft, ctDepth);
             const cost = supplyCost + installCost + bsCost + cutoutCost + removalCost + addonsRes.cost;
             sub += cost;
@@ -5560,7 +5546,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           bsCost = bsSupply + bsInstall;
         }
         const removalChecked = gv('mqsrm-'+id) === 'yes';
-        const removalCost = removalChecked ? (ctRemovalUnit==='linft' ? linFt : sqft) * ctRemovalRate : 0;
+        const removalCost = removalChecked ? (m.removalUnit==='linft' ? linFt : sqft) * (m.removalRate||0) : 0;
         const cost = supplyCost+installCost+bsCost+removalCost
           +(document.getElementById('mqsco-'+id)?.checked?cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`mqscuts-${id}-q-${i}`)*(o.rate||0),0):0);
         const addonsRes = ctAddonsCost(m, `mqs-edge-${id}-sel`, `mqs-addons-${id}-a`, linFt, sqft, d||ctDepth);
@@ -6507,7 +6493,6 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!data || !container) return;
     const { shop, specs } = data;
     buildCTMAT(data);
-    buildCTRemoval(data);
     buildTRIM(data);
     buildTALLCAB(data);
     container.innerHTML = buildWidgetHTML(shop, specs, data);
@@ -7132,7 +7117,6 @@ window.mqTogDrawerConfig=(prefix)=>{
       shop['Box text colour']
     );
     buildCTMAT(data);
-    buildCTRemoval(data);
     buildTRIM(data);
     buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
