@@ -2551,9 +2551,6 @@
           <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
           <div class="mq-travel-note">${TRAVEL_NOTE}</div>
-          <div class="mq-cta-row">
-            <button onclick="mqSwitchTab('both',document.querySelectorAll('.mq-tab')[0])">Get full project quote ✨</button>
-          </div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -2759,15 +2756,6 @@
           placeholder.style.cssText = 'cursor:default;background:#f3f4f6;border-color:#f3f4f6;box-shadow:none;pointer-events:none';
           tabBar.appendChild(placeholder);
         }
-      }
-      // The "Get full project quote" upsell inside the Cabinets tab (the
-      // Countertops tab's own copy was removed per Jordan's request) only
-      // makes sense when the Both tab still exists to send someone to —
-      // remove it rather than leave a dead link to a tab with no button.
-      if (hidden.includes('both')) {
-        document.querySelectorAll('.mq-cta-row').forEach(row => {
-          if (row.querySelector(`[onclick^="mqSwitchTab('both'"]`)) row.remove();
-        });
       }
       const firstVisible = ALL_TAB_IDS.find(id => !hidden.includes(id));
       const activeContent = document.querySelector('.mq-tab-content.active');
