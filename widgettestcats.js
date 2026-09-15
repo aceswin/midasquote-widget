@@ -243,7 +243,22 @@
     li.drawers.forEach(dr => { dr.photoUrl = shopPhotos[photoKeyFor('drawer', dr['Name'])] || ''; dr.featured = shopFeatured[photoKeyFor('drawer', dr['Name'])] || false; dr.visibleRooms = effectiveVisibleRooms(parseVisibleRooms(dr), 'drawer'); });
 
     const localZone = sorted.find(r=>r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
-    li.localRadius = localZone?.['Rate'] || 15;
+    // Was reading localZone?.['Rate'] directly -- localZone is the raw
+    // Airtable record (has a .fields, per the `sorted` map above), so that
+    // always missed and silently fell back to the 15 default, no matter
+    // what a shop had actually configured in Pricing's "Local delivery
+    // zone" card. Also now captures the configured Unit (km/mi, set
+    // alongside Rate by pricing-helper-v2.js's mqphSaveLocalRadius /
+    // wizard step) -- previously never read here at all. Jordan: "the
+    // travel local delivery we have never actuially gets shown when the
+    // quotes get generated.. it should say something like [...] based on
+    // local delivery (X amount of miles/kms)". Stashed on window so
+    // mqTravelNote() below can read the shop's real values without
+    // threading li through every render call site.
+    li.localRadius = localZone?.fields?.['Rate'] || 15;
+    li.localRadiusUnit = localZone?.fields?.['Unit'] || 'km';
+    window._mqLocalRadius = li.localRadius;
+    window._mqLocalRadiusUnit = li.localRadiusUnit;
 
     const hasDynamic = li.materials.length > 0;
 
@@ -2421,7 +2436,11 @@
       </div>`;
   }
 
-  const TRAVEL_NOTE = '🚗 This estimate is based on local delivery. Jobs outside our local area may be subject to additional travel charges — your final quote will confirm the exact amount.';
+  function mqTravelNote() {
+    const radius = window._mqLocalRadius || 15;
+    const unitLabel = window._mqLocalRadiusUnit === 'mi' ? 'miles' : 'km';
+    return `🚗 This estimate is based on local delivery (${radius} ${unitLabel}). Jobs outside our local area may be subject to additional travel charges — your final quote will confirm the exact amount.`;
+  }
 
   // Reference images for trade terms most customers won't recognize
   // ("return", "side splash") — shared across every shop since these look
@@ -2552,7 +2571,7 @@
           </div>
           <div class="mq-disclaimer" id="mq-c-disclaimer">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
-          <div class="mq-travel-note">${TRAVEL_NOTE}</div>
+          <div class="mq-travel-note">${mqTravelNote()}</div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -2607,7 +2626,7 @@
             </div>
           </div>
           <div class="mq-disclaimer">⚠ Stone slabs vary by lot. Final pricing requires templating.</div>
-          <div class="mq-travel-note">${TRAVEL_NOTE}</div>
+          <div class="mq-travel-note">${mqTravelNote()}</div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>
@@ -2706,7 +2725,7 @@
           </div>
           <div class="mq-disclaimer" id="mq-b-disclaimer" style="margin-top:1rem">⚠ ${disc}</div>
           <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.5">🔧 <strong>Handles & knobs not included</strong> in this estimate unless listed as a specialty item above.</div>
-          <div class="mq-travel-note" style="margin-top:8px">${TRAVEL_NOTE}</div>
+          <div class="mq-travel-note" style="margin-top:8px">${mqTravelNote()}</div>
           <div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>
         </div>
       </div>`;
