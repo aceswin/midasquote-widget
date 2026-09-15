@@ -2251,7 +2251,7 @@
             <span class="mq-step-badge" style="width:26px;height:26px;font-size:14px">1</span>
             ${data.shop['Project type title'] || 'Start here — choose your project type'}
           </label>
-          <select id="mq-${prefix}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${prefix}']=this.value" onchange="mqCommitCurrentConfig('${prefix}');mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>!r.proOnly).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+          <select id="mq-${prefix}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${prefix}']=this.value" onchange="mqCommitCurrentConfig('${prefix}');mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>!r.proOnly && !r.forCountertops).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
           <p class="mq-hint mq-focal-box-label" style="display:block;margin-top:8px;font-weight:500">${data.shop['Project type hint'] || 'After calculating your first quote, you can continue adding other project types.'}</p>
           <p class="mq-hint mq-focal-box-label" id="mq-${prefix}-room-vanity-note" style="display:none;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:13px;color:#92400e;line-height:1.5"></div>
@@ -2439,6 +2439,7 @@
 
   function buildWidgetHTML(shop, specs, data) {
     const hasCtInstall = hasCountertopInstall();
+    const { roomTypes } = data;
     const bcSafe = (shop['Brand colour']||'#1a1a1a').replace(/'/g,"\\'");
     const letterSafe = ((shop['Shop name']||'S').charAt(0)||'S').replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const logoHTML = shop['Logo URL'] ? `<div class="mq-logo-real"><img src="${shop['Logo URL']}" alt="${shop['Shop name']}" onerror="mqHandleLogoError(this,'${bcSafe}','${letterSafe}')"/></div>` : `<div class="mq-logo"><span>${(shop['Shop name']||'S').charAt(0)}</span></div>`;
@@ -2547,6 +2548,27 @@
       <!-- COUNTERTOP TAB -->
       <div class="mq-tab-content" id="mq-tab-countertops">
         ${priceLegendHTML()}
+        <div class="mq-sec">
+          <p class="mq-sec-title">Project basics</p>
+          <div class="mq-focal-box">
+            <label class="mq-focal-box-label" style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;margin-bottom:8px">
+              <span class="mq-step-badge" style="width:26px;height:26px;font-size:14px">1</span>
+              ${shop['Project type title'] || 'Start here — choose your project type'}
+            </label>
+            <select id="mq-ct-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['ct']=this.value" onchange="mqCommitCurrentConfig('ct');mqTogVanityNote('ct');mqTogDwOption('ct');mqRefreshRoomVisibility('ct');mqShowRoomDescription('ct');mqRefreshMeasureGuide('ct');mqRefreshAllPickerVisibility('ct');mqOnProjectTypeChange('ct')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>r.forCountertops).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
+            <p class="mq-hint mq-focal-box-label" style="display:block;margin-top:8px;font-weight:500">${shop['Project type hint'] || 'After calculating your first quote, you can continue adding other project types.'}</p>
+            <div id="mq-ct-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:13px;color:#92400e;line-height:1.5"></div>
+          </div>
+        </div>
+        <div class="mq-sec" id="mq-ct-measuring-sec" onclick="mqOpenIfClosed('ct-measuring')">
+          ${collapsibleHeader('ct-measuring', 'How to measure')}
+          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">
+            📏 Tips for getting accurate measurements, plus a converter for inches/mm.
+          </div>
+          <div id="mq-ct-measuring-body" style="display:none">
+            <div id="mq-ct-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
+          </div>
+        </div>
         <div class="mq-sec">
           <p class="mq-sec-title" id="mq-ct-surfaces-title">Countertop surfaces</p>
           <div id="mq-ct-surfaces"></div>
@@ -4554,7 +4576,7 @@
     // or switching away to a different tab. Returns true if it committed
     // something, so callers can tell whether the cart actually changed.
     window.mqCommitCurrentConfig = function(prefix) {
-      const roomEl = (prefix === 'b' || prefix === 'c') ? document.getElementById(`mq-${prefix}-room`) : null;
+      const roomEl = (prefix === 'b' || prefix === 'c' || prefix === 'ct') ? document.getElementById(`mq-${prefix}-room`) : null;
       const actualValue = roomEl ? roomEl.value : null;
 
       try {
@@ -4755,7 +4777,7 @@
         mqRenderQuoteCart();
       }
 
-      mqResetCabinetForm(prefix);
+      if (prefix === 'ct') { mqResetCountertopStandalone(prefix); } else { mqResetCabinetForm(prefix); }
       // Reset every specialty item on an actual project type change — not
       // just the ones that become hidden by the room switch. An item that
       // happens to stay visible across two different project types (e.g.
@@ -5427,6 +5449,15 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       const {removalRate}=P();
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
+      // Same 3-field price-adjustment concept calcCabinet already applies
+      // for 'b'/'c' (a project type can carry its own install % and a final
+      // ballpark-wide %) -- countertops only ever have a project type to read
+      // one from on the standalone Countertops tab, so this only takes effect
+      // for prefix==='ct'; 'b' keeps roomObj null and both multipliers at 1.
+      const roomObj = prefix === 'ct' ? (window._mqRoomTypes||[]).find(r=>r.id===gv('mq-ct-room')) : null;
+      const installAdjPct = roomObj ? (parseFloat(roomObj.installAdjPct)||0) : 0;
+      const totalAdjPct   = roomObj ? (parseFloat(roomObj.totalAdjPct)||0) : 0;
+      const installMult = (100 + installAdjPct) / 100;
       const lines=[]; let sub=0;
 
       // Minimum charges pool PER MATERIAL, across every counter/run using
@@ -5469,7 +5500,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             // applied once at the end against this material's pooled total
             // across every counter/run in this project type, not here.
             const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
-            const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
+            const installCost = (si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0) * installMult;
             const pool = poolFor(mat, m);
             pool.rawSupply += supplyCost; pool.hasSupply = true;
             if (si==='install') { pool.rawInstall += installCost; pool.hasInstall = true; }
@@ -5487,7 +5518,7 @@ window.mqTogDrawerConfig=(prefix)=>{
               const bsSupplyUnit  = bsOpt.supplyUnit  || m.supplyUnit  || 'sqft';
               const bsInstallUnit = bsOpt.installUnit || m.installUnit || 'lin ft';
               const bsSupply  = bsSupplyUnit  === 'lin ft' ? bsLinFt*bsRate : bsSqft*bsRate;
-              const bsInstall = si==='install' ? (bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0)) : 0;
+              const bsInstall = (si==='install' ? (bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0)) : 0) * installMult;
               bsCost = bsSupply + bsInstall;
             }
             const coChecked = document.getElementById(coId)?.checked;
@@ -5526,7 +5557,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         // the pool toward a minimum charge for a counter that isn't
         // really there yet.
         const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
-        const installCost = si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0;
+        const installCost = (si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0) * installMult;
         if (totalLen > 0) {
           const pool = poolFor(mat, m);
           pool.rawSupply += supplyCost; pool.hasSupply = true;
@@ -5545,7 +5576,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           const bsSupplyUnit  = bsOpt.supplyUnit  || m.supplyUnit  || 'sqft';
           const bsInstallUnit = bsOpt.installUnit || m.installUnit || 'lin ft';
           const bsSupply  = bsSupplyUnit  === 'lin ft' ? bsLinFt*bsRate : bsSqft*bsRate;
-          const bsInstall = si==='install' ? (bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0)) : 0;
+          const bsInstall = (si==='install' ? (bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0)) : 0) * installMult;
           bsCost = bsSupply + bsInstall;
         }
         const removalChecked = gv('mqsrm-'+id) === 'yes';
@@ -5576,9 +5607,10 @@ window.mqTogDrawerConfig=(prefix)=>{
         }
       });
 
-      lines.push({label:'Subtotal (before tax)',cost:Math.round(sub),bold:true});
-      const total=sub;
-      return {lines,sub:Math.round(sub),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10};
+      const totalMult = (100 + totalAdjPct) / 100;
+      const total = sub * totalMult;
+      lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
+      return {lines,sub:Math.round(total),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10};
     }
 
     function renderResult(rangeEl,listEl,result,prefix){
@@ -6840,13 +6872,11 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
     mqAdjustWidgetBottomPadding();
   };
-  // The standalone Countertops tab isn't tied to any project type selection
-  // at all, so there's nothing to check a toggle against — it always shows
-  // a range. Cabinets and Both are both tied to a selected room, so they
-  // respect that room's own showRange setting (defaulting to true/range,
+  // Cabinets, Both, and (now that it has its own project-type selector)
+  // the standalone Countertops tab are all tied to a selected room, so they
+  // all respect that room's own showRange setting (defaulting to true/range,
   // same as it's always behaved, for any room that's never touched this).
   function mqShouldShowRange(prefix) {
-    if (prefix === 'ct') return true;
     // Inlined rather than calling gv() — gv is scoped inside a different,
     // inner function and isn't reachable from every place this needs to
     // run (this is exactly what threw "gv is not defined" from inside the
