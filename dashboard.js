@@ -1136,7 +1136,7 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('rooms')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Project types</div>
             <div class="mq-page-sub">Set up the project types your widget offers — rooms, service tiers, or anything else — and adjust pricing up or down for each one. Great for things like "Kitchen Reno — Premium" vs. "Luxury," or a bathroom vanity running smaller than a kitchen cabinet at the same length.</div>
-            <div class="mq-card">
+            <div class="mq-card" id="mq-rooms-cabinet-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
                 💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
@@ -1145,6 +1145,22 @@ window.logoutMember = async function () {
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
                 <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()">+ Add room</button>
                 <select id="mq-restore-room-select" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
+                  <option value="">↩ Restore a default type…</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mq-card" id="mq-rooms-ct-card" style="margin-top:1.25rem">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span style="font-size:18px">🪨</span>
+                <div style="font-size:15px;font-weight:700;color:#1a1a1a">Countertop project types</div>
+              </div>
+              <div style="font-size:12px;color:#6b7280;margin-bottom:1rem;line-height:1.6">A separate set of project types just for countertop quotes — shown to customers on your Countertops tab (and in the countertop section of a full project quote) before they measure. These are purely descriptive — a welcome note plus a measuring guide — and never change pricing.</div>
+              <div id="mq-rooms-list-ct"></div>
+              <div id="mq-rooms-list-ct-empty" style="display:none;font-size:12px;color:#9ca3af;padding:4px 0 12px">No countertop project types yet. Add one below if you'd like customers to pick something like "New countertop install" or "Countertop replacement" before they measure — totally optional.</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
+                <button class="mq-btn mq-btn-sm" onclick="mqAddRoom(true)">+ Add countertop project type</button>
+                <select id="mq-restore-room-select-ct" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
                   <option value="">↩ Restore a default type…</option>
                 </select>
               </div>
@@ -3119,6 +3135,126 @@ window.logoutMember = async function () {
     specialty: 'Specialty Items',
   };
 
+  // Countertop Materials and Specialty Items are the only two categories
+  // whose items can ever actually render on the customer-facing Countertops
+  // tab -- every other My Products category (Box Materials, Door Styles,
+  // Door Hinges, Drawer Configurations, Crown Moulding, Valance, Tall
+  // Cabinets) only ever shows inside the Cabinets/Both tabs' cabinet-
+  // measurements section, so its items can never be reached through
+  // Countertops no matter what their "Visible rooms" says. Per Jordan:
+  // "i doubt this even would allow them to show but they should not be
+  // able to show for couters so those check boxes dont need to be there"
+  // -- for these categories the 6 countertop project types aren't just
+  // defaulted off, they're removed from the checkbox list entirely as
+  // non-functional/misleading options. Countertop Materials and Specialty
+  // Items both keep the full list (Specialty Items can genuinely show on
+  // either side -- see roomsForCategory's callers).
+  const CABINET_ONLY_CATS = ['material', 'door', 'drawer', 'hinge', 'trim_crown', 'trim_valance', 'tall_cabinet'];
+  function roomsForCategory(cat) {
+    const allRooms = window._mqRooms || defaultRoomTypes();
+    if (CABINET_ONLY_CATS.includes(cat)) return allRooms.filter(r => !r.forCountertops);
+    // Specialty items can genuinely show on either side, so they don't lose
+    // rooms the way the cabinet-only categories above do -- but per Jordan,
+    // once a shop has scoped its widget down to just one estimator tab
+    // ("if theres no cabinet items because we are on countertops only then
+    // the cabinet related project types should be hidden from specialty
+    // items project type checkboxes... and if its a cabinets only toggle
+    // then opposite"), the OTHER side's project types shouldn't be offered
+    // as checkbox options at all, same as the cabinet-only categories.
+    if (cat === 'specialty') {
+      const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
+      if (countertopsOnly) return allRooms.filter(r => r.forCountertops);
+      if (cabinetsOnly) return allRooms.filter(r => !r.forCountertops);
+    }
+    return allRooms;
+  }
+
+  // Whichever ONE estimator tab (if any) is the only thing customers can
+  // reach, per Shop Info's "🗂️ Estimator tabs" toggles ('Hidden widget
+  // tabs' = {hidden:[...], applyToPro}). Per Jordan: "after this fix Id
+  // like to make all cabinet related items in pricing tab to become hidden
+  // when the countertops only toggle is the only on on... and if the
+  // cabinets only one is the only one toggled on then all the countertop
+  // pricing hidden. Also the related project types hidden too for each."
+  // Both are false whenever more than one tab is visible (including the
+  // default, untouched state) -- nothing gets hidden in the shop's own
+  // dashboard until a shop has deliberately narrowed the widget down to
+  // just one side.
+  function mqComputeTabScope(shopFields) {
+    let hidden = [];
+    try {
+      const parsed = shopFields && shopFields['Hidden widget tabs'] ? JSON.parse(shopFields['Hidden widget tabs']) : null;
+      if (parsed && Array.isArray(parsed.hidden)) hidden = parsed.hidden;
+    } catch(e) { /* keep defaults */ }
+    return {
+      countertopsOnly: hidden.includes('both') && hidden.includes('cabinets') && !hidden.includes('countertops'),
+      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets'),
+    };
+  }
+
+  // Applies that same scoping to the shop's own Project Types page -- the
+  // cabinet "Project types" card and the "Countertop project types" card
+  // are two independent .mq-card blocks (see the ROOM TYPES page markup),
+  // so this just shows/hides the whole card, same as the Pricing tab's
+  // mqphApplyEstimatorTabScope handles its own sections.
+  function mqApplyEstimatorTabScopeToRoomsPage() {
+    const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
+    const cabCard = document.getElementById('mq-rooms-cabinet-card');
+    const ctCard = document.getElementById('mq-rooms-ct-card');
+    if (cabCard) cabCard.style.display = countertopsOnly ? 'none' : '';
+    if (ctCard) ctCard.style.display = cabinetsOnly ? 'none' : '';
+  }
+  // My Products' own category cards -- catSection(cat) tags each one with
+  // data-mq-cat. Only ever needs window._mqShopRecord read fresh (never a
+  // cached copy), since this runs at the end of initProductsTab, which
+  // itself is always handed the just-refetched shop record by mqNav's
+  // 'products' block.
+  function mqApplyEstimatorTabScopeToProducts() {
+    const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
+    CABINET_ONLY_CATS.forEach(cat => {
+      const card = document.querySelector(`#mq-products-content .mq-card[data-mq-cat="${cat}"]`);
+      if (card) card.style.display = countertopsOnly ? 'none' : '';
+    });
+    const ctCard = document.querySelector('#mq-products-content .mq-card[data-mq-cat="countertop"]');
+    if (ctCard) ctCard.style.display = cabinetsOnly ? 'none' : '';
+  }
+  // Refreshes the Pricing tab's own scoping too, if it's been built yet —
+  // pricing-helper-v2.js is a separate file/module (loaded lazily the
+  // first time a shop opens the Pricing tab). Deliberately a full
+  // window.mqph2Init() re-sync rather than just calling
+  // window.mqphApplyEstimatorTabScope() directly: pricing-helper-v2.js
+  // caches its own `shopRecord` from whatever object mqph2Init last passed
+  // it, and 'products'/'showroom' both REPLACE window._mqShopRecord with a
+  // brand-new object on every visit (`window._mqShopRecord = freshShop`)
+  // — once that's happened, the Pricing tab's cached copy is a different
+  // object than window._mqShopRecord and never sees a later write to
+  // window._mqShopRecord.fields, no matter how many times this function
+  // runs. Re-running mqph2Init hands it the CURRENT window._mqShopRecord
+  // fresh every time, which both re-syncs the reference and re-applies the
+  // scoping (loadAndRender calls mqphApplyEstimatorTabScope at the end).
+  function mqApplyEstimatorTabScopeToPricing() {
+    const helperContainer = document.getElementById('mq-pricing-helper-v2');
+    if (helperContainer && helperContainer.dataset.loaded && typeof window.mqph2Init === 'function') {
+      window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
+    }
+  }
+  // Admin Specialty Items table -- its project-type checkboxes are baked
+  // into generated HTML at render time (roomLinkDisclosure), not a plain
+  // display:none toggle like the category cards above, so the only way to
+  // reflect a scope change already on this page is to re-render it. Cheap
+  // and safe to call any time the page is open/cached: renderSpecialty
+  // rebuilds from window._mqSpecRecords with no fresh Airtable fetch, and
+  // already preserves the active filter bar state across re-runs (see its
+  // own comment). My Products' specialty cards use the same
+  // roomsForCategory('specialty') and pick up the new scope the next time
+  // that tab loads/revisits, same as every other category card.
+  function mqApplyEstimatorTabScopeToSpecialty() {
+    const specList = document.getElementById('mq-spec-list');
+    if (specList && window._mqSpecRecords) {
+      renderSpecialty(window._mqSpecRecords, window._mqShopRecord);
+    }
+  }
+
   // Same wording as the widget's hardcoded fallback guide (defaultMeasureGuideHTML
   // in widgettestcats.js), just written in the **bold**/line-break plain-text
   // form a shop owner can start from and edit. Used by the "Use default guide"
@@ -3142,6 +3278,15 @@ window.logoutMember = async function () {
 
 **Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.`;
 
+  // Countertop project types get their own guide entirely -- shape-based
+  // surfaces, not linear-foot cabinet runs, so none of the cabinet wording
+  // above applies. Jordan's own wording, used for every countertop default
+  // (see defaultCountertopRoomTypes() below) via mqFillDefaultGuide.
+  const DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP =
+`**Use the shape options to input your countertop sizes.** You may need more than one shape to complete your project. To add additional countertop shapes, click add another surface at the bottom.
+
+[tip]If your countertop is an odd shape, try your best to break it up into individual rectangle shapes. Use the [calc] to convert feet/mm into inches.[/tip]`;
+
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
   // own from scratch. Confirms first if the box already has something in it,
@@ -3153,11 +3298,12 @@ window.logoutMember = async function () {
 
 **Not sure?** Just use your best guess — this is a ballpark estimate!`;
 
-  window.mqFillDefaultGuide = function(textareaId, roomId) {
+  window.mqFillDefaultGuide = function(textareaId, roomId, forCountertops) {
     const ta = el(textareaId);
     if (!ta) return;
     if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
-    ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
+    ta.value = forCountertops ? DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP
+      : roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
       : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
       // Refacing/Repainting/Restaining are priced per square foot, not
       // linear feet — there's no corner cabinet concept for them, so they
@@ -3190,7 +3336,11 @@ window.logoutMember = async function () {
       renderRoomsList();
       return; // renderRoomsList already rebuilds the preview with the fresh default
     }
-    const previewUrl = mqDefaultMeasureImageUrlFor(roomId, idx != null && window._mqRooms && window._mqRooms[idx] ? window._mqRooms[idx].name : '');
+    const previewUrl = mqDefaultMeasureImageUrlFor(
+      roomId,
+      idx != null && window._mqRooms && window._mqRooms[idx] ? window._mqRooms[idx].name : '',
+      idx != null && window._mqRooms && window._mqRooms[idx] ? window._mqRooms[idx].forCountertops : false
+    );
     const preview = document.getElementById(previewId);
     if (preview) preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">📏</span>';
   };
@@ -3289,7 +3439,11 @@ window.logoutMember = async function () {
   // below, this exact set is also what gets baked into a brand-new shop's
   // Kitchen/Laundry/Garage/Commercial/Other measureImage+measureImages.
   const MQ_DEFAULT_MEASURE_IMAGE_SET = ['how-to-measure1.jpg', 'how-to-measure.jpg', 'things-to-remember.jpg', 'island.jpg', 'corner-cabinets.jpg'];
-  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bathroom: ['bathroom11.jpg'], laundry: MQ_DEFAULT_MEASURE_IMAGE_SET, garage: MQ_DEFAULT_MEASURE_IMAGE_SET, commercial: MQ_DEFAULT_MEASURE_IMAGE_SET, other: MQ_DEFAULT_MEASURE_IMAGE_SET };
+  const MQ_DEFAULT_MEASURE_IMAGE_FILES = { kitchen: MQ_DEFAULT_MEASURE_IMAGE_SET, bathroom: ['bathroom11.jpg'], laundry: MQ_DEFAULT_MEASURE_IMAGE_SET, garage: MQ_DEFAULT_MEASURE_IMAGE_SET, commercial: MQ_DEFAULT_MEASURE_IMAGE_SET, other: MQ_DEFAULT_MEASURE_IMAGE_SET,
+    // Countertop project types get their own single default image, resolved
+    // directly off a forCountertops flag by mqDefaultImageKeyFor below --
+    // mirrors widget.js/widgetpro.js's own MQ_DEFAULT_MEASURE_IMAGES.countertop.
+    countertop: ['countertops.jpg'] };
   // Matches a room to one of the default-image keys — tries the id first
   // (the normal, fast path for standard ids), but falls back to matching on
   // the room's NAME too, same robust logic already used in widget.js's own
@@ -3321,7 +3475,11 @@ window.logoutMember = async function () {
     if (mqIsVideoUrl(u)) return '<span style="font-size:22px" title="Video link">🎥</span>';
     return `<img src="${u.replace(/"/g,'&quot;')}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
   }
-  function mqDefaultImageKeyFor(roomId, roomName) {
+  function mqDefaultImageKeyFor(roomId, roomName, forCountertops) {
+    // Checked first, before any id/name matching below -- a countertop room
+    // named e.g. "Kitchen counters" would otherwise incorrectly match the
+    // cabinet-context 'kitchen' key via the name.includes('kitchen') check.
+    if (forCountertops) return 'countertop';
     const id = (roomId||'').toLowerCase();
     if (MQ_DEFAULT_MEASURE_IMAGE_FILES[id]) return id;
     const name = (roomName||'').toLowerCase();
@@ -3333,13 +3491,13 @@ window.logoutMember = async function () {
     if (name.includes('other')) return 'other';
     return null;
   }
-  function mqDefaultMeasureImageUrlFor(roomId, roomName) {
-    const key = mqDefaultImageKeyFor(roomId, roomName);
+  function mqDefaultMeasureImageUrlFor(roomId, roomName, forCountertops) {
+    const key = mqDefaultImageKeyFor(roomId, roomName, forCountertops);
     const files = key ? MQ_DEFAULT_MEASURE_IMAGE_FILES[key] : null;
     return files && files.length ? MQ_DEFAULT_MEASURE_IMAGE_BASE + files[0] : '';
   }
-  function mqDefaultMeasureImageUrlsFor(roomId, roomName) {
-    const key = mqDefaultImageKeyFor(roomId, roomName);
+  function mqDefaultMeasureImageUrlsFor(roomId, roomName, forCountertops) {
+    const key = mqDefaultImageKeyFor(roomId, roomName, forCountertops);
     const files = key ? MQ_DEFAULT_MEASURE_IMAGE_FILES[key] : null;
     return files ? files.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f) : [];
   }
@@ -3353,7 +3511,7 @@ window.logoutMember = async function () {
   // afterward with the existing ✕ Remove buttons.
   window.mqUseAllDefaultMeasureImages = function(roomId, idx) {
     if (idx == null || !window._mqRooms || !window._mqRooms[idx]) return;
-    const urls = mqDefaultMeasureImageUrlsFor(roomId, window._mqRooms[idx].name);
+    const urls = mqDefaultMeasureImageUrlsFor(roomId, window._mqRooms[idx].name, window._mqRooms[idx].forCountertops);
     if (!urls.length) return;
     if (!confirm(`Load all ${urls.length} default images for this project type? You can remove any you don't want afterward.`)) return;
     window._mqRooms[idx].measureImage = urls[0];
@@ -3388,6 +3546,28 @@ window.logoutMember = async function () {
     ];
   }
 
+  // Same idea as defaultRoomTypes() above, but for the standalone
+  // Countertops tab -- mirrors every cabinet default EXCEPT Refacing/
+  // Repainting/Restaining (materials-only concepts that don't apply to
+  // countertops), per Jordan's explicit request. Deliberately kept OUT of
+  // populateRooms() below: a brand-new cabinet shop shouldn't get 6 extra
+  // countertop project types it never asked for. These only get added if a
+  // shop owner clicks "Restore a default type" on the Countertops tab --
+  // see mqRefreshRestoreDropdown/mqRestoreDefaultRoom. measureText/
+  // measureImage left blank on purpose so all 6 keep following whatever the
+  // countertop default guide/image is, automatically, rather than freezing
+  // today's wording/photo into each row.
+  function defaultCountertopRoomTypes() {
+    return [
+      { id:'ct_kitchen',    name:'Kitchen counters',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"New countertops can completely transform your kitchen. Pick your material and finish, and let's get you a ballpark price.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-kitchen.jpg', measureText:'', measureImage:'' },
+      { id:'ct_bathroom',   name:'Bathroom counters',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"A new vanity top is a quick way to freshen up any bathroom. Choose your material and we'll help you price it out.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-bathroom.jpg', measureText:'', measureImage:'' },
+      { id:'ct_laundry',    name:'Laundry counters',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Adding a counter to your laundry room makes folding and sorting so much easier. Pick a material and get your estimate.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-laundry.jpg', measureText:'', measureImage:'' },
+      { id:'ct_garage',     name:'Garage counters',     materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Durable counters for a workbench, hobby space, or storage area. Pick your material and see your ballpark price.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-garage.jpg', measureText:'', measureImage:'' },
+      { id:'ct_commercial', name:'Commercial counters', materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Give your business a polished look with new countertops — reception desks, break rooms, or workspaces. Choose your material to get started.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-commercial.jpg', measureText:'', measureImage:'' },
+      { id:'ct_other',      name:'Other counters',      materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Got a countertop project that doesn't fit the usual categories? Pick a material below and let's get you a ballpark estimate.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-other.jpg', measureText:'', measureImage:'' },
+    ];
+  }
+
   function populateRooms(shop) {
     const f = shop.fields;
     let rooms = [];
@@ -3395,6 +3575,7 @@ window.logoutMember = async function () {
     if (!Array.isArray(rooms) || !rooms.length) rooms = defaultRoomTypes();
     window._mqRooms = rooms;
     renderRoomsList();
+    mqApplyEstimatorTabScopeToRoomsPage();
 
     // Category-level hiding: which project types each WHOLE category is
     // hidden for (e.g. hide all Door Styles for "Door refacing"). Individual
@@ -3493,14 +3674,19 @@ window.logoutMember = async function () {
     </div>`;
   }
 
-  function renderRoomsList() {
-    const container = el('mq-rooms-list');
-    if (!container) return;
-    const rooms = window._mqRooms || [];
-    const isDemo = (window._mqShopRecord?.fields?.['Plan']||'') === 'Demo';
-    container.innerHTML = rooms.map((r, idx) => {
-      const isOpen = _mqExpandedRoomIds.has(r.id);
-      return `
+    // r.forCountertops tags a project type as belonging to the separate
+  // "Countertop project types" section instead of the regular cabinet
+  // project types list below it — same underlying Room types JSON array
+  // and editor, just grouped into two containers so a countertop shop's
+  // list doesn't get mixed in with (or mistaken for) cabinet rooms, and a
+  // cabinet shop's list isn't cluttered with countertop-only entries.
+  // Countertop project types are purely descriptive (welcome note +
+  // measuring guide) per Jordan's call — they never adjust pricing, so
+  // the price-adjustments block below is skipped for them.
+  function mqRoomRowHTML(r, idx, isDemo) {
+    const isOpen = _mqExpandedRoomIds.has(r.id);
+    const isCountertop = r.forCountertops === true;
+    return `
       <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
         <div style="display:grid;grid-template-columns:24px minmax(140px,300px) 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
@@ -3531,13 +3717,17 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
           </label>
-          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+          ${isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
+          </div>` : `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
             ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
-            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. renovations run higher since customers are living in the house')}
-            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
-          </div>
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
+          </div>`}
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="margin-bottom:10px">
             ${isDemo ? mqDemoImageLockedHTML('cover images') : `
@@ -3561,13 +3751,13 @@ window.logoutMember = async function () {
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
             <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
             <div style="margin-bottom:8px">
-              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
+              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}',${!!r.forCountertops})">↺ Use default guide</button>
               <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo, [tip]text[/tip] wraps it in a yellow callout box</span>
             </div>
             ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos') : `
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
-                ${mqMeasureImgPreviewHTML(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name))}
+                ${mqMeasureImgPreviewHTML(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name, r.forCountertops))}
               </div>
               <div style="flex:1;min-width:0">
                 <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Measuring guide image or video (optional)</label>
@@ -3578,7 +3768,7 @@ window.logoutMember = async function () {
                 </label>
                 <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
                 <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>
-                ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
+                ${mqDefaultMeasureImageUrlsFor(r.id, r.name, r.forCountertops).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
                 <span id="mq-room-measure-img-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
             </div>
@@ -3603,11 +3793,20 @@ window.logoutMember = async function () {
           </div>
         </div>
       </div>`;
-    }).join('');
+  }
+
+  // Renders one group of rooms (cabinet or countertop) into its own
+  // container, wiring up image uploads and drag-to-reorder scoped to just
+  // that container — dragging a row only ever reorders it among the other
+  // rows in the same section, never across into the other one.
+  function mqWireRoomSection(containerId, entries, isDemo, isCountertopSection) {
+    const container = el(containerId);
+    if (!container) return;
+    container.innerHTML = entries.map(({ r, idx }) => mqRoomRowHTML(r, idx, isDemo)).join('');
 
     // Wire each room's cover-image upload button — uploads immediately, fills
     // the URL field, and refreshes the small preview thumbnail on success.
-    rooms.forEach((r, idx) => {
+    entries.forEach(({ r, idx }) => {
       mqWireUploadButton(
         null,
         `mq-room-cover-file-${idx}`,
@@ -3672,10 +3871,16 @@ window.logoutMember = async function () {
         row.style.opacity = '1';
         row.draggable = false;
         dragging = null;
-        const newRooms = [...container.querySelectorAll('.mq-room-row')].map(r => {
-          const oldIdx = r.dataset.idx;
+        // Rebuild just this section's slice in its new DOM order, reading
+        // both DOM edits and the original (non-DOM) fields — id,
+        // forCountertops, and measureImages — off window._mqRooms[oldIdx],
+        // same as mqSaveRooms does, so a drag never silently drops extra
+        // measuring images or re-tags a room into the wrong section.
+        const reordered = [...container.querySelectorAll('.mq-room-row')].map(rowEl => {
+          const oldIdx = rowEl.dataset.idx;
+          const orig = window._mqRooms[oldIdx] || {};
           return {
-            id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
+            id: orig.id || ('room_' + Date.now()),
             name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
             materialAdjPct: parseFloat(document.getElementById(`mq-room-adj-mat-${oldIdx}`)?.value) || 0,
             upperMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-upper-mat-${oldIdx}`)?.value) || 0,
@@ -3690,9 +3895,12 @@ window.logoutMember = async function () {
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
+            measureImages: (orig.measureImages || []).map((_, exIdx) => document.getElementById(`mq-room-measure-img-extra-${oldIdx}-${exIdx}`)?.value || ''),
+            ...(isCountertopSection ? { forCountertops: true } : {}),
           };
         });
-        window._mqRooms = newRooms;
+        const otherGroup = (window._mqRooms || []).filter(rm => (rm.forCountertops === true) !== isCountertopSection);
+        window._mqRooms = isCountertopSection ? [...otherGroup, ...reordered] : [...reordered, ...otherGroup];
         renderRoomsList();
       });
       row.addEventListener('dragover', e => {
@@ -3705,6 +3913,20 @@ window.logoutMember = async function () {
         }
       });
     });
+  }
+
+  function renderRoomsList() {
+    const rooms = window._mqRooms || [];
+    const isDemo = (window._mqShopRecord?.fields?.['Plan']||'') === 'Demo';
+    const cabinetEntries = [];
+    const countertopEntries = [];
+    rooms.forEach((r, idx) => {
+      (r.forCountertops === true ? countertopEntries : cabinetEntries).push({ r, idx });
+    });
+    mqWireRoomSection('mq-rooms-list', cabinetEntries, isDemo, false);
+    mqWireRoomSection('mq-rooms-list-ct', countertopEntries, isDemo, true);
+    const ctEmpty = el('mq-rooms-list-ct-empty');
+    if (ctEmpty) ctEmpty.style.display = countertopEntries.length ? 'none' : 'block';
 
     mqRefreshRestoreDropdown();
   }
@@ -3716,18 +3938,31 @@ window.logoutMember = async function () {
   // cover image, and measuring guide intact, without needing to recreate
   // any of that by hand.
   function mqRefreshRestoreDropdown() {
-    const sel = document.getElementById('mq-restore-room-select');
-    if (!sel) return;
     const currentIds = new Set((window._mqRooms || []).map(r => r.id));
-    const missing = defaultRoomTypes().filter(r => !currentIds.has(r.id));
-    sel.innerHTML = `<option value="">↩ Restore a default type…</option>` +
-      missing.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    sel.style.display = missing.length ? 'inline-block' : 'none';
+
+    const sel = document.getElementById('mq-restore-room-select');
+    if (sel) {
+      const missing = defaultRoomTypes().filter(r => !currentIds.has(r.id));
+      sel.innerHTML = `<option value="">↩ Restore a default type…</option>` +
+        missing.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+      sel.style.display = missing.length ? 'inline-block' : 'none';
+    }
+
+    // Countertop tab's own restore dropdown -- sourced from
+    // defaultCountertopRoomTypes() instead, so it never offers a cabinet
+    // default (or vice versa).
+    const selCt = document.getElementById('mq-restore-room-select-ct');
+    if (selCt) {
+      const missingCt = defaultCountertopRoomTypes().filter(r => !currentIds.has(r.id));
+      selCt.innerHTML = `<option value="">↩ Restore a default type…</option>` +
+        missingCt.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+      selCt.style.display = missingCt.length ? 'inline-block' : 'none';
+    }
   }
 
   window.mqRestoreDefaultRoom = function(roomId) {
     if (!roomId) return;
-    const defaults = defaultRoomTypes();
+    const defaults = defaultRoomTypes().concat(defaultCountertopRoomTypes());
     const roomDef = defaults.find(r => r.id === roomId);
     if (!roomDef) return;
     if (!window._mqRooms) window._mqRooms = [];
@@ -3737,10 +3972,12 @@ window.logoutMember = async function () {
     showMsg('mq-rooms-msg', `✓ "${roomDef.name}" restored with its default description, image, and measuring guide.`);
   };
 
-  window.mqAddRoom = function() {
+  window.mqAddRoom = function(forCountertops) {
     if (!window._mqRooms) window._mqRooms = [];
-    const newId = 'room_' + Date.now();
-    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' });
+    const newId = (forCountertops ? 'ctroom_' : 'room_') + Date.now();
+    const newRoom = { id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' };
+    if (forCountertops) newRoom.forCountertops = true;
+    window._mqRooms.push(newRoom);
     _mqExpandedRoomIds.add(newId);
     renderRoomsList();
   };
@@ -3792,6 +4029,7 @@ window.logoutMember = async function () {
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
         measureImages: (r.measureImages || []).map((_, exIdx) => (el(`mq-room-measure-img-extra-${idx}-${exIdx}`)?.value || '').trim()),
+        ...(r.forCountertops === true ? { forCountertops: true } : {}),
       })).filter(r => r.name); // drop any left with a blank name
 
       if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
@@ -5677,7 +5915,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const items = byCategory[cat] || [];
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
-      return `<div class="mq-card" style="padding:0;overflow:hidden">
+      return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
           <span id="mq-cat-arrow-${cat}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
@@ -6140,6 +6378,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <div style="font-size:11px;color:#9ca3af;margin-top:10px">Shown on any item you mark below — change the wording or color here and every marked item updates automatically, no need to re-mark anything.</div>
           </div>` + catsOrdered.map(catSection).join('') + specSection;
 
+      mqApplyEstimatorTabScopeToProducts();
+
       // Wire up upload buttons for every photo card just rendered
       const shopToken = shopRecord.fields['Shop token'] || 'unknown-shop';
       content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
@@ -6208,6 +6448,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
       shopRec.fields['Hidden widget tabs'] = payload;
       showMsg('mq-shop-msg', willBeOn ? `✓ "${tabId}" tab shown on widget.` : `✓ "${tabId}" tab hidden from widget.`);
+      mqApplyEstimatorTabScopeToRoomsPage();
+      mqApplyEstimatorTabScopeToPricing();
+      mqApplyEstimatorTabScopeToSpecialty();
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
   window.mqToggleWidgetTabsApplyPro = async function(checked) {
@@ -7543,7 +7786,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqToggleSpecRoom = async function(itemId) {
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory('specialty');
     const items = window._mqSpecItemsList || [];
     const cachedItem = items.find(it => it.id === itemId);
     let prevRooms = [];
@@ -7552,12 +7795,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const checkedIds = rooms
       .filter(r => document.getElementById(`mq-spec-room-${itemId}-${r.id}`)?.checked)
       .map(r => r.id);
-    const allChecked = checkedIds.length === rooms.length;
-    const toSave = allChecked ? [] : checkedIds;
+    // No "all checked -> []" collapse for specialty items -- see the
+    // comment on roomCheckedByDefault for why an empty list can no longer
+    // stand in for "literally everything, countertops included." And while
+    // a Countertops-only/Cabinets-only estimator-tab toggle has narrowed
+    // `rooms` down to just one side, keep whatever was already saved for
+    // the other, currently-hidden side instead of dropping it -- the
+    // checkboxes for it simply aren't rendered right now, they weren't
+    // unchecked.
+    const inScopeIds = rooms.map(r => r.id);
+    const outOfScopeIds = prevRooms.filter(id => !inScopeIds.includes(id));
+    const toSave = [...outOfScopeIds, ...checkedIds];
     try {
       await atUpdate(CONFIG.SPECIALTY_TABLE, itemId, { 'Visible rooms': JSON.stringify(toSave) });
       const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
-      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms, 'specialty');
       if (cachedItem) cachedItem.visibleRooms = JSON.stringify(toSave);
       // Keep the row's own filterable data in sync and immediately re-apply
       // whatever filter is currently active — an item that no longer
@@ -7576,28 +7828,48 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       console.error('Failed to save room links', e);
       rooms.forEach(r => {
         const cb = document.getElementById(`mq-spec-room-${itemId}-${r.id}`);
-        if (cb) cb.checked = (!prevRooms.length || prevRooms.includes(r.id));
+        if (cb) cb.checked = prevRooms.length ? prevRooms.includes(r.id) : roomCheckedByDefault(r, 'specialty');
       });
       const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
-      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms) + ' — save failed, try again';
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms, 'specialty') + ' — save failed, try again';
     }
   };
 
 
-  function roomLinkSummaryText(visibleRooms, rooms) {
-    if (!visibleRooms || !visibleRooms.length) return 'All project types';
+  // Specialty items are the one place an empty/never-configured "Visible
+  // rooms" list does NOT mean "every project type, full stop" -- it means
+  // every CABINET-side type, and never a countertop type implicitly. Per
+  // Jordan: "The only things that should be able to show in countertops
+  // are specialty items that have been selected to. By default any of the
+  // prepopulated ones shouldnt show in countertops... if someone adds a
+  // new one it can be shown in there if they want" -- applies the same to
+  // a brand-new specialty item as to the 4 prepopulated starters, since
+  // there's no separate "prepopulated" flag to key off and none is needed:
+  // any item that's never had its own countertop box checked stays off
+  // Countertops until a shop opts it in. Mirrors mqRefreshRoomVisibility in
+  // widget.js/widgetpro.js, which is what actually enforces this for
+  // customers -- kept in sync here so what the dashboard shows checked
+  // matches what the widget actually does.
+  function roomCheckedByDefault(r, cat) {
+    return cat === 'specialty' ? !r.forCountertops : true;
+  }
+
+  function roomLinkSummaryText(visibleRooms, rooms, cat) {
+    if (!visibleRooms || !visibleRooms.length) {
+      return cat === 'specialty' ? 'All cabinet types (not Countertops — check to add)' : 'All project types';
+    }
     const names = visibleRooms.map(id => rooms.find(r => r.id === id)?.name).filter(Boolean);
     return names.length ? names.join(', ') : 'All project types';
   }
 
   function roomLinkDisclosure(itemId, visibleRoomsJson) {
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory('specialty');
     let visibleRooms = [];
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
-    const summary = roomLinkSummaryText(visibleRooms, rooms);
+    const summary = roomLinkSummaryText(visibleRooms, rooms, 'specialty');
     const checkboxes = rooms.map(r => `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
+        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, 'specialty'))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
       </label>`).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
@@ -7976,14 +8248,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   function lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat) {
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory(cat);
     let visibleRooms = [];
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
-    const summary = roomLinkSummaryText(visibleRooms, rooms);
+    const summary = roomLinkSummaryText(visibleRooms, rooms, cat);
     const idsAttr = (ids||[]).join(',');
     const checkboxes = rooms.map(r => `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(!visibleRooms.length || visibleRooms.includes(r.id))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, cat))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
       </label>`).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
@@ -7999,7 +8271,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   window.mqToggleLineItemRoom = async function(key, idsCsv, cat) {
     const ids = (idsCsv||'').split(',').filter(Boolean);
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory(cat);
     // Find this item's cached record so we can (a) know its last-saved state
     // for rollback if the save below fails, and (b) keep the cache itself in
     // sync on success — otherwise a later category-level bulk toggle would
@@ -8013,13 +8285,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const checkedIds = rooms
       .filter(r => document.getElementById(`mq-li-room-${key}-${r.id}`)?.checked)
       .map(r => r.id);
+    // Specialty items never collapse "all checked" down to [] -- see
+    // roomCheckedByDefault's comment: an empty list means "cabinet-only,
+    // no countertop" for them now, so collapsing away an explicit
+    // all-15-checked state would silently turn countertops back off.
+    // Every other category keeps the old collapse; its "all" meaning
+    // hasn't changed.
     const allChecked = checkedIds.length === rooms.length;
-    const toSave = allChecked ? [] : checkedIds;
+    // Specialty items in My Products go through the same out-of-scope
+    // preservation as mqToggleSpecRoom above -- `rooms` here is already
+    // roomsForCategory(cat), so it's already narrowed to one side while an
+    // estimator tab toggle is scoped, and a save here shouldn't drop
+    // whatever's saved for the other, currently-hidden side.
+    const toSave = (cat === 'specialty')
+      ? (() => {
+          const inScopeIds = rooms.map(r => r.id);
+          const outOfScopeIds = prevRooms.filter(id => !inScopeIds.includes(id));
+          return [...outOfScopeIds, ...checkedIds];
+        })()
+      : (allChecked ? [] : checkedIds);
     const table = cat === 'specialty' ? CONFIG.SPECIALTY_TABLE : CONFIG.LINE_ITEMS_TABLE;
     try {
       await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(toSave) })));
       const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
-      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms);
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(toSave, rooms, cat);
       if (cachedItem) cachedItem.visibleRooms = JSON.stringify(toSave);
     } catch(e) {
       console.error('Failed to save line item room links', e);
@@ -8028,10 +8317,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // reached Airtable.
       rooms.forEach(r => {
         const cb = document.getElementById(`mq-li-room-${key}-${r.id}`);
-        if (cb) cb.checked = (!prevRooms.length || prevRooms.includes(r.id));
+        if (cb) cb.checked = prevRooms.length ? prevRooms.includes(r.id) : roomCheckedByDefault(r, cat);
       });
       const summaryEl = document.getElementById(`mq-li-room-summary-${key}`);
-      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms) + ' — save failed, try again';
+      if (summaryEl) summaryEl.textContent = roomLinkSummaryText(prevRooms, rooms, cat) + ' — save failed, try again';
     }
   };
 
@@ -8047,7 +8336,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function categoryRoomDisclosure(cat) {
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory(cat);
     const categoryRooms = window._mqCategoryRooms || {};
     const hiddenIds = categoryRooms[cat] || [];
     const summary = categorySummaryText(hiddenIds, rooms);
@@ -8082,7 +8371,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   async function applyCategoryRoomChange(cat, roomId, checked) {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory(cat);
     const allRoomIds = rooms.map(r => r.id);
 
     // Update the category-level hidden list for this one room
@@ -8127,7 +8416,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const itemCb = document.getElementById(`mq-li-room-${key}-${roomId}`);
       if (itemCb) itemCb.checked = checked;
       const itemSummaryEl = document.getElementById(`mq-li-room-summary-${key}`);
-      if (itemSummaryEl) itemSummaryEl.textContent = roomLinkSummaryText(finalList, rooms);
+      if (itemSummaryEl) itemSummaryEl.textContent = roomLinkSummaryText(finalList, rooms, cat);
     }));
   }
 
@@ -10825,6 +11114,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         loadSpecialty(window._mqShopRecord.fields['Shop token']).then(specs => {
           renderSpecialty(specs, window._mqShopRecord);
         });
+      } else if (specList) {
+        // Same page revisited within the refetch throttle window -- re-apply
+        // estimator-tab scoping anyway (cheap, cached, no refetch) so a
+        // toggle flipped elsewhere doesn't leave this table's checkbox list
+        // showing a stale scope until the throttle clears, same pattern as
+        // the 'products' page above.
+        mqApplyEstimatorTabScopeToSpecialty();
       }
       if (window._mqShopRecord && !window._mqShopRecord.fields['Specialty tips popup seen']) {
         window.mqShowSpecialtyTipsModal();
@@ -10852,12 +11148,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         ]).then(([freshShop, lineItems]) => {
           if (freshShop) window._mqShopRecord = freshShop;
           window._mqLineItems = lineItems;
-          initProductsTab(window._mqShopRecord, lineItems);
+          initProductsTab(window._mqShopRecord, lineItems); // applies estimator-tab scoping itself, at the end
           if (window._mqShopRecord && !window._mqShopRecord.fields['Products tips popup seen']) {
             window.mqShowProductsTipsModal();
           }
         });
+      } else if (prodContent) {
+        // Same page revisited within the refetch throttle window (no fresh
+        // fetch above) — re-apply scoping anyway so a toggle flipped
+        // elsewhere doesn't leave stale display:none sitting here until
+        // the throttle clears.
+        mqApplyEstimatorTabScopeToProducts();
       }
+    }
+    if (page === 'rooms') {
+      mqApplyEstimatorTabScopeToRoomsPage();
+    }
+    if (page === 'pricing') {
+      // Not the first-open path below (that already renders fresh) — a
+      // revisit. Goes through the same mqph2Init re-sync as the toggle
+      // handler (mqApplyEstimatorTabScopeToPricing no-ops if the Pricing
+      // tab was never opened this session) rather than calling
+      // window.mqphApplyEstimatorTabScope() directly — that alone would
+      // still read pricing-helper-v2.js's own cached (and possibly stale)
+      // shopRecord instead of whatever window._mqShopRecord currently is.
+      mqApplyEstimatorTabScopeToPricing();
     }
     if (page === 'showroom') {
       const catsWrap = document.getElementById('mq-showroom-cats');

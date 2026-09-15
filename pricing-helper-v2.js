@@ -2157,7 +2157,7 @@ window.mqphGoToWizard = function() {
         </div>` : `
 
         ${['material','door','drawer','hinge','zone','install'].map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
-          <div class="mqph-cat-block">
+          <div class="mqph-cat-block" data-mq-cat="${cat}">
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
               <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
               ${cat==='install'
@@ -3913,7 +3913,6 @@ window.mqphGoToWizard = function() {
   function buildCTHtml() {
     const materials = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&!(r.fields['Description']||'').includes('type:backsplash')&&!(r.fields['Description']||'').includes('type:cutout'))
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
-
     function matRow(r) {
       const unitParts = (r.fields['Unit']||'sqft|sqft').split('|');
       const su = (unitParts[0]||'sqft').trim();
@@ -3987,7 +3986,7 @@ window.mqphGoToWizard = function() {
     };
 
     return `
-      <div class="mqph-ct-block">
+      <div class="mqph-ct-block" id="mqph-scope-countertop">
         <div class="mqph-cat-header" onclick="mqphToggleCategory('countertop')" style="cursor:pointer">
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-countertop" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🪨 Countertop pricing <span style="font-size:12px;font-weight:400;color:#9ca3af">(${materials.length})</span></span>
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenCTAdd()">+ Add material</button>
@@ -4062,6 +4061,19 @@ window.mqphGoToWizard = function() {
                 <span style="font-size:12px;color:#6b7280;white-space:nowrap" title="Same idea as the supply minimum, but for install labor — a small counter can still take as long to template and install as a bigger one. Leave at 0 for no minimum.">Minimum charge per counter ⓘ</span>
                 <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-ct-install-min" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+              </div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Removal rate</div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">What to charge to remove &amp; dispose of an existing countertop in THIS material — granite removal can cost more than laminate. Customers can opt into this per surface in the widget, right after choosing supply or supply + install. Leave at 0 to not offer removal for this material.</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-removal-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+                <span style="font-size:13px;color:#6b7280">per</span>
+                <select id="mqph-ct-removal-unit" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
+                  <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
+                </select>
+                ${mqphRateCalcIconHTML('mqph-ct-removal-rate', 'mqph-ct-removal-unit')}
               </div>
             </div>
 
@@ -4179,7 +4191,7 @@ window.mqphGoToWizard = function() {
       ${items.length > 0 ? `<div${items.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>${items.map(trimRow).join('')}</div>` : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
 
     return `
-      <div class="mqph-ct-block">
+      <div class="mqph-ct-block" id="mqph-scope-trim">
         <div class="mqph-cat-header" onclick="mqphToggleCategory('trim')" style="cursor:pointer">
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-trim" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>👑 Crown moulding / valance <span style="font-size:12px;font-weight:400;color:#9ca3af">(${trimItems.length})</span></span>
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenTrimAdd()">+ Add style</button>
@@ -4280,7 +4292,7 @@ window.mqphGoToWizard = function() {
     }
 
     return `
-      <div class="mqph-ct-block">
+      <div class="mqph-ct-block" id="mqph-scope-tallcab">
         <div class="mqph-cat-header" onclick="mqphToggleCategory('tallcab')" style="cursor:pointer">
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-tallcab" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏛️ Tall cabinets <span style="font-size:12px;font-weight:400;color:#9ca3af">(${tallCabs.length})</span></span>
           ${wizardHasRun
@@ -4691,6 +4703,8 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-ct-install-rate').value = '';
     document.getElementById('mqph-ct-install-unit').value = 'sqft';
     document.getElementById('mqph-ct-install-min').value = '';
+    document.getElementById('mqph-ct-removal-rate').value = '';
+    document.getElementById('mqph-ct-removal-unit').value = 'sqft';
     document.getElementById('mqph-ct-active').checked = true;
     // Default row — auto-sync flags update it live as user types rates above
     currentBsOptions = [{ label:'4" standard', heightIn:4, supplyRate:0, supplyUnit:'sqft', installRate:0, installUnit:'sqft', _supplyAutoSync:true, _installAutoSync:true }];
@@ -4744,6 +4758,8 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-ct-install-rate').value = matInstall||'';
     document.getElementById('mqph-ct-install-unit').value = matInstallUnit;
     document.getElementById('mqph-ct-install-min').value = rec.fields['Install minimum price']||'';
+    document.getElementById('mqph-ct-removal-rate').value = rec.fields['Countertop removal rate']||'';
+    document.getElementById('mqph-ct-removal-unit').value = rec.fields['Countertop removal unit']||'sqft';
     document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
     mqphRenderBsList();
     mqphRenderCutoutList();
@@ -4776,6 +4792,8 @@ window.mqphGoToWizard = function() {
         supplyMin: parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
         installRate: parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
         installMin: parseFloat(document.getElementById('mqph-ct-install-min').value||0),
+        removalRate: parseFloat(document.getElementById('mqph-ct-removal-rate').value||0),
+        removalUnit: document.getElementById('mqph-ct-removal-unit').value,
         unit: `${su}|${iu}`,
         bsOptions: cleanBsOptions,
         cutoutOptions: cleanCutoutOptions,
@@ -4794,6 +4812,8 @@ window.mqphGoToWizard = function() {
       'Minimum price':parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
       'Install rate':parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
       'Install minimum price':parseFloat(document.getElementById('mqph-ct-install-min').value||0),
+      'Countertop removal rate':parseFloat(document.getElementById('mqph-ct-removal-rate').value||0),
+      'Countertop removal unit':document.getElementById('mqph-ct-removal-unit').value,
       Unit:`${su}|${iu}`, Description:'type:material',
       'Backsplash options': JSON.stringify(cleanBsOptions),
       'Cutout options': JSON.stringify(cleanCutoutOptions),
@@ -4883,6 +4903,7 @@ window.mqphGoToWizard = function() {
         shop:[shopRecord._recordId], Name:nm, Category:'countertop',
         Rate: ctBulk.supplyRate, 'Minimum price': ctBulk.supplyMin,
         'Install rate': ctBulk.installRate, 'Install minimum price': ctBulk.installMin, Unit: ctBulk.unit,
+        'Countertop removal rate': ctBulk.removalRate, 'Countertop removal unit': ctBulk.removalUnit,
         Description:'type:material',
         'Backsplash options': JSON.stringify(ctBulk.bsOptions),
         'Cutout options': JSON.stringify(ctBulk.cutoutOptions),
@@ -5171,6 +5192,53 @@ window.mqphGoToWizard = function() {
   let ctMigrationDone = false;
   let baselinePinMigrationDone = false;
 
+  // Which cabinet-side pricing category keys to hide entirely when a shop
+  // has narrowed the widget down to Countertops only (Shop Info's
+  // "Estimator tabs" toggles). Zone (travel), tax, and any custom category
+  // aren't in this list on purpose -- they're general/shared settings, not
+  // clearly cabinet-only, and Jordan's request was specifically "all
+  // cabinet related items" (box materials, door styles, hinges, drawer
+  // configs -- the wizard-driven categories -- plus install/removal, which
+  // is quoted in cabinet-specific terms; see CAT_LABELS['install']).
+  const CABINET_ONLY_PRICING_CATS = ['material', 'door', 'drawer', 'hinge', 'install'];
+
+  // Mirrors dashboard.js's mqComputeTabScope -- same 'Hidden widget tabs'
+  // field, same {hidden, applyToPro} shape, just re-implemented here since
+  // this file is loaded as its own separate script, not a shared module.
+  function mqphComputeTabScope() {
+    let hidden = [];
+    try {
+      const parsed = shopRecord && shopRecord.fields && shopRecord.fields['Hidden widget tabs'] ? JSON.parse(shopRecord.fields['Hidden widget tabs']) : null;
+      if (parsed && Array.isArray(parsed.hidden)) hidden = parsed.hidden;
+    } catch(e) { /* keep defaults */ }
+    return {
+      countertopsOnly: hidden.includes('both') && hidden.includes('cabinets') && !hidden.includes('countertops'),
+      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets'),
+    };
+  }
+
+  // Per Jordan: "after this fix Id like to make all cabinet related items
+  // in pricing tab to become hidden when the countertops only toggle is
+  // the only on on... and if the cabinets only one is the only one toggled
+  // on then all the countertop pricing hidden." Re-run after every render
+  // (loadAndRender) and exposed as window.mqphApplyEstimatorTabScope so
+  // dashboard.js's mqToggleWidgetTab can refresh this tab live the moment
+  // a shop flips a toggle, without forcing a full rebuild.
+  function mqphApplyEstimatorTabScope() {
+    const { countertopsOnly, cabinetsOnly } = mqphComputeTabScope();
+    CABINET_ONLY_PRICING_CATS.forEach(cat => {
+      const block = document.querySelector(`.mqph-cat-block[data-mq-cat="${cat}"]`);
+      if (block) block.style.display = countertopsOnly ? 'none' : '';
+    });
+    const trimBlock = document.getElementById('mqph-scope-trim');
+    if (trimBlock) trimBlock.style.display = countertopsOnly ? 'none' : '';
+    const tallcabBlock = document.getElementById('mqph-scope-tallcab');
+    if (tallcabBlock) tallcabBlock.style.display = countertopsOnly ? 'none' : '';
+    const ctBlock = document.getElementById('mqph-scope-countertop');
+    if (ctBlock) ctBlock.style.display = cabinetsOnly ? 'none' : '';
+  }
+  window.mqphApplyEstimatorTabScope = mqphApplyEstimatorTabScope;
+
   async function loadAndRender() {
     const container=document.getElementById('mq-pricing-helper-v2');
     if(!container) return;
@@ -5189,6 +5257,7 @@ window.mqphGoToWizard = function() {
     const driftNotices = await mqphCheckBaselineDrift();
     container.innerHTML=buildEditorHTML(driftNotices);
     mqphRestoreExpandedCats();
+    mqphApplyEstimatorTabScope();
   }
 
   window.loadAndRender=loadAndRender;
