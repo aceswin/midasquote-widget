@@ -916,6 +916,14 @@
   // MODULE-LEVEL CT_MAT — populated before buildWidgetHTML runs
   // ============================================================
   let CT_MAT = {};
+  // Countertop removal rate/unit, resolved from li.otherItems the same way
+  // CT_MAT is resolved above -- hasCtRemoval() is called from buildWidgetHTML
+  // and addSurfaceInternal, neither of which has `li` in scope (that only
+  // exists inside wireWidget's own destructure of `data`), so this mirrors
+  // the CT_MAT/buildCTMAT pattern: resolved once via buildCTRemoval(data)
+  // wherever buildCTMAT(data) already runs, then read from these outer-scope
+  // vars everywhere else instead of touching `li` directly.
+  let CT_REMOVAL_RATE = 0, CT_REMOVAL_UNIT = 'sqft';
 
   // Countertop installation is priced independently from cabinet installation
   // (a shop could sub out cabinet install but do their own countertop work,
@@ -934,8 +942,14 @@
   // "Yes/No" removal choice that silently adds $0, which is more
   // confusing than just not offering it yet.
   function hasCtRemoval() {
+    return CT_REMOVAL_RATE > 0;
+  }
+
+  function buildCTRemoval(data) {
+    const { li } = data;
     const item = li.otherItems.find(i => i['Name']?.toLowerCase().includes('countertop removal'));
-    return !!(item && (item['Rate']||0) > 0);
+    CT_REMOVAL_RATE = item ? (item['Rate']||0) : 0;
+    CT_REMOVAL_UNIT = item?.['Unit'] === 'lin ft' ? 'linft' : 'sqft';
   }
 
   function buildCTMAT(data) {
@@ -6493,6 +6507,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     if (!data || !container) return;
     const { shop, specs } = data;
     buildCTMAT(data);
+    buildCTRemoval(data);
     buildTRIM(data);
     buildTALLCAB(data);
     container.innerHTML = buildWidgetHTML(shop, specs, data);
@@ -7117,6 +7132,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       shop['Box text colour']
     );
     buildCTMAT(data);
+    buildCTRemoval(data);
     buildTRIM(data);
     buildTALLCAB(data);
     container.innerHTML=buildWidgetHTML(shop,specs,data);
