@@ -3159,26 +3159,35 @@
       el.classList.add('active');
       if (id === 'cabinets') { mqRenumberSteps('c'); window.mqUpdateStepFocus('c'); }
       else if (id === 'both') { window.mqTogUseCab('b'); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
-      else if (id === 'countertops' && tabActuallyChanged) {
-        // The standalone Countertops tab has no room dropdown, so it never
-        // gets the "reselect your room — mqOnProjectTypeChange finds the
-        // matching cart entry and restores it" treatment Cabinets/Both get.
-        // Without this, a committed Countertops quote — which
-        // mqResetCountertopStandalone wipes from the form the instant it's
-        // committed, a few lines up — had NO way back: switching to
-        // another tab and back showed a genuinely empty tab (just the
-        // "+ Add another surface" button), with surfCounts still climbing
-        // from whatever surfaces existed before. This is that same
-        // restore, just triggered by re-entering the tab instead of by a
-        // room change, since Countertops only ever has one "instance" to
-        // restore (no per-room entries to choose between).
-        const idx = (window._mqQuoteCart||[]).findIndex(e => e.prefix === 'ct');
-        if (idx >= 0) {
-          const entry = window._mqQuoteCart[idx];
-          window._mqQuoteCart.splice(idx, 1);
-          mqRenderQuoteCart();
-          mqRestoreFormState('ct', entry.formSnapshot);
+      else if (id === 'countertops') {
+        if (tabActuallyChanged) {
+          // The standalone Countertops tab has no room dropdown, so it never
+          // gets the "reselect your room — mqOnProjectTypeChange finds the
+          // matching cart entry and restores it" treatment Cabinets/Both get.
+          // Without this, a committed Countertops quote — which
+          // mqResetCountertopStandalone wipes from the form the instant it's
+          // committed, a few lines up — had NO way back: switching to
+          // another tab and back showed a genuinely empty tab (just the
+          // "+ Add another surface" button), with surfCounts still climbing
+          // from whatever surfaces existed before. This is that same
+          // restore, just triggered by re-entering the tab instead of by a
+          // room change, since Countertops only ever has one "instance" to
+          // restore (no per-room entries to choose between).
+          const idx = (window._mqQuoteCart||[]).findIndex(e => e.prefix === 'ct');
+          if (idx >= 0) {
+            const entry = window._mqQuoteCart[idx];
+            window._mqQuoteCart.splice(idx, 1);
+            mqRenderQuoteCart();
+            mqRestoreFormState('ct', entry.formSnapshot);
+          }
         }
+        // Same guided step-focus treatment Cabinets/Both already get on
+        // every click into their tab (dimmed done/upcoming sections, the
+        // Continue/Back footer, auto-opening the current collapsed step,
+        // and re-arming the scroll-spy) -- previously only wired for 'c'
+        // and 'b' here, so the Countertops tab never got any of it.
+        mqRenumberSteps('ct');
+        window.mqUpdateStepFocus('ct');
       }
       // Once the customer has calculated anything at all, the sticky bar's
       // live-typing tracker (window._mqStickyPrefix) needs to follow
@@ -3924,7 +3933,7 @@
     window.mqScrollWithOffset = mqScrollWithOffset;
 
     function mqGetVisibleSections(prefix) {
-      const scopeId = prefix === 'c' ? 'mq-tab-cabinets' : (prefix === 'b' ? 'mq-tab-both' : null);
+      const scopeId = prefix === 'c' ? 'mq-tab-cabinets' : (prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : null));
       const scope = scopeId && document.getElementById(scopeId);
       if (!scope) return [];
       return [...scope.querySelectorAll('.mq-sec')].filter(sec => sec.offsetParent !== null);
@@ -4386,6 +4395,11 @@
       const surfacesContainer = document.getElementById(`mq-${prefix}-surfaces`);
       if (surfacesContainer) { surfacesContainer.innerHTML = ''; surfacesContainer.dataset.autoAdded = 'false'; }
       if (surfs[prefix]) surfs[prefix] = {};
+      // Re-add a fresh starter surface, same as the very first page load
+      // does (addSurfaceInternal('ct') during init) -- otherwise switching
+      // project types leaves the section empty with nothing but "+ Add
+      // another surface" and no obvious way back in.
+      addSurfaceInternal(prefix);
     }
 
     // ===================== Snapshot / restore a project type's form state =====================
@@ -4826,6 +4840,12 @@
         });
       }
       mqRefreshSectionVisibility(prefix);
+      // mqRefreshSectionVisibility is a no-op for 'ct' (it only handles 'c'/
+      // 'b'), so it never reaches its own mqRenumberSteps/mqUpdateStepFocus
+      // calls for the Countertops tab -- do that step here instead, so
+      // changing project type actually reflects the step-1 reset above
+      // (dimmed done/upcoming sections, current-step highlight, auto-open).
+      if (prefix === 'ct') { mqRenumberSteps('ct'); window.mqUpdateStepFocus('ct'); }
       if (restoreSnapshot) mqRestoreFormState(prefix, restoreSnapshot);
       mqRefreshBallparkWording(prefix);
       if (window._mqStickyPrefix === prefix) mqUpdateLivePreview(prefix);
