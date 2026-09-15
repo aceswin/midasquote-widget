@@ -3190,12 +3190,39 @@ window.logoutMember = async function () {
     if (cabCard) cabCard.style.display = countertopsOnly ? 'none' : '';
     if (ctCard) ctCard.style.display = cabinetsOnly ? 'none' : '';
   }
+  // My Products' own category cards -- catSection(cat) tags each one with
+  // data-mq-cat. Only ever needs window._mqShopRecord read fresh (never a
+  // cached copy), since this runs at the end of initProductsTab, which
+  // itself is always handed the just-refetched shop record by mqNav's
+  // 'products' block.
+  function mqApplyEstimatorTabScopeToProducts() {
+    const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
+    CABINET_ONLY_CATS.forEach(cat => {
+      const card = document.querySelector(`#mq-products-content .mq-card[data-mq-cat="${cat}"]`);
+      if (card) card.style.display = countertopsOnly ? 'none' : '';
+    });
+    const ctCard = document.querySelector('#mq-products-content .mq-card[data-mq-cat="countertop"]');
+    if (ctCard) ctCard.style.display = cabinetsOnly ? 'none' : '';
+  }
   // Refreshes the Pricing tab's own scoping too, if it's been built yet —
   // pricing-helper-v2.js is a separate file/module (loaded lazily the
-  // first time a shop opens the Pricing tab), so this is a no-op until
-  // then; loadAndRender applies the same scoping on every real (re)build.
+  // first time a shop opens the Pricing tab). Deliberately a full
+  // window.mqph2Init() re-sync rather than just calling
+  // window.mqphApplyEstimatorTabScope() directly: pricing-helper-v2.js
+  // caches its own `shopRecord` from whatever object mqph2Init last passed
+  // it, and 'products'/'showroom' both REPLACE window._mqShopRecord with a
+  // brand-new object on every visit (`window._mqShopRecord = freshShop`)
+  // — once that's happened, the Pricing tab's cached copy is a different
+  // object than window._mqShopRecord and never sees a later write to
+  // window._mqShopRecord.fields, no matter how many times this function
+  // runs. Re-running mqph2Init hands it the CURRENT window._mqShopRecord
+  // fresh every time, which both re-syncs the reference and re-applies the
+  // scoping (loadAndRender calls mqphApplyEstimatorTabScope at the end).
   function mqApplyEstimatorTabScopeToPricing() {
-    if (typeof window.mqphApplyEstimatorTabScope === 'function') window.mqphApplyEstimatorTabScope();
+    const helperContainer = document.getElementById('mq-pricing-helper-v2');
+    if (helperContainer && helperContainer.dataset.loaded && typeof window.mqph2Init === 'function') {
+      window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
+    }
   }
 
   // Same wording as the widget's hardcoded fallback guide (defaultMeasureGuideHTML
@@ -5858,7 +5885,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const items = byCategory[cat] || [];
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
-      return `<div class="mq-card" style="padding:0;overflow:hidden">
+      return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
           <span id="mq-cat-arrow-${cat}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
@@ -6320,6 +6347,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             </div>
             <div style="font-size:11px;color:#9ca3af;margin-top:10px">Shown on any item you mark below — change the wording or color here and every marked item updates automatically, no need to re-mark anything.</div>
           </div>` + catsOrdered.map(catSection).join('') + specSection;
+
+      mqApplyEstimatorTabScopeToProducts();
 
       // Wire up upload buttons for every photo card just rendered
       const shopToken = shopRecord.fields['Shop token'] || 'unknown-shop';
@@ -11063,12 +11092,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         ]).then(([freshShop, lineItems]) => {
           if (freshShop) window._mqShopRecord = freshShop;
           window._mqLineItems = lineItems;
-          initProductsTab(window._mqShopRecord, lineItems);
+          initProductsTab(window._mqShopRecord, lineItems); // applies estimator-tab scoping itself, at the end
           if (window._mqShopRecord && !window._mqShopRecord.fields['Products tips popup seen']) {
             window.mqShowProductsTipsModal();
           }
         });
+      } else if (prodContent) {
+        // Same page revisited within the refetch throttle window (no fresh
+        // fetch above) — re-apply scoping anyway so a toggle flipped
+        // elsewhere doesn't leave stale display:none sitting here until
+        // the throttle clears.
+        mqApplyEstimatorTabScopeToProducts();
       }
+    }
+    if (page === 'rooms') {
+      mqApplyEstimatorTabScopeToRoomsPage();
+    }
+    if (page === 'pricing') {
+      // Not the first-open path below (that already renders fresh) — a
+      // revisit. Goes through the same mqph2Init re-sync as the toggle
+      // handler (mqApplyEstimatorTabScopeToPricing no-ops if the Pricing
+      // tab was never opened this session) rather than calling
+      // window.mqphApplyEstimatorTabScope() directly — that alone would
+      // still read pricing-helper-v2.js's own cached (and possibly stale)
+      // shopRecord instead of whatever window._mqShopRecord currently is.
+      mqApplyEstimatorTabScopeToPricing();
     }
     if (page === 'showroom') {
       const catsWrap = document.getElementById('mq-showroom-cats');
