@@ -573,6 +573,7 @@
         #midasquote-widget .mq-logo-real img{max-width:140px}
         #midasquote-widget .mq-tab-bar{padding:8px 0.5rem;gap:5px}
         #midasquote-widget .mq-tab{padding:9px 6px;font-size:12.5px}
+        #midasquote-widget .mq-tab.mq-tab-lone{width:calc(50% - 2.5px)}
         /* The measuring guide image is a wide landscape infographic — on a
            narrow phone, the box's own 16px side padding eats into already
            limited width. Bleeding the image past just that padding (not the
@@ -594,6 +595,7 @@
       #midasquote-widget .mq-shop-sub{font-size:13px;color:#4b5563}
       #midasquote-widget .mq-tab-bar{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;gap:8px}
       #midasquote-widget .mq-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-size:14px;font-weight:500;color:#4b5563;cursor:pointer;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.10)}
+      #midasquote-widget .mq-tab.mq-tab-lone{flex:0 0 auto;width:calc(50% - 4px)}
       #midasquote-widget .mq-tab.active{background:${bc};color:#fff;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget .mq-tab-icon{font-size:18px;flex-shrink:0}
       #midasquote-widget .mq-tab-label{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
@@ -2739,23 +2741,21 @@
       // that's exactly the 50/50 split Jordan wants, so it's left alone —
       // no override needed. With only 1 tab left, flex:1 would stretch it
       // to the full width instead (tried and rejected — looked like a
-      // giant single bar). Rather than shrinking that lone tab down to its
-      // own natural size (also tried and rejected — looked cramped/
-      // off-balance against the rest of the widget), keep it at the same
-      // 50/50 width it'd have alongside a second tab, and fill that other
-      // half with an inert, unlabeled placeholder pill — same shape as a
-      // real tab, just blank and grey, so the bar still reads as a normal
-      // two-pill row instead of one oversized button.
+      // giant single bar). An earlier version filled the other half with a
+      // blank placeholder pill to keep that 50/50 width, but that read as
+      // left-aligned rather than centered ("id like the one to be centered
+      // on the widget... keep the size it is though. i like the half width
+      // size it is now"). So instead: pin the lone tab's width to that same
+      // half-width size via the .mq-tab-lone class (flex:0 0 auto overrides
+      // the flex:1 stretch; the CSS rule itself accounts for the tab bar's
+      // gap so the width matches exactly what it'd be next to a second
+      // tab), then center the now-shorter bar with justify-content.
       const visibleCount = ALL_TAB_IDS.length - hidden.length;
       if (visibleCount === 1) {
         const tabBar = document.querySelector('.mq-tab-bar');
-        if (tabBar) {
-          const placeholder = document.createElement('div');
-          placeholder.className = 'mq-tab mq-tab-placeholder';
-          placeholder.setAttribute('aria-hidden', 'true');
-          placeholder.style.cssText = 'cursor:default;background:#f3f4f6;border-color:#f3f4f6;box-shadow:none;pointer-events:none';
-          tabBar.appendChild(placeholder);
-        }
+        const loneTab = document.querySelector('.mq-tab');
+        if (tabBar) tabBar.style.justifyContent = 'center';
+        if (loneTab) loneTab.classList.add('mq-tab-lone');
       }
       const firstVisible = ALL_TAB_IDS.find(id => !hidden.includes(id));
       const activeContent = document.querySelector('.mq-tab-content.active');
@@ -3204,17 +3204,30 @@
       if (note) note.style.display = 'none';
     };
     // Shows/hides specialty items based on the currently selected room. An
-    // item with an empty visibleRooms list is visible everywhere (backward
-    // compatible default for every item that's never had this configured).
+    // item with an empty visibleRooms list is visible everywhere it's
+    // ELIGIBLE to be -- except a countertop project type, which is the one
+    // case that's opt-in only rather than backward-compatible-default-on.
+    // Per Jordan: "The only things that should be able to show in
+    // countertops are specialty items that have been selected to. By
+    // default any of the prepopulated ones shouldnt show in countertops...
+    // if someone adds a new one it can be shown in there if they want" --
+    // so an empty/never-configured visibleRooms list still means "every
+    // cabinet-side project type" same as always, but never implicitly
+    // includes a countertop one; a shop has to explicitly check a
+    // countertop project type's box (Products tab) for an item to show
+    // there. This applies uniformly to every specialty item, prepopulated
+    // defaults and shop-added ones alike -- there's no separate "is this a
+    // prepopulated item" flag to key off, and none is needed.
     // If a previously-selected item gets hidden by the room switch, its
     // quantity resets to 0 so nothing stays silently "charged" for a room
     // it no longer applies to.
     window.mqRefreshRoomVisibility=(prefix)=>{
       const roomId = gv(`mq-${prefix}-room`);
+      const roomIsCountertop = (window._mqRoomTypes||[]).find(r => r.id === roomId)?.forCountertops === true;
       document.querySelectorAll(`[id^="mq-sp-${prefix}-"]`).forEach(el=>{
         let rooms=[];
         try { rooms = JSON.parse(el.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
-        const visible = !rooms.length || rooms.includes(roomId);
+        const visible = rooms.length ? rooms.includes(roomId) : !roomIsCountertop;
         el.style.display = visible ? '' : 'none';
         if (!visible) {
           const idx = parseInt(el.id.split('-').pop(), 10);

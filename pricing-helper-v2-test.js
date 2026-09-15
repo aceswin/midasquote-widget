@@ -2157,7 +2157,7 @@ window.mqphGoToWizard = function() {
         </div>` : `
 
         ${['material','door','drawer','hinge','zone','install'].map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
-          <div class="mqph-cat-block">
+          <div class="mqph-cat-block" data-mq-cat="${cat}">
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
               <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
               ${cat==='install'
@@ -3986,7 +3986,7 @@ window.mqphGoToWizard = function() {
     };
 
     return `
-      <div class="mqph-ct-block">
+      <div class="mqph-ct-block" id="mqph-scope-countertop">
         <div class="mqph-cat-header" onclick="mqphToggleCategory('countertop')" style="cursor:pointer">
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-countertop" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🪨 Countertop pricing <span style="font-size:12px;font-weight:400;color:#9ca3af">(${materials.length})</span></span>
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenCTAdd()">+ Add material</button>
@@ -4191,7 +4191,7 @@ window.mqphGoToWizard = function() {
       ${items.length > 0 ? `<div${items.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>${items.map(trimRow).join('')}</div>` : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
 
     return `
-      <div class="mqph-ct-block">
+      <div class="mqph-ct-block" id="mqph-scope-trim">
         <div class="mqph-cat-header" onclick="mqphToggleCategory('trim')" style="cursor:pointer">
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-trim" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>👑 Crown moulding / valance <span style="font-size:12px;font-weight:400;color:#9ca3af">(${trimItems.length})</span></span>
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenTrimAdd()">+ Add style</button>
@@ -4292,7 +4292,7 @@ window.mqphGoToWizard = function() {
     }
 
     return `
-      <div class="mqph-ct-block">
+      <div class="mqph-ct-block" id="mqph-scope-tallcab">
         <div class="mqph-cat-header" onclick="mqphToggleCategory('tallcab')" style="cursor:pointer">
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-tallcab" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏛️ Tall cabinets <span style="font-size:12px;font-weight:400;color:#9ca3af">(${tallCabs.length})</span></span>
           ${wizardHasRun
@@ -5192,6 +5192,53 @@ window.mqphGoToWizard = function() {
   let ctMigrationDone = false;
   let baselinePinMigrationDone = false;
 
+  // Which cabinet-side pricing category keys to hide entirely when a shop
+  // has narrowed the widget down to Countertops only (Shop Info's
+  // "Estimator tabs" toggles). Zone (travel), tax, and any custom category
+  // aren't in this list on purpose -- they're general/shared settings, not
+  // clearly cabinet-only, and Jordan's request was specifically "all
+  // cabinet related items" (box materials, door styles, hinges, drawer
+  // configs -- the wizard-driven categories -- plus install/removal, which
+  // is quoted in cabinet-specific terms; see CAT_LABELS['install']).
+  const CABINET_ONLY_PRICING_CATS = ['material', 'door', 'drawer', 'hinge', 'install'];
+
+  // Mirrors dashboard.js's mqComputeTabScope -- same 'Hidden widget tabs'
+  // field, same {hidden, applyToPro} shape, just re-implemented here since
+  // this file is loaded as its own separate script, not a shared module.
+  function mqphComputeTabScope() {
+    let hidden = [];
+    try {
+      const parsed = shopRecord && shopRecord.fields && shopRecord.fields['Hidden widget tabs'] ? JSON.parse(shopRecord.fields['Hidden widget tabs']) : null;
+      if (parsed && Array.isArray(parsed.hidden)) hidden = parsed.hidden;
+    } catch(e) { /* keep defaults */ }
+    return {
+      countertopsOnly: hidden.includes('both') && hidden.includes('cabinets') && !hidden.includes('countertops'),
+      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets'),
+    };
+  }
+
+  // Per Jordan: "after this fix Id like to make all cabinet related items
+  // in pricing tab to become hidden when the countertops only toggle is
+  // the only on on... and if the cabinets only one is the only one toggled
+  // on then all the countertop pricing hidden." Re-run after every render
+  // (loadAndRender) and exposed as window.mqphApplyEstimatorTabScope so
+  // dashboard.js's mqToggleWidgetTab can refresh this tab live the moment
+  // a shop flips a toggle, without forcing a full rebuild.
+  function mqphApplyEstimatorTabScope() {
+    const { countertopsOnly, cabinetsOnly } = mqphComputeTabScope();
+    CABINET_ONLY_PRICING_CATS.forEach(cat => {
+      const block = document.querySelector(`.mqph-cat-block[data-mq-cat="${cat}"]`);
+      if (block) block.style.display = countertopsOnly ? 'none' : '';
+    });
+    const trimBlock = document.getElementById('mqph-scope-trim');
+    if (trimBlock) trimBlock.style.display = countertopsOnly ? 'none' : '';
+    const tallcabBlock = document.getElementById('mqph-scope-tallcab');
+    if (tallcabBlock) tallcabBlock.style.display = countertopsOnly ? 'none' : '';
+    const ctBlock = document.getElementById('mqph-scope-countertop');
+    if (ctBlock) ctBlock.style.display = cabinetsOnly ? 'none' : '';
+  }
+  window.mqphApplyEstimatorTabScope = mqphApplyEstimatorTabScope;
+
   async function loadAndRender() {
     const container=document.getElementById('mq-pricing-helper-v2');
     if(!container) return;
@@ -5210,6 +5257,7 @@ window.mqphGoToWizard = function() {
     const driftNotices = await mqphCheckBaselineDrift();
     container.innerHTML=buildEditorHTML(driftNotices);
     mqphRestoreExpandedCats();
+    mqphApplyEstimatorTabScope();
   }
 
   window.loadAndRender=loadAndRender;
