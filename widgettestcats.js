@@ -3314,6 +3314,12 @@
     refacing: ['https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg'],
     repainting: ['https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg'],
     restaining: ['https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg'],
+    // Countertop project types (forCountertops:true) get their own single
+    // default image, resolved directly off room.forCountertops below rather
+    // than through mqDefaultImageKey's id/name matching -- a countertop room
+    // named e.g. "Kitchen counters" would otherwise incorrectly match the
+    // cabinet-context 'kitchen' key above (name.includes('kitchen')).
+    countertop: [MQ_MEASURE_IMAGE_BASE + 'countertops.jpg'],
   };
 
   // Matches a room to one of the 6 default-image keys above. Tries the id
@@ -3566,7 +3572,7 @@
       // just one, now that most rooms ship with a small default gallery.
       const allImages = customPrimary
         ? [customPrimary, ...customExtra]
-        : (customExtra.length ? customExtra : (room ? (MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || []) : []));
+        : (customExtra.length ? customExtra : (room ? (room.forCountertops ? MQ_DEFAULT_MEASURE_IMAGES.countertop : (MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || [])) : []));
       guideEl.innerHTML = ''; // clear before rebuilding
       if (allImages.length > 1) {
         guideEl.appendChild(mqBuildMeasureCarousel(allImages, room));
