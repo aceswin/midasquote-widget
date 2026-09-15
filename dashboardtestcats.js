@@ -32,15 +32,55 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
   const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
+  // This script's own URL, captured while it's still executing at its own
+  // top level (document.currentScript only resolves correctly here, not
+  // later inside an async function) — used by mqCheckForNewerDeploy below
+  // to re-fetch itself and check whether a newer version has been deployed
+  // since this tab loaded.
+  const MQ_DASHBOARD_SCRIPT_URL = document.currentScript ? document.currentScript.src : '';
+
+  // Airtable returns up to 100 records per request and signals "there's
+  // more" via an `offset` in the response, which you pass back in to get
+  // the next page. This used to just take that first 100-record page and
+  // stop, so ANY table that grew past 100 rows for a shop (Leads was the
+  // one Jordan actually hit, 2026-09-12) silently hid everything past the
+  // 100th — new leads stopped appearing, deleting one just let the
+  // next-oldest slide in to refill the count back to 100, and Jordan
+  // advertises unlimited specialty items/pricing items, which this same
+  // cap would have quietly broken too once a shop's catalog grew past it.
+  //
+  // First attempt at this fix (2026-09-12) added the offset-following loop
+  // below but kept `maxRecords=100` in the request — which is a DIFFERENT
+  // parameter from `pageSize`. `pageSize` caps records per page (max 100);
+  // `maxRecords` caps the TOTAL records returned across every page,
+  // period. With `maxRecords=100` set, Airtable hands back exactly 100 and
+  // never includes an `offset` for anything beyond that, since 100 total
+  // is literally what was asked for — so the loop below exited after one
+  // page every time, reproducing the exact same 100-record ceiling despite
+  // the "fix." Corrected same day to `pageSize=100` (no `maxRecords` at
+  // all), which asks for 100-at-a-time with no overall cap, letting the
+  // loop actually reach every page. The 50-page ceiling (5,000 records) is
+  // just a defensive backstop against an infinite loop if Airtable ever
+  // returned a malformed/repeating offset — no real shop is anywhere near
+  // that many rows in any one table.
   async function atGet(table, formula) {
-    const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=100`;
-    const res = await fetch(url, { headers: AT_HEADS });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
-    }
-    const data = await res.json();
-    return data.records || [];
+    let allRecords = [];
+    let offset;
+    let pages = 0;
+    do {
+      const offsetParam = offset ? `&offset=${offset}` : '';
+      const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100${offsetParam}`;
+      const res = await fetch(url, { headers: AT_HEADS });
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
+      }
+      const data = await res.json();
+      allRecords = allRecords.concat(data.records || []);
+      offset = data.offset;
+      pages++;
+    } while (offset && pages < 50);
+    return allRecords;
   }
 
   async function atUpdate(table, id, fields) {
@@ -218,8 +258,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Project type section title/hint</strong> — the heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
         <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
-        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge.</p>
+        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount — below that, the monthly-payment line stays hidden, so it never shows up looking oddly small on a low-cost quote.</p>
         <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
+        <p><strong>🗂️ Estimator tabs</strong> — a card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
         <p>Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
       `
     },
@@ -244,11 +285,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
         <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
         <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
-        <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another [category]'s pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
+        <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
+        <p><strong>⭐ Baseline</strong> — Box Materials, Door Styles, and Hinges each have one item pinned as the baseline (marked with a ⭐ Baseline badge) that every other item in the category is priced against. It automatically re-pins to whichever item is genuinely cheapest the moment one is saved. Delete the current baseline and you'll be asked to pick what becomes the new one, with ties shown so you can choose.</p>
+        <p><strong>Sort any item list</strong> by clicking its Name or Price column header — the active sort highlights in blue. Lists past 10 items scroll in place instead of pushing the page down.</p>
+        <p><strong>✏️ Edit install/removal rates</strong> — requote your whole Installation & Removal set at once, pre-filled with your current rates. Deleting any one rate deletes the whole set, since the widget needs all of them to price every job type correctly.</p>
+        <p><strong>See (and edit) the original quote behind a rate</strong> — opening Edit on a Box Material, Door Style, Drawer Config, or Hinge now shows the real job price that rate came from, so you can update it by typing a new job total instead of doing the math yourself.</p>
         <p style="margin-top:1.25rem"><strong>How some of the trickier pricing actually works:</strong></p>
         <p><strong>Extended (36"–40") upper cabinets</strong> add a flat 30% on top of the material/door cost and the install cost for upper cabinets only — base cabinets are never affected, since it's only the uppers that get taller to reach the ceiling.</p>
         <p><strong>Tall cabinets</strong> are priced per unit: your wizard's baseline unit price (24" wide, baseline material & door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced just because it shares a door style with the rest of the kitchen.</p>
-        <p><strong>Countertop edges</strong> are always priced per linear foot — there's genuinely no other accurate way to price an edge profile, since its cost is set by the length of material being shaped, not the counter's overall area. To account for the parts of a counter this tool can't precisely measure — the "returns" where an edge wraps around each end — every edge calculation adds 2 extra returns' worth of the counter's depth on top of its straight length. That's a deliberately generous assumption rather than an exact one: since this is a ballpark estimate, it's better to slightly overestimate an edge than to surprise a customer with a bigger number later at the real quote.</p>
       `
     },
     specialty: {
@@ -263,6 +307,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
         <p><strong>🌍 Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
+        <p><strong>Variants</strong> — give one item multiple options (like Maple/Oak/MDF under one "Crown Molding" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
+        <p><strong>Pro only</strong> — hides an item from the customer-facing widget entirely while keeping it available in MidasQuote Pro.</p>
       `
     },
     proposals: {
@@ -302,6 +348,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Groups</h4>
         <p>In Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🏆 Best sellers</h4>
+        <p><strong>🏆 Best seller badge</strong> — mark any item's photo to show a small badge on the widget; the badge's label (default "Best seller") is customizable from Marketing Kit.</p>
       `
     },
     showroom: {
@@ -315,6 +364,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
         <p>The live preview below is your actual showroom page, not a mockup — it's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
         <p>Your showroom has its own link that works completely on its own — paste it into your own website's navigation if you'd like, it doesn't need the widget at all.</p>
+        <p><strong>🧩 Embed on a page</strong> — beyond the standalone link, your showroom can be embedded right on your own website as a self-sizing iframe — grab the code from the "Embed on a page" card. You can independently show or hide the shop info block, top navigation, hero banner, and project-type filter bar just for the embedded version, so it blends into your site instead of duplicating your own header/nav.</p>
+        <p><strong>🖱️ "See our showroom" button</strong> — choose whether the widget's own showroom button opens the popup page (default) or sends customers straight to your embedded page instead.</p>
       `
     },
     templates: {
@@ -379,11 +430,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">👋</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           Every tab has a <strong style="color:#2563eb">❓ Need help?</strong> button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
+          <br><br>
+          Only offer some of what MidasQuote can quote? In Shop Info → <strong>🗂️ Estimator tabs</strong>, you can turn off whichever tabs don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
           <br><br>
           Take your time exploring — there's no rush, and almost everything here autosaves as you go.
         </div>
@@ -407,16 +460,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'aug2026-update-roundup';
+  const MQ_LATEST_ANNOUNCEMENT = 'sep2026-countertop-shapes';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p style="margin-bottom:14px"><strong>Live-updating estimates</strong> — swap a door, material, or countertop and watch the whole estimate update instantly — not just the sticky total at the bottom, the full itemized breakdown too. No need to hit Calculate again to see it reflect your latest change.</p>
-      <p style="margin-bottom:14px"><strong>Email me a copy</strong> — customers can now email themselves their current estimate anytime, right from the sticky bar. Already gave their email earlier? It sends instantly. Skipped it? A quick one-field prompt asks just for that, nothing more.</p>
-      <p style="margin-bottom:14px"><strong>Smarter price badges</strong> — $/$$/$$$ badges now reflect real standing within each collection and category, instead of being thrown off by unrelated pricier (or cheaper) items elsewhere in your catalog.</p>
-      <p style="margin-bottom:14px"><strong>Best seller badges</strong> — mark your top items (any door, material, drawer, countertop, or specialty item) with an eye-catching badge right on the widget. Customize the wording ("Best seller," "Our pick," whatever fits) and the color, both from the top of My Products — change either one later and every already-marked item updates automatically, no need to re-mark anything.</p>
+      <p style="margin-bottom:14px"><strong>Countertop shapes</strong> — customers quoting a countertop can now choose Straight, L-Shape, or U-Shape and measure each section on its own, instead of trying to boil an irregular counter down into one combined number. It's a quicker, more accurate way for them to get you measurements you can actually trust.</p>
+      <p style="margin-bottom:14px;padding:12px 14px;background:#f9fafb;border-radius:8px;font-size:13px;color:#4b5563;line-height:1.6">📬 <strong>Quick reminder:</strong> replies to your support form submissions occasionally land in junk or spam mail instead of your inbox. If you've submitted a request and haven't heard back, it's worth a quick check there before following up again.</p>
       <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
-      <p style="font-size:13px;color:#4b5563;line-height:1.6">Mass price editing — update the price on multiple same-priced items all at once — and quick price edits right from the Pricing dashboard, no need to open each item individually.</p>
+      <p style="font-size:13px;color:#4b5563;line-height:1.6">More countertop updates — photos and videos walking customers through exactly how to measure their space, plus new options for refacing-style projects using specialty item variants.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
@@ -428,7 +479,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:520px;width:100%;padding:2rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:14px">${MQ_ANNOUNCEMENT_CONTENT.title}</div>
         <div style="font-size:14px;color:#374151;line-height:1.7;text-align:left;margin-bottom:1.5rem">${MQ_ANNOUNCEMENT_CONTENT.body}</div>
         <button onclick="mqCloseAnnouncementModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it</button>
@@ -489,7 +540,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">⭐</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
@@ -533,7 +584,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">📦</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
@@ -631,6 +682,18 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-table{width:100%;border-collapse:collapse}
       #midasquote-dashboard .mq-table th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:10px 16px;border-bottom:1px solid #e5e7eb;text-align:left}
       #midasquote-dashboard .mq-table td{font-size:13px;padding:12px 16px;border-bottom:1px solid #f3f4f6;color:#111}
+      /* Leads table only (the new checkbox column pushed it wider than the
+         card — Jordan reported the last column bleeding past the right
+         edge, 2026-09-12). Tighter padding just on this table's cells
+         claws back enough width that the row fits without needing the
+         .mq-table-wrap horizontal scrollbar in the first place. Scoped to
+         .mq-table-compact specifically so Specialty Items/Line Items/
+         Proposal Templates — which already fit fine — keep their normal
+         spacing. */
+      #midasquote-dashboard .mq-table-compact th,
+      #midasquote-dashboard .mq-table-compact td{padding-left:8px;padding-right:8px}
+      #midasquote-dashboard .mq-table-compact th:first-child,
+      #midasquote-dashboard .mq-table-compact td:first-child{padding-left:12px}
       /* The Specialty Items table has more columns than any other table on
          the dashboard (11, even after removing the standalone Variants
          column) — the base 16px horizontal cell padding that's fine for
@@ -797,7 +860,8 @@ window.logoutMember = async function () {
               </select>
             </div>
             <div id="mq-leads-msg"></div>
-            <div style="margin-bottom:1rem;text-align:right">
+            <div style="margin-bottom:1rem;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px">
+              <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSelectedLeads()">🗑️ Delete selected</button>
               <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteAllLeads()">🗑️ Clear all leads</button>
             </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
@@ -1085,6 +1149,19 @@ window.logoutMember = async function () {
                 </select>
               </div>
             </div>
+
+            <div class="mq-card" style="margin-top:1.25rem">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span style="font-size:18px">🪨</span>
+                <div style="font-size:15px;font-weight:700;color:#1a1a1a">Countertop project types</div>
+              </div>
+              <div style="font-size:12px;color:#6b7280;margin-bottom:1rem;line-height:1.6">A separate set of project types just for countertop quotes — shown to customers on your Countertops tab (and in the countertop section of a full project quote) before they measure. These are purely descriptive — a welcome note plus a measuring guide — and never change pricing.</div>
+              <div id="mq-rooms-list-ct"></div>
+              <div id="mq-rooms-list-ct-empty" style="display:none;font-size:12px;color:#9ca3af;padding:4px 0 12px">No countertop project types yet. Add one below if you'd like customers to pick something like "New countertop install" or "Countertop replacement" before they measure — totally optional.</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
+                <button class="mq-btn mq-btn-sm" onclick="mqAddRoom(true)">+ Add countertop project type</button>
+              </div>
+            </div>
           </div>
 
           <!-- PRICING -->
@@ -1333,15 +1410,93 @@ window.logoutMember = async function () {
             <div class="mq-page-sub">Manage everything that can appear on your showroom page — your real priced categories (materials, doors, specialty items, etc.) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
             <div id="mq-showroom-msg"></div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">🔗 Your showroom link</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">This is a standalone page with its own link — share it anywhere, including as a page in your own website's navigation. It works on its own, with or without the widget.</p>
-              <div class="mq-embed-box"><span id="mq-showroomtab-link-text"></span><button class="mq-copy-btn" id="mq-showroomtab-copy-btn">Copy</button></div>
-              <button class="mq-btn" style="margin-top:10px" id="mq-showroomtab-open-btn">Open showroom ↗</button>
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('link')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🔗 Your showroom link</div>
+                <span id="mq-sr-arrow-link" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-link" style="display:none;padding:0 1.25rem 1.25rem">
+                <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">This is a standalone page with its own link — share it anywhere, including as a page in your own website's navigation. It works on its own, with or without the widget.</p>
+                <div class="mq-embed-box"><span id="mq-showroomtab-link-text"></span><button class="mq-copy-btn" id="mq-showroomtab-copy-btn">Copy</button></div>
+                <button class="mq-btn" style="margin-top:10px" id="mq-showroomtab-open-btn">Open showroom ↗</button>
+              </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">🎭 Showroom style</div>
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('embed')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🧩 Embed on a page</div>
+                <span id="mq-sr-arrow-embed" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-embed" style="display:none;padding:0 1.25rem 1.25rem">
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Prefer it to show up right inside a page on your own site instead of opening a new tab? Paste the code below where you want it to appear — no need to pick a size, it automatically sizes itself to fit its own content. These four switches only affect how it looks <strong>once embedded</strong> — your standalone showroom link/popup always shows everything, exactly as it does today.</p>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show shop info</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">Your logo, shop name, and city — the whole top-left block</div>
+                </div>
+                <div class="mq-toggle on" id="mq-showroom-embed-shopinfo-toggle" onclick="mqShowroomToggleEmbedDisplay('shopInfo')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show top navigation links</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">The row of section jump-links (Box Materials, Door Styles, etc.)</div>
+                </div>
+                <div class="mq-toggle on" id="mq-showroom-embed-nav-toggle" onclick="mqShowroomToggleEmbedDisplay('nav')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show hero banner</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">The large colored "Materials & Options" banner at the top</div>
+                </div>
+                <div class="mq-toggle on" id="mq-showroom-embed-hero-toggle" onclick="mqShowroomToggleEmbedDisplay('hero')"></div>
+              </div>
+              <div class="mq-toggle-row" style="margin-bottom:1.25rem">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show project-type filter</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">The Kitchen / Bathroom / etc. filter chips row</div>
+                </div>
+                <div class="mq-toggle on" id="mq-showroom-embed-filterbar-toggle" onclick="mqShowroomToggleEmbedDisplay('filterBar')"></div>
+              </div>
+              <div style="border-top:1px solid #e5e7eb;padding-top:1rem">
+                <div class="mq-embed-box" style="margin-bottom:10px"><span id="mq-showroom-embed-display" style="white-space:pre-wrap;word-break:break-all"></span></div>
+                <button class="mq-btn mq-btn-primary" id="mq-showroom-embed-copy-btn" style="width:100%">📋 Copy embed code</button>
+              </div>
+              </div>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('button')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🖱️ "See our showroom" button (on the widget)</div>
+                <span id="mq-sr-arrow-button" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-button" style="display:none;padding:0 1.25rem 1.25rem">
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Your widget already has its own "🖼️ See our showroom" button for customers. If you've embedded the showroom on a page of your own (above), you can send that button there instead of popping open a new tab on widget.midasquote.com. You can always have both — this only changes where the widget's own button goes; it doesn't affect whether your embedded page exists.</p>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <div id="mq-showroom-target-popup" onclick="mqShowroomSetButtonTarget('popup')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🪟 Popup (default)</div>
+                  <div style="font-size:12px;color:#6b7280">Opens your standalone showroom link in a new tab — today's behavior. Works whether or not you've embedded the showroom anywhere.</div>
+                </div>
+                <div id="mq-showroom-target-page" onclick="mqShowroomSetButtonTarget('own_page')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🔗 My own page</div>
+                  <div style="font-size:12px;color:#6b7280">Sends customers to a page on your own site instead — still opens in a new tab, so their quote stays open too. Needs the URL below.</div>
+                </div>
+              </div>
+              <div id="mq-showroom-target-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
+              <div id="mq-showroom-target-url-wrap" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">
+                <label class="mq-label">Your showroom page URL</label>
+                <p style="font-size:12px;color:#6b7280;margin:2px 0 8px">The page on your own site where you pasted the embed code above.</p>
+                <input type="url" id="mq-showroom-target-url-input" placeholder="https://yoursite.com/showroom" style="width:100%;margin-bottom:8px"/>
+                <button class="mq-btn mq-btn-sm" onclick="mqSaveShowroomButtonUrl()">Save</button>
+              </div>
+              </div>
+            </div>
+
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('style')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">🎭 Showroom style</div>
+                <span id="mq-sr-arrow-style" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-style" style="display:none;padding:0 1.25rem 1.25rem">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Choose how your showroom page looks. Specialty Items show either way — everything else depends on which one's picked.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
                 <div id="mq-showroom-mode-default" onclick="mqShowroomSetMode('default')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
@@ -1360,23 +1515,34 @@ window.logoutMember = async function () {
                 <input type="text" id="mq-showroom-subhead-input" maxlength="160" placeholder="Browse some of our past projects and features. Have questions? Get in touch for a full consultation." style="width:100%;margin-bottom:8px"/>
                 <button class="mq-btn mq-btn-sm" onclick="mqSaveShowroomSubheading()">Save</button>
               </div>
+              </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem">
-              <div class="mq-card-title">📦 Your categories</div>
+            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+              <div onclick="mqToggleShowroomSection('categories')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">📦 Your categories</div>
+                <span id="mq-sr-arrow-categories" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+              </div>
+              <div id="mq-sr-body-categories" style="display:none;padding:0 1.25rem 1.25rem">
               <p id="mq-showroom-cats-intro" style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use the ▲▼ arrows to reorder. Every change saves right away — no separate "Save" button on this tab.</p>
               <div id="mq-showroom-cats"><div class="mq-loading">Loading...</div></div>
               <div id="mq-showroom-addcat-note" style="font-size:12px;color:#6b7280;display:none"></div>
               <button id="mq-showroom-addcat-btn" class="mq-btn mq-btn-primary" style="margin-top:12px" onclick="mqAddShowroomCategory()">+ New category</button>
+              </div>
             </div>
 
             <div class="mq-card" style="padding:0;overflow:hidden">
-              <div style="padding:1.25rem 1.25rem 0">
-                <div class="mq-card-title" style="margin-bottom:4px">👁️ Live preview</div>
-                <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This is your actual showroom page, loaded live — it updates automatically as you make changes above, or click refresh any time.</p>
-                <button class="mq-btn mq-btn-sm" style="margin-bottom:1rem" onclick="mqRefreshShowroomPreview()">🔄 Refresh preview</button>
+              <div onclick="mqToggleShowroomSection('preview')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
+                <div class="mq-card-title" style="margin:0">👁️ Live preview</div>
+                <span id="mq-sr-arrow-preview" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
               </div>
-              <iframe id="mq-showroom-preview-frame" style="width:100%;height:800px;border:0;border-top:1px solid #e5e7eb;display:block"></iframe>
+              <div id="mq-sr-body-preview" style="display:none">
+                <div style="padding:0 1.25rem 1rem">
+                  <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This is your actual showroom page, loaded live — it updates automatically as you make changes above, or click refresh any time.</p>
+                  <button class="mq-btn mq-btn-sm" style="margin-bottom:1rem" onclick="mqRefreshShowroomPreview()">🔄 Refresh preview</button>
+                </div>
+                <iframe id="mq-showroom-preview-frame" style="width:100%;height:800px;border:0;border-top:1px solid #e5e7eb;display:block"></iframe>
+              </div>
             </div>
           </div>
 
@@ -2102,7 +2268,13 @@ window.logoutMember = async function () {
           html
         })
       });
-      if (statusEl) { statusEl.textContent = "✓ Sent! We'll get back to you soon."; statusEl.style.color = '#166534'; }
+      if (statusEl) {
+        statusEl.style.color = '';
+        statusEl.innerHTML = '<div style="color:#166534;font-weight:700;font-size:14px;margin-bottom:6px">✓ Sent!</div>'
+          + '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.5;color:#78350f;font-weight:600">'
+          + '📩 If you don\'t receive an email in 24 hours, please check your <u>spam/junk folder</u>.'
+          + '</div>';
+      }
       if (messageEl) messageEl.value = '';
     } catch(e) {
       if (statusEl) { statusEl.textContent = 'Something went wrong sending that — please try again.'; statusEl.style.color = '#dc2626'; }
@@ -2389,13 +2561,13 @@ window.logoutMember = async function () {
     return recs.length ? recs[0] : null;
   }
 
-  async function loadLeads(shopName) {
-    const recs = await atGet(CONFIG.LEADS_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+  async function loadLeads(shopToken) {
+    const recs = await atGet(CONFIG.LEADS_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     return recs;
   }
 
-  async function loadSpecialty(shopName) {
-    const recs = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+  async function loadSpecialty(shopToken) {
+    const recs = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
 
@@ -2407,8 +2579,8 @@ window.logoutMember = async function () {
   ];
 
   async function ensureSpecialtyDefaults(shopRecord) {
-    const shopName = shopRecord.fields['Shop name'];
-    const existing = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+    const shopToken = shopRecord.fields['Shop token'];
+    const existing = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     if (existing.length > 0) return existing;
     // New shop — create default list
     const created = [];
@@ -3334,14 +3506,19 @@ window.logoutMember = async function () {
     </div>`;
   }
 
-  function renderRoomsList() {
-    const container = el('mq-rooms-list');
-    if (!container) return;
-    const rooms = window._mqRooms || [];
-    const isDemo = (window._mqShopRecord?.fields?.['Plan']||'') === 'Demo';
-    container.innerHTML = rooms.map((r, idx) => {
-      const isOpen = _mqExpandedRoomIds.has(r.id);
-      return `
+    // r.forCountertops tags a project type as belonging to the separate
+  // "Countertop project types" section instead of the regular cabinet
+  // project types list below it — same underlying Room types JSON array
+  // and editor, just grouped into two containers so a countertop shop's
+  // list doesn't get mixed in with (or mistaken for) cabinet rooms, and a
+  // cabinet shop's list isn't cluttered with countertop-only entries.
+  // Countertop project types are purely descriptive (welcome note +
+  // measuring guide) per Jordan's call — they never adjust pricing, so
+  // the price-adjustments block below is skipped for them.
+  function mqRoomRowHTML(r, idx, isDemo) {
+    const isOpen = _mqExpandedRoomIds.has(r.id);
+    const isCountertop = r.forCountertops === true;
+    return `
       <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
         <div style="display:grid;grid-template-columns:24px minmax(140px,300px) 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
@@ -3372,13 +3549,17 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
           </label>
-          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+          ${isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. removals or awkward layouts run higher since installers spend more time on site')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Premium finish" tier priced a flat % above standard')}
+          </div>` : `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
             ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'e.g. renovations run higher since customers are living in the house')}
             ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'e.g. a "Luxury package" tier priced a flat % above standard')}
-          </div>
+          </div>`}
           <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="margin-bottom:10px">
             ${isDemo ? mqDemoImageLockedHTML('cover images') : `
@@ -3444,11 +3625,20 @@ window.logoutMember = async function () {
           </div>
         </div>
       </div>`;
-    }).join('');
+  }
+
+  // Renders one group of rooms (cabinet or countertop) into its own
+  // container, wiring up image uploads and drag-to-reorder scoped to just
+  // that container — dragging a row only ever reorders it among the other
+  // rows in the same section, never across into the other one.
+  function mqWireRoomSection(containerId, entries, isDemo, isCountertopSection) {
+    const container = el(containerId);
+    if (!container) return;
+    container.innerHTML = entries.map(({ r, idx }) => mqRoomRowHTML(r, idx, isDemo)).join('');
 
     // Wire each room's cover-image upload button — uploads immediately, fills
     // the URL field, and refreshes the small preview thumbnail on success.
-    rooms.forEach((r, idx) => {
+    entries.forEach(({ r, idx }) => {
       mqWireUploadButton(
         null,
         `mq-room-cover-file-${idx}`,
@@ -3513,10 +3703,16 @@ window.logoutMember = async function () {
         row.style.opacity = '1';
         row.draggable = false;
         dragging = null;
-        const newRooms = [...container.querySelectorAll('.mq-room-row')].map(r => {
-          const oldIdx = r.dataset.idx;
+        // Rebuild just this section's slice in its new DOM order, reading
+        // both DOM edits and the original (non-DOM) fields — id,
+        // forCountertops, and measureImages — off window._mqRooms[oldIdx],
+        // same as mqSaveRooms does, so a drag never silently drops extra
+        // measuring images or re-tags a room into the wrong section.
+        const reordered = [...container.querySelectorAll('.mq-room-row')].map(rowEl => {
+          const oldIdx = rowEl.dataset.idx;
+          const orig = window._mqRooms[oldIdx] || {};
           return {
-            id: (window._mqRooms[oldIdx] || {}).id || ('room_' + Date.now()),
+            id: orig.id || ('room_' + Date.now()),
             name: document.getElementById(`mq-room-name-${oldIdx}`)?.value || '',
             materialAdjPct: parseFloat(document.getElementById(`mq-room-adj-mat-${oldIdx}`)?.value) || 0,
             upperMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-upper-mat-${oldIdx}`)?.value) || 0,
@@ -3531,9 +3727,12 @@ window.logoutMember = async function () {
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
+            measureImages: (orig.measureImages || []).map((_, exIdx) => document.getElementById(`mq-room-measure-img-extra-${oldIdx}-${exIdx}`)?.value || ''),
+            ...(isCountertopSection ? { forCountertops: true } : {}),
           };
         });
-        window._mqRooms = newRooms;
+        const otherGroup = (window._mqRooms || []).filter(rm => (rm.forCountertops === true) !== isCountertopSection);
+        window._mqRooms = isCountertopSection ? [...otherGroup, ...reordered] : [...reordered, ...otherGroup];
         renderRoomsList();
       });
       row.addEventListener('dragover', e => {
@@ -3546,6 +3745,20 @@ window.logoutMember = async function () {
         }
       });
     });
+  }
+
+  function renderRoomsList() {
+    const rooms = window._mqRooms || [];
+    const isDemo = (window._mqShopRecord?.fields?.['Plan']||'') === 'Demo';
+    const cabinetEntries = [];
+    const countertopEntries = [];
+    rooms.forEach((r, idx) => {
+      (r.forCountertops === true ? countertopEntries : cabinetEntries).push({ r, idx });
+    });
+    mqWireRoomSection('mq-rooms-list', cabinetEntries, isDemo, false);
+    mqWireRoomSection('mq-rooms-list-ct', countertopEntries, isDemo, true);
+    const ctEmpty = el('mq-rooms-list-ct-empty');
+    if (ctEmpty) ctEmpty.style.display = countertopEntries.length ? 'none' : 'block';
 
     mqRefreshRestoreDropdown();
   }
@@ -3578,10 +3791,12 @@ window.logoutMember = async function () {
     showMsg('mq-rooms-msg', `✓ "${roomDef.name}" restored with its default description, image, and measuring guide.`);
   };
 
-  window.mqAddRoom = function() {
+  window.mqAddRoom = function(forCountertops) {
     if (!window._mqRooms) window._mqRooms = [];
-    const newId = 'room_' + Date.now();
-    window._mqRooms.push({ id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' });
+    const newId = (forCountertops ? 'ctroom_' : 'room_') + Date.now();
+    const newRoom = { id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' };
+    if (forCountertops) newRoom.forCountertops = true;
+    window._mqRooms.push(newRoom);
     _mqExpandedRoomIds.add(newId);
     renderRoomsList();
   };
@@ -3633,6 +3848,7 @@ window.logoutMember = async function () {
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
         measureImages: (r.measureImages || []).map((_, exIdx) => (el(`mq-room-measure-img-extra-${idx}-${exIdx}`)?.value || '').trim()),
+        ...(r.forCountertops === true ? { forCountertops: true } : {}),
       })).filter(r => r.name); // drop any left with a blank name
 
       if (!rooms.length) { showMsg('mq-rooms-msg', 'You need at least one project type.', 'error'); return; }
@@ -3729,7 +3945,7 @@ window.logoutMember = async function () {
     return `${datePart} · ${timePart}`;
   }
 
-  function renderLeads(leads, limit) {
+  function renderLeads(leads, limit, selectable) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
 
     // Group leads sharing a Session ID so multi-attempt visitors get a clear
@@ -3774,7 +3990,9 @@ window.logoutMember = async function () {
       const sessionBadge = badgeText
         ? `<span title="Session ${f['Session ID']}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:2px 7px;white-space:nowrap">${badgeText}</span>`
         : '';
+      const selectCell = selectable ? `<td style="width:1%;white-space:nowrap"><input type="checkbox" class="mq-lead-check" value="${r.id}" onchange="mqLeadCheckboxChanged()"></td>` : '';
       return `<tr>
+        ${selectCell}
         <td>${formatLeadDate(r.createdTime)}</td>
         <td><strong>${f['Customer name'] || '—'}</strong>${sessionBadge ? '<br>'+sessionBadge : ''}</td>
         <td>${f['Customer email'] || '—'}</td>
@@ -3795,7 +4013,9 @@ window.logoutMember = async function () {
       </tr>`;
     }).join('');
     const th = (field, label) => `<th onclick="mqSortLeads('${field}')" style="cursor:pointer;user-select:none;white-space:nowrap">${label}${sortArrow(field)}</th>`;
-    return `<div class="mq-table-wrap"><table class="mq-table"><thead><tr>${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    const selectHeaderCell = selectable ? `<th style="width:1%;white-space:nowrap"><input type="checkbox" id="mq-lead-select-all" onchange="mqToggleAllLeadCheckboxes(this)" title="Select all"></th>` : '';
+    const tableClass = selectable ? 'mq-table mq-table-compact' : 'mq-table';
+    return `<div class="mq-table-wrap"><table class="${tableClass}"><thead><tr>${selectHeaderCell}${th('date','Date')}${th('name','Name')}${th('email','Email')}${th('phone','Phone')}${th('type','Type')}${th('room','Project type')}${th('price','Estimate')}<th>Status</th><th>Update</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   function renderStats(leads) {
@@ -3882,8 +4102,8 @@ window.logoutMember = async function () {
     if (typeof window.mqRefreshCategoryOrderBox === 'function') window.mqRefreshCategoryOrderBox();
   };
 
-  async function loadProposalTemplates(shopName) {
-    const recs = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopName}", ARRAYJOIN({Shop}))`);
+  async function loadProposalTemplates(shopToken) {
+    const recs = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
 
@@ -4203,7 +4423,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     try {
-      const existing = await loadProposalTemplates(shopRec.fields['Shop name']);
+      const existing = await loadProposalTemplates(shopRec.fields['Shop token']);
       await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, {
         'Shop': [shopRec.id],
         'Template name': 'New template',
@@ -4218,7 +4438,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Body': PROPOSAL_BODY_STANDARD,
         'Sort order': existing.length,
       });
-      const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
+      const templates = await loadProposalTemplates(shopRec.fields['Shop token']);
       renderProposalTemplates(templates, shopRec);
       showMsg('mq-prop-msg', '✓ Template added — edit its name and settings below.');
     } catch(e) { showMsg('mq-prop-msg', 'Error adding template.', 'error'); }
@@ -4229,7 +4449,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const shopRec = window._mqShopRecord;
     try {
       await atDelete(CONFIG.PROPOSAL_TEMPLATES_TABLE, id);
-      const templates = await loadProposalTemplates(shopRec.fields['Shop name']);
+      const templates = await loadProposalTemplates(shopRec.fields['Shop token']);
       renderProposalTemplates(templates, shopRec);
       showMsg('mq-prop-msg', '✓ Template deleted.');
     } catch(e) { showMsg('mq-prop-msg', 'Error deleting template.', 'error'); }
@@ -4871,6 +5091,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (chevron) chevron.style.transform = 'rotate(90deg)';
   };
 
+  // Showroom tab: every card (Your showroom link, Embed on a page, "See
+  // our showroom" button, Showroom style, Your categories, Live preview)
+  // collapses/expands independently, all starting collapsed — added
+  // 2026-09-10, Jordan: "we should make these all collapsable. theres a
+  // lot going on on the page." Same click-header-to-toggle-a-body-div +
+  // rotating-arrow pattern already used for Marketing Kit's sections
+  // (mqToggleMkSection), just scoped to this tab's own id prefix
+  // (mq-sr-body-<key> / mq-sr-arrow-<key>) so the two don't collide.
+  // Collapsing a card is purely visual (display:none on its body) — it
+  // doesn't unmount or reset anything inside, so e.g. the Live Preview
+  // iframe still loads/refreshes normally (mqRefreshShowroomPreview sets
+  // its src regardless of whether the card is currently open) even while
+  // collapsed.
+  window.mqToggleShowroomSection = function(key) {
+    const body = el('mq-sr-body-' + key);
+    const arrow = el('mq-sr-arrow-' + key);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+  };
+
   window.mqToggleColorScheme = function() {
     const body = el('mq-colorscheme-body');
     const chevron = el('mq-colorscheme-chevron');
@@ -4926,7 +5168,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // full page reload. Force both to rebuild right away instead, the
       // same way Marketing Kit already does above.
       if (currencyChanged) {
-        loadSpecialty(shopRec.fields['Shop name']).then(specs => renderSpecialty(specs, shopRec)).catch(()=>{});
+        loadSpecialty(shopRec.fields['Shop token']).then(specs => renderSpecialty(specs, shopRec)).catch(()=>{});
         const helperContainer = document.getElementById('mq-pricing-helper-v2');
         if (helperContainer && helperContainer.dataset.loaded && window.mqph2Init) {
           window.mqph2Init(shopRec, window._mqPricingRecord);
@@ -5460,7 +5702,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) {}
 
     // Load specialty items
-    const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`);
+    const specItems = await atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)})), {Active})`);
     // Stored globally in the same {id, ids, visibleRooms} shape as byCategory
     // items, so the bulk-sync logic can treat specialty items identically.
     window._mqSpecItemsList = specItems.map(r => ({ id: r.id, ids: [r.id], visibleRooms: r.fields['Visible rooms'] }));
@@ -6193,6 +6435,100 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
+  // Where the widget's own "🖼️ See our showroom" button sends customers —
+  // 'popup' (default) or 'own_page'. See the settingsRaw parse in
+  // initShowroomTab above for the field this lives in, and widget.js/
+  // widgetpro.js's buildWidgetHTML for how the button actually reads it.
+  function mqShowroomRenderButtonTargetUI() {
+    const settings = window._mqShowroomSettings || {};
+    const target = settings.buttonTarget === 'own_page' ? 'own_page' : 'popup';
+    const popupCard = el('mq-showroom-target-popup');
+    const pageCard  = el('mq-showroom-target-page');
+    if (popupCard) { popupCard.style.borderColor = target === 'popup'    ? '#1a1a1a' : '#e5e7eb'; popupCard.style.background = target === 'popup'    ? '#f9fafb' : '#fff'; }
+    if (pageCard)  { pageCard.style.borderColor  = target === 'own_page' ? '#1a1a1a' : '#e5e7eb'; pageCard.style.background  = target === 'own_page' ? '#f9fafb' : '#fff'; }
+    const urlWrap = el('mq-showroom-target-url-wrap');
+    if (urlWrap) urlWrap.style.display = target === 'own_page' ? 'block' : 'none';
+    const urlInput = el('mq-showroom-target-url-input');
+    if (urlInput && document.activeElement !== urlInput) urlInput.value = settings.buttonUrl || '';
+    const note = el('mq-showroom-target-note');
+    if (note) {
+      if (target === 'own_page' && !(settings.buttonUrl || '').trim()) {
+        note.textContent = '⚠️ No URL saved yet — the button will keep using the popup until you add one below.';
+      } else if (target === 'own_page') {
+        note.textContent = '🔗 My own page is active — the widget\'s showroom button now sends customers to your page instead of popping open a new tab on widget.midasquote.com.';
+      } else {
+        note.textContent = '🪟 Popup is active — the widget\'s showroom button opens your standalone showroom link in a new tab.';
+      }
+    }
+  }
+
+  // Embedded-only display toggles — added 2026-09-10, alongside Jordan's
+  // ask to be able to strip the shop info/nav/hero/filter bar down for a
+  // shop that wants the showroom to blend into their own page's existing
+  // header/nav instead of showing its own. `shopInfo` covers the logo AND
+  // the shop name/city right beside it (expanded from a logo-only toggle
+  // same day, per Jordan: "include the removal of the shop name and
+  // number as part of the logo remove... like a shop info remove") — it's
+  // one combined switch, not two, since those three always sit together
+  // as one visual block. Deliberately scoped to the <iframe> embed ONLY
+  // (Jordan's explicit choice over applying site-wide) — the standalone
+  // popup tab/link always shows all four, unchanged, so a shop that wants
+  // the "full" showroom experience for a direct link still gets it. See
+  // showroom.html's own read of `embedDisplay` (guarded by
+  // `MQ_SR_EMBEDDED`) for how these actually apply. Lives inside the same
+  // "🧩 Embed on a page" card, above the code box, per Jordan's ask
+  // (2026-09-10) to see the toggles before the code rather than in a
+  // separate card below it.
+  function mqShowroomRenderEmbedDisplayUI() {
+    const settings = window._mqShowroomSettings || {};
+    const d = settings.embedDisplay || { shopInfo: true, nav: true, hero: true, filterBar: true };
+    const shopInfoToggle = el('mq-showroom-embed-shopinfo-toggle');
+    const navToggle = el('mq-showroom-embed-nav-toggle');
+    const heroToggle = el('mq-showroom-embed-hero-toggle');
+    const filterToggle = el('mq-showroom-embed-filterbar-toggle');
+    if (shopInfoToggle) shopInfoToggle.classList.toggle('on', d.shopInfo !== false);
+    if (navToggle) navToggle.classList.toggle('on', d.nav !== false);
+    if (heroToggle) heroToggle.classList.toggle('on', d.hero !== false);
+    if (filterToggle) filterToggle.classList.toggle('on', d.filterBar !== false);
+  }
+
+  window.mqShowroomToggleEmbedDisplay = async function(key) {
+    window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    window._mqShowroomSettings.embedDisplay = window._mqShowroomSettings.embedDisplay || { shopInfo: true, nav: true, hero: true, filterBar: true };
+    const wasOn = window._mqShowroomSettings.embedDisplay[key] !== false;
+    window._mqShowroomSettings.embedDisplay[key] = !wasOn;
+    mqShowroomRenderEmbedDisplayUI();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Embed appearance updated.'); }
+    catch(e) { window._mqShowroomSettings.embedDisplay[key] = wasOn; mqShowroomRenderEmbedDisplayUI(); showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  window.mqShowroomSetButtonTarget = async function(target) {
+    window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    if (window._mqShowroomSettings.buttonTarget === target) return;
+    window._mqShowroomSettings.buttonTarget = target;
+    mqShowroomRenderButtonTargetUI();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', target === 'own_page' ? '✓ Showroom button now points to your own page.' : '✓ Showroom button back to popup.'); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  // No enforced format beyond a basic sanity check — this is a URL the shop
+  // types in themselves (their own site), not a closed set of choices, so
+  // free text is the right shape here (unlike e.g. pricing-helper-v2.js's
+  // Unit field). A bare domain/path with no scheme gets "https://" prepended
+  // rather than saved broken or rejected outright.
+  window.mqSaveShowroomButtonUrl = async function() {
+    const input = el('mq-showroom-target-url-input');
+    if (!input) return;
+    let url = input.value.trim();
+    if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+    input.value = url;
+    window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
+    window._mqShowroomSettings.buttonUrl = url;
+    mqShowroomRenderButtonTargetUI();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Showroom page URL saved.'); }
+    catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
   // Build-My-Own-only subheading override. Blank clears it back to
   // showroom.html's own built-in default line ("Browse some of our past
   // projects and features...") rather than saving an empty string that
@@ -6232,8 +6568,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // Empty/missing means "use the built-in default line" (showroom.html
       // has its own copy of that default text, this never stores it).
       customSubheading: typeof settingsRaw.customSubheading === 'string' ? settingsRaw.customSubheading : '',
+      // Where the widget's own "🖼️ See our showroom" button sends customers
+      // — added 2026-09-10, alongside the showroom embed feature. 'popup'
+      // (default, for any shop that's never touched this) matches the
+      // button's original always-popup behavior; 'own_page' sends customers
+      // to buttonUrl instead — see mqShowroomSetButtonTarget /
+      // mqSaveShowroomButtonUrl below, and widget.js/widgetpro.js's own
+      // read of this same field for how the button actually uses it.
+      buttonTarget: settingsRaw.buttonTarget === 'own_page' ? 'own_page' : 'popup',
+      buttonUrl: typeof settingsRaw.buttonUrl === 'string' ? settingsRaw.buttonUrl : '',
+      // Embedded-only show/hide switches for logo/nav/hero/filter bar — see
+      // mqShowroomRenderEmbedDisplayUI/mqShowroomToggleEmbedDisplay above,
+      // and showroom.html's own MQ_SR_EMBEDDED-gated read of this same
+      // field. Any key not explicitly `false` defaults to shown, so a shop
+      // that's never touched these switches sees zero change either way.
+      embedDisplay: (settingsRaw.embedDisplay && typeof settingsRaw.embedDisplay === 'object') ? {
+        shopInfo: settingsRaw.embedDisplay.shopInfo !== false,
+        nav: settingsRaw.embedDisplay.nav !== false,
+        hero: settingsRaw.embedDisplay.hero !== false,
+        filterBar: settingsRaw.embedDisplay.filterBar !== false,
+      } : { shopInfo: true, nav: true, hero: true, filterBar: true },
     };
     mqShowroomRenderModeUI();
+    mqShowroomRenderButtonTargetUI();
+    mqShowroomRenderEmbedDisplayUI();
 
     try { window._mqShowroomPhotos = shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}; } catch(e) { window._mqShowroomPhotos = {}; }
     try { window._mqShowroomHiddenItems = shopRecord.fields['Hidden'] ? JSON.parse(shopRecord.fields['Hidden']) : {}; } catch(e) { window._mqShowroomHiddenItems = {}; }
@@ -6245,6 +6603,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (copyBtn)  copyBtn.onclick = () => mqCopyText(showroomUrl, copyBtn);
     if (openBtn)  openBtn.onclick = () => window.open(showroomUrl, '_blank');
 
+    // Embed-on-a-page snippet — added 2026-09-10, alongside (not replacing)
+    // the standalone link above. An <iframe> works here because
+    // showroom.html is already fully self-contained (pulls its own data
+    // from ?shop=TOKEN, same as the standalone page/preview iframe below
+    // already do) — no separate JS-mount build needed the way widget.js's
+    // own embed does. Deliberately gives no height/size field to fill in:
+    // showroom.html measures its own rendered height (via a ResizeObserver
+    // added there) and posts it up through this snippet's tiny listener
+    // script, which resizes the iframe to match — so a non-technical shop
+    // owner just pastes one block and it looks right, no guessing a pixel
+    // height. `scrolling="no"` + no inner overflow is safe specifically
+    // because the iframe is always exactly as tall as its content.
+    const showroomEmbedCode = `<iframe id="midasquote-showroom" src="${showroomUrl}" style="width:100%;border:none;display:block" scrolling="no"></iframe>\n<scr` + `ipt>(function(){window.addEventListener('message',function(e){if(e.data&&e.data.type==='midasquote-showroom-height'){var f=document.getElementById('midasquote-showroom');if(f)f.style.height=e.data.height+'px';}});})();</scr` + `ipt>`;
+    const embedDisplay = el('mq-showroom-embed-display');
+    const embedCopyBtn = el('mq-showroom-embed-copy-btn');
+    if (embedDisplay) embedDisplay.textContent = showroomEmbedCode;
+    if (embedCopyBtn) embedCopyBtn.onclick = () => mqCopyText(showroomEmbedCode, embedCopyBtn);
+
     const frame = el('mq-showroom-preview-frame');
     if (frame) frame.src = showroomUrl + '&_r=' + Date.now();
 
@@ -6252,8 +6628,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (wrap) wrap.innerHTML = '<div class="mq-loading">Loading your products...</div>';
 
     const [lineItems, specItems] = await Promise.all([
-      atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`),
-      atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop})), {Active})`),
+      atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`),
+      atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${shopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)})), {Active})`),
     ]);
     window._mqShowroomByCategory = buildShowroomLineItemCategories(lineItems);
     window._mqShowroomSpecItems = specItems;
@@ -6729,7 +7105,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqUpdateLeadStatus = async function(id, status) {
     try {
       await atUpdate(CONFIG.LEADS_TABLE, id, { 'Status': status });
-    } catch(e) { console.error('Failed to update lead status', e); }
+      const lead = (window._mqLeads || []).find(r => r.id === id);
+      if (lead) lead.fields['Status'] = status;
+      renderStats(window._mqLeads || []);
+      el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads || [], 5);
+      mqFilterLeads();
+      showMsg('mq-leads-msg', '✓ Status updated.');
+    } catch(e) {
+      console.error('Failed to update lead status', e);
+      showMsg('mq-leads-msg', 'Error saving status — please try again.', 'error');
+    }
   };
 
   window.mqSaveAllSpecItems = async function() {
@@ -7530,7 +7915,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   async function pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms) {
     const result = { created: false, replaced: false, roomsAdded: 0, error: false };
     try {
-      const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+      const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
       // Match by tag first, but also fall back to an exact name match —
       // catches orphaned rows left behind by manual Airtable edits that
       // never got (or lost) their tracking tag, so they don't silently
@@ -7818,7 +8203,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!confirm('Delete this specialty item?')) return;
     try {
       await atDelete(CONFIG.SPECIALTY_TABLE, id);
-      const specs = await loadSpecialty(window._mqShopRecord.fields['Shop name']);
+      const specs = await loadSpecialty(window._mqShopRecord.fields['Shop token']);
       renderSpecialty(specs, window._mqShopRecord);
       showMsg('mq-spec-msg', '✓ Item deleted.');
     } catch(e) { showMsg('mq-spec-msg', 'Error deleting item.', 'error'); }
@@ -7828,7 +8213,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     try {
-      const existing = await loadSpecialty(shopRec.fields['Shop name']);
+      const existing = await loadSpecialty(shopRec.fields['Shop token']);
       // Strictly lower than the current lowest Sort order — not just 0 —
       // so a brand new item always lands unambiguously first, even if
       // other items also happen to be sitting at 0 already.
@@ -7841,7 +8226,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Per linear foot': false,
         'Sort order': minSort - 1,
       });
-      const specs = await loadSpecialty(shopRec.fields['Shop name']);
+      const specs = await loadSpecialty(shopRec.fields['Shop token']);
       renderSpecialty(specs, shopRec);
       showMsg('mq-spec-msg', '✓ Item added at the top — edit the name and price below.');
       // Scroll to it and focus the name field so it's impossible to miss,
@@ -7936,6 +8321,58 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { showMsg('mq-leads-msg', 'Error deleting leads.', 'error'); }
   };
 
+  // Keeps the header "select all" checkbox in sync with whatever's
+  // actually checked below it — ticks itself when every visible row is
+  // checked, clears when none are, and shows the native indeterminate
+  // dash in between. Reads only currently-rendered `.mq-lead-check`
+  // boxes, so it automatically respects whatever status filter is active
+  // (mqFilterLeads only ever renders the filtered subset to begin with).
+  window.mqLeadCheckboxChanged = function() {
+    const boxes = Array.from(document.querySelectorAll('.mq-lead-check'));
+    const headerCb = el('mq-lead-select-all');
+    if (!headerCb) return;
+    const checkedCount = boxes.filter(b => b.checked).length;
+    headerCb.checked = boxes.length > 0 && checkedCount === boxes.length;
+    headerCb.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+  };
+
+  window.mqToggleAllLeadCheckboxes = function(headerCb) {
+    document.querySelectorAll('.mq-lead-check').forEach(cb => { cb.checked = headerCb.checked; });
+  };
+
+  window.mqDeleteSelectedLeads = async function() {
+    const ids = Array.from(document.querySelectorAll('.mq-lead-check:checked')).map(cb => cb.value);
+    if (!ids.length) { showMsg('mq-leads-msg', 'Select at least one lead first — check the boxes on the left of each row.', 'error'); return; }
+    const n = ids.length;
+    if (!confirm(`Delete ${n} selected lead${n===1?'':'s'}? This cannot be undone.`)) return;
+    showMsg('mq-leads-msg', `Deleting ${n} lead${n===1?'':'s'}...`);
+    try {
+      for (const id of ids) {
+        await atDelete(CONFIG.LEADS_TABLE, id);
+      }
+      window._mqLeads = (window._mqLeads || []).filter(r => !ids.includes(r.id));
+      renderStats(window._mqLeads);
+      el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
+      mqFilterLeads();
+      showMsg('mq-leads-msg', `✓ Deleted ${n} lead${n===1?'':'s'}.`);
+    } catch(e) {
+      // Some deletes in the loop above may have already succeeded before
+      // this one failed — re-render from whatever Airtable actually has
+      // rather than trusting local state, so the table doesn't lie about
+      // what's left.
+      showMsg('mq-leads-msg', 'Error deleting one or more selected leads — refreshing to show what actually remains.', 'error');
+      try {
+        const shopToken = window._mqShopRecord?.fields?.['Shop token'];
+        if (shopToken) {
+          window._mqLeads = sortLeadsArray(await loadLeads(shopToken));
+          renderStats(window._mqLeads);
+          el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
+          mqFilterLeads();
+        }
+      } catch(e2) {}
+    }
+  };
+
   // ============================================================
   // MY PRODUCTS
   // ============================================================
@@ -7946,7 +8383,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let leads = window._mqLeads || [];
     if (filter) leads = leads.filter(r => r.fields['Status'] === filter);
     leads = sortLeadsArray(leads);
-    el('mq-leads-table').innerHTML = renderLeads(leads);
+    el('mq-leads-table').innerHTML = renderLeads(leads, null, true);
   };
 
   // ============================================================
@@ -10270,17 +10707,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (navTemplates) navTemplates.style.display = 'flex';
     }
 
-    const leads = await loadLeads(shopRecord.fields['Shop name']);
+    const leads = await loadLeads(shopRecord.fields['Shop token']);
     window._mqLeads = sortLeadsArray(leads);
     renderStats(window._mqLeads);
     el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
-    el('mq-leads-table').innerHTML = renderLeads(window._mqLeads);
+    el('mq-leads-table').innerHTML = renderLeads(window._mqLeads, null, true);
 
     const specs = await ensureSpecialtyDefaults(shopRecord);
     renderSpecialty(specs, shopRecord);
 
     // Load line items for My Products tab
-    const lineItems = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`);
+    const lineItems = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${shopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
     window._mqLineItems = lineItems;
   }
 
@@ -10301,6 +10738,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return true;
   }
 
+  // Detects a newer dashboard.js deploy and reloads the page to pick it
+  // up — the in-memory MQ_LATEST_ANNOUNCEMENT re-check right below this
+  // only ever compares against whatever version THIS already-loaded copy
+  // of the script knows about, so a tab open since before a deploy can
+  // click around forever and never learn a newer announcement exists.
+  // Fetches this same script fresh (cache:'no-store' — bypasses any
+  // browser/CDN cache so it's never fooled by a stale copy), pulls out
+  // just the version marker via regex (no need to execute the file), and
+  // reloads only if that marker actually changed. Throttled through the
+  // same mqShouldRefetch used for Airtable data above, so rapid tab
+  // clicking doesn't refetch the whole script on every single click.
+  async function mqCheckForNewerDeploy() {
+    if (!MQ_DASHBOARD_SCRIPT_URL || !mqShouldRefetch('dashboardVersionCheck', 20000)) return;
+    try {
+      const res = await fetch(MQ_DASHBOARD_SCRIPT_URL, { cache: 'no-store' });
+      if (!res.ok) return;
+      const text = await res.text();
+      const m = text.match(/const MQ_LATEST_ANNOUNCEMENT = '([^']+)';/);
+      if (m && m[1] && m[1] !== MQ_LATEST_ANNOUNCEMENT) window.location.reload();
+    } catch (e) {
+      // Offline / blocked request / whatever — just skip, try again next
+      // tab switch. Never blocks or breaks normal navigation.
+    }
+  }
+
   // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
@@ -10314,6 +10776,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (window._mqShopRecord && window._mqShopRecord.fields['Welcome popup seen'] && window._mqShopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
       window.mqShowAnnouncementModal();
     }
+    mqCheckForNewerDeploy();
     mqToggleFloatingSave(MQ_PAGE_SAVE_ACTIONS[page] || null);
     if (page === 'marketing' || page === 'embed') {
       const socialEl = document.getElementById('mq-mk-social');
@@ -10403,7 +10866,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const leadsTable = document.getElementById('mq-leads-table');
       if (leadsTable && window._mqShopRecord && mqShouldRefetch('leads')) {
         leadsTable.innerHTML = '<div class="mq-loading">Refreshing leads...</div>';
-        loadLeads(window._mqShopRecord.fields['Shop name']).then(leads => {
+        loadLeads(window._mqShopRecord.fields['Shop token']).then(leads => {
           window._mqLeads = sortLeadsArray(leads);
           renderStats(window._mqLeads);
           const recentEl = document.getElementById('mq-recent-leads');
@@ -10416,7 +10879,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const specList = document.getElementById('mq-spec-list');
       if (specList && window._mqShopRecord && mqShouldRefetch('specialty')) {
         specList.innerHTML = '<div class="mq-loading">Refreshing specialty items...</div>';
-        loadSpecialty(window._mqShopRecord.fields['Shop name']).then(specs => {
+        loadSpecialty(window._mqShopRecord.fields['Shop token']).then(specs => {
           renderSpecialty(specs, window._mqShopRecord);
         });
       }
@@ -10429,7 +10892,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (propList && window._mqShopRecord && mqShouldRefetch('proposals')) {
         propList.innerHTML = '<div class="mq-loading">Loading proposal templates...</div>';
         ensureProposalTemplatesSeeded(window._mqShopRecord).then(() =>
-          loadProposalTemplates(window._mqShopRecord.fields['Shop name'])
+          loadProposalTemplates(window._mqShopRecord.fields['Shop token'])
         ).then(templates => {
           renderProposalTemplates(templates, window._mqShopRecord);
         });
@@ -10442,7 +10905,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const shopToken = window._mqShopRecord.fields['Shop token'];
         Promise.all([
           loadShop(shopToken), // refetch the shop record itself fresh — this is where Photos/Hidden actually live, and a push from elsewhere (like the Templates admin tool) wouldn't otherwise show up until a full page reload
-          atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop name']}", ARRAYJOIN({Shop}))`),
+          atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`),
         ]).then(([freshShop, lineItems]) => {
           if (freshShop) window._mqShopRecord = freshShop;
           window._mqLineItems = lineItems;
@@ -10480,7 +10943,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };

@@ -22,31 +22,82 @@ let wizardBaseline = null;
   // Mini-wizard state
   let miniWiz = { cat: null, name: '', step: 0, matchMode: false, matchName: '', matchRates: null, bulkMode: false, bulkCount: 0, bulkRates: null, bulkNames: [] };
 
+  // Shops outside North America think in mm, not inches — rather than a full
+  // imperial/metric toggle, every inch/foot measurement shown in the wizard
+  // also gets its mm equivalent inline so metric shops never need a
+  // calculator. Everything still gets stored/output in linear feet either way.
+  const mqphMm = (inches) => Math.round(inches * 25.4);
+  const mqphMmTag = (inches) => `<span class="mqph-mm">(${mqphMm(inches).toLocaleString()}mm)</span>`;
+
   const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
   const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
 
+  // A UK (or any non-North-American) shop can pick their own currency
+  // symbol on the dashboard's Shop Info tab — everywhere in the pricing
+  // wizard that used to show a hardcoded "$" now reads it from here
+  // instead, falling back to "$" for shops that haven't set one.
+  // shopRecord is populated by mqph2Init() (passed in from dashboard.js's
+  // already-loaded shop record) before loadAndRender() ever runs.
+  function CUR() { return (shopRecord && shopRecord.fields && shopRecord.fields['Currency symbol']) || '$'; }
+
+  // Same fix as dashboard.js's atGet (2026-09-12) — Airtable returns up to
+  // 100 records per request, signalling more via an `offset` you pass back
+  // in for the next page. This used to take one page (and, since
+  // maxRecords=200 here was never actually reachable without following
+  // that offset, was really no different from a 100-record cap in
+  // practice) and stop, which would have silently capped a shop's Line
+  // Items once their catalog — doors, materials, hinges, drawer configs,
+  // countertops — grew past 100 rows. Jordan advertises unlimited items,
+  // so this needs to have no ceiling.
+  //
+  // First same-day attempt at this fix added the offset-following loop
+  // below but kept a `maxRecords` request param (200, changed from the
+  // original) — a DIFFERENT parameter from `pageSize`. `pageSize` caps
+  // records per page (max 100); `maxRecords` caps the TOTAL records
+  // returned across every page combined. With any `maxRecords` set,
+  // Airtable stops including `offset` once it hits that total, so the loop
+  // below still exited after hitting the cap regardless of its value —
+  // reproducing the same ceiling despite the "fix." Corrected same day to
+  // `pageSize=100` with no `maxRecords` at all, so there's no overall cap
+  // and the loop actually reaches every page. The 50-page (5,000 record)
+  // backstop is just against a runaway loop, not a real limit any shop's
+  // Line Items table would ever approach.
   async function atGet(table, formula) {
-    const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=200`;
-    const res = await fetch(url, { headers: AT_HEADS() });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
-    }
-    const data = await res.json();
-    return data.records || [];
+    let allRecords = [];
+    let offset;
+    let pages = 0;
+    do {
+      const offsetParam = offset ? `&offset=${offset}` : '';
+      const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100${offsetParam}`;
+      const res = await fetch(url, { headers: AT_HEADS() });
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
+      }
+      const data = await res.json();
+      allRecords = allRecords.concat(data.records || []);
+      offset = data.offset;
+      pages++;
+    } while (offset && pages < 50);
+    return allRecords;
   }
   async function atCreate(table, fields) {
-    const res = await fetch(`${AT_BASE_URL()}/${table}`, { method: 'POST', headers: AT_HEADS(), body: JSON.stringify({ fields }) });
+    // typecast:true lets Airtable auto-add a new option to a Single Select
+    // field instead of rejecting the request with a 422 when the value
+    // isn't already one of the field's known choices.
+    const res = await fetch(`${AT_BASE_URL()}/${table}`, { method: 'POST', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
+      console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
     }
     return await res.json();
   }
   async function atUpdate(table, id, fields) {
-    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'PATCH', headers: AT_HEADS(), body: JSON.stringify({ fields }) });
+    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'PATCH', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
+      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
     }
     return await res.json();
@@ -115,6 +166,7 @@ let wizardBaseline = null;
       .mqph-spec-box{background:#f9fafb !important;border:1px solid #e5e7eb !important;border-radius:8px !important;padding:12px 16px !important;margin-bottom:1.25rem !important;font-size:13px !important;color:#374151 !important;line-height:1.8 !important}
       .mqph-spec-box strong{color:#111 !important}
       .mqph-spec-tag{display:inline-block !important;background:#fff !important;border:1px solid #e5e7eb !important;border-radius:6px !important;padding:2px 8px !important;font-size:12px !important;font-weight:600 !important;color:#374151 !important;margin:2px 3px 2px 0 !important}
+      .mqph-mm{font-weight:500 !important;color:#9ca3af !important}
 
       /* ── Inputs ── */
       .mqph-input-row{display:flex !important;align-items:center !important;gap:10px !important;margin-bottom:1rem !important;padding:0 !important}
@@ -226,6 +278,26 @@ let wizardBaseline = null;
     trim:'👑 Crown moulding / valance',
   };
 
+  // Which Unit values a shop can pick from for a given (pre-existing)
+  // category — a closed dropdown in the raw Add/Edit item modal, never a
+  // free-text field, per Jordan's explicit call 2026-09-10 ("no typing in
+  // anywhere please" — a shop owner should only ever be choosing from a
+  // fixed list, same as before, just with "mi" now offered alongside "km"
+  // for travel zones since that one's just a display label either way —
+  // see mqphOnItemCatChange / mqphPopulateUnitOptions below).
+  const CAT_UNIT_OPTIONS = {
+    material: ['per lin ft — uppers','per lin ft — bases'],
+    door:     ['per lin ft upcharge'],
+    hinge:    ['per lin ft upcharge'],
+    drawer:   ['per lin ft upcharge'],
+    install:  ['per lin ft','flat','each'],
+    zone:     ['km','mi'],
+    trim:     ['per lin ft','flat'],
+    tax:      ['%'],
+    other:    ['per lin ft','flat','each','%','km','mi'],
+  };
+  const ALL_UNIT_OPTIONS = ['per lin ft','per lin ft — uppers','per lin ft — bases','per lin ft upcharge','flat','each','%','km','mi'];
+
   // Categories fully owned by the wizard — wiped on every full wizard run
   const WIZARD_OWNED_CATEGORIES = ['material','door','drawer','hinge','install','tax'];
 
@@ -250,13 +322,35 @@ let wizardBaseline = null;
   }
 
   // Derive baseline rates from existing lineItems for mini-wizard math
+  //
+  // "Baseline" used to be purely inferred — whichever record in a category
+  // happened to have the lowest Sort order. That broke the moment a shop
+  // single-added enough new materials/doors/hinges (the "+ Add" / "+Add
+  // batch" features number a new row by counting existing rows in that
+  // category, with no idea what number the original Pricing Setup Wizard
+  // used) — a later addition could easily land on a lower Sort order than
+  // the shop's real baseline and silently steal its spot, which is exactly
+  // what happened on Muskoka Cabinets' shop (2026-09-09): a single-added
+  // hinge, and then Plywood, both out-sorted the real baseline and got
+  // quoted against for new door styles instead of it.
+  //
+  // Fixed by pinning baseline explicitly via the "Is baseline" checkbox
+  // (set on the wizard's baseline rows when the wizard runs — see
+  // mqphFinishWizard — and backfilled for existing shops by
+  // migrateBaselinePins()), so it no longer depends on numbering staying
+  // consistent between two different features. Sort order is kept only as
+  // a fallback for a shop that hasn't been migrated yet / never ran the
+  // wizard, so this can't change anything for a shop that was never
+  // affected by the bug above.
   function getBaselineRates() {
     const materials = getByCategory('material');
     const doors     = getByCategory('door');
     const hinges    = getByCategory('hinge');
 
-    // Baseline material = first material (Sort order 1 = set in wizard as baseline)
-    const blMatName = materials[0]?.fields['Name']?.replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() || '';
+    // Baseline material = whichever material is pinned via "Is baseline",
+    // else fall back to the lowest Sort order (old behavior).
+    const pinnedMat = materials.find(r => r.fields['Is baseline']);
+    const blMatName = (pinnedMat || materials[0])?.fields['Name']?.replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() || '';
 
     // Find uppers + bases rates for baseline material
     const blUpperRec = lineItems.find(r => r.fields &&
@@ -271,16 +365,95 @@ let wizardBaseline = null;
     const blUpperRate = blUpperRec?.fields['Rate'] || 0;
     const blBaseRate  = blBaseRec?.fields['Rate']  || 0;
 
-    // Baseline door = first door style (Sort order 1)
-    const blDoor     = doors[0];
+    // Baseline door = pinned door, else first door style (Sort order)
+    const blDoor     = doors.find(r => r.fields['Is baseline']) || doors[0];
     const blDoorRate = blDoor?.fields['Rate'] || 0;
     const blDoorName = blDoor?.fields['Name'] || '';
 
-    // Baseline hinge = first hinge (rate 0)
-    const blHinge     = hinges[0];
+    // Baseline hinge = pinned hinge, else first hinge (Sort order)
+    const blHinge     = hinges.find(r => r.fields['Is baseline']) || hinges[0];
     const blHingeName = blHinge?.fields['Name'] || '';
 
     return { blMatName, blUpperRate, blBaseRate, blUpperPrice:blUpperRate*4, blBasePrice:blBaseRate*4, blDoorName, blDoorRate, blHingeName };
+  }
+
+  // ============================================================
+  // PASSIVE BASELINE DRIFT WATCH — material & door only
+  // ============================================================
+  // Per Jordan 2026-09-12: "baseline means base as in lowest so cheapest
+  // so cheapest should be baseline" — the wizard already tells shop owners
+  // to pick their cheapest material/door as baseline when setting up, but
+  // nothing enforced that afterward. This watches for it drifting out of
+  // sync on its own (a shop owner edits some OTHER item's price down below
+  // the current baseline, with no delete involved) and quietly self-heals:
+  // re-pins whichever one is now actually cheapest, and returns a one-line
+  // notice for buildEditorHTML() to show once. Runs at the end of every
+  // loadAndRender() — cheap to compute (a sort over data already in memory)
+  // and self-stabilizing (once re-pinned, the next run sees they already
+  // match and does nothing), so there's no risk of it looping or spamming.
+  //
+  // Hinge is deliberately NOT watched here — its baseline is defined as
+  // exactly $0 (folded into the door price, see getBaselineRates() above),
+  // which is already the lowest a real, non-negative Rate can be. It can
+  // only stop being "cheapest" by being deleted outright, which is the
+  // ACTIVE flow (mqphOpenBaselineDeleteFlow below), not passive drift.
+  async function mqphCheckBaselineDrift() {
+    const notices = [];
+
+    // --- Material: cheapest by BASES rate (same number every upcharge
+    // formula elsewhere in this file already anchors off — see
+    // getBaselineRates()'s blBasePrice). Only pairs with BOTH an uppers
+    // and a bases row are eligible, same requirement Bulk Edit already
+    // enforces — a material missing one half is a data problem to fix by
+    // hand, not something this should guess at or silently promote.
+    const matsByBase = {};
+    lineItems.forEach(r => {
+      if (!r.fields || r.fields['Category'] !== 'material' || r.fields['Active'] === false) return;
+      const baseName = (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim();
+      if (!baseName) return;
+      if (!matsByBase[baseName]) matsByBase[baseName] = { baseName, upperRec:null, baseRec:null };
+      if (/—\s*uppers\s*$/i.test(r.fields['Name']||'')) matsByBase[baseName].upperRec = r; else matsByBase[baseName].baseRec = r;
+    });
+    const matPairs = Object.values(matsByBase).filter(p => p.upperRec && p.baseRec);
+    if (matPairs.length > 1) {
+      const currentBL = matPairs.find(p => p.baseRec.fields['Is baseline'] || p.upperRec.fields['Is baseline']);
+      const cheapest = matPairs.reduce((min, p) => (p.baseRec.fields['Rate']||0) < (min.baseRec.fields['Rate']||0) ? p : min, matPairs[0]);
+      if (currentBL && cheapest.baseName !== currentBL.baseName && (cheapest.baseRec.fields['Rate']||0) < (currentBL.baseRec.fields['Rate']||0)) {
+        try {
+          await atUpdate(LINE_ITEMS_TABLE, currentBL.upperRec.id, { 'Is baseline': false });
+          await atUpdate(LINE_ITEMS_TABLE, currentBL.baseRec.id, { 'Is baseline': false });
+          await atUpdate(LINE_ITEMS_TABLE, cheapest.upperRec.id, { 'Is baseline': true });
+          await atUpdate(LINE_ITEMS_TABLE, cheapest.baseRec.id, { 'Is baseline': true });
+          notices.push(`⭐ <strong>${cheapest.baseName}</strong> is now your cheapest box material, so it's now your baseline (was <strong>${currentBL.baseName}</strong>).`);
+        } catch(e) { console.error('Failed to auto-update baseline material', e); }
+      }
+    }
+
+    // --- Door: cheapest by Rate directly (every door's Rate is already an
+    // absolute upcharge over the baseline box, independent of which door
+    // is pinned — see getBaselineRates() above — so comparing Rate values
+    // straight across doors is a valid, apples-to-apples comparison).
+    const doors = lineItems.filter(r => r.fields && r.fields['Category'] === 'door' && r.fields['Active'] !== false);
+    if (doors.length > 1) {
+      const currentBL = doors.find(r => r.fields['Is baseline']);
+      const cheapest = doors.reduce((min, r) => (r.fields['Rate']||0) < (min.fields['Rate']||0) ? r : min, doors[0]);
+      if (currentBL && cheapest.id !== currentBL.id && (cheapest.fields['Rate']||0) < (currentBL.fields['Rate']||0)) {
+        try {
+          await atUpdate(LINE_ITEMS_TABLE, currentBL.id, { 'Is baseline': false });
+          await atUpdate(LINE_ITEMS_TABLE, cheapest.id, { 'Is baseline': true });
+          notices.push(`⭐ <strong>${cheapest.fields['Name']}</strong> is now your cheapest door style, so it's now your baseline (was <strong>${currentBL.fields['Name']}</strong>).`);
+        } catch(e) { console.error('Failed to auto-update baseline door', e); }
+      }
+    }
+
+    // Re-fetch so the render right after this reflects the re-pin instead
+    // of the stale in-memory copy — cheap, and only happens on the rare
+    // render where drift was actually found.
+    if (notices.length) {
+      const recs = await atGet(LINE_ITEMS_TABLE, `FIND("${shopRecord._shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
+      lineItems = recs.filter(r => r.fields);
+    }
+    return notices;
   }
 
   function specBox(lines) {
@@ -297,6 +470,12 @@ let wizardBaseline = null;
       if (!existing[cat]) existing[cat] = [];
       existing[cat].push(r);
     });
+    // Used by the "Local delivery zone" card below — km/mi is just a display
+    // label here (see CAT_UNIT_OPTIONS comment), so a shop can pick either
+    // at setup time instead of only discovering the Edit-to-switch trick
+    // later on the Pricing page. Defaults to 'km' for anyone who doesn't
+    // touch it, matching the original hardcoded behavior.
+    const existingZoneItem = (existing['zone']||[]).find(r=>r.fields['Name']?.toLowerCase().includes('local'));
 
     return `
       <div style="margin-bottom:1.5rem">
@@ -350,8 +529,11 @@ let wizardBaseline = null;
         </div>
         <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <label style="font-size:13px;color:#374151;font-weight:500">Local radius:</label>
-          <input type="number" id="mqph-local-radius" value="${(existing['zone']||[]).find(r=>r.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15}" style="width:90px;text-align:right;font-family:inherit;font-size:14px;font-weight:600;color:#111;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-          <span style="font-size:13px;color:#6b7280;font-weight:500">km</span>
+          <input type="number" id="mqph-local-radius" value="${existingZoneItem?.fields['Rate'] || 15}" style="width:90px;text-align:right;font-family:inherit;font-size:14px;font-weight:600;color:#111;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+          <select id="mqph-local-radius-unit" style="font-size:13px;font-family:inherit;color:#374151;font-weight:500;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 8px;background:#fff">
+            <option value="km" ${(existingZoneItem?.fields['Unit']||'km')==='km'?'selected':''}>km</option>
+            <option value="mi" ${existingZoneItem?.fields['Unit']==='mi'?'selected':''}>mi</option>
+          </select>
           <button onclick="mqphSaveLocalRadius()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>
           <span id="mqph-local-radius-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
         </div>
@@ -497,7 +679,7 @@ window.mqphGoToWizard = function() {
         <div class="mqph-hl">
           ✅ Found <strong>${materials.length}</strong> material${materials.length!==1?'s':''}, <strong>${doorStyles.length}</strong> door style${doorStyles.length!==1?'s':''}, <strong>${drawers.length}</strong> drawer config${drawers.length!==1?'s':''}, <strong>${hinges.length}</strong> hinge${hinges.length!==1?'s':''}.<br/><br/>
           <strong>Every step uses the same spec:</strong>&nbsp;
-          <span class="mqph-spec-tag">1 × 30" cabinet</span> + <span class="mqph-spec-tag">1 × 18" cabinet</span> = <span class="mqph-spec-tag">4 linear feet</span>
+          <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} cabinet</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} cabinet</span> = <span class="mqph-spec-tag">4 linear feet ${mqphMmTag(48)}</span>
         </div>
         <div style="font-size:13px;color:#374151;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1.25rem;line-height:1.6">💡 <strong>Tip:</strong> Just price your main, most-common items here — not every single variation. Once your baseline is set, use the <strong>+ Add</strong> button on each category to add a whole batch of similarly-priced items at once — much faster than running through this wizard for every option.</div>
         <div style="font-size:13px;color:#374151;line-height:1.9;margin-bottom:1.25rem">
@@ -548,11 +730,11 @@ window.mqphGoToWizard = function() {
         return `
           ${specBox([
             `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
-            `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
             `<strong>No doors · No drawers · No hardware · Supply only</strong>`,
           ])}
-          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
           <div id="mqph-r-bl-u" class="mqph-result"></div>`;
       },
       nextLabel:'Next →',
@@ -560,7 +742,7 @@ window.mqphGoToWizard = function() {
         const p = parseFloat(document.getElementById('mqph-bl-u-price')?.value||0);
         if (p>0&&wizardBaseline) {
           wizardBaseline.upperPrice=p; wizardBaseline.upperRate=p/4;
-          wizardItems.push({ name:wizardBaseline.matName+' — uppers', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline box rate uppers', active:true });
+          wizardItems.push({ name:wizardBaseline.matName+' — uppers', category:'material', rate:Math.round(wizardBaseline.upperRate*100)/100, unit:'per lin ft — uppers', description:'Baseline box rate uppers', active:true, isBaseline:true });
         }
       }
     });
@@ -574,12 +756,12 @@ window.mqphGoToWizard = function() {
         return `
           ${specBox([
             `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
-            `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
             `<strong>No doors · No drawers · Supply only · Include toe kick</strong>`,
           ])}
-          ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was $${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
-          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
+          ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was ${CUR()}${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
           <div id="mqph-r-bl-b" class="mqph-result"></div>`;
       },
       nextLabel:'Next →',
@@ -587,7 +769,7 @@ window.mqphGoToWizard = function() {
         const p = parseFloat(document.getElementById('mqph-bl-b-price')?.value||0);
         if (p>0&&wizardBaseline) {
           wizardBaseline.basePrice=p; wizardBaseline.baseRate=p/4;
-          wizardItems.push({ name:wizardBaseline.matName+' — bases', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline box rate bases', active:true });
+          wizardItems.push({ name:wizardBaseline.matName+' — bases', category:'material', rate:Math.round(wizardBaseline.baseRate*100)/100, unit:'per lin ft — bases', description:'Baseline box rate bases', active:true, isBaseline:true });
         }
       }
     });
@@ -604,10 +786,10 @@ window.mqphGoToWizard = function() {
             <div class="mqph-item-block">
               <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
               ${specBox([
-                `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
-                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · Supply only`,
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · Supply only · Include toe kick`,
               ])}
-              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcMatUp(${idx})"/></div>
+              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcMatUp(${idx})"/></div>
               <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
@@ -643,12 +825,12 @@ window.mqphGoToWizard = function() {
           <div class="mqph-hl">Doors are priced as an upcharge on top of the box.</div>
           ${specBox([
             `<strong>Base cabinets + baseline door style (no drawers)</strong>`,
-            `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `Door style: <span class="mqph-spec-tag">${doorName}</span> · <span class="mqph-spec-tag">3 doors: 2 on 30", 1 on 18"</span>`,
-            `Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only`,
+            `Door style: <span class="mqph-spec-tag">${doorName}</span> · <span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span>`,
+            `Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only · Include toe kick`,
           ])}
-          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-baseline" placeholder="0.00" oninput="mqphCalcDoorBaseline()"/></div>
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-door-baseline" placeholder="0.00" oninput="mqphCalcDoorBaseline()"/></div>
           <div id="mqph-r-door-baseline" class="mqph-result"></div>`;
       },
       nextLabel:'Next →',
@@ -657,9 +839,9 @@ window.mqphGoToWizard = function() {
         if (p>0&&wizardBaseline) {
           wizardBaseline.baseWithDoorPrice = p;
           const u = (p - wizardBaseline.basePrice) / 4;
-          wizardItems.push({ name:wizardBaseline.doorName, category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Baseline door style', active:true });
+          wizardItems.push({ name:wizardBaseline.doorName, category:'door', rate:Math.round(u*100)/100, unit:'per lin ft upcharge', description:'Baseline door style', active:true, isBaseline:true });
           if (wizardBaseline.hingeName) {
-            wizardItems.push({ name:wizardBaseline.hingeName, category:'hinge', rate:0, unit:'per lin ft upcharge', description:'Baseline hinge — included in door price', active:true });
+            wizardItems.push({ name:wizardBaseline.hingeName, category:'hinge', rate:0, unit:'per lin ft upcharge', description:'Baseline hinge — included in door price', active:true, isBaseline:true });
           }
         }
       }
@@ -679,11 +861,11 @@ window.mqphGoToWizard = function() {
             <div class="mqph-item-block">
               <div class="mqph-item-block-label">🚪 ${d.fields['Name']}</div>
               ${specBox([
-                `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                 `Material: <span class="mqph-spec-tag">${matName}</span> · Door: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
-                `<span class="mqph-spec-tag">3 doors: 2 on 30", 1 on 18"</span> · Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only`,
+                `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${hingeName}</span> · No drawers · Supply only · Include toe kick`,
               ])}
-              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
+              <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-door-${idx}" placeholder="0.00" oninput="mqphCalcDoorUp(${idx})"/></div>
               <div id="mqph-r-door-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
@@ -718,11 +900,11 @@ window.mqphGoToWizard = function() {
             <div class="mqph-item-block">
               <div class="mqph-item-block-label">🔧 ${h.fields['Name']}</div>
               ${specBox([
-                `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+                `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                 `Material: <span class="mqph-spec-tag">${matName}</span> · Door: <span class="mqph-spec-tag">${doorName}</span>`,
-                `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${blHingeName}) · No drawers · Supply only`,
+                `Hinges: <span class="mqph-spec-tag">${h.fields['Name']}</span> (instead of ${blHingeName}) · No drawers · Supply only · Include toe kick`,
               ])}
-              <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
+              <div class="mqph-input-row"><label>Your price with ${h.fields['Name']}?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-hinge-${idx}" placeholder="0.00" oninput="mqphCalcHingeUp(${idx})"/></div>
               <div id="mqph-r-hinge-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
@@ -757,11 +939,11 @@ window.mqphGoToWizard = function() {
               <div class="mqph-item-block">
                 <div class="mqph-item-block-label">🗄️ ${d.fields['Name']}</div>
                 ${specBox([
-                  `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+                  `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                   `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
-                  `<strong>1 top drawer per cabinet · Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+                  `<strong>1 top drawer per cabinet · Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick</strong>`,
                 ])}
-                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-drawer1-${idx}" placeholder="0.00" oninput="mqphCalcDrawer1(${idx})"/></div>
+                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-drawer1-${idx}" placeholder="0.00" oninput="mqphCalcDrawer1(${idx})"/></div>
                 <div id="mqph-r-drawer1-${idx}" class="mqph-result"></div>
               </div>`).join('')}`;
         },
@@ -793,12 +975,12 @@ window.mqphGoToWizard = function() {
               <div class="mqph-item-block">
                 <div class="mqph-item-block-label">🗄️ ${d.fields['Name']}</div>
                 ${specBox([
-                  `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+                  `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
                   `Material: <span class="mqph-spec-tag">${matName}</span> · Drawers: <span class="mqph-spec-tag">${d.fields['Name']}</span>`,
-                  `<strong>Full drawer bank (3 per cabinet) · Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+                  `<strong>Full drawer bank (3 per cabinet) · Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick</strong>`,
                 ])}
-                ${p1>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:10px">1-drawer quote was $${p1.toLocaleString()} — bank quote should be higher.</p>`:''}
-                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">$</span><input type="number" id="mqph-drawer3-${idx}" placeholder="0.00" oninput="mqphCalcDrawer3(${idx})"/></div>
+                ${p1>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:10px">1-drawer quote was ${CUR()}${p1.toLocaleString()} — bank quote should be higher.</p>`:''}
+                <div class="mqph-input-row"><label>Your price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-drawer3-${idx}" placeholder="0.00" oninput="mqphCalcDrawer3(${idx})"/></div>
                 <div id="mqph-r-drawer3-${idx}" class="mqph-result"></div>
               </div>`;
             }).join('')}`;
@@ -846,21 +1028,24 @@ window.mqphGoToWizard = function() {
         sub:'Quote install-only prices — no supply, just labour. Use the same 4 lin ft spec.',
         content:() => `
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔼 Upper cabinets — install only</div>
-            <div class="mqph-input-row"><label>4ft uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-            <div class="mqph-input-row"><label>4ft uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔼 Upper cabinets — install only</div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}</div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🔽 Base cabinets — install only</div>
-            <div class="mqph-input-row"><label>4ft bases, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
-            <div class="mqph-input-row"><label>4ft bases, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">$</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔽 Base cabinets — install only</div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)} · Include toe kick install</div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors, include toe kick)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles, include toe kick)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           </div>
           <div id="mqph-r-install" class="mqph-result"></div>
           <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
-          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🗑️ Cabinet removal & disposal</div>
-          <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet of base cabinets with doors?</label></div>
+          <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🗑️ Cabinet removal & disposal</div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)} · Include toe kick install</div>
+          <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet (${mqphMm(48).toLocaleString()}mm) of base cabinets with doors?</label></div>
           <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Include your cost to haul away and dispose of the old cabinets. <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
-          <div class="mqph-input-row"><label>Removal & disposal price for 4ft job</label><span class="mqph-pfx">$</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+          <div class="mqph-input-row"><label>Removal & disposal price for 4ft (${mqphMm(48).toLocaleString()}mm) job</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
           <div id="mqph-r-removal" class="mqph-result"></div>`,
         skipLabel:'Skip — supply only',
         nextLabel:'Next →',
@@ -891,14 +1076,16 @@ window.mqphGoToWizard = function() {
       title:'📍 Final step — Local delivery zone',
       sub:'Set your local delivery radius so the widget knows your service area.',
       content:() => {
-        const existingRadius = getByCategory('zone').find(z=>z.fields['Name']?.toLowerCase().includes('local'))?.fields['Rate'] || 15;
+        const existingZoneRec = getByCategory('zone').find(z=>z.fields['Name']?.toLowerCase().includes('local'));
+        const existingRadius = existingZoneRec?.fields['Rate'] || 15;
+        const existingUnit = existingZoneRec?.fields['Unit'] || 'km';
         return `
           <div class="mqph-info">
             Jobs within your local radius are quoted at no extra travel charge — any delivery cost should already be built into your regular pricing. Jobs outside this area will include a note on the quote that travel charges may apply.
           </div>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
             <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">📍 Local delivery radius</div>
-            <div class="mqph-input-row"><label>No extra travel charge within this distance</label><input type="number" id="mqph-zone-r" value="${existingRadius}" style="width:130px;text-align:right"/><span class="mqph-pfx">km</span></div>
+            <div class="mqph-input-row"><label>No extra travel charge within this distance</label><input type="number" id="mqph-zone-r" value="${existingRadius}" style="width:130px;text-align:right"/><select id="mqph-zone-r-unit" style="font-size:14px;font-family:inherit;color:#374151;border:1px solid #d1d5db;border-radius:6px;padding:6px 8px"><option value="km" ${existingUnit==='km'?'selected':''}>km</option><option value="mi" ${existingUnit==='mi'?'selected':''}>mi</option></select></div>
           </div>`;
       },
       skipLabel:'Skip',
@@ -906,13 +1093,15 @@ window.mqphGoToWizard = function() {
       onNext:() => {
         const gn=id=>parseFloat(document.getElementById(id)?.value||0);
         const zr=gn('mqph-zone-r');
+        const zUnit = document.getElementById('mqph-zone-r-unit')?.value || 'km';
         if(zr>0) {
           const existing = lineItems.find(r=>r.fields&&r.fields['Category']==='zone'&&r.fields['Name']?.toLowerCase().includes('local'));
           if(existing) {
-            atUpdate(LINE_ITEMS_TABLE, existing.id, {Rate:zr});
+            atUpdate(LINE_ITEMS_TABLE, existing.id, {Rate:zr, Unit:zUnit});
             existing.fields['Rate'] = zr;
+            existing.fields['Unit'] = zUnit;
           } else {
-            atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Local zone radius',Category:'zone',Rate:zr,Unit:'km',Description:'Within this distance = no travel surcharge',Active:true,'Sort order':0})
+            atCreate(LINE_ITEMS_TABLE, {shop:[shopRecord._recordId],Name:'Local zone radius',Category:'zone',Rate:zr,Unit:zUnit,Description:'Within this distance = no travel surcharge',Active:true,'Sort order':0})
               .then(rec=>{ if(rec?.id) lineItems.push(rec); });
           }
         }
@@ -933,7 +1122,7 @@ window.mqphGoToWizard = function() {
     const cfg=map[id]; if(!cfg) return;
     const p=parseFloat(document.getElementById(cfg.inputId)?.value||0);
     const res=document.getElementById(cfg.resId); if(!res) return;
-    if(p>0){res.style.display='block';res.innerHTML=`<strong>${cfg.label}:</strong> <span class="mqph-result-val">$${cfg.calc(p).toFixed(2)}/lin ft</span>`;}
+    if(p>0){res.style.display='block';res.innerHTML=`<strong>${cfg.label}:</strong> <span class="mqph-result-val">${CUR()}${cfg.calc(p).toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcMatUp = function(idx) {
@@ -944,7 +1133,7 @@ window.mqphGoToWizard = function() {
       const upperRate = (wizardBaseline.upperRate || 0) + upcharge;
       const baseRate  = (wizardBaseline.baseRate  || 0) + upcharge;
       res.style.display='block';
-      res.innerHTML=`<strong>Upcharge:</strong> <span class="mqph-result-val">$${upcharge.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;→ uppers $${upperRate.toFixed(2)}/ft · bases $${baseRate.toFixed(2)}/ft</span>`;
+      res.innerHTML=`<strong>Upcharge:</strong> <span class="mqph-result-val">${CUR()}${upcharge.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;→ uppers ${CUR()}${upperRate.toFixed(2)}/ft · bases ${CUR()}${baseRate.toFixed(2)}/ft</span>`;
     }
     else res.style.display='none';
   };
@@ -954,19 +1143,19 @@ window.mqphGoToWizard = function() {
     if(p>0){
       const u=(p-wizardBaseline.basePrice)/4;
       res.style.display='block';
-      res.innerHTML=`<strong>Door upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;(box $${wizardBaseline.baseRate.toFixed(2)} + door $${u.toFixed(2)} = $${(wizardBaseline.baseRate+u).toFixed(2)}/ft total)</span>`;
+      res.innerHTML=`<strong>Door upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">&nbsp;(box ${CUR()}${wizardBaseline.baseRate.toFixed(2)} + door ${CUR()}${u.toFixed(2)} = ${CUR()}${(wizardBaseline.baseRate+u).toFixed(2)}/ft total)</span>`;
     } else res.style.display='none';
   };
   window.mqphCalcDoorUp = function(idx) {
     const p=parseFloat(document.getElementById(`mqph-door-${idx}`)?.value||0);
     const res=document.getElementById(`mqph-r-door-${idx}`); if(!res||!wizardBaseline) return;
-    if(p>0){const u=(p-wizardBaseline.basePrice)/4;res.style.display='block';res.innerHTML=`<strong>Upcharge vs plain box:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;}
+    if(p>0){const u=(p-wizardBaseline.basePrice)/4;res.style.display='block';res.innerHTML=`<strong>Upcharge vs plain box:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcHingeUp = function(idx) {
     const p=parseFloat(document.getElementById(`mqph-hinge-${idx}`)?.value||0);
     const res=document.getElementById(`mqph-r-hinge-${idx}`); if(!res||!wizardBaseline) return;
-    if(p>0){const u=(p-(wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice))/4;res.style.display='block';res.innerHTML=`<strong>Hinge upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;}
+    if(p>0){const u=(p-(wizardBaseline.baseWithDoorPrice||wizardBaseline.basePrice))/4;res.style.display='block';res.innerHTML=`<strong>Hinge upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;}
     else res.style.display='none';
   };
   window.mqphCalcDrawer1 = function(idx) {
@@ -975,7 +1164,7 @@ window.mqphGoToWizard = function() {
     if(p>0){
       const u=(p-wizardBaseline.basePrice)/4;
       res.style.display='block';
-      res.innerHTML=`<strong>"Some drawers" upcharge:</strong> <span class="mqph-result-val">$${u.toFixed(2)}/lin ft</span>`;
+      res.innerHTML=`<strong>"Some drawers" upcharge:</strong> <span class="mqph-result-val">${CUR()}${u.toFixed(2)}/lin ft</span>`;
     } else res.style.display='none';
   };
   window.mqphCalcDrawer3 = function(idx) {
@@ -985,7 +1174,7 @@ window.mqphGoToWizard = function() {
     if(p3>0){
       const mostlyRate=((p1+p3)/2-wizardBaseline.basePrice)/4;
       res.style.display='block';
-      res.innerHTML=`<strong>"Mostly drawers" upcharge:</strong> <span class="mqph-result-val">$${mostlyRate.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">(average of $${p1.toLocaleString()} + $${p3.toLocaleString()})</span>`;
+      res.innerHTML=`<strong>"Mostly drawers" upcharge:</strong> <span class="mqph-result-val">${CUR()}${mostlyRate.toFixed(2)}/lin ft</span> <span style="font-size:12px;color:#6b7280">(average of ${CUR()}${p1.toLocaleString()} + ${CUR()}${p3.toLocaleString()})</span>`;
     } else res.style.display='none';
   };
   window.mqphCalcInstall = function() {
@@ -996,23 +1185,136 @@ window.mqphGoToWizard = function() {
     const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
     const res=document.getElementById('mqph-r-install'); if(!res) return;
     let html='';
-    if(und>0) html+=`Uppers (no doors): <span class="mqph-result-val">$${(und/4).toFixed(2)}/lin ft</span><br/>`;
-    if(uwd>0) html+=`Uppers (with doors): <span class="mqph-result-val">$${(uwd/4).toFixed(2)}/lin ft</span><br/>`;
-    if(bnd>0) html+=`Bases (no doors): <span class="mqph-result-val">$${(bnd/4).toFixed(2)}/lin ft</span><br/>`;
+    if(und>0) html+=`Uppers (no doors): <span class="mqph-result-val">${CUR()}${(und/4).toFixed(2)}/lin ft</span><br/>`;
+    if(uwd>0) html+=`Uppers (with doors): <span class="mqph-result-val">${CUR()}${(uwd/4).toFixed(2)}/lin ft</span><br/>`;
+    if(bnd>0) html+=`Bases (no doors): <span class="mqph-result-val">${CUR()}${(bnd/4).toFixed(2)}/lin ft</span><br/>`;
     if(bwd>0) {
-      html+=`Bases (with doors): <span class="mqph-result-val">$${(bwd/4).toFixed(2)}/lin ft</span><br/>`;
-      html+=`Bases (some drawers): <span class="mqph-result-val">$${(bwd/4*1.10).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +10%</span><br/>`;
-      html+=`Bases (mostly drawers): <span class="mqph-result-val">$${(bwd/4*1.15).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +15%</span>`;
+      html+=`Bases (with doors): <span class="mqph-result-val">${CUR()}${(bwd/4).toFixed(2)}/lin ft</span><br/>`;
+      html+=`Bases (some drawers): <span class="mqph-result-val">${CUR()}${(bwd/4*1.10).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +10%</span><br/>`;
+      html+=`Bases (mostly drawers): <span class="mqph-result-val">${CUR()}${(bwd/4*1.15).toFixed(2)}/lin ft</span> <span style="font-size:11px;color:#9ca3af">auto +15%</span>`;
       // Update removal suggestion hint
       const hint = document.getElementById('mqph-removal-hint');
-      if (hint) hint.textContent = `Suggested: $${Math.round(bwd*0.5)} (half your base install with doors rate)`;
+      if (hint) hint.textContent = `Suggested: ${CUR()}${Math.round(bwd*0.5)} (half your base install with doors rate)`;
     }
     if(html){res.style.display='block';res.innerHTML=html;}else res.style.display='none';
     // Removal live rate
     const remRes = document.getElementById('mqph-r-removal');
     if (remRes) {
-      if(rem>0){remRes.style.display='block';remRes.innerHTML=`<strong>Removal rate:</strong> <span class="mqph-result-val">$${(rem/4).toFixed(2)}/lin ft</span>`;}
+      if(rem>0){remRes.style.display='block';remRes.innerHTML=`<strong>Removal rate:</strong> <span class="mqph-result-val">${CUR()}${(rem/4).toFixed(2)}/lin ft</span>`;}
       else remRes.style.display='none';
+    }
+  };
+
+  // Install/removal requote flow — Jordan 2026-09-11: deleting ANY single
+  // install/removal rate now cascade-deletes the whole category (see
+  // mqphDelete below), since the widget needs the full set to price every
+  // job type accurately. Once the category is empty, this is how a shop
+  // gets it back — same 5-input quote as wizard Step 9, reusing
+  // mqphCalcInstall() for the live calc since that function has no
+  // wizard-state dependency of its own.
+  window.mqphOpenInstallRequote = function() {
+    // Per Jordan 2026-09-12 ("if they go to edit install rates it should
+    // be showing the original quotes... so they can requote to edit"):
+    // this modal now doubles as the "edit install rates" entry point
+    // (see the button in buildEditorHTML's category header, no longer
+    // gated to only the empty-category case) — so when rates already
+    // exist, pre-fill each box with the ORIGINAL quoted job total those
+    // rates came from, same "reverse rate × 4 = job price" math every
+    // other Requote panel in this file already uses, instead of always
+    // opening to 5 blank fields. Matched by each rate's fixed Name
+    // (Sort order/Description can vary, Name doesn't). The two derived
+    // some/mostly-drawers rates have no input box of their own — they're
+    // always recomputed from the "bases, with doors" box on save, same
+    // as they always have been.
+    const findRate = (name) => lineItems.find(r => r.fields && r.fields['Category']==='install' && r.fields['Name']===name);
+    const prefill = (id, name) => {
+      const el = document.getElementById(id); if (!el) return;
+      const rec = findRate(name);
+      el.value = rec ? (Math.round((rec.fields['Rate']||0) * 4 * 100) / 100) : '';
+    };
+    prefill('mqph-inst-u-nd', 'Install — uppers (no doors)');
+    prefill('mqph-inst-u-wd', 'Install — uppers (with doors)');
+    prefill('mqph-inst-b-nd', 'Install — bases (no doors)');
+    prefill('mqph-inst-b-wd', 'Install — bases (with doors)');
+    prefill('mqph-removal',   'Cabinet removal');
+    document.getElementById('mqph-install-requote-overlay')?.classList.add('show');
+    mqphCalcInstall();
+  };
+
+  window.mqphCloseInstallRequote = function() {
+    document.getElementById('mqph-install-requote-overlay')?.classList.remove('show');
+  };
+
+  window.mqphSaveInstallRequote = async function() {
+    const und=parseFloat(document.getElementById('mqph-inst-u-nd')?.value||0);
+    const uwd=parseFloat(document.getElementById('mqph-inst-u-wd')?.value||0);
+    const bnd=parseFloat(document.getElementById('mqph-inst-b-nd')?.value||0);
+    const bwd=parseFloat(document.getElementById('mqph-inst-b-wd')?.value||0);
+    const rem=parseFloat(document.getElementById('mqph-removal')?.value||0);
+
+    const hasExisting = lineItems.some(r => r.fields && r.fields['Category']==='install');
+    const allBlank = !(und>0) && !(uwd>0) && !(bnd>0) && !(bwd>0) && !(rem>0);
+    if (!hasExisting && allBlank) { alert('Enter at least one rate before saving.'); return; }
+    if (hasExisting && allBlank) {
+      if (!confirm('Every box is blank — this will delete all your remaining installation & removal rates. Continue?')) return;
+    }
+
+    const btn = document.getElementById('mqph-install-requote-save');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    // Per Jordan 2026-09-12: this modal now also serves as "edit install
+    // rates" (see mqphOpenInstallRequote's pre-fill above), not just the
+    // empty-category recovery flow it shipped as on 2026-09-11 — so
+    // saving now UPDATES a rate that already exists (matched by its
+    // fixed Name) instead of always creating a new row alongside it, and
+    // clearing a box back to blank deletes that one rate. Mirrors every
+    // other Requote/Edit panel in this file: edit in place, don't
+    // duplicate.
+    async function upsert(name, jobPriceOrRate, description, isRawRate) {
+      const existing = lineItems.find(r => r.fields && r.fields['Category']==='install' && r.fields['Name']===name);
+      const hasValue = isRawRate ? jobPriceOrRate !== null : jobPriceOrRate > 0;
+      if (hasValue) {
+        const rate = isRawRate ? jobPriceOrRate : Math.round((jobPriceOrRate/4)*100)/100;
+        if (existing) {
+          await atUpdate(LINE_ITEMS_TABLE, existing.id, {Rate:rate});
+          existing.fields['Rate'] = rate;
+        } else {
+          const sort = lineItems.filter(r=>r.fields&&r.fields['Category']==='install').length + 1;
+          const rec = await atCreate(LINE_ITEMS_TABLE, { shop:[shopRecord._recordId], Name:name, Category:'install', Rate:rate, Unit:'per lin ft', Description:description, Active:true, 'Sort order':sort });
+          if (rec?.id) lineItems.push(rec);
+        }
+      } else if (existing) {
+        await atDelete(LINE_ITEMS_TABLE, existing.id);
+        const idx = lineItems.indexOf(existing); if (idx !== -1) lineItems.splice(idx, 1);
+      }
+    }
+
+    try {
+      await upsert('Install — uppers (no doors)',   und, 'Upper box install, no doors');
+      await upsert('Install — uppers (with doors)', uwd, 'Upper install with doors hung');
+      await upsert('Install — bases (no doors)',    bnd, 'Base box install, no doors');
+      if (bwd > 0) {
+        const bwdRate = Math.round((bwd/4)*100)/100;
+        await upsert('Install — bases (with doors)',     bwd, 'Base install with doors hung');
+        await upsert('Install — bases (some drawers)',   Math.round(bwdRate*1.10*100)/100, 'Base install with some drawers (+10% over with-doors rate)', true);
+        await upsert('Install — bases (mostly drawers)', Math.round(bwdRate*1.15*100)/100, 'Base install with mostly drawers (+15% over with-doors rate)', true);
+      } else {
+        // Cleared back to blank — the two auto-calculated drawer rates
+        // only ever exist because of this one, so they go too, same
+        // "all 7 travel together" relationship the delete-cascade
+        // already enforces elsewhere.
+        await upsert('Install — bases (with doors)',     0, '');
+        await upsert('Install — bases (some drawers)',   null, '', true);
+        await upsert('Install — bases (mostly drawers)', null, '', true);
+      }
+      await upsert('Cabinet removal', rem, 'Remove & dispose existing cabinets');
+
+      mqphCloseInstallRequote();
+      await loadAndRender();
+    } catch(e) {
+      alert('Something went wrong saving these — please try again. Anything already saved stayed saved, so check Pricing before re-running to avoid duplicates.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Save install/removal rates →'; }
     }
   };
 
@@ -1042,6 +1344,15 @@ window.mqphGoToWizard = function() {
     if(back) back.style.display=idx===0?'none':'inline-block';
     if(next){ if(steps[idx].nextLabel){next.textContent=steps[idx].nextLabel;next.style.display='inline-block';}else next.style.display='none'; }
     if(skip){ skip.style.display=steps[idx].skipLabel?'inline-block':'none'; if(steps[idx].skipLabel) skip.textContent=steps[idx].skipLabel; }
+    // Per Jordan 2026-09-12: "every new step should bring you to the
+    // top of the step" — without this, the page kept whatever scroll
+    // position it had from the PREVIOUS step, which could land partway
+    // down or at the very bottom of the new (often shorter or taller)
+    // step's content instead of showing its title from the top. Scrolls
+    // the wizard card's own header into view, not just window.scrollTo,
+    // so this still does the right thing regardless of where the wizard
+    // sits on the page.
+    document.querySelector('.mqph-wizard-header')?.scrollIntoView({block:'start'});
   }
 
   window.mqphExitWizard = function() {
@@ -1121,7 +1432,7 @@ window.mqphGoToWizard = function() {
         await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:item.name, Category:item.category,
           Rate:item.rate, Unit:item.unit, Description:item.description||'',
-          Active:true, 'Sort order':i+1,
+          Active:true, 'Sort order':i+1, 'Is baseline': item.isBaseline === true,
         });
       } catch(e) { console.warn('Create failed:',item.name,e); }
     }
@@ -1134,7 +1445,7 @@ window.mqphGoToWizard = function() {
       <div class="mqph-wizard-card">
         <div class="mqph-wizard-header">
           <h2>⚙️ Pricing Setup Wizard</h2>
-          <p>Spec used throughout every step: 1 × 30" + 1 × 18" = 4 lin ft</p>
+          <p>Spec used throughout every step: 1 × 30" (${mqphMm(30)}mm) + 1 × 18" (${mqphMm(18)}mm) = 4 lin ft (${mqphMm(48).toLocaleString()}mm)</p>
           <div class="mqph-progress">${steps.map(()=>'<div class="dot"></div>').join('')}</div>
         </div>
         <div class="mqph-wizard-body">${steps.map((_,i)=>`<div class="mqph-step ${i===0?'active':''}" id="mqph-step-${i}"></div>`).join('')}</div>
@@ -1169,9 +1480,9 @@ window.mqphGoToWizard = function() {
     const options = miniWizMatchOptions(cat);
     if (!options.length) return ''; // nothing to match against yet
     const preview = miniWiz.matchRates ? (() => {
-      if (cat === 'material') return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (uppers) and $${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (bases) — same as "${miniWiz.matchName}"`;
-      if (cat === 'drawer') return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (some drawers) and $${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (mostly drawers) — same as "${miniWiz.matchName}"`;
-      return `Will use $${miniWiz.matchRates.rate0.toFixed(2)}/lin ft upcharge — same as "${miniWiz.matchName}"`;
+      if (cat === 'material') return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (uppers) and ${CUR()}${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (bases) — same as "${miniWiz.matchName}"`;
+      if (cat === 'drawer') return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft (some drawers) and ${CUR()}${miniWiz.matchRates.rate1.toFixed(2)}/lin ft (mostly drawers) — same as "${miniWiz.matchName}"`;
+      return `Will use ${CUR()}${miniWiz.matchRates.rate0.toFixed(2)}/lin ft upcharge — same as "${miniWiz.matchName}"`;
     })() : '';
     return `
       <div style="margin-bottom:1.25rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
@@ -1240,11 +1551,11 @@ window.mqphGoToWizard = function() {
           <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote this job exactly in your software, then enter the total below.</p>
           ${specBox([
             `<strong>Upper cabinets — box only, no doors</strong>`,
-            `Cabinets: <span class="mqph-spec-tag">1 × 30" upper</span> + <span class="mqph-spec-tag">1 × 18" upper</span> = 4 lin ft`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${name}</span> &nbsp;·&nbsp; No doors &nbsp;·&nbsp; Supply only &nbsp;·&nbsp; Local delivery`,
           ])}
           ${matchBlock}
-          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">Enter your quoted total for this 4 lin ft job</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
             <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
@@ -1256,11 +1567,11 @@ window.mqphGoToWizard = function() {
           <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Same material, now bases. Include toe kick.</p>
           ${specBox([
             `<strong>Base cabinets — box only, no doors</strong>`,
-            `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${name}</span> &nbsp;·&nbsp; No doors &nbsp;·&nbsp; Supply only &nbsp;·&nbsp; Include toe kick`,
           ])}
           ${matchBlock}
-          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">Enter your quoted total for this 4 lin ft job</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
             <div class="mqph-rate-reveal-val" id="mqph-mini-rate-1">—</div>
@@ -1270,17 +1581,17 @@ window.mqphGoToWizard = function() {
     }
 
     if (cat === 'door') {
-      const baselineBoxDesc = `$${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price)`;
+      const baselineBoxDesc = `${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price)`;
       return `
         <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the same baseline base box job with this new door style added.</p>
         ${specBox([
           `<strong>Base cabinets + new door style</strong>`,
-          `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${name}</span>`,
-          `<span class="mqph-spec-tag">3 doors: 2 on 30", 1 on 18"</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only · Include toe kick`,
         ])}
         ${matchBlock}
-        <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
         <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the door upcharge per lin ft</p>
         <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
           <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
@@ -1290,17 +1601,17 @@ window.mqphGoToWizard = function() {
 
     if (cat === 'hinge') {
       const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
-      const baselineDesc = `$${baseWithDoor.toLocaleString(undefined,{maximumFractionDigits:0})} (${bl.blMatName} bases + ${bl.blDoorName})`;
+      const baselineDesc = `${CUR()}${baseWithDoor.toLocaleString(undefined,{maximumFractionDigits:0})} (${bl.blMatName} bases + ${bl.blDoorName})`;
       return `
         <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the baseline box + baseline door, but swap to this hinge.</p>
         ${specBox([
           `<strong>Base cabinets + baseline door + new hinge</strong>`,
-          `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${bl.blDoorName}</span>`,
-          `Hinges: <span class="mqph-spec-tag">${name}</span> · No drawers · Supply only`,
+          `Hinges: <span class="mqph-spec-tag">${name}</span> · No drawers · Supply only · Include toe kick`,
         ])}
         ${matchBlock}
-        <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
         <p class="mqph-calc-hint">We'll subtract ${baselineDesc} and divide by 4 to get the hinge upcharge per lin ft</p>
         <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
           <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
@@ -1309,18 +1620,18 @@ window.mqphGoToWizard = function() {
     }
 
     if (cat === 'drawer') {
-      const baselineBoxDesc = `$${bl.blBasePrice.toLocaleString(undefined,{maximumFractionDigits:0})} (your ${bl.blMatName} base box price)`;
+      const baselineBoxDesc = `${CUR()}${bl.blBasePrice.toLocaleString(undefined,{maximumFractionDigits:0})} (your ${bl.blMatName} base box price)`;
       if (step === 0) {
         return `
           <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Quote the baseline base box with <strong>1 top drawer</strong> in each cabinet. This gives us the "some drawers" rate.</p>
           ${specBox([
             `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
-            `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
-            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick</strong>`,
           ])}
           ${matchBlock}
-          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p0" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the "some drawers" upcharge per lin ft</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-0">
             <div class="mqph-rate-reveal-val" id="mqph-mini-rate-0">—</div>
@@ -1333,13 +1644,13 @@ window.mqphGoToWizard = function() {
           <p style="font-size:13px;color:#6b7280;margin-bottom:1.5rem;line-height:1.6">Now quote a <strong>full drawer bank</strong> — 3 drawers in each cabinet. This gives us the "mostly drawers" rate.</p>
           ${specBox([
             `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong>`,
-            `Cabinets: <span class="mqph-spec-tag">1 × 30" base</span> + <span class="mqph-spec-tag">1 × 18" base</span> = 4 lin ft`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${name}</span>`,
-            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only</strong>`,
+            `<strong>Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick</strong>`,
           ])}
-          ${p0>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">1-drawer quote was $${p0.toLocaleString()} — bank quote should be higher.</p>`:''}
+          ${p0>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">1-drawer quote was ${CUR()}${p0.toLocaleString()} — bank quote should be higher.</p>`:''}
           ${matchBlock}
-          <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
+          <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-mini-p1" placeholder="0" oninput="mqphMiniCalc()"/></div>
           <p class="mqph-calc-hint">We'll average this with your 1-drawer quote to get the "mostly drawers" rate</p>
           <div class="mqph-rate-reveal" id="mqph-mini-reveal-1">
             <div class="mqph-rate-reveal-val" id="mqph-mini-rate-1">—</div>
@@ -1362,7 +1673,7 @@ window.mqphGoToWizard = function() {
       const rv = document.getElementById(`mqph-mini-rate-${idx}`);
       if (!el || !rv) return;
       if (rate !== null && !isNaN(rate)) {
-        rv.textContent = `$${rate.toFixed(2)} / lin ft`;
+        rv.textContent = `${CUR()}${rate.toFixed(2)} / lin ft`;
         el.style.display = 'block';
       } else {
         el.style.display = 'none';
@@ -1534,14 +1845,27 @@ window.mqphGoToWizard = function() {
         const upperRate = Math.round((miniWiz.p0 / 4) * 100) / 100;
         const baseRate  = Math.round((miniWiz.p1 / 4) * 100) / 100;
         const sortBase  = lineItems.filter(r=>r.fields&&r.fields['Category']==='material').length;
+        // Per Jordan 2026-09-12 (hit this for real on hinge — see the
+        // door branch below and the category-always-visible fix a few
+        // hundred lines up): if this is the shop's very first material
+        // (category was completely empty before this save), pin it
+        // baseline immediately rather than leaving it unpinned — there's
+        // nothing else in the category to compare it to, it's trivially
+        // both the only option and the cheapest one. Material is safe to
+        // just pin outright with no other math involved (its Rate is its
+        // own absolute box price, never relative to baseline — same
+        // reasoning as the "Is baseline" entry's material/door bullet).
+        const isFirstOfCat = sortBase === 0;
 
         const upperRec = await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:`${name} — uppers`, Category:'material',
           Rate:upperRate, Unit:'per lin ft — uppers', Description:'Box material rate uppers', Active:true, 'Sort order':sortBase+1,
+          ...(isFirstOfCat ? {'Is baseline': true} : {}),
         });
         const baseRec = await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:`${name} — bases`, Category:'material',
           Rate:baseRate, Unit:'per lin ft — bases', Description:'Box material rate bases', Active:true, 'Sort order':sortBase+2,
+          ...(isFirstOfCat ? {'Is baseline': true} : {}),
         });
         if (upperRec?.id) lineItems.push(upperRec);
         if (baseRec?.id)  lineItems.push(baseRec);
@@ -1550,9 +1874,15 @@ window.mqphGoToWizard = function() {
       if (cat === 'door') {
         const rate = Math.round(((p - bl.blBasePrice) / 4) * 100) / 100;
         const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='door').length;
+        // Same "first item in an empty category becomes baseline
+        // automatically" reasoning as material just above — door's Rate
+        // is likewise its own independent upcharge, safe to pin with no
+        // other row needing to change.
+        const isFirstOfCat = sortBase === 0;
         const rec = await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:name, Category:'door',
           Rate:rate, Unit:'per lin ft upcharge', Description:'Door style upcharge', Active:true, 'Sort order':sortBase+1,
+          ...(isFirstOfCat ? {'Is baseline': true} : {}),
         });
         if (rec?.id) lineItems.push(rec);
       }
@@ -1561,9 +1891,46 @@ window.mqphGoToWizard = function() {
         const baseWithDoor = (bl.blBaseRate + bl.blDoorRate) * 4;
         const rate = Math.round(((p - baseWithDoor) / 4) * 100) / 100;
         const sortBase = lineItems.filter(r=>r.fields&&r.fields['Category']==='hinge').length;
+        const isFirstOfCat = sortBase === 0;
+        // Per Jordan 2026-09-12: adding the shop's first hinge back into
+        // a completely empty category (e.g. after deleting the old
+        // baseline hinge) has to become the new $0 baseline outright —
+        // there's nothing else in the category for it to be an upcharge
+        // over. But unlike material/door, just storing `rate` as-is and
+        // pinning it would be WRONG: `rate` was computed against the OLD
+        // baseline reference (`baseWithDoor`, which already has the OLD
+        // baseline hinge's real dollar value folded into `bl.blDoorRate`
+        // — see the chat reply for this session for the full derivation),
+        // so it represents "how much more/less this hinge costs than
+        // what's currently baked into every door's price as free" — not
+        // this hinge's own upcharge over itself. The correct new baseline
+        // hinge Rate is exactly 0 (it always is), and that same `rate`
+        // value is exactly the amount every door's own Rate needs to move
+        // by to stay accurate to the swap (their price included the OLD
+        // hinge's value; shifting by `rate` re-bases them onto the new
+        // one) — reusing the identical shift math the active baseline-
+        // delete flow's hinge branch uses below in
+        // mqphConfirmBaselineDelete, just triggered from this entry point
+        // instead of that one.
+        const doors = lineItems.filter(r => r.fields && r.fields['Category'] === 'door');
+        if (isFirstOfCat && rate !== 0 && doors.length) {
+          const preview = doors.slice(0,3)
+            .map(d => `${d.fields['Name']}: ${CUR()}${(d.fields['Rate']||0).toFixed(2)}/lin ft → ${CUR()}${(((d.fields['Rate']||0)+rate)).toFixed(2)}/lin ft`).join('\n');
+          const ok = confirm(`This becomes your new baseline hinge, priced at exactly ${CUR()}0 (included, not charged separately) — and since your door prices were quoted assuming your OLD baseline hinge, every door's price needs to shift by ${CUR()}${rate.toFixed(2)}/lin ft to stay accurate to this hinge's real cost.\n\nFor example:\n${preview}${doors.length>3?'\n…':''}\n\nContinue?`);
+          if (!ok) {
+            if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Save →'; }
+            return;
+          }
+          for (const d of doors) {
+            const newRate = Math.round(((d.fields['Rate']||0) + rate) * 100) / 100;
+            try { await atUpdate(LINE_ITEMS_TABLE, d.id, {Rate:newRate}); d.fields['Rate'] = newRate; }
+            catch(e) { console.error('Failed to reprice door for new baseline hinge', d.id, e); }
+          }
+        }
         const rec = await atCreate(LINE_ITEMS_TABLE, {
           shop:[shopRecord._recordId], Name:name, Category:'hinge',
-          Rate:rate, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':sortBase+1,
+          Rate:isFirstOfCat ? 0 : rate, Unit:'per lin ft upcharge', Description:'Hinge upcharge', Active:true, 'Sort order':sortBase+1,
+          ...(isFirstOfCat ? {'Is baseline': true} : {}),
         });
         if (rec?.id) lineItems.push(rec);
       }
@@ -1742,7 +2109,7 @@ window.mqphGoToWizard = function() {
   // ============================================================
   // EDITOR
   // ============================================================
-  function buildEditorHTML() {
+  function buildEditorHTML(driftNotices = []) {
     // Wizard has run if any material record has a rate > 0
     const wizardHasRun = lineItems.some(r => r.fields && r.fields['Category'] === 'material' && (r.fields['Rate'] || 0) > 0);
 
@@ -1779,6 +2146,8 @@ window.mqphGoToWizard = function() {
         </div>
       </div>
 
+      ${driftNotices.length ? driftNotices.map(n => `<div class="mqph-msg mqph-msg-success" style="display:block;margin-bottom:1rem">${n}</div>`).join('') : ''}
+
       ${!hasItems ? `
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:3rem;text-align:center;margin-bottom:1.5rem">
           <div style="font-size:32px;margin-bottom:12px">⚙️</div>
@@ -1787,34 +2156,59 @@ window.mqphGoToWizard = function() {
           <button class="mqph-btn mqph-btn-primary" onclick="mqphStartItemSetup()">Set up shop items →</button>
         </div>` : `
 
-        ${['material','door','drawer','hinge','zone','install','other','tax'].filter(cat => groups[cat]).map(cat => [cat, groups[cat]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
+        ${['material','door','drawer','hinge','zone','install'].map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
           <div class="mqph-cat-block">
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
               <span class="mqph-cat-title"><span id="mqph-cat-arrow-${cat}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${CAT_LABELS[cat]||cat} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${recs.length})</span></span>
               ${cat==='install'
-                ? ''
-                : MINI_WIZ_CATS.includes(cat)
-                  ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>${['door','material'].includes(cat) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenBulkEdit('${cat}')">📊 Bulk edit</button>` : ''}`
-                  : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
+                ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenInstallRequote()">${recs.length===0 ? '🔧 Requote install/removal rates' : '✏️ Edit install/removal rates'}</button>`
+                : cat==='zone'
+                  ? (recs.length===0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('zone')">+ Add</button>` : '')
+                  : MINI_WIZ_CATS.includes(cat)
+                    ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAddItem('${cat}')">+ Add ${cat}</button>`
+                    : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenAdd('${cat}')">+ Add</button>`
               }
             </div>
             <div id="mqph-cat-body-${cat}" style="display:none">
+            ${cat==='zone' ? `<div style="font-size:11px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;margin:4px 12px 8px">💡 Showing "km" but want "mi" instead (or back to km)? Click <strong>Edit</strong> on the zone below and switch the unit — it's just a label, so it's the one field that's editable there.</div>` : ''}
+            ${cat==='install' && recs.length===0 ? `
+            <div style="padding:16px 12px;font-size:12px;color:#6b7280;line-height:1.5">All installation & removal rates were deleted. Click <strong>"🔧 Requote install/removal rates"</strong> above to quote them again — the widget needs these to price install-only and removal jobs.</div>
+            ` : recs.length===0 ? `
+            <!-- Per Jordan 2026-09-12: a category that's dropped to zero
+                 items (e.g. its last item got deleted) used to disappear
+                 from this page ENTIRELY — header, "+ Add" button and all —
+                 since the outer category list used to only render a
+                 category that already had at least one item. That left no
+                 way back in except through Airtable directly. Every
+                 category above now always renders its header/button (see
+                 the removed filter a few lines up); this is just the
+                 friendlier empty body to go with it, in place of a bare
+                 Name/Price column-header row with nothing under it. -->
+            <div style="padding:16px 12px;font-size:12px;color:#6b7280;line-height:1.5">No ${(CAT_LABELS[cat]||cat).replace(/^\S+\s/,'').toLowerCase()} yet. Use the "+ Add" button above to add one.</div>
+            ` : `
             <div style="display:flex;align-items:center;gap:16px;padding:4px 12px 6px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f3f4f6;user-select:none">
-              <span style="cursor:pointer;flex:1" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
-              <span style="cursor:pointer;min-width:80px;text-align:right" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
+              <span style="cursor:pointer;flex:1;${mqphSortLabelStyle(cat,'name')}" onclick="mqphSetSort('${cat}','name')">Name ${mqphSortArrow(cat,'name')}</span>
+              <span style="cursor:pointer;min-width:80px;text-align:right;${mqphSortLabelStyle(cat,'price')}" onclick="mqphSetSort('${cat}','price')">Price ${mqphSortArrow(cat,'price')}</span>
+              ${['door','material'].includes(cat) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenBulkEdit('${cat}')">📊 Bulk edit</button>` : ''}
             </div>
+            <div${recs.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>
             ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
                 <div style="flex:1;min-width:0">
-                  <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
+                  <div class="mqph-row-name">${r.fields['Name']||'—'}${['material','door','hinge'].includes(cat) && r.fields['Is baseline'] ? ' <span title="New items in this category are priced as an upcharge against this one" style="font-size:11px;font-weight:600;color:#92400e">⭐ Baseline</span>' : ''}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
-                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : '$'+(r.fields['Rate']||0).toLocaleString()}</div>
+                <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : CUR() +(r.fields['Rate']||0).toLocaleString()}</div>
                 <div class="mqph-row-unit">${r.fields['Unit']||''}</div>
                 <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
-                <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>
+                ${cat==='install'
+                  ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenInstallRequote()">Edit</button>`
+                  : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphOpenEdit('${r.id}')">Edit</button>`
+                }
                 <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphDelete('${r.id}')">Delete</button>
               </div>`).join('')}
+            </div>
+            `}
             </div>
           </div>`).join('')}
       `}
@@ -1840,6 +2234,8 @@ window.mqphGoToWizard = function() {
             <div id="mqph-bulk-edit-form" style="display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
               <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:0.75rem" id="mqph-bulk-selected-count"></div>
               <div id="mqph-bulk-price-fields"></div>
+              <div id="mqph-bulk-requote-toggle" style="margin:2px 0 0"></div>
+              <div id="mqph-bulk-requote-panel" style="display:none;margin-top:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px"></div>
               <div style="margin-top:10px">
                 <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px">Or match another item's price</label>
                 <input type="text" id="mqph-bulk-match-search" placeholder="Search items to match…" oninput="mqphBulkMatchSearch(this.value)" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
@@ -1847,6 +2243,48 @@ window.mqphGoToWizard = function() {
               </div>
               <button class="mqph-btn mqph-btn-primary" style="margin-top:1rem;width:100%" onclick="mqphBulkApply()">Update selected items →</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Install/removal requote overlay — appears only once Jordan's
+           cascade-delete (see mqphDelete) has cleared the whole Install &
+           Removal category, via the "🔧 Requote install/removal rates"
+           button that takes the place of that category's normal "+ Add"
+           button when it's empty. Reuses the exact same 5 input ids and
+           mqphCalcInstall() live-calc as wizard Step 9 — mqphCalcInstall
+           has no wizard-state dependency, it only reads these DOM ids — so
+           the shop can requote the whole install/removal set without
+           re-running the full pricing wizard. Added 2026-09-11. -->
+      <div class="mqph-overlay" id="mqph-install-requote-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3>🔧 Requote install/removal rates</h3></div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseInstallRequote()">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <p style="font-size:13px;color:#6b7280;margin:0 0 1rem;line-height:1.5">Quote install-only prices — no supply, just labour. Use the same 4 lin ft spec as the rest of your pricing. Leave any box blank to skip that rate.</p>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔼 Upper cabinets — install only</div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}</div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>box only</strong> (no doors)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) uppers, <strong>with doors</strong> (hang, adjust and install handles)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-u-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            </div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🔽 Base cabinets — install only</div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)} · Include toe kick install</div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>box only</strong> (no doors, include toe kick)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-nd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+              <div class="mqph-input-row"><label>4ft (${mqphMm(48).toLocaleString()}mm) bases, <strong>with doors</strong> (hang, adjust and install handles, include toe kick)</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-inst-b-wd" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            </div>
+            <div id="mqph-r-install" class="mqph-result"></div>
+            <div style="height:1px;background:#e5e7eb;margin:1.25rem 0"></div>
+            <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem">🗑️ Cabinet removal & disposal</div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:0.75rem">Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)} · Include toe kick install</div>
+            <div class="mqph-input-row"><label>What would you charge to remove & dispose those same 4 linear feet (${mqphMm(48).toLocaleString()}mm) of base cabinets with doors?</label></div>
+            <p style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Include your cost to haul away and dispose of the old cabinets. <span id="mqph-removal-hint" style="color:#1d4ed8;font-weight:500"></span></p>
+            <div class="mqph-input-row"><label>Removal & disposal price for 4ft (${mqphMm(48).toLocaleString()}mm) job</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-removal" placeholder="0.00" oninput="mqphCalcInstall()"/></div>
+            <div id="mqph-r-removal" class="mqph-result"></div>
+            <button class="mqph-btn mqph-btn-primary" id="mqph-install-requote-save" style="margin-top:1.25rem;width:100%" onclick="mqphSaveInstallRequote()">Save install/removal rates →</button>
           </div>
         </div>
       </div>
@@ -1878,16 +2316,31 @@ window.mqphGoToWizard = function() {
             <button class="mqph-modal-hdr-close" onclick="mqphCloseModal()">×</button>
           </div>
           <div class="mqph-modal-body">
-            <div class="mqph-field"><label>Name</label><input type="text" id="mqph-item-name"/></div>
-            <div class="mqph-field"><label>Category</label>
-              <select id="mqph-item-cat">${Object.entries(CAT_LABELS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
+            <div class="mqph-field"><label>Name</label><input type="text" id="mqph-item-name"/>
+              <div id="mqph-item-name-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4"></div>
             </div>
-            <div class="mqph-field"><label>Rate ($)</label><input type="number" id="mqph-item-rate" step="0.01"/></div>
+            <div class="mqph-field"><label>Category</label>
+              <!-- 'drawer_config' is deliberately excluded here — it shares
+                   CAT_LABELS' "🗄️ Drawer configurations" text with 'drawer'
+                   (the real priced category, with Rate/Unit) purely for
+                   display purposes elsewhere (category headers, etc.), but
+                   it isn't a priced category itself — it has no entry in
+                   CAT_UNIT_OPTIONS, and its rows are config-name chips
+                   managed only through Edit Shop Items (see the
+                   "drawer_config chips — not shown in editor" comment on
+                   the main category-list render below). Listing it here
+                   duplicated "Drawer configurations" in this dropdown
+                   (Jordan flagged 2026-09-10) and would let a shop
+                   accidentally create a malformed drawer_config row through
+                   the wrong screen. -->
+              <select id="mqph-item-cat" onchange="mqphOnItemCatChange()">${Object.entries(CAT_LABELS).filter(([v])=>!['drawer_config','other','tax'].includes(v)).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>
+              <div id="mqph-item-cat-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked — an item's category can't be changed after it's created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material's rate is a flat price, a door style's is an upcharge, a drawer config's rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.</div>
+            </div>
+            <div class="mqph-field"><label id="mqph-item-rate-label">Rate (${CUR()})</label><input type="number" id="mqph-item-rate" step="0.01" oninput="mqphEditRequoteFromRate()"/></div>
+            <div id="mqph-edit-requote-wrap"></div>
             <div class="mqph-field"><label>Unit</label>
-              <select id="mqph-item-unit">
-                <option>per lin ft</option><option>per lin ft — uppers</option><option>per lin ft — bases</option>
-                <option>per lin ft upcharge</option><option>flat</option><option>each</option><option>%</option><option>km</option>
-              </select>
+              <select id="mqph-item-unit"></select>
+              <div id="mqph-item-unit-lock-note" style="display:none;font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4">🔒 Locked — an item's pricing method can't be changed after it's created (this is what let a hinge get accidentally switched to "each" and confuse pricing). Delete and re-add the item if it truly needs to be priced differently.</div>
             </div>
             <div class="mqph-field"><label>Description (optional)</label><textarea id="mqph-item-desc"></textarea></div>
             <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
@@ -1898,6 +2351,25 @@ window.mqphGoToWizard = function() {
           <div class="mqph-modal-footer">
             <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseModal()">Cancel</button>
             <button class="mqph-btn mqph-btn-primary" onclick="mqphSaveItem()" style="margin-left:auto">Save item</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Baseline delete flow — see mqphOpenBaselineDeleteFlow above.
+           Body content is fully dynamic (candidate list depends on which
+           item is being deleted), so it's set via mqph-baseline-delete-body's
+           innerHTML rather than templated here, same pattern as the bulk
+           edit clusters list above. -->
+      <div class="mqph-overlay" id="mqph-baseline-delete-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3>⭐ Delete baseline item?</h3></div>
+            <button class="mqph-modal-hdr-close" onclick="mqphCloseBaselineDelete()">×</button>
+          </div>
+          <div class="mqph-modal-body" id="mqph-baseline-delete-body"></div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqphCloseBaselineDelete()">Cancel</button>
+            <button class="mqph-btn mqph-btn-danger" onclick="mqphConfirmBaselineDelete()" style="margin-left:auto">Delete item</button>
           </div>
         </div>
       </div>
@@ -1987,15 +2459,33 @@ window.mqphGoToWizard = function() {
 
   window.mqphSaveLocalRadius = async function() {
     const val = parseFloat(document.getElementById('mqph-local-radius')?.value || 15);
+    const unit = document.getElementById('mqph-local-radius-unit')?.value || 'km';
     const existing = lineItems.find(r => r.fields && r.fields['Name']?.toLowerCase().includes('local') && r.fields['Category']==='zone');
     if (existing) {
-      await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate':val });
+      await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate':val, 'Unit':unit });
       existing.fields['Rate'] = val;
+      existing.fields['Unit'] = unit;
     } else {
-      const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':'Local zone radius', 'Category':'zone', 'Rate':val, 'Unit':'km', 'Description':'Within this distance = no travel surcharge', 'Active':true, 'Sort order':0 });
+      const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':'Local zone radius', 'Category':'zone', 'Rate':val, 'Unit':unit, 'Description':'Within this distance = no travel surcharge', 'Active':true, 'Sort order':0 });
       if (rec?.id) lineItems.push(rec);
     }
     const saved = document.getElementById('mqph-local-radius-saved');
+    if (saved) { saved.style.display='inline'; setTimeout(()=>saved.style.display='none',2000); }
+  };
+
+  window.mqphSaveCTRemoval = async function() {
+    const val = parseFloat(document.getElementById('mqph-ct-removal-rate')?.value || 0);
+    const unit = document.getElementById('mqph-ct-removal-unit')?.value || 'sqft';
+    const existing = lineItems.find(r => r.fields && r.fields['Category']==='other' && r.fields['Name']==='Countertop removal');
+    if (existing) {
+      await atUpdate(LINE_ITEMS_TABLE, existing.id, { 'Rate':val, 'Unit':unit });
+      existing.fields['Rate'] = val;
+      existing.fields['Unit'] = unit;
+    } else {
+      const rec = await atCreate(LINE_ITEMS_TABLE, { 'shop':[shopRecord._recordId], 'Name':'Countertop removal', 'Category':'other', 'Rate':val, 'Unit':unit, 'Description':'Remove & dispose existing countertop', 'Active':true, 'Sort order':0 });
+      if (rec?.id) lineItems.push(rec);
+    }
+    const saved = document.getElementById('mqph-ct-removal-saved');
     if (saved) { saved.style.display='inline'; setTimeout(()=>saved.style.display='none',2000); }
   };
 
@@ -2022,16 +2512,304 @@ window.mqphGoToWizard = function() {
     if(container) container.innerHTML=buildItemSetupHTML();
   };
 
+  // Fills the Unit dropdown with only the values that make sense for `cat`
+  // (falling back to the full list for an unrecognized category) — a
+  // closed set of choices, never free-typed, per Jordan's explicit call
+  // 2026-09-10. If `selected` isn't in that category's normal list — an
+  // old/odd item — it's added anyway so opening the modal never silently
+  // swaps an item's unit out from under it just by rendering the dropdown.
+  // Travel zones store a distance (km/mi), not a dollar amount — the
+  // "Rate" field's label needs to say so, since a bare "Rate ($)" with a
+  // dollar-sign prefix reads as a price and confused Jordan when he opened
+  // his "Local zone radius" item and saw "$" next to a plain distance
+  // number. Every other category still uses a real Rate ($/lin ft, %,
+  // flat, etc.), so this only swaps the label for `zone`.
+  function mqphRateLabel(cat) {
+    return cat === 'zone' ? 'Distance' : `Rate (${CUR()})`;
+  }
+
+  function mqphPopulateUnitOptions(cat, selected) {
+    const sel = document.getElementById('mqph-item-unit');
+    if (!sel) return;
+    const opts = CAT_UNIT_OPTIONS[cat] || ALL_UNIT_OPTIONS;
+    const list = (selected && !opts.includes(selected)) ? [selected, ...opts] : opts;
+    sel.innerHTML = list.map(u => `<option value="${u}" ${u===selected?'selected':''}>${u}</option>`).join('');
+  }
+
+  // Category changes only affect Unit choices while adding a brand-new
+  // item — once editing an existing one, Unit is locked (see mqphOpenEdit)
+  // regardless of what Category gets changed to.
+  window.mqphOnItemCatChange = function() {
+    if (currentEditId) return;
+    const cat = document.getElementById('mqph-item-cat').value;
+    mqphPopulateUnitOptions(cat, (CAT_UNIT_OPTIONS[cat]||ALL_UNIT_OPTIONS)[0]);
+  };
+
   window.mqphOpenAdd = function(cat) {
     currentEditId = null;
     document.getElementById('mqph-modal-title').textContent = 'Add item';
     document.getElementById('mqph-item-name').value = '';
+    // Add never reaches material/door/drawer through this raw modal (those
+    // categories' "+ Add" opens the mini-wizard instead — see
+    // MINI_WIZ_CATS) so Name always starts fresh/editable here — the
+    // material/drawer lock above only ever applies on Edit.
+    document.getElementById('mqph-item-name').disabled = false;
+    const nameLockNote = document.getElementById('mqph-item-name-lock-note');
+    if (nameLockNote) nameLockNote.style.display = 'none';
     document.getElementById('mqph-item-cat').value = cat || 'material';
+    // Locked here too, not just on Edit — per Jordan 2026-09-11: "when
+    // adding new they shouldnt be able to choose right? because if youre
+    // adding a door, youre adding a door... you shouldnt be able to tell
+    // it its a door [from some other category's Add button]." Confirmed
+    // this is safe: mqphOpenAdd has exactly one call site in the whole
+    // file (each category header's own "+ Add" button, passing its own
+    // `cat`), so the category is always already decided by which button
+    // was clicked — the dropdown was never actually choosing anything,
+    // just redundantly re-displaying a decision already made.
+    document.getElementById('mqph-item-cat').disabled = true;
     document.getElementById('mqph-item-rate').value = '';
-    document.getElementById('mqph-item-unit').value = 'per lin ft';
+    const rateLabelEl = document.getElementById('mqph-item-rate-label');
+    if (rateLabelEl) rateLabelEl.textContent = mqphRateLabel(cat || 'material');
+    mqphPopulateUnitOptions(cat || 'material', (CAT_UNIT_OPTIONS[cat||'material']||ALL_UNIT_OPTIONS)[0]);
+    document.getElementById('mqph-item-unit').disabled = false;
     document.getElementById('mqph-item-desc').value = '';
     document.getElementById('mqph-item-active').checked = true;
+    const lockNote = document.getElementById('mqph-item-unit-lock-note');
+    if (lockNote) lockNote.style.display = 'none';
+    const catLockNote = document.getElementById('mqph-item-cat-lock-note');
+    if (catLockNote) {
+      catLockNote.textContent = `🔒 Adding a "${CAT_LABELS[cat || 'material']}" item — set by the "+ Add" button you clicked. To add a different kind of item, use that category's own "+ Add" button instead.`;
+      catLockNote.style.display = 'block';
+    }
+    // Add never reaches material/door/drawer (those categories' "+ Add"
+    // opens the mini-wizard instead — see MINI_WIZ_CATS), so there's never
+    // a rec to reverse-calculate a quote from here. Clear defensively
+    // anyway in case a leftover panel from a prior Edit is still in the DOM.
+    mqphRenderEditRequote(null);
     document.getElementById('mqph-modal-overlay').classList.add('show');
+  };
+
+  // ============================================================
+  // EDIT MODAL — "see the original quote behind this rate" panel
+  // ============================================================
+  // Material, door and drawer rates aren't numbers a shop owner ever typed
+  // directly — they're back-derived from a real job quote using the same
+  // 4-lin-ft baseline spec the wizard/mini-wiz/Bulk-Edit-Requote all use
+  // (see getBaselineRates()). Per Jordan 2026-09-11 ("seeing the linear
+  // foot upcharge can be confusing, because its unrelatable... let them
+  // see their original quote"), this reverse-calculates that job total and
+  // shows it right in the Edit modal, pre-filled from the item's current
+  // Rate. He confirmed (2026-09-11, AskUserQuestion) he wants it
+  // interactive rather than read-only — same idea as Bulk Edit's Requote,
+  // just built into every Edit instead of hidden behind a toggle — so
+  // typing a new job total here writes straight back into the Rate field
+  // above, and editing Rate directly updates this total right back. Either
+  // field can drive the other; nothing here writes to Airtable itself,
+  // mqphSaveItem() still owns that (it just reads whatever's currently in
+  // Rate, same as always).
+  //
+  // UPDATE (2026-09-11) — hinge is now included too, per Jordan's
+  // follow-up ask ("i also noticed hinges isnt showing its requote
+  // option, can we also allow it"). The BASELINE hinge specifically is
+  // still excluded from the interactive panel (see the `Is baseline`
+  // check below) — its Rate is deliberately pinned at exactly 0 (its cost
+  // is already folded into the baseline door price, not charged
+  // separately — see the "Is baseline" entry in the persistent-fixes
+  // checklist), and letting a shop type an arbitrary job price in here
+  // would silently give it a nonzero rate, breaking that invariant. Every
+  // other hinge reverses the same way door does.
+  //
+  // Material and door reverse cleanly (one real quote in, one number out).
+  // Drawer's "mostly drawers" rate is trickier: it's the wizard's own
+  // average of two separate quotes (1-drawer + full bank), and only the
+  // blended result was ever saved on the "mostly drawers" record itself —
+  // BUT the 1-drawer quote can be recovered exactly from the paired
+  // "some drawers" record's own rate (their formulas share that same
+  // number). UPDATE (2026-09-11): when that paired record still exists,
+  // this now shows the actual drawer-bank quote (editable, so a shop can
+  // requote it if they got it wrong or prices changed) instead of the
+  // blended effective price — per Jordan: "id rather it show their quote
+  // for the drawer bank because thats whats used to get the blended
+  // rate." Falls back to the old blended-effective-price display only if
+  // the paired "some drawers" record is missing (can mostly only happen
+  // on old data from before the two were required to stay paired — see
+  // mqphDelete's drawer-pair cascade above).
+  function mqphEditRequoteSpec(rec) {
+    const cat = rec.fields['Category'];
+    if (!['material','door','drawer','hinge'].includes(cat)) return null;
+    const bl = getBaselineRates();
+    const name = rec.fields['Name'] || '';
+    const unit = rec.fields['Unit'] || '';
+
+    if (cat === 'material') {
+      const isUpper = /uppers/i.test(unit) || /—\s*uppers\s*$/i.test(name);
+      const matName = name.replace(/\s*—\s*(uppers|bases)\s*$/i, '').trim() || 'this material';
+      return {
+        priceLabel: 'Your total price for this job?',
+        hint: null,
+        spec: specBox(isUpper ? [
+          `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · Supply only`,
+        ] : [
+          `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · Supply only · Include toe kick`,
+        ]),
+        rateToPrice: (rate) => rate * 4,
+        priceToRate: (price) => price / 4,
+      };
+    }
+
+    if (cat === 'door') {
+      if (bl.blBasePrice <= 0) return { noBaseline: true };
+      return {
+        priceLabel: 'Your total price for this job?',
+        hint: `We'll subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the upcharge.`,
+        spec: specBox([
+          `<strong>Base cabinets + this door style</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${name}</span>`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only · Include toe kick`,
+        ]),
+        rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
+        priceToRate: (price) => (price - bl.blBasePrice) / 4,
+      };
+    }
+
+    // drawer
+    if (cat === 'drawer') {
+      if (bl.blBasePrice <= 0) return { noBaseline: true };
+      const isMostly = /mostly drawers\s*$/i.test(name);
+      const drawerName = name.replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() || 'this drawer config';
+      if (isMostly) {
+        // Recover the paired "some drawers" record's own quote — its rate
+        // gives us the 1-drawer job price exactly (someRate = (p1 -
+        // basePrice)/4, so p1 = someRate*4 + basePrice), which is the
+        // missing piece needed to pull the drawer-bank quote back out of
+        // this "mostly" rate (a plain average of the two).
+        const someRec = lineItems.find(r => r.fields &&
+          r.fields['Category'] === 'drawer' &&
+          (r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() === drawerName &&
+          /some drawers\s*$/i.test(r.fields['Name']||''));
+        if (someRec) {
+          const p1 = (someRec.fields['Rate']||0) * 4 + bl.blBasePrice;
+          return {
+            priceLabel: 'Your total price for the full drawer bank job?',
+            hint: `In plain terms: this rate is a blend of two quotes — 1 drawer per cabinet, and a full 3-drawer bank — averaged together. We already know your 1-drawer quote from the "${drawerName} — some drawers" rate, so this box shows your drawer-bank quote specifically. Change it here if you quoted it wrong or prices changed, and we'll re-blend the two to update the rate.`,
+            spec: specBox([
+              `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong>`,
+              `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+              `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · No doors · No drawer fronts · Supply only · Include toe kick`,
+            ]),
+            rateToPrice: (rate) => 2 * (rate * 4 + bl.blBasePrice) - p1,
+            priceToRate: (price) => ((p1 + price) / 2 - bl.blBasePrice) / 4,
+          };
+        }
+        // No paired "some drawers" record found (old data from before the
+        // pair became required together — see mqphDelete above) — fall
+        // back to showing the blended effective price, same as before
+        // this feature could recover the real drawer-bank quote.
+        return {
+          priceLabel: 'Combined effective job price for this rate',
+          hint: `In plain terms: this rate is a blend of two quotes — 1 drawer per cabinet, and a full 3-drawer bank — averaged together, and only the blended result was ever saved (we couldn't find a matching "${drawerName} — some drawers" rate to recover your original drawer-bank quote from). This is that combined effective price, not one real quote. We subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the rate.`,
+          spec: specBox([
+            `<strong>Base cabinets + full drawer bank (3 per cabinet)</strong> — averaged with the 1-drawer quote`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · No doors · No drawer fronts · Supply only · Include toe kick`,
+          ]),
+          rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
+          priceToRate: (price) => (price - bl.blBasePrice) / 4,
+          isBlended: true,
+        };
+      }
+      return {
+        priceLabel: 'Your total price for this job?',
+        hint: `We'll subtract ${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price) and divide by 4 to get the upcharge.`,
+        spec: specBox([
+          `<strong>Base cabinets + 1 top drawer per cabinet</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Drawers: <span class="mqph-spec-tag">${drawerName}</span> · Include slides/guides · No doors · No drawer fronts · Supply only · Include toe kick`,
+        ]),
+        rateToPrice: (rate) => rate * 4 + bl.blBasePrice,
+        priceToRate: (price) => (price - bl.blBasePrice) / 4,
+      };
+    }
+
+    // hinge — the baseline hinge itself is excluded (see the comment block
+    // above this function for why); every other hinge reverses the same
+    // way door does, over the base+baseline-door job instead of the bare
+    // base box.
+    if (rec.fields['Is baseline']) return { baselineHinge: true };
+    if (bl.blBasePrice <= 0) return { noBaseline: true };
+    const baseWithDoorPrice = bl.blBasePrice + bl.blDoorRate * 4;
+    return {
+      priceLabel: 'Your total price for this job?',
+      hint: `We'll subtract ${CUR()}${baseWithDoorPrice.toLocaleString()} (your ${bl.blMatName} base box + ${bl.blDoorName||'baseline door'}) and divide by 4 to get the upcharge.`,
+      spec: specBox([
+        `<strong>Base cabinets + baseline door + this hinge</strong>`,
+        `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+        `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${bl.blDoorName||'baseline door'}</span>`,
+        `Hinges: <span class="mqph-spec-tag">${name}</span> (instead of ${bl.blHingeName||'baseline hinge'}) · No drawers · Supply only · Include toe kick`,
+      ]),
+      rateToPrice: (rate) => rate * 4 + baseWithDoorPrice,
+      priceToRate: (price) => (price - baseWithDoorPrice) / 4,
+    };
+  }
+
+  // Holds the active conversion functions for whatever's open in the Edit
+  // modal right now — null when the panel isn't showing (wrong category,
+  // or no baseline yet), so the two oninput handlers below become no-ops.
+  let _mqphEditRequote = null;
+
+  function mqphRenderEditRequote(rec) {
+    const wrap = document.getElementById('mqph-edit-requote-wrap');
+    if (!wrap) return;
+    _mqphEditRequote = null;
+    if (!rec) { wrap.innerHTML = ''; return; }
+    const cfg = mqphEditRequoteSpec(rec);
+    if (!cfg) { wrap.innerHTML = ''; return; }
+    if (cfg.noBaseline) {
+      wrap.innerHTML = `<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin:-4px 0 1rem">⚠️ No baseline pricing found — run the pricing wizard first to see this rate's original quote.</div>`;
+      return;
+    }
+    if (cfg.baselineHinge) {
+      wrap.innerHTML = `<div style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;margin:-4px 0 1rem">⭐ This is your baseline hinge — its rate always stays ${CUR()}0 because its cost is already built into the baseline door price, not charged on top of it, so there's no separate quote to show here.</div>`;
+      return;
+    }
+    _mqphEditRequote = cfg;
+    const currentRate = parseFloat(document.getElementById('mqph-item-rate')?.value || 0);
+    const price = currentRate ? cfg.rateToPrice(currentRate) : 0;
+    wrap.innerHTML = `
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin:-4px 0 1rem">
+        <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">🧮 ${cfg.isBlended ? 'Reverse-calculated effective quote' : 'Original quote for this rate'}</div>
+        ${cfg.spec}
+        <div class="mqph-input-row"><label>${cfg.priceLabel}</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-edit-rq-price" value="${price>0?price.toFixed(2):''}" placeholder="0.00" oninput="mqphEditRequoteFromPrice()"/></div>
+        ${cfg.hint ? `<p class="mqph-calc-hint" style="margin-bottom:0">${cfg.hint}</p>` : ''}
+      </div>`;
+  }
+
+  // Typing a new job total here recalculates Rate above — doesn't touch
+  // Airtable, just fills the input; Save still owns the actual write.
+  window.mqphEditRequoteFromPrice = function() {
+    if (!_mqphEditRequote) return;
+    const priceInp = document.getElementById('mqph-edit-rq-price');
+    const rateInp = document.getElementById('mqph-item-rate');
+    if (!priceInp || !rateInp) return;
+    const price = parseFloat(priceInp.value || 0);
+    if (!price) return;
+    rateInp.value = (Math.round(_mqphEditRequote.priceToRate(price) * 100) / 100).toFixed(2);
+  };
+
+  // The reverse direction — editing Rate directly keeps the quote total
+  // above it honest instead of going stale/contradictory.
+  window.mqphEditRequoteFromRate = function() {
+    if (!_mqphEditRequote) return;
+    const priceInp = document.getElementById('mqph-edit-rq-price');
+    const rateInp = document.getElementById('mqph-item-rate');
+    if (!priceInp || !rateInp) return;
+    const rate = parseFloat(rateInp.value || 0);
+    priceInp.value = rate ? (Math.round(_mqphEditRequote.rateToPrice(rate) * 100) / 100).toFixed(2) : '';
   };
 
   window.mqphOpenEdit = function(id) {
@@ -2039,11 +2817,84 @@ window.mqphGoToWizard = function() {
     currentEditId = id;
     document.getElementById('mqph-modal-title').textContent = 'Edit item';
     document.getElementById('mqph-item-name').value  = rec.fields['Name']||'';
+    // Locked for material and drawer only — per Jordan 2026-09-11: "i think
+    // both should probably be locked, because i can see how it would work
+    // otherwise" (following up on his original Category-lock question,
+    // which also asked whether material/drawer names are safe to change).
+    // They're not: getBaselineRates() finds a material's uppers/bases pair,
+    // and mqphDelete/mqphEditRequoteSpec find a drawer config's some/mostly
+    // pair, by stripping the "— uppers"/"— bases"/"— some drawers"/
+    // "— mostly drawers" suffix off this exact Name and matching the two
+    // rows' stripped names against each other — a rename that doesn't keep
+    // both halves in sync would silently break that pairing. Door was
+    // deliberately left OUT of this lock (see the smart-door-rename fix
+    // above) — Jordan wants door names to stay freely editable, and the
+    // `Linked door style` fragility that used to make that unsafe is now
+    // handled by auto-propagating a door rename into every linked trim
+    // item, not by locking it.
+    // Install — locked 2026-09-12 too, for the same reason as material/
+    // drawer above: mqphOpenInstallRequote/mqphSaveInstallRequote and
+    // widget.js/widgetpro.js all look up an install rate by one of its 5
+    // fixed Name strings ('Install — uppers (no doors)', etc. — see the
+    // CAT_LABELS/upsert comments near mqphSaveInstallRequote), so a
+    // rename would silently orphan that rate from every place that reads
+    // it by name. In practice this rarely gets reached — the per-row Edit
+    // button for install rows now opens mqphOpenInstallRequote() instead
+    // of this raw modal (see the category-row template) — but locked here
+    // too as a defensive backstop, same layered pattern as Category's lock
+    // applying to both Add and Edit even though most entry points are
+    // already gated.
+    const nameLocked = ['material','drawer','install'].includes(rec.fields['Category']);
+    document.getElementById('mqph-item-name').disabled = nameLocked;
+    const nameLockNote = document.getElementById('mqph-item-name-lock-note');
+    if (nameLockNote) {
+      nameLockNote.textContent = rec.fields['Category'] === 'install'
+        ? '🔒 Locked — install & removal rates are matched to the widget\'s pricing by this exact name, so renaming one would silently stop it from being priced. Use the "✏️ Edit install/removal rates" panel instead to change the price.'
+        : '🔒 Locked — box materials and drawer configs are matched to their paired row (uppers/bases, or some/mostly drawers) by parsing this exact name, so renaming one side without the other would break that pairing and silently mis-price the widget. Delete and re-add both halves together if it truly needs a new name.';
+      nameLockNote.style.display = nameLocked ? 'block' : 'none';
+    }
     document.getElementById('mqph-item-cat').value   = rec.fields['Category']||'material';
+    // Locked, no exception (unlike Unit below) — Category changes what an
+    // item's Rate/Unit actually MEAN (a box material's rate is a flat
+    // price; a door style's is an upcharge over baseline; a drawer
+    // config's depends on its paired "some"/"mostly" rate; an install
+    // rate is one of a matched set) and every one of those meanings is
+    // wired to Category-specific math and lookups elsewhere in this file
+    // (getBaselineRates, the drawer-pairing delete/requote logic, the
+    // install-cascade delete/requote logic, etc.) — switching Category on
+    // an existing record would keep the same stored Rate but reinterpret
+    // it under a different formula, silently mispricing the widget with
+    // no warning. Per Jordan 2026-09-11: "categories should be locked...
+    // i dont think any item should be able to change its category."
+    document.getElementById('mqph-item-cat').disabled = true;
+    const catLockNote = document.getElementById('mqph-item-cat-lock-note');
+    if (catLockNote) {
+      catLockNote.textContent = '🔒 Locked — an item\'s category can\'t be changed after it\'s created. Its Rate/Unit only make sense for the category it was priced under (e.g. a box material\'s rate is a flat price, a door style\'s is an upcharge, a drawer config\'s rate depends on its paired "some"/"mostly" rate) — switching category would keep the old number but reinterpret what it means, silently mispricing the widget. Delete and re-add the item under the correct category instead.';
+      catLockNote.style.display = 'block';
+    }
     document.getElementById('mqph-item-rate').value  = rec.fields['Rate']||'';
-    document.getElementById('mqph-item-unit').value  = rec.fields['Unit']||'per lin ft';
+    const rateLabelEl = document.getElementById('mqph-item-rate-label');
+    if (rateLabelEl) rateLabelEl.textContent = mqphRateLabel(rec.fields['Category']||'material');
+    const editCat = rec.fields['Category']||'material';
+    const unit = rec.fields['Unit']||'per lin ft';
+    mqphPopulateUnitOptions(editCat, unit);
+    // Locked: whatever pricing method the item was created with is the
+    // only one it can ever have — see the CAT_UNIT_OPTIONS comment above
+    // and Jordan's 2026-09-09 report of a customer accidentally switching
+    // a hinge from "per lin ft upcharge" to "each" and confusing pricing.
+    //
+    // Exception: "zone" (travel zones). Its Unit is just a display label —
+    // "km" vs "mi" — with zero calculation behind it (see CAT_UNIT_OPTIONS
+    // comment), so switching it on Edit can't cause the hinge-style pricing
+    // bug. Per Jordan 2026-09-10, leave it editable there so a shop can
+    // relabel a zone from km to mi (or back) without deleting/recreating it.
+    const unitLocked = editCat !== 'zone';
+    document.getElementById('mqph-item-unit').disabled = unitLocked;
     document.getElementById('mqph-item-desc').value  = rec.fields['Description']||'';
     document.getElementById('mqph-item-active').checked = rec.fields['Active']!==false;
+    const lockNote = document.getElementById('mqph-item-unit-lock-note');
+    if (lockNote) lockNote.style.display = unitLocked ? 'block' : 'none';
+    mqphRenderEditRequote(rec);
     document.getElementById('mqph-modal-overlay').classList.add('show');
   };
 
@@ -2054,6 +2905,17 @@ window.mqphGoToWizard = function() {
     if (!name) { alert('Please enter a name.'); return; }
     const category = document.getElementById('mqph-item-cat').value;
     if (!currentEditId && !mqphWarnIfDuplicate(category, name)) return;
+    // Smart door rename — per Jordan 2026-09-11: "yes lets make door
+    // change names smart." Crown/Valance trim items link to a door style
+    // by storing its NAME as plain text in `Linked door style` (not a
+    // record ID — see the door → trim cleanup inside mqphDelete above),
+    // so a plain rename would otherwise silently orphan that link. Snapshot
+    // the door's pre-save name here (Category is locked on Edit, so
+    // `category` above is guaranteed to match `oldRec`'s if this is an
+    // edit) and propagate the rename into every linked trim item's array
+    // after the save succeeds, below.
+    const oldRec = currentEditId ? lineItems.find(r => r.id === currentEditId) : null;
+    const oldDoorName = (oldRec && oldRec.fields && oldRec.fields['Category'] === 'door') ? (oldRec.fields['Name'] || '') : '';
     const fields = {
       shop:[shopRecord._recordId], Name:name,
       Category:category,
@@ -2065,6 +2927,20 @@ window.mqphGoToWizard = function() {
     try {
       if (currentEditId) { await atUpdate(LINE_ITEMS_TABLE,currentEditId,fields); }
       else { fields['Sort order']=lineItems.length+1; await atCreate(LINE_ITEMS_TABLE,fields); }
+      if (oldDoorName && oldDoorName !== name) {
+        const linkedTrims = lineItems.filter(r => {
+          if (!r.fields || r.fields['Category'] !== 'trim') return false;
+          let linked = [];
+          try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+          return linked.includes(oldDoorName);
+        });
+        for (const t of linkedTrims) {
+          let linked = [];
+          try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+          const renamed = linked.map(n => n === oldDoorName ? name : n);
+          try { await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(renamed) }); } catch(e) { console.error('Failed to propagate door rename to linked trim', e); }
+        }
+      }
       mqphCloseModal(); await loadAndRender();
     } catch(e) { alert('Error saving. Please try again.'); }
   };
@@ -2079,11 +2955,56 @@ window.mqphGoToWizard = function() {
   };
 
   window.mqphDelete = async function(id) {
-    if (!confirm('Delete this item?')) return;
+    const rec = lineItems.find(r => r.id === id);
+    // Deleting the pinned baseline material/door/hinge used to just fall
+    // through to the plain confirm() below, and getBaselineRates() would
+    // silently pick up whatever had the lowest Sort order as the new
+    // baseline — not necessarily the cheapest, and with zero warning. Per
+    // Jordan 2026-09-11/12 ("baseline should be the cheapest... its called
+    // baseline for that reason"), this intercepts that one case and routes
+    // to an explicit picker instead — see mqphOpenBaselineDeleteFlow below.
+    if (rec && rec.fields && rec.fields['Is baseline'] && ['material','door','hinge'].includes(rec.fields['Category'])) {
+      return mqphOpenBaselineDeleteFlow(id);
+    }
+    // Drawer "some" and "mostly" rates are two halves of one calculation —
+    // "mostly drawers"' rate is a blend that depends on the "some drawers"
+    // rate for the same config to make sense (see mqphEditRequoteSpec
+    // below, which reads the paired item back out to recover the original
+    // drawer-bank quote) — deleting only one half leaves the other
+    // pointing at a quote that no longer fully exists. Per Jordan
+    // 2026-09-11: warn that the partner rate goes too, then delete both.
+    let drawerPartner = null;
+    if (rec && rec.fields && rec.fields['Category'] === 'drawer') {
+      const baseName = (rec.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
+      if (baseName) {
+        drawerPartner = lineItems.find(r => r.id !== id && r.fields &&
+          r.fields['Category'] === 'drawer' &&
+          (r.fields['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim() === baseName);
+      }
+    }
+    // Installation & removal rates all work together to cover every job
+    // type the widget can quote (uppers/bases, with/without doors, some/
+    // mostly drawers, removal) — deleting only one would leave the widget
+    // with no accurate install price for whatever job needs the missing
+    // rate. Per Jordan 2026-09-11: warn that deleting any one install/
+    // removal rate deletes the whole set, then let the shop requote all of
+    // them at once via the "🔧 Requote install/removal rates" button that
+    // takes the "+ Add" button's place once the category is empty (see
+    // mqphOpenInstallRequote above).
+    let installSiblings = [];
+    if (rec && rec.fields && rec.fields['Category'] === 'install') {
+      installSiblings = lineItems.filter(r => r.id !== id && r.fields && r.fields['Category'] === 'install');
+    }
+
+    const confirmMsg = drawerPartner
+      ? `Delete this item? Its paired rate — "${drawerPartner.fields['Name']}" — is calculated together with this one and can't be split apart, so it'll be deleted too.`
+      : installSiblings.length > 0
+        ? `Delete this item? Your installation & removal rates work together — the widget picks whichever one matches a job, so having only some of them would make its install pricing inaccurate. Deleting this one will delete all ${installSiblings.length + 1} installation & removal rates together. You can requote them anytime after, using the button that'll appear here.`
+        : 'Delete this item?';
+    if (!confirm(confirmMsg)) return;
     try {
       // Same door → linked-crown/valance cleanup as mqphDeleteChip, for
       // this second, more generic delete path.
-      const rec = lineItems.find(r => r.id === id);
       if (rec && rec.fields && rec.fields['Category'] === 'door') {
         const doorName = rec.fields['Name'] || '';
         if (doorName) {
@@ -2101,7 +3022,223 @@ window.mqphGoToWizard = function() {
           }
         }
       }
-      await atDelete(LINE_ITEMS_TABLE,id); await loadAndRender();
+      await atDelete(LINE_ITEMS_TABLE,id);
+      if (drawerPartner) { try { await atDelete(LINE_ITEMS_TABLE, drawerPartner.id); } catch(e) {} }
+      for (const sib of installSiblings) { try { await atDelete(LINE_ITEMS_TABLE, sib.id); } catch(e) {} }
+      await loadAndRender();
+    } catch(e) { alert('Error deleting.'); }
+  };
+
+  // ============================================================
+  // ACTIVE BASELINE DELETE FLOW — material, door, hinge
+  // ============================================================
+  // Per Jordan 2026-09-11/12: "baseline should be the cheapest... its
+  // called baseline for that reason" — deleting the pinned baseline item
+  // now shows this instead of the plain confirm() in mqphDelete above: the
+  // item(s) that would become the new baseline (with a picker if more than
+  // one is tied for cheapest), or a plain warning if it's the only item
+  // left in its category.
+  //
+  // "Create a new item instead" is deliberately NOT a price-entry form
+  // nested inside this popup — that would mean re-building a second, more
+  // cramped copy of the existing Add-item form in here, which is a lot of
+  // new surface area to get wrong for something the shop can already do
+  // with the regular "+ Add" button. Per Jordan wanting this "easy and not
+  // going to be all buggy": cancel out of this popup, add the new item
+  // normally, then delete the old baseline again. For material/door
+  // that's often a non-event by the time you come back — the passive
+  // drift-watcher (mqphCheckBaselineDrift above) auto-promotes a genuinely
+  // cheaper item to baseline the moment it's saved, so this popup may not
+  // even appear a second time. Hinge isn't passively watched (its
+  // baseline is pinned at exactly $0, not just "whatever's cheapest" — see
+  // that function's own comment for why), so a newly-added hinge instead
+  // shows up right here, as a normal candidate to pick.
+  let _baselineDeleteState = null;
+
+  function mqphOpenBaselineDeleteFlow(id) {
+    const rec = lineItems.find(r => r.id === id);
+    if (!rec) return;
+    const cat = rec.fields['Category'];
+
+    let candidates; // [{ key, label, price, ids:[...] }], cheapest-first ties grouped by equal price
+    if (cat === 'material') {
+      const baseName = (rec.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim();
+      const byBase = {};
+      lineItems.forEach(r => {
+        if (!r.fields || r.fields['Category'] !== 'material' || r.fields['Active'] === false) return;
+        const bn = (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim();
+        if (bn === baseName) return; // exclude the material being deleted
+        if (!byBase[bn]) byBase[bn] = { key: bn, label: bn, price: null, ids: [] };
+        byBase[bn].ids.push(r.id);
+        if (/—\s*bases\s*$/i.test(r.fields['Name']||'')) byBase[bn].price = r.fields['Rate']||0;
+      });
+      // Same requirement Bulk Edit and the drift-watcher already enforce —
+      // a material missing its uppers or bases half can't be safely priced.
+      candidates = Object.values(byBase).filter(c => c.price !== null && c.ids.length === 2);
+    } else {
+      candidates = lineItems.filter(r => r.fields && r.fields['Category'] === cat && r.fields['Active'] !== false && r.id !== id)
+        .map(r => ({ key: r.id, label: r.fields['Name']||'—', price: r.fields['Rate']||0, ids: [r.id] }));
+    }
+
+    let cheapestTies = [];
+    if (candidates.length) {
+      const minPrice = Math.min(...candidates.map(c => c.price));
+      cheapestTies = candidates.filter(c => Math.abs(c.price - minPrice) < 0.005);
+    }
+
+    _baselineDeleteState = { id, cat, rec, cheapestTies, selectedKey: cheapestTies[0]?.key || null };
+    mqphRenderBaselineDeleteBody();
+    document.getElementById('mqph-baseline-delete-overlay')?.classList.add('show');
+  }
+
+  function mqphRenderBaselineDeleteBody() {
+    const s = _baselineDeleteState;
+    const body = document.getElementById('mqph-baseline-delete-body');
+    if (!s || !body) return;
+    const catLabel = { material:'box material', door:'door style', hinge:'hinge' }[s.cat] || s.cat;
+    const name = s.cat === 'material' ? (s.rec.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() : (s.rec.fields['Name']||'—');
+
+    if (!s.cheapestTies.length) {
+      body.innerHTML = `
+        <p style="font-size:13px;color:#374151;line-height:1.5;margin:0 0 1rem">
+          "<strong>${name}</strong>" is your only ${catLabel} — it's currently your baseline. Deleting it will leave you with none, so your widget won't be able to quote any job until you add a new one.
+        </p>`;
+      return;
+    }
+
+    const hingeNote = s.cat === 'hinge' ? `
+        <p style="font-size:12px;color:#6b7280;line-height:1.5;margin:0.5rem 0 0">
+          Your baseline hinge is priced at exactly ${CUR()}0 (it's already folded into your baseline door price, not charged separately). Whichever you pick becomes the new ${CUR()}0 hinge, and every other hinge's price shifts to match so the actual price differences between them stay the same — you'll see a preview before anything changes.
+        </p>` : '';
+
+    body.innerHTML = `
+      <p style="font-size:13px;color:#374151;line-height:1.5;margin:0 0 1rem">
+        "<strong>${name}</strong>" is your baseline ${catLabel}. Deleting it, here's what becomes your new baseline${s.cheapestTies.length>1?' — pick one':''}:
+      </p>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:0.5rem">
+        ${s.cheapestTies.map((c,i) => `
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;${i>0?'border-top:1px solid #e5e7eb':''}">
+            <input type="radio" name="mqph-bl-pick" value="${c.key}" ${c.key===s.selectedKey?'checked':''} onchange="mqphSelectBaselineDeleteCandidate('${c.key}')" style="width:auto"/>
+            <span style="flex:1;font-size:13px;color:#111">${c.label}</span>
+            <span style="font-size:13px;color:#6b7280">${CUR()}${c.price.toFixed(2)}</span>
+          </label>
+        `).join('')}
+      </div>
+      <p style="font-size:12px;color:#9ca3af;line-height:1.5;margin:0.25rem 0 0">
+        Want something cheaper to be the baseline instead? Cancel here, add it with the <strong>+ Add</strong> button, then delete "${name}" again.
+      </p>
+      ${hingeNote}`;
+  }
+
+  window.mqphSelectBaselineDeleteCandidate = function(key) {
+    if (_baselineDeleteState) _baselineDeleteState.selectedKey = key;
+  };
+
+  window.mqphCloseBaselineDelete = function() {
+    document.getElementById('mqph-baseline-delete-overlay')?.classList.remove('show');
+    _baselineDeleteState = null;
+  };
+
+  window.mqphConfirmBaselineDelete = async function() {
+    const s = _baselineDeleteState;
+    if (!s) return;
+    const picked = s.cheapestTies.find(c => c.key === s.selectedKey) || s.cheapestTies[0] || null;
+
+    // Hinge rebalance preview — same math as the dead-but-correct
+    // mqphSetAsBaseline above: shift EVERY hinge's Rate by the new
+    // baseline's own pre-shift Rate, so it zeroes out and every other
+    // hinge's price relative to it is unchanged, just re-anchored.
+    // Per Jordan 2026-09-12: this alone isn't enough — every DOOR's own
+    // stored Rate already has the OLD baseline hinge's real dollar value
+    // baked into it (every door was quoted "box + this door + the
+    // CURRENT baseline hinge" as one reference job — see
+    // mqphEditRequoteSpec's door branch/the job-spec box wording), so
+    // swapping which hinge is baseline without also moving doors would
+    // leave every door quietly over- or under-priced by the real
+    // difference between the old and new baseline hinge. `shift` here is
+    // exactly that difference (the picked hinge's Rate relative to the
+    // OLD baseline, same quantity used to zero out every other hinge —
+    // see the identical derivation on the mini-wizard's own hinge branch
+    // above, mqphMiniNext), so every door's Rate shifts by the same
+    // amount, in the same direction hinge Rates shift the OPPOSITE way
+    // (hinges: −shift, so they re-anchor to the new $0; doors: +shift,
+    // so their price keeps reflecting this hinge's real cost instead of
+    // the old one's).
+    if (s.cat === 'hinge' && picked) {
+      const catRows = lineItems.filter(r => r.fields && r.fields['Category'] === 'hinge' && r.id !== s.id);
+      const doors = lineItems.filter(r => r.fields && r.fields['Category'] === 'door');
+      const shift = picked.price || 0;
+      if (shift !== 0) {
+        const others = catRows.filter(h => h.id !== picked.key);
+        const hingePreview = others.slice(0,2)
+          .map(h => `${h.fields['Name']}: ${CUR()}${(h.fields['Rate']||0).toFixed(2)} → ${CUR()}${((h.fields['Rate']||0)-shift).toFixed(2)}`).join('\n');
+        const doorPreview = doors.slice(0,2)
+          .map(d => `${d.fields['Name']}: ${CUR()}${(d.fields['Rate']||0).toFixed(2)}/lin ft → ${CUR()}${(((d.fields['Rate']||0)+shift)).toFixed(2)}/lin ft`).join('\n');
+        const ok = confirm(`Making "${picked.label}" the new baseline hinge (priced at ${CUR()}0, included) shifts every other hinge's price by ${CUR()}${shift.toFixed(2)} — nothing actually changes relative to each other, just re-anchored — AND shifts every door's price by the same amount, since your door prices were quoted assuming the OLD baseline hinge and need to stay accurate to this one's real cost.\n\nFor example:\n${hingePreview}${others.length>2?'\n…':''}\n${doorPreview}${doors.length>2?'\n…':''}\n\nContinue?`);
+        if (!ok) return;
+      }
+    }
+
+    document.getElementById('mqph-baseline-delete-overlay')?.classList.remove('show');
+    try {
+      // Same linked-crown/valance cleanup mqphDelete does for a normal
+      // door delete — this flow bypasses that function entirely, so it
+      // needs its own copy here.
+      if (s.cat === 'door') {
+        const doorName = s.rec.fields['Name'] || '';
+        if (doorName) {
+          const linkedTrims = lineItems.filter(r => {
+            if (!r.fields || r.fields['Category'] !== 'trim') return false;
+            let linked = [];
+            try { linked = r.fields['Linked door style'] ? JSON.parse(r.fields['Linked door style']) : []; } catch(e) { linked = []; }
+            return linked.includes(doorName);
+          });
+          for (const t of linkedTrims) {
+            let linked = [];
+            try { linked = JSON.parse(t.fields['Linked door style']); } catch(e) { linked = []; }
+            const cleaned = linked.filter(name => name !== doorName);
+            try { await atUpdate(LINE_ITEMS_TABLE, t.id, { 'Linked door style': JSON.stringify(cleaned) }); } catch(e) { console.error('Failed to clean up linked door style', e); }
+          }
+        }
+      }
+
+      if (picked) {
+        if (s.cat === 'hinge') {
+          const shift = picked.price || 0;
+          if (shift !== 0) {
+            const catRows = lineItems.filter(r => r.fields && r.fields['Category'] === 'hinge' && r.id !== s.id);
+            for (const h of catRows) {
+              const newRate = Math.round(((h.fields['Rate']||0) - shift) * 100) / 100;
+              try { await atUpdate(LINE_ITEMS_TABLE, h.id, {Rate:newRate}); } catch(e) { console.error('Failed to reprice hinge', h.id, e); }
+            }
+            // See the big comment above this function for why doors need
+            // to move too, not just other hinges — same `shift` value,
+            // opposite direction from the hinge rebalance just above.
+            const doors = lineItems.filter(r => r.fields && r.fields['Category'] === 'door');
+            for (const d of doors) {
+              const newRate = Math.round(((d.fields['Rate']||0) + shift) * 100) / 100;
+              try { await atUpdate(LINE_ITEMS_TABLE, d.id, {Rate:newRate}); } catch(e) { console.error('Failed to reprice door for new baseline hinge', d.id, e); }
+            }
+          }
+        }
+        // Old baseline row(s) get deleted below anyway (they're the ones
+        // being removed), so there's nothing to explicitly unpin — just
+        // pin the picked replacement.
+        for (const rowId of picked.ids) {
+          try { await atUpdate(LINE_ITEMS_TABLE, rowId, {'Is baseline': true}); } catch(e) { console.error('Failed to pin new baseline', e); }
+        }
+      }
+
+      await atDelete(LINE_ITEMS_TABLE, s.id);
+      if (s.cat === 'material') {
+        // Material is two rows (uppers + bases) — delete the paired row too.
+        const baseName = (s.rec.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim();
+        const partner = lineItems.find(r => r.id !== s.id && r.fields && r.fields['Category'] === 'material' &&
+          (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() === baseName);
+        if (partner) { try { await atDelete(LINE_ITEMS_TABLE, partner.id); } catch(e) {} }
+      }
+      _baselineDeleteState = null;
+      await loadAndRender();
     } catch(e) { alert('Error deleting.'); }
   };
 
@@ -2172,6 +3309,18 @@ window.mqphGoToWizard = function() {
     groupSel.value = '';
     mqphRenderBulkClusters();
     document.getElementById('mqph-bulk-edit-form').style.display = 'none';
+    // Requote (quote-a-job → back into the rate) is only wired up for
+    // Material and Door so far — same math the "+ Add" mini-wizard already
+    // uses for those two categories. Per Jordan 2026-09-10: Crown/Valance
+    // are direct per-lin-ft rates shops already know off the top of their
+    // head (no baseline math involved), so no requote helper needed there;
+    // Hinge explicitly excluded too — no bulk edit for hinges at all.
+    const toggleEl = document.getElementById('mqph-bulk-requote-toggle');
+    if (toggleEl) toggleEl.innerHTML = (cat === 'material' || cat === 'door')
+      ? `<a href="#" onclick="event.preventDefault();mqphBulkToggleRequote()" style="font-size:12px;color:#2563eb;text-decoration:none">🧮 Not sure of the price? Requote this job to calculate it →</a>`
+      : '';
+    const panelEl = document.getElementById('mqph-bulk-requote-panel');
+    if (panelEl) { panelEl.style.display = 'none'; panelEl.innerHTML = ''; }
     document.getElementById('mqph-bulk-overlay').classList.add('show');
   };
 
@@ -2214,7 +3363,7 @@ window.mqphGoToWizard = function() {
       const allChecked = c.items.every(it => _bulkEdit.checkedIds.has(it.id));
       const someChecked = !allChecked && c.items.some(it => _bulkEdit.checkedIds.has(it.id));
       const isOpen = _bulkEdit.openClusters.has(c.key);
-      const priceLabel = c.priceFields.map(f => `${f.label}: $${f.value.toFixed(2)}`).join(' · ');
+      const priceLabel = c.priceFields.map(f => `${f.label}: ${CUR()}${f.value.toFixed(2)}`).join(' · ');
       const keyEsc = c.key.replace(/'/g,"\\'");
       return `
         <div style="border-bottom:1px solid #f3f4f6">
@@ -2255,6 +3404,10 @@ window.mqphGoToWizard = function() {
   function mqphUpdateBulkForm() {
     const form = document.getElementById('mqph-bulk-edit-form');
     const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    // Selection changed underneath it — a Requote panel left open would be
+    // quoting stale items, so collapse it rather than carry it forward.
+    const panelEl = document.getElementById('mqph-bulk-requote-panel');
+    if (panelEl) { panelEl.style.display = 'none'; panelEl.innerHTML = ''; }
     if (!selected.length) { form.style.display = 'none'; return; }
     form.style.display = 'block';
     document.getElementById('mqph-bulk-selected-count').textContent = `${selected.length} item${selected.length!==1?'s':''} selected`;
@@ -2264,7 +3417,7 @@ window.mqphGoToWizard = function() {
       <div class="mqph-input-row" style="margin-bottom:8px">
         <label>${f.label}</label>
         <div style="display:flex;align-items:center;gap:6px">
-          <span style="color:#6b7280">$</span>
+          <span style="color:#6b7280">${CUR()}</span>
           <input type="number" id="mqph-bulk-newprice-${i}" step="0.01" style="width:120px" placeholder="New price"/>
         </div>
       </div>`).join('');
@@ -2273,6 +3426,128 @@ window.mqphGoToWizard = function() {
     const searchInput = document.getElementById('mqph-bulk-match-search');
     if (searchInput) searchInput.value = '';
   }
+
+  // Requote — Bulk Edit only, Material + Door. Same "quote a real job, we
+  // back into the rate" math as the "+ Add" mini-wizard's material/door
+  // steps (see miniWizContent/mqphMiniCalc/mqphMiniNext above) — reused
+  // here rather than re-derived, per Jordan 2026-09-10: most shops don't
+  // have their per-lin-ft upcharge reverse-engineered, but they do know
+  // what they'd quote a customer for the equivalent job. The two Material
+  // questions are shown together (not paginated into two steps like the
+  // mini-wiz) since Bulk Edit's price fields already show Uppers + Bases
+  // side by side. Result: fills the existing "New price" input(s) so the
+  // shop owner sees the number before confirming — it never writes to
+  // Airtable itself, mqphBulkApply() still owns that.
+  function mqphBulkRequoteHTML() {
+    const cat = _bulkEdit.cat;
+    if (cat !== 'material' && cat !== 'door') return '';
+    const bl = getBaselineRates();
+    if (bl.blBasePrice <= 0) {
+      return `<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px">⚠️ No baseline pricing found — run the pricing wizard first to use Requote.</div>`;
+    }
+    const selected = _bulkEdit.items.filter(it => _bulkEdit.checkedIds.has(it.id));
+    const groupLabel = selected.length === 1 ? selected[0].label : `these ${selected.length} items`;
+
+    if (cat === 'material') {
+      return `
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Quote these two jobs exactly like you would for a customer for ${groupLabel} — we'll work out the per-linear-foot rate.</div>
+        <div class="mqph-item-block" style="margin-bottom:10px">
+          ${specBox([
+            `<strong>Upper cabinets — box only, no doors</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `No doors · Supply only · Local delivery`,
+          ])}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bulk-rq-p0" placeholder="0.00" oninput="mqphBulkRequoteCalc()"/></div>
+          <div id="mqph-bulk-rq-r0" class="mqph-result"></div>
+        </div>
+        <div class="mqph-item-block" style="margin-bottom:10px">
+          ${specBox([
+            `<strong>Base cabinets — box only, no doors</strong>`,
+            `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+            `No doors · Supply only · Include toe kick`,
+          ])}
+          <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bulk-rq-p1" placeholder="0.00" oninput="mqphBulkRequoteCalc()"/></div>
+          <div id="mqph-bulk-rq-r1" class="mqph-result"></div>
+        </div>
+        <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="width:100%" onclick="mqphBulkRequoteApply()">Use these prices ↑</button>`;
+    }
+
+    // door
+    const baselineBoxDesc = `${CUR()}${bl.blBasePrice.toLocaleString()} (your ${bl.blMatName} base box price)`;
+    return `
+      <div class="mqph-item-block" style="margin-bottom:10px">
+        <div style="font-size:12px;color:#6b7280;margin-bottom:8px;line-height:1.5">Quote the baseline base box job with ${groupLabel} added — we'll work out the upcharge.</div>
+        ${specBox([
+          `<strong>Base cabinets + door style</strong>`,
+          `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
+          `Material: <span class="mqph-spec-tag">${bl.blMatName}</span> · Door: <span class="mqph-spec-tag">${groupLabel}</span>`,
+          `<span class="mqph-spec-tag">3 doors: 2 on 30" ${mqphMmTag(30)}, 1 on 18" ${mqphMmTag(18)}</span> · Hinges: <span class="mqph-spec-tag">${bl.blHingeName||'baseline hinge'}</span> · No drawers · Supply only · Include toe kick`,
+        ])}
+        <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bulk-rq-p0" placeholder="0.00" oninput="mqphBulkRequoteCalc()"/></div>
+        <p class="mqph-calc-hint">We'll subtract ${baselineBoxDesc} and divide by 4 to get the door upcharge per lin ft</p>
+        <div id="mqph-bulk-rq-r0" class="mqph-result"></div>
+      </div>
+      <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="width:100%" onclick="mqphBulkRequoteApply()">Use this price ↑</button>`;
+  }
+
+  window.mqphBulkToggleRequote = function() {
+    const panel = document.getElementById('mqph-bulk-requote-panel');
+    if (!panel) return;
+    const willShow = panel.style.display === 'none' || !panel.style.display;
+    if (willShow) {
+      panel.innerHTML = mqphBulkRequoteHTML();
+      panel.style.display = 'block';
+    } else {
+      panel.style.display = 'none';
+    }
+  };
+
+  window.mqphBulkRequoteCalc = function() {
+    const cat = _bulkEdit.cat;
+    const bl = getBaselineRates();
+    const reveal = (idx, rate) => {
+      const el = document.getElementById(`mqph-bulk-rq-r${idx}`);
+      if (!el) return;
+      el.textContent = (rate !== null && !isNaN(rate)) ? `${CUR()}${rate.toFixed(2)} / lin ft` : '';
+    };
+    if (cat === 'material') {
+      const p0 = parseFloat(document.getElementById('mqph-bulk-rq-p0')?.value || 0);
+      const p1 = parseFloat(document.getElementById('mqph-bulk-rq-p1')?.value || 0);
+      reveal(0, p0 > 0 ? p0 / 4 : null);
+      reveal(1, p1 > 0 ? p1 / 4 : null);
+    }
+    if (cat === 'door') {
+      const p0 = parseFloat(document.getElementById('mqph-bulk-rq-p0')?.value || 0);
+      reveal(0, p0 > 0 ? (p0 - bl.blBasePrice) / 4 : null);
+    }
+  };
+
+  // Fills the already-rendered "New price" input(s) with the computed
+  // rate(s) and collapses back down — mqphBulkApply() (the actual write)
+  // is untouched, so the shop owner still confirms via the normal button.
+  window.mqphBulkRequoteApply = function() {
+    const cat = _bulkEdit.cat;
+    const bl = getBaselineRates();
+    if (cat === 'material') {
+      const p0 = parseFloat(document.getElementById('mqph-bulk-rq-p0')?.value || 0);
+      const p1 = parseFloat(document.getElementById('mqph-bulk-rq-p1')?.value || 0);
+      if (!(p0 > 0) || !(p1 > 0)) { alert('Enter a total price for both jobs first.'); return; }
+      const upperRate = Math.round((p0/4)*100)/100;
+      const baseRate  = Math.round((p1/4)*100)/100;
+      const inp0 = document.getElementById('mqph-bulk-newprice-0');
+      const inp1 = document.getElementById('mqph-bulk-newprice-1');
+      if (inp0) inp0.value = upperRate.toFixed(2);
+      if (inp1) inp1.value = baseRate.toFixed(2);
+    } else if (cat === 'door') {
+      const p0 = parseFloat(document.getElementById('mqph-bulk-rq-p0')?.value || 0);
+      if (!(p0 > 0)) { alert('Enter a total price for the job first.'); return; }
+      const rate = Math.round(((p0 - bl.blBasePrice)/4)*100)/100;
+      const inp0 = document.getElementById('mqph-bulk-newprice-0');
+      if (inp0) inp0.value = rate.toFixed(2);
+    }
+    const panel = document.getElementById('mqph-bulk-requote-panel');
+    if (panel) panel.style.display = 'none';
+  };
 
   window.mqphBulkMatchSearch = function(val) {
     const term = (val||'').toLowerCase().trim();
@@ -2283,7 +3558,7 @@ window.mqphGoToWizard = function() {
     resultsEl.innerHTML = matches.length ? matches.map(it => `
       <div onclick="mqphBulkPickMatch('${it.id.replace(/'/g,"\\'")}')" style="padding:6px 8px;font-size:12px;cursor:pointer;border-radius:6px;display:flex;justify-content:space-between;gap:8px" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
         <span>${it.label}</span>
-        <span style="color:#6b7280;white-space:nowrap">${it.priceFields.map(f=>'$'+f.value.toFixed(2)).join(' / ')}</span>
+        <span style="color:#6b7280;white-space:nowrap">${it.priceFields.map(f=>CUR() +f.value.toFixed(2)).join(' / ')}</span>
       </div>`).join('') : `<div style="font-size:12px;color:#9ca3af;padding:6px 8px">No matches.</div>`;
   };
 
@@ -2307,7 +3582,7 @@ window.mqphGoToWizard = function() {
     });
     if (newValues.some(v => v === null)) { alert('Please enter a new price for every field (or pick an item above to match).'); return; }
 
-    const summary = selected[0].priceFields.map((f,i) => `${f.label} → $${newValues[i].toFixed(2)}`).join(', ');
+    const summary = selected[0].priceFields.map((f,i) => `${f.label} → ${CUR()}${newValues[i].toFixed(2)}`).join(', ');
     if (!confirm(`Update ${selected.length} item${selected.length!==1?'s':''}?\n\n${summary}`)) return;
 
     // Group field updates by underlying record id first — crown/valance
@@ -2339,9 +3614,17 @@ window.mqphGoToWizard = function() {
   // customers see on the widget. Purely a convenience for finding/editing
   // items in the dashboard (e.g. sort a big door list alphabetically to
   // find one, then it's still in its normal custom order for customers).
-  let _mqphSortState = {}; // cat -> {field:'default'|'name'|'price', dir:'asc'|'desc'}
+  //
+  // Default (before a shop owner clicks a column header) is alphabetical
+  // by name — per Jordan 2026-09-11, reversing the 2026-09-10 price-first
+  // default: with a lot going on on this page, A→Z is the more findable
+  // starting order than cheapest-first. `MQPH_DEFAULT_SORT` is that
+  // starting state; "Sort order" (the original custom/import order) is
+  // still reachable as a 3rd click, same as before.
+  const MQPH_DEFAULT_SORT = {field:'name', dir:'asc'};
+  let _mqphSortState = {}; // cat -> {field:'default'|'name'|'price', dir:'asc'|'desc'} — unset means MQPH_DEFAULT_SORT
   function mqphSortRecs(cat, recs) {
-    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const state = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
     const sorted = [...recs];
     if (state.field === 'name') sorted.sort((a,b) => (a.fields['Name']||'').localeCompare(b.fields['Name']||''));
     else if (state.field === 'price') sorted.sort((a,b) => (a.fields['Rate']||0) - (b.fields['Rate']||0));
@@ -2350,16 +3633,26 @@ window.mqphGoToWizard = function() {
     return sorted;
   }
   function mqphSortArrow(cat, field) {
-    const state = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const state = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
     if (state.field !== field) return '<span style="opacity:0.35">↕</span>';
     return state.dir === 'asc' ? '↑' : '↓';
   }
+  // Which column is actually driving the current sort gets called out in
+  // color (not just the ↑/↓ vs ↕ arrow, which is easy to miss at a glance
+  // on a busy page) — per Jordan 2026-09-11 ("highlight the method thats
+  // currently being used for sorting"). Reuses the same blue already used
+  // for links/active state elsewhere in this file (e.g. the default-chip
+  // and re-run-wizard link), so it reads as "active" rather than an error.
+  function mqphSortLabelStyle(cat, field) {
+    const state = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
+    return state.field === field ? 'color:#1d4ed8' : '';
+  }
   window.mqphSetSort = function(cat, field) {
-    const current = _mqphSortState[cat] || {field:'default', dir:'asc'};
+    const current = _mqphSortState[cat] || MQPH_DEFAULT_SORT;
     if (current.field === field) {
-      // 3rd click cycles back to default order — asc, then desc, then back
-      // to normal, without needing a dedicated "Order" label taking up
-      // space of its own.
+      // 3rd click cycles back to the items' original custom/import order —
+      // asc, then desc, then back to normal, without needing a dedicated
+      // "Order" label taking up space of its own.
       _mqphSortState[cat] = current.dir === 'asc' ? { field, dir:'desc' } : { field:'default', dir:'asc' };
     } else {
       _mqphSortState[cat] = { field, dir:'asc' };
@@ -2404,6 +3697,34 @@ window.mqphGoToWizard = function() {
   window.mqphToggle = async function(id, el) {
     const rec = lineItems.find(r=>r.id===id); if(!rec) return;
     const val = !rec.fields['Active'];
+    // Turning an item OFF drops it from pricing exactly the same way
+    // deleting it does (getByCategory()/getBaselineRates() both filter
+    // out Active===false rows) — but bypasses every safety net built
+    // for Delete (the install cascade-warning, the baseline material/
+    // door/hinge picker). Per Jordan 2026-09-12 ("we shouldnt let them
+    // toggle off any install items... that would be the same as kindof
+    // deleting them"), block turning OFF (not on) for:
+    //  - any Installation & Removal rate — the widget needs the
+    //    complete set of 7 to price every job type; Delete (which
+    //    cascades and offers the Requote flow) is the safe path.
+    //  - whichever material/door/hinge row is the CURRENTLY PINNED
+    //    baseline — same reasoning as the active baseline-delete flow
+    //    above: silently dropping it out of getBaselineRates() by
+    //    toggling it off would fall back to Sort order with no warning
+    //    and no picker, exactly the bug that flow exists to prevent. A
+    //    non-baseline material/door/hinge row can still be toggled off
+    //    freely — this only blocks the one row currently defining the
+    //    reference price for its category.
+    if (!val) {
+      if (rec.fields['Category'] === 'install') {
+        alert("Installation & removal rates can't be turned off individually — the widget needs the complete set of 7 to price every job type accurately. Use Delete instead (it'll warn you and offer to requote the whole set).");
+        return;
+      }
+      if (rec.fields['Is baseline'] && ['material','door','hinge'].includes(rec.fields['Category'])) {
+        alert("This is your current baseline — every other price in this category is calculated relative to it, so it can't be turned off. Use Delete instead, which will let you pick what becomes the new baseline first.");
+        return;
+      }
+    }
     el.classList.toggle('on',val); rec.fields['Active']=val;
     await atUpdate(LINE_ITEMS_TABLE,id,{Active:val});
   };
@@ -2517,9 +3838,107 @@ window.mqphGoToWizard = function() {
     }
   }
 
+  // One-time-per-shop backfill for the explicit "Is baseline" pin (see the
+  // big comment above getBaselineRates() for why this exists). For each of
+  // material/door/hinge: if nothing in that category is pinned yet, look
+  // for the row(s) whose Description carries the exact marker text the
+  // Pricing Setup Wizard writes only on its baseline rows, and pin those.
+  // If a category has no such marker (shop never ran the wizard) or
+  // already has a pin (already migrated, or a shop owner set one manually
+  // via ⭐ Set as baseline), it's left alone — getBaselineRates() keeps
+  // falling back to Sort order for anything unpinned, so this can only
+  // ever correct a category, never change one that was already fine.
+  const BASELINE_MARKERS = { material:'Baseline box rate', door:'Baseline door style', hinge:'Baseline hinge' };
+  async function migrateBaselinePins() {
+    for (const cat of Object.keys(BASELINE_MARKERS)) {
+      const rows = lineItems.filter(r => r.fields && r.fields['Category'] === cat);
+      if (rows.some(r => r.fields['Is baseline'])) continue; // already pinned — never overwrite
+      const marker = BASELINE_MARKERS[cat];
+      const candidates = rows.filter(r => (r.fields['Description']||'').startsWith(marker));
+      if (!candidates.length) continue; // no wizard-baseline marker found — leave unpinned, falls back to Sort order
+      for (const rec of candidates) {
+        try {
+          await atUpdate(LINE_ITEMS_TABLE, rec.id, {'Is baseline': true});
+          rec.fields['Is baseline'] = true;
+        } catch(e) { /* non-fatal — leave this row to migrate next load */ }
+      }
+    }
+  }
+
+  // Lets a shop owner explicitly re-pin baseline themselves (⭐ button next
+  // to each material/door/hinge row) instead of needing a dev fix if it
+  // ever drifts again. For material, both the "— uppers" and "— bases"
+  // rows of the chosen material are pinned together (and the old
+  // baseline's rows, if any, are unpinned) since a material's baseline
+  // status is really about the material as a whole, not one row of it.
+  //
+  // Material and door are safe to just re-pin with no other changes:
+  // every material's Rate is its own independent, absolute box price (not
+  // stored relative to baseline at all), and every door style's Rate is
+  // an upcharge over a bare box (also independent of which door happens
+  // to be pinned baseline) — so no other row's Rate needs to move.
+  //
+  // Hinge is genuinely different, and this is the one category where
+  // Jordan was right to ask "won't this need to realign everything?":
+  // the baseline hinge's Rate is hard-set to 0 by the wizard (its cost is
+  // already folded into the baseline door/box price, so it's "included,"
+  // not charged separately — see the wizard's Step 5 push, `rate:0`), and
+  // every OTHER hinge's Rate is an upcharge over that $0. Just moving the
+  // pin without touching Rate would leave the OLD baseline hinge stuck at
+  // $0 forever (customers would get it for free) and the NEW baseline
+  // hinge stuck at its old nonzero upcharge (customers would still get
+  // charged for the "included" hinge) — so every hinge's Rate is shifted
+  // by the new baseline's own (pre-shift) Rate: that zeroes out the new
+  // baseline and preserves the actual price relationships between every
+  // hinge exactly as they were, just re-anchored to the new $0 point.
+  window.mqphSetAsBaseline = async function(cat, recId) {
+    const rec = lineItems.find(r => r.id === recId);
+    if (!rec) return;
+    const catRows = lineItems.filter(r => r.fields && r.fields['Category'] === cat);
+    let newBaselineRows;
+    if (cat === 'material') {
+      const baseName = (rec.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim();
+      newBaselineRows = catRows.filter(r => (r.fields['Name']||'').replace(/\s*—\s*(uppers|bases)\s*$/i,'').trim() === baseName);
+    } else {
+      newBaselineRows = [rec];
+    }
+
+    if (cat === 'hinge') {
+      const shift = rec.fields['Rate'] || 0;
+      if (shift !== 0) {
+        const preview = catRows.filter(h => h.id !== rec.id).slice(0,3)
+          .map(h => `${h.fields['Name']}: ${CUR()}${(h.fields['Rate']||0).toFixed(2)} → ${CUR()}${(((h.fields['Rate']||0)-shift)).toFixed(2)}`).join('\n');
+        const ok = confirm(`"${rec.fields['Name']}" currently costs ${CUR()}${shift.toFixed(2)}/ft more than your current baseline hinge. Making it the new baseline means it becomes the "included, no extra charge" hinge — so every hinge's price shifts by ${CUR()}${shift.toFixed(2)}/ft to keep the actual price differences between hinges the same.\n\nFor example:\n${preview}${catRows.length>4?'\n…':''}\n\nContinue?`);
+        if (!ok) return;
+        for (const h of catRows) {
+          const newRate = Math.round(((h.fields['Rate']||0) - shift) * 100) / 100;
+          try { await atUpdate(LINE_ITEMS_TABLE, h.id, {Rate:newRate}); h.fields['Rate'] = newRate; }
+          catch(e) { console.error('Failed to reprice hinge', h.id, e); }
+        }
+      }
+    }
+
+    const toUnpin = catRows.filter(r => r.fields['Is baseline'] && !newBaselineRows.some(nb => nb.id === r.id));
+    try {
+      for (const r of toUnpin) { await atUpdate(LINE_ITEMS_TABLE, r.id, {'Is baseline': false}); r.fields['Is baseline'] = false; }
+      for (const r of newBaselineRows) { await atUpdate(LINE_ITEMS_TABLE, r.id, {'Is baseline': true}); r.fields['Is baseline'] = true; }
+    } catch(e) { console.error('Failed to update baseline pin', e); }
+    await loadAndRender();
+  };
+
   function buildCTHtml() {
     const materials = lineItems.filter(r=>r.fields&&r.fields['Category']==='countertop'&&!(r.fields['Description']||'').includes('type:backsplash')&&!(r.fields['Description']||'').includes('type:cutout'))
       .sort((a,b)=>(a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+    // Countertop removal — a single shop-wide rate + unit, same
+    // find-or-create pattern as mqphSaveLocalRadius (one record, not a
+    // whole item type). Stored under Category:'other' (not 'countertop')
+    // so it never gets swept into the material list/dropdown — widget.js
+    // finds it the same way it already finds "Cabinet removal": by
+    // scanning li.otherItems for a name match. Jordan: "in the pricing
+    // part let them decide how to price, linear or square foot just like
+    // installation is priced" — hence the unit choice, mirroring the
+    // supply/install rate-unit selects on each countertop material above.
+    const ctRemovalItem = lineItems.find(r=>r.fields&&r.fields['Category']==='other'&&r.fields['Name']==='Countertop removal');
 
     function matRow(r) {
       const unitParts = (r.fields['Unit']||'sqft|sqft').split('|');
@@ -2527,25 +3946,30 @@ window.mqphGoToWizard = function() {
       const iu = (unitParts[1]||'sqft').trim();
       const bsOpts = getBsOptions(r);
       const bsSummary = bsOpts.length
-        ? bsOpts.map(o=>`${o.label} (supply $${(o.supplyRate||0).toLocaleString()}, install $${(o.installRate||0).toLocaleString()}/lin ft)`).join(', ')
+        ? bsOpts.map(o=>`${o.label} (supply ${CUR()}${(o.supplyRate||0).toLocaleString()}, install ${CUR()}${(o.installRate||0).toLocaleString()}/lin ft)`).join(', ')
         : 'No backsplash options set';
       const cutoutOpts = getCutoutOptions(r);
       const cutoutSummary = cutoutOpts.length
-        ? cutoutOpts.map(o=>`${o.label} $${(o.rate||0).toLocaleString()}`).join(', ')
+        ? cutoutOpts.map(o=>`${o.label} ${CUR()}${(o.rate||0).toLocaleString()}`).join(', ')
+        : null;
+      const minSupply = r.fields['Minimum price']||0;
+      const minInstall = r.fields['Install minimum price']||0;
+      const minSummary = (minSupply>0 || minInstall>0)
+        ? `📏 Min: ${minSupply>0?`${CUR()}${minSupply.toLocaleString()} supply`:''}${(minSupply>0&&minInstall>0)?' + ':''}${minInstall>0?`${CUR()}${minInstall.toLocaleString()} install`:''} per counter`
         : null;
       return `
         <div class="mqph-row">
           <div style="flex:1;min-width:0">
             <div class="mqph-row-name">${r.fields['Name']||'—'}</div>
-            <div class="mqph-row-desc">🧱 ${bsSummary}${cutoutSummary ? ` &nbsp;·&nbsp; ✂️ ${cutoutSummary}` : ''}</div>
+            <div class="mqph-row-desc">🧱 ${bsSummary}${cutoutSummary ? ` &nbsp;·&nbsp; ✂️ ${cutoutSummary}` : ''}${minSummary ? ` &nbsp;·&nbsp; ${minSummary}` : ''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
             <span style="color:#6b7280;font-size:11px">Supply:</span>
-            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/${su}</span>
             <span style="color:#d1d5db;margin:0 4px">·</span>
             <span style="color:#6b7280;font-size:11px">Install:</span>
-            <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Install rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/${iu}</span>
           </div>
           <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
@@ -2556,7 +3980,7 @@ window.mqphGoToWizard = function() {
 
     const section = (title, items, rowFn, emptyMsg) => items.length > 0
       ? `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
-         ${items.map(rowFn).join('')}`
+         <div${items.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>${items.map(rowFn).join('')}</div>`
       : `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6">${title}</div>
          <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`;
 
@@ -2572,7 +3996,7 @@ window.mqphGoToWizard = function() {
       const taggedMats = materials.filter(m=>getAddonOptions(m).some(x=>x.id===a.id));
       const rates = taggedMats.map(m => getAddonOptions(m).find(x=>x.id===a.id)?.rate || 0);
       const allSame = rates.every(r => r === rates[0]);
-      const rateLabel = !rates.length ? '$0' : allSame ? `$${rates[0].toLocaleString()}` : `$${Math.min(...rates).toLocaleString()}–$${Math.max(...rates).toLocaleString()}`;
+      const rateLabel = !rates.length ? `${CUR()}0` : allSame ? `${CUR()}${rates[0].toLocaleString()}` : `${CUR()}${Math.min(...rates).toLocaleString()}–${CUR()}${Math.max(...rates).toLocaleString()}`;
       return `
       <div class="mqph-row">
         <div style="flex:1;min-width:0">
@@ -2597,9 +4021,24 @@ window.mqphGoToWizard = function() {
         <div id="mqph-cat-body-countertop" style="display:none">
         <div id="mqph-ct-msg" class="mqph-msg"></div>
         <div class="mqph-info" style="margin:12px 16px">
-          Each material now carries its own backsplash height options and cutout pricing — no more separate backsplash/cutout items to keep in sync. Add a material below, then set its backsplash heights and cutout rates right inside it.
+          Each material now carries its own backsplash height options and cutout pricing — no more separate backsplash/cutout items to keep in sync. Add a material below, then set its backsplash heights and cutout rates right inside it. Each material also has its own optional minimum charge per counter (separately for supply and install) — set one when a small counter still means ordering a full sheet.
         </div>
         ${section('Materials', materials, matRow, 'No materials yet — add your first countertop material.')}
+        <div style="padding:12px 16px;background:#f9fafb;border-top:1px solid #f3f4f6;border-bottom:1px solid #f3f4f6">
+          <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">🗑️ Countertop removal</div>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">What you'd charge to remove &amp; dispose of an existing countertop. Customers can opt into this per surface in the widget, right after choosing supply or supply + install. Leave the rate at 0 to not offer removal.</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+            <input type="number" id="mqph-ct-removal-rate" value="${ctRemovalItem?.fields['Rate']||0}" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;font-weight:600;color:#111;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
+            <span style="font-size:13px;color:#6b7280">per</span>
+            <select id="mqph-ct-removal-unit" style="font-size:13px;font-family:inherit;color:#374151;font-weight:500;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 8px;background:#fff">
+              <option value="sqft" ${(ctRemovalItem?.fields['Unit']||'sqft')==='sqft'?'selected':''}>sqft</option>
+              <option value="lin ft" ${ctRemovalItem?.fields['Unit']==='lin ft'?'selected':''}>lin ft</option>
+            </select>
+            <button onclick="mqphSaveCTRemoval()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>
+            <span id="mqph-ct-removal-saved" style="font-size:12px;color:#16a34a;display:none">✓ Saved</span>
+          </div>
+        </div>
         <div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;background:#f9fafb;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between">
           <span>Edges &amp; addons</span>
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqphOpenAddonAdd()">+ New edge/addon</button>
@@ -2634,24 +4073,36 @@ window.mqphGoToWizard = function() {
 
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate</div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:13px;color:#6b7280">$</span>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-ct-supply-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsSupplyRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
                 <select id="mqph-ct-supply-unit" onchange="mqphSyncBsSupplyRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
                 </select>
+                ${mqphRateCalcIconHTML('mqph-ct-supply-rate', 'mqph-ct-supply-unit')}
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
+                <span style="font-size:12px;color:#6b7280;white-space:nowrap" title="A small counter can still mean ordering a full sheet of material — this floor makes sure supply cost never goes below what you set here, no matter how small the sq ft/lin ft math comes out. Leave at 0 for no minimum. Applies per counter/surface, not to the whole quote.">Minimum charge per counter ⓘ</span>
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-supply-min" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
               </div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate</div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:13px;color:#6b7280">$</span>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-ct-install-rate" placeholder="0.00" step="0.01" oninput="mqphSyncBsInstallRate()" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">per</span>
                 <select id="mqph-ct-install-unit" onchange="mqphSyncBsInstallRate()" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px">
                   <option value="sqft">sqft</option><option value="lin ft">lin ft</option>
                 </select>
+                ${mqphRateCalcIconHTML('mqph-ct-install-rate', 'mqph-ct-install-unit')}
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
+                <span style="font-size:12px;color:#6b7280;white-space:nowrap" title="Same idea as the supply minimum, but for install labor — a small counter can still take as long to template and install as a bigger one. Leave at 0 for no minimum.">Minimum charge per counter ⓘ</span>
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
+                <input type="number" id="mqph-ct-install-min" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
               </div>
             </div>
 
@@ -2749,11 +4200,11 @@ window.mqphGoToWizard = function() {
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap">
             <span style="color:#6b7280;font-size:11px">Supply:</span>
-            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/lin ft</span>
             <span style="color:#d1d5db;margin:0 4px">·</span>
             <span style="color:#6b7280;font-size:11px">Install:</span>
-            <span style="font-weight:600">$${(r.fields['Install rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Install rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/lin ft</span>
           </div>
           <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
@@ -2766,7 +4217,7 @@ window.mqphGoToWizard = function() {
         <span style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em">${title}</span>
         ${items.length > 0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="event.stopPropagation();mqphOpenBulkEdit('${bulkCat}')">📊 Bulk edit</button>` : ''}
       </div>
-      ${items.length > 0 ? items.map(trimRow).join('') : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
+      ${items.length > 0 ? `<div${items.length > 10 ? ' style="max-height:450px;overflow-y:auto"' : ''}>${items.map(trimRow).join('')}</div>` : `<div style="padding:1rem 16px;font-size:13px;color:#9ca3af">${emptyMsg}</div>`}`;
 
     return `
       <div class="mqph-ct-block">
@@ -2813,18 +4264,20 @@ window.mqphGoToWizard = function() {
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Supply rate (per linear foot)</div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:13px;color:#6b7280">$</span>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-trim-supply-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">/ lin ft</span>
+                ${mqphRateCalcIconHTML('mqph-trim-supply-rate', '', 'linear')}
               </div>
             </div>
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
               <div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Install rate (per linear foot)</div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:13px;color:#6b7280">$</span>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;color:#6b7280">${CUR()}</span>
                 <input type="number" id="mqph-trim-install-rate" placeholder="0.00" step="0.01" style="width:100px;text-align:right;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
                 <span style="font-size:13px;color:#6b7280">/ lin ft</span>
+                ${mqphRateCalcIconHTML('mqph-trim-install-rate', '', 'linear')}
               </div>
             </div>
             <div class="mqph-field" style="flex-direction:row;align-items:center;gap:10px">
@@ -2858,7 +4311,7 @@ window.mqphGoToWizard = function() {
           </div>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px">
             <span style="color:#6b7280;font-size:11px">Base price:</span>
-            <span style="font-weight:600">$${(r.fields['Rate']||0).toLocaleString()}</span>
+            <span style="font-weight:600">${CUR()}${(r.fields['Rate']||0).toLocaleString()}</span>
             <span style="color:#6b7280;font-size:11px">/ unit</span>
           </div>
           <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active']?'on':''}" onclick="mqphToggle('${r.id}',this)"></div></div>
@@ -2947,13 +4400,13 @@ window.mqphGoToWizard = function() {
         <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Quote this exact tall cabinet in your software, then enter the total below.</p>
         ${specBox([
           `<strong>${name}</strong>`,
-          `Width: <span class="mqph-spec-tag">24"</span> (standard tall cabinet width)`,
+          `Width: <span class="mqph-spec-tag">24" (610mm)</span> (standard tall cabinet width)`,
           `Material: <span class="mqph-spec-tag">${bl.blMatName||'your baseline material'}</span>`,
           `<strong>No doors · No hinges · Supply only · No install · Local delivery</strong>`,
           `Include the box, shelves, and any interior fittings specific to this type (pullouts, drawer boxes, etc.)`,
           `<span style="color:#1e40af">Door upcharges, hinge upcharges, material upcharges, and install will be calculated automatically by the widget based on what the customer selects.</span>`,
         ])}
-        <div class="mqph-price-input-wrap"><span class="mqph-pfx">$</span><input class="mqph-price-input-big" type="number" id="mqph-tallcab-price" placeholder="0" oninput="mqphTallCabCalc()"/></div>
+        <div class="mqph-price-input-wrap"><span class="mqph-pfx">${CUR()}</span><input class="mqph-price-input-big" type="number" id="mqph-tallcab-price" placeholder="0" oninput="mqphTallCabCalc()"/></div>
         <p class="mqph-calc-hint">Base unit price only — door, hinge, material & install upcharges are added automatically</p>
         <div class="mqph-rate-reveal" id="mqph-tallcab-reveal" style="display:none">
           <div class="mqph-rate-reveal-val" id="mqph-tallcab-rate-val">—</div>
@@ -2970,7 +4423,7 @@ window.mqphGoToWizard = function() {
     const reveal = document.getElementById('mqph-tallcab-reveal');
     const val    = document.getElementById('mqph-tallcab-rate-val');
     if (reveal && val) {
-      if (p > 0) { reveal.style.display = 'block'; val.textContent = `$${p.toLocaleString()} / unit`; }
+      if (p > 0) { reveal.style.display = 'block'; val.textContent = `${CUR()}${p.toLocaleString()} / unit`; }
       else reveal.style.display = 'none';
     }
   };
@@ -3062,6 +4515,110 @@ window.mqphGoToWizard = function() {
     mqphRenderBsList();
   };
 
+  // A shop owner thinking in metric shouldn't have to do the sqft/linft
+  // math themselves just to set a countertop rate — this "Use metric?"
+  // calculator (same idea as the one on the dashboard's Specialty Items
+  // tab) opens a tiny popover where they type their rate per square metre
+  // or per linear metre — whichever matches the field's current "per"
+  // dropdown — and it converts and drops the equivalent rate straight into
+  // the Supply/Install rate field. The stored rate and the widget's own
+  // pricing math never change — this is purely a friendlier way to type
+  // the same number.
+  // targetUnitSelectId: id of a <select> whose current value ('lin ft' vs
+  // anything else) decides linear-vs-sqft mode. Pass forcedMode ('linear' or
+  // 'sqft') instead when there's no unit dropdown at all — e.g. Crown/Valance
+  // rates, which are always per linear foot.
+  function mqphRateCalcIconHTML(targetInputId, targetUnitSelectId, forcedMode) {
+    const svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
+    return `<span style="display:inline-flex;align-items:center;gap:7px;margin-left:6px">
+      <span style="font-size:11px;color:#2563eb;font-weight:600;white-space:nowrap">Use metric?</span>
+      <button type="button" onclick="mqphShowRateCalc(this,'${targetInputId}','${targetUnitSelectId||''}',event,'${forcedMode||''}')" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
+    </span>`;
+  }
+
+  window.mqphShowRateCalc = function(triggerEl, targetInputId, targetUnitSelectId, event, forcedMode) {
+    if (event) event.stopPropagation();
+    let mode;
+    if (forcedMode === 'linear' || forcedMode === 'sqft') {
+      mode = forcedMode;
+    } else {
+      const unitSelect = document.getElementById(targetUnitSelectId);
+      mode = (unitSelect?.value === 'lin ft') ? 'linear' : 'sqft';
+    }
+    let pop = document.getElementById('mqph-rate-calc-popover');
+    const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'mqph-rate-calc-popover';
+      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#fff;color:#111;font-size:13px;line-height:1.5;padding:14px;border-radius:10px;width:230px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid #e5e7eb';
+      pop.addEventListener('click', (e) => e.stopPropagation());
+      document.body.appendChild(pop);
+      // Only need to wire this once — closes the popover on any outside
+      // click, same pattern as the dashboard's Specialty Items version.
+      document.addEventListener('click', () => { pop.style.display = 'none'; });
+    }
+    if (alreadyOpenForThis) { pop.style.display = 'none'; return; }
+    pop._trigger = triggerEl;
+    pop._targetInputId = targetInputId;
+    pop._mode = mode;
+    const unitLabel = mode === 'linear' ? 'linear metre' : 'square metre (m²)';
+    const targetUnitLabel = mode === 'linear' ? 'lin ft' : 'sq ft';
+    pop.innerHTML = `
+      <div style="font-weight:700;margin-bottom:8px;font-size:13px">🧮 Enter rate per ${unitLabel}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="color:#6b7280">${CUR()}</span>
+        <input type="number" id="mqph-rate-calc-input" placeholder="0.00" style="flex:1;min-width:0;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" oninput="mqphRateCalcUpdate()"/>
+      </div>
+      <div style="background:#f0fdf4;border-radius:6px;padding:8px 10px;margin-bottom:10px;text-align:center">
+        <div style="font-size:11px;color:#6b7280">= per ${targetUnitLabel}</div>
+        <div id="mqph-rate-calc-result" style="font-size:15px;font-weight:700;color:#166534">${CUR()}0.00</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button type="button" onclick="mqphCloseRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+        <button type="button" onclick="mqphApplyRateCalc()" style="flex:1;padding:7px;border-radius:6px;border:none;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Use this</button>
+      </div>`;
+    const rect = triggerEl.getBoundingClientRect();
+    pop.style.display = 'block';
+    pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    pop.style.left = Math.max(8, window.scrollX + rect.left - 100) + 'px';
+    setTimeout(() => document.getElementById('mqph-rate-calc-input')?.focus(), 50);
+  };
+
+  window.mqphRateCalcUpdate = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
+    const input = document.getElementById('mqph-rate-calc-input');
+    const resultEl = document.getElementById('mqph-rate-calc-result');
+    if (!pop || !input || !resultEl) return;
+    const val = parseFloat(input.value) || 0;
+    // 1 sqft = 0.092903 sqm, 1 ft = 0.3048 m — same conversion the
+    // Specialty Items calculator uses.
+    const converted = pop._mode === 'linear' ? val * 0.3048 : val * 0.092903;
+    resultEl.textContent = CUR() + converted.toFixed(2);
+  };
+
+  window.mqphApplyRateCalc = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
+    const input = document.getElementById('mqph-rate-calc-input');
+    if (!pop || !input || !pop._targetInputId) return;
+    const val = parseFloat(input.value) || 0;
+    const converted = pop._mode === 'linear' ? val * 0.3048 : val * 0.092903;
+    const rounded = Math.round(converted * 100) / 100;
+    const targetEl = document.getElementById(pop._targetInputId);
+    if (targetEl) {
+      targetEl.value = rounded;
+      // Programmatic value changes don't fire input events on their own —
+      // dispatch one so mqphSyncBsSupplyRate/InstallRate (which keep the
+      // backsplash height options' auto-synced rates in step) actually run.
+      targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    mqphCloseRateCalc();
+  };
+
+  window.mqphCloseRateCalc = function() {
+    const pop = document.getElementById('mqph-rate-calc-popover');
+    if (pop) pop.style.display = 'none';
+  };
+
   function mqphRenderBsList() {
     const list = document.getElementById('mqph-ct-bs-list');
     if (!list) return;
@@ -3084,14 +4641,14 @@ window.mqphGoToWizard = function() {
             <input type="number" value="${o.heightIn!=null?o.heightIn:''}" placeholder="4" oninput="mqphUpdateBsOption(${i},'heightIn',this.value,false)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:100%;text-align:right"/>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;min-width:90px">
-            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Supply $</span>
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Supply ${CUR()}</span>
             <div style="display:flex;gap:4px;align-items:center">
               <input type="number" value="${o.supplyRate!=null?o.supplyRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'supplyRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:80px;text-align:right"/>
               <select onchange="mqphUpdateBsOption(${i},'supplyUnit',this.value,false)" style="font-family:inherit;font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 6px;min-width:60px">${unitOpts(o.supplyUnit||matSupplyUnit)}</select>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:3px;min-width:90px">
-            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Install $</span>
+            <span style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Install ${CUR()}</span>
             <div style="display:flex;gap:4px;align-items:center">
               <input type="number" value="${o.installRate!=null?o.installRate:''}" placeholder="0.00" step="0.01" oninput="mqphUpdateBsOption(${i},'installRate',this.value,true)" style="font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;width:80px;text-align:right"/>
               <select onchange="mqphUpdateBsOption(${i},'installUnit',this.value,false)" style="font-family:inherit;font-size:12px;border:1px solid #d1d5db;border-radius:8px;padding:6px 6px;min-width:60px">${unitOpts(o.installUnit||matInstallUnit)}</select>
@@ -3126,7 +4683,7 @@ window.mqphGoToWizard = function() {
     list.innerHTML = currentCutoutOptions.map((o,i) => `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
         <input type="text" value="${(o.label||'').replace(/"/g,'&quot;')}" placeholder="Label, e.g. Sink cutout" oninput="mqphUpdateCutoutOption(${i},'label',this.value)" style="flex:1;min-width:120px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
-        <span style="font-size:11px;color:#9ca3af">$</span>
+        <span style="font-size:11px;color:#9ca3af">${CUR()}</span>
         <input type="number" value="${o.rate!=null?o.rate:''}" placeholder="Rate" step="0.01" oninput="mqphUpdateCutoutOption(${i},'rate',this.value)" style="width:100px;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px"/>
         <span style="font-size:11px;color:#9ca3af">each</span>
         <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveCutoutOption(${i})">✕</button>
@@ -3171,8 +4728,10 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-ct-name').value = '';
     document.getElementById('mqph-ct-supply-rate').value = '';
     document.getElementById('mqph-ct-supply-unit').value = 'sqft';
+    document.getElementById('mqph-ct-supply-min').value = '';
     document.getElementById('mqph-ct-install-rate').value = '';
     document.getElementById('mqph-ct-install-unit').value = 'sqft';
+    document.getElementById('mqph-ct-install-min').value = '';
     document.getElementById('mqph-ct-active').checked = true;
     // Default row — auto-sync flags update it live as user types rates above
     currentBsOptions = [{ label:'4" standard', heightIn:4, supplyRate:0, supplyUnit:'sqft', installRate:0, installUnit:'sqft', _supplyAutoSync:true, _installAutoSync:true }];
@@ -3222,8 +4781,10 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-ct-name').value = rec.fields['Name']||'';
     document.getElementById('mqph-ct-supply-rate').value  = matSupply||'';
     document.getElementById('mqph-ct-supply-unit').value  = matSupplyUnit;
+    document.getElementById('mqph-ct-supply-min').value = rec.fields['Minimum price']||'';
     document.getElementById('mqph-ct-install-rate').value = matInstall||'';
     document.getElementById('mqph-ct-install-unit').value = matInstallUnit;
+    document.getElementById('mqph-ct-install-min').value = rec.fields['Install minimum price']||'';
     document.getElementById('mqph-ct-active').checked = rec.fields['Active']!==false;
     mqphRenderBsList();
     mqphRenderCutoutList();
@@ -3253,7 +4814,9 @@ window.mqphGoToWizard = function() {
       ctBulk = {
         count,
         supplyRate: parseFloat(document.getElementById('mqph-ct-supply-rate').value||0),
+        supplyMin: parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
         installRate: parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
+        installMin: parseFloat(document.getElementById('mqph-ct-install-min').value||0),
         unit: `${su}|${iu}`,
         bsOptions: cleanBsOptions,
         cutoutOptions: cleanCutoutOptions,
@@ -3269,7 +4832,9 @@ window.mqphGoToWizard = function() {
     const fields = {
       shop:[shopRecord._recordId], Name:name, Category:'countertop',
       Rate:parseFloat(document.getElementById('mqph-ct-supply-rate').value||0),
+      'Minimum price':parseFloat(document.getElementById('mqph-ct-supply-min').value||0),
       'Install rate':parseFloat(document.getElementById('mqph-ct-install-rate').value||0),
+      'Install minimum price':parseFloat(document.getElementById('mqph-ct-install-min').value||0),
       Unit:`${su}|${iu}`, Description:'type:material',
       'Backsplash options': JSON.stringify(cleanBsOptions),
       'Cutout options': JSON.stringify(cleanCutoutOptions),
@@ -3357,7 +4922,8 @@ window.mqphGoToWizard = function() {
     try {
       const writes = names.map(nm => atCreate(LINE_ITEMS_TABLE, {
         shop:[shopRecord._recordId], Name:nm, Category:'countertop',
-        Rate: ctBulk.supplyRate, 'Install rate': ctBulk.installRate, Unit: ctBulk.unit,
+        Rate: ctBulk.supplyRate, 'Minimum price': ctBulk.supplyMin,
+        'Install rate': ctBulk.installRate, 'Install minimum price': ctBulk.installMin, Unit: ctBulk.unit,
         Description:'type:material',
         'Backsplash options': JSON.stringify(ctBulk.bsOptions),
         'Cutout options': JSON.stringify(ctBulk.cutoutOptions),
@@ -3416,7 +4982,7 @@ window.mqphGoToWizard = function() {
           <span>${m.fields['Name']||'—'}</span>
         </label>
         <div style="display:flex;align-items:center;gap:4px;visibility:${existing?'visible':'hidden'}" id="mqph-addon-ratewrap-${m.id}">
-          <span style="font-size:12px;color:#6b7280">$</span>
+          <span style="font-size:12px;color:#6b7280">${CUR()}</span>
           <input type="number" id="mqph-addon-rate-${m.id}" value="${rateVal}" placeholder="0.00" step="0.01" style="width:70px;font-size:12px;padding:4px 6px;border:1px solid #d1d5db;border-radius:5px"/>
         </div>
       </div>`;
@@ -3644,17 +5210,25 @@ window.mqphGoToWizard = function() {
   // LOAD AND RENDER
   // ============================================================
   let ctMigrationDone = false;
+  let baselinePinMigrationDone = false;
 
   async function loadAndRender() {
     const container=document.getElementById('mq-pricing-helper-v2');
     if(!container) return;
-    const recs=await atGet(LINE_ITEMS_TABLE,`FIND("${shopRecord._shopName}", ARRAYJOIN({shop}))`);
+    const recs=await atGet(LINE_ITEMS_TABLE,`FIND("${shopRecord._shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
     lineItems=recs.filter(r=>r.fields);
     if (!ctMigrationDone) {
       ctMigrationDone = true; // set before awaiting so a second call can't race in
       await migrateCTPricing();
     }
-    container.innerHTML=buildEditorHTML();
+    if (!baselinePinMigrationDone) {
+      baselinePinMigrationDone = true; // set before awaiting so a second call can't race in
+      await migrateBaselinePins();
+    }
+    // Runs on every load, not just once — see mqphCheckBaselineDrift's own
+    // comment for why that's safe (self-stabilizing, cheap).
+    const driftNotices = await mqphCheckBaselineDrift();
+    container.innerHTML=buildEditorHTML(driftNotices);
     mqphRestoreExpandedCats();
   }
 
@@ -3668,9 +5242,9 @@ window.mqphGoToWizard = function() {
     shopRecord = {
       ...passedShopRecord,
       _recordId: passedShopRecord.id,
-      _shopName: (passedShopRecord.fields && passedShopRecord.fields['Shop name']) || '',
+      _shopToken: (passedShopRecord.fields && passedShopRecord.fields['Shop token']) || '',
       _baseId:   'app4zrMlVLwF2xn4h',
-      _token:    'patulbU1ndSvFpMDo.906a8be9e784fb12de048d4238c5d553859f8d57670ccd1bc1a6de4e2da37325',
+      _token:    'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
       _pricingTable: 'tblu6AYZs8h7SIaQl',
     };
     pricingRecord = passedPricingRecord;

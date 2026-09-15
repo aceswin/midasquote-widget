@@ -925,6 +925,19 @@
     return Object.values(CT_MAT).some(m => (m.pi||0) > 0);
   }
 
+  // Countertop removal is a single shop-wide rate+unit (not per-material,
+  // unlike CT_MAT) — configured once on the Pricing tab (see
+  // pricing-helper-v2.js's mqphSaveCTRemoval) and looked up here the same
+  // way "Cabinet removal" already is: a name match inside li.otherItems.
+  // The removal selector only renders at all once a shop has actually set
+  // a rate > 0 — otherwise every countertop surface would show a
+  // "Yes/No" removal choice that silently adds $0, which is more
+  // confusing than just not offering it yet.
+  function hasCtRemoval() {
+    const item = li.otherItems.find(i => i['Name']?.toLowerCase().includes('countertop removal'));
+    return !!(item && (item['Rate']||0) > 0);
+  }
+
   function buildCTMAT(data) {
     const { li, pricing, shopPhotos, shopFeatured } = data;
     CT_MAT = {};
@@ -2570,6 +2583,8 @@
               ${hasCtInstall ? '' : '<p class="mq-hint" style="margin-bottom:6px">This shop offers supply only — installation is not included.</p>'}
               <select id="mq-b-ct-si">${hasCtInstall ? '<option value="supply">Supply only</option><option value="install">Supply + install</option>' : '<option value="supply">Supply only</option>'}</select></div>
           </div>
+          ${hasCtRemoval() ? `<div class="mq-field" style="margin-top:0.75rem"><label class="mq-label">Removal of existing countertop?</label>
+            <select id="mq-b-ct-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove &amp; dispose</option></select></div>` : ''}
           <label id="mq-b-use-cab-wrap" style="display:flex;align-items:flex-start;gap:10px;margin-top:0.75rem;cursor:pointer">
             <input type="checkbox" id="mq-b-use-cab" checked onchange="mqTogUseCab('b')" style="margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             <span style="font-size:14px;font-weight:500;line-height:1.4">Use my base cabinet measurements <span style="font-weight:400;color:#6b7280">(assumes standard depth counter)</span></span>
@@ -2764,7 +2779,7 @@
 
     function P() {
       const mat={}, door={}, drawer={}, hinge={};
-      let installUWithDoors=0, installUNoDoors=0, installBWithDoors=0, installBNoDoors=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0;
+      let installUWithDoors=0, installUNoDoors=0, installBWithDoors=0, installBNoDoors=0, installBSome=0, installBMostly=0, removalRate=0, taxRate=0, ctRemovalRate=0, ctRemovalUnit='sqft';
       // Which `mat` key is the shop's actual pinned baseline material — per
       // Jordan 2026-09-12: the Tall Cabinet material-upcharge calc below
       // used to grab `Object.keys(mat)[0]` (whichever material happens to
@@ -2845,8 +2860,16 @@
       // fall back to the old first-by-Sort-order behavior rather than
       // leaving blMatKey null, same defensive fallback getBaselineRates()
       // itself uses in pricing-helper-v2.js.
+      // Countertop removal — independent of the hasDynamic/legacy branch
+      // above (a shop can have zero cabinet materials, e.g. a
+      // countertops-only shop, and still want this priced), so it's
+      // resolved once here rather than duplicated in both branches.
+      const ctRem = li.otherItems.find(i => i['Name']?.toLowerCase().includes('countertop removal'));
+      ctRemovalRate = ctRem ? (ctRem['Rate']||0) : 0;
+      ctRemovalUnit = ctRem?.['Unit'] === 'lin ft' ? 'linft' : 'sqft';
+
       if (!blMatKey) blMatKey = Object.keys(mat)[0];
-      return { mat, door, drawer, hinge, blMatKey, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
+      return { mat, door, drawer, hinge, blMatKey, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate, ctRemovalRate, ctRemovalUnit };
     }
 
     // Legacy global fallback rates (used only if a material has no per-material
@@ -4285,6 +4308,8 @@
         if (ctSurfaces) { ctSurfaces.innerHTML = ''; ctSurfaces.dataset.autoAdded = 'false'; }
         const ctSi = document.getElementById('mq-b-ct-si');
         if (ctSi) ctSi.selectedIndex = 0;
+        const ctRemoval = document.getElementById('mq-b-ct-removal');
+        if (ctRemoval) ctRemoval.selectedIndex = 0;
       }
 
       window.mqRefreshAllPickerVisibility(prefix);
@@ -4312,6 +4337,8 @@
       if (extraFtEl) extraFtEl.value = 0;
       const edgeSelEl = document.getElementById(`mq-${prefix}-cab-edge-sel`);
       if (edgeSelEl) edgeSelEl.selectedIndex = 0;
+      const removalEl = document.getElementById(`mq-${prefix}-ct-removal`);
+      if (removalEl) removalEl.selectedIndex = 0;
       const surfacesContainer = document.getElementById(`mq-${prefix}-surfaces`);
       if (surfacesContainer) { surfacesContainer.innerHTML = ''; surfacesContainer.dataset.autoAdded = 'false'; }
       if (surfs[prefix]) surfs[prefix] = {};
@@ -5146,7 +5173,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     }
 
     function calcCabinet(prefix) {
-      const {mat,door,drawer,hinge,blMatKey,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
+      const {mat,door,drawer,hinge,blMatKey,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate,ctRemovalRate,ctRemovalUnit}=P();
       // If the Cabinet measurements section is hidden (no real box material
       // for the current project type), treat linear footage as 0 regardless
       // of whatever's still sitting in those inputs — otherwise a hidden
@@ -5395,7 +5422,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           return {lines:[],sub:0,total:0,low:0,high:0};
         }
       }
-      const {removalRate}=P();
+      const {removalRate,ctRemovalRate,ctRemovalUnit}=P();
       const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
       const lines=[]; let sub=0;
 
@@ -5421,6 +5448,7 @@ window.mqTogDrawerConfig=(prefix)=>{
         const bsId  = prefix==='ct' ? 'mq-ct-cab-bs'     : `mq-${prefix}-cab-bs`;
         const coId  = prefix==='ct' ? 'mq-ct-cab-co'     : `mq-${prefix}-cab-co`;
         const cutsId= prefix==='ct' ? 'mq-ct-cab-cuts'   : `mq-${prefix}-cab-cuts`;
+        const removalId = `mq-${prefix}-ct-removal`;
         const bsSubtractId = `mq-${prefix}-cab-bs-subtract`;
         const bsSidesId = `mq-${prefix}-cab-bs-sides`;
         const dwChecked = document.getElementById(`mq-${prefix}-cab-dw`)?.checked;
@@ -5461,10 +5489,12 @@ window.mqTogDrawerConfig=(prefix)=>{
             }
             const coChecked = document.getElementById(coId)?.checked;
             const cutoutCost = coChecked ? cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`${cutsId}-q-${i}`)*(o.rate||0),0) : 0;
+            const removalChecked = gv(removalId) === 'yes';
+            const removalCost = removalChecked ? (ctRemovalUnit==='linft' ? linFt : sqft) * ctRemovalRate : 0;
             const addonsRes = ctAddonsCost(m, `mq-${prefix}-cab-edge-sel`, `mq-${prefix}-cab-addons-a`, linFt, sqft, ctDepth);
-            const cost = supplyCost + installCost + bsCost + cutoutCost + addonsRes.cost;
+            const cost = supplyCost + installCost + bsCost + cutoutCost + removalCost + addonsRes.cost;
             sub += cost;
-            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
+            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${removalChecked?' + removal':''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
           }
         }
       }
@@ -5515,12 +5545,14 @@ window.mqTogDrawerConfig=(prefix)=>{
           const bsInstall = si==='install' ? (bsInstallUnit === 'lin ft' ? bsLinFt*(bsOpt.installRate||0) : bsSqft*(bsOpt.installRate||0)) : 0;
           bsCost = bsSupply + bsInstall;
         }
-        const cost = supplyCost+installCost+bsCost
+        const removalChecked = gv('mqsrm-'+id) === 'yes';
+        const removalCost = removalChecked ? (ctRemovalUnit==='linft' ? linFt : sqft) * ctRemovalRate : 0;
+        const cost = supplyCost+installCost+bsCost+removalCost
           +(document.getElementById('mqsco-'+id)?.checked?cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`mqscuts-${id}-q-${i}`)*(o.rate||0),0):0);
         const addonsRes = ctAddonsCost(m, `mqs-edge-${id}-sel`, `mqs-addons-${id}-a`, linFt, sqft, d||ctDepth);
         const totalCost = cost + addonsRes.cost;
         sub+=totalCost;
-        lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${Math.round(bsLinFt*10)/10} lin ft)`:''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`,cost:Math.round(totalCost)});
+        lines.push({label:`${gv('mqsn-'+id)||'Surface'} — ${m.label} (${Math.round(sqft*10)/10} sqft, ${Math.round(linFt*10)/10} lin ft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${Math.round(bsLinFt*10)/10} lin ft)`:''}${removalChecked?' + removal':''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`,cost:Math.round(totalCost)});
       });
 
       // Settle every material's minimum against its pooled total from
@@ -5851,6 +5883,8 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div class="mq-field"><label class="mq-label">Backsplash</label>
             <select id="mqsbs-${id}" style="max-width:260px;min-width:140px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select></div>
         </div>
+        ${hasCtRemoval() ? `<div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Removal of existing countertop?</label>
+          <select id="mqsrm-${id}" style="max-width:260px;min-width:140px" onchange="mqSurfUpdatePreview('${id}')"><option value="no">No removal needed</option><option value="yes">Yes — remove &amp; dispose</option></select></div>` : ''}
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
@@ -5890,6 +5924,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (dims && !/enter section/i.test(dims)) parts.push(dims);
       if (matLabel) parts.push(matLabel);
       parts.push(siLabel);
+      if (gv(`mqsrm-${id}`) === 'yes') parts.push('Removal');
       // Same shape-icon/material-photo pair the open card's own live
       // preview uses, so a surface looks like "the same thing" whether
       // it's expanded or tucked into its one-line summary row.
