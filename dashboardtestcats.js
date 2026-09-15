@@ -3152,7 +3152,21 @@ window.logoutMember = async function () {
   const CABINET_ONLY_CATS = ['material', 'door', 'drawer', 'hinge', 'trim_crown', 'trim_valance', 'tall_cabinet'];
   function roomsForCategory(cat) {
     const allRooms = window._mqRooms || defaultRoomTypes();
-    return CABINET_ONLY_CATS.includes(cat) ? allRooms.filter(r => !r.forCountertops) : allRooms;
+    if (CABINET_ONLY_CATS.includes(cat)) return allRooms.filter(r => !r.forCountertops);
+    // Specialty items can genuinely show on either side, so they don't lose
+    // rooms the way the cabinet-only categories above do -- but per Jordan,
+    // once a shop has scoped its widget down to just one estimator tab
+    // ("if theres no cabinet items because we are on countertops only then
+    // the cabinet related project types should be hidden from specialty
+    // items project type checkboxes... and if its a cabinets only toggle
+    // then opposite"), the OTHER side's project types shouldn't be offered
+    // as checkbox options at all, same as the cabinet-only categories.
+    if (cat === 'specialty') {
+      const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
+      if (countertopsOnly) return allRooms.filter(r => r.forCountertops);
+      if (cabinetsOnly) return allRooms.filter(r => !r.forCountertops);
+    }
+    return allRooms;
   }
 
   // Whichever ONE estimator tab (if any) is the only thing customers can
@@ -3222,6 +3236,22 @@ window.logoutMember = async function () {
     const helperContainer = document.getElementById('mq-pricing-helper-v2');
     if (helperContainer && helperContainer.dataset.loaded && typeof window.mqph2Init === 'function') {
       window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
+    }
+  }
+  // Admin Specialty Items table -- its project-type checkboxes are baked
+  // into generated HTML at render time (roomLinkDisclosure), not a plain
+  // display:none toggle like the category cards above, so the only way to
+  // reflect a scope change already on this page is to re-render it. Cheap
+  // and safe to call any time the page is open/cached: renderSpecialty
+  // rebuilds from window._mqSpecRecords with no fresh Airtable fetch, and
+  // already preserves the active filter bar state across re-runs (see its
+  // own comment). My Products' specialty cards use the same
+  // roomsForCategory('specialty') and pick up the new scope the next time
+  // that tab loads/revisits, same as every other category card.
+  function mqApplyEstimatorTabScopeToSpecialty() {
+    const specList = document.getElementById('mq-spec-list');
+    if (specList && window._mqSpecRecords) {
+      renderSpecialty(window._mqSpecRecords, window._mqShopRecord);
     }
   }
 
@@ -6420,6 +6450,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       showMsg('mq-shop-msg', willBeOn ? `✓ "${tabId}" tab shown on widget.` : `✓ "${tabId}" tab hidden from widget.`);
       mqApplyEstimatorTabScopeToRoomsPage();
       mqApplyEstimatorTabScopeToPricing();
+      mqApplyEstimatorTabScopeToSpecialty();
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
   window.mqToggleWidgetTabsApplyPro = async function(checked) {
@@ -7755,7 +7786,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqToggleSpecRoom = async function(itemId) {
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory('specialty');
     const items = window._mqSpecItemsList || [];
     const cachedItem = items.find(it => it.id === itemId);
     let prevRooms = [];
@@ -7766,8 +7797,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       .map(r => r.id);
     // No "all checked -> []" collapse for specialty items -- see the
     // comment on roomCheckedByDefault for why an empty list can no longer
-    // stand in for "literally everything, countertops included."
-    const toSave = checkedIds;
+    // stand in for "literally everything, countertops included." And while
+    // a Countertops-only/Cabinets-only estimator-tab toggle has narrowed
+    // `rooms` down to just one side, keep whatever was already saved for
+    // the other, currently-hidden side instead of dropping it -- the
+    // checkboxes for it simply aren't rendered right now, they weren't
+    // unchecked.
+    const inScopeIds = rooms.map(r => r.id);
+    const outOfScopeIds = prevRooms.filter(id => !inScopeIds.includes(id));
+    const toSave = [...outOfScopeIds, ...checkedIds];
     try {
       await atUpdate(CONFIG.SPECIALTY_TABLE, itemId, { 'Visible rooms': JSON.stringify(toSave) });
       const summaryEl = document.getElementById(`mq-spec-room-summary-${itemId}`);
@@ -7825,7 +7863,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function roomLinkDisclosure(itemId, visibleRoomsJson) {
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory('specialty');
     let visibleRooms = [];
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
     const summary = roomLinkSummaryText(visibleRooms, rooms, 'specialty');
@@ -8254,7 +8292,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Every other category keeps the old collapse; its "all" meaning
     // hasn't changed.
     const allChecked = checkedIds.length === rooms.length;
-    const toSave = (cat === 'specialty') ? checkedIds : (allChecked ? [] : checkedIds);
+    // Specialty items in My Products go through the same out-of-scope
+    // preservation as mqToggleSpecRoom above -- `rooms` here is already
+    // roomsForCategory(cat), so it's already narrowed to one side while an
+    // estimator tab toggle is scoped, and a save here shouldn't drop
+    // whatever's saved for the other, currently-hidden side.
+    const toSave = (cat === 'specialty')
+      ? (() => {
+          const inScopeIds = rooms.map(r => r.id);
+          const outOfScopeIds = prevRooms.filter(id => !inScopeIds.includes(id));
+          return [...outOfScopeIds, ...checkedIds];
+        })()
+      : (allChecked ? [] : checkedIds);
     const table = cat === 'specialty' ? CONFIG.SPECIALTY_TABLE : CONFIG.LINE_ITEMS_TABLE;
     try {
       await Promise.all(ids.map(id => atUpdate(table, id, { 'Visible rooms': JSON.stringify(toSave) })));
@@ -11065,6 +11114,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         loadSpecialty(window._mqShopRecord.fields['Shop token']).then(specs => {
           renderSpecialty(specs, window._mqShopRecord);
         });
+      } else if (specList) {
+        // Same page revisited within the refetch throttle window -- re-apply
+        // estimator-tab scoping anyway (cheap, cached, no refetch) so a
+        // toggle flipped elsewhere doesn't leave this table's checkbox list
+        // showing a stale scope until the throttle clears, same pattern as
+        // the 'products' page above.
+        mqApplyEstimatorTabScopeToSpecialty();
       }
       if (window._mqShopRecord && !window._mqShopRecord.fields['Specialty tips popup seen']) {
         window.mqShowSpecialtyTipsModal();
