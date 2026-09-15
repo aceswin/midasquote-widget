@@ -4779,6 +4779,15 @@
       mqResetCabinetForm('c');
       mqResetCabinetForm('b');
       mqResetCountertopStandalone('ct');
+      // Hide every tab's already-calculated result panel too -- resetting
+      // the form fields above doesn't do this on its own, so without this
+      // a tab that had a result showing before "Reset quote" was clicked
+      // just kept showing it (stale numbers, "Get full project quote"
+      // button and all) instead of going back to looking like a fresh,
+      // never-calculated tab.
+      document.getElementById('mq-c-result')?.classList.remove('show');
+      document.getElementById('mq-b-result')?.classList.remove('show');
+      document.getElementById('mq-ct-result')?.classList.remove('show');
       const sticky = document.getElementById('mq-sticky-bar');
       if (sticky) sticky.classList.remove('show');
     };
