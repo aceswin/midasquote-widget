@@ -4050,7 +4050,7 @@
     window.mqJumpToSectionIfNeeded = function(sec) {
       const tab = sec.closest('.mq-tab-content');
       if (!tab) return;
-      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : null);
+      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
       if (!prefix) return;
       const sections = mqGetVisibleSections(prefix);
       const idx = sections.indexOf(sec);
