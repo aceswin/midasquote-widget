@@ -6493,6 +6493,23 @@ window.mqTogDrawerConfig=(prefix)=>{
     mqRefreshAllPickerVisibility('b');
     mqRefreshSectionVisibility('c');
     mqRefreshSectionVisibility('b');
+    // The standalone Countertops tab's own project-type selector (added
+    // alongside 'c'/'b' above) needs this same first-load treatment —
+    // without it, a native <select> auto-selects its first <option> on
+    // render but never fires a 'change' event for it, so the room
+    // description (cover photo + text) and "How to measure" guide stayed
+    // blank until a customer manually switched project types once (Jordan:
+    // "the wiring for the images/video for how to measure and project
+    // photo and how to measure description and project description are
+    // not living"). mqRefreshRoomVisibility/mqRefreshAllPickerVisibility/
+    // mqRefreshSectionVisibility all already no-op for 'ct' today (no
+    // specialty items or cabinet-only sections exist on this tab yet) —
+    // included anyway so this stays in sync if that ever changes.
+    mqRefreshRoomVisibility('ct');
+    mqShowRoomDescription('ct');
+    mqRefreshMeasureGuide('ct');
+    mqRefreshAllPickerVisibility('ct');
+    mqRefreshSectionVisibility('ct');
   }
 
   // ============================================================
