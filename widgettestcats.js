@@ -983,7 +983,10 @@
             // Per-material removal rate/unit -- see hasCtRemoval's comment
             // above for why this replaced a single shop-wide rate.
             removalRate: item['Countertop removal rate']||0,
-            removalUnit: item['Countertop removal unit']==='lin ft' ? 'linft' : 'sqft',
+            // Single select in Airtable, so match loosely (case/whitespace) rather
+            // than requiring the option label to be exactly 'lin ft' -- a shop typing
+            // 'Lin Ft', 'Linear ft', etc. into that select still resolves correctly.
+            removalUnit: /lin/i.test(item['Countertop removal unit']||'') ? 'linft' : 'sqft',
             supplyUnit:  (unitParts[0]||'sqft').trim(),
             installUnit: (unitParts[1]||'sqft').trim(),
             bsOptions:   Array.isArray(bsOptions) ? bsOptions : [],
