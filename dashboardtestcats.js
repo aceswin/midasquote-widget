@@ -1160,6 +1160,9 @@ window.logoutMember = async function () {
               <div id="mq-rooms-list-ct-empty" style="display:none;font-size:12px;color:#9ca3af;padding:4px 0 12px">No countertop project types yet. Add one below if you'd like customers to pick something like "New countertop install" or "Countertop replacement" before they measure — totally optional.</div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
                 <button class="mq-btn mq-btn-sm" onclick="mqAddRoom(true)">+ Add countertop project type</button>
+                <select id="mq-restore-room-select-ct" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
+                  <option value="">↩ Restore a default type…</option>
+                </select>
               </div>
             </div>
           </div>
@@ -3155,6 +3158,15 @@ window.logoutMember = async function () {
 
 **Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.`;
 
+  // Countertop project types get their own guide entirely -- shape-based
+  // surfaces, not linear-foot cabinet runs, so none of the cabinet wording
+  // above applies. Jordan's own wording, used for every countertop default
+  // (see defaultCountertopRoomTypes() below) via mqFillDefaultGuide.
+  const DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP =
+`**Use the shape options to input your countertop sizes.** You may need more than one shape to complete your project. To add additional countertop shapes, click add another surface at the bottom.
+
+[tip]If your countertop is an odd shape, try your best to break it up into individual rectangle shapes. Use the [calc] to convert feet/mm into inches.[/tip]`;
+
   // Fills a measure-guide textarea with the default text above — lets a shop
   // owner start from (and edit) the standard guide instead of writing their
   // own from scratch. Confirms first if the box already has something in it,
@@ -3166,11 +3178,12 @@ window.logoutMember = async function () {
 
 **Not sure?** Just use your best guess — this is a ballpark estimate!`;
 
-  window.mqFillDefaultGuide = function(textareaId, roomId) {
+  window.mqFillDefaultGuide = function(textareaId, roomId, forCountertops) {
     const ta = el(textareaId);
     if (!ta) return;
     if (ta.value.trim() && !confirm('Replace what\'s in this box with the default guide text?')) return;
-    ta.value = roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
+    ta.value = forCountertops ? DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP
+      : roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
       : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
       // Refacing/Repainting/Restaining are priced per square foot, not
       // linear feet — there's no corner cabinet concept for them, so they
@@ -3413,6 +3426,28 @@ window.logoutMember = async function () {
     ];
   }
 
+  // Same idea as defaultRoomTypes() above, but for the standalone
+  // Countertops tab -- mirrors every cabinet default EXCEPT Refacing/
+  // Repainting/Restaining (materials-only concepts that don't apply to
+  // countertops), per Jordan's explicit request. Deliberately kept OUT of
+  // populateRooms() below: a brand-new cabinet shop shouldn't get 6 extra
+  // countertop project types it never asked for. These only get added if a
+  // shop owner clicks "Restore a default type" on the Countertops tab --
+  // see mqRefreshRestoreDropdown/mqRestoreDefaultRoom. measureText/
+  // measureImage left blank on purpose so all 6 keep following whatever the
+  // countertop default guide/image is, automatically, rather than freezing
+  // today's wording/photo into each row.
+  function defaultCountertopRoomTypes() {
+    return [
+      { id:'ct_kitchen',    name:'Kitchen counters',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"New countertops can completely transform your kitchen. Pick your material and finish, and let's get you a ballpark price.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-kitchen.jpg', measureText:'', measureImage:'' },
+      { id:'ct_bathroom',   name:'Bathroom counters',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"A new vanity top is a quick way to freshen up any bathroom. Choose your material and we'll help you price it out.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-bathroom.jpg', measureText:'', measureImage:'' },
+      { id:'ct_laundry',    name:'Laundry counters',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Adding a counter to your laundry room makes folding and sorting so much easier. Pick a material and get your estimate.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-laundry.jpg', measureText:'', measureImage:'' },
+      { id:'ct_garage',     name:'Garage counters',     materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Durable counters for a workbench, hobby space, or storage area. Pick your material and see your ballpark price.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-garage.jpg', measureText:'', measureImage:'' },
+      { id:'ct_commercial', name:'Commercial counters', materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Give your business a polished look with new countertops — reception desks, break rooms, or workspaces. Choose your material to get started.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-commercial.jpg', measureText:'', measureImage:'' },
+      { id:'ct_other',      name:'Other counters',      materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Got a countertop project that doesn't fit the usual categories? Pick a material below and let's get you a ballpark estimate.", active:true, forCountertops:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'countertop-other.jpg', measureText:'', measureImage:'' },
+    ];
+  }
+
   function populateRooms(shop) {
     const f = shop.fields;
     let rooms = [];
@@ -3595,7 +3630,7 @@ window.logoutMember = async function () {
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
             <textarea id="mq-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
             <div style="margin-bottom:8px">
-              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
+              <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}',${!!r.forCountertops})">↺ Use default guide</button>
               <span style="font-size:11px;color:#9ca3af;margin-left:6px">Tip: **text** shows as bold, [calc] shows the calculator icon, [corner-img] shows the corner-cabinets photo, [tip]text[/tip] wraps it in a yellow callout box</span>
             </div>
             ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos') : `
@@ -3782,18 +3817,31 @@ window.logoutMember = async function () {
   // cover image, and measuring guide intact, without needing to recreate
   // any of that by hand.
   function mqRefreshRestoreDropdown() {
-    const sel = document.getElementById('mq-restore-room-select');
-    if (!sel) return;
     const currentIds = new Set((window._mqRooms || []).map(r => r.id));
-    const missing = defaultRoomTypes().filter(r => !currentIds.has(r.id));
-    sel.innerHTML = `<option value="">↩ Restore a default type…</option>` +
-      missing.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    sel.style.display = missing.length ? 'inline-block' : 'none';
+
+    const sel = document.getElementById('mq-restore-room-select');
+    if (sel) {
+      const missing = defaultRoomTypes().filter(r => !currentIds.has(r.id));
+      sel.innerHTML = `<option value="">↩ Restore a default type…</option>` +
+        missing.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+      sel.style.display = missing.length ? 'inline-block' : 'none';
+    }
+
+    // Countertop tab's own restore dropdown -- sourced from
+    // defaultCountertopRoomTypes() instead, so it never offers a cabinet
+    // default (or vice versa).
+    const selCt = document.getElementById('mq-restore-room-select-ct');
+    if (selCt) {
+      const missingCt = defaultCountertopRoomTypes().filter(r => !currentIds.has(r.id));
+      selCt.innerHTML = `<option value="">↩ Restore a default type…</option>` +
+        missingCt.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+      selCt.style.display = missingCt.length ? 'inline-block' : 'none';
+    }
   }
 
   window.mqRestoreDefaultRoom = function(roomId) {
     if (!roomId) return;
-    const defaults = defaultRoomTypes();
+    const defaults = defaultRoomTypes().concat(defaultCountertopRoomTypes());
     const roomDef = defaults.find(r => r.id === roomId);
     if (!roomDef) return;
     if (!window._mqRooms) window._mqRooms = [];

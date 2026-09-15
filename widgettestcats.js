@@ -1870,7 +1870,20 @@
   // type (see mqRefreshMeasureGuide). Kept as its own function so both the
   // initial HTML render and the per-project-type swap can reuse the exact
   // same markup.
-  function defaultMeasureGuideHTML(roomId = 'kitchen') {
+  // Countertop project types get their own measuring guide entirely --
+  // shape-based surfaces, not linear-foot cabinet runs, so the cabinet
+  // guide below (upper/base/corner cabinets) doesn't apply to them at all.
+  // Routed through renderSafeGuideText (same [tip]/[calc]/**bold** token
+  // parsing a shop's own custom measureText gets) so this renders with the
+  // identical yellow tip-box treatment, rather than hand-duplicating that
+  // styling here.
+  const DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP = "**Use the shape options to input your countertop sizes.** You may need more than one shape to complete your project. To add additional countertop shapes, click add another surface at the bottom.\n\n[tip]If your countertop is an odd shape, try your best to break it up into individual rectangle shapes. Use the [calc] to convert feet/mm into inches.[/tip]";
+  function defaultMeasureGuideHTML(roomId = 'kitchen', forCountertops) {
+    if (forCountertops) {
+      return `
+        <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
+        ${renderSafeGuideText(DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP)}`;
+    }
     const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
       <img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg" alt="How to measure corner cabinets" onclick="mqPhotoLightbox('https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg','How to measure corner cabinets')" onerror="this.style.display='none'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>
     </div>`;
@@ -3605,7 +3618,7 @@
       }
       if (!customText) {
         const defaultBody = document.createElement('div');
-        defaultBody.innerHTML = defaultMeasureGuideHTML(roomId);
+        defaultBody.innerHTML = defaultMeasureGuideHTML(roomId, room && room.forCountertops);
         guideEl.appendChild(defaultBody);
         return;
       }
