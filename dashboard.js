@@ -5125,6 +5125,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (draggingVariantsRow) tbody.insertBefore(draggingVariantsRow, dragging.nextSibling);
       });
     });
+
+    // Every item's variants panel already exists in the DOM at this point
+    // (inside its own hidden mq-spec-variants-row-<id>, built by
+    // mqVariantsPanelHTML above), so their drag handles can be wired up now
+    // rather than waiting for the panel to first be opened.
+    specs.forEach(r => mqWireVariantDrag(r.id));
   }
 
   // Which categories should be listed for reordering under a given project
@@ -7703,8 +7709,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
         <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
         <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+    // Each row carries its own stable variant id (not its array index, which
+    // shifts around on every add/remove/reorder) in data-variant-id, plus a
+    // ⠿ drag handle — same handle-activated draggable pattern as the
+    // Specialty Items table's own rows: draggable only turns on while the
+    // mouse is down on the handle itself, so selecting text in the label
+    // input isn't prone to being grabbed as a drag instead.
     const rows = variants.map((v, vi) => `
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
+      <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap;cursor:grab">
+        <span class="mq-variant-drag-handle" title="Drag to reorder" style="color:#9ca3af;font-size:16px;cursor:grab;flex-shrink:0">⠿</span>
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
         ${minInputHTML(v, vi)}
@@ -7719,16 +7732,57 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `
       <div style="border-left:3px solid #c7d2fe;padding-left:10px">
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
-        ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
+        <div id="mq-spec-variants-list-${r.id}">${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}</div>
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
+        ${variants.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px">Drag the ⠿ handle to reorder — the first one listed is what customers see selected by default.</div>` : ''}
         ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
       </div>`;
+  }
+
+  // Wires up drag-and-drop reordering for one item's variant rows. Scoped to
+  // just the #mq-spec-variants-list-<id> container (not the whole document)
+  // so dragging a variant in one item's open panel can never reach into a
+  // different item's panel, even though every item's panel markup exists in
+  // the DOM at once (each hidden behind its own display:none row until its
+  // pill is clicked). Must be re-called any time the container's innerHTML
+  // is rebuilt (mqRefreshVariantsPanel), since that destroys and recreates
+  // every element these listeners are attached to.
+  function mqWireVariantDrag(id) {
+    const list = document.getElementById(`mq-spec-variants-list-${id}`);
+    if (!list) return;
+    let dragging = null;
+    list.querySelectorAll('.mq-variant-row').forEach(row => {
+      row.draggable = false;
+      const handle = row.querySelector('.mq-variant-drag-handle');
+      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
+      row.addEventListener('mouseup', () => { row.draggable = false; });
+      row.addEventListener('dragstart', () => {
+        dragging = row;
+        setTimeout(() => row.style.opacity = '0.4', 0);
+      });
+      row.addEventListener('dragend', () => {
+        row.style.opacity = '1';
+        row.draggable = false;
+        dragging = null;
+        mqReorderVariants(id);
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (row === dragging) return;
+        const after = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+        const target = e.clientY < after ? row : row.nextSibling;
+        list.insertBefore(dragging, target);
+      });
+    });
   }
 
   function mqRefreshVariantsPanel(id) {
     const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     const panel = document.getElementById(`mq-spec-variants-panel-${id}`);
-    if (r && panel) panel.innerHTML = mqVariantsPanelHTML(r);
+    if (r && panel) {
+      panel.innerHTML = mqVariantsPanelHTML(r);
+      mqWireVariantDrag(id);
+    }
   }
 
   function mqRefreshSpecVariantUI(id) {
@@ -7794,6 +7848,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     variants[vi][field] = value;
     r.fields['Variants'] = JSON.stringify(variants);
     await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  // Called after a variant row drag ends. Unlike mqSaveVariantField (which
+  // writes by array INDEX), reordering is exactly what makes indices stale,
+  // so this reads the new order straight from the DOM's data-variant-id
+  // attributes, re-sorts the real variants array to match by id, and saves
+  // the whole array — the same save shape mqAddVariant/mqRemoveVariant use.
+  window.mqReorderVariants = async function(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const list = document.getElementById(`mq-spec-variants-list-${id}`);
+    if (!r || !list) return;
+    const variants = mqParseVariants(r);
+    const byId = new Map(variants.map(v => [v.id, v]));
+    const orderedIds = [...list.querySelectorAll('.mq-variant-row')].map(row => row.dataset.variantId);
+    const reordered = orderedIds.map(vid => byId.get(vid)).filter(Boolean);
+    // Safety: if the DOM order and the in-memory array ever disagree on
+    // which ids exist (shouldn't happen), bail rather than risk silently
+    // dropping a variant from what gets saved.
+    if (reordered.length !== variants.length) return;
+    r.fields['Variants'] = JSON.stringify(reordered);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(reordered));
   };
   // =================== end specialty item variants ===================
 
