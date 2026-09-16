@@ -695,7 +695,7 @@
            real overflow left to scroll to) for specialty item rows only. */
         #midasquote-widget .mq-spec-scroll-wrap .mq-vpicker-arrow.show{display:flex!important}
       }
-      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s;cursor:pointer}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
       #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
@@ -1474,7 +1474,16 @@
       // picked — it's an opt-out, not a style choice. Real ungrouped items
       // fall into the "Other" bucket instead.
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-doors="${doorsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      // The whole card selects on click now (Jordan: "make it so that if
+      // they click anywhere inside that card other than the image, it will
+      // select... i still want images to zoom like they do now") -- only
+      // the thumbnail is excluded, via its own existing
+      // event.stopPropagation() (it opens the zoom lightbox instead). The
+      // select button keeps its own onclick too (now also stopping
+      // propagation) so a direct tap on it doesn't fire mqPickVisual twice
+      // -- once from the button's own handler, once again as that click
+      // bubbles up to the card's.
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-doors="${doorsAttr}" data-group="${groupAttr}" onclick="mqPickVisual('${selectId}',this.querySelector('.mq-vpicker-select-btn'))" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="event.stopPropagation();mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
     const vpickerWrap = `<div class="mq-vpicker-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${selectId}" onclick="mqScrollPickerRow('${selectId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${selectId}" onclick="mqScrollPickerRow('${selectId}',1)" aria-label="Scroll right">›</button></div>`;
     if (!hasAnyGroup) return vpickerWrap;
