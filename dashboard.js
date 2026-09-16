@@ -6638,7 +6638,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 oninput="mqPreviewSpecSharedImage('${r.id}')" onblur="if(this.value.trim())mqApplySpecSharedImage('${r.id}')"/>
               <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
               ${footerHtml}`) + `</div>`;
-          const variantCardsHtml = variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" data-spec-group="${r.id}" style="display:none">
+          // A slight amber tint + border around each popped-out variant
+          // card (Jordan, after seeing them plain: "when a variant card
+          // opens up to reveal all the variants it has lets give them a bit
+          // of that yellow from the main card so its easy to see they ae a
+          // part of the crew or a slight boarder"). photoCard()'s own
+          // returned markup already draws its usual plain gray card
+          // (background/border/padding) filling this wrap completely, so
+          // rather than reworking that shared function (used by every other
+          // photo card in this tab, not just variants), this wrap now adds
+          // its own small amber halo AROUND that inner card instead -- a
+          // soft `#fffdf5` background, a thin `#fde68a` border (the same
+          // muted amber already used for the badge and footer divider on
+          // the template card, so it reads as the same family of yellow,
+          // just lighter), and a few px of padding so the ring is actually
+          // visible around the inner card rather than sitting underneath it.
+          const variantCardsHtml = variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" data-spec-group="${r.id}" style="display:none;background:#fffdf5;border:1px solid #fde68a;border-radius:10px;padding:5px">
             ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
           </div>`);
           return [specTemplateCardHtml, ...variantCardsHtml];
