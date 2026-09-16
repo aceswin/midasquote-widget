@@ -150,6 +150,20 @@
         { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
         { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
         { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
+        // The 6 standalone-Countertops-tab defaults (forCountertops:true) --
+        // previously missing from this true "never saved anything at all"
+        // fallback, so any shop whose Airtable 'Room types' field was
+        // genuinely empty (every shop, until it saves at least once) showed
+        // a completely blank project-type selector on the Countertops tab,
+        // even though that tab is visible by default. Mirrors dashboard.js's
+        // defaultCountertopRoomTypes() so the widget's own last-resort
+        // fallback and the dashboard's defaults never drift apart.
+        { id:'ct_kitchen',    name:'Kitchen counters',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"New countertops can completely transform your kitchen. Pick your material and finish, and let's get you a ballpark price.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-kitchen.jpg', measureImage:'' },
+        { id:'ct_bathroom',   name:'Bathroom counters',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"A new vanity top is a quick way to freshen up any bathroom. Choose your material and we'll help you price it out.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-bathroom.jpg', measureImage:'' },
+        { id:'ct_laundry',    name:'Laundry counters',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Adding a counter to your laundry room makes folding and sorting so much easier. Pick a material and get your estimate.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-laundry.jpg', measureImage:'' },
+        { id:'ct_garage',     name:'Garage counters',     materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Durable counters for a workbench, hobby space, or storage area. Pick your material and see your ballpark price.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-garage.jpg', measureImage:'' },
+        { id:'ct_commercial', name:'Commercial counters', materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Give your business a polished look with new countertops — reception desks, break rooms, or workspaces. Choose your material to get started.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-commercial.jpg', measureImage:'' },
+        { id:'ct_other',      name:'Other counters',      materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Got a countertop project that doesn't fit the usual categories? Pick a material below and let's get you a ballpark estimate.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-other.jpg', measureImage:'' },
       ];
     }
     // Draft project types (active:false) never show to customers, no matter
@@ -3074,11 +3088,29 @@
         }
       });
       const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
+      let anySpecItemVisible = false;
       if (specBody) {
         specBody.querySelectorAll('.mq-spec-category-group').forEach(group => {
           const anyVisible = [...group.querySelectorAll('.mq-spec-item')].some(item => item.style.display !== 'none');
           group.style.display = anyVisible ? '' : 'none';
+          if (anyVisible) anySpecItemVisible = true;
         });
+        // A shop with no groups configured at all still renders its items
+        // as plain .mq-spec-item cards directly in the body (no
+        // .mq-spec-category-group wrapper) — check those too, same rule.
+        if (!specBody.querySelector('.mq-spec-category-group')) {
+          anySpecItemVisible = [...specBody.querySelectorAll('.mq-spec-item')].some(item => item.style.display !== 'none');
+        }
+      }
+      // Same "nothing left, so don't show an empty step" rule already
+      // applied above to Crown moulding/valance -- if this project type has
+      // zero visible specialty items, hide the entire "Details & Selections"
+      // section rather than leaving an empty box on the page. Renumber so
+      // later steps close the gap.
+      const specSec = document.getElementById(`mq-${prefix}-specialty-sec`);
+      if (specSec) {
+        specSec.style.display = anySpecItemVisible ? '' : 'none';
+        if (window.mqRenumberSteps) window.mqRenumberSteps(prefix);
       }
       mqReorderSpecCategoryGroups(prefix, roomId);
     };
