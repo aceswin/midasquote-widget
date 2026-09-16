@@ -5818,6 +5818,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const input = document.getElementById('mq-specshared-url-' + itemId);
       if (input) input.value = url;
       mqPreviewSpecSharedImage(itemId);
+      mqApplySpecSharedImage(itemId);
     });
   };
 
@@ -5837,11 +5838,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!url) { alert('Paste or type an image URL first.'); return; }
     const variantInputs = [...document.querySelectorAll(`input[id^="mq-photo-spec_${itemId}_v"]`)];
     if (!variantInputs.length) return;
-    const hasDifferentExisting = variantInputs.some(inp => inp.value.trim() && inp.value.trim() !== url);
-    if (hasDifferentExisting) {
-      const ok = confirm('One or more variants already have a different photo set. Replace all of them with this shared image?');
-      if (!ok) return;
-    }
+    // There's no separate "Use same image for all" button anymore -- setting
+    // a shared photo (upload, paste-and-blur, or library pick) applies it
+    // immediately, so this confirm is the shop owner's only checkpoint
+    // before every variant's existing photo gets overwritten (Jordan: "now
+    // that they have clear instruction, they dont need the 'use for all
+    // buttom... then as soon as they upload it it applies to all... you
+    // could set a warning that says are you sure you want to apply this
+    // image to all your variants"). Always confirm, not just when a variant
+    // already has a DIFFERENT photo -- there's no separate deliberate click
+    // left to treat as implicit consent.
+    const ok = confirm(`Apply this photo to all ${variantInputs.length} variants? This will replace any photo they already have.`);
+    if (!ok) return;
     variantInputs.forEach(inp => {
       inp.value = url;
       const key = inp.id.replace('mq-photo-', '');
@@ -6612,7 +6620,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               </div>
               <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
               <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
-              <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">A shortcut for when every variant looks the same — upload or paste one photo and it fills them all in below. You can leave this blank and set each variant's own photo instead, and you can always change any variant's photo individually later either way.</div>
+              <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">A shortcut for when every variant looks the same — upload, paste, or choose a photo below and (after you confirm) it fills in all ${variants.length} variants at once. You can leave this blank and set each variant's own photo instead, and you can always change any variant's photo individually later either way.</div>
               <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
                 📤 Upload a photo
                 <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
@@ -6621,9 +6629,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
               <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
                 style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
-                oninput="mqPreviewSpecSharedImage('${r.id}')"/>
-              <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;color:#6b7280" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
-              <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;font-weight:600" onclick="mqApplySpecSharedImage('${r.id}')">Use same image for all</button>
+                oninput="mqPreviewSpecSharedImage('${r.id}')" onblur="if(this.value.trim())mqApplySpecSharedImage('${r.id}')"/>
+              <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
               ${footerHtml}`) + `</div>`;
           const variantCardsHtml = variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" data-spec-group="${r.id}" style="display:none">
             ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
@@ -6697,7 +6704,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           'mq-specshared-url-' + itemId,
           shopToken,
           'products',
-          (url) => { mqPreviewSpecSharedImage(itemId); }
+          (url) => { mqPreviewSpecSharedImage(itemId); mqApplySpecSharedImage(itemId); }
         );
       });
     }
