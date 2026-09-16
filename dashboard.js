@@ -5565,10 +5565,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   let _pickerTargetKey = null;
+  // Optional override for a target whose input id doesn't follow the normal
+  // "mq-photo-<key>" convention -- e.g. the specialty-item group card's
+  // shared-image slot (mq-specshared-url-<itemId>), which is deliberately
+  // NOT "mq-photo-" prefixed (see mqApplySpecSharedImage). Every existing
+  // caller omits this and keeps working exactly as before.
+  let _pickerOnSelect = null;
 
-  window.mqOpenPhotoPicker = async function(key, cat) {
+  window.mqOpenPhotoPicker = async function(key, cat, onSelect) {
     injectPhotoPicker();
     _pickerTargetKey = key;
+    _pickerOnSelect = typeof onSelect === 'function' ? onSelect : null;
     const grid = document.getElementById('mq-picker-grid');
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">Loading photos...</div>';
     document.getElementById('mq-photo-picker').style.display = 'flex';
@@ -5608,10 +5615,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqSelectLibraryPhoto = function(url) {
-    const input = el('mq-photo-' + _pickerTargetKey);
-    if (input) {
-      input.value = url;
-      mqPreviewPhoto(_pickerTargetKey);
+    if (_pickerOnSelect) {
+      _pickerOnSelect(url);
+    } else {
+      const input = el('mq-photo-' + _pickerTargetKey);
+      if (input) {
+        input.value = url;
+        mqPreviewPhoto(_pickerTargetKey);
+      }
     }
     mqClosePhotoPicker();
   };
@@ -5744,8 +5755,44 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
     if (!body) return;
     const opening = body.style.display === 'none';
-    body.style.display = opening ? 'grid' : 'none';
+    // 'flex' (a vertical stack), not 'grid' -- the group card is now the
+    // same width as every other card (Jordan: "make it the same width as
+    // the other cards so it doesn't take up the whole row"), so its
+    // expanded variant list has to fit that same narrow column rather than
+    // laying its own mini-grid across a full row it no longer spans.
+    body.style.display = opening ? 'flex' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+  };
+
+  // Live preview for the group card's own dedicated "shared image" slot --
+  // same visual behavior as mqPreviewPhoto, just pointed at the
+  // mq-specshared-* ids instead of mq-photo-<key> (that field is
+  // deliberately NOT "mq-photo-" prefixed -- see mqApplySpecSharedImage's
+  // note below on why).
+  window.mqPreviewSpecSharedImage = function(itemId) {
+    const input = document.getElementById('mq-specshared-url-' + itemId);
+    const preview = document.getElementById('mq-specshared-preview-' + itemId);
+    if (!input || !preview) return;
+    const url = input.value.trim();
+    if (!url) {
+      preview.innerHTML = `<div style="width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">⭐</div>`;
+      return;
+    }
+    preview.innerHTML = `<img src="${url}" style="width:100%;height:90px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:8px" onerror="this.outerHTML='<div style=\\'width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px\\'>⭐</div>'"/>`;
+  };
+
+  // "Choose from library" for the group card's shared-image slot -- reuses
+  // the same photo-library modal every other photo field already has
+  // (Jordan: "makiong them paste in the url is rough, they need to be able
+  // to upload or choose from the library just like everything else"), just
+  // routed to this slot's own non-"mq-photo-" id via mqOpenPhotoPicker's
+  // optional onSelect override instead of its normal mq-photo-<key> default.
+  window.mqOpenSpecSharedPhotoPicker = function(itemId) {
+    window.mqOpenPhotoPicker('specshared_' + itemId, 'specialty', (url) => {
+      const input = document.getElementById('mq-specshared-url-' + itemId);
+      if (input) input.value = url;
+      mqPreviewSpecSharedImage(itemId);
+    });
   };
 
   // "Use same image for all" (Jordan: "can we also add the ability for all
@@ -5780,7 +5827,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const body = document.getElementById('mq-specgroup-body-' + itemId);
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
     if (body && body.style.display === 'none') {
-      body.style.display = 'grid';
+      body.style.display = 'flex';
       if (arrow) arrow.style.transform = 'rotate(90deg)';
     }
     if (window.mqMarkProductsDirty) window.mqMarkProductsDirty();
@@ -6466,33 +6513,50 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           // since they can take up a boatload of space... easier if they
           // were highlighted to show they have variants and then can be
           // expanded to show all"). Now it's a single highlighted, collapsed
-          // group card spanning the full grid row; expanding it reveals the
-          // same individual variant cards as before, unchanged. It also
-          // carries its own dedicated "shared image" field + button so one
+          // group card -- sized the SAME as every other card in this grid,
+          // per Jordan's follow-up ("make it the same width as the other
+          // cards so it doesn't take up the whole row"), not spanning the
+          // full row -- that expands to reveal the same individual variant
+          // cards as before, unchanged. It also carries its own dedicated
+          // "shared image" slot (preview, Upload a photo, paste a URL, AND
+          // Choose from library -- same three options as every other photo
+          // field on this tab, per Jordan's follow-up that URL-paste-only
+          // was "rough") plus a "Use same image for all" button so one
           // photo can be pushed to every variant at once (Jordan: "maybe i
           // make 10 variants of maple doors just in differrent sizes but all
           // should use the same image").
           const sharedImageHtml = isDemoShop
-            ? `<div style="padding:10px 14px;border-bottom:1px solid #e5e7eb;background:#fff;font-size:11px;color:#6b7280">
+            ? `<div style="padding:10px 12px;background:#fff;font-size:11px;color:#6b7280;line-height:1.4">
                 🔒 Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or set each variant's photo individually below.
               </div>`
-            : `<div style="padding:10px 14px;border-bottom:1px solid #e5e7eb;background:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap" onclick="event.stopPropagation()">
-                <label style="font-size:11px;color:#6b7280;white-space:nowrap">Shared image URL:</label>
+            : `<div style="padding:10px 12px;background:#fff" onclick="event.stopPropagation()">
+                <div id="mq-specshared-preview-${r.id}">
+                  <div style="width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">${specIcon(itemName)}</div>
+                </div>
+                <div style="font-size:10px;font-weight:700;color:#92400e;letter-spacing:0.02em;margin-bottom:6px">SHARED IMAGE — applies to every variant</div>
+                <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+                  📤 Upload a photo
+                  <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
+                </label>
+                <div id="mq-specshared-upload-status-${r.id}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
                 <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
-                  style="flex:1;min-width:160px;font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px"/>
-                <button type="button" class="mq-btn mq-btn-sm" onclick="mqApplySpecSharedImage('${r.id}')">Use same image for all</button>
+                  style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
+                  oninput="mqPreviewSpecSharedImage('${r.id}')"/>
+                <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;color:#6b7280" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
+                <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;font-weight:600" onclick="mqApplySpecSharedImage('${r.id}')">Use same image for all</button>
               </div>`;
-          return [`<div class="mq-spec-card-wrap mq-spec-group-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" style="grid-column:1 / -1;border:1px solid #fde68a;border-radius:10px;overflow:hidden;background:#fffbeb">
-            <div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;cursor:pointer">
-              <div style="display:flex;align-items:center;gap:8px;min-width:0">
-                <span id="mq-specgroup-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:12px;color:#92400e">▶</span>
-                <span style="font-size:20px">${specIcon(itemName)}</span>
-                <strong style="font-size:14px;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${itemName}</strong>
+          return [`<div class="mq-spec-card-wrap mq-spec-group-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" style="border:1px solid #fde68a;border-radius:10px;overflow:hidden;background:#fffbeb">
+            <div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;cursor:pointer">
+              <div style="display:flex;align-items:center;gap:6px;min-width:0">
+                <span id="mq-specgroup-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:12px;color:#92400e;flex-shrink:0">▶</span>
+                <span style="font-size:18px;flex-shrink:0">${specIcon(itemName)}</span>
+                <strong style="font-size:13px;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${itemName}</strong>
               </div>
-              <span style="font-size:11px;font-weight:600;color:#92400e;background:#fde68a;padding:3px 9px;border-radius:999px;white-space:nowrap">${variants.length} variants</span>
+              <span style="font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:999px;white-space:nowrap;flex-shrink:0">${variants.length} var.</span>
             </div>
-            ${sharedImageHtml}
-            <div id="mq-specgroup-body-${r.id}" style="display:none;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;padding:14px;background:#fff">
+            <div style="border-top:1px solid #fde68a">${sharedImageHtml}</div>
+            <div id="mq-specgroup-body-${r.id}" style="display:none;flex-direction:column;gap:10px;padding:10px 12px;background:#fff;border-top:1px solid #e5e7eb">
               ${variants.map(v => photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])).join('')}
             </div>
           </div>`];
@@ -6545,6 +6609,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           shopToken,
           'products',
           (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
+        );
+      });
+      // Same wiring, separately, for every variant-item group card's own
+      // "shared image" upload button. These use a different id scheme
+      // (mq-specshared-upload-file-<itemId>, not mq-upload-file-<key>) on
+      // purpose -- their target field, mq-specshared-url-<itemId>, is NOT
+      // "mq-photo-" prefixed (so mqSaveProducts' [id^="mq-photo-"] scan at
+      // save time doesn't sweep it up as a bogus orphan key), so they can't
+      // just fall into the generic loop above, which always targets
+      // "mq-photo-" + key.
+      content.querySelectorAll('input[type="file"][id^="mq-specshared-upload-file-"]').forEach(fileInput => {
+        const itemId = fileInput.id.replace('mq-specshared-upload-file-', '');
+        mqWireUploadButton(
+          null,
+          'mq-specshared-upload-file-' + itemId,
+          'mq-specshared-upload-status-' + itemId,
+          'mq-specshared-url-' + itemId,
+          shopToken,
+          'products',
+          (url) => { mqPreviewSpecSharedImage(itemId); }
         );
       });
     }
