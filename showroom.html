@@ -855,26 +855,47 @@
       // always look for a photo/hidden-state at the plain 'spec_<id>' key
       // regardless of variants -- a key that's never set for a variants
       // item at all -- so visibleSpecs' `photos[s.photoKey]` check below
-      // always came up empty and the item never showed here, no matter
-      // what any variant's own "Hide from showroom" checkbox said (Jordan,
-      // after checking every variant's "Hide from showroom" box was OFF in
-      // My Products: "these doors all show that they are not hidden from
-      // showroom... now look at my showroom... specialty items arent
-      // showing those doors"). Represented instead by its first variant's
-      // photo/hidden state, the same "first one is shown by default"
-      // convention already used for this item's thumbnail elsewhere.
-      const specs = (payload.specialty || []).map(r => {
+      // always came up empty and the item never showed here at all, no
+      // matter what any variant's own "Hide from showroom" checkbox said
+      // (Jordan, after checking every variant's "Hide from showroom" box
+      // was OFF in My Products: "these doors all show that they are not
+      // hidden from showroom... now look at my showroom... specialty items
+      // arent showing those doors").
+      //
+      // A first pass fixed that by representing the whole item with just
+      // its first variant's photo -- which got the item showing again, but
+      // Jordan then pointed out it collapsed all 4 variants down to one
+      // card: "well that a hair better but its only showing the first one
+      // from the list of items you see that should be there from tose
+      // variants" -- he wants what My Products already shows: one card PER
+      // VARIANT (MDF Shaker, MDF Bevel Shaker, Maple Shaker, Oak Shaker all
+      // separately), not one card for the item as a whole.
+      //
+      // So a variants item now flatMaps into one spec entry per variant
+      // instead of one entry for the item -- each named "<item name> —
+      // <variant label>", exactly like each variant's own card is already
+      // labeled in My Products/the Specialty Items table (`${itemName} —
+      // ${v.label || 'Variant'}`) -- and each keyed to ITS OWN photo/hidden
+      // state (spec_<id>_v<variantId>), not just the first one. That also
+      // means each variant's own "Hide from showroom" checkbox now
+      // correctly controls just that one variant's card, instead of one
+      // checkbox (the first variant's) gating the entire item.
+      const specs = (payload.specialty || []).flatMap(r => {
         let variants = [];
         try {
           const v = JSON.parse(r.fields['Variants'] || '[]');
           variants = (Array.isArray(v) ? v : []).map((variant, vi) => ({ ...variant, id: variant.id || ('i' + vi) }));
         } catch(e) { variants = []; }
-        const photoKey = variants.length ? ('spec_' + r.id + '_v' + variants[0].id) : ('spec_' + r.id);
-        return {
-          name: r.fields['Item name'] || r.fields['Special Items'] || '',
-          photoKey,
-          visibleRooms: effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty', categoryRooms, allRoomIds),
-        };
+        const itemName = r.fields['Item name'] || r.fields['Special Items'] || '';
+        const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty', categoryRooms, allRoomIds);
+        if (!variants.length) {
+          return [{ name: itemName, photoKey: 'spec_' + r.id, visibleRooms }];
+        }
+        return variants.map(v => ({
+          name: `${itemName} — ${(v.label || '').trim() || 'Variant'}`,
+          photoKey: 'spec_' + r.id + '_v' + v.id,
+          visibleRooms,
+        }));
       });
 
       SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes, customCategories, catSettings };
