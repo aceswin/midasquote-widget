@@ -5734,6 +5734,59 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
   };
 
+  // Expands/collapses a variant item's group card in My Products → Specialty
+  // Items (Jordan: "items with variants could be collapsable in the
+  // myproducts section since they can take up a boatload of space"). Starts
+  // collapsed (see the flatMap render below) so a 30-variant item doesn't
+  // dominate the grid until the shop owner actually wants to see it.
+  window.mqToggleSpecPhotoGroup = function(itemId) {
+    const body = document.getElementById('mq-specgroup-body-' + itemId);
+    const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'grid' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+  };
+
+  // "Use same image for all" (Jordan: "can we also add the ability for all
+  // varaints to use the same image somehow? like maybe i make 10 variants of
+  // maple doors just in differrent sizes but all should use the same
+  // image"). Reads the group card's own dedicated shared-image field and
+  // copies it into every variant's own photo input + preview -- those
+  // per-variant inputs are still what actually gets saved (mqSaveProducts
+  // rebuilds its whole Photos map from every on-screen [id^="mq-photo-"]
+  // input), so this shared field is intentionally NOT id-prefixed
+  // "mq-photo-" itself, or it'd get swept into the save as a bogus orphan
+  // key nothing ever reads back.
+  window.mqApplySpecSharedImage = function(itemId) {
+    const urlInput = document.getElementById('mq-specshared-url-' + itemId);
+    const url = (urlInput?.value || '').trim();
+    if (!url) { alert('Paste or type an image URL first.'); return; }
+    const variantInputs = [...document.querySelectorAll(`input[id^="mq-photo-spec_${itemId}_v"]`)];
+    if (!variantInputs.length) return;
+    const hasDifferentExisting = variantInputs.some(inp => inp.value.trim() && inp.value.trim() !== url);
+    if (hasDifferentExisting) {
+      const ok = confirm('One or more variants already have a different photo set. Replace all of them with this shared image?');
+      if (!ok) return;
+    }
+    variantInputs.forEach(inp => {
+      inp.value = url;
+      const key = inp.id.replace('mq-photo-', '');
+      const previewWrap = document.getElementById('mq-photo-preview-' + key);
+      if (previewWrap) {
+        previewWrap.innerHTML = `<img src="${url.replace(/"/g,'&quot;')}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">⭐</div>`;
+      }
+    });
+    const body = document.getElementById('mq-specgroup-body-' + itemId);
+    const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
+    if (body && body.style.display === 'none') {
+      body.style.display = 'grid';
+      if (arrow) arrow.style.transform = 'rotate(90deg)';
+    }
+    if (window.mqMarkProductsDirty) window.mqMarkProductsDirty();
+    showMsg('mq-products-msg', `✓ Applied to all ${variantInputs.length} variants — click "Save changes" to keep it.`);
+  };
+
   // Same pure view filter, for the Templates admin page.
   window.mqFilterTemplateCards = function() {
     const roomFilter = el('mq-tmpl-filter-room')?.value || '';
@@ -6407,9 +6460,42 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
             </div>`];
           }
-          return variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}">
-            ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
-          </div>`);
+          // A variant item used to flatMap into one full card PER variant --
+          // with 20-30 variants that ate up the whole grid (Jordan: "items
+          // with variants could be collapsable in the myproducts section
+          // since they can take up a boatload of space... easier if they
+          // were highlighted to show they have variants and then can be
+          // expanded to show all"). Now it's a single highlighted, collapsed
+          // group card spanning the full grid row; expanding it reveals the
+          // same individual variant cards as before, unchanged. It also
+          // carries its own dedicated "shared image" field + button so one
+          // photo can be pushed to every variant at once (Jordan: "maybe i
+          // make 10 variants of maple doors just in differrent sizes but all
+          // should use the same image").
+          const sharedImageHtml = isDemoShop
+            ? `<div style="padding:10px 14px;border-bottom:1px solid #e5e7eb;background:#fff;font-size:11px;color:#6b7280">
+                🔒 Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or set each variant's photo individually below.
+              </div>`
+            : `<div style="padding:10px 14px;border-bottom:1px solid #e5e7eb;background:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap" onclick="event.stopPropagation()">
+                <label style="font-size:11px;color:#6b7280;white-space:nowrap">Shared image URL:</label>
+                <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
+                  style="flex:1;min-width:160px;font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px"/>
+                <button type="button" class="mq-btn mq-btn-sm" onclick="mqApplySpecSharedImage('${r.id}')">Use same image for all</button>
+              </div>`;
+          return [`<div class="mq-spec-card-wrap mq-spec-group-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" style="grid-column:1 / -1;border:1px solid #fde68a;border-radius:10px;overflow:hidden;background:#fffbeb">
+            <div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;cursor:pointer">
+              <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                <span id="mq-specgroup-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:12px;color:#92400e">▶</span>
+                <span style="font-size:20px">${specIcon(itemName)}</span>
+                <strong style="font-size:14px;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${itemName}</strong>
+              </div>
+              <span style="font-size:11px;font-weight:600;color:#92400e;background:#fde68a;padding:3px 9px;border-radius:999px;white-space:nowrap">${variants.length} variants</span>
+            </div>
+            ${sharedImageHtml}
+            <div id="mq-specgroup-body-${r.id}" style="display:none;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;padding:14px;background:#fff">
+              ${variants.map(v => photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])).join('')}
+            </div>
+          </div>`];
         }).join('')}
       </div>
       </div>
