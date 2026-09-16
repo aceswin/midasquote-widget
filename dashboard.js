@@ -5737,7 +5737,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const name = wrap.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
       const proOnlyMatch = !proOnlyFilter || wrap.getAttribute('data-proonly') === '1';
-      const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
+      const matches = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
+      // A variant item's individual photo cards (data-spec-group="<itemId>")
+      // are plain grid siblings of their own "template" card now, not nested
+      // inside it -- so they'd otherwise get force-shown by a filter match
+      // even while the shop owner has that group collapsed. Gate them on
+      // BOTH matching the filter AND the group actually being expanded
+      // (mqToggleSpecPhotoGroup/mqApplySpecSharedImage keep the template
+      // card's own data-expanded flag in sync), so filtering never fights
+      // with, or silently overrides, the collapse state.
+      const groupId = wrap.getAttribute('data-spec-group');
+      const groupExpanded = !groupId || document.getElementById('mq-specgroup-wrap-' + groupId)?.dataset.expanded === 'true';
+      const show = matches && groupExpanded;
       wrap.style.display = show ? '' : 'none';
       if (show) visibleCount++;
     });
@@ -5745,32 +5756,38 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
   };
 
-  // Expands/collapses a variant item's group card in My Products → Specialty
+  // Expands/collapses a variant item's group in My Products → Specialty
   // Items (Jordan: "items with variants could be collapsable in the
   // myproducts section since they can take up a boatload of space"). Starts
   // collapsed (see the flatMap render below) so a 30-variant item doesn't
   // dominate the grid until the shop owner actually wants to see it.
+  //
+  // The "template" card (mq-specgroup-wrap-<itemId>) and each variant's own
+  // photo card (data-spec-group="<itemId>") are plain SIBLING grid items in
+  // #mq-spec-cards-grid, not nested inside one big wrapper -- per Jordan's
+  // 4th-round feedback ("this cannot be the starting card for variants...
+  // the variants can start aligning to the right of it") the template card
+  // needed to look and size exactly like a normal card, with the variants
+  // simply appearing right after it in the same grid. Since the grid already
+  // auto-flows left-to-right and wraps rows, just toggling each variant
+  // card's own display gets that "pop out to the right, then down" layout
+  // for free -- no special-casing the template card's width or grid-column
+  // needed at all.
   window.mqToggleSpecPhotoGroup = function(itemId) {
     const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
-    const body = document.getElementById('mq-specgroup-body-' + itemId);
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
-    if (!body) return;
-    const opening = body.style.display === 'none';
-    // Collapsed, this card is the same width as every other card (Jordan:
-    // "make it the same width as the other cards so it doesn't take up the
-    // whole row"). But cramming many variant photo cards into that one
-    // narrow column once actually expanded looked "weird" (Jordan's
-    // follow-up: "let it expand to the right and down like it did when you
-    // took up the whole row... it should still list all the variants on
-    // each column and row"). So the card temporarily grows to span the full
-    // grid row only while expanded -- revealing the shared-image "template"
-    // card as the first cell, with every variant card laid out beside/below
-    // it in that same grid (Jordan's 3rd follow-up: "The variants can start
-    // aligning to the right of it") -- and snaps back to the normal
-    // single-card width the instant it's collapsed again.
-    if (wrap) wrap.style.gridColumn = opening ? '1 / -1' : '';
-    body.style.display = opening ? 'grid' : 'none';
-    if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
+    const variantWraps = document.querySelectorAll(`[data-spec-group="${itemId}"]`);
+    if (!variantWraps.length) return;
+    const opening = variantWraps[0].style.display === 'none';
+    variantWraps.forEach(w => { w.style.display = opening ? '' : 'none'; });
+    if (wrap) wrap.dataset.expanded = opening ? 'true' : 'false';
+    // The arrow points DOWN by default and rotates to point RIGHT once
+    // expanded (Jordan: "that red arrow on the right side of the card
+    // pointing down, then when clicked it points to the right and the
+    // variants popout") -- the reverse of the usual ▶-rotates-to-▼
+    // convention, since here it's cueing "the variants popped out to the
+    // right of this card," not "this section opened downward."
+    if (arrow) arrow.style.transform = opening ? 'rotate(-90deg)' : 'rotate(0deg)';
   };
 
   // Live preview for the group card's own dedicated "shared image" slot --
@@ -5834,12 +5851,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
     });
     const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
-    const body = document.getElementById('mq-specgroup-body-' + itemId);
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
-    if (body && body.style.display === 'none') {
-      if (wrap) wrap.style.gridColumn = '1 / -1';
-      body.style.display = 'grid';
-      if (arrow) arrow.style.transform = 'rotate(90deg)';
+    const variantWraps = document.querySelectorAll(`[data-spec-group="${itemId}"]`);
+    if (variantWraps.length && variantWraps[0].style.display === 'none') {
+      variantWraps.forEach(w => { w.style.display = ''; });
+      if (wrap) wrap.dataset.expanded = 'true';
+      if (arrow) arrow.style.transform = 'rotate(-90deg)';
     }
     if (window.mqMarkProductsDirty) window.mqMarkProductsDirty();
     showMsg('mq-products-msg', `✓ Applied to all ${variantInputs.length} variants — click "Save changes" to keep it.`);
@@ -6523,76 +6540,94 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           // with variants could be collapsable in the myproducts section
           // since they can take up a boatload of space... easier if they
           // were highlighted to show they have variants and then can be
-          // expanded to show all"). Now it's a single highlighted, collapsed
-          // group card -- sized the SAME as every other card in this grid,
-          // per Jordan's follow-up ("make it the same width as the other
-          // cards so it doesn't take up the whole row"). Clicking it expands
-          // the card back out to a full grid row (Jordan's 2nd follow-up:
-          // "let it expand to the right and down like it did when you took
-          // up the whole row... it should still list all the variants on
-          // each column and row").
+          // expanded to show all"). This went through several redesigns
+          // (narrower card, upload/library controls, an expand button, a
+          // multi-column expand) before landing on the current one, prompted
+          // by Jordan trying the previous version live and sending
+          // screenshots: "ok we are close but this cannot be the startig
+          // card for variants lol. now this is more like what the first
+          // image should look like and its name should be fully visable and
+          // in the card, not above the card... and that red arrow on the
+          // right side of the card pointing down, then when clicked it
+          // points to the right and the variajnts popout like they are
+          // now..."
           //
-          // What's revealed on expand went through one more redesign (Jordan,
-          // after actually trying that version, with a screenshot of buttons
-          // stretched the full width of the screen): "it should first off
-          // not have buttons as wide as the screen. Second the template
-          // image and its upload and all that should still be the size of
-          // the regular card on the left again not spread across the whole
-          // thing. The variants can start aligning to the right of it..
-          // Any just make it clear that this card is for one image to rep
-          // them all." The earlier version put the shared-image controls in
-          // their own always-full-width block ABOVE a separately-collapsing
-          // variant grid -- so every button inside it stretched edge to
-          // edge the instant the card grew to full-row width. Now the
-          // shared-image control panel is just the FIRST card inside that
-          // same expanded grid, sized exactly like every variant card next
-          // to it (its buttons are back to a normal, sane width because
-          // they're relative to that one card, not the whole row) --
-          // visually marked as the odd one out with a thicker amber border
-          // and an explicit "TEMPLATE IMAGE" label so it reads as "the
-          // photo that represents all of them," not a 17th variant. The
-          // separate "Choose individual images for variants" button from
-          // the previous round is gone -- with the template card and every
-          // variant card now revealed together by the exact same click,
-          // there's no longer a meaningfully different second action for it
-          // to represent.
-          const specTemplateCardHtml = isDemoShop
-            ? `<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:1rem">
-                <div style="font-size:10px;font-weight:700;color:#92400e;letter-spacing:0.02em;margin-bottom:8px">🖼️ TEMPLATE IMAGE — sets every variant to the right</div>
+          // The previous version had a separate thin header bar (name +
+          // arrow) sitting ABOVE a big empty box that only turned into the
+          // real "template image" card once expanded -- so the collapsed
+          // state looked broken/unfinished. Now the template card itself
+          // IS the collapsed default state: one normal-card-sized element
+          // (same background/border/padding family as a regular photoCard,
+          // just amber-tinted to read as "the special one"), with the
+          // item's full, un-truncated name wrapping naturally inside the
+          // card body (not a separate header, no ellipsis truncation), a
+          // "N var." badge overlaid on the image preview's corner instead
+          // of a separate pill, the same upload/paste-URL/library/"Use same
+          // image for all" controls as every prior round (unchanged), and a
+          // footer row at the bottom-right with a label and an arrow
+          // (only that footer row is clickable -- the card's own upload
+          // button, URL field, and library button no longer need
+          // event.stopPropagation() since there's no longer an ambient
+          // click-handler wrapping the whole card).
+          //
+          // The arrow itself is intentionally the REVERSE of every other
+          // collapsible arrow in this file (which is ▶ rotating to ▼ on
+          // open, i.e. "opens downward"). Here it starts as ▼ (pointing
+          // down, closed) and rotates to point right on open, because
+          // opening doesn't reveal anything below the card -- it makes the
+          // variant cards pop out to the card's right. It's also red
+          // (#dc2626) per Jordan's explicit "red arrow" wording.
+          //
+          // Structurally, each variant's own photo card is no longer nested
+          // inside this template card or a separate body/grid wrapper at
+          // all -- it's rendered as a PLAIN TOP-LEVEL SIBLING in the same
+          // #mq-spec-cards-grid flatMap array, tagged data-spec-group="<id>"
+          // and starting with display:none. The outer grid already auto-
+          // flows left-to-right, wrapping to new rows
+          // (grid-template-columns:repeat(auto-fill,minmax(175px,1fr))), so
+          // simply toggling each variant sibling's display (mqToggleSpecPhoto
+          // Group) makes them "pop out" immediately after the template card
+          // in natural DOM order, filling right-then-down for free -- no
+          // grid-column spans or nested grids needed anywhere, which is what
+          // caused the full-screen-width button bug in the previous round.
+          const badgeHtml = `<span style="position:absolute;top:6px;right:6px;font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:999px;white-space:nowrap">${variants.length} var.</span>`;
+          const footerHtml = `<div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;cursor:pointer;padding-top:8px;margin-top:8px;border-top:1px solid #fde68a">
+                <span style="font-size:11px;color:#92400e;font-weight:600">${variants.length} variants</span>
+                <span id="mq-specgroup-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#dc2626;flex-shrink:0">▼</span>
+              </div>`;
+          const specTemplateCardHtml = `<div id="mq-specgroup-wrap-${r.id}" class="mq-spec-card-wrap mq-spec-group-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" data-expanded="false" style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:1rem">` + (isDemoShop
+            ? `<div style="position:relative">
                 <div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🔒</div>
-                <div style="font-size:11px;color:#6b7280;line-height:1.4">Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or set each variant's photo individually.</div>
-              </div>`
-            : `<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:1rem" onclick="event.stopPropagation()">
-                <div style="font-size:10px;font-weight:700;color:#92400e;letter-spacing:0.02em;margin-bottom:8px">🖼️ TEMPLATE IMAGE — sets every variant to the right</div>
+                ${badgeHtml}
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
+              <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px">🖼️ One image sets every variant</div>
+              <div style="font-size:11px;color:#6b7280;line-height:1.4">Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or set each variant's photo individually.</div>
+              ${footerHtml}`
+            : `<div style="position:relative">
                 <div id="mq-specshared-preview-${r.id}">
                   <div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${specIcon(itemName)}</div>
                 </div>
-                <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
-                  📤 Upload a photo
-                  <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
-                </label>
-                <div id="mq-specshared-upload-status-${r.id}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
-                <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
-                <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
-                  style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
-                  oninput="mqPreviewSpecSharedImage('${r.id}')"/>
-                <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;color:#6b7280" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
-                <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;font-weight:600" onclick="mqApplySpecSharedImage('${r.id}')">Use same image for all</button>
-              </div>`;
-          return [`<div id="mq-specgroup-wrap-${r.id}" class="mq-spec-card-wrap mq-spec-group-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" style="border:1px solid #fde68a;border-radius:10px;overflow:hidden;background:#fffbeb">
-            <div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;cursor:pointer">
-              <div style="display:flex;align-items:center;gap:6px;min-width:0">
-                <span id="mq-specgroup-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:12px;color:#92400e;flex-shrink:0">▶</span>
-                <span style="font-size:18px;flex-shrink:0">${specIcon(itemName)}</span>
-                <strong style="font-size:13px;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${itemName}</strong>
+                ${badgeHtml}
               </div>
-              <span style="font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:999px;white-space:nowrap;flex-shrink:0">${variants.length} var.</span>
-            </div>
-            <div id="mq-specgroup-body-${r.id}" style="display:none;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;padding:10px 12px;background:#fff;border-top:1px solid #e5e7eb">
-              ${specTemplateCardHtml}
-              ${variants.map(v => photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])).join('')}
-            </div>
-          </div>`];
+              <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
+              <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px">🖼️ One image sets every variant</div>
+              <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+                📤 Upload a photo
+                <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
+              </label>
+              <div id="mq-specshared-upload-status-${r.id}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+              <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
+              <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
+                style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
+                oninput="mqPreviewSpecSharedImage('${r.id}')"/>
+              <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;color:#6b7280" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
+              <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;font-weight:600" onclick="mqApplySpecSharedImage('${r.id}')">Use same image for all</button>
+              ${footerHtml}`) + `</div>`;
+          const variantCardsHtml = variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" data-spec-group="${r.id}" style="display:none">
+            ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
+          </div>`);
+          return [specTemplateCardHtml, ...variantCardsHtml];
         }).join('')}
       </div>
       </div>
