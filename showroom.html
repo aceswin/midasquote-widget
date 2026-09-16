@@ -647,7 +647,11 @@
       const shop_token = new URLSearchParams(window.location.search).get('shop');
       if (!shop_token) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">No shop specified.</div>'; return; }
 
-      const res = await fetch(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(shop_token)}`);
+      // cache: 'no-store' -- matches widget.js's own shop-data fetch. Without
+      // this, a browser could serve a stale cached copy of this response
+      // (e.g. right after a pricing/product fix is deployed to the proxy
+      // worker), showing outdated items until the cache naturally expires.
+      const res = await fetch(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(shop_token)}`, { cache: 'no-store' });
       const payload = await res.json();
       if (payload.error || !payload.shop) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">Shop not found.</div>'; return; }
 
