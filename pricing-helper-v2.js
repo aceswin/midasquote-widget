@@ -483,6 +483,17 @@ let wizardBaseline = null;
         <p style="font-size:13px;color:#6b7280;line-height:1.6">Start with the materials, door styles, and drawer configs you sell most — your everyday go-tos, not the rare special orders. A focused list gives customers a better experience and makes your widget feel clean and professional.</p>
       </div>
 
+      <!-- Added per Jordan: the wizard used to offer a "Skip — same price for
+           all materials/door styles" button on its Additional
+           materials/Additional door styles steps, which sounded like it would
+           carry the baseline price over to the rest of the group -- it
+           actually just left them with NO price recorded at all. That button
+           is gone now (see buildWizardSteps' Step 4/Step 6 skipLabel removal
+           below); this tip heads the confusion off before it starts, by
+           steering same-priced items away from the wizard's one-quote-per-
+           item flow in the first place. -->
+      <div class="mqph-warn">💡 <strong>If you have multiple items offered at the same price, just add ONE of them here — add the rest later in regular pricing.</strong> It's much faster to add multiple items of the same price after the wizard than to quote each one individually here.</div>
+
       ${CATEGORIES.map(cat => {
         const allItems = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
         let items;
@@ -689,7 +700,7 @@ window.mqphGoToWizard = function() {
           ✅ Separate upper and base rates<br/>
           ✅ Installation and removal rates
         </div>
-        <div class="mqph-warn">⚠️ <strong>Running the wizard replaces all existing pricing.</strong> Specialty items, countertop rates, and crown/valance rates are not affected.</div>
+        <div class="mqph-warn">⚠️ <strong>Running the wizard replaces all existing pricing.</strong> Specialty items, countertop rates, tall cabinet rates, and crown/valance rates are not affected.</div>
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:13px;color:#374151">Need to add or change your shop items first?</span>
           <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>
@@ -793,7 +804,17 @@ window.mqphGoToWizard = function() {
               <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
-        skipLabel:'Skip — same price for all materials',
+        // No "Skip — same price for all materials" button anymore (Jordan:
+        // "lets remove that button that says 'Skip, all items have the same
+        // price'... i think its confusing"). It sounded like it would carry
+        // the baseline price over to these materials, but it actually left
+        // them with NO price recorded at all -- clicking "Next →" with the
+        // price fields left blank does the exact same thing (onNext only
+        // pushes a wizardItems entry for a material whose price is > 0), so
+        // nothing is lost, just the misleading shortcut. The item-setup
+        // screen's new tip (see buildItemSetupHTML) heads this off earlier
+        // by steering same-priced items away from this step in the first
+        // place — add one here, add the rest later in regular pricing.
         nextLabel:'Next →',
   onNext:() => {
           const blIdx = wizardBaseline?.matIndex ?? 0;
@@ -869,7 +890,10 @@ window.mqphGoToWizard = function() {
               <div id="mqph-r-door-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
-        skipLabel:'Skip — same price for all door styles',
+        // Same reasoning as Step 4's removed "Skip — same price for all
+        // materials" button just above -- see that comment. "Next →" with
+        // blank price fields is the identical no-op skip, minus the
+        // misleading "same price" wording.
         nextLabel:'Next →',
         onNext:() => {
           const blIdx = wizardBaseline?.doorIndex ?? 0;
