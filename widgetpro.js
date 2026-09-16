@@ -2986,7 +2986,7 @@
       document.getElementById('mq-tab-'+id).classList.add('active');
       el.classList.add('active');
       if (id === 'cabinets') { mqRenumberSteps('c'); window.mqUpdateStepFocus('c'); }
-      else if (id === 'both') { window.mqTogUseCab('b'); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
+      else if (id === 'both') { window.mqTogUseCab('b', {scroll:false}); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
       else if (id === 'countertops') {
         if (tabActuallyChanged) {
           // The standalone Countertops tab has no room dropdown, so it never
@@ -4021,7 +4021,7 @@
           // it can tell the difference below from someone who unchecked
           // it themselves while cabinets were already present.
           useCabCbCt.dataset.forcedOffByNoCabinets = 'true';
-          window.mqTogUseCab('b');
+          window.mqTogUseCab('b', {scroll:false});
         } else if (cabActive && useCabCbCt && !useCabCbCt.checked && useCabCbCt.dataset.forcedOffByNoCabinets === 'true') {
           // Cabinets are back (room switched again) and this box is only
           // unchecked because of that earlier no-cabinets forcing, not
@@ -4029,7 +4029,7 @@
           // way it'd normally default, rather than leaving it stuck off.
           useCabCbCt.checked = true;
           useCabCbCt.dataset.forcedOffByNoCabinets = 'false';
-          window.mqTogUseCab('b');
+          window.mqTogUseCab('b', {scroll:false});
         }
         if (surfTitle) surfTitle.textContent = (cabActive && useCabCbCt?.checked) ? 'Additional countertop surfaces' : 'Countertop surfaces';
         if (!cabActive && surfContainer && !surfContainer.children.length) {
@@ -4143,7 +4143,7 @@
       if (prefix === 'b') {
         const useCabCt = document.getElementById('mq-b-use-cab');
         if (useCabCt) useCabCt.checked = true;
-        window.mqTogUseCab('b');
+        window.mqTogUseCab('b', {scroll:false});
         // Countertop material, backsplash, dishwasher/extra-space toggles,
         // and cutouts were never reset here — mqResetCountertopStandalone
         // covers this exact same set of fields for the standalone
@@ -6007,7 +6007,16 @@ window.mqTogDrawerConfig=(prefix)=>{
       mqRenumberSurfaces(prefix);
       mqShowSurfaceToast(prefix, `${removedName} removed`);
     };
-    window.mqTogUseCab=(prefix)=>{
+    // opts.scroll (default true) controls the "bring existing surfaces into
+    // view" jump below. That jump is meant as direct feedback for a customer
+    // who just clicked the checkbox themselves (see the onchange="..." on
+    // the checkbox's own markup) -- it should NOT fire just because this
+    // function gets re-run to re-sync UI state on its own, e.g. every time
+    // the Both tab is (re-)entered, or when a project type change forces the
+    // box on/off programmatically. Every one of THOSE call sites passes
+    // {scroll:false} explicitly; only the checkbox's own onchange omits it.
+    window.mqTogUseCab=(prefix, opts)=>{
+      const scrollOnExisting = !opts || opts.scroll !== false;
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       const matDiv  = document.getElementById(`mq-${prefix}-cab-mat`);
       if(matDiv) matDiv.style.display=checked?'block':'none';
@@ -6033,11 +6042,16 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (surfContainer && !surfContainer.children.length) {
           window.mqAddSurface('b');
           surfContainer.dataset.autoAdded = 'true';
-        } else if (surfContainer) {
+        } else if (surfContainer && scrollOnExisting) {
           // Surface(s) already exist from an earlier uncheck — bring the
           // section's heading into view (same focal point every other add
           // scrolls to, see mqAddSurface) instead of piling on a redundant
-          // blank one.
+          // blank one. Only when the checkbox change was a real, direct
+          // click though (see the opts.scroll note above) — otherwise a
+          // shop's countertop-only project type (which already has this box
+          // unchecked and a surface auto-added) would silently jump the
+          // page down every single time someone just switches INTO the Both
+          // tab, with nothing having actually changed.
           const titleEl = document.getElementById('mq-b-ct-surfaces-title');
           (titleEl || surfContainer).scrollIntoView({behavior:'smooth', block:'start'});
         }
