@@ -7229,14 +7229,37 @@ window.mqTogDrawerConfig=(prefix)=>{
     _mqStickyDebounce = setTimeout(mqLiveRecalcSticky, 250);
   }
 
+  // Cycled through instead of a single static "Loading estimator…" while
+  // the widget's initial shop-data fetch is in flight (Jordan: "can we make
+  // the estimator say something cool when its loading instead of just
+  // loading?"). Kept deliberately TRADE-NEUTRAL -- no cabinet-only wording
+  // ("table saw", "doors", "drawers") and no countertop-only wording
+  // ("slab", "polishing granite") -- since this shows before the widget
+  // even knows whether this particular shop sells cabinets, countertops, or
+  // both (Jordan's own follow-up: "just make sure it works for countertop
+  // stores and cabinet shops"). Every phrase below reads naturally for
+  // either trade.
+  const MQ_LOADING_PHRASES = ['Sharpening the pencils…','Measuring twice…','Squaring up the corners…','Warming up the workshop…','Dusting off the blueprints…','Double-checking the numbers…','Leveling things out…','Fine-tuning your estimate…'];
   async function init() {
     const container=document.getElementById('midasquote-widget');
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
     container.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;gap:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
       <div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#1a1a1a;border-radius:50%;animation:mqSpin 0.7s linear infinite;"></div>
-      <div style="font-size:14px;color:#4b5563;letter-spacing:0.01em;">Loading estimator…</div>
+      <div id="mq-loading-phrase" style="font-size:14px;color:#4b5563;letter-spacing:0.01em;">${MQ_LOADING_PHRASES[0]}</div>
       <style>@keyframes mqSpin{to{transform:rotate(360deg)}}</style>
     </div>`;
+    // Self-clearing: once container.innerHTML gets replaced by any of
+    // init()'s several exit paths (error, subscription-gate lock, or the
+    // real widget rendering), #mq-loading-phrase no longer exists, so the
+    // very next tick clears this on its own instead of needing a matching
+    // clearInterval() threaded into every one of those branches.
+    let mqLoadingPhraseIdx = 0;
+    const mqLoadingInterval = setInterval(() => {
+      const el = document.getElementById('mq-loading-phrase');
+      if (!el) { clearInterval(mqLoadingInterval); return; }
+      mqLoadingPhraseIdx = (mqLoadingPhraseIdx + 1) % MQ_LOADING_PHRASES.length;
+      el.textContent = MQ_LOADING_PHRASES[mqLoadingPhraseIdx];
+    }, 900);
     let data;
     try {
       data = await loadShopData(shopToken);
