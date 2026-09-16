@@ -5754,7 +5754,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
     const body = document.getElementById('mq-specgroup-body-' + itemId);
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
-    const chooseBtn = document.getElementById('mq-specgroup-choosebtn-' + itemId);
     if (!body) return;
     const opening = body.style.display === 'none';
     // Collapsed, this card is the same width as every other card (Jordan:
@@ -5764,16 +5763,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // follow-up: "let it expand to the right and down like it did when you
     // took up the whole row... it should still list all the variants on
     // each column and row"). So the card temporarily grows to span the full
-    // grid row only while expanded -- same multi-column layout the very
-    // first version had -- and snaps back to the normal single-card width
-    // the instant it's collapsed again.
+    // grid row only while expanded -- revealing the shared-image "template"
+    // card as the first cell, with every variant card laid out beside/below
+    // it in that same grid (Jordan's 3rd follow-up: "The variants can start
+    // aligning to the right of it") -- and snaps back to the normal
+    // single-card width the instant it's collapsed again.
     if (wrap) wrap.style.gridColumn = opening ? '1 / -1' : '';
     body.style.display = opening ? 'grid' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
-    // Keeps the explicit "Choose individual images for variants" button's
-    // own label in sync too, whichever of the two ways this got toggled
-    // (clicking the header row, or clicking that button itself).
-    if (chooseBtn) chooseBtn.textContent = opening ? '▲ Hide individual variant images' : 'Choose individual images for variants';
   };
 
   // Live preview for the group card's own dedicated "shared image" slot --
@@ -5839,12 +5836,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
     const body = document.getElementById('mq-specgroup-body-' + itemId);
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
-    const chooseBtn = document.getElementById('mq-specgroup-choosebtn-' + itemId);
     if (body && body.style.display === 'none') {
       if (wrap) wrap.style.gridColumn = '1 / -1';
       body.style.display = 'grid';
       if (arrow) arrow.style.transform = 'rotate(90deg)';
-      if (chooseBtn) chooseBtn.textContent = '▲ Hide individual variant images';
     }
     if (window.mqMarkProductsDirty) window.mqMarkProductsDirty();
     showMsg('mq-products-msg', `✓ Applied to all ${variantInputs.length} variants — click "Save changes" to keep it.`);
@@ -6531,44 +6526,47 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           // expanded to show all"). Now it's a single highlighted, collapsed
           // group card -- sized the SAME as every other card in this grid,
           // per Jordan's follow-up ("make it the same width as the other
-          // cards so it doesn't take up the whole row"), not spanning the
-          // full row -- that expands to reveal the same individual variant
-          // cards as before, unchanged. It also carries its own dedicated
-          // "shared image" slot (preview, Upload a photo, paste a URL, AND
-          // Choose from library -- same three options as every other photo
-          // field on this tab, per Jordan's follow-up that URL-paste-only
-          // was "rough") plus a "Use same image for all" button so one
-          // photo can be pushed to every variant at once (Jordan: "maybe i
-          // make 10 variants of maple doors just in differrent sizes but all
-          // should use the same image").
-          // The explicit "Choose individual images for variants" button
-          // below (Jordan, after trying the first version: "after i opened
-          // up the variant i reailized why you had taken up the whole
-          // row..... um ok lets keep what we have now, but at the bottom
-          // where theres that opne space lets put a button that says
-          // 'Choose individual images for variants' then when they click
-          // that it expands them all as well. to try to avoid confusion")
-          // -- once the card was narrowed to match the others, the empty
-          // space left at the bottom made it unclear that clicking the
-          // header itself is what expands to per-variant photos, easy to
-          // miss next to the much more prominent "Use same image for all"
-          // button right above it. This gives that same expand action its
-          // own explicit, labeled entry point so the two paths (one shared
-          // photo vs. a different photo per variant) read as equally
-          // valid choices, not one obvious button and one hidden gesture.
-          // Available on Demo-plan shops too (unlike the shared-image slot
-          // itself) since viewing/expanding to see each variant's existing
-          // photo isn't a paid action, only changing one is.
-          const chooseIndividualBtn = `<button type="button" id="mq-specgroup-choosebtn-${r.id}" class="mq-btn mq-btn-sm mq-btn-secondary" style="width:100%;font-size:11px" onclick="event.stopPropagation();mqToggleSpecPhotoGroup('${r.id}')">Choose individual images for variants</button>`;
-          const sharedImageHtml = isDemoShop
-            ? `<div style="padding:10px 12px 0;background:#fff;font-size:11px;color:#6b7280;line-height:1.4">
-                🔒 Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or set each variant's photo individually below.
+          // cards so it doesn't take up the whole row"). Clicking it expands
+          // the card back out to a full grid row (Jordan's 2nd follow-up:
+          // "let it expand to the right and down like it did when you took
+          // up the whole row... it should still list all the variants on
+          // each column and row").
+          //
+          // What's revealed on expand went through one more redesign (Jordan,
+          // after actually trying that version, with a screenshot of buttons
+          // stretched the full width of the screen): "it should first off
+          // not have buttons as wide as the screen. Second the template
+          // image and its upload and all that should still be the size of
+          // the regular card on the left again not spread across the whole
+          // thing. The variants can start aligning to the right of it..
+          // Any just make it clear that this card is for one image to rep
+          // them all." The earlier version put the shared-image controls in
+          // their own always-full-width block ABOVE a separately-collapsing
+          // variant grid -- so every button inside it stretched edge to
+          // edge the instant the card grew to full-row width. Now the
+          // shared-image control panel is just the FIRST card inside that
+          // same expanded grid, sized exactly like every variant card next
+          // to it (its buttons are back to a normal, sane width because
+          // they're relative to that one card, not the whole row) --
+          // visually marked as the odd one out with a thicker amber border
+          // and an explicit "TEMPLATE IMAGE" label so it reads as "the
+          // photo that represents all of them," not a 17th variant. The
+          // separate "Choose individual images for variants" button from
+          // the previous round is gone -- with the template card and every
+          // variant card now revealed together by the exact same click,
+          // there's no longer a meaningfully different second action for it
+          // to represent.
+          const specTemplateCardHtml = isDemoShop
+            ? `<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:1rem">
+                <div style="font-size:10px;font-weight:700;color:#92400e;letter-spacing:0.02em;margin-bottom:8px">🖼️ TEMPLATE IMAGE — sets every variant to the right</div>
+                <div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🔒</div>
+                <div style="font-size:11px;color:#6b7280;line-height:1.4">Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or set each variant's photo individually.</div>
               </div>`
-            : `<div style="padding:10px 12px 0;background:#fff" onclick="event.stopPropagation()">
+            : `<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:1rem" onclick="event.stopPropagation()">
+                <div style="font-size:10px;font-weight:700;color:#92400e;letter-spacing:0.02em;margin-bottom:8px">🖼️ TEMPLATE IMAGE — sets every variant to the right</div>
                 <div id="mq-specshared-preview-${r.id}">
-                  <div style="width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">${specIcon(itemName)}</div>
+                  <div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${specIcon(itemName)}</div>
                 </div>
-                <div style="font-size:10px;font-weight:700;color:#92400e;letter-spacing:0.02em;margin-bottom:6px">SHARED IMAGE — applies to every variant</div>
                 <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
                   📤 Upload a photo
                   <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
@@ -6579,7 +6577,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                   style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
                   oninput="mqPreviewSpecSharedImage('${r.id}')"/>
                 <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;color:#6b7280" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
-                <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;font-weight:600;margin-bottom:10px" onclick="mqApplySpecSharedImage('${r.id}')">Use same image for all</button>
+                <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;font-weight:600" onclick="mqApplySpecSharedImage('${r.id}')">Use same image for all</button>
               </div>`;
           return [`<div id="mq-specgroup-wrap-${r.id}" class="mq-spec-card-wrap mq-spec-group-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" style="border:1px solid #fde68a;border-radius:10px;overflow:hidden;background:#fffbeb">
             <div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;cursor:pointer">
@@ -6590,9 +6588,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               </div>
               <span style="font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:999px;white-space:nowrap;flex-shrink:0">${variants.length} var.</span>
             </div>
-            <div style="border-top:1px solid #fde68a">${sharedImageHtml}</div>
-            <div style="padding:0 12px 10px;background:#fff">${chooseIndividualBtn}</div>
             <div id="mq-specgroup-body-${r.id}" style="display:none;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;padding:10px 12px;background:#fff;border-top:1px solid #e5e7eb">
+              ${specTemplateCardHtml}
               ${variants.map(v => photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])).join('')}
             </div>
           </div>`];
