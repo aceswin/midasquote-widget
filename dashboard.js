@@ -6601,8 +6601,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 ${badgeHtml}
               </div>
               <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
-              <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px">🖼️ One image sets every variant</div>
-              <div style="font-size:11px;color:#6b7280;line-height:1.4">Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or set each variant's photo individually.</div>
+              <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
+              <div style="font-size:11px;color:#6b7280;line-height:1.4">Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or leave this blank and set each variant's own photo individually below.</div>
               ${footerHtml}`
             : `<div style="position:relative">
                 <div id="mq-specshared-preview-${r.id}">
@@ -6611,7 +6611,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 ${badgeHtml}
               </div>
               <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
-              <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px">🖼️ One image sets every variant</div>
+              <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
+              <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">A shortcut for when every variant looks the same — upload or paste one photo and it fills them all in below. You can leave this blank and set each variant's own photo instead, and you can always change any variant's photo individually later either way.</div>
               <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
                 📤 Upload a photo
                 <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
