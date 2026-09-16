@@ -150,6 +150,23 @@
     // is completely unaffected — every line below is a no-op there.
     const MQ_SR_EMBEDDED = window.self !== window.top;
     if (MQ_SR_EMBEDDED) {
+      // Jordan: "for showrom showing on embeedede paghes, i want the
+      // background fulltransparent.. right now it has a slight bit of
+      // color. i need it to just blend into whatever page its on" -- the
+      // page's own cream body background (--gray-50) was always meant for
+      // the standalone tab/popup view, where it reads as this page's own
+      // branded background. Embedded in an <iframe> on the shop's own
+      // site, that same cream tint showed through every gap and margin as
+      // a mismatched box sitting on top of the host page's real
+      // background instead of blending into it. Set here, synchronously,
+      // the same way and at the same moment as the header/nav/hero/filter-
+      // bar pre-hiding just below, so it's never visible even for a
+      // moment. Cards, the header bar, the hero banner, etc. all keep
+      // their own explicit white/brand backgrounds -- only the page's
+      // outer background (what shows through between/around them) goes
+      // transparent. Standalone mode is completely untouched.
+      document.documentElement.style.background = 'transparent';
+      document.body.style.background = 'transparent';
       // "← Close" only makes sense as its own tab (window.close() silently
       // does nothing otherwise) — hide it immediately, don't wait on init().
       const closeLink = document.getElementById('sr-close-link');
