@@ -5023,6 +5023,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                   <div onclick="mqNav('products', document.getElementById('mq-nav-products'));window.scrollTo({top:0,behavior:'smooth'})" style="font-size:10px;color:#9ca3af;margin-top:2px;cursor:pointer;width:fit-content" title="Go to My Products">Add/change images in My Products</div>
                   <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
                     <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
+                    <button class="mq-btn mq-btn-sm" title="Copy this item, all its settings, and every variant — handy for a similar item you don't want to rebuild from scratch" onclick="mqDuplicateSpec('${r.id}')">⧉ Duplicate</button>
                     <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
                   </div>
                 </div>
@@ -8536,6 +8537,79 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       renderSpecialty(specs, window._mqShopRecord);
       showMsg('mq-spec-msg', '✓ Item deleted.');
     } catch(e) { showMsg('mq-spec-msg', 'Error deleting item.', 'error'); }
+  };
+
+  // Copies a specialty item wholesale -- pricing, install settings, project
+  // types, category, Pro-only/Active state, and every one of its variants
+  // (Jordan: "I have an item that has 30 variants and I just want to
+  // duplicate it and just change some minor things for the next one").
+  // Starts from a full copy of the original's own fields rather than a
+  // hand-picked list, so nothing gets silently left behind as new fields are
+  // added to this table down the road -- the only thing stripped out is
+  // {Shop token (lookup)}, a read-only Airtable Lookup field Airtable
+  // computes on its own and rejects any attempt to write to directly.
+  window.mqDuplicateSpec = async function(id) {
+    const r = (window._mqSpecRecords || []).find(x => x.id === id);
+    const shopRec = window._mqShopRecord;
+    if (!r || !shopRec) return;
+    try {
+      // "<Name> - Copy", then "<Name> - Copy 2", "<Name> - Copy 3"... so
+      // duplicating the same item more than once (or duplicating a copy of
+      // a copy) never lands on a name that's already in use.
+      const existingNames = new Set((window._mqSpecRecords || []).map(x => (x.fields['Item name'] || '').trim().toLowerCase()));
+      const baseName = (r.fields['Item name'] || 'Untitled item').trim();
+      let newName = `${baseName} - Copy`;
+      let n = 2;
+      while (existingNames.has(newName.toLowerCase())) { newName = `${baseName} - Copy ${n}`; n++; }
+
+      const newFields = { ...r.fields };
+      delete newFields['Shop token (lookup)'];
+      newFields['Item name'] = newName;
+      newFields['Special Items'] = newName; // kept in sync with Item name everywhere else -- see mqSaveSpecField
+      // Lands right after the original, not shoved to the very top of the
+      // list, so the two sit next to each other for an easy side-by-side
+      // edit. Fractional and temporary -- Sort order gets fully renumbered
+      // to clean integers the moment anything in this tab is drag-reordered.
+      newFields['Sort order'] = (r.fields['Sort order'] || 0) + 0.5;
+
+      const created = await atCreate(CONFIG.SPECIALTY_TABLE, newFields);
+
+      // Also copy over this item's own photo, plus every variant's photo and
+      // its showroom-hidden state -- otherwise a 30-variant item's duplicate
+      // would need all 30 photos re-uploaded by hand, which defeats most of
+      // the point of duplicating it in the first place. Photos live in a
+      // separate JSON blob on the SHOP record (keyed 'spec_<itemId>' or
+      // 'spec_<itemId>_v<variantId>'), not on the item record itself, so
+      // this is a second, separate copy step after the item record exists.
+      if (created?.id) {
+        let shopPhotos = {}; try { shopPhotos = shopRec.fields['Photos'] ? JSON.parse(shopRec.fields['Photos']) : {}; } catch(e) {}
+        let shopHidden = {}; try { shopHidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) {}
+        let changed = false;
+        const variants = mqParseVariants(r);
+        const oldKeys = variants.length ? variants.map(v => 'spec_' + r.id + '_v' + v.id) : ['spec_' + r.id];
+        const newKeys = variants.length ? variants.map(v => 'spec_' + created.id + '_v' + v.id) : ['spec_' + created.id];
+        oldKeys.forEach((oldKey, i) => {
+          const newKey = newKeys[i];
+          if (shopPhotos[oldKey]) { shopPhotos[newKey] = shopPhotos[oldKey]; changed = true; }
+          if (shopHidden[oldKey]) { shopHidden[newKey] = shopHidden[oldKey]; changed = true; }
+        });
+        if (changed) {
+          await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Photos': JSON.stringify(shopPhotos), 'Hidden': JSON.stringify(shopHidden) });
+          shopRec.fields['Photos'] = JSON.stringify(shopPhotos);
+          shopRec.fields['Hidden'] = JSON.stringify(shopHidden);
+        }
+      }
+
+      const specs = await loadSpecialty(shopRec.fields['Shop token']);
+      renderSpecialty(specs, shopRec);
+      showMsg('mq-spec-msg', `✓ Duplicated as "${newName}" — edit it below.`);
+      if (created?.id) {
+        setTimeout(() => {
+          const nameInput = document.getElementById('mq-spec-name-' + created.id);
+          if (nameInput) { nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); nameInput.focus(); nameInput.select(); }
+        }, 300);
+      }
+    } catch(e) { showMsg('mq-spec-msg', 'Error duplicating item.', 'error'); }
   };
 
   window.mqAddSpecItem = async function() {
