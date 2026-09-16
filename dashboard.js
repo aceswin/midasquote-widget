@@ -217,13 +217,22 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   // One save action per tab that actually has one. Tabs not listed here
-  // (Dashboard, Leads, Embed code, Marketing Kit, Billing) either have
-  // nothing to save or autosave invisibly per field, so they get no
-  // floating button at all.
+  // (Dashboard, Leads, Embed code, Marketing Kit, Billing, Specialty items)
+  // either have nothing to save or autosave invisibly per field, so they
+  // get no floating button at all. Specialty items moved into that second
+  // group per Jordan ("please make anyhting in specialty items autosave so
+  // I dont have to remember to click save") -- every field on that tab
+  // (name, description, category, price, per-lin/sq-ft, install
+  // choice/price/mode, project types, pro only, active, variants, even
+  // drag-reordering) already called mqSaveSpecField/mqSaveSpecUnit/atUpdate
+  // directly on blur/change/drop, with no dirty-flag gating any of it -- the
+  // floating "Save all" button here was pure leftover, and its own handler
+  // (mqSaveAllSpecItems, since removed) only re-saved Item name + Price for
+  // every row regardless of whether anything had changed, which were
+  // already being saved the instant they were edited anyway.
   const MQ_PAGE_SAVE_ACTIONS = {
     shop:      { label: '💾 Save changes',  fn: () => window.mqSaveShop() },
     rooms:     { label: '💾 Save changes',  fn: () => window.mqSaveRooms() },
-    specialty: { label: '💾 Save all',      fn: () => window.mqSaveAllSpecItems() },
     products:  { label: '💾 Save changes',  fn: () => window.mqSaveProducts() },
     templates: { label: '💾 Save all changes', fn: () => { window.mqSaveMasterRoomDefs(); window.mqSaveTemplatePhotos(); } },
   };
@@ -309,6 +318,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>🌍 Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
         <p><strong>Variants</strong> — give one item multiple options (like Maple/Oak/MDF under one "Crown Molding" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
         <p><strong>Pro only</strong> — hides an item from the customer-facing widget entirely while keeping it available in MidasQuote Pro.</p>
+        <p>Everything on this tab autosaves the moment you change it — there's no "Save" button to remember here.</p>
       `
     },
     proposals: {
@@ -5928,21 +5938,38 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Templates admin tab has also been visited this session, its leftover
     // inputs (same id pattern) could get swept up into the wrong shop's save.
     const scope = document.getElementById('mq-products-content') || document;
-    const photos = {};
-    const hidden = {};
-    const featured = {};
+    // Start from whatever's already saved, NOT a blank slate. A card that
+    // isn't currently rendered into this DOM -- most commonly a specialty
+    // item (or any other line item) that's been toggled Active -> off,
+    // which removes its whole photo card from this tab until it's
+    // reactivated -- has no [id^="mq-photo-"]/[id^="mq-hidden-"]/
+    // [id^="mq-featured-"] element for the sweep below to find at all.
+    // Rebuilding these maps from scratch every save (the old behavior) then
+    // silently dropped that item's saved photo/hidden/featured state the
+    // very next time ANYTHING on this tab was saved -- Jordan: "if i ad
+    // images to a specialty item that is avtiv, then uncheck its active
+    // box then when i leave and come back it no longer has the image
+    // saved." Now only a key actually present in the DOM gets added,
+    // updated, or (left blank / unchecked) removed -- every other key
+    // carries forward untouched, so a card missing from view for any
+    // reason never loses what was already saved for it.
+    let photos = {}, hidden = {}, featured = {};
+    try { photos = shopRec.fields['Photos'] ? JSON.parse(shopRec.fields['Photos']) : {}; } catch(e) { photos = {}; }
+    try { hidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) { hidden = {}; }
+    try { featured = shopRec.fields['Featured items'] ? JSON.parse(shopRec.fields['Featured items']) : {}; } catch(e) { featured = {}; }
     scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
-      if (input.value.trim()) photos[key] = input.value.trim();
+      const val = input.value.trim();
+      if (val) photos[key] = val; else delete photos[key];
     });
     scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
       const key = cb.id.replace('mq-hidden-', '');
-      if (cb.checked) hidden[key] = true;
+      if (cb.checked) hidden[key] = true; else delete hidden[key];
     });
     scope.querySelectorAll('[id^="mq-featured-"]').forEach(cb => {
       const key = cb.id.replace('mq-featured-', '');
-      if (cb.checked) featured[key] = true;
+      if (cb.checked) featured[key] = true; else delete featured[key];
     });
     const badgeLabelInput = document.getElementById('mq-badge-label');
     const badgeLabelToSave = badgeLabelInput ? (badgeLabelInput.value.trim() || 'Best seller') : (shopRec.fields['Badge label'] || 'Best seller');
@@ -5973,21 +6000,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   // Same pattern as mqSaveProducts, but scoped to the Templates tab and
-  // saving to the master template shop record instead of the admin's own shop.
+  // saving to the master template shop record instead of the admin's own
+  // shop. Same merge-not-overwrite fix applied here too, for the same
+  // reason -- a template card not currently rendered into this DOM must not
+  // have its saved photo/hidden state wiped just because this particular
+  // save couldn't see it.
   window.mqSaveTemplatePhotos = async function() {
     const masterShop = window._mqMasterTemplateShop;
     if (!masterShop) return;
     const scope = document.getElementById('mq-templates-content') || document;
-    const photos = {};
-    const hidden = {};
+    let photos = {}, hidden = {};
+    try { photos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) { photos = {}; }
+    try { hidden = masterShop.fields['Hidden'] ? JSON.parse(masterShop.fields['Hidden']) : {}; } catch(e) { hidden = {}; }
     scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
-      if (input.value.trim()) photos[key] = input.value.trim();
+      const val = input.value.trim();
+      if (val) photos[key] = val; else delete photos[key];
     });
     scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
       const key = cb.id.replace('mq-hidden-', '');
-      if (cb.checked) hidden[key] = true;
+      if (cb.checked) hidden[key] = true; else delete hidden[key];
     });
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, {
@@ -6113,7 +6146,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // locked, not what a shop already has.
     const isDemoShop = (shopRecord.fields['Plan']||'') === 'Demo';
     function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
-      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemoShop);
+      // 'mqSaveProducts' -- My Products now autosaves a photo URL, "Hide
+      // from showroom," and the featured/badge checkbox the instant they
+      // change, the same way the Templates admin tab already did (Jordan:
+      // "i keep selecting show in showroom for some items then i go to
+      // showroom and they arent showing. then i come back to my products
+      // and they are listed again as dont show in sdhowroom" -- that
+      // toggle was only ever marking the tab dirty, waiting on a manual
+      // "Save changes" click that was easy to forget).
+      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemoShop, 'mqSaveProducts');
     }
 
     // Groups only make sense for categories customers actually pick a
@@ -6705,7 +6746,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           'mq-photo-' + key,
           shopToken,
           'products',
-          (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
+          // Autosaves the instant an upload finishes, same as the URL field
+          // and the "Hide from showroom"/featured checkboxes now do -- see
+          // photoCard() above for why.
+          (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts(); }
         );
       });
       // Same wiring, separately, for every variant-item group card's own
@@ -7654,25 +7698,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
   };
 
-  window.mqSaveAllSpecItems = async function() {
-    const rows = document.querySelectorAll('#mq-spec-tbody tr[data-id]');
-    if (!rows.length) return;
-    showMsg('mq-spec-msg', 'Saving...');
-    try {
-      for (const row of rows) {
-        const id = row.dataset.id;
-        const nameInput = document.getElementById('mq-spec-name-' + id);
-        const priceInput = document.getElementById('mq-spec-price-' + id);
-        if (nameInput || priceInput) {
-          await atUpdate(CONFIG.SPECIALTY_TABLE, id, {
-            'Item name': nameInput?.value || '',
-            'Price': parseFloat(priceInput?.value) || 0,
-          });
-        }
-      }
-      showMsg('mq-spec-msg', '✓ All items saved!');
-    } catch(e) { showMsg('mq-spec-msg', 'Error saving — please try again.', 'error'); }
-  };
+  // mqSaveAllSpecItems (the old floating "Save all" button's handler) was
+  // removed -- every field on the Specialty Items table already autosaves
+  // individually on blur/change (see the MQ_PAGE_SAVE_ACTIONS comment
+  // above), and this function only ever re-saved Item name + Price for
+  // every row regardless of whether anything had changed, both of which
+  // were already saved the instant they were edited.
 
   window.mqSaveSpecField = async function(id, field, value) {
     try {
@@ -7707,6 +7738,62 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { return []; }
   }
 
+  // "Sized" variants (Jordan: "so instead of the customer inputting length
+  // and width of an entire span... i want shops to also be able to add
+  // sized items... what id like is for this process to be easier... beside
+  // each variant a checkbox that says 'sized item'... if they check the box
+  // then it shows a field for mm inches or feet. then they choose and input
+  // the size. it then puts it in the field for them and knows that its a
+  // size... Then for the price if hey want it as a flat rate thats fine,
+  // but if they want it as per square foot or linear foot they can input
+  // the per sqfoot or linear foot cost and it auto calculates.") -- his own
+  // screenshot showed 36 hand-typed variants like "30" x 9"" / "30" x 10""
+  // each with a manually pre-calculated flat price, which is exactly the
+  // "pain... almost gave up" this is meant to remove.
+  //
+  // This never changes what the widget actually reads at quote time -- a
+  // sized variant's `price` field ends up a completely ordinary flat dollar
+  // amount, just like every other variant. All of this only runs here, in
+  // the dashboard, as a one-time calculator that fills in `label` and
+  // `price` for you from two dimensions and a rate, exactly the way a shop
+  // owner would do it by hand with a calculator otherwise.
+  //
+  // Two dimensions are stored as entered (dimA/dimB, in whichever `unit` is
+  // currently selected) with no fixed "width"/"height" meaning -- Jordan
+  // was explicit that shops need control over which one prints FIRST in the
+  // label independent of which box it's typed into ("maybe they are doing
+  // 30 inch by 10,11,12,13... but then they go into 15 height doors...
+  // still want them showing with the 15 first... a 'show width first show
+  // height first' switcharoo"), since the same item can mix differently-
+  // oriented batches of sizes. `swap` is that per-variant switcharoo, purely
+  // cosmetic -- it only changes label word order, never which number is
+  // dimA vs dimB or how the price gets calculated.
+  //
+  // For $/lin ft, the rate is applied to whichever of the two dimensions is
+  // LONGER, not a fixed "always dimA" or "always dimB" -- a sensible,
+  // order-independent default for door/drawer-front-style linear pricing
+  // that needs no extra configuration and can never be thrown off by the
+  // swap toggle above.
+  function mqApplySizedVariantCalcs(v) {
+    if (!v || !v.sized) return;
+    const dimA = parseFloat(v.dimA) || 0;
+    const dimB = parseFloat(v.dimB) || 0;
+    const unit = v.unit === 'mm' ? 'mm' : 'in';
+    if (dimA || dimB) {
+      const unitSuffix = unit === 'mm' ? 'mm' : '"';
+      const first = v.swap ? dimB : dimA;
+      const second = v.swap ? dimA : dimB;
+      v.label = `${first}${unitSuffix} x ${second}${unitSuffix}`;
+    }
+    const rateMode = v.rateMode || 'flat';
+    if (rateMode !== 'flat' && v.rate) {
+      const toFeet = (n) => unit === 'mm' ? (n / 304.8) : (n / 12);
+      const feetA = toFeet(dimA), feetB = toFeet(dimB);
+      const price = rateMode === 'sqft' ? (feetA * feetB * v.rate) : (Math.max(feetA, feetB) * v.rate);
+      v.price = Math.round(price * 100) / 100;
+    }
+  }
+
   function mqVariantsPanelHTML(r) {
     const variants = mqParseVariants(r);
     const itemName = (r.fields['Item name'] || 'this item').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -7724,6 +7811,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
         <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
         <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+    // The dimension/rate row, only shown once "📏 Sized" is checked for
+    // that variant. `width:100%` on this wrapper forces it onto its own
+    // line inside the variant row's flex-wrap, without needing a separate
+    // markup structure. Every field here autosaves through
+    // mqSaveSizedVariantField, which re-derives label/price after every
+    // change via mqApplySizedVariantCalcs above.
+    const sizedControlsHTML = (v, vi) => !v.sized ? '' : `
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px 24px;width:100%">
+        <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="First dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
+        <span style="font-size:11px;color:#9ca3af">×</span>
+        <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Second dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
+        <select title="Unit" style="font-size:11px;padding:5px 4px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'unit',this.value)">
+          <option value="in" ${v.unit!=='mm'?'selected':''}>in</option>
+          <option value="mm" ${v.unit==='mm'?'selected':''}>mm</option>
+        </select>
+        <button type="button" class="mq-btn mq-btn-sm" title="Swap which measurement prints first in the auto-filled label — doesn't change pricing" onclick="mqSaveSizedVariantField('${r.id}',${vi},'swap',${v.swap ? 'false' : 'true'})">⇄ ${v.swap ? 'B×A' : 'A×B'}</button>
+        <select title="How this variant's price gets calculated" style="font-size:11px;padding:5px 4px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'rateMode',this.value)">
+          <option value="flat" ${(!v.rateMode||v.rateMode==='flat')?'selected':''}>Flat $</option>
+          <option value="sqft" ${v.rateMode==='sqft'?'selected':''}>${CUR()}/sq ft</option>
+          <option value="linft" ${v.rateMode==='linft'?'selected':''}>${CUR()}/lin ft</option>
+        </select>
+        ${(v.rateMode==='sqft'||v.rateMode==='linft') ? `<input type="number" value="${v.rate||''}" placeholder="Rate" title="${v.rateMode==='sqft'?'Price per square foot — multiplied by this size\'s area to fill in Price above':'Price per linear foot — multiplied by this size\'s longer side to fill in Price above'}" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'rate',parseFloat(this.value)||0)"/>` : ''}
+      </div>`;
     // Each row carries its own stable variant id (not its array index, which
     // shifts around on every add/remove/reorder) in data-variant-id, plus a
     // ⠿ drag handle — same handle-activated draggable pattern as the
@@ -7736,7 +7846,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
         ${minInputHTML(v, vi)}
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap" title="Enter two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the label + price above fill in automatically">
+          <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
+          📏 Sized
+        </label>
+        <button class="mq-btn mq-btn-sm" title="Duplicate this variant — handy for adding the next size in the same run" onclick="mqDuplicateVariant('${r.id}',${vi})">⧉</button>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
+        ${sizedControlsHTML(v, vi)}
       </div>`).join('');
     // Boxed with a colored left border and the item's own name repeated in
     // the header — this panel can end up sitting visually next to a
@@ -7750,7 +7866,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div id="mq-spec-variants-list-${r.id}">${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}</div>
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
         ${variants.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px">Drag the ⠿ handle to reorder — the first one listed is what customers see selected by default.</div>` : ''}
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> variants (e.g. differently-sized doors) let you type two dimensions and a $/sq ft or $/lin ft rate instead of calculating each price by hand — ⧉ duplicate a sized variant to quickly add the next size in the same run.</div>` : ''}
       </div>`;
   }
 
@@ -7862,6 +7978,69 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!variants[vi]) return;
     variants[vi][field] = value;
     r.fields['Variants'] = JSON.stringify(variants);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  // Same shape as mqSaveVariantField above, for the "📏 Sized" fields
+  // (sized/dimA/dimB/unit/swap/rateMode/rate) -- the one difference is that
+  // every change here also re-derives that variant's label/price via
+  // mqApplySizedVariantCalcs and refreshes the panel immediately, so a shop
+  // owner sees the auto-filled label/price update live as they type instead
+  // of only after their next save or reload.
+  window.mqSaveSizedVariantField = async function(id, vi, field, value) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    if (!variants[vi]) return;
+    variants[vi][field] = value;
+    mqApplySizedVariantCalcs(variants[vi]);
+    r.fields['Variants'] = JSON.stringify(variants);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  // Duplicates ONE variant within the same item -- Jordan: "they should also
+  // be able to duplicate the variants so they would just have to change the
+  // sizes." A fresh id is generated (same pattern mqAddVariant uses) rather
+  // than reusing the source variant's id, because -- unlike mqDuplicateSpec,
+  // which duplicates a whole ITEM and can safely reuse variant ids since the
+  // differing item id keeps their photo keys apart -- a duplicate variant
+  // living inside the SAME item's array would otherwise collide with its
+  // source on the photo key 'spec_<itemId>_v<sharedId>'. The source
+  // variant's own photo/hidden-from-showroom state is copied forward to the
+  // new id for the same reason mqDuplicateSpec copies photos: re-uploading
+  // an identical door photo for every duplicated size would defeat the point
+  // of duplicating in the first place.
+  window.mqDuplicateVariant = async function(id, vi) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const shopRec = window._mqShopRecord;
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    const source = variants[vi];
+    if (!source) return;
+    const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const copy = { ...source, id: newId, label: (source.label || '') + ' - Copy' };
+    variants.splice(vi + 1, 0, copy);
+    r.fields['Variants'] = JSON.stringify(variants);
+
+    if (shopRec) {
+      let shopPhotos = {}; try { shopPhotos = shopRec.fields['Photos'] ? JSON.parse(shopRec.fields['Photos']) : {}; } catch(e) {}
+      let shopHidden = {}; try { shopHidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) {}
+      const oldKey = 'spec_' + id + '_v' + source.id;
+      const newKey = 'spec_' + id + '_v' + newId;
+      let changed = false;
+      if (shopPhotos[oldKey]) { shopPhotos[newKey] = shopPhotos[oldKey]; changed = true; }
+      if (shopHidden[oldKey]) { shopHidden[newKey] = shopHidden[oldKey]; changed = true; }
+      if (changed) {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Photos': JSON.stringify(shopPhotos), 'Hidden': JSON.stringify(shopHidden) });
+        shopRec.fields['Photos'] = JSON.stringify(shopPhotos);
+        shopRec.fields['Hidden'] = JSON.stringify(shopHidden);
+      }
+    }
+
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
     await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
   };
 
@@ -8326,15 +8505,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Module-level so both initProductsTab (My Products) and renderTemplates
   // (admin Templates tab) can share it, instead of it being locked inside one
   // function's closure over a specific shop's savedPhotos/savedHidden.
-  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo, autosave) {
-    // autosave (Templates admin tab only — every other caller omits it) —
-    // this tab's floating "Save all changes" button is easy to forget after
-    // uploading/pasting a photo or toggling "Hide from showroom," and
-    // anything not saved before navigating away or reloading is silently
-    // lost (mqSaveTemplatePhotos rebuilds the whole Photos/Hidden blob from
-    // whatever's in the DOM at save time). So on this tab specifically,
-    // these two actions save immediately instead of only marking dirty.
-    const autosaveJs = autosave ? "if(typeof window.mqSaveTemplatePhotos==='function')window.mqSaveTemplatePhotos();" : '';
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo, autosaveFn) {
+    // autosaveFn -- the (window-global) name of the save function this
+    // card's tab should call, e.g. 'mqSaveProducts' for My Products or
+    // 'mqSaveTemplatePhotos' for the Templates admin tab. Both tabs also
+    // still have their own floating "Save changes" button, which is easy to
+    // forget after uploading/pasting a photo or toggling "Hide from
+    // showroom" -- and anything not saved before navigating away or
+    // reloading is silently lost (mqSaveProducts/mqSaveTemplatePhotos
+    // rebuild the whole Photos/Hidden/Featured blob from whatever's in the
+    // DOM at save time). So these actions save immediately instead of only
+    // marking dirty, on every caller that passes a save function name here.
+    const autosaveJs = autosaveFn ? `if(typeof window.${autosaveFn}==='function')window.${autosaveFn}();` : '';
     const savedUrl = savedPhotos[key] || '';
     const isHidden = savedHidden[key] || false;
     // savedFeatured is only ever passed in from My Products — every other
@@ -8344,7 +8526,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const featuredHtml = savedFeatured ? (() => {
       const isFeatured = savedFeatured[key] || false;
       return `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a" onchange="mqMarkProductsDirty()"/>
+        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a" onchange="mqMarkProductsDirty();${autosaveJs}"/>
         🏆 Mark as "${(badgeLabel||'Best seller').replace(/"/g,'&quot;')}"
       </label>`;
     })() : '';
@@ -8391,7 +8573,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // templates don't have an equivalent, so it lives right on the card here).
   function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
-    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, true);
+    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
     const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:6px">
