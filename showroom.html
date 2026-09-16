@@ -846,11 +846,36 @@
         tall_cabinet: buildEntries(rawTallCab, 'tall_cabinet', 'Name'),
       };
 
-      const specs = (payload.specialty || []).map(r => ({
-        name: r.fields['Item name'] || r.fields['Special Items'] || '',
-        photoKey: 'spec_' + r.id,
-        visibleRooms: effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty', categoryRooms, allRoomIds),
-      }));
+      // A specialty item with variants (e.g. "New Doors/Drawer fronts" —
+      // MDF Shaker / MDF Bevel Shaker / Maple Shaker / Oak Shaker) doesn't
+      // have one photo of its own -- each variant gets its own, keyed
+      // 'spec_<id>_v<variantId>' (see mqParseVariants/specPhotoKey in
+      // dashboard.js, which use this exact same convention for that item's
+      // own thumbnail everywhere else in the dashboard). This page used to
+      // always look for a photo/hidden-state at the plain 'spec_<id>' key
+      // regardless of variants -- a key that's never set for a variants
+      // item at all -- so visibleSpecs' `photos[s.photoKey]` check below
+      // always came up empty and the item never showed here, no matter
+      // what any variant's own "Hide from showroom" checkbox said (Jordan,
+      // after checking every variant's "Hide from showroom" box was OFF in
+      // My Products: "these doors all show that they are not hidden from
+      // showroom... now look at my showroom... specialty items arent
+      // showing those doors"). Represented instead by its first variant's
+      // photo/hidden state, the same "first one is shown by default"
+      // convention already used for this item's thumbnail elsewhere.
+      const specs = (payload.specialty || []).map(r => {
+        let variants = [];
+        try {
+          const v = JSON.parse(r.fields['Variants'] || '[]');
+          variants = (Array.isArray(v) ? v : []).map((variant, vi) => ({ ...variant, id: variant.id || ('i' + vi) }));
+        } catch(e) { variants = []; }
+        const photoKey = variants.length ? ('spec_' + r.id + '_v' + variants[0].id) : ('spec_' + r.id);
+        return {
+          name: r.fields['Item name'] || r.fields['Special Items'] || '',
+          photoKey,
+          visibleRooms: effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty', categoryRooms, allRoomIds),
+        };
+      });
 
       SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes, customCategories, catSettings };
       renderFilterBar();
