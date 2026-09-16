@@ -3568,6 +3568,56 @@ window.logoutMember = async function () {
     ];
   }
 
+  // Makes sure a shop has the 6 default countertop project types the
+  // moment Countertops or Both is visible to customers -- not gated on an
+  // explicit toggle FLIP, just on the CURRENT resulting state, so the same
+  // helper covers both "a shop just turned the tab on" (called from
+  // mqToggleWidgetTab, for instant feedback) and "this shop's dashboard is
+  // loading and it already has the tab on" (called from populateRooms, as
+  // a self-heal -- covers shops that had the tab on from day one and never
+  // had to explicitly turn it on at all). Per Jordan, after his first pass
+  // at this only triggering on the toggle click: "im not sure thats what i
+  // meant... i mean i want it as the default.. so evey shop has them by
+  // default beausse at the moment shops start with th toggle on. And
+  // current shops I want them to have them loaded in as well, unless of
+  // course they curently have the toggle off. if the toggles on i want
+  // them in there. because right now with our updates, if they dont have
+  // them on the project types shows a blamk in the countertop only cab."
+  // Deliberately checks "is countertops-side visible right now" rather
+  // than "did THIS specific toggle just turn countertops/both on" -- the
+  // Both tab shows countertop content too, so toggling some other tab
+  // (like Cabinets) while Both is already on and countertop rooms are
+  // still missing should self-heal it just the same, not just the exact
+  // countertops/both toggle click.
+  // Always reconstructs its base from defaultRoomTypes() when a shop has
+  // literally never saved anything (mirrors populateRooms' own fallback
+  // below), so seeding never accidentally saves 'Room types' holding ONLY
+  // the 6 countertop rooms with the 9 cabinet ones silently missing.
+  // Gated on having ZERO countertop rooms already (not "missing some of
+  // the 6") so a shop that's already restored or customized its own set
+  // is never touched.
+  async function mqEnsureCountertopDefaults(shopRec) {
+    if (!shopRec) return false;
+    let hidden = [];
+    try {
+      const parsed = shopRec.fields['Hidden widget tabs'] ? JSON.parse(shopRec.fields['Hidden widget tabs']) : null;
+      if (parsed && Array.isArray(parsed.hidden)) hidden = parsed.hidden;
+    } catch(e) { /* keep defaults */ }
+    const ctVisible = !(hidden.includes('countertops') && hidden.includes('both'));
+    if (!ctVisible) return false;
+
+    let currentRooms = [];
+    try { currentRooms = shopRec.fields['Room types'] ? JSON.parse(shopRec.fields['Room types']) : []; } catch(e) { currentRooms = []; }
+    if (!Array.isArray(currentRooms) || !currentRooms.length) currentRooms = defaultRoomTypes();
+    const hasAnyCountertopRoom = currentRooms.some(r => r && r.forCountertops === true);
+    if (hasAnyCountertopRoom) return false;
+
+    const seeded = [...currentRooms, ...defaultCountertopRoomTypes()];
+    await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(seeded) });
+    shopRec.fields['Room types'] = JSON.stringify(seeded);
+    return true;
+  }
+
   function populateRooms(shop) {
     const f = shop.fields;
     let rooms = [];
@@ -3576,6 +3626,22 @@ window.logoutMember = async function () {
     window._mqRooms = rooms;
     renderRoomsList();
     mqApplyEstimatorTabScopeToRoomsPage();
+
+    // Self-heal: every dashboard load checks whether this shop should
+    // already have the 6 default countertop project types (Countertops or
+    // Both currently visible, zero countertop rooms saved) and, if so,
+    // seeds + saves them right away -- covers existing shops as well as
+    // brand-new ones, not just the moment a toggle gets clicked. Runs in
+    // the background so it never delays the render above; once it
+    // resolves (if it actually changed anything), refreshes the in-memory
+    // list and re-renders so the new types appear without a reload. See
+    // mqEnsureCountertopDefaults for the full rationale.
+    mqEnsureCountertopDefaults(shop).then(seeded => {
+      if (seeded) {
+        window._mqRooms = [...window._mqRooms, ...defaultCountertopRoomTypes()];
+        renderRoomsList();
+      }
+    });
 
     // Category-level hiding: which project types each WHOLE category is
     // hidden for (e.g. hide all Door Styles for "Door refacing"). Individual
@@ -6447,7 +6513,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const payload = JSON.stringify({ hidden, applyToPro });
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
       shopRec.fields['Hidden widget tabs'] = payload;
-      showMsg('mq-shop-msg', willBeOn ? `✓ "${tabId}" tab shown on widget.` : `✓ "${tabId}" tab hidden from widget.`);
+
+      // Auto-preload the 6 default countertop project types the moment
+      // Countertops or Both ends up visible, if the shop doesn't have ANY
+      // countertop project types yet -- see mqEnsureCountertopDefaults for
+      // the full rationale (this used to be gated on tabId being exactly
+      // 'countertops'/'both', but that missed shops where Both was
+      // already on and some OTHER tab got toggled instead; the shared
+      // helper checks the resulting visibility itself, not which toggle
+      // was clicked).
+      const seededCountertopDefaults = await mqEnsureCountertopDefaults(shopRec);
+      if (seededCountertopDefaults && window._mqRooms) {
+        window._mqRooms = [...window._mqRooms, ...defaultCountertopRoomTypes()];
+        renderRoomsList();
+      }
+
+      showMsg('mq-shop-msg', willBeOn
+        ? `✓ "${tabId}" tab shown on widget.` + (seededCountertopDefaults ? ' Default countertop project types added.' : '')
+        : `✓ "${tabId}" tab hidden from widget.`);
       mqApplyEstimatorTabScopeToRoomsPage();
       mqApplyEstimatorTabScopeToPricing();
       mqApplyEstimatorTabScopeToSpecialty();
@@ -7859,7 +7942,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return cat === 'specialty' ? 'All cabinet types (not Countertops — check to add)' : 'All project types';
     }
     const names = visibleRooms.map(id => rooms.find(r => r.id === id)?.name).filter(Boolean);
-    return names.length ? names.join(', ') : 'All project types';
+    // An empty visibleRooms list means "never configured, so visible for
+    // every current project type" (handled above) -- this is a DIFFERENT
+    // case: it WAS explicitly scoped to one or more specific project types,
+    // and every single one of those has since been deleted from the shop's
+    // own Project types list. That's not "all project types" (it's
+    // currently visible for zero of them) -- it used to silently fall
+    // through to the same "All project types" label as the empty case,
+    // which was actively misleading (Jordan: items "still say 'all project
+    // types' weirdly" when every checkbox shown was actually unchecked).
+    // The stale ids themselves are left untouched here on purpose -- they're
+    // exactly what makes an item like this automatically start showing
+    // again, with zero extra steps, if that project type is ever brought
+    // back via "Restore a default type…" (which reuses the same id).
+    if (!names.length) return 'None (its project types were removed)';
+    return names.join(', ');
   }
 
   function roomLinkDisclosure(itemId, visibleRoomsJson) {
