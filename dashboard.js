@@ -5039,7 +5039,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>${variantCount ? '' : mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${variantCount ? '' : mqSpecMinPriceHTML(r, false)}</td>
+              <td>
+                <div style="display:flex;flex-direction:column;gap:3px;width:94px">
+                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" placeholder="${variantCount ? 'New rate' : ''}" style="width:80px" ${variantCount ? `title="Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone."` : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+                  ${variantCount ? `<button class="mq-btn mq-btn-sm" style="font-size:10px;padding:3px 6px;white-space:nowrap" title="Applies the rate above to every 📏 Sized variant on this item that's priced per sq/lin ft" onclick="mqMassUpdateVariantRates('${r.id}')">Apply to all sized</button><div style="font-size:9px;color:#9ca3af;line-height:1.3">Mass-updates 📏 Sized variants' rate</div>` : `${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}`}
+                </div>
+              </td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
@@ -7948,12 +7953,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.style.background = n ? '#eef2ff' : '#f3f4f6';
       pill.style.color = n ? '#4338ca' : '#6b7280';
     }
-    // Price field is meaningless once variants exist — disable it in place
-    // rather than making the shop owner guess why it's not being used.
+    // The flat Price field is meaningless once variants exist (each variant
+    // has its own price instead) -- but rather than just disabling it, it's
+    // repurposed as a bulk rate-entry box (see mqMassUpdateVariantRates):
+    // type a new $/sq or lin ft rate there and "Apply to all sized" updates
+    // every 📏 Sized, per sq/lin ft variant on this item at once. Keep this
+    // in sync with the table row's own initial render of this same field.
     const priceInput = document.getElementById(`mq-spec-price-${id}`);
     if (priceInput) {
-      priceInput.disabled = n > 0;
-      priceInput.title = n > 0 ? 'Priced per variant — see the Variants pill under the item name' : '';
+      priceInput.disabled = false;
+      priceInput.placeholder = n > 0 ? 'New rate' : '';
+      priceInput.title = n > 0 ? "Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone." : '';
     }
   }
 
@@ -8063,6 +8073,51 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     mqRefreshVariantsPanel(id);
     mqRefreshSpecVariantUI(id);
     await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  // Jordan, after duplicating a 41-variant sized item to reuse for a
+  // different wood species at a different price point: "when i duplicate a
+  // heavy item with like 50 variants and i want them all priced the
+  // same... could we make it so the original price spot from befoe
+  // variants were added could be used for a mass update of that items
+  // variants... like lets say i duplicated this maple shaker door item
+  // with 20 size variants at 54.95 and im going to use the duplicate to
+  // cherry doors but need the square foot price to be 75.95 per sqft, it
+  // would be way easier to be able to reprice the whole lot by using the
+  // original price spot..."
+  //
+  // The item's own Price field (id="mq-spec-price-<id>") already goes
+  // unused the moment it has variants — each variant has its own price
+  // instead. Rather than leaving it disabled, it's now repurposed as a
+  // bulk rate-entry box for exactly this: whatever number is currently
+  // typed there gets applied as the new `rate` on every "📏 Sized" variant
+  // on this item that's priced per sq ft or per lin ft (a flat-rate or
+  // non-sized variant has no rate to update, so those are left completely
+  // alone), then each updated variant's price is re-derived through the
+  // same mqApplySizedVariantCalcs already used everywhere else, exactly as
+  // if that rate had been typed into that one variant's own rate field by
+  // hand.
+  window.mqMassUpdateVariantRates = async function(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const input = document.getElementById(`mq-spec-price-${id}`);
+    const newRate = parseFloat(input?.value);
+    if (!input || isNaN(newRate)) { showMsg('mq-spec-msg', 'Enter a rate first.', 'error'); return; }
+    const variants = mqParseVariants(r);
+    let updated = 0;
+    variants.forEach(v => {
+      if (v.sized && (v.rateMode === 'sqft' || v.rateMode === 'linft')) {
+        v.rate = newRate;
+        mqApplySizedVariantCalcs(v);
+        updated++;
+      }
+    });
+    if (!updated) { showMsg('mq-spec-msg', 'No 📏 Sized, per sq/lin ft variants to update on this item.', 'error'); return; }
+    r.fields['Variants'] = JSON.stringify(variants);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+    showMsg('mq-spec-msg', `✓ Updated the rate on ${updated} variant${updated===1?'':'s'}.`);
   };
 
   // Called after a variant row drag ends. Unlike mqSaveVariantField (which
