@@ -6138,6 +6138,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
     function specIcon(name) { for (const [k,v] of Object.entries(icons)) { if ((name||'').toLowerCase().includes(k)) return v; } return '⭐'; }
 
+    // Jordan, after adding photos to every variant on an item individually,
+    // then leaving My Products and coming back: "it shows the start [star]
+    // placeholder on the variant itselfs card.. even though all the
+    // variants are fine and have their images correct... could we make it
+    // so that main card also shows the image (as long as all variants have
+    // the same image. if they dont then thats fine to have the star
+    // placeholder." The collapsed group/template card's preview used to
+    // always show the star/emoji placeholder no matter what, even once
+    // every variant already had -- individually, via the shared-photo
+    // shortcut, or by coincidence -- the exact same photo. Returns that
+    // shared URL only when EVERY variant has a photo AND they're all
+    // identical; otherwise '' (no single photo represents "every variant",
+    // so the star placeholder is still the right, honest thing to show).
+    // Purely a display convenience for the collapsed card -- never touches
+    // what's actually saved.
+    function mqSharedVariantPhotoUrl(itemId, variants, savedPhotosMap) {
+      if (!variants || !variants.length) return '';
+      const urls = variants.map(v => savedPhotosMap['spec_' + itemId + '_v' + v.id] || '');
+      return urls.every(u => u && u === urls[0]) ? urls[0] : '';
+    }
+
     let savedHidden = {};
     try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
     let savedFeatured = {};
@@ -6595,6 +6616,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
             </div>`];
           }
+          // See mqSharedVariantPhotoUrl above (Jordan: "could we make it so
+          // that main card also shows the image (as long as all variants
+          // have the same image. if they dont then thats fine to have the
+          // star placeholder"). '' means no single photo represents every
+          // variant, so the template card below falls back to the star
+          // placeholder exactly as before.
+          const sharedVariantPhotoUrl = mqSharedVariantPhotoUrl(r.id, variants, savedPhotos);
           // A variant item used to flatMap into one full card PER variant --
           // with 20-30 variants that ate up the whole grid (Jordan: "items
           // with variants could be collapsable in the myproducts section
@@ -6666,7 +6694,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               ${footerHtml}`
             : `<div style="position:relative">
                 <div id="mq-specshared-preview-${r.id}">
-                  <div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${specIcon(itemName)}</div>
+                  ${sharedVariantPhotoUrl
+                    ? `<img src="${sharedVariantPhotoUrl.replace(/"/g,'&quot;')}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.outerHTML='<div style=\\'width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px\\'>${specIcon(itemName)}</div>'"/>`
+                    : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${specIcon(itemName)}</div>`}
                 </div>
                 ${badgeHtml}
               </div>
