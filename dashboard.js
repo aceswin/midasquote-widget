@@ -4357,6 +4357,7 @@ window.logoutMember = async function () {
     // right away, not linger until the page gets refreshed.
     if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
     if (typeof window.mqRefreshCategoryOrderBox === 'function') window.mqRefreshCategoryOrderBox();
+    if (typeof window.mqRefreshItemOrderBox === 'function') window.mqRefreshItemOrderBox();
   };
 
   async function loadProposalTemplates(shopToken) {
@@ -4973,7 +4974,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
         <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
-          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable();mqRefreshCategoryOrderBox()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable();mqRefreshCategoryOrderBox();mqRefreshItemOrderBox()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
             <option value="">All project types</option>
             ${roomOptions}
           </select>
@@ -4983,9 +4984,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <span>Filter by category</span>
             <span onclick="mqShowManageCategoriesModal()" style="color:#2563eb;cursor:pointer;font-weight:600;white-space:nowrap">Edit categories</span>
           </label>
-          <select id="mq-spec-tab-filter-category" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+          <select id="mq-spec-tab-filter-category" onchange="mqFilterSpecTable();mqRefreshItemOrderBox()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
             <option value="">All categories</option>
             ${[...new Set(specs.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
+            ${specs.some(r => !(r.fields['Category']||'').trim()) ? '<option value="__other__">Other</option>' : ''}
           </select>
         </div>
         <div style="flex:1;min-width:160px">
@@ -5000,6 +5002,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
       </div>
       <div id="mq-spec-catorder-box">${mqCategoryOrderBoxHTML(savedFilters.room)}</div>
+      <div id="mq-spec-itemorder-box">${mqItemOrderBoxHTML(savedFilters.room, savedFilters.category)}</div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
@@ -5230,6 +5233,109 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return;
     }
     window.mqRefreshCategoryOrderBox();
+  };
+
+  // The items belonging to one category (or the "Other" bucket, for items
+  // with no category set at all — __other__ here is the exact same
+  // sentinel widget.js/widgetpro.js already use, not a made-up new one),
+  // scoped to one project type, in display order: whatever's been saved for
+  // this room+category pairing first, then anything not yet placed —
+  // brand-new items, or items added before this feature existed — appended
+  // in cheapest-to-priciest order (by total cost: supply + install), the
+  // same metric and same default-on-first-view order the customer-facing
+  // widget itself already sorts by. Direct analog of
+  // mqSpecCategoriesForRoom, just one level narrower (items within a single
+  // category+room instead of categories within a room).
+  function mqSpecItemsForRoomCategory(roomId, category) {
+    const specs = window._mqSpecRecords || [];
+    const itemsHere = specs.filter(r => {
+      const cat = (r.fields['Category'] || '').trim() || '__other__';
+      if (cat !== category) return false;
+      let rooms = [];
+      try { rooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { rooms = []; }
+      return !rooms.length || rooms.includes(roomId);
+    });
+    const priceOf = r => {
+      const variants = mqParseVariants(r);
+      const base = variants.length ? (variants[0].price || 0) : (r.fields['Price'] || 0);
+      return base + (r.fields['Install price'] || 0);
+    };
+    itemsHere.sort((a, b) => priceOf(a) - priceOf(b));
+    let orderMap = {};
+    try { orderMap = window._mqShopRecord?.fields['Specialty item order'] ? JSON.parse(window._mqShopRecord.fields['Specialty item order']) : {}; } catch(e) { orderMap = {}; }
+    const saved = (orderMap[roomId] || {})[category] || [];
+    const byId = new Map(itemsHere.map(r => [r.id, r]));
+    const ordered = saved.map(id => byId.get(id)).filter(Boolean);
+    const placedIds = new Set(ordered.map(r => r.id));
+    itemsHere.forEach(r => { if (!placedIds.has(r.id)) ordered.push(r); });
+    return ordered;
+  }
+
+  // Lets a shop owner control the order specialty ITEMS appear in WITHIN one
+  // category, for ONE specific project type — e.g. two items both filed
+  // under "Doors" shown in a different order for Refacing than for Kitchen.
+  // Only makes sense once a project type AND a category are both selected in
+  // the filters above (an item can belong to a category for one project
+  // type and not show at all for another, so there's no single "order" to
+  // show without both narrowed down — per Jordan: "so only if a project and
+  // category has been choosen"), and only once that room+category pairing
+  // actually has 2+ items to order. "Other" (items with no category set) is
+  // a completely normal choice here too, same as any named category — per
+  // Jordan: "that other category can allow for the rearannging of items
+  // within it and the project type." Saved on the shop record as one JSON
+  // blob keyed by project type, then by category, one level deeper than
+  // "Specialty category order" is keyed.
+  function mqItemOrderBoxHTML(roomId, category) {
+    if (!roomId || !category) return '';
+    const room = (window._mqRooms || defaultRoomTypes()).find(r => r.id === roomId);
+    const roomName = room ? room.name : roomId;
+    const catLabel = category === '__other__' ? 'Other' : category;
+    const ordered = mqSpecItemsForRoomCategory(roomId, category);
+    if (ordered.length < 2) return '';
+    return `
+      <div style="margin:16px 16px 20px;padding:22px 24px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
+        <div style="font-size:12px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Item order for ${catLabel.replace(/</g,'&lt;')} — ${roomName.replace(/</g,'&lt;')}</div>
+        <div style="font-size:11px;color:#15803d;margin-bottom:10px;line-height:1.5">This is the order customers see these items in within "${catLabel.replace(/</g,'&lt;')}" when quoting ${roomName.replace(/</g,'&lt;')} — doesn't affect this category in any other project type, or any other category. Price badges still show, they just may not stay in strict order once you've moved something.</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px">
+          ${ordered.map((r, i) => `
+            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;width:fit-content;max-width:33vw">
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px;flex-shrink:0" ${i===0?'disabled':''} onclick='mqMoveSpecItemOrder(${JSON.stringify(roomId)},${JSON.stringify(category)},${JSON.stringify(r.id)},-1)' title="Move up">↑</button>
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px;flex-shrink:0" ${i===ordered.length-1?'disabled':''} onclick='mqMoveSpecItemOrder(${JSON.stringify(roomId)},${JSON.stringify(category)},${JSON.stringify(r.id)},1)' title="Move down">↓</button>
+              <span style="font-size:13px;color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(r.fields['Item name']||'').replace(/</g,'&lt;')}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  window.mqRefreshItemOrderBox = function() {
+    const box = document.getElementById('mq-spec-itemorder-box');
+    if (!box) return;
+    const roomId = el('mq-spec-tab-filter-room')?.value || '';
+    const category = el('mq-spec-tab-filter-category')?.value || '';
+    box.innerHTML = mqItemOrderBoxHTML(roomId, category);
+  };
+
+  window.mqMoveSpecItemOrder = async function(roomId, category, itemId, dir) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const ordered = mqSpecItemsForRoomCategory(roomId, category).map(r => r.id);
+    const idx = ordered.indexOf(itemId);
+    const swapIdx = idx + dir;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= ordered.length) return;
+    [ordered[idx], ordered[swapIdx]] = [ordered[swapIdx], ordered[idx]];
+    let orderMap = {};
+    try { orderMap = shopRec.fields['Specialty item order'] ? JSON.parse(shopRec.fields['Specialty item order']) : {}; } catch(e) { orderMap = {}; }
+    const roomMap = { ...(orderMap[roomId] || {}), [category]: ordered };
+    orderMap = { ...orderMap, [roomId]: roomMap };
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Specialty item order': JSON.stringify(orderMap) });
+      shopRec.fields['Specialty item order'] = JSON.stringify(orderMap);
+    } catch(e) {
+      console.error('Failed to save item order', e);
+      alert('Could not save that order — please try again.');
+      return;
+    }
+    window.mqRefreshItemOrderBox();
   };
 
   // Categories aren't a real Airtable table — they only exist as whatever
@@ -5714,7 +5820,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       try { rooms = JSON.parse(row.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
       const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
       const category = row.getAttribute('data-category') || '';
-      const categoryMatch = !categoryFilter || category === categoryFilter;
+      // '__other__' is the "no category set" filter choice — data-category
+      // itself stays a plain empty string for those rows (same as it always
+      // has, and as mqSpecCategoryChanged still writes back when a shop
+      // owner picks "(No category)"), so match it by absence rather than by
+      // literal value.
+      const categoryMatch = !categoryFilter || (categoryFilter === '__other__' ? !category : category === categoryFilter);
       const name = row.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
       const proOnlyMatch = !proOnlyFilter || row.getAttribute('data-proonly') === '1';
@@ -8531,6 +8642,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (rec) rec.fields['Visible rooms'] = JSON.stringify(toSave);
       if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
       if (typeof window.mqRefreshCategoryOrderBox === 'function') window.mqRefreshCategoryOrderBox();
+      if (typeof window.mqRefreshItemOrderBox === 'function') window.mqRefreshItemOrderBox();
     } catch(e) {
       console.error('Failed to save room links', e);
       rooms.forEach(r => {

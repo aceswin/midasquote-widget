@@ -209,6 +209,14 @@
     // customer switches project type.
     try { window._mqSpecCategoryOrder = shop['Specialty category order'] ? JSON.parse(shop['Specialty category order']) : {}; } catch(e) { window._mqSpecCategoryOrder = {}; }
 
+    // Same idea, one level deeper — per-project-type order for items WITHIN
+    // one category (or the "Other" bucket) — e.g. two doors both filed
+    // under "Doors" shown in a different order for Refacing than for
+    // Kitchen. { [roomId]: { [categoryName-or-'__other__']: [itemId, ...] } }.
+    // See mqReorderSpecItemsWithinCategories, which applies this the same
+    // way mqReorderSpecCategoryGroups applies the category-level order above.
+    try { window._mqSpecItemOrder = shop['Specialty item order'] ? JSON.parse(shop['Specialty item order']) : {}; } catch(e) { window._mqSpecItemOrder = {}; }
+
     const p = payload.pricing || {};
 
     const lineItemRecords = payload.lineItems || [];
@@ -1624,7 +1632,7 @@
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : 'quantity')}</span>
         </div>` : '';
       return `
-      <div class="mq-spec-item" id="${itemDomId}" data-rooms="${roomsAttr}">
+      <div class="mq-spec-item" id="${itemDomId}" data-rooms="${roomsAttr}" data-item-id="${s.id}">
         <div class="mq-spec-top">
           <div style="position:relative;flex-shrink:0" id="mq-spec-visual-${prefix}-${i}" data-group-key="${groupKey}">${mqSpecVisualHTML(s, groupKey, itemDomId)}</div>
           <div style="flex:1;min-width:0">
@@ -3122,6 +3130,7 @@
         if (window.mqRenumberSteps) window.mqRenumberSteps(prefix);
       }
       mqReorderSpecCategoryGroups(prefix, roomId);
+      mqReorderSpecItemsWithinCategories(prefix, roomId);
     };
 
     // All of a shop's specialty categories are built into the page once, up
@@ -3159,6 +3168,42 @@
         if (g.style.display === 'none') return;
         g.style.margin = (seenVisible ? '14px' : '0') + ' 0 0';
         seenVisible = true;
+      });
+    };
+    // Same idea, one level deeper — items are also all built into the page
+    // once, up front, covering every project type at once, so a
+    // per-project-type-AND-category item order can't be baked in at build
+    // time either. Each category's cards live in their own horizontally
+    // scrolling row (.mq-spec-category-items when the shop has categories
+    // at all, .mq-spec-flat-items for a shop with none configured at all) —
+    // this physically re-stacks the cards WITHIN each row independently
+    // (repositioning within "Doors" never touches "Hardware", or "Doors" in
+    // a different project type) according to that room+category's saved
+    // order, falling back to whatever order they'd otherwise be in
+    // (cheapest-to-priciest, same as mqReorderSpecCategoryGroups falls back
+    // to render order) for anything not explicitly repositioned.
+    window.mqReorderSpecItemsWithinCategories = function(prefix, roomId) {
+      const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
+      if (!specBody) return;
+      const orderByRoom = (window._mqSpecItemOrder || {})[roomId] || {};
+      specBody.querySelectorAll('.mq-spec-category-items, .mq-spec-flat-items').forEach(row => {
+        // A row's own category comes from its parent capsule's data-cat (the
+        // same raw key, including __other__, mqReorderSpecCategoryGroups
+        // already matches categories with). A shop with no categories at
+        // all has exactly one such row and no wrapping capsule — there's
+        // nowhere else for its (necessarily uncategorized) order to live,
+        // so it falls back to the same __other__ key.
+        const group = row.closest('.mq-spec-category-group');
+        const cat = group ? group.dataset.cat : '__other__';
+        const roomOrder = orderByRoom[cat] || [];
+        if (!roomOrder.length) return;
+        const items = [...row.children].filter(el => el.classList.contains('mq-spec-item'));
+        if (items.length < 2) return;
+        const pos = new Map(roomOrder.map((id, i) => [id, i]));
+        items
+          .map((el, i) => ({ el, p: pos.has(el.dataset.itemId) ? pos.get(el.dataset.itemId) : (1000 + i) }))
+          .sort((a, b) => a.p - b.p)
+          .forEach(({ el }) => row.appendChild(el));
       });
     };
     // Shows the shop owner's custom guidance note for whichever project type
