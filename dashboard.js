@@ -7817,17 +7817,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // markup structure. Every field here autosaves through
     // mqSaveSizedVariantField, which re-derives label/price after every
     // change via mqApplySizedVariantCalcs above.
+    //
+    // Both <select>s below need an explicit width: #midasquote-dashboard's
+    // global form-field CSS rule sets `select{width:100%}`, which (since
+    // these selects didn't set their own width) was stretching each one to
+    // the full row width and forcing it onto its own line -- the "in" unit
+    // picker and the "Flat $" pricing-mode picker each taking up the whole
+    // row Jordan saw. Sized here to comfortably fit their own longest
+    // option's text ("inches" / "$/lin ft") plus padding, and matched to
+    // the same width as each other so the two sit neatly side by side.
     const sizedControlsHTML = (v, vi) => !v.sized ? '' : `
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px 24px;width:100%">
+        <div style="font-size:10px;color:#9ca3af;width:100%">Input your sizes below — the variant name above will fill in automatically from them.</div>
         <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="First dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
         <span style="font-size:11px;color:#9ca3af">×</span>
         <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Second dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
-        <select title="Unit" style="font-size:11px;padding:5px 4px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'unit',this.value)">
-          <option value="in" ${v.unit!=='mm'?'selected':''}>in</option>
+        <button type="button" class="mq-btn mq-btn-sm" title="Switch which number prints first in the auto-filled size — e.g. height × width vs. width × height. Doesn't change the price either way." onclick="mqSaveSizedVariantField('${r.id}',${vi},'swap',${v.swap ? 'false' : 'true'})">⇄ Switch order</button>
+        <select title="Unit" style="width:92px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'unit',this.value)">
+          <option value="in" ${v.unit!=='mm'?'selected':''}>inches</option>
           <option value="mm" ${v.unit==='mm'?'selected':''}>mm</option>
         </select>
-        <button type="button" class="mq-btn mq-btn-sm" title="Swap which measurement prints first in the auto-filled label — doesn't change pricing" onclick="mqSaveSizedVariantField('${r.id}',${vi},'swap',${v.swap ? 'false' : 'true'})">⇄ ${v.swap ? 'B×A' : 'A×B'}</button>
-        <select title="How this variant's price gets calculated" style="font-size:11px;padding:5px 4px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'rateMode',this.value)">
+        <select title="How this variant's price gets calculated" style="width:92px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'rateMode',this.value)">
           <option value="flat" ${(!v.rateMode||v.rateMode==='flat')?'selected':''}>Flat $</option>
           <option value="sqft" ${v.rateMode==='sqft'?'selected':''}>${CUR()}/sq ft</option>
           <option value="linft" ${v.rateMode==='linft'?'selected':''}>${CUR()}/lin ft</option>
