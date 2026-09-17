@@ -309,7 +309,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
         <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
-        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Manage categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
+        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Edit categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
         <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it: enter 16.80 as the install price, not ${CUR()}71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
         <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
@@ -2150,7 +2150,7 @@ window.logoutMember = async function () {
   // form snippet, this calls their documented updateMemberAuth() method
   // directly — same DOM package already used everywhere else on this page
   // (logout, billing portal, plan checkout) — inside a modal styled to
-  // match the rest of the dashboard exactly, e.g. Manage categories.
+  // match the rest of the dashboard exactly, e.g. Edit categories.
   window.mqShowChangePasswordModal = function() {
     let modal = document.getElementById('mq-changepw-modal');
     if (!modal) {
@@ -4981,7 +4981,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="flex:1;min-width:160px">
           <label style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;font-size:11px;color:#6b7280;margin-bottom:4px">
             <span>Filter by category</span>
-            <span onclick="mqShowManageCategoriesModal()" style="color:#2563eb;cursor:pointer;font-weight:600;white-space:nowrap">Manage categories</span>
+            <span onclick="mqShowManageCategoriesModal()" style="color:#2563eb;cursor:pointer;font-weight:600;white-space:nowrap">Edit categories</span>
           </label>
           <select id="mq-spec-tab-filter-category" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
             <option value="">All categories</option>
@@ -5192,12 +5192,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="margin:28px 16px 20px;padding:22px 24px;background:#eef2ff;border:1.5px solid #a5b4fc;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
         <div style="font-size:12px;font-weight:700;color:#3730a3;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Category order for ${roomName.replace(/</g,'&lt;')}</div>
         <div style="font-size:11px;color:#4338ca;margin-bottom:10px;line-height:1.5">This is the order customers see these categories in on the widget when quoting ${roomName.replace(/</g,'&lt;')} — doesn't affect any other project type.</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px">
           ${ordered.map((c, i) => `
-            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e0e7ff;border-radius:6px;padding:6px 10px">
-              <span style="flex:1;font-size:13px;color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.replace(/</g,'&lt;')}</span>
-              <button class="mq-btn mq-btn-sm" style="padding:2px 8px" ${i===0?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},-1)' title="Move up">↑</button>
-              <button class="mq-btn mq-btn-sm" style="padding:2px 8px" ${i===ordered.length-1?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},1)' title="Move down">↓</button>
+            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e0e7ff;border-radius:6px;padding:6px 10px;width:fit-content;max-width:33vw">
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px;flex-shrink:0" ${i===0?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},-1)' title="Move up">↑</button>
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px;flex-shrink:0" ${i===ordered.length-1?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},1)' title="Move down">↓</button>
+              <span style="font-size:13px;color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.replace(/</g,'&lt;')}</span>
             </div>`).join('')}
         </div>
       </div>`;
@@ -5255,7 +5255,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.25);max-height:80vh;overflow-y:auto">
-        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px">Manage categories</div>
+        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px">Edit categories</div>
         <div style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.5">Rename a category to update it everywhere at once, or delete one — deleting a category never deletes its items, they just become uncategorized.</div>
         ${categories.length ? categories.map(c => `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #f3f4f6">
