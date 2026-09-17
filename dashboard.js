@@ -7850,8 +7850,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Specialty Items table's own rows: draggable only turns on while the
     // mouse is down on the handle itself, so selecting text in the label
     // input isn't prone to being grabbed as a drag instead.
+    //
+    // Jordan, after trying the sized-variant controls: "wow thats perfect,
+    // now we just need a little seperation for each from eachother... maybe
+    // a border and some shading." A plain `border-bottom` between rows
+    // wasn't enough once a row could also carry a whole extra sub-row of
+    // dimension/unit/rate controls underneath it -- it got hard to tell
+    // where one variant's card ended and the next one's began. Each row is
+    // now its own bordered, lightly-shaded card with its own rounded
+    // corners and a gap below it, so a variant (label/price/sized controls
+    // and all) reads as one distinct unit at a glance, especially useful
+    // once a shop owner has 20-30 of them stacked in a row.
     const rows = variants.map((v, vi) => `
-      <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap;cursor:grab">
+      <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;flex-wrap:wrap;cursor:grab">
         <span class="mq-variant-drag-handle" title="Drag to reorder" style="color:#9ca3af;font-size:16px;cursor:grab;flex-shrink:0">⠿</span>
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
