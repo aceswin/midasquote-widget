@@ -5991,6 +5991,22 @@ window.mqTogDrawerConfig=(prefix)=>{
       const hasCtInstall = hasCountertopInstall();
       const n=name||`Surface ${surfCounts[prefix]}`;
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
+      // Jordan: "when a new surface i added i want it to carry over
+      // whatever the install selections were and the removal selections,
+      // because they will likely be the same.. so just by default when
+      // they add another surface it will have that install and removal
+      // selection the same as the first surface automatically." Read
+      // straight off the DOM (not a stored JS value) so this always
+      // reflects whatever the first surface is CURRENTLY set to, even if
+      // it was changed after being added. A brand new project's very first
+      // surface has no earlier surface to copy from, so both stay null and
+      // each select simply falls back to its normal first-option default,
+      // exactly as before.
+      const firstSurfContainer = document.getElementById(containerId);
+      const firstSiSelect = firstSurfContainer?.querySelector(`select[id^="mqssi-s${prefix}"]`);
+      const firstRmSelect = firstSurfContainer?.querySelector(`select[id^="mqsrm-s${prefix}"]`);
+      const carrySi = firstSiSelect ? firstSiSelect.value : null;
+      const carryRm = firstRmSelect ? firstRmSelect.value : null;
       const card=document.createElement('div');
       card.className='mq-surface-card';card.id='mqsc-'+id;card.dataset.prefix=prefix;
       card.innerHTML=`
@@ -6022,12 +6038,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
         <div class="mq-grid2" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
-            <select id="mqssi-${id}" style="max-width:260px;min-width:140px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
+            <select id="mqssi-${id}" style="max-width:260px;min-width:140px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':`<option value="inherit"${carrySi==='inherit'?' selected':''}>Same as project</option>`}<option value="supply"${carrySi==='supply'?' selected':''}>Supply only</option><option value="install"${carrySi==='install'?' selected':''}>Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
           <div class="mq-field"><label class="mq-label">Backsplash</label>
             <select id="mqsbs-${id}" style="max-width:260px;min-width:140px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select></div>
         </div>
         ${hasCtRemoval() ? `<div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Removal of existing countertop?</label>
-          <select id="mqsrm-${id}" style="max-width:260px;min-width:140px" onchange="mqSurfUpdatePreview('${id}')"><option value="no">No removal needed</option><option value="yes">Yes — remove &amp; dispose</option></select></div>` : ''}
+          <select id="mqsrm-${id}" style="max-width:260px;min-width:140px" onchange="mqSurfUpdatePreview('${id}')"><option value="no"${carryRm==='yes'?'':' selected'}>No removal needed</option><option value="yes"${carryRm==='yes'?' selected':''}>Yes — remove &amp; dispose</option></select></div>` : ''}
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
