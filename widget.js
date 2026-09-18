@@ -6288,7 +6288,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       return false;
     }
-    window.mqAddSurface=(prefix, skipValidation)=>{
+    window.mqAddSurface=(prefix, skipValidation, opts)=>{
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
       const container = document.getElementById(containerId);
       // Whichever surface is currently open (if any) has to actually be
@@ -6326,9 +6326,20 @@ window.mqTogDrawerConfig=(prefix)=>{
       // "id like it to put the 'countertop surfaces' heading as the focal
       // point, so just a little higher, so the user sees that their first
       // item was added."
-      const titleEl = document.getElementById(prefix==='ct' ? 'mq-ct-surfaces-title' : 'mq-b-ct-surfaces-title');
-      const newCard = document.getElementById('mqsc-'+newId);
-      (titleEl || newCard)?.scrollIntoView({behavior:'smooth', block:'start'});
+      // opts.scroll (default true) lets a programmatic caller opt out —
+      // mqTogUseCab passes {scroll:false} through here when IT was told
+      // not to scroll (see the comment there), so a project-type switch
+      // that silently seeds a surface behind the scenes (e.g. switching to
+      // Refacing/Restaining/Repainting, where cabinets aren't part of the
+      // job) doesn't yank the page down to a section the customer never
+      // asked to see. Every direct "+ Add another surface" click, and the
+      // snapshot-restore replay above, omit opts and keep scrolling exactly
+      // as before.
+      if (!opts || opts.scroll !== false) {
+        const titleEl = document.getElementById(prefix==='ct' ? 'mq-ct-surfaces-title' : 'mq-b-ct-surfaces-title');
+        const newCard = document.getElementById('mqsc-'+newId);
+        (titleEl || newCard)?.scrollIntoView({behavior:'smooth', block:'start'});
+      }
     };
     window.mqRemoveSurf=(prefix,id)=>{
       const removedName = gv(`mqsn-${id}`) || 'Surface';
@@ -6371,7 +6382,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       } else if (prefix === 'b') {
         const surfContainer = document.getElementById('mq-b-ct-surfaces');
         if (surfContainer && !surfContainer.children.length) {
-          window.mqAddSurface('b');
+          // Forward the same scroll intent this function itself was given
+          // — a direct checkbox click (scrollOnExisting true, the default)
+          // still scrolls to show the freshly seeded first surface, same as
+          // always, but a silent/programmatic call (scroll:false, e.g. from
+          // a project-type switch) stays silent instead of jumping the page.
+          window.mqAddSurface('b', false, {scroll: scrollOnExisting});
           surfContainer.dataset.autoAdded = 'true';
         } else if (surfContainer && scrollOnExisting) {
           // Surface(s) already exist from an earlier uncheck — bring the
