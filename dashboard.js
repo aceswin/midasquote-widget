@@ -8788,14 +8788,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
       : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
     const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat)}</div>` : '';
-    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
+    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
       <div id="mq-photo-preview-${key}">${preview}</div>
       <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
       ${roomLinkHtml}
       ${featuredHtml}
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
         <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"
-          onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1';${autosaveJs}"/>
+          onchange="mqMarkProductsDirty();${autosaveJs}"/>
         Hide from showroom
       </label>
       ${isDemo ? `
