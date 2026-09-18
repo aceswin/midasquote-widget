@@ -8670,6 +8670,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // customers -- kept in sync here so what the dashboard shows checked
   // matches what the widget actually does.
   function roomCheckedByDefault(r, cat) {
+    // A project type the CATEGORY itself has hidden (the 🗂️ control at the
+    // top of each My Products category) is never checked-by-default for an
+    // individual item that hasn't been explicitly configured -- the
+    // category is the ceiling, not just a starting suggestion an item can
+    // quietly ignore. Added 2026-09-17 per Jordan: unchecking the category
+    // for a project type "should automatically uncheck every product under
+    // that section" -- this is what makes an item's own checkbox panel
+    // actually reflect that, instead of always showing every project type
+    // checked regardless of what the category above it says. See the
+    // matching disabled-checkbox treatment in lineItemRoomDisclosure/
+    // roomLinkDisclosure, and effectiveVisibleRooms in widget.js/
+    // widgetpro.js/showroom.html, which now enforces the same rule for
+    // what customers actually see.
+    if (((window._mqCategoryRooms || {})[cat] || []).includes(r.id)) return false;
     return cat === 'specialty' ? !r.forCountertops : true;
   }
 
@@ -8700,10 +8714,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let visibleRooms = [];
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
     const summary = roomLinkSummaryText(visibleRooms, rooms, 'specialty');
-    const checkboxes = rooms.map(r => `
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, 'specialty'))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
-      </label>`).join('');
+    // A project type the Specialty Items category itself hides (if/when
+    // that control ever gets exposed the same way the pricing categories'
+    // 🗂️ control is) can never be re-enabled from one item's own panel --
+    // same "category is the ceiling" rule as lineItemRoomDisclosure below.
+    const categoryHidden = (window._mqCategoryRooms || {})['specialty'] || [];
+    const checkboxes = rooms.map(r => {
+      const catHidden = categoryHidden.includes(r.id);
+      const isChecked = !catHidden && (visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, 'specialty'));
+      return `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:${catHidden?'not-allowed':'pointer'};opacity:${catHidden?'0.5':'1'}"${catHidden?` title="Hidden for this project type by the category setting above — enable it there first."`:''}>
+        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:10px">🔒</span>':''}
+      </label>`;
+    }).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
         <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
@@ -9089,10 +9112,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
     const summary = roomLinkSummaryText(visibleRooms, rooms, cat);
     const idsAttr = (ids||[]).join(',');
-    const checkboxes = rooms.map(r => `
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, cat))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
-      </label>`).join('');
+    // A project type the whole CATEGORY hides (the 🗂️ control above every
+    // category grid) can't be re-enabled from one item's own panel -- the
+    // category checkbox is the master switch per project type; an item can
+    // only add its OWN extra restrictions within project types the
+    // category still shows, never re-open one the category has closed.
+    // Added 2026-09-17 per Jordan, after "Hidden for: Restaining,
+    // Repainting, Refacing" on Drawer Configurations didn't match what a
+    // Drawer item's own panel showed (every box checked, misleadingly
+    // implying it was independently visible for those three anyway).
+    const categoryHidden = (window._mqCategoryRooms || {})[cat] || [];
+    const checkboxes = rooms.map(r => {
+      const catHidden = categoryHidden.includes(r.id);
+      const isChecked = !catHidden && (visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, cat));
+      return `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:${catHidden?'not-allowed':'pointer'};opacity:${catHidden?'0.5':'1'}"${catHidden?` title="Hidden for this project type by the category setting above — enable it there first."`:''}>
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:10px">🔒</span>':''}
+      </label>`;
+    }).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
         <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
@@ -9250,7 +9287,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // Reflect the sync visually on that item's own checkbox/summary, if rendered
       const key = cat === 'specialty' ? `spec_${item.id}` : `li_${cat}_${(item.baseName||'').replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
       const itemCb = document.getElementById(`mq-li-room-${key}-${roomId}`);
-      if (itemCb) itemCb.checked = checked;
+      if (itemCb) {
+        itemCb.checked = checked;
+        // Keep the item's own checkbox actually locked/unlocked in step
+        // with the category, not just its checked state -- otherwise a
+        // panel that's already open when the category gets toggled would
+        // show the right checked/unchecked state but still let a shop
+        // owner click it back on immediately, since disabled/opacity/title
+        // were only ever set once at initial render (lineItemRoomDisclosure/
+        // roomLinkDisclosure), not re-applied here.
+        itemCb.disabled = !checked;
+        const lbl = itemCb.closest('label');
+        if (lbl) {
+          lbl.style.cursor = checked ? 'pointer' : 'not-allowed';
+          lbl.style.opacity = checked ? '1' : '0.5';
+          if (checked) lbl.removeAttribute('title');
+          else lbl.setAttribute('title', 'Hidden for this project type by the category setting above — enable it there first.');
+        }
+      }
       const itemSummaryEl = document.getElementById(`mq-li-room-summary-${key}`);
       if (itemSummaryEl) itemSummaryEl.textContent = roomLinkSummaryText(finalList, rooms, cat);
     }));

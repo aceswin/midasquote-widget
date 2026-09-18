@@ -88,16 +88,37 @@
     catch(e) { return []; }
   }
 
-  // Implements the override rule: an item's own explicit project-type setting
-  // always wins outright. Only when an item has NEVER been individually
-  // configured does it inherit whatever the whole category is hidden for.
+  // The category's own hidden list is now a hard ceiling, not just a
+  // fallback default an item can quietly override — changed 2026-09-17 per
+  // Jordan: the category-level 🗂️ control on My Products is meant to be
+  // the master switch per project type ("if you don't want drawers, doors,
+  // or box materials to show in refacing/restaining/repainting... that
+  // should automatically uncheck every product under that section... and
+  // if someone tried to recheck it, it should say this section is hidden
+  // from this room type"). So an item can still use its own explicit
+  // setting to be MORE restrictive than its category, but never less —
+  // any project type the category hides is filtered out of an item's own
+  // explicit list too, not just used as its default when unconfigured.
+  // This also protects against stale data saved before this rule existed
+  // (an item explicitly scoped to a room the category has since hidden).
   // Returns an empty array to mean "visible everywhere" — same convention
   // already used throughout the rest of the file, so no other code needs to
-  // change to understand the result of this function.
+  // change to understand the result of this function, EXCEPT the one edge
+  // case handled below.
   function effectiveVisibleRooms(itemExplicitRooms, category) {
-    if (itemExplicitRooms && itemExplicitRooms.length) return itemExplicitRooms;
     const categoryRooms = window._mqCategoryRooms || {};
     const hiddenForCategory = categoryRooms[category] || [];
+    if (itemExplicitRooms && itemExplicitRooms.length) {
+      if (!hiddenForCategory.length) return itemExplicitRooms;
+      const filtered = itemExplicitRooms.filter(id => !hiddenForCategory.includes(id));
+      // If every one of the item's own explicitly-chosen project types
+      // happens to be one the category now hides, the item is explicitly
+      // visible for NONE of them — returning [] here would flip meaning
+      // under this file's "empty = everywhere" convention (the opposite
+      // of intended), so a sentinel id that can never match a real
+      // project type keeps it correctly hidden everywhere instead.
+      return filtered.length ? filtered : ['__none__'];
+    }
     if (!hiddenForCategory.length) return [];
     const allRoomIds = (window._mqRoomTypes || []).map(r => r.id);
     return allRoomIds.filter(id => !hiddenForCategory.includes(id));

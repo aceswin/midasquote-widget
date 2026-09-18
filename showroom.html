@@ -251,13 +251,27 @@
       catch(e) { return []; }
     }
 
-    // Same override rule used everywhere else: an item's own explicit
-    // project-type setting always wins; only an item that's never been
-    // individually configured inherits whatever the whole category is
-    // hidden for. Empty array = visible for every project type.
+    // The category's own hidden list is now a hard ceiling, not just a
+    // fallback default an item can quietly override — changed 2026-09-17
+    // per Jordan: the category-level 🗂️ control on My Products is meant to
+    // be the master switch per project type, so an item can still use its
+    // own explicit setting to be MORE restrictive than its category, but
+    // never less. Same rule now enforced identically in widget.js's and
+    // widgetpro.js's own effectiveVisibleRooms — see their comments for
+    // the full rationale. Empty array = visible for every project type,
+    // EXCEPT the one sentinel case below.
     function effectiveVisibleRooms(itemExplicitRooms, category, categoryRooms, allRoomIds) {
-      if (itemExplicitRooms && itemExplicitRooms.length) return itemExplicitRooms;
       const hiddenForCategory = categoryRooms[category] || [];
+      if (itemExplicitRooms && itemExplicitRooms.length) {
+        if (!hiddenForCategory.length) return itemExplicitRooms;
+        const filtered = itemExplicitRooms.filter(id => !hiddenForCategory.includes(id));
+        // Every one of the item's own explicitly-chosen project types is
+        // one the category now hides -- returning [] here would flip
+        // meaning under this page's "empty = everywhere" convention (the
+        // opposite of intended), so a sentinel id that can never match a
+        // real project type keeps it correctly hidden everywhere instead.
+        return filtered.length ? filtered : ['__none__'];
+      }
       if (!hiddenForCategory.length) return [];
       return allRoomIds.filter(id => !hiddenForCategory.includes(id));
     }
