@@ -2862,14 +2862,24 @@ window.logoutMember = async function () {
     // shop owner can always turn any of them back on for a given project
     // type from the My Products tab if they want to use the wizard for it
     // after all.
-    // Door hinges deliberately isn't in this list — it doesn't need to be.
-    // The whole "Cabinet measurements" section (where hinges live) already
-    // hides itself on the widget whenever Box Materials has no visible
-    // options for a room (see mqRefreshSectionVisibility's `cabActive`
-    // check), so hiding Box Materials here hides hinges along with it for
-    // free.
+    // Door Hinges is now in this list too (added 2026-09-18, per Jordan:
+    // "hinges are tied to doors, so whatever happens to the doors section,
+    // happens same to hinges section") -- it used to be deliberately left
+    // out, on the reasoning that the whole "Cabinet measurements" section
+    // (where hinges live) already hides itself on the widget whenever Box
+    // Materials has no visible options for a room (see
+    // mqRefreshSectionVisibility's `cabActive` check), so hiding Box
+    // Materials hid hinges along with it "for free" on the customer-facing
+    // side regardless. That's still true, but it left the DASHBOARD's own
+    // category-hiding state inconsistent for a brand-new shop: Box
+    // Materials/Door Styles/Drawer Configurations would show "Hidden for:
+    // Refacing, Repainting, Restaining" while Hinges' own 🗂️ control still
+    // showed "Visible for all project types" until someone happened to
+    // touch it — exactly the mismatch that prompted adding Hinges to
+    // LINKED_CABINET_CATS in the first place. Included here now so a
+    // brand-new shop starts fully consistent across all four from day one.
     const NON_WIZARD_ROOM_IDS = ['refacing', 'repainting', 'restaining'];
-    const NON_WIZARD_HIDDEN_CATS = ['material', 'door', 'drawer', 'trim_crown', 'trim_valance', 'tall_cabinet'];
+    const NON_WIZARD_HIDDEN_CATS = ['material', 'door', 'drawer', 'hinge', 'trim_crown', 'trim_valance', 'tall_cabinet'];
     const categoryRooms = window._mqCategoryRooms || {};
     let categoryRoomsChanged = false;
     NON_WIZARD_HIDDEN_CATS.forEach(cat => {
@@ -3666,28 +3676,31 @@ window.logoutMember = async function () {
     // means the shop DID interact with this and deliberately ended up at
     // "visible everywhere" (see the "all-checked collapses back to []"
     // comment in applyCategoryRoomChange below) — that choice must never
-    // get silently overwritten by this. Box Materials, Door Styles, and
-    // Drawer Configurations (LINKED_CABINET_CATS — always kept in sync with
-    // each other) start hidden for Refacing, Repainting, and Restaining,
-    // since those three project types reuse the customer's EXISTING
-    // box/doors/drawers rather than pricing new ones — without this, a shop
-    // has to notice and hide all three by hand before their first refacing
-    // quote looks right. This only ever fires once per shop: the moment it
-    // saves, 'material' gets a real key (even if that key is later toggled
-    // back to []), so it can never re-fire or clobber a shop's own later
-    // choice. Deliberately skips bulk-syncing individual items' own
-    // "Visible rooms" fields the way a manual toggle does (mqToggleCategoryRoom
-    // below) — window._mqByCategory isn't populated yet this early in the
-    // page load, and isn't needed anyway: a shop's default line items have
-    // no per-item override yet, so the widget's own fallback rule
-    // (effectiveVisibleRooms in widget.js/widgetpro.js — an item only
-    // inherits the category's hidden list when it has no explicit setting
-    // of its own) already hides them correctly from this category default
-    // alone.
+    // get silently overwritten by this. Box Materials, Door Styles, Drawer
+    // Configurations, and Door Hinges (LINKED_CABINET_CATS — always kept in
+    // sync with each other) start hidden for Refacing, Repainting, and
+    // Restaining, since those three project types reuse the customer's
+    // EXISTING box/doors/drawers/hinges rather than pricing new ones —
+    // without this, a shop has to notice and hide all four by hand before
+    // their first refacing quote looks right. Hinge added 2026-09-18, per
+    // Jordan: "hinges are tied to doors, so whatever happens to the doors
+    // section, happens same to hinges section" — matches LINKED_CABINET_CATS
+    // and the wizard's own NON_WIZARD_HIDDEN_CATS default above. This only
+    // ever fires once per shop: the moment it saves, 'material' gets a real
+    // key (even if that key is later toggled back to []), so it can never
+    // re-fire or clobber a shop's own later choice. Deliberately skips
+    // bulk-syncing individual items' own "Visible rooms" fields the way a
+    // manual toggle does (mqToggleCategoryRoom below) — window._mqByCategory
+    // isn't populated yet this early in the page load, and isn't needed
+    // anyway: a shop's default line items have no per-item override yet, so
+    // the widget's own fallback rule (effectiveVisibleRooms in widget.js/
+    // widgetpro.js — an item only inherits the category's hidden list when
+    // it has no explicit setting of its own) already hides them correctly
+    // from this category default alone.
     if (categoryRooms.material === undefined) {
       const defaultHiddenRoomIds = ['refacing', 'repainting', 'restaining'].filter(id => rooms.some(r => r.id === id));
       if (defaultHiddenRoomIds.length) {
-        const seeded = { ...categoryRooms, material: defaultHiddenRoomIds, door: defaultHiddenRoomIds, drawer: defaultHiddenRoomIds };
+        const seeded = { ...categoryRooms, material: defaultHiddenRoomIds, door: defaultHiddenRoomIds, drawer: defaultHiddenRoomIds, hinge: defaultHiddenRoomIds };
         window._mqCategoryRooms = seeded;
         atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Category rooms': JSON.stringify(seeded) })
           .then(() => { shop.fields['Category rooms'] = JSON.stringify(seeded); })
@@ -8724,7 +8737,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const isChecked = !catHidden && (visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, 'specialty'));
       return `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:${catHidden?'not-allowed':'pointer'};opacity:${catHidden?'0.5':'1'}"${catHidden?` title="Hidden for this project type by the category setting above — enable it there first."`:''}>
-        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:10px">🔒</span>':''}
+        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:11px;color:#92400e;font-weight:600;white-space:nowrap">🔒 hidden</span>':''}
       </label>`;
     }).join('');
     return `
@@ -8733,7 +8746,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span id="mq-spec-room-summary-${itemId}">${summary}</span>
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:200px">
           ${checkboxes}
         </div>
       </details>`;
@@ -9127,7 +9140,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const isChecked = !catHidden && (visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, cat));
       return `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:${catHidden?'not-allowed':'pointer'};opacity:${catHidden?'0.5':'1'}"${catHidden?` title="Hidden for this project type by the category setting above — enable it there first."`:''}>
-        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:10px">🔒</span>':''}
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:11px;color:#92400e;font-weight:600;white-space:nowrap">🔒 hidden</span>':''}
       </label>`;
     }).join('');
     return `
@@ -9136,7 +9149,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span id="mq-li-room-summary-${key}">${summary}</span>
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:200px">
           ${checkboxes}
         </div>
       </details>`;
@@ -9219,7 +9232,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </label>`).join('');
     const linkedWarning = LINKED_CABINET_CATS.includes(cat) ? `
       <div style="font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:8px;line-height:1.4">
-        ⚠️ Box Materials, Door Styles, and Drawer Configurations are always used together. Unchecking a project type here does the same for all three automatically, which hides the whole Cabinet measurements section on the widget for that project type.
+        ⚠️ ${mqJoinNatural(LINKED_CABINET_CATS.map(c => CAT_DISPLAY_NAMES[c]))} are always used together. Unchecking a project type here does the same for all of them automatically, which hides the whole Cabinet measurements section on the widget for that project type.
       </div>` : '';
     // Plain-language explanation of what this control actually does, sitting
     // right beside it (not tucked inside the click-to-open panel) so it's
@@ -9229,7 +9242,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // neighboring caption just below, for consistency.
     const howItWorksNote = `
       <span style="font-size:11px;color:#9ca3af;line-height:1.4;max-width:420px">
-        This is the master switch for ${CAT_DISPLAY_NAMES[cat]||'this category'} on each project type. Uncheck one above and every item below is hidden and locked (🔒) for it automatically. Individual products can still be hidden for the project types they're visible for here, using their own checkboxes below — but they can't be turned back on for a project type that's unchecked up here.
+        This is the master switch for ${CAT_DISPLAY_NAMES[cat]||'this category'} on each project type. Uncheck a project type and every item and this entire section is hidden and locked (🔒) for it automatically. Individual products can still be hidden for the project types they're visible for here, using their own checkboxes below — but they can't be turned back on for a project type that's unchecked up here.
       </span>`;
     return `
       <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
@@ -9248,11 +9261,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>`;
   }
 
-  // Material, Door Styles, and Drawer Configurations are always used
-  // together for cabinet pricing — unchecking any one of them for a project
-  // type hides the whole Cabinet measurements section on the widget, so all
-  // three need to stay in sync rather than letting them drift apart.
-  const LINKED_CABINET_CATS = ['material', 'door', 'drawer'];
+  // Material, Door Styles, Drawer Configurations, and Door Hinges are always
+  // used together for cabinet pricing — unchecking any one of them for a
+  // project type hides the whole Cabinet measurements section on the widget,
+  // so all four need to stay in sync rather than letting them drift apart.
+  // Door Hinges added 2026-09-18 per Jordan, after toggling Door Hinges'
+  // own 🗂️ control for Refacing/Repainting/Restaining left Box
+  // Materials/Door Styles/Drawer Configurations' own category state
+  // untouched (and vice versa) even though they're all part of the same
+  // "Cabinet measurements" section on the widget: "if doors are unchecked
+  // on the master side for a project type then hinges need to be
+  // automatically the same since they are connected."
+  const LINKED_CABINET_CATS = ['material', 'door', 'drawer', 'hinge'];
+
+  // Small "X, Y, and Z" formatter (Oxford comma, "X and Y" for exactly two,
+  // just "X" for one) — used for the linked-category messaging below so it
+  // reads naturally regardless of how many categories end up in
+  // LINKED_CABINET_CATS, instead of a hardcoded "and"-chain that gets
+  // grammatically worse every time a category is added to the group.
+  function mqJoinNatural(list) {
+    if (list.length <= 1) return list.join('');
+    if (list.length === 2) return list.join(' and ');
+    return list.slice(0, -1).join(', ') + ', and ' + list[list.length - 1];
+  }
 
   async function applyCategoryRoomChange(cat, roomId, checked) {
     const shopRec = window._mqShopRecord;
@@ -9330,7 +9361,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (LINKED_CABINET_CATS.includes(cat)) {
       const others = LINKED_CABINET_CATS.filter(c => c !== cat);
       await Promise.all(others.map(otherCat => applyCategoryRoomChange(otherCat, roomId, checked)));
-      showMsg('mq-products-msg', `✓ Also updated ${others.map(c => CAT_DISPLAY_NAMES[c]).join(' and ')} to match, since they're always used together.`);
+      showMsg('mq-products-msg', `✓ Also updated ${mqJoinNatural(others.map(c => CAT_DISPLAY_NAMES[c]))} to match, since they're always used together.`);
     }
   };
 
