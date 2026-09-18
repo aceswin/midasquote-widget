@@ -9221,18 +9221,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:8px;line-height:1.4">
         ⚠️ Box Materials, Door Styles, and Drawer Configurations are always used together. Unchecking a project type here does the same for all three automatically, which hides the whole Cabinet measurements section on the widget for that project type.
       </div>` : '';
+    // Plain-language explanation of what this control actually does, sitting
+    // right beside it (not tucked inside the click-to-open panel) so it's
+    // understandable at a glance -- added 2026-09-18 per Jordan, after the
+    // category-vs-item hiding relationship needed a whole back-and-forth to
+    // clarify. Same visual pattern as the "+ New group" button's own
+    // neighboring caption just below, for consistency.
+    const howItWorksNote = `
+      <span style="font-size:11px;color:#9ca3af;line-height:1.4;max-width:420px">
+        This is the master switch for ${CAT_DISPLAY_NAMES[cat]||'this category'} on each project type. Uncheck one above and every item below is hidden and locked (🔒) for it automatically. Individual products can still be hidden for the project types they're visible for here, using their own checkboxes below — but they can't be turned back on for a project type that's unchecked up here.
+      </span>`;
     return `
-      <details style="position:relative;margin-bottom:12px" ontoggle="mqPositionRoomPanel(this)">
-        <summary style="font-size:12px;font-weight:600;color:#92400e;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;width:fit-content">
-          🗂️ <span id="mq-cat-room-summary-${cat}">${summary}</span>
-          <span style="font-size:15px;line-height:1">▾</span>
-        </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
-          ${linkedWarning}
-          <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match. Change one item afterward to make it an exception.</div>
-          ${checkboxes}
-        </div>
-      </details>`;
+      <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
+          <summary style="font-size:12px;font-weight:600;color:#92400e;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;width:fit-content">
+            🗂️ <span id="mq-cat-room-summary-${cat}">${summary}</span>
+            <span style="font-size:15px;line-height:1">▾</span>
+          </summary>
+          <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
+            ${linkedWarning}
+            <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match, and locks/unlocks each item's own checkbox for that project type to match. An item can only add its own extra hiding on top of this — it can never override a project type unchecked here.</div>
+            ${checkboxes}
+          </div>
+        </details>
+        ${howItWorksNote}
+      </div>`;
   }
 
   // Material, Door Styles, and Drawer Configurations are always used
