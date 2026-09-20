@@ -6315,6 +6315,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const items = byCategory[cat] || [];
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
+      const hasGroups = GROUPABLE_CATS.includes(cat) && items.some(i => i.groupName);
+      const catSortDir = mqSortDirFor(cat);
       return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
@@ -6333,6 +6335,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;max-width:320px;box-sizing:border-box"
               onchange="mqSaveCategoryPickerLabel('${cat}',this.value)"/>
           </div>` : ''}
+          ${hasGroups ? '' : `
+          <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqToggleCatSort('${cat}')" title="Sort this category's items by name">Sort by name (${catSortDir==='desc'?'Z→A':'A→Z'})</button>
+            <input type="text" id="mq-cat-search-${cat}" oninput="mqFilterProductCards('${cat}')" onclick="event.stopPropagation()" placeholder="Search by name…" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;flex:1;min-width:160px;max-width:260px"/>
+          </div>
+          <div id="mq-cat-search-empty-${cat}" style="display:none;font-size:12px;color:#9ca3af;padding:0 0 0.75rem">No items match that search.</div>
+          `}
           <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
           ${cat === 'countertop' && mqCountertopAddonPhotoList().length ? `
           <div style="margin-top:16px">
@@ -6384,6 +6393,172 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (opening) _mqExpandedProductGroups.add(fullKey); else _mqExpandedProductGroups.delete(fullKey);
     };
 
+    // Jordan: "i dont have the items sorted in any way under their
+    // categories... id like the items to be sorted in alphabetical order
+    // by default... if they have a group then inside their group there can
+    // be a 'Sort by -> A-Z' beside the edit group button. if they dont
+    // have a group then beside or under the pick a collection input the
+    // same thing." Purely a display-order preference for this tab — not
+    // persisted to Airtable, so it always starts fresh at the A→Z default
+    // on reload, same as groups always starting collapsed above. Keyed
+    // either by a named group's full "${cat}::${groupName}" (one control
+    // per group, next to that group's own "Edit group" button) or by the
+    // bare category id for that category's own "no group" bucket (every
+    // item in a category with no groups at all, or just the leftover
+    // "Other" items in a partially-grouped one) — one control near "Pick a
+    // collection" covers that case instead.
+    let _mqProductSortDir = {};
+    function mqSortDirFor(key) { return _mqProductSortDir[key] === 'desc' ? 'desc' : 'asc'; }
+    function mqSortItemsByName(items, key, nameFn) {
+      const dir = mqSortDirFor(key);
+      const getName = nameFn || ((i) => i.baseName || '');
+      return [...items].sort((a, b) => {
+        const cmp = (getName(a) || '').localeCompare(getName(b) || '', undefined, { sensitivity: 'base', numeric: true });
+        return dir === 'desc' ? -cmp : cmp;
+      });
+    }
+    window.mqToggleCatSort = function(cat) {
+      _mqProductSortDir[cat] = mqSortDirFor(cat) === 'asc' ? 'desc' : 'asc';
+      // This button only ever shows when the category has no groups (see
+      // catSection), so its own "mq-cat-search-${cat}" box is the only
+      // search in play here. Re-rendering the grid below wipes that input
+      // back to empty, so its typed value is carried across the rebuild by
+      // hand, same as mqToggleGroupSort does for its own group's box.
+      const searchVal = document.getElementById(`mq-cat-search-${cat}`)?.value || '';
+      const grid = document.getElementById(`mq-cat-grid-${cat}`);
+      if (grid) grid.innerHTML = catGridHtml(cat);
+      const searchInput = document.getElementById(`mq-cat-search-${cat}`);
+      if (searchInput) {
+        searchInput.value = searchVal;
+        if (searchVal) window.mqFilterProductCards(cat);
+      }
+    };
+    window.mqToggleGroupSort = function(cat, groupName) {
+      const key = `${cat}::${groupName}`;
+      _mqProductSortDir[key] = mqSortDirFor(key) === 'asc' ? 'desc' : 'asc';
+      const slug = mqGroupSlug(cat, groupName);
+      // Same reasoning as mqToggleCatSort above — carry this ONE group's
+      // own search text across the grid rebuild, since only that group's
+      // input (not the whole category) is relevant now that search is
+      // scoped per-group.
+      const searchVal = document.getElementById(`mq-group-search-${slug}`)?.value || '';
+      const grid = document.getElementById(`mq-cat-grid-${cat}`);
+      if (grid) grid.innerHTML = catGridHtml(cat);
+      const searchInput = document.getElementById(`mq-group-search-${slug}`);
+      if (searchInput) {
+        searchInput.value = searchVal;
+        if (searchVal) window.mqFilterGroupCards(cat, groupName);
+      }
+    };
+    // Same "no group" sort key convention as everything above, just under
+    // its own 'specialty' key — Specialty Items has no group manager of its
+    // own, so there's only ever the one control here (Jordan: "lets have
+    // specialty items alphabetical by default as well and able to sort the
+    // same way too"). specCardsHtml (defined further below, alongside the
+    // rest of the Specialty Items section) re-sorts and rebuilds the grid.
+    window.mqToggleSpecSort = function() {
+      _mqProductSortDir['specialty'] = mqSortDirFor('specialty') === 'asc' ? 'desc' : 'asc';
+      const grid = document.getElementById('mq-spec-cards-grid');
+      if (grid) grid.innerHTML = specCardsHtml();
+      window.mqFilterSpecialtyCards();
+    };
+
+    // Same live-filter pattern as Specialty Items' own search
+    // (mqFilterSpecialtyCards) but scoped to one category's grid — Jordan:
+    // "a simple search like in specialty items would also be great for
+    // each section in case a shop has a large amount of doors, crown...".
+    // A match sitting inside a currently-collapsed group auto-opens that
+    // group (never auto-closes one) so a hit is never hidden behind a
+    // collapsed header; clearing the search leaves groups exactly as the
+    // shop owner left them.
+    window.mqFilterProductCards = function(cat) {
+      const searchFilter = (document.getElementById(`mq-cat-search-${cat}`)?.value || '').toLowerCase().trim();
+      const grid = document.getElementById(`mq-cat-grid-${cat}`);
+      if (!grid) return;
+      let anyVisible = false;
+      const groupBodiesWithMatch = new Set();
+      grid.querySelectorAll('.mq-product-card-wrap').forEach(wrap => {
+        const name = wrap.getAttribute('data-name') || '';
+        const show = !searchFilter || name.includes(searchFilter);
+        wrap.style.display = show ? '' : 'none';
+        if (show) {
+          anyVisible = true;
+          const body = wrap.closest('[id^="mq-group-body-"]');
+          if (body) groupBodiesWithMatch.add(body.id);
+        }
+      });
+      if (searchFilter) {
+        groupBodiesWithMatch.forEach(bodyId => {
+          const body = document.getElementById(bodyId);
+          if (body && body.style.display === 'none') {
+            body.style.display = 'grid';
+            const slug = bodyId.replace('mq-group-body-', '');
+            const arrow = document.getElementById(`mq-group-arrow-${slug}`);
+            if (arrow) arrow.style.transform = 'rotate(90deg)';
+          }
+        });
+      }
+      const emptyMsg = document.getElementById(`mq-cat-search-empty-${cat}`);
+      if (emptyMsg) emptyMsg.style.display = (searchFilter && !anyVisible) ? 'block' : 'none';
+    };
+
+    // Jordan noticed the category-wide search "goes weird" once a category
+    // has groups: typing a name while only the SECOND group was open would
+    // still search (and silently auto-expand) the first group too, since
+    // one search box was filtering every card in the whole category
+    // regardless of which group the shop owner was actually looking at.
+    // Fix: once a category has any groups, the single "mq-cat-search-${cat}"
+    // box no longer renders at all (see catSection) — each named group gets
+    // its OWN "Search by name" box instead (see catGridHtml), and this only
+    // ever touches that one group's own members, never another group's.
+    window.mqFilterGroupCards = function(cat, groupName) {
+      const slug = mqGroupSlug(cat, groupName);
+      const searchFilter = (document.getElementById(`mq-group-search-${slug}`)?.value || '').toLowerCase().trim();
+      const body = document.getElementById(`mq-group-body-${slug}`);
+      if (!body) return;
+      let anyVisible = false;
+      body.querySelectorAll('.mq-product-card-wrap').forEach(wrap => {
+        const name = wrap.getAttribute('data-name') || '';
+        const show = !searchFilter || name.includes(searchFilter);
+        wrap.style.display = show ? '' : 'none';
+        if (show) anyVisible = true;
+      });
+      // A search typed into a currently-collapsed group's own box should
+      // still reveal its matches — same "never hide a hit behind a
+      // collapsed header, never auto-close on clear" rule as everywhere
+      // else in this tab, just scoped to this one group now.
+      if (searchFilter && body.style.display === 'none') {
+        body.style.display = 'grid';
+        const arrow = document.getElementById(`mq-group-arrow-${slug}`);
+        if (arrow) arrow.style.transform = 'rotate(90deg)';
+        _mqExpandedProductGroups.add(`${cat}::${groupName}`);
+      }
+      const emptyMsg = document.getElementById(`mq-group-search-empty-${slug}`);
+      if (emptyMsg) emptyMsg.style.display = (searchFilter && !anyVisible) ? 'block' : 'none';
+    };
+
+    // Whether a category "hasGroups" (and so whether it shows the
+    // top-level Sort/Search controls or each group's own) is decided in
+    // catSection, not catGridHtml — so creating a category's very FIRST
+    // group, or deleting its LAST one, has to re-render the whole category
+    // card, not just the inner grid, or the top-level controls would be
+    // left stale (still showing after a first group appears, or missing
+    // after the last group is removed). Preserves whether the category was
+    // open/closed across the refresh, same as a group's own open/closed
+    // state already survives a grid-only rebuild.
+    function mqRefreshCatSection(cat) {
+      const wasOpen = document.getElementById(`mq-cat-body-${cat}`)?.style.display !== 'none';
+      const catEl = document.querySelector(`[data-mq-cat="${cat}"]`);
+      if (!catEl) return;
+      catEl.outerHTML = catSection(cat);
+      if (wasOpen) {
+        const body = document.getElementById(`mq-cat-body-${cat}`);
+        const arrow = document.getElementById(`mq-cat-arrow-${cat}`);
+        if (body) body.style.display = 'block';
+        if (arrow) arrow.style.transform = 'rotate(90deg)';
+      }
+    }
+
     function catGridHtml(cat) {
       const items = byCategory[cat] || [];
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
@@ -6391,18 +6566,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
         const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
         const card = photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
-        if (!GROUPABLE_CATS.includes(cat)) return card;
         // A clickable badge showing this item's group (if any) — clicking it
         // opens the same group manager, so reassigning an item is "click its
         // group, check/uncheck it there" rather than retyping text per item.
-        const badge = item.groupName
+        const badge = GROUPABLE_CATS.includes(cat) ? (item.groupName
           ? `<button onclick="mqOpenGroupManager('${cat}','${item.groupName.replace(/'/g,"\\'")}')" style="margin-top:6px;width:100%;font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151;text-align:left">🏷️ ${item.groupName}</button>`
-          : `<div style="margin-top:6px;font-size:11px;color:#9ca3af;padding:4px 2px">Not in a group</div>`;
-        return `<div>${card}${badge}</div>`;
+          : `<div style="margin-top:6px;font-size:11px;color:#9ca3af;padding:4px 2px">Not in a group</div>`) : '';
+        // Every card (grouped or not, groupable category or not) gets
+        // wrapped the same way now — a plain data-name-carrying div, used
+        // by mqFilterProductCards' live search below. Adding this wrapper
+        // doesn't change how anything looks (no styling of its own), just
+        // gives the search something to find and hide/show.
+        const dataName = item.baseName.toLowerCase().replace(/"/g,'&quot;');
+        return `<div class="mq-product-card-wrap" data-name="${dataName}">${card}${badge}</div>`;
       };
 
       if (!GROUPABLE_CATS.includes(cat) || !items.some(i => i.groupName)) {
-        return items.map(buildCard).join('');
+        // No groups at all here — the whole category is one "no group"
+        // bucket, sorted/toggled by the category-level control up by
+        // "Pick a collection" (or, for non-groupable categories, the one
+        // right below the category-hiding note).
+        return mqSortItemsByName(items, cat).map(buildCard).join('');
       }
 
       const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
@@ -6420,6 +6604,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const fullKey = `${cat}::${groupKey}`;
         const slug = mqGroupSlug(cat, groupKey);
         const isOpen = _mqExpandedProductGroups.has(fullKey);
+        // A named group sorts by its OWN control next to "Edit group"; the
+        // "Other" leftovers share the same category-level sort key as a
+        // fully ungrouped category, since that's the one control Jordan
+        // asked for covering "items that don't have a group."
+        const sortKey = g.name ? `${cat}::${g.name}` : cat;
+        const sortDir = mqSortDirFor(sortKey);
+        const sortedMembers = mqSortItemsByName(g.members, sortKey);
         return `
         <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap;cursor:pointer" onclick="mqToggleProductGroup('${cat}','${groupKey.replace(/'/g,"\\'")}')">
           <span id="mq-group-arrow-${slug}" style="display:inline-block;font-size:11px;color:#6b7280;transition:transform 0.2s;transform:rotate(${isOpen?'90deg':'0deg'})">▶</span>
@@ -6429,11 +6620,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
             <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqToggleGroupSort('${cat}','${g.name.replace(/'/g,"\\'")}')" title="Sort this group's items by name">Sort by name (${sortDir==='desc'?'Z→A':'A→Z'})</button>
             ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
           ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
         </div>
+        ${g.name ? `
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:0 0 8px">
+          <input type="text" id="mq-group-search-${slug}" oninput="mqFilterGroupCards('${cat}','${g.name.replace(/'/g,"\\'")}')" onclick="event.stopPropagation()" placeholder="Search by name…" style="font-size:12px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;flex:1;min-width:160px;max-width:260px"/>
+        </div>
+        <div id="mq-group-search-empty-${slug}" style="display:none;grid-column:1/-1;font-size:12px;color:#9ca3af;padding:0 0 0.5rem">No items match that search.</div>
+        ` : ''}
         <div id="mq-group-body-${slug}" style="display:${isOpen?'grid':'none'};grid-column:1/-1;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-          ${g.members.map(buildCard).join('')}
+          ${sortedMembers.map(buildCard).join('')}
         </div>`;
       }).join('');
     }
@@ -6466,8 +6664,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       try {
         await Promise.all(ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': groupName })));
         if (item) item.groupName = groupName;
-        const grid = document.getElementById(`mq-cat-grid-${cat}`);
-        if (grid) grid.innerHTML = catGridHtml(cat);
+        mqRefreshCatSection(cat);
       } catch(e) {
         console.error('Failed to save item group', e);
         alert('Could not save the group — please try again.');
@@ -6649,8 +6846,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       try {
         await Promise.all(writes);
         mqCloseGroupManager();
-        const grid = document.getElementById(`mq-cat-grid-${cat}`);
-        if (grid) grid.innerHTML = catGridHtml(cat);
+        // A brand-new group here can be this category's very FIRST one —
+        // that flips "hasGroups" for the whole category, so the top-level
+        // Sort/Search controls need to disappear too, not just the grid
+        // content refresh (see mqRefreshCatSection).
+        mqRefreshCatSection(cat);
       } catch(e) {
         console.error('Failed to save group', e);
         alert('Could not save the group — please try again.');
@@ -6666,8 +6866,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         await Promise.all(items.flatMap(i => i.ids.map(id => atUpdate(CONFIG.LINE_ITEMS_TABLE, id, { 'Group name': '' }))));
         items.forEach(i => i.groupName = '');
         mqCloseGroupManager();
-        const grid = document.getElementById(`mq-cat-grid-${cat}`);
-        if (grid) grid.innerHTML = catGridHtml(cat);
+        // Same reasoning as mqSaveGroupManager above — removing a
+        // category's LAST group needs to bring the top-level Sort/Search
+        // controls back, which only a full category-card refresh does.
+        mqRefreshCatSection(cat);
       } catch(e) {
         console.error('Failed to remove group', e);
         alert('Could not remove the group — please try again.');
@@ -6694,26 +6896,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>
       <div id="mq-cat-body-specialty" style="display:none;padding:0 1.25rem 1.25rem">
       <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Add photos to your specialty items. All active items from your Specialty Items tab appear here.</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;background:#f9fafb;border-radius:8px">
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
-          <select id="mq-spec-filter-room" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
-            <option value="">All project types</option>
-            ${specRoomOptions}
-          </select>
+      <div style="margin:12px 0;padding:10px 12px;background:#f9fafb;border-radius:8px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:160px">
+            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
+            <select id="mq-spec-filter-room" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+              <option value="">All project types</option>
+              ${specRoomOptions}
+            </select>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by category</label>
+            <select id="mq-spec-filter-category" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+              <option value="">All categories</option>
+              ${[...new Set(specItems.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
+            </select>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
+            <input type="text" id="mq-spec-filter-search" oninput="mqFilterSpecialtyCards()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
+          </div>
         </div>
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by category</label>
-          <select id="mq-spec-filter-category" onchange="mqFilterSpecialtyCards()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
-            <option value="">All categories</option>
-            ${[...new Set(specItems.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
-          </select>
-        </div>
-        <div style="flex:1;min-width:160px">
-          <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Search by name</label>
-          <input type="text" id="mq-spec-filter-search" oninput="mqFilterSpecialtyCards()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
-        </div>
-        <div style="display:flex;align-items:flex-end;padding-bottom:6px">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px">
+          <button class="mq-btn mq-btn-sm" onclick="mqToggleSpecSort()" title="Sort specialty items by name">Sort by name (${mqSortDirFor('specialty')==='desc'?'Z→A':'A→Z'})</button>
           <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;white-space:nowrap">
             <input type="checkbox" id="mq-spec-filter-proonly" onchange="mqFilterSpecialtyCards()" style="width:16px;height:16px;accent-color:#1a1a1a"/>
             ⭐ Pro only
@@ -6722,7 +6927,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>
       <div id="mq-spec-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px" id="mq-spec-cards-grid">
-        ${specItems.flatMap(r => {
+        ${specCardsHtml()}
+      </div>
+      </div>
+    </div>` : '';
+
+    // Jordan: "lets have specialty items alphabetical by default as well
+    // and able to sort the same way too." Split out from the specSection
+    // template above so mqToggleSpecSort can rebuild just this grid (same
+    // pattern as catGridHtml/mqToggleCatSort) without re-rendering the
+    // filter controls around it. Sorts fresh off the current
+    // _mqProductSortDir['specialty'] every call, same 'specialty' key
+    // the sort button's own label reads from above.
+    function specCardsHtml() {
+      return mqSortItemsByName(specItems, 'specialty', (r) => r.fields['Item name'] || '').flatMap(r => {
           const itemName = r.fields['Item name'] || '';
           const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
           const dataName = itemName.toLowerCase().replace(/"/g,'&quot;');
@@ -6857,10 +7075,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
           </div>`);
           return [specTemplateCardHtml, ...variantCardsHtml];
-        }).join('')}
-      </div>
-      </div>
-    </div>` : '';
+        }).join('');
+    }
 
     const content = el('mq-products-content');
     if (content) {
