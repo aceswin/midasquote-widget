@@ -217,13 +217,22 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   // One save action per tab that actually has one. Tabs not listed here
-  // (Dashboard, Leads, Embed code, Marketing Kit, Billing) either have
-  // nothing to save or autosave invisibly per field, so they get no
-  // floating button at all.
+  // (Dashboard, Leads, Embed code, Marketing Kit, Billing, Specialty items)
+  // either have nothing to save or autosave invisibly per field, so they
+  // get no floating button at all. Specialty items moved into that second
+  // group per Jordan ("please make anyhting in specialty items autosave so
+  // I dont have to remember to click save") -- every field on that tab
+  // (name, description, category, price, per-lin/sq-ft, install
+  // choice/price/mode, project types, pro only, active, variants, even
+  // drag-reordering) already called mqSaveSpecField/mqSaveSpecUnit/atUpdate
+  // directly on blur/change/drop, with no dirty-flag gating any of it -- the
+  // floating "Save all" button here was pure leftover, and its own handler
+  // (mqSaveAllSpecItems, since removed) only re-saved Item name + Price for
+  // every row regardless of whether anything had changed, which were
+  // already being saved the instant they were edited anyway.
   const MQ_PAGE_SAVE_ACTIONS = {
     shop:      { label: '💾 Save changes',  fn: () => window.mqSaveShop() },
     rooms:     { label: '💾 Save changes',  fn: () => window.mqSaveRooms() },
-    specialty: { label: '💾 Save all',      fn: () => window.mqSaveAllSpecItems() },
     products:  { label: '💾 Save changes',  fn: () => window.mqSaveProducts() },
     templates: { label: '💾 Save all changes', fn: () => { window.mqSaveMasterRoomDefs(); window.mqSaveTemplatePhotos(); } },
   };
@@ -300,7 +309,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
         <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
-        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Manage categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
+        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Edit categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
         <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it: enter 16.80 as the install price, not ${CUR()}71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
         <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
@@ -309,6 +318,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>🌍 Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
         <p><strong>Variants</strong> — give one item multiple options (like Maple/Oak/MDF under one "Crown Molding" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
         <p><strong>Pro only</strong> — hides an item from the customer-facing widget entirely while keeping it available in MidasQuote Pro.</p>
+        <p>Everything on this tab autosaves the moment you change it — there's no "Save" button to remember here.</p>
       `
     },
     proposals: {
@@ -347,7 +357,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>A whole category at once:</strong> at the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category is now hidden for those types in one click, no need to touch them individually. For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically. You can still give one item its own exception afterward by unchecking or rechecking just that item's own project types.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Groups</h4>
-        <p>In Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together, like "Shaker" or "Raised panel." Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
+        <p>In Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together — a few styles or finishes that belong together, or just several items priced the same. Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🏆 Best sellers</h4>
         <p><strong>🏆 Best seller badge</strong> — mark any item's photo to show a small badge on the widget; the badge's label (default "Best seller") is customizable from Marketing Kit.</p>
@@ -2140,7 +2150,7 @@ window.logoutMember = async function () {
   // form snippet, this calls their documented updateMemberAuth() method
   // directly — same DOM package already used everywhere else on this page
   // (logout, billing portal, plan checkout) — inside a modal styled to
-  // match the rest of the dashboard exactly, e.g. Manage categories.
+  // match the rest of the dashboard exactly, e.g. Edit categories.
   window.mqShowChangePasswordModal = function() {
     let modal = document.getElementById('mq-changepw-modal');
     if (!modal) {
@@ -2852,14 +2862,24 @@ window.logoutMember = async function () {
     // shop owner can always turn any of them back on for a given project
     // type from the My Products tab if they want to use the wizard for it
     // after all.
-    // Door hinges deliberately isn't in this list — it doesn't need to be.
-    // The whole "Cabinet measurements" section (where hinges live) already
-    // hides itself on the widget whenever Box Materials has no visible
-    // options for a room (see mqRefreshSectionVisibility's `cabActive`
-    // check), so hiding Box Materials here hides hinges along with it for
-    // free.
+    // Door Hinges is now in this list too (added 2026-09-18, per Jordan:
+    // "hinges are tied to doors, so whatever happens to the doors section,
+    // happens same to hinges section") -- it used to be deliberately left
+    // out, on the reasoning that the whole "Cabinet measurements" section
+    // (where hinges live) already hides itself on the widget whenever Box
+    // Materials has no visible options for a room (see
+    // mqRefreshSectionVisibility's `cabActive` check), so hiding Box
+    // Materials hid hinges along with it "for free" on the customer-facing
+    // side regardless. That's still true, but it left the DASHBOARD's own
+    // category-hiding state inconsistent for a brand-new shop: Box
+    // Materials/Door Styles/Drawer Configurations would show "Hidden for:
+    // Refacing, Repainting, Restaining" while Hinges' own 🗂️ control still
+    // showed "Visible for all project types" until someone happened to
+    // touch it — exactly the mismatch that prompted adding Hinges to
+    // LINKED_CABINET_CATS in the first place. Included here now so a
+    // brand-new shop starts fully consistent across all four from day one.
     const NON_WIZARD_ROOM_IDS = ['refacing', 'repainting', 'restaining'];
-    const NON_WIZARD_HIDDEN_CATS = ['material', 'door', 'drawer', 'trim_crown', 'trim_valance', 'tall_cabinet'];
+    const NON_WIZARD_HIDDEN_CATS = ['material', 'door', 'drawer', 'hinge', 'trim_crown', 'trim_valance', 'tall_cabinet'];
     const categoryRooms = window._mqCategoryRooms || {};
     let categoryRoomsChanged = false;
     NON_WIZARD_HIDDEN_CATS.forEach(cat => {
@@ -3568,6 +3588,56 @@ window.logoutMember = async function () {
     ];
   }
 
+  // Makes sure a shop has the 6 default countertop project types the
+  // moment Countertops or Both is visible to customers -- not gated on an
+  // explicit toggle FLIP, just on the CURRENT resulting state, so the same
+  // helper covers both "a shop just turned the tab on" (called from
+  // mqToggleWidgetTab, for instant feedback) and "this shop's dashboard is
+  // loading and it already has the tab on" (called from populateRooms, as
+  // a self-heal -- covers shops that had the tab on from day one and never
+  // had to explicitly turn it on at all). Per Jordan, after his first pass
+  // at this only triggering on the toggle click: "im not sure thats what i
+  // meant... i mean i want it as the default.. so evey shop has them by
+  // default beausse at the moment shops start with th toggle on. And
+  // current shops I want them to have them loaded in as well, unless of
+  // course they curently have the toggle off. if the toggles on i want
+  // them in there. because right now with our updates, if they dont have
+  // them on the project types shows a blamk in the countertop only cab."
+  // Deliberately checks "is countertops-side visible right now" rather
+  // than "did THIS specific toggle just turn countertops/both on" -- the
+  // Both tab shows countertop content too, so toggling some other tab
+  // (like Cabinets) while Both is already on and countertop rooms are
+  // still missing should self-heal it just the same, not just the exact
+  // countertops/both toggle click.
+  // Always reconstructs its base from defaultRoomTypes() when a shop has
+  // literally never saved anything (mirrors populateRooms' own fallback
+  // below), so seeding never accidentally saves 'Room types' holding ONLY
+  // the 6 countertop rooms with the 9 cabinet ones silently missing.
+  // Gated on having ZERO countertop rooms already (not "missing some of
+  // the 6") so a shop that's already restored or customized its own set
+  // is never touched.
+  async function mqEnsureCountertopDefaults(shopRec) {
+    if (!shopRec) return false;
+    let hidden = [];
+    try {
+      const parsed = shopRec.fields['Hidden widget tabs'] ? JSON.parse(shopRec.fields['Hidden widget tabs']) : null;
+      if (parsed && Array.isArray(parsed.hidden)) hidden = parsed.hidden;
+    } catch(e) { /* keep defaults */ }
+    const ctVisible = !(hidden.includes('countertops') && hidden.includes('both'));
+    if (!ctVisible) return false;
+
+    let currentRooms = [];
+    try { currentRooms = shopRec.fields['Room types'] ? JSON.parse(shopRec.fields['Room types']) : []; } catch(e) { currentRooms = []; }
+    if (!Array.isArray(currentRooms) || !currentRooms.length) currentRooms = defaultRoomTypes();
+    const hasAnyCountertopRoom = currentRooms.some(r => r && r.forCountertops === true);
+    if (hasAnyCountertopRoom) return false;
+
+    const seeded = [...currentRooms, ...defaultCountertopRoomTypes()];
+    await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(seeded) });
+    shopRec.fields['Room types'] = JSON.stringify(seeded);
+    return true;
+  }
+
   function populateRooms(shop) {
     const f = shop.fields;
     let rooms = [];
@@ -3576,6 +3646,22 @@ window.logoutMember = async function () {
     window._mqRooms = rooms;
     renderRoomsList();
     mqApplyEstimatorTabScopeToRoomsPage();
+
+    // Self-heal: every dashboard load checks whether this shop should
+    // already have the 6 default countertop project types (Countertops or
+    // Both currently visible, zero countertop rooms saved) and, if so,
+    // seeds + saves them right away -- covers existing shops as well as
+    // brand-new ones, not just the moment a toggle gets clicked. Runs in
+    // the background so it never delays the render above; once it
+    // resolves (if it actually changed anything), refreshes the in-memory
+    // list and re-renders so the new types appear without a reload. See
+    // mqEnsureCountertopDefaults for the full rationale.
+    mqEnsureCountertopDefaults(shop).then(seeded => {
+      if (seeded) {
+        window._mqRooms = [...window._mqRooms, ...defaultCountertopRoomTypes()];
+        renderRoomsList();
+      }
+    });
 
     // Category-level hiding: which project types each WHOLE category is
     // hidden for (e.g. hide all Door Styles for "Door refacing"). Individual
@@ -3590,28 +3676,31 @@ window.logoutMember = async function () {
     // means the shop DID interact with this and deliberately ended up at
     // "visible everywhere" (see the "all-checked collapses back to []"
     // comment in applyCategoryRoomChange below) — that choice must never
-    // get silently overwritten by this. Box Materials, Door Styles, and
-    // Drawer Configurations (LINKED_CABINET_CATS — always kept in sync with
-    // each other) start hidden for Refacing, Repainting, and Restaining,
-    // since those three project types reuse the customer's EXISTING
-    // box/doors/drawers rather than pricing new ones — without this, a shop
-    // has to notice and hide all three by hand before their first refacing
-    // quote looks right. This only ever fires once per shop: the moment it
-    // saves, 'material' gets a real key (even if that key is later toggled
-    // back to []), so it can never re-fire or clobber a shop's own later
-    // choice. Deliberately skips bulk-syncing individual items' own
-    // "Visible rooms" fields the way a manual toggle does (mqToggleCategoryRoom
-    // below) — window._mqByCategory isn't populated yet this early in the
-    // page load, and isn't needed anyway: a shop's default line items have
-    // no per-item override yet, so the widget's own fallback rule
-    // (effectiveVisibleRooms in widget.js/widgetpro.js — an item only
-    // inherits the category's hidden list when it has no explicit setting
-    // of its own) already hides them correctly from this category default
-    // alone.
+    // get silently overwritten by this. Box Materials, Door Styles, Drawer
+    // Configurations, and Door Hinges (LINKED_CABINET_CATS — always kept in
+    // sync with each other) start hidden for Refacing, Repainting, and
+    // Restaining, since those three project types reuse the customer's
+    // EXISTING box/doors/drawers/hinges rather than pricing new ones —
+    // without this, a shop has to notice and hide all four by hand before
+    // their first refacing quote looks right. Hinge added 2026-09-18, per
+    // Jordan: "hinges are tied to doors, so whatever happens to the doors
+    // section, happens same to hinges section" — matches LINKED_CABINET_CATS
+    // and the wizard's own NON_WIZARD_HIDDEN_CATS default above. This only
+    // ever fires once per shop: the moment it saves, 'material' gets a real
+    // key (even if that key is later toggled back to []), so it can never
+    // re-fire or clobber a shop's own later choice. Deliberately skips
+    // bulk-syncing individual items' own "Visible rooms" fields the way a
+    // manual toggle does (mqToggleCategoryRoom below) — window._mqByCategory
+    // isn't populated yet this early in the page load, and isn't needed
+    // anyway: a shop's default line items have no per-item override yet, so
+    // the widget's own fallback rule (effectiveVisibleRooms in widget.js/
+    // widgetpro.js — an item only inherits the category's hidden list when
+    // it has no explicit setting of its own) already hides them correctly
+    // from this category default alone.
     if (categoryRooms.material === undefined) {
       const defaultHiddenRoomIds = ['refacing', 'repainting', 'restaining'].filter(id => rooms.some(r => r.id === id));
       if (defaultHiddenRoomIds.length) {
-        const seeded = { ...categoryRooms, material: defaultHiddenRoomIds, door: defaultHiddenRoomIds, drawer: defaultHiddenRoomIds };
+        const seeded = { ...categoryRooms, material: defaultHiddenRoomIds, door: defaultHiddenRoomIds, drawer: defaultHiddenRoomIds, hinge: defaultHiddenRoomIds };
         window._mqCategoryRooms = seeded;
         atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Category rooms': JSON.stringify(seeded) })
           .then(() => { shop.fields['Category rooms'] = JSON.stringify(seeded); })
@@ -4281,6 +4370,7 @@ window.logoutMember = async function () {
     // right away, not linger until the page gets refreshed.
     if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
     if (typeof window.mqRefreshCategoryOrderBox === 'function') window.mqRefreshCategoryOrderBox();
+    if (typeof window.mqRefreshItemOrderBox === 'function') window.mqRefreshItemOrderBox();
   };
 
   async function loadProposalTemplates(shopToken) {
@@ -4897,7 +4987,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
         <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
-          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable();mqRefreshCategoryOrderBox()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+          <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable();mqRefreshCategoryOrderBox();mqRefreshItemOrderBox()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
             <option value="">All project types</option>
             ${roomOptions}
           </select>
@@ -4905,11 +4995,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="flex:1;min-width:160px">
           <label style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;font-size:11px;color:#6b7280;margin-bottom:4px">
             <span>Filter by category</span>
-            <span onclick="mqShowManageCategoriesModal()" style="color:#2563eb;cursor:pointer;font-weight:600;white-space:nowrap">Manage categories</span>
+            <span onclick="mqShowManageCategoriesModal()" style="color:#2563eb;cursor:pointer;font-weight:600;white-space:nowrap">Edit categories</span>
           </label>
-          <select id="mq-spec-tab-filter-category" onchange="mqFilterSpecTable()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
+          <select id="mq-spec-tab-filter-category" onchange="mqFilterSpecTable();mqRefreshItemOrderBox()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
             <option value="">All categories</option>
             ${[...new Set(specs.map(r => (r.fields['Category']||'').trim()).filter(Boolean))].map(c => `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('')}
+            ${specs.some(r => !(r.fields['Category']||'').trim()) ? '<option value="__other__">Other</option>' : ''}
           </select>
         </div>
         <div style="flex:1;min-width:160px">
@@ -4924,6 +5015,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
       </div>
       <div id="mq-spec-catorder-box">${mqCategoryOrderBoxHTML(savedFilters.room)}</div>
+      <div id="mq-spec-itemorder-box">${mqItemOrderBoxHTML(savedFilters.room, savedFilters.category)}</div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table" id="mq-spec-table">
@@ -4957,12 +5049,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                   <div onclick="mqNav('products', document.getElementById('mq-nav-products'));window.scrollTo({top:0,behavior:'smooth'})" style="font-size:10px;color:#9ca3af;margin-top:2px;cursor:pointer;width:fit-content" title="Go to My Products">Add/change images in My Products</div>
                   <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
                     <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
+                    <button class="mq-btn mq-btn-sm" title="Copy this item, all its settings, and every variant — handy for a similar item you don't want to rebuild from scratch" onclick="mqDuplicateSpec('${r.id}')">⧉ Duplicate</button>
                     <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
                   </div>
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td><input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:80px" ${variantCount ? 'disabled title="Priced per variant — see the Variants pill under the item name"' : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>${variantCount ? '' : mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${variantCount ? '' : mqSpecMinPriceHTML(r, false)}</td>
+              <td>
+                <div style="display:flex;flex-direction:column;gap:3px;width:94px">
+                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" placeholder="${variantCount ? 'New rate' : ''}" style="width:80px" ${variantCount ? `title="Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone."` : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+                  ${variantCount ? `<button class="mq-btn mq-btn-sm" style="font-size:10px;padding:3px 6px;white-space:nowrap" title="Applies the rate above to every 📏 Sized variant on this item that's priced per sq/lin ft" onclick="mqMassUpdateVariantRates('${r.id}')">Apply to all sized</button><div style="font-size:9px;color:#9ca3af;line-height:1.3">Mass-updates 📏 Sized variants' rate</div>` : `${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}`}
+                </div>
+              </td>
               <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
@@ -5058,6 +5156,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (draggingVariantsRow) tbody.insertBefore(draggingVariantsRow, dragging.nextSibling);
       });
     });
+
+    // Every item's variants panel already exists in the DOM at this point
+    // (inside its own hidden mq-spec-variants-row-<id>, built by
+    // mqVariantsPanelHTML above), so their drag handles can be wired up now
+    // rather than waiting for the panel to first be opened.
+    specs.forEach(r => mqWireVariantDrag(r.id));
   }
 
   // Which categories should be listed for reordering under a given project
@@ -5104,12 +5208,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="margin:28px 16px 20px;padding:22px 24px;background:#eef2ff;border:1.5px solid #a5b4fc;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
         <div style="font-size:12px;font-weight:700;color:#3730a3;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Category order for ${roomName.replace(/</g,'&lt;')}</div>
         <div style="font-size:11px;color:#4338ca;margin-bottom:10px;line-height:1.5">This is the order customers see these categories in on the widget when quoting ${roomName.replace(/</g,'&lt;')} — doesn't affect any other project type.</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px">
           ${ordered.map((c, i) => `
-            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e0e7ff;border-radius:6px;padding:6px 10px">
-              <span style="flex:1;font-size:13px;color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.replace(/</g,'&lt;')}</span>
-              <button class="mq-btn mq-btn-sm" style="padding:2px 8px" ${i===0?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},-1)' title="Move up">↑</button>
-              <button class="mq-btn mq-btn-sm" style="padding:2px 8px" ${i===ordered.length-1?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},1)' title="Move down">↓</button>
+            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e0e7ff;border-radius:6px;padding:6px 10px;width:fit-content;max-width:33vw">
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px;flex-shrink:0" ${i===0?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},-1)' title="Move up">↑</button>
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px;flex-shrink:0" ${i===ordered.length-1?'disabled':''} onclick='mqMoveSpecCategoryOrder(${JSON.stringify(roomId)},${JSON.stringify(c)},1)' title="Move down">↓</button>
+              <span style="font-size:13px;color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.replace(/</g,'&lt;')}</span>
             </div>`).join('')}
         </div>
       </div>`;
@@ -5144,6 +5248,109 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window.mqRefreshCategoryOrderBox();
   };
 
+  // The items belonging to one category (or the "Other" bucket, for items
+  // with no category set at all — __other__ here is the exact same
+  // sentinel widget.js/widgetpro.js already use, not a made-up new one),
+  // scoped to one project type, in display order: whatever's been saved for
+  // this room+category pairing first, then anything not yet placed —
+  // brand-new items, or items added before this feature existed — appended
+  // in cheapest-to-priciest order (by total cost: supply + install), the
+  // same metric and same default-on-first-view order the customer-facing
+  // widget itself already sorts by. Direct analog of
+  // mqSpecCategoriesForRoom, just one level narrower (items within a single
+  // category+room instead of categories within a room).
+  function mqSpecItemsForRoomCategory(roomId, category) {
+    const specs = window._mqSpecRecords || [];
+    const itemsHere = specs.filter(r => {
+      const cat = (r.fields['Category'] || '').trim() || '__other__';
+      if (cat !== category) return false;
+      let rooms = [];
+      try { rooms = r.fields['Visible rooms'] ? JSON.parse(r.fields['Visible rooms']) : []; } catch(e) { rooms = []; }
+      return !rooms.length || rooms.includes(roomId);
+    });
+    const priceOf = r => {
+      const variants = mqParseVariants(r);
+      const base = variants.length ? (variants[0].price || 0) : (r.fields['Price'] || 0);
+      return base + (r.fields['Install price'] || 0);
+    };
+    itemsHere.sort((a, b) => priceOf(a) - priceOf(b));
+    let orderMap = {};
+    try { orderMap = window._mqShopRecord?.fields['Specialty item order'] ? JSON.parse(window._mqShopRecord.fields['Specialty item order']) : {}; } catch(e) { orderMap = {}; }
+    const saved = (orderMap[roomId] || {})[category] || [];
+    const byId = new Map(itemsHere.map(r => [r.id, r]));
+    const ordered = saved.map(id => byId.get(id)).filter(Boolean);
+    const placedIds = new Set(ordered.map(r => r.id));
+    itemsHere.forEach(r => { if (!placedIds.has(r.id)) ordered.push(r); });
+    return ordered;
+  }
+
+  // Lets a shop owner control the order specialty ITEMS appear in WITHIN one
+  // category, for ONE specific project type — e.g. two items both filed
+  // under "Doors" shown in a different order for Refacing than for Kitchen.
+  // Only makes sense once a project type AND a category are both selected in
+  // the filters above (an item can belong to a category for one project
+  // type and not show at all for another, so there's no single "order" to
+  // show without both narrowed down — per Jordan: "so only if a project and
+  // category has been choosen"), and only once that room+category pairing
+  // actually has 2+ items to order. "Other" (items with no category set) is
+  // a completely normal choice here too, same as any named category — per
+  // Jordan: "that other category can allow for the rearannging of items
+  // within it and the project type." Saved on the shop record as one JSON
+  // blob keyed by project type, then by category, one level deeper than
+  // "Specialty category order" is keyed.
+  function mqItemOrderBoxHTML(roomId, category) {
+    if (!roomId || !category) return '';
+    const room = (window._mqRooms || defaultRoomTypes()).find(r => r.id === roomId);
+    const roomName = room ? room.name : roomId;
+    const catLabel = category === '__other__' ? 'Other' : category;
+    const ordered = mqSpecItemsForRoomCategory(roomId, category);
+    if (ordered.length < 2) return '';
+    return `
+      <div style="margin:16px 16px 20px;padding:22px 24px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
+        <div style="font-size:12px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Item order for ${catLabel.replace(/</g,'&lt;')} — ${roomName.replace(/</g,'&lt;')}</div>
+        <div style="font-size:11px;color:#15803d;margin-bottom:10px;line-height:1.5">This is the order customers see these items in within "${catLabel.replace(/</g,'&lt;')}" when quoting ${roomName.replace(/</g,'&lt;')} — doesn't affect this category in any other project type, or any other category. Price badges still show, they just may not stay in strict order once you've moved something.</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px">
+          ${ordered.map((r, i) => `
+            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;width:fit-content;max-width:33vw">
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px;flex-shrink:0" ${i===0?'disabled':''} onclick='mqMoveSpecItemOrder(${JSON.stringify(roomId)},${JSON.stringify(category)},${JSON.stringify(r.id)},-1)' title="Move up">↑</button>
+              <button class="mq-btn mq-btn-sm" style="padding:2px 8px;flex-shrink:0" ${i===ordered.length-1?'disabled':''} onclick='mqMoveSpecItemOrder(${JSON.stringify(roomId)},${JSON.stringify(category)},${JSON.stringify(r.id)},1)' title="Move down">↓</button>
+              <span style="font-size:13px;color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(r.fields['Item name']||'').replace(/</g,'&lt;')}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  window.mqRefreshItemOrderBox = function() {
+    const box = document.getElementById('mq-spec-itemorder-box');
+    if (!box) return;
+    const roomId = el('mq-spec-tab-filter-room')?.value || '';
+    const category = el('mq-spec-tab-filter-category')?.value || '';
+    box.innerHTML = mqItemOrderBoxHTML(roomId, category);
+  };
+
+  window.mqMoveSpecItemOrder = async function(roomId, category, itemId, dir) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const ordered = mqSpecItemsForRoomCategory(roomId, category).map(r => r.id);
+    const idx = ordered.indexOf(itemId);
+    const swapIdx = idx + dir;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= ordered.length) return;
+    [ordered[idx], ordered[swapIdx]] = [ordered[swapIdx], ordered[idx]];
+    let orderMap = {};
+    try { orderMap = shopRec.fields['Specialty item order'] ? JSON.parse(shopRec.fields['Specialty item order']) : {}; } catch(e) { orderMap = {}; }
+    const roomMap = { ...(orderMap[roomId] || {}), [category]: ordered };
+    orderMap = { ...orderMap, [roomId]: roomMap };
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Specialty item order': JSON.stringify(orderMap) });
+      shopRec.fields['Specialty item order'] = JSON.stringify(orderMap);
+    } catch(e) {
+      console.error('Failed to save item order', e);
+      alert('Could not save that order — please try again.');
+      return;
+    }
+    window.mqRefreshItemOrderBox();
+  };
+
   // Categories aren't a real Airtable table — they only exist as whatever
   // string value shows up in specialty items' own Category field. So
   // "renaming" or "deleting" a category really means bulk-editing every
@@ -5167,7 +5374,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:1.75rem;box-shadow:0 24px 60px rgba(0,0,0,0.25);max-height:80vh;overflow-y:auto">
-        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px">Manage categories</div>
+        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px">Edit categories</div>
         <div style="font-size:13px;color:#6b7280;margin-bottom:1rem;line-height:1.5">Rename a category to update it everywhere at once, or delete one — deleting a category never deletes its items, they just become uncategorized.</div>
         ${categories.length ? categories.map(c => `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #f3f4f6">
@@ -5498,10 +5705,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   let _pickerTargetKey = null;
+  // Optional override for a target whose input id doesn't follow the normal
+  // "mq-photo-<key>" convention -- e.g. the specialty-item group card's
+  // shared-image slot (mq-specshared-url-<itemId>), which is deliberately
+  // NOT "mq-photo-" prefixed (see mqApplySpecSharedImage). Every existing
+  // caller omits this and keeps working exactly as before.
+  let _pickerOnSelect = null;
 
-  window.mqOpenPhotoPicker = async function(key, cat) {
+  window.mqOpenPhotoPicker = async function(key, cat, onSelect) {
     injectPhotoPicker();
     _pickerTargetKey = key;
+    _pickerOnSelect = typeof onSelect === 'function' ? onSelect : null;
     const grid = document.getElementById('mq-picker-grid');
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">Loading photos...</div>';
     document.getElementById('mq-photo-picker').style.display = 'flex';
@@ -5541,10 +5755,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqSelectLibraryPhoto = function(url) {
-    const input = el('mq-photo-' + _pickerTargetKey);
-    if (input) {
-      input.value = url;
-      mqPreviewPhoto(_pickerTargetKey);
+    if (_pickerOnSelect) {
+      _pickerOnSelect(url);
+    } else {
+      const input = el('mq-photo-' + _pickerTargetKey);
+      if (input) {
+        input.value = url;
+        mqPreviewPhoto(_pickerTargetKey);
+      }
     }
     mqClosePhotoPicker();
   };
@@ -5615,7 +5833,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       try { rooms = JSON.parse(row.getAttribute('data-rooms') || '[]'); } catch(e) { rooms = []; }
       const roomMatch = !roomFilter || !rooms.length || rooms.includes(roomFilter);
       const category = row.getAttribute('data-category') || '';
-      const categoryMatch = !categoryFilter || category === categoryFilter;
+      // '__other__' is the "no category set" filter choice — data-category
+      // itself stays a plain empty string for those rows (same as it always
+      // has, and as mqSpecCategoryChanged still writes back when a shop
+      // owner picks "(No category)"), so match it by absence rather than by
+      // literal value.
+      const categoryMatch = !categoryFilter || (categoryFilter === '__other__' ? !category : category === categoryFilter);
       const name = row.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
       const proOnlyMatch = !proOnlyFilter || row.getAttribute('data-proonly') === '1';
@@ -5659,12 +5882,137 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const name = wrap.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
       const proOnlyMatch = !proOnlyFilter || wrap.getAttribute('data-proonly') === '1';
-      const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
+      const matches = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
+      // A variant item's individual photo cards (data-spec-group="<itemId>")
+      // are plain grid siblings of their own "template" card now, not nested
+      // inside it -- so they'd otherwise get force-shown by a filter match
+      // even while the shop owner has that group collapsed. Gate them on
+      // BOTH matching the filter AND the group actually being expanded
+      // (mqToggleSpecPhotoGroup/mqApplySpecSharedImage keep the template
+      // card's own data-expanded flag in sync), so filtering never fights
+      // with, or silently overrides, the collapse state.
+      const groupId = wrap.getAttribute('data-spec-group');
+      const groupExpanded = !groupId || document.getElementById('mq-specgroup-wrap-' + groupId)?.dataset.expanded === 'true';
+      const show = matches && groupExpanded;
       wrap.style.display = show ? '' : 'none';
       if (show) visibleCount++;
     });
     const emptyMsg = document.getElementById('mq-spec-filter-empty');
     if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+  };
+
+  // Expands/collapses a variant item's group in My Products → Specialty
+  // Items (Jordan: "items with variants could be collapsable in the
+  // myproducts section since they can take up a boatload of space"). Starts
+  // collapsed (see the flatMap render below) so a 30-variant item doesn't
+  // dominate the grid until the shop owner actually wants to see it.
+  //
+  // The "template" card (mq-specgroup-wrap-<itemId>) and each variant's own
+  // photo card (data-spec-group="<itemId>") are plain SIBLING grid items in
+  // #mq-spec-cards-grid, not nested inside one big wrapper -- per Jordan's
+  // 4th-round feedback ("this cannot be the starting card for variants...
+  // the variants can start aligning to the right of it") the template card
+  // needed to look and size exactly like a normal card, with the variants
+  // simply appearing right after it in the same grid. Since the grid already
+  // auto-flows left-to-right and wraps rows, just toggling each variant
+  // card's own display gets that "pop out to the right, then down" layout
+  // for free -- no special-casing the template card's width or grid-column
+  // needed at all.
+  window.mqToggleSpecPhotoGroup = function(itemId) {
+    const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
+    const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
+    const variantWraps = document.querySelectorAll(`[data-spec-group="${itemId}"]`);
+    if (!variantWraps.length) return;
+    const opening = variantWraps[0].style.display === 'none';
+    variantWraps.forEach(w => { w.style.display = opening ? '' : 'none'; });
+    if (wrap) wrap.dataset.expanded = opening ? 'true' : 'false';
+    // The arrow points DOWN by default and rotates to point RIGHT once
+    // expanded (Jordan: "that red arrow on the right side of the card
+    // pointing down, then when clicked it points to the right and the
+    // variants popout") -- the reverse of the usual ▶-rotates-to-▼
+    // convention, since here it's cueing "the variants popped out to the
+    // right of this card," not "this section opened downward."
+    if (arrow) arrow.style.transform = opening ? 'rotate(-90deg)' : 'rotate(0deg)';
+  };
+
+  // Live preview for the group card's own dedicated "shared image" slot --
+  // same visual behavior as mqPreviewPhoto, just pointed at the
+  // mq-specshared-* ids instead of mq-photo-<key> (that field is
+  // deliberately NOT "mq-photo-" prefixed -- see mqApplySpecSharedImage's
+  // note below on why).
+  window.mqPreviewSpecSharedImage = function(itemId) {
+    const input = document.getElementById('mq-specshared-url-' + itemId);
+    const preview = document.getElementById('mq-specshared-preview-' + itemId);
+    if (!input || !preview) return;
+    const url = input.value.trim();
+    if (!url) {
+      preview.innerHTML = `<div style="width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">⭐</div>`;
+      return;
+    }
+    preview.innerHTML = `<img src="${url}" style="width:100%;height:90px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:8px" onerror="this.outerHTML='<div style=\\'width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px\\'>⭐</div>'"/>`;
+  };
+
+  // "Choose from library" for the group card's shared-image slot -- reuses
+  // the same photo-library modal every other photo field already has
+  // (Jordan: "makiong them paste in the url is rough, they need to be able
+  // to upload or choose from the library just like everything else"), just
+  // routed to this slot's own non-"mq-photo-" id via mqOpenPhotoPicker's
+  // optional onSelect override instead of its normal mq-photo-<key> default.
+  window.mqOpenSpecSharedPhotoPicker = function(itemId) {
+    window.mqOpenPhotoPicker('specshared_' + itemId, 'specialty', (url) => {
+      const input = document.getElementById('mq-specshared-url-' + itemId);
+      if (input) input.value = url;
+      mqPreviewSpecSharedImage(itemId);
+      mqApplySpecSharedImage(itemId);
+    });
+  };
+
+  // "Use same image for all" (Jordan: "can we also add the ability for all
+  // varaints to use the same image somehow? like maybe i make 10 variants of
+  // maple doors just in differrent sizes but all should use the same
+  // image"). Reads the group card's own dedicated shared-image field and
+  // copies it into every variant's own photo input + preview -- those
+  // per-variant inputs are still what actually gets saved (mqSaveProducts
+  // rebuilds its whole Photos map from every on-screen [id^="mq-photo-"]
+  // input), so this shared field is intentionally NOT id-prefixed
+  // "mq-photo-" itself, or it'd get swept into the save as a bogus orphan
+  // key nothing ever reads back.
+  window.mqApplySpecSharedImage = function(itemId) {
+    const urlInput = document.getElementById('mq-specshared-url-' + itemId);
+    const url = (urlInput?.value || '').trim();
+    if (!url) { alert('Paste or type an image URL first.'); return; }
+    const variantInputs = [...document.querySelectorAll(`input[id^="mq-photo-spec_${itemId}_v"]`)];
+    if (!variantInputs.length) return;
+    // There's no separate "Use same image for all" button anymore -- setting
+    // a shared photo (upload, paste-and-blur, or library pick) applies it
+    // immediately, so this confirm is the shop owner's only checkpoint
+    // before every variant's existing photo gets overwritten (Jordan: "now
+    // that they have clear instruction, they dont need the 'use for all
+    // buttom... then as soon as they upload it it applies to all... you
+    // could set a warning that says are you sure you want to apply this
+    // image to all your variants"). Always confirm, not just when a variant
+    // already has a DIFFERENT photo -- there's no separate deliberate click
+    // left to treat as implicit consent.
+    const ok = confirm(`Apply this photo to all ${variantInputs.length} variants? This will replace any photo they already have.`);
+    if (!ok) return;
+    variantInputs.forEach(inp => {
+      inp.value = url;
+      const key = inp.id.replace('mq-photo-', '');
+      const previewWrap = document.getElementById('mq-photo-preview-' + key);
+      if (previewWrap) {
+        previewWrap.innerHTML = `<img src="${url.replace(/"/g,'&quot;')}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">⭐</div>`;
+      }
+    });
+    const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
+    const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
+    const variantWraps = document.querySelectorAll(`[data-spec-group="${itemId}"]`);
+    if (variantWraps.length && variantWraps[0].style.display === 'none') {
+      variantWraps.forEach(w => { w.style.display = ''; });
+      if (wrap) wrap.dataset.expanded = 'true';
+      if (arrow) arrow.style.transform = 'rotate(-90deg)';
+    }
+    if (window.mqMarkProductsDirty) window.mqMarkProductsDirty();
+    showMsg('mq-products-msg', `✓ Applied to all ${variantInputs.length} variants — click "Save changes" to keep it.`);
   };
 
   // Same pure view filter, for the Templates admin page.
@@ -5719,21 +6067,38 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Templates admin tab has also been visited this session, its leftover
     // inputs (same id pattern) could get swept up into the wrong shop's save.
     const scope = document.getElementById('mq-products-content') || document;
-    const photos = {};
-    const hidden = {};
-    const featured = {};
+    // Start from whatever's already saved, NOT a blank slate. A card that
+    // isn't currently rendered into this DOM -- most commonly a specialty
+    // item (or any other line item) that's been toggled Active -> off,
+    // which removes its whole photo card from this tab until it's
+    // reactivated -- has no [id^="mq-photo-"]/[id^="mq-hidden-"]/
+    // [id^="mq-featured-"] element for the sweep below to find at all.
+    // Rebuilding these maps from scratch every save (the old behavior) then
+    // silently dropped that item's saved photo/hidden/featured state the
+    // very next time ANYTHING on this tab was saved -- Jordan: "if i ad
+    // images to a specialty item that is avtiv, then uncheck its active
+    // box then when i leave and come back it no longer has the image
+    // saved." Now only a key actually present in the DOM gets added,
+    // updated, or (left blank / unchecked) removed -- every other key
+    // carries forward untouched, so a card missing from view for any
+    // reason never loses what was already saved for it.
+    let photos = {}, hidden = {}, featured = {};
+    try { photos = shopRec.fields['Photos'] ? JSON.parse(shopRec.fields['Photos']) : {}; } catch(e) { photos = {}; }
+    try { hidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) { hidden = {}; }
+    try { featured = shopRec.fields['Featured items'] ? JSON.parse(shopRec.fields['Featured items']) : {}; } catch(e) { featured = {}; }
     scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
-      if (input.value.trim()) photos[key] = input.value.trim();
+      const val = input.value.trim();
+      if (val) photos[key] = val; else delete photos[key];
     });
     scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
       const key = cb.id.replace('mq-hidden-', '');
-      if (cb.checked) hidden[key] = true;
+      if (cb.checked) hidden[key] = true; else delete hidden[key];
     });
     scope.querySelectorAll('[id^="mq-featured-"]').forEach(cb => {
       const key = cb.id.replace('mq-featured-', '');
-      if (cb.checked) featured[key] = true;
+      if (cb.checked) featured[key] = true; else delete featured[key];
     });
     const badgeLabelInput = document.getElementById('mq-badge-label');
     const badgeLabelToSave = badgeLabelInput ? (badgeLabelInput.value.trim() || 'Best seller') : (shopRec.fields['Badge label'] || 'Best seller');
@@ -5764,21 +6129,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   // Same pattern as mqSaveProducts, but scoped to the Templates tab and
-  // saving to the master template shop record instead of the admin's own shop.
+  // saving to the master template shop record instead of the admin's own
+  // shop. Same merge-not-overwrite fix applied here too, for the same
+  // reason -- a template card not currently rendered into this DOM must not
+  // have its saved photo/hidden state wiped just because this particular
+  // save couldn't see it.
   window.mqSaveTemplatePhotos = async function() {
     const masterShop = window._mqMasterTemplateShop;
     if (!masterShop) return;
     const scope = document.getElementById('mq-templates-content') || document;
-    const photos = {};
-    const hidden = {};
+    let photos = {}, hidden = {};
+    try { photos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) { photos = {}; }
+    try { hidden = masterShop.fields['Hidden'] ? JSON.parse(masterShop.fields['Hidden']) : {}; } catch(e) { hidden = {}; }
     scope.querySelectorAll('[id^="mq-photo-"]').forEach(input => {
       if (input.tagName !== 'INPUT') return;
       const key = input.id.replace('mq-photo-', '');
-      if (input.value.trim()) photos[key] = input.value.trim();
+      const val = input.value.trim();
+      if (val) photos[key] = val; else delete photos[key];
     });
     scope.querySelectorAll('[id^="mq-hidden-"]').forEach(cb => {
       const key = cb.id.replace('mq-hidden-', '');
-      if (cb.checked) hidden[key] = true;
+      if (cb.checked) hidden[key] = true; else delete hidden[key];
     });
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, masterShop.id, {
@@ -5891,6 +6262,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const icons = {'tall':'📦','appliance':'🔌','blind':'↩️','garbage':'🗑️','toe':'👟','lazy':'🔄','wine':'🍷','spice':'🧂','pull':'📥','pot':'🍳','pantry':'🥫','desk':'🖥️','glass':'🪟','light':'💡','crown':'👑'};
     function specIcon(name) { for (const [k,v] of Object.entries(icons)) { if ((name||'').toLowerCase().includes(k)) return v; } return '⭐'; }
 
+    // Jordan, after adding photos to every variant on an item individually,
+    // then leaving My Products and coming back: "it shows the start [star]
+    // placeholder on the variant itselfs card.. even though all the
+    // variants are fine and have their images correct... could we make it
+    // so that main card also shows the image (as long as all variants have
+    // the same image. if they dont then thats fine to have the star
+    // placeholder." The collapsed group/template card's preview used to
+    // always show the star/emoji placeholder no matter what, even once
+    // every variant already had -- individually, via the shared-photo
+    // shortcut, or by coincidence -- the exact same photo. Returns that
+    // shared URL only when EVERY variant has a photo AND they're all
+    // identical; otherwise '' (no single photo represents "every variant",
+    // so the star placeholder is still the right, honest thing to show).
+    // Purely a display convenience for the collapsed card -- never touches
+    // what's actually saved.
+    function mqSharedVariantPhotoUrl(itemId, variants, savedPhotosMap) {
+      if (!variants || !variants.length) return '';
+      const urls = variants.map(v => savedPhotosMap['spec_' + itemId + '_v' + v.id] || '');
+      return urls.every(u => u && u === urls[0]) ? urls[0] : '';
+    }
+
     let savedHidden = {};
     try { if (shopRecord.fields['Hidden']) savedHidden = JSON.parse(shopRecord.fields['Hidden']); } catch(e) {}
     let savedFeatured = {};
@@ -5904,7 +6296,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // locked, not what a shop already has.
     const isDemoShop = (shopRecord.fields['Plan']||'') === 'Demo';
     function photoCard(key, name, emoji, cat, ids, visibleRoomsJson) {
-      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemoShop);
+      // 'mqSaveProducts' -- My Products now autosaves a photo URL, "Hide
+      // from showroom," and the featured/badge checkbox the instant they
+      // change, the same way the Templates admin tab already did (Jordan:
+      // "i keep selecting show in showroom for some items then i go to
+      // showroom and they arent showing. then i come back to my products
+      // and they are listed again as dont show in sdhowroom" -- that
+      // toggle was only ever marking the tab dirty, waiting on a manual
+      // "Save changes" click that was easy to forget).
+      return photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemoShop, 'mqSaveProducts');
     }
 
     // Groups only make sense for categories customers actually pick a
@@ -5915,6 +6315,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const items = byCategory[cat] || [];
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
+      const hasGroups = GROUPABLE_CATS.includes(cat) && items.some(i => i.groupName);
+      const catSortDir = mqSortDirFor(cat);
+      const catSortTitle = hasGroups ? "Sort this category's ungrouped items by name" : 'Sort this category\'s items by name';
       return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
@@ -5925,7 +6328,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           ${categoryRoomDisclosure(cat)}
           ${GROUPABLE_CATS.includes(cat) ? `<div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <button class="mq-btn mq-btn-secondary mq-btn-sm" onclick="event.stopPropagation();mqOpenGroupManager('${cat}',null)">+ New group</button>
-            <span style="font-size:11px;color:#9ca3af">You can make a group for a type of style — like "Shaker" or "Raised panel" — or price several items the same and collect them into one group. Want to leave things as they are? Just don't create any groups.</span>
+            <span style="font-size:11px;color:#9ca3af">You can make a group for a type or style within this category, or just collect a few similarly-priced items into one group. Want to leave things as they are? Just don't create any groups.</span>
           </div>
           <div style="margin-bottom:12px">
             <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Dropdown label shown to customers for this category's collections (only appears once you've created a group here)</label>
@@ -5933,6 +6336,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;max-width:320px;box-sizing:border-box"
               onchange="mqSaveCategoryPickerLabel('${cat}',this.value)"/>
           </div>` : ''}
+          <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqToggleCatSort('${cat}')" title="${catSortTitle}">Sort by name (${catSortDir==='desc'?'Z→A':'A→Z'})</button>
+            <input type="text" id="mq-cat-search-${cat}" oninput="mqFilterProductCards('${cat}')" onclick="event.stopPropagation()" placeholder="Search by name…" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;flex:1;min-width:160px;max-width:260px"/>
+          </div>
+          <div id="mq-cat-search-empty-${cat}" style="display:none;font-size:12px;color:#9ca3af;padding:0 0 0.75rem">No items match that search.</div>
           <div id="mq-cat-grid-${cat}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">${catGridHtml(cat)}</div>
           ${cat === 'countertop' && mqCountertopAddonPhotoList().length ? `
           <div style="margin-top:16px">
@@ -5984,6 +6392,82 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (opening) _mqExpandedProductGroups.add(fullKey); else _mqExpandedProductGroups.delete(fullKey);
     };
 
+    // Jordan: "i dont have the items sorted in any way under their
+    // categories... id like the items to be sorted in alphabetical order
+    // by default... if they have a group then inside their group there can
+    // be a 'Sort by -> A-Z' beside the edit group button. if they dont
+    // have a group then beside or under the pick a collection input the
+    // same thing." Purely a display-order preference for this tab — not
+    // persisted to Airtable, so it always starts fresh at the A→Z default
+    // on reload, same as groups always starting collapsed above. Keyed
+    // either by a named group's full "${cat}::${groupName}" (one control
+    // per group, next to that group's own "Edit group" button) or by the
+    // bare category id for that category's own "no group" bucket (every
+    // item in a category with no groups at all, or just the leftover
+    // "Other" items in a partially-grouped one) — one control near "Pick a
+    // collection" covers that case instead.
+    let _mqProductSortDir = {};
+    function mqSortDirFor(key) { return _mqProductSortDir[key] === 'desc' ? 'desc' : 'asc'; }
+    function mqSortItemsByName(items, key) {
+      const dir = mqSortDirFor(key);
+      return [...items].sort((a, b) => {
+        const cmp = (a.baseName || '').localeCompare(b.baseName || '', undefined, { sensitivity: 'base', numeric: true });
+        return dir === 'desc' ? -cmp : cmp;
+      });
+    }
+    window.mqToggleCatSort = function(cat) {
+      _mqProductSortDir[cat] = mqSortDirFor(cat) === 'asc' ? 'desc' : 'asc';
+      const grid = document.getElementById(`mq-cat-grid-${cat}`);
+      if (grid) grid.innerHTML = catGridHtml(cat);
+      window.mqFilterProductCards(cat); // keep any active search applied through the re-render
+    };
+    window.mqToggleGroupSort = function(cat, groupName) {
+      const key = `${cat}::${groupName}`;
+      _mqProductSortDir[key] = mqSortDirFor(key) === 'asc' ? 'desc' : 'asc';
+      const grid = document.getElementById(`mq-cat-grid-${cat}`);
+      if (grid) grid.innerHTML = catGridHtml(cat);
+      window.mqFilterProductCards(cat);
+    };
+
+    // Same live-filter pattern as Specialty Items' own search
+    // (mqFilterSpecialtyCards) but scoped to one category's grid — Jordan:
+    // "a simple search like in specialty items would also be great for
+    // each section in case a shop has a large amount of doors, crown...".
+    // A match sitting inside a currently-collapsed group auto-opens that
+    // group (never auto-closes one) so a hit is never hidden behind a
+    // collapsed header; clearing the search leaves groups exactly as the
+    // shop owner left them.
+    window.mqFilterProductCards = function(cat) {
+      const searchFilter = (document.getElementById(`mq-cat-search-${cat}`)?.value || '').toLowerCase().trim();
+      const grid = document.getElementById(`mq-cat-grid-${cat}`);
+      if (!grid) return;
+      let anyVisible = false;
+      const groupBodiesWithMatch = new Set();
+      grid.querySelectorAll('.mq-product-card-wrap').forEach(wrap => {
+        const name = wrap.getAttribute('data-name') || '';
+        const show = !searchFilter || name.includes(searchFilter);
+        wrap.style.display = show ? '' : 'none';
+        if (show) {
+          anyVisible = true;
+          const body = wrap.closest('[id^="mq-group-body-"]');
+          if (body) groupBodiesWithMatch.add(body.id);
+        }
+      });
+      if (searchFilter) {
+        groupBodiesWithMatch.forEach(bodyId => {
+          const body = document.getElementById(bodyId);
+          if (body && body.style.display === 'none') {
+            body.style.display = 'grid';
+            const slug = bodyId.replace('mq-group-body-', '');
+            const arrow = document.getElementById(`mq-group-arrow-${slug}`);
+            if (arrow) arrow.style.transform = 'rotate(90deg)';
+          }
+        });
+      }
+      const emptyMsg = document.getElementById(`mq-cat-search-empty-${cat}`);
+      if (emptyMsg) emptyMsg.style.display = (searchFilter && !anyVisible) ? 'block' : 'none';
+    };
+
     function catGridHtml(cat) {
       const items = byCategory[cat] || [];
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
@@ -5991,18 +6475,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const key = `li_${cat}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
         const lib = PHOTO_LIBRARY[item.baseName.toLowerCase().replace(/\s+/g,'_')] || {};
         const card = photoCard(key, item.baseName, lib.emoji || disp.emoji, cat, item.ids, item.visibleRooms);
-        if (!GROUPABLE_CATS.includes(cat)) return card;
         // A clickable badge showing this item's group (if any) — clicking it
         // opens the same group manager, so reassigning an item is "click its
         // group, check/uncheck it there" rather than retyping text per item.
-        const badge = item.groupName
+        const badge = GROUPABLE_CATS.includes(cat) ? (item.groupName
           ? `<button onclick="mqOpenGroupManager('${cat}','${item.groupName.replace(/'/g,"\\'")}')" style="margin-top:6px;width:100%;font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151;text-align:left">🏷️ ${item.groupName}</button>`
-          : `<div style="margin-top:6px;font-size:11px;color:#9ca3af;padding:4px 2px">Not in a group</div>`;
-        return `<div>${card}${badge}</div>`;
+          : `<div style="margin-top:6px;font-size:11px;color:#9ca3af;padding:4px 2px">Not in a group</div>`) : '';
+        // Every card (grouped or not, groupable category or not) gets
+        // wrapped the same way now — a plain data-name-carrying div, used
+        // by mqFilterProductCards' live search below. Adding this wrapper
+        // doesn't change how anything looks (no styling of its own), just
+        // gives the search something to find and hide/show.
+        const dataName = item.baseName.toLowerCase().replace(/"/g,'&quot;');
+        return `<div class="mq-product-card-wrap" data-name="${dataName}">${card}${badge}</div>`;
       };
 
       if (!GROUPABLE_CATS.includes(cat) || !items.some(i => i.groupName)) {
-        return items.map(buildCard).join('');
+        // No groups at all here — the whole category is one "no group"
+        // bucket, sorted/toggled by the category-level control up by
+        // "Pick a collection" (or, for non-groupable categories, the one
+        // right below the category-hiding note).
+        return mqSortItemsByName(items, cat).map(buildCard).join('');
       }
 
       const groupNames = [...new Set(items.filter(i=>i.groupName).map(i=>i.groupName))];
@@ -6020,6 +6513,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const fullKey = `${cat}::${groupKey}`;
         const slug = mqGroupSlug(cat, groupKey);
         const isOpen = _mqExpandedProductGroups.has(fullKey);
+        // A named group sorts by its OWN control next to "Edit group"; the
+        // "Other" leftovers share the same category-level sort key as a
+        // fully ungrouped category, since that's the one control Jordan
+        // asked for covering "items that don't have a group."
+        const sortKey = g.name ? `${cat}::${g.name}` : cat;
+        const sortDir = mqSortDirFor(sortKey);
+        const sortedMembers = mqSortItemsByName(g.members, sortKey);
         return `
         <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap;cursor:pointer" onclick="mqToggleProductGroup('${cat}','${groupKey.replace(/'/g,"\\'")}')">
           <span id="mq-group-arrow-${slug}" style="display:inline-block;font-size:11px;color:#6b7280;transition:transform 0.2s;transform:rotate(${isOpen?'90deg':'0deg'})">▶</span>
@@ -6029,11 +6529,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
             <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
+            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqToggleGroupSort('${cat}','${g.name.replace(/'/g,"\\'")}')" title="Sort this group's items by name">Sort by name (${sortDir==='desc'?'Z→A':'A→Z'})</button>
             ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
           ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
         </div>
         <div id="mq-group-body-${slug}" style="display:${isOpen?'grid':'none'};grid-column:1/-1;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
-          ${g.members.map(buildCard).join('')}
+          ${sortedMembers.map(buildCard).join('')}
         </div>`;
       }).join('');
     }
@@ -6340,9 +6841,123 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               ${photoCard('spec_' + r.id, itemName, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
             </div>`];
           }
-          return variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}">
+          // See mqSharedVariantPhotoUrl above (Jordan: "could we make it so
+          // that main card also shows the image (as long as all variants
+          // have the same image. if they dont then thats fine to have the
+          // star placeholder"). '' means no single photo represents every
+          // variant, so the template card below falls back to the star
+          // placeholder exactly as before.
+          const sharedVariantPhotoUrl = mqSharedVariantPhotoUrl(r.id, variants, savedPhotos);
+          // A variant item used to flatMap into one full card PER variant --
+          // with 20-30 variants that ate up the whole grid (Jordan: "items
+          // with variants could be collapsable in the myproducts section
+          // since they can take up a boatload of space... easier if they
+          // were highlighted to show they have variants and then can be
+          // expanded to show all"). This went through several redesigns
+          // (narrower card, upload/library controls, an expand button, a
+          // multi-column expand) before landing on the current one, prompted
+          // by Jordan trying the previous version live and sending
+          // screenshots: "ok we are close but this cannot be the startig
+          // card for variants lol. now this is more like what the first
+          // image should look like and its name should be fully visable and
+          // in the card, not above the card... and that red arrow on the
+          // right side of the card pointing down, then when clicked it
+          // points to the right and the variajnts popout like they are
+          // now..."
+          //
+          // The previous version had a separate thin header bar (name +
+          // arrow) sitting ABOVE a big empty box that only turned into the
+          // real "template image" card once expanded -- so the collapsed
+          // state looked broken/unfinished. Now the template card itself
+          // IS the collapsed default state: one normal-card-sized element
+          // (same background/border/padding family as a regular photoCard,
+          // just amber-tinted to read as "the special one"), with the
+          // item's full, un-truncated name wrapping naturally inside the
+          // card body (not a separate header, no ellipsis truncation), a
+          // "N var." badge overlaid on the image preview's corner instead
+          // of a separate pill, the same upload/paste-URL/library/"Use same
+          // image for all" controls as every prior round (unchanged), and a
+          // footer row at the bottom-right with a label and an arrow
+          // (only that footer row is clickable -- the card's own upload
+          // button, URL field, and library button no longer need
+          // event.stopPropagation() since there's no longer an ambient
+          // click-handler wrapping the whole card).
+          //
+          // The arrow itself is intentionally the REVERSE of every other
+          // collapsible arrow in this file (which is ▶ rotating to ▼ on
+          // open, i.e. "opens downward"). Here it starts as ▼ (pointing
+          // down, closed) and rotates to point right on open, because
+          // opening doesn't reveal anything below the card -- it makes the
+          // variant cards pop out to the card's right. It's also red
+          // (#dc2626) per Jordan's explicit "red arrow" wording.
+          //
+          // Structurally, each variant's own photo card is no longer nested
+          // inside this template card or a separate body/grid wrapper at
+          // all -- it's rendered as a PLAIN TOP-LEVEL SIBLING in the same
+          // #mq-spec-cards-grid flatMap array, tagged data-spec-group="<id>"
+          // and starting with display:none. The outer grid already auto-
+          // flows left-to-right, wrapping to new rows
+          // (grid-template-columns:repeat(auto-fill,minmax(175px,1fr))), so
+          // simply toggling each variant sibling's display (mqToggleSpecPhoto
+          // Group) makes them "pop out" immediately after the template card
+          // in natural DOM order, filling right-then-down for free -- no
+          // grid-column spans or nested grids needed anywhere, which is what
+          // caused the full-screen-width button bug in the previous round.
+          const badgeHtml = `<span style="position:absolute;top:6px;right:6px;font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:999px;white-space:nowrap">${variants.length} var.</span>`;
+          const footerHtml = `<div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;cursor:pointer;padding-top:8px;margin-top:8px;border-top:1px solid #fde68a">
+                <span style="font-size:11px;color:#92400e;font-weight:600">${variants.length} variants</span>
+                <span id="mq-specgroup-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#dc2626;flex-shrink:0">▼</span>
+              </div>`;
+          const specTemplateCardHtml = `<div id="mq-specgroup-wrap-${r.id}" class="mq-spec-card-wrap mq-spec-group-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" data-expanded="false" style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:1rem">` + (isDemoShop
+            ? `<div style="position:relative">
+                <div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🔒</div>
+                ${badgeHtml}
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
+              <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
+              <div style="font-size:11px;color:#6b7280;line-height:1.4">Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or leave this blank and set each variant's own photo individually below.</div>
+              ${footerHtml}`
+            : `<div style="position:relative">
+                <div id="mq-specshared-preview-${r.id}">
+                  ${sharedVariantPhotoUrl
+                    ? `<img src="${sharedVariantPhotoUrl.replace(/"/g,'&quot;')}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.outerHTML='<div style=\\'width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px\\'>${specIcon(itemName)}</div>'"/>`
+                    : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${specIcon(itemName)}</div>`}
+                </div>
+                ${badgeHtml}
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
+              <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
+              <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">A shortcut for when every variant looks the same — upload, paste, or choose a photo below and (after you confirm) it fills in all ${variants.length} variants at once. You can leave this blank and set each variant's own photo instead, and you can always change any variant's photo individually later either way.</div>
+              <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+                📤 Upload a photo
+                <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
+              </label>
+              <div id="mq-specshared-upload-status-${r.id}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+              <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
+              <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
+                style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
+                oninput="mqPreviewSpecSharedImage('${r.id}')" onblur="if(this.value.trim())mqApplySpecSharedImage('${r.id}')"/>
+              <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
+              ${footerHtml}`) + `</div>`;
+          // A slight amber tint + border around each popped-out variant
+          // card (Jordan, after seeing them plain: "when a variant card
+          // opens up to reveal all the variants it has lets give them a bit
+          // of that yellow from the main card so its easy to see they ae a
+          // part of the crew or a slight boarder"). photoCard()'s own
+          // returned markup already draws its usual plain gray card
+          // (background/border/padding) filling this wrap completely, so
+          // rather than reworking that shared function (used by every other
+          // photo card in this tab, not just variants), this wrap now adds
+          // its own small amber halo AROUND that inner card instead -- a
+          // soft `#fffdf5` background, a thin `#fde68a` border (the same
+          // muted amber already used for the badge and footer divider on
+          // the template card, so it reads as the same family of yellow,
+          // just lighter), and a few px of padding so the ring is actually
+          // visible around the inner card rather than sitting underneath it.
+          const variantCardsHtml = variants.map(v => `<div class="mq-spec-card-wrap" data-rooms="${roomsAttr}" data-name="${dataName}" data-category="${dataCategory}" data-proonly="${dataProOnly}" data-spec-group="${r.id}" style="display:none;background:#fffdf5;border:1px solid #fde68a;border-radius:10px;padding:5px">
             ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
           </div>`);
+          return [specTemplateCardHtml, ...variantCardsHtml];
         }).join('')}
       </div>
       </div>
@@ -6391,7 +7006,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           'mq-photo-' + key,
           shopToken,
           'products',
-          (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); }
+          // Autosaves the instant an upload finishes, same as the URL field
+          // and the "Hide from showroom"/featured checkboxes now do -- see
+          // photoCard() above for why.
+          (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts(); }
+        );
+      });
+      // Same wiring, separately, for every variant-item group card's own
+      // "shared image" upload button. These use a different id scheme
+      // (mq-specshared-upload-file-<itemId>, not mq-upload-file-<key>) on
+      // purpose -- their target field, mq-specshared-url-<itemId>, is NOT
+      // "mq-photo-" prefixed (so mqSaveProducts' [id^="mq-photo-"] scan at
+      // save time doesn't sweep it up as a bogus orphan key), so they can't
+      // just fall into the generic loop above, which always targets
+      // "mq-photo-" + key.
+      content.querySelectorAll('input[type="file"][id^="mq-specshared-upload-file-"]').forEach(fileInput => {
+        const itemId = fileInput.id.replace('mq-specshared-upload-file-', '');
+        mqWireUploadButton(
+          null,
+          'mq-specshared-upload-file-' + itemId,
+          'mq-specshared-upload-status-' + itemId,
+          'mq-specshared-url-' + itemId,
+          shopToken,
+          'products',
+          (url) => { mqPreviewSpecSharedImage(itemId); mqApplySpecSharedImage(itemId); }
         );
       });
     }
@@ -6447,7 +7085,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const payload = JSON.stringify({ hidden, applyToPro });
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
       shopRec.fields['Hidden widget tabs'] = payload;
-      showMsg('mq-shop-msg', willBeOn ? `✓ "${tabId}" tab shown on widget.` : `✓ "${tabId}" tab hidden from widget.`);
+
+      // Auto-preload the 6 default countertop project types the moment
+      // Countertops or Both ends up visible, if the shop doesn't have ANY
+      // countertop project types yet -- see mqEnsureCountertopDefaults for
+      // the full rationale (this used to be gated on tabId being exactly
+      // 'countertops'/'both', but that missed shops where Both was
+      // already on and some OTHER tab got toggled instead; the shared
+      // helper checks the resulting visibility itself, not which toggle
+      // was clicked).
+      const seededCountertopDefaults = await mqEnsureCountertopDefaults(shopRec);
+      if (seededCountertopDefaults && window._mqRooms) {
+        window._mqRooms = [...window._mqRooms, ...defaultCountertopRoomTypes()];
+        renderRoomsList();
+      }
+
+      showMsg('mq-shop-msg', willBeOn
+        ? `✓ "${tabId}" tab shown on widget.` + (seededCountertopDefaults ? ' Default countertop project types added.' : '')
+        : `✓ "${tabId}" tab hidden from widget.`);
       mqApplyEstimatorTabScopeToRoomsPage();
       mqApplyEstimatorTabScopeToPricing();
       mqApplyEstimatorTabScopeToSpecialty();
@@ -7303,25 +7958,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
   };
 
-  window.mqSaveAllSpecItems = async function() {
-    const rows = document.querySelectorAll('#mq-spec-tbody tr[data-id]');
-    if (!rows.length) return;
-    showMsg('mq-spec-msg', 'Saving...');
-    try {
-      for (const row of rows) {
-        const id = row.dataset.id;
-        const nameInput = document.getElementById('mq-spec-name-' + id);
-        const priceInput = document.getElementById('mq-spec-price-' + id);
-        if (nameInput || priceInput) {
-          await atUpdate(CONFIG.SPECIALTY_TABLE, id, {
-            'Item name': nameInput?.value || '',
-            'Price': parseFloat(priceInput?.value) || 0,
-          });
-        }
-      }
-      showMsg('mq-spec-msg', '✓ All items saved!');
-    } catch(e) { showMsg('mq-spec-msg', 'Error saving — please try again.', 'error'); }
-  };
+  // mqSaveAllSpecItems (the old floating "Save all" button's handler) was
+  // removed -- every field on the Specialty Items table already autosaves
+  // individually on blur/change (see the MQ_PAGE_SAVE_ACTIONS comment
+  // above), and this function only ever re-saved Item name + Price for
+  // every row regardless of whether anything had changed, both of which
+  // were already saved the instant they were edited.
 
   window.mqSaveSpecField = async function(id, field, value) {
     try {
@@ -7356,6 +7998,62 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { return []; }
   }
 
+  // "Sized" variants (Jordan: "so instead of the customer inputting length
+  // and width of an entire span... i want shops to also be able to add
+  // sized items... what id like is for this process to be easier... beside
+  // each variant a checkbox that says 'sized item'... if they check the box
+  // then it shows a field for mm inches or feet. then they choose and input
+  // the size. it then puts it in the field for them and knows that its a
+  // size... Then for the price if hey want it as a flat rate thats fine,
+  // but if they want it as per square foot or linear foot they can input
+  // the per sqfoot or linear foot cost and it auto calculates.") -- his own
+  // screenshot showed 36 hand-typed variants like "30" x 9"" / "30" x 10""
+  // each with a manually pre-calculated flat price, which is exactly the
+  // "pain... almost gave up" this is meant to remove.
+  //
+  // This never changes what the widget actually reads at quote time -- a
+  // sized variant's `price` field ends up a completely ordinary flat dollar
+  // amount, just like every other variant. All of this only runs here, in
+  // the dashboard, as a one-time calculator that fills in `label` and
+  // `price` for you from two dimensions and a rate, exactly the way a shop
+  // owner would do it by hand with a calculator otherwise.
+  //
+  // Two dimensions are stored as entered (dimA/dimB, in whichever `unit` is
+  // currently selected) with no fixed "width"/"height" meaning -- Jordan
+  // was explicit that shops need control over which one prints FIRST in the
+  // label independent of which box it's typed into ("maybe they are doing
+  // 30 inch by 10,11,12,13... but then they go into 15 height doors...
+  // still want them showing with the 15 first... a 'show width first show
+  // height first' switcharoo"), since the same item can mix differently-
+  // oriented batches of sizes. `swap` is that per-variant switcharoo, purely
+  // cosmetic -- it only changes label word order, never which number is
+  // dimA vs dimB or how the price gets calculated.
+  //
+  // For $/lin ft, the rate is applied to whichever of the two dimensions is
+  // LONGER, not a fixed "always dimA" or "always dimB" -- a sensible,
+  // order-independent default for door/drawer-front-style linear pricing
+  // that needs no extra configuration and can never be thrown off by the
+  // swap toggle above.
+  function mqApplySizedVariantCalcs(v) {
+    if (!v || !v.sized) return;
+    const dimA = parseFloat(v.dimA) || 0;
+    const dimB = parseFloat(v.dimB) || 0;
+    const unit = v.unit === 'mm' ? 'mm' : 'in';
+    if (dimA || dimB) {
+      const unitSuffix = unit === 'mm' ? 'mm' : '"';
+      const first = v.swap ? dimB : dimA;
+      const second = v.swap ? dimA : dimB;
+      v.label = `${first}${unitSuffix} x ${second}${unitSuffix}`;
+    }
+    const rateMode = v.rateMode || 'flat';
+    if (rateMode !== 'flat' && v.rate) {
+      const toFeet = (n) => unit === 'mm' ? (n / 304.8) : (n / 12);
+      const feetA = toFeet(dimA), feetB = toFeet(dimB);
+      const price = rateMode === 'sqft' ? (feetA * feetB * v.rate) : (Math.max(feetA, feetB) * v.rate);
+      v.price = Math.round(price * 100) / 100;
+    }
+  }
+
   function mqVariantsPanelHTML(r) {
     const variants = mqParseVariants(r);
     const itemName = (r.fields['Item name'] || 'this item').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -7373,12 +8071,69 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
         <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
         <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+    // The dimension/rate row, only shown once "📏 Sized" is checked for
+    // that variant. `width:100%` on this wrapper forces it onto its own
+    // line inside the variant row's flex-wrap, without needing a separate
+    // markup structure. Every field here autosaves through
+    // mqSaveSizedVariantField, which re-derives label/price after every
+    // change via mqApplySizedVariantCalcs above.
+    //
+    // Both <select>s below need an explicit width: #midasquote-dashboard's
+    // global form-field CSS rule sets `select{width:100%}`, which (since
+    // these selects didn't set their own width) was stretching each one to
+    // the full row width and forcing it onto its own line -- the "in" unit
+    // picker and the "Flat $" pricing-mode picker each taking up the whole
+    // row Jordan saw. Sized here to comfortably fit their own longest
+    // option's text ("inches" / "$/lin ft") plus padding, and matched to
+    // the same width as each other so the two sit neatly side by side.
+    const sizedControlsHTML = (v, vi) => !v.sized ? '' : `
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px 24px;width:100%">
+        <div style="font-size:10px;color:#9ca3af;width:100%">Input your sizes below — the variant name above will fill in automatically from them.</div>
+        <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="First dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
+        <span style="font-size:11px;color:#9ca3af">×</span>
+        <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Second dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
+        <button type="button" class="mq-btn mq-btn-sm" title="Switch which number prints first in the auto-filled size — e.g. height × width vs. width × height. Doesn't change the price either way." onclick="mqSaveSizedVariantField('${r.id}',${vi},'swap',${v.swap ? 'false' : 'true'})">⇄ Switch order</button>
+        <select title="Unit" style="width:92px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'unit',this.value)">
+          <option value="in" ${v.unit!=='mm'?'selected':''}>inches</option>
+          <option value="mm" ${v.unit==='mm'?'selected':''}>mm</option>
+        </select>
+        <select title="How this variant's price gets calculated" style="width:92px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'rateMode',this.value)">
+          <option value="flat" ${(!v.rateMode||v.rateMode==='flat')?'selected':''}>Flat $</option>
+          <option value="sqft" ${v.rateMode==='sqft'?'selected':''}>${CUR()}/sq ft</option>
+          <option value="linft" ${v.rateMode==='linft'?'selected':''}>${CUR()}/lin ft</option>
+        </select>
+        ${(v.rateMode==='sqft'||v.rateMode==='linft') ? `<input type="number" value="${v.rate||''}" placeholder="Rate" title="${v.rateMode==='sqft'?'Price per square foot — multiplied by this size\'s area to fill in Price above':'Price per linear foot — multiplied by this size\'s longer side to fill in Price above'}" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'rate',parseFloat(this.value)||0)"/>` : ''}
+      </div>`;
+    // Each row carries its own stable variant id (not its array index, which
+    // shifts around on every add/remove/reorder) in data-variant-id, plus a
+    // ⠿ drag handle — same handle-activated draggable pattern as the
+    // Specialty Items table's own rows: draggable only turns on while the
+    // mouse is down on the handle itself, so selecting text in the label
+    // input isn't prone to being grabbed as a drag instead.
+    //
+    // Jordan, after trying the sized-variant controls: "wow thats perfect,
+    // now we just need a little seperation for each from eachother... maybe
+    // a border and some shading." A plain `border-bottom` between rows
+    // wasn't enough once a row could also carry a whole extra sub-row of
+    // dimension/unit/rate controls underneath it -- it got hard to tell
+    // where one variant's card ended and the next one's began. Each row is
+    // now its own bordered, lightly-shaded card with its own rounded
+    // corners and a gap below it, so a variant (label/price/sized controls
+    // and all) reads as one distinct unit at a glance, especially useful
+    // once a shop owner has 20-30 of them stacked in a row.
     const rows = variants.map((v, vi) => `
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;flex-wrap:wrap">
+      <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;flex-wrap:wrap;cursor:grab">
+        <span class="mq-variant-drag-handle" title="Drag to reorder" style="color:#9ca3af;font-size:16px;cursor:grab;flex-shrink:0">⠿</span>
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
         <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
         ${minInputHTML(v, vi)}
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap" title="Enter two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the label + price above fill in automatically">
+          <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
+          📏 Sized
+        </label>
+        <button class="mq-btn mq-btn-sm" title="Duplicate this variant — handy for adding the next size in the same run" onclick="mqDuplicateVariant('${r.id}',${vi})">⧉</button>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
+        ${sizedControlsHTML(v, vi)}
       </div>`).join('');
     // Boxed with a colored left border and the item's own name repeated in
     // the header — this panel can end up sitting visually next to a
@@ -7389,16 +8144,57 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `
       <div style="border-left:3px solid #c7d2fe;padding-left:10px">
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
-        ${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}
+        <div id="mq-spec-variants-list-${r.id}">${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}</div>
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default.</div>` : ''}
+        ${variants.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px">Drag the ⠿ handle to reorder — the first one listed is what customers see selected by default.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> variants (e.g. differently-sized doors) let you type two dimensions and a $/sq ft or $/lin ft rate instead of calculating each price by hand — ⧉ duplicate a sized variant to quickly add the next size in the same run.</div>` : ''}
       </div>`;
+  }
+
+  // Wires up drag-and-drop reordering for one item's variant rows. Scoped to
+  // just the #mq-spec-variants-list-<id> container (not the whole document)
+  // so dragging a variant in one item's open panel can never reach into a
+  // different item's panel, even though every item's panel markup exists in
+  // the DOM at once (each hidden behind its own display:none row until its
+  // pill is clicked). Must be re-called any time the container's innerHTML
+  // is rebuilt (mqRefreshVariantsPanel), since that destroys and recreates
+  // every element these listeners are attached to.
+  function mqWireVariantDrag(id) {
+    const list = document.getElementById(`mq-spec-variants-list-${id}`);
+    if (!list) return;
+    let dragging = null;
+    list.querySelectorAll('.mq-variant-row').forEach(row => {
+      row.draggable = false;
+      const handle = row.querySelector('.mq-variant-drag-handle');
+      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
+      row.addEventListener('mouseup', () => { row.draggable = false; });
+      row.addEventListener('dragstart', () => {
+        dragging = row;
+        setTimeout(() => row.style.opacity = '0.4', 0);
+      });
+      row.addEventListener('dragend', () => {
+        row.style.opacity = '1';
+        row.draggable = false;
+        dragging = null;
+        mqReorderVariants(id);
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (row === dragging) return;
+        const after = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+        const target = e.clientY < after ? row : row.nextSibling;
+        list.insertBefore(dragging, target);
+      });
+    });
   }
 
   function mqRefreshVariantsPanel(id) {
     const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     const panel = document.getElementById(`mq-spec-variants-panel-${id}`);
-    if (r && panel) panel.innerHTML = mqVariantsPanelHTML(r);
+    if (r && panel) {
+      panel.innerHTML = mqVariantsPanelHTML(r);
+      mqWireVariantDrag(id);
+    }
   }
 
   function mqRefreshSpecVariantUI(id) {
@@ -7412,12 +8208,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.style.background = n ? '#eef2ff' : '#f3f4f6';
       pill.style.color = n ? '#4338ca' : '#6b7280';
     }
-    // Price field is meaningless once variants exist — disable it in place
-    // rather than making the shop owner guess why it's not being used.
+    // The flat Price field is meaningless once variants exist (each variant
+    // has its own price instead) -- but rather than just disabling it, it's
+    // repurposed as a bulk rate-entry box (see mqMassUpdateVariantRates):
+    // type a new $/sq or lin ft rate there and "Apply to all sized" updates
+    // every 📏 Sized, per sq/lin ft variant on this item at once. Keep this
+    // in sync with the table row's own initial render of this same field.
     const priceInput = document.getElementById(`mq-spec-price-${id}`);
     if (priceInput) {
-      priceInput.disabled = n > 0;
-      priceInput.title = n > 0 ? 'Priced per variant — see the Variants pill under the item name' : '';
+      priceInput.disabled = false;
+      priceInput.placeholder = n > 0 ? 'New rate' : '';
+      priceInput.title = n > 0 ? "Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone." : '';
     }
   }
 
@@ -7464,6 +8265,137 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     variants[vi][field] = value;
     r.fields['Variants'] = JSON.stringify(variants);
     await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  // Same shape as mqSaveVariantField above, for the "📏 Sized" fields
+  // (sized/dimA/dimB/unit/swap/rateMode/rate) -- the one difference is that
+  // every change here also re-derives that variant's label/price via
+  // mqApplySizedVariantCalcs and refreshes the panel immediately, so a shop
+  // owner sees the auto-filled label/price update live as they type instead
+  // of only after their next save or reload.
+  window.mqSaveSizedVariantField = async function(id, vi, field, value) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    if (!variants[vi]) return;
+    variants[vi][field] = value;
+    mqApplySizedVariantCalcs(variants[vi]);
+    r.fields['Variants'] = JSON.stringify(variants);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  // Duplicates ONE variant within the same item -- Jordan: "they should also
+  // be able to duplicate the variants so they would just have to change the
+  // sizes." A fresh id is generated (same pattern mqAddVariant uses) rather
+  // than reusing the source variant's id, because -- unlike mqDuplicateSpec,
+  // which duplicates a whole ITEM and can safely reuse variant ids since the
+  // differing item id keeps their photo keys apart -- a duplicate variant
+  // living inside the SAME item's array would otherwise collide with its
+  // source on the photo key 'spec_<itemId>_v<sharedId>'. The source
+  // variant's own photo/hidden-from-showroom state is copied forward to the
+  // new id for the same reason mqDuplicateSpec copies photos: re-uploading
+  // an identical door photo for every duplicated size would defeat the point
+  // of duplicating in the first place.
+  window.mqDuplicateVariant = async function(id, vi) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const shopRec = window._mqShopRecord;
+    if (!r) return;
+    const variants = mqParseVariants(r);
+    const source = variants[vi];
+    if (!source) return;
+    const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const copy = { ...source, id: newId, label: (source.label || '') + ' - Copy' };
+    variants.splice(vi + 1, 0, copy);
+    r.fields['Variants'] = JSON.stringify(variants);
+
+    if (shopRec) {
+      let shopPhotos = {}; try { shopPhotos = shopRec.fields['Photos'] ? JSON.parse(shopRec.fields['Photos']) : {}; } catch(e) {}
+      let shopHidden = {}; try { shopHidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) {}
+      const oldKey = 'spec_' + id + '_v' + source.id;
+      const newKey = 'spec_' + id + '_v' + newId;
+      let changed = false;
+      if (shopPhotos[oldKey]) { shopPhotos[newKey] = shopPhotos[oldKey]; changed = true; }
+      if (shopHidden[oldKey]) { shopHidden[newKey] = shopHidden[oldKey]; changed = true; }
+      if (changed) {
+        await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Photos': JSON.stringify(shopPhotos), 'Hidden': JSON.stringify(shopHidden) });
+        shopRec.fields['Photos'] = JSON.stringify(shopPhotos);
+        shopRec.fields['Hidden'] = JSON.stringify(shopHidden);
+      }
+    }
+
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  // Jordan, after duplicating a 41-variant sized item to reuse for a
+  // different wood species at a different price point: "when i duplicate a
+  // heavy item with like 50 variants and i want them all priced the
+  // same... could we make it so the original price spot from befoe
+  // variants were added could be used for a mass update of that items
+  // variants... like lets say i duplicated this maple shaker door item
+  // with 20 size variants at 54.95 and im going to use the duplicate to
+  // cherry doors but need the square foot price to be 75.95 per sqft, it
+  // would be way easier to be able to reprice the whole lot by using the
+  // original price spot..."
+  //
+  // The item's own Price field (id="mq-spec-price-<id>") already goes
+  // unused the moment it has variants — each variant has its own price
+  // instead. Rather than leaving it disabled, it's now repurposed as a
+  // bulk rate-entry box for exactly this: whatever number is currently
+  // typed there gets applied as the new `rate` on every "📏 Sized" variant
+  // on this item that's priced per sq ft or per lin ft (a flat-rate or
+  // non-sized variant has no rate to update, so those are left completely
+  // alone), then each updated variant's price is re-derived through the
+  // same mqApplySizedVariantCalcs already used everywhere else, exactly as
+  // if that rate had been typed into that one variant's own rate field by
+  // hand.
+  window.mqMassUpdateVariantRates = async function(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (!r) return;
+    const input = document.getElementById(`mq-spec-price-${id}`);
+    const newRate = parseFloat(input?.value);
+    if (!input || isNaN(newRate)) { showMsg('mq-spec-msg', 'Enter a rate first.', 'error'); return; }
+    const variants = mqParseVariants(r);
+    let updated = 0;
+    variants.forEach(v => {
+      if (v.sized && (v.rateMode === 'sqft' || v.rateMode === 'linft')) {
+        v.rate = newRate;
+        mqApplySizedVariantCalcs(v);
+        updated++;
+      }
+    });
+    if (!updated) { showMsg('mq-spec-msg', 'No 📏 Sized, per sq/lin ft variants to update on this item.', 'error'); return; }
+    r.fields['Variants'] = JSON.stringify(variants);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+    showMsg('mq-spec-msg', `✓ Updated the rate on ${updated} variant${updated===1?'':'s'}.`);
+  };
+
+  // Called after a variant row drag ends. Unlike mqSaveVariantField (which
+  // writes by array INDEX), reordering is exactly what makes indices stale,
+  // so this reads the new order straight from the DOM's data-variant-id
+  // attributes, re-sorts the real variants array to match by id, and saves
+  // the whole array — the same save shape mqAddVariant/mqRemoveVariant use.
+  window.mqReorderVariants = async function(id) {
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const list = document.getElementById(`mq-spec-variants-list-${id}`);
+    if (!r || !list) return;
+    const variants = mqParseVariants(r);
+    const byId = new Map(variants.map(v => [v.id, v]));
+    const orderedIds = [...list.querySelectorAll('.mq-variant-row')].map(row => row.dataset.variantId);
+    const reordered = orderedIds.map(vid => byId.get(vid)).filter(Boolean);
+    // Safety: if the DOM order and the in-memory array ever disagree on
+    // which ids exist (shouldn't happen), bail rather than risk silently
+    // dropping a variant from what gets saved.
+    if (reordered.length !== variants.length) return;
+    r.fields['Variants'] = JSON.stringify(reordered);
+    mqRefreshVariantsPanel(id);
+    mqRefreshSpecVariantUI(id);
+    await mqSaveSpecField(id, 'Variants', JSON.stringify(reordered));
   };
   // =================== end specialty item variants ===================
 
@@ -7824,6 +8756,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (rec) rec.fields['Visible rooms'] = JSON.stringify(toSave);
       if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
       if (typeof window.mqRefreshCategoryOrderBox === 'function') window.mqRefreshCategoryOrderBox();
+      if (typeof window.mqRefreshItemOrderBox === 'function') window.mqRefreshItemOrderBox();
     } catch(e) {
       console.error('Failed to save room links', e);
       rooms.forEach(r => {
@@ -7851,6 +8784,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // customers -- kept in sync here so what the dashboard shows checked
   // matches what the widget actually does.
   function roomCheckedByDefault(r, cat) {
+    // A project type the CATEGORY itself has hidden (the 🗂️ control at the
+    // top of each My Products category) is never checked-by-default for an
+    // individual item that hasn't been explicitly configured -- the
+    // category is the ceiling, not just a starting suggestion an item can
+    // quietly ignore. Added 2026-09-17 per Jordan: unchecking the category
+    // for a project type "should automatically uncheck every product under
+    // that section" -- this is what makes an item's own checkbox panel
+    // actually reflect that, instead of always showing every project type
+    // checked regardless of what the category above it says. See the
+    // matching disabled-checkbox treatment in lineItemRoomDisclosure/
+    // roomLinkDisclosure, and effectiveVisibleRooms in widget.js/
+    // widgetpro.js/showroom.html, which now enforces the same rule for
+    // what customers actually see.
+    if (((window._mqCategoryRooms || {})[cat] || []).includes(r.id)) return false;
     return cat === 'specialty' ? !r.forCountertops : true;
   }
 
@@ -7859,7 +8806,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return cat === 'specialty' ? 'All cabinet types (not Countertops — check to add)' : 'All project types';
     }
     const names = visibleRooms.map(id => rooms.find(r => r.id === id)?.name).filter(Boolean);
-    return names.length ? names.join(', ') : 'All project types';
+    // An empty visibleRooms list means "never configured, so visible for
+    // every current project type" (handled above) -- this is a DIFFERENT
+    // case: it WAS explicitly scoped to one or more specific project types,
+    // and every single one of those has since been deleted from the shop's
+    // own Project types list. That's not "all project types" (it's
+    // currently visible for zero of them) -- it used to silently fall
+    // through to the same "All project types" label as the empty case,
+    // which was actively misleading (Jordan: items "still say 'all project
+    // types' weirdly" when every checkbox shown was actually unchecked).
+    // The stale ids themselves are left untouched here on purpose -- they're
+    // exactly what makes an item like this automatically start showing
+    // again, with zero extra steps, if that project type is ever brought
+    // back via "Restore a default type…" (which reuses the same id).
+    if (!names.length) return 'None (its project types were removed)';
+    return names.join(', ');
   }
 
   function roomLinkDisclosure(itemId, visibleRoomsJson) {
@@ -7867,17 +8828,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let visibleRooms = [];
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
     const summary = roomLinkSummaryText(visibleRooms, rooms, 'specialty');
-    const checkboxes = rooms.map(r => `
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${(visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, 'specialty'))?'checked':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
-      </label>`).join('');
+    // A project type the Specialty Items category itself hides (if/when
+    // that control ever gets exposed the same way the pricing categories'
+    // 🗂️ control is) can never be re-enabled from one item's own panel --
+    // same "category is the ceiling" rule as lineItemRoomDisclosure below.
+    const categoryHidden = (window._mqCategoryRooms || {})['specialty'] || [];
+    const checkboxes = rooms.map(r => {
+      const catHidden = categoryHidden.includes(r.id);
+      const isChecked = !catHidden && (visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, 'specialty'));
+      return `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:${catHidden?'not-allowed':'pointer'};opacity:${catHidden?'0.5':'1'}"${catHidden?` title="Hidden for this project type by the category setting above — enable it there first."`:''}>
+        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:11px;color:#92400e;font-weight:600;white-space:nowrap">🔒 hidden</span>':''}
+      </label>`;
+    }).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
         <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
           <span id="mq-spec-room-summary-${itemId}">${summary}</span>
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:200px">
           ${checkboxes}
         </div>
       </details>`;
@@ -7890,15 +8860,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Module-level so both initProductsTab (My Products) and renderTemplates
   // (admin Templates tab) can share it, instead of it being locked inside one
   // function's closure over a specific shop's savedPhotos/savedHidden.
-  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo, autosave) {
-    // autosave (Templates admin tab only — every other caller omits it) —
-    // this tab's floating "Save all changes" button is easy to forget after
-    // uploading/pasting a photo or toggling "Hide from showroom," and
-    // anything not saved before navigating away or reloading is silently
-    // lost (mqSaveTemplatePhotos rebuilds the whole Photos/Hidden blob from
-    // whatever's in the DOM at save time). So on this tab specifically,
-    // these two actions save immediately instead of only marking dirty.
-    const autosaveJs = autosave ? "if(typeof window.mqSaveTemplatePhotos==='function')window.mqSaveTemplatePhotos();" : '';
+  function photoCardShared(key, name, emoji, cat, ids, visibleRoomsJson, savedPhotos, savedHidden, savedFeatured, badgeLabel, isDemo, autosaveFn) {
+    // autosaveFn -- the (window-global) name of the save function this
+    // card's tab should call, e.g. 'mqSaveProducts' for My Products or
+    // 'mqSaveTemplatePhotos' for the Templates admin tab. Both tabs also
+    // still have their own floating "Save changes" button, which is easy to
+    // forget after uploading/pasting a photo or toggling "Hide from
+    // showroom" -- and anything not saved before navigating away or
+    // reloading is silently lost (mqSaveProducts/mqSaveTemplatePhotos
+    // rebuild the whole Photos/Hidden/Featured blob from whatever's in the
+    // DOM at save time). So these actions save immediately instead of only
+    // marking dirty, on every caller that passes a save function name here.
+    const autosaveJs = autosaveFn ? `if(typeof window.${autosaveFn}==='function')window.${autosaveFn}();` : '';
     const savedUrl = savedPhotos[key] || '';
     const isHidden = savedHidden[key] || false;
     // savedFeatured is only ever passed in from My Products — every other
@@ -7908,7 +8881,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const featuredHtml = savedFeatured ? (() => {
       const isFeatured = savedFeatured[key] || false;
       return `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a" onchange="mqMarkProductsDirty()"/>
+        <input type="checkbox" id="mq-featured-${key}" ${isFeatured ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a" onchange="mqMarkProductsDirty();${autosaveJs}"/>
         🏆 Mark as "${(badgeLabel||'Best seller').replace(/"/g,'&quot;')}"
       </label>`;
     })() : '';
@@ -7916,14 +8889,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       ? `<img src="${savedUrl}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`
       : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">${emoji}</div>`;
     const roomLinkHtml = ids ? `<div style="margin-bottom:8px">${lineItemRoomDisclosure(key, visibleRoomsJson, ids, cat)}</div>` : '';
-    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;${isHidden ? 'opacity:0.5' : ''}">
+    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
       <div id="mq-photo-preview-${key}">${preview}</div>
       <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:6px">${name}</div>
       ${roomLinkHtml}
       ${featuredHtml}
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:8px;cursor:pointer">
         <input type="checkbox" id="mq-hidden-${key}" ${isHidden ? 'checked' : ''} style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"
-          onchange="mqMarkProductsDirty();this.closest('div[style*=border-radius]').style.opacity=this.checked?'0.5':'1';${autosaveJs}"/>
+          onchange="mqMarkProductsDirty();${autosaveJs}"/>
         Hide from showroom
       </label>
       ${isDemo ? `
@@ -7955,7 +8928,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // templates don't have an equivalent, so it lives right on the card here).
   function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
-    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, true);
+    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
     const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:6px">
@@ -8253,17 +9226,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
     const summary = roomLinkSummaryText(visibleRooms, rooms, cat);
     const idsAttr = (ids||[]).join(',');
-    const checkboxes = rooms.map(r => `
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${(visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, cat))?'checked':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
-      </label>`).join('');
+    // A project type the whole CATEGORY hides (the 🗂️ control above every
+    // category grid) can't be re-enabled from one item's own panel -- the
+    // category checkbox is the master switch per project type; an item can
+    // only add its OWN extra restrictions within project types the
+    // category still shows, never re-open one the category has closed.
+    // Added 2026-09-17 per Jordan, after "Hidden for: Restaining,
+    // Repainting, Refacing" on Drawer Configurations didn't match what a
+    // Drawer item's own panel showed (every box checked, misleadingly
+    // implying it was independently visible for those three anyway).
+    const categoryHidden = (window._mqCategoryRooms || {})[cat] || [];
+    const checkboxes = rooms.map(r => {
+      const catHidden = categoryHidden.includes(r.id);
+      const isChecked = !catHidden && (visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, cat));
+      return `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:${catHidden?'not-allowed':'pointer'};opacity:${catHidden?'0.5':'1'}"${catHidden?` title="Hidden for this project type by the category setting above — enable it there first."`:''}>
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:11px;color:#92400e;font-weight:600;white-space:nowrap">🔒 hidden</span>':''}
+      </label>`;
+    }).join('');
     return `
       <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
         <summary style="font-size:12px;color:#1d4ed8;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#eff6ff;border-radius:6px;width:fit-content">
           <span id="mq-li-room-summary-${key}">${summary}</span>
           <span style="font-size:15px;line-height:1">▾</span>
         </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px">
+        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:200px">
           ${checkboxes}
         </div>
       </details>`;
@@ -8346,27 +9333,58 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </label>`).join('');
     const linkedWarning = LINKED_CABINET_CATS.includes(cat) ? `
       <div style="font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:8px;line-height:1.4">
-        ⚠️ Box Materials, Door Styles, and Drawer Configurations are always used together. Unchecking a project type here does the same for all three automatically, which hides the whole Cabinet measurements section on the widget for that project type.
+        ⚠️ ${mqJoinNatural(LINKED_CABINET_CATS.map(c => CAT_DISPLAY_NAMES[c]))} are always used together. Unchecking a project type here does the same for all of them automatically, which hides the whole Cabinet measurements section on the widget for that project type.
       </div>` : '';
+    // Plain-language explanation of what this control actually does, sitting
+    // right beside it (not tucked inside the click-to-open panel) so it's
+    // understandable at a glance -- added 2026-09-18 per Jordan, after the
+    // category-vs-item hiding relationship needed a whole back-and-forth to
+    // clarify. Same visual pattern as the "+ New group" button's own
+    // neighboring caption just below, for consistency.
+    const howItWorksNote = `
+      <span style="font-size:11px;color:#9ca3af;line-height:1.4;max-width:420px">
+        This is the master switch for ${CAT_DISPLAY_NAMES[cat]||'this category'} on each project type. Uncheck a project type and every item and this entire section is hidden and locked (🔒) for it automatically. Individual products can still be hidden for the project types they're visible for here, using their own checkboxes below — but they can't be turned back on for a project type that's unchecked up here.
+      </span>`;
     return `
-      <details style="position:relative;margin-bottom:12px" ontoggle="mqPositionRoomPanel(this)">
-        <summary style="font-size:12px;font-weight:600;color:#92400e;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;width:fit-content">
-          🗂️ <span id="mq-cat-room-summary-${cat}">${summary}</span>
-          <span style="font-size:15px;line-height:1">▾</span>
-        </summary>
-        <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
-          ${linkedWarning}
-          <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match. Change one item afterward to make it an exception.</div>
-          ${checkboxes}
-        </div>
-      </details>`;
+      <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <details style="position:relative" ontoggle="mqPositionRoomPanel(this)">
+          <summary style="font-size:12px;font-weight:600;color:#92400e;cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;width:fit-content">
+            🗂️ <span id="mq-cat-room-summary-${cat}">${summary}</span>
+            <span style="font-size:15px;line-height:1">▾</span>
+          </summary>
+          <div class="mq-room-panel" style="position:fixed;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:220px">
+            ${linkedWarning}
+            <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4">Checking/unchecking here sets every item in this category to match, and locks/unlocks each item's own checkbox for that project type to match. An item can only add its own extra hiding on top of this — it can never override a project type unchecked here.</div>
+            ${checkboxes}
+          </div>
+        </details>
+        ${howItWorksNote}
+      </div>`;
   }
 
-  // Material, Door Styles, and Drawer Configurations are always used
-  // together for cabinet pricing — unchecking any one of them for a project
-  // type hides the whole Cabinet measurements section on the widget, so all
-  // three need to stay in sync rather than letting them drift apart.
-  const LINKED_CABINET_CATS = ['material', 'door', 'drawer'];
+  // Material, Door Styles, Drawer Configurations, and Door Hinges are always
+  // used together for cabinet pricing — unchecking any one of them for a
+  // project type hides the whole Cabinet measurements section on the widget,
+  // so all four need to stay in sync rather than letting them drift apart.
+  // Door Hinges added 2026-09-18 per Jordan, after toggling Door Hinges'
+  // own 🗂️ control for Refacing/Repainting/Restaining left Box
+  // Materials/Door Styles/Drawer Configurations' own category state
+  // untouched (and vice versa) even though they're all part of the same
+  // "Cabinet measurements" section on the widget: "if doors are unchecked
+  // on the master side for a project type then hinges need to be
+  // automatically the same since they are connected."
+  const LINKED_CABINET_CATS = ['material', 'door', 'drawer', 'hinge'];
+
+  // Small "X, Y, and Z" formatter (Oxford comma, "X and Y" for exactly two,
+  // just "X" for one) — used for the linked-category messaging below so it
+  // reads naturally regardless of how many categories end up in
+  // LINKED_CABINET_CATS, instead of a hardcoded "and"-chain that gets
+  // grammatically worse every time a category is added to the group.
+  function mqJoinNatural(list) {
+    if (list.length <= 1) return list.join('');
+    if (list.length === 2) return list.join(' and ');
+    return list.slice(0, -1).join(', ') + ', and ' + list[list.length - 1];
+  }
 
   async function applyCategoryRoomChange(cat, roomId, checked) {
     const shopRec = window._mqShopRecord;
@@ -8414,7 +9432,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // Reflect the sync visually on that item's own checkbox/summary, if rendered
       const key = cat === 'specialty' ? `spec_${item.id}` : `li_${cat}_${(item.baseName||'').replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
       const itemCb = document.getElementById(`mq-li-room-${key}-${roomId}`);
-      if (itemCb) itemCb.checked = checked;
+      if (itemCb) {
+        itemCb.checked = checked;
+        // Keep the item's own checkbox actually locked/unlocked in step
+        // with the category, not just its checked state -- otherwise a
+        // panel that's already open when the category gets toggled would
+        // show the right checked/unchecked state but still let a shop
+        // owner click it back on immediately, since disabled/opacity/title
+        // were only ever set once at initial render (lineItemRoomDisclosure/
+        // roomLinkDisclosure), not re-applied here.
+        itemCb.disabled = !checked;
+        const lbl = itemCb.closest('label');
+        if (lbl) {
+          lbl.style.cursor = checked ? 'pointer' : 'not-allowed';
+          lbl.style.opacity = checked ? '1' : '0.5';
+          if (checked) lbl.removeAttribute('title');
+          else lbl.setAttribute('title', 'Hidden for this project type by the category setting above — enable it there first.');
+        }
+      }
       const itemSummaryEl = document.getElementById(`mq-li-room-summary-${key}`);
       if (itemSummaryEl) itemSummaryEl.textContent = roomLinkSummaryText(finalList, rooms, cat);
     }));
@@ -8427,7 +9462,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (LINKED_CABINET_CATS.includes(cat)) {
       const others = LINKED_CABINET_CATS.filter(c => c !== cat);
       await Promise.all(others.map(otherCat => applyCategoryRoomChange(otherCat, roomId, checked)));
-      showMsg('mq-products-msg', `✓ Also updated ${others.map(c => CAT_DISPLAY_NAMES[c]).join(' and ')} to match, since they're always used together.`);
+      showMsg('mq-products-msg', `✓ Also updated ${mqJoinNatural(others.map(c => CAT_DISPLAY_NAMES[c]))} to match, since they're always used together.`);
     }
   };
 
@@ -8439,6 +9474,79 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       renderSpecialty(specs, window._mqShopRecord);
       showMsg('mq-spec-msg', '✓ Item deleted.');
     } catch(e) { showMsg('mq-spec-msg', 'Error deleting item.', 'error'); }
+  };
+
+  // Copies a specialty item wholesale -- pricing, install settings, project
+  // types, category, Pro-only/Active state, and every one of its variants
+  // (Jordan: "I have an item that has 30 variants and I just want to
+  // duplicate it and just change some minor things for the next one").
+  // Starts from a full copy of the original's own fields rather than a
+  // hand-picked list, so nothing gets silently left behind as new fields are
+  // added to this table down the road -- the only thing stripped out is
+  // {Shop token (lookup)}, a read-only Airtable Lookup field Airtable
+  // computes on its own and rejects any attempt to write to directly.
+  window.mqDuplicateSpec = async function(id) {
+    const r = (window._mqSpecRecords || []).find(x => x.id === id);
+    const shopRec = window._mqShopRecord;
+    if (!r || !shopRec) return;
+    try {
+      // "<Name> - Copy", then "<Name> - Copy 2", "<Name> - Copy 3"... so
+      // duplicating the same item more than once (or duplicating a copy of
+      // a copy) never lands on a name that's already in use.
+      const existingNames = new Set((window._mqSpecRecords || []).map(x => (x.fields['Item name'] || '').trim().toLowerCase()));
+      const baseName = (r.fields['Item name'] || 'Untitled item').trim();
+      let newName = `${baseName} - Copy`;
+      let n = 2;
+      while (existingNames.has(newName.toLowerCase())) { newName = `${baseName} - Copy ${n}`; n++; }
+
+      const newFields = { ...r.fields };
+      delete newFields['Shop token (lookup)'];
+      newFields['Item name'] = newName;
+      newFields['Special Items'] = newName; // kept in sync with Item name everywhere else -- see mqSaveSpecField
+      // Lands right after the original, not shoved to the very top of the
+      // list, so the two sit next to each other for an easy side-by-side
+      // edit. Fractional and temporary -- Sort order gets fully renumbered
+      // to clean integers the moment anything in this tab is drag-reordered.
+      newFields['Sort order'] = (r.fields['Sort order'] || 0) + 0.5;
+
+      const created = await atCreate(CONFIG.SPECIALTY_TABLE, newFields);
+
+      // Also copy over this item's own photo, plus every variant's photo and
+      // its showroom-hidden state -- otherwise a 30-variant item's duplicate
+      // would need all 30 photos re-uploaded by hand, which defeats most of
+      // the point of duplicating it in the first place. Photos live in a
+      // separate JSON blob on the SHOP record (keyed 'spec_<itemId>' or
+      // 'spec_<itemId>_v<variantId>'), not on the item record itself, so
+      // this is a second, separate copy step after the item record exists.
+      if (created?.id) {
+        let shopPhotos = {}; try { shopPhotos = shopRec.fields['Photos'] ? JSON.parse(shopRec.fields['Photos']) : {}; } catch(e) {}
+        let shopHidden = {}; try { shopHidden = shopRec.fields['Hidden'] ? JSON.parse(shopRec.fields['Hidden']) : {}; } catch(e) {}
+        let changed = false;
+        const variants = mqParseVariants(r);
+        const oldKeys = variants.length ? variants.map(v => 'spec_' + r.id + '_v' + v.id) : ['spec_' + r.id];
+        const newKeys = variants.length ? variants.map(v => 'spec_' + created.id + '_v' + v.id) : ['spec_' + created.id];
+        oldKeys.forEach((oldKey, i) => {
+          const newKey = newKeys[i];
+          if (shopPhotos[oldKey]) { shopPhotos[newKey] = shopPhotos[oldKey]; changed = true; }
+          if (shopHidden[oldKey]) { shopHidden[newKey] = shopHidden[oldKey]; changed = true; }
+        });
+        if (changed) {
+          await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Photos': JSON.stringify(shopPhotos), 'Hidden': JSON.stringify(shopHidden) });
+          shopRec.fields['Photos'] = JSON.stringify(shopPhotos);
+          shopRec.fields['Hidden'] = JSON.stringify(shopHidden);
+        }
+      }
+
+      const specs = await loadSpecialty(shopRec.fields['Shop token']);
+      renderSpecialty(specs, shopRec);
+      showMsg('mq-spec-msg', `✓ Duplicated as "${newName}" — edit it below.`);
+      if (created?.id) {
+        setTimeout(() => {
+          const nameInput = document.getElementById('mq-spec-name-' + created.id);
+          if (nameInput) { nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); nameInput.focus(); nameInput.select(); }
+        }, 300);
+      }
+    } catch(e) { showMsg('mq-spec-msg', 'Error duplicating item.', 'error'); }
   };
 
   window.mqAddSpecItem = async function() {
@@ -11201,7 +12309,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
