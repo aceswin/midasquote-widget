@@ -6317,7 +6317,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
       const hasGroups = GROUPABLE_CATS.includes(cat) && items.some(i => i.groupName);
       const catSortDir = mqSortDirFor(cat);
-      const catSortTitle = hasGroups ? "Sort this category's ungrouped items by name" : 'Sort this category\'s items by name';
       return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
@@ -6337,7 +6336,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               onchange="mqSaveCategoryPickerLabel('${cat}',this.value)"/>
           </div>` : ''}
           <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqToggleCatSort('${cat}')" title="${catSortTitle}">Sort by name (${catSortDir==='desc'?'Z→A':'A→Z'})</button>
+            ${hasGroups ? '' : `<button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqToggleCatSort('${cat}')" title="Sort this category's items by name">Sort by name (${catSortDir==='desc'?'Z→A':'A→Z'})</button>`}
             <input type="text" id="mq-cat-search-${cat}" oninput="mqFilterProductCards('${cat}')" onclick="event.stopPropagation()" placeholder="Search by name…" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;flex:1;min-width:160px;max-width:260px"/>
           </div>
           <div id="mq-cat-search-empty-${cat}" style="display:none;font-size:12px;color:#9ca3af;padding:0 0 0.75rem">No items match that search.</div>
@@ -6408,10 +6407,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // collection" covers that case instead.
     let _mqProductSortDir = {};
     function mqSortDirFor(key) { return _mqProductSortDir[key] === 'desc' ? 'desc' : 'asc'; }
-    function mqSortItemsByName(items, key) {
+    function mqSortItemsByName(items, key, nameFn) {
       const dir = mqSortDirFor(key);
+      const getName = nameFn || ((i) => i.baseName || '');
       return [...items].sort((a, b) => {
-        const cmp = (a.baseName || '').localeCompare(b.baseName || '', undefined, { sensitivity: 'base', numeric: true });
+        const cmp = (getName(a) || '').localeCompare(getName(b) || '', undefined, { sensitivity: 'base', numeric: true });
         return dir === 'desc' ? -cmp : cmp;
       });
     }
@@ -6427,6 +6427,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const grid = document.getElementById(`mq-cat-grid-${cat}`);
       if (grid) grid.innerHTML = catGridHtml(cat);
       window.mqFilterProductCards(cat);
+    };
+    // Same "no group" sort key convention as everything above, just under
+    // its own 'specialty' key — Specialty Items has no group manager of its
+    // own, so there's only ever the one control here (Jordan: "lets have
+    // specialty items alphabetical by default as well and able to sort the
+    // same way too"). specCardsHtml (defined further below, alongside the
+    // rest of the Specialty Items section) re-sorts and rebuilds the grid.
+    window.mqToggleSpecSort = function() {
+      _mqProductSortDir['specialty'] = mqSortDirFor('specialty') === 'asc' ? 'desc' : 'asc';
+      const grid = document.getElementById('mq-spec-cards-grid');
+      if (grid) grid.innerHTML = specCardsHtml();
+      window.mqFilterSpecialtyCards();
     };
 
     // Same live-filter pattern as Specialty Items' own search
@@ -6815,6 +6827,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <input type="text" id="mq-spec-filter-search" oninput="mqFilterSpecialtyCards()" placeholder="e.g. lazy susan" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%"/>
         </div>
         <div style="display:flex;align-items:flex-end;padding-bottom:6px">
+          <button class="mq-btn mq-btn-sm" onclick="mqToggleSpecSort()" title="Sort specialty items by name">Sort by name (${mqSortDirFor('specialty')==='desc'?'Z→A':'A→Z'})</button>
+        </div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:6px">
           <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;white-space:nowrap">
             <input type="checkbox" id="mq-spec-filter-proonly" onchange="mqFilterSpecialtyCards()" style="width:16px;height:16px;accent-color:#1a1a1a"/>
             ⭐ Pro only
@@ -6823,7 +6838,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>
       <div id="mq-spec-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px" id="mq-spec-cards-grid">
-        ${specItems.flatMap(r => {
+        ${specCardsHtml()}
+      </div>
+      </div>
+    </div>` : '';
+
+    // Jordan: "lets have specialty items alphabetical by default as well
+    // and able to sort the same way too." Split out from the specSection
+    // template above so mqToggleSpecSort can rebuild just this grid (same
+    // pattern as catGridHtml/mqToggleCatSort) without re-rendering the
+    // filter controls around it. Sorts fresh off the current
+    // _mqProductSortDir['specialty'] every call, same 'specialty' key
+    // the sort button's own label reads from above.
+    function specCardsHtml() {
+      return mqSortItemsByName(specItems, 'specialty', (r) => r.fields['Item name'] || '').flatMap(r => {
           const itemName = r.fields['Item name'] || '';
           const roomsAttr = (r.fields['Visible rooms'] || '[]').replace(/"/g,'&quot;');
           const dataName = itemName.toLowerCase().replace(/"/g,'&quot;');
@@ -6958,10 +6986,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             ${photoCard('spec_' + r.id + '_v' + v.id, `${itemName} — ${(v.label||'').trim() || 'Variant'}`, specIcon(itemName), 'specialty', [r.id], r.fields['Visible rooms'])}
           </div>`);
           return [specTemplateCardHtml, ...variantCardsHtml];
-        }).join('')}
-      </div>
-      </div>
-    </div>` : '';
+        }).join('');
+    }
 
     const content = el('mq-products-content');
     if (content) {
