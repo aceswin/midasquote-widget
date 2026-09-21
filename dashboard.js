@@ -5935,6 +5935,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (arrow) arrow.style.transform = opening ? 'rotate(-90deg)' : 'rotate(0deg)';
   };
 
+  // Jordan: "on variant cards can we make a 'hide all from showroom' check
+  // box so it will hide all the items of a variant from the showroom if
+  // checked... i have like 50 variants and am having to uncheck each one
+  // individually." Bulk-sets every variant's own "Hide from showroom"
+  // checkbox at once, instead of opening the group and clicking through
+  // each one. Scoped with the exact data-spec-group="<itemId>" attribute
+  // each variant card's wrapper already carries (see the flatMap below) --
+  // an exact match, not a prefix match, so there's no risk of it ever
+  // touching a different item's variants. Works whether the group is
+  // currently expanded or collapsed (display:none doesn't remove the
+  // checkboxes from the DOM, so this reaches every variant either way), and
+  // it doesn't need its own save path -- flipping these standard
+  // mq-hidden-<key> checkboxes and reusing mqSaveProducts (My Products'
+  // existing sweep-every-checkbox save) is all that's needed to persist it.
+  window.mqHideAllSpecVariants = function(itemId, hide) {
+    document.querySelectorAll(`[data-spec-group="${itemId}"] [id^="mq-hidden-"]`).forEach(cb => { cb.checked = hide; });
+    mqMarkProductsDirty();
+    if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts();
+  };
+
   // Live preview for the group card's own dedicated "shared image" slot --
   // same visual behavior as mqPreviewPhoto, just pointed at the
   // mq-specshared-* ids instead of mq-photo-<key> (that field is
@@ -7021,6 +7041,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           // grid-column spans or nested grids needed anywhere, which is what
           // caused the full-screen-width button bug in the previous round.
           const badgeHtml = `<span style="position:absolute;top:6px;right:6px;font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:999px;white-space:nowrap">${variants.length} var.</span>`;
+          // Jordan: "i have like 50 variants and am having to uncheck each
+          // one individually" -- a single checkbox on the template card that
+          // bulk-flips every one of this item's variant "Hide from showroom"
+          // boxes via mqHideAllSpecVariants. Pre-checked only when EVERY
+          // variant is already hidden, so reopening the page shows an
+          // accurate state rather than always starting unchecked; a mixed
+          // state (some hidden, some not) just starts unchecked like any
+          // other bulk-action box, since a plain checkbox can't show
+          // "partial" without extra wiring this didn't seem worth adding.
+          const allVariantsHidden = variants.length > 0 && variants.every(v => savedHidden['spec_' + r.id + '_v' + v.id]);
+          const hideAllHtml = `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;font-weight:600;margin-bottom:6px;cursor:pointer">
+                <input type="checkbox" id="mq-hideall-spec-${r.id}" ${allVariantsHidden ? 'checked' : ''} onchange="mqHideAllSpecVariants('${r.id}', this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+                🙈 Hide all ${variants.length} variants from showroom
+              </label>`;
           const footerHtml = `<div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;cursor:pointer;padding-top:8px;margin-top:8px;border-top:1px solid #fde68a">
                 <span style="font-size:11px;color:#92400e;font-weight:600">${variants.length} variants</span>
                 <span id="mq-specgroup-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#dc2626;flex-shrink:0">▼</span>
@@ -7031,6 +7065,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 ${badgeHtml}
               </div>
               <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
+              ${hideAllHtml}
               <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
               <div style="font-size:11px;color:#6b7280;line-height:1.4">Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or leave this blank and set each variant's own photo individually below.</div>
               ${footerHtml}`
@@ -7043,6 +7078,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 ${badgeHtml}
               </div>
               <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
+              ${hideAllHtml}
               <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
               <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">A shortcut for when every variant looks the same — upload, paste, or choose a photo below and (after you confirm) it fills in all ${variants.length} variants at once. You can leave this blank and set each variant's own photo instead, and you can always change any variant's photo individually later either way.</div>
               <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
