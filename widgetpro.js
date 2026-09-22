@@ -5554,7 +5554,14 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (subEl) subEl.textContent = `${r.uFt} ft uppers · ${r.bFt} ft bases · ${r.si==='install'?'Supply + install':'Supply only'}`;
         renderResult('mq-c-res-range','mq-c-line-items', r, 'c');
         mqUpdateFinancingBox('c', r.low, r.high, r.total);
-        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
+        // r.lines includes the bold "Subtotal (before tax)" summary row
+        // calcCabinet appends for the on-page breakdown display — filtered
+        // out here before it's stored, same as the 'b' (combined) branch
+        // below already does, so nothing downstream (e.g. Create Proposal)
+        // ever treats that summary row as a real, separately-priced line.
+        // See mqOpenProposalModal's own filter for why this needed a second,
+        // defensive copy there too.
+        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines.filter(l=>!l.bold), total: r.total } });
         return { low: r.low, high: r.high, total: r.total, label: r.roomLabel };
       }
       if (prefix === 'ct') {
@@ -5566,7 +5573,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (subEl) subEl.textContent = `${active} surface(s)`;
         renderResult('mq-ct-res-range','mq-ct-line-items', r, 'ct');
         mqUpdateFinancingBox('ct', r.low, r.high, r.total);
-        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
+        // Same "Subtotal (before tax)" bold row, same filter — see the 'c'
+        // branch above.
+        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines.filter(l=>!l.bold), total: r.total } });
         return { low: r.low, high: r.high, total: r.total, label: 'Countertops' };
       }
       if (prefix === 'b') {
@@ -5614,7 +5623,11 @@ window.mqTogDrawerConfig=(prefix)=>{
         if (vanityNoteC) vanityNoteC.style.display = 'none';
         renderResult('mq-c-res-range','mq-c-line-items',r,'c');
         mqUpdateFinancingBox('c', r.low, r.high, r.total);
-        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines, total: r.total } });
+        // Same "Subtotal (before tax)" bold-row filter as
+        // window._mqRefreshResultsPanel above — this is the calc-on-submit
+        // path (button click), that one's the recalc-on-input-change path,
+        // both write to the same window._mqLastEstimate.c.
+        window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { c: { projectType: r.roomLabel + ' — Cabinets', lines: r.lines.filter(l=>!l.bold), total: r.total } });
         window.mqShowStickyBar('c', r.low, r.high, r.total);
         document.getElementById('mq-c-loading').classList.remove('show');
         document.getElementById('mq-c-result').classList.add('show');mqScrollResultsIntoView('c');
@@ -5638,7 +5651,9 @@ window.mqTogDrawerConfig=(prefix)=>{
           document.getElementById('mq-ct-res-sub').textContent=`${active} surface(s)`;
           renderResult('mq-ct-res-range','mq-ct-line-items',r,'ct');
           mqUpdateFinancingBox('ct', r.low, r.high, r.total);
-          window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines, total: r.total } });
+          // Same "Subtotal (before tax)" bold-row filter as the 'c' branch
+          // just above.
+          window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { ct: { projectType: 'Countertops', lines: r.lines.filter(l=>!l.bold), total: r.total } });
           window.mqShowStickyBar('ct', r.low, r.high, r.total);
           document.getElementById('mq-ct-loading').classList.remove('show');
           document.getElementById('mq-ct-result').classList.add('show');mqScrollResultsIntoView('ct');
@@ -7348,7 +7363,17 @@ window.mqTogDrawerConfig=(prefix)=>{
         waiveDeposit: false,
         // Editable copy — the original est.lines stays untouched so
         // reopening this modal always starts fresh from the real estimate.
-        lines: est.lines.map(l => ({ label: l.label, cost: l.cost })),
+        // Also filters out any bold "Subtotal (before tax)" summary row as
+        // a defensive backstop — est.lines (window._mqLastEstimate[prefix]
+        // .lines) is SUPPOSED to already be pre-filtered by whichever
+        // calc-refresh path set it (see window._mqRefreshResultsPanel /
+        // mqCalcCabinets / mqCalcCountertops / mqCalcBoth), but this is the
+        // one place that bold row actually gets summed as if it were a real
+        // line (state.lines.reduce(...) below and in mqUpdateProposalSummary
+        // / mqGenerateProposal) — filtering here too means a future producer
+        // of _mqLastEstimate that forgets the filter can't silently double
+        // every quote's subtotal on the generated proposal again.
+        lines: est.lines.filter(l => !l.bold).map(l => ({ label: l.label, cost: l.cost })),
       };
       mqRenderProposalModalBody();
     };
