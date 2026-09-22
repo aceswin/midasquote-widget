@@ -3265,6 +3265,12 @@
       document.getElementById(`mq-${prefix}-diff-tog`).classList.toggle('on',diffOn[prefix]);
       document.getElementById(`mq-${prefix}-shared`).style.display=diffOn[prefix]?'none':'block';
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
+      // Same fix as mqTogDrawerConfig below — the upper/lower box material,
+      // door style, and hinge picker rows inside #mq-${prefix}-diff are
+      // already built, just hidden until "Different styles for uppers and
+      // lowers" is switched on, so their overflow arrows never got a real
+      // scrollWidth/clientWidth to measure until now.
+      if (diffOn[prefix] && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
     };
     window.mqTogVanityNote=(prefix)=>{
       // Intentionally hidden from customers — the % adjustment itself still
@@ -5091,7 +5097,19 @@
 window.mqTogDrawerConfig=(prefix)=>{
       const tier=gv(`mq-${prefix}-drawer-tier`);
       const wrap=document.getElementById(`mq-${prefix}-drawer-config-wrap`);
-      if(wrap) wrap.style.display=tier==='none'?'none':'block';
+      const opening = tier!=='none';
+      if(wrap) wrap.style.display=opening?'block':'none';
+      // The "Drawer type" picker row was already built into the page (this
+      // wrap just starts display:none until "Some"/"Mostly drawers" is
+      // picked), so its scrollWidth/clientWidth both read as 0 while
+      // hidden — same underlying issue mqToggleCollapse already works
+      // around for whole sections. Without this, the row's left/right
+      // scroll arrows never appear even when there's genuinely more than
+      // one screen's worth of drawer types (Jordan: "I don't see them and
+      // can't access the drawer to the far right"), since the one-time
+      // overflow check at initial page load ran before this wrap was ever
+      // visible.
+      if (opening && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
     };
 
     window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
