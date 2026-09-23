@@ -478,6 +478,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           Only offer some of what MidasQuote can quote? In Shop Info → <strong>🗂️ Estimator tabs</strong>, you can turn off whichever tabs don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
           <br><br>
           Take your time exploring — there's no rush, and almost everything here autosaves as you go.
+          <br><br>
+          <strong>Support &amp; suggestions</strong><br>
+          MidasQuote is constantly improving with your help. Please don't be shy to share ideas that would make MidasQuote better for your shop — every single suggestion is taken seriously and implemented if possible.
         </div>
         <button onclick="mqCloseWelcomeModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, let's go!</button>
       </div>`;
