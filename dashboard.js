@@ -6490,7 +6490,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     function mqSortSelectHtml(key, onchangeExpr) {
       const mode = `${mqSortFieldFor(key)}-${mqSortDirFor(key)}`;
       const opt = (val, label) => `<option value="${val}" ${mode===val?'selected':''}>${label}</option>`;
-      return `<select onchange="event.stopPropagation();${onchangeExpr}" title="Sort these items" style="font-size:11px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer">
+      // Two bugs Jordan caught after this control shipped, both fixed here:
+      // 1. Width/wrapping onto its own line — #midasquote-dashboard has a
+      //    global `select{width:100%}` rule (same one the group search
+      //    <input> above already has to fight off with its own inline
+      //    max-width), which stretched this control to fill the whole flex
+      //    row instead of sizing to its own text like "Edit group" does.
+      //    width:auto in the inline style (inline always wins over that
+      //    external rule) restores the old compact, content-sized look and
+      //    puts it back on the same line right after "Edit group".
+      // 2. Items vanishing the instant you open the dropdown — clicking a
+      //    <select> to open it fires a real, bubbling "click" event on the
+      //    select itself (same as clicking anything else), separate from
+      //    "onchange". That click was bubbling straight up to the group
+      //    header row's own onclick="mqToggleProductGroup(...)" and
+      //    collapsing the group before you'd even picked an option. The
+      //    search <input> right below already guards against this exact
+      //    thing with its own onclick stopPropagation; this control just
+      //    needs the same guard.
+      return `<select onclick="event.stopPropagation()" onchange="event.stopPropagation();${onchangeExpr}" title="Sort these items" style="font-size:11px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;width:auto">
         ${opt('name-asc','Sort: Name (A→Z)')}
         ${opt('name-desc','Sort: Name (Z→A)')}
         ${opt('price-asc','Sort: Price (low→high)')}
