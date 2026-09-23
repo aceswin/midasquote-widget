@@ -83,7 +83,28 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     return allRecords;
   }
 
-  async function atUpdate(table, id, fields) {
+  // Jordan: "once in a while when adding new groups or editing new groups
+  // its says 'Couldnt save group' but then still seems to save it fine
+  // amnyway." Root cause: Airtable enforces 5 requests/second PER BASE, and
+  // several call sites (mqSaveGroupManager chief among them — saving a
+  // group with several items, some spanning 2 underlying ids each, fires
+  // every write via Promise.all with zero throttling) can easily burst past
+  // that in one go. Airtable answers an over-the-limit request with 429 and
+  // does NOT process it — atUpdate used to throw on that immediately, which
+  // fails the whole Promise.all and pops the "Could not save" alert even
+  // though every OTHER write in that same batch already went through fine.
+  // It "still seems to save it fine anyway" because each item's in-memory
+  // groupName is set synchronously in the forEach loop, before any of the
+  // writes are even awaited — so the on-screen grid already reflects the
+  // intended end state regardless of what the network actually did, masking
+  // that one write may not have actually landed in Airtable.
+  // Fix: retry a 429 with a short backoff (honoring Airtable's own
+  // Retry-After header when it sends one) instead of failing immediately —
+  // up to 3 attempts, which comfortably covers a momentary burst. Any other
+  // failure (a genuine 4xx/5xx, e.g. a real validation error) still throws
+  // right away exactly as before; only a rate-limit response is retried.
+  async function atUpdate(table, id, fields, attempt) {
+    attempt = attempt || 0;
     const res = await fetch(`${AT_BASE}/${table}/${id}`, {
       method: 'PATCH', headers: AT_HEADS,
       // typecast:true lets Airtable auto-add a new option to a Single Select
@@ -92,6 +113,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: JSON.stringify({ fields, typecast: true })
     });
     if (!res.ok) {
+      if (res.status === 429 && attempt < 3) {
+        const retryAfterSec = parseFloat(res.headers.get('Retry-After'));
+        const delayMs = !isNaN(retryAfterSec) ? retryAfterSec * 1000 : 300 * Math.pow(2, attempt);
+        await new Promise(r => setTimeout(r, delayMs));
+        return atUpdate(table, id, fields, attempt + 1);
+      }
       const errBody = await res.text().catch(() => '');
       console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
@@ -6336,7 +6363,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
       const hasGroups = GROUPABLE_CATS.includes(cat) && items.some(i => i.groupName);
-      const catSortDir = mqSortDirFor(cat);
       return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
@@ -6357,7 +6383,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </div>` : ''}
           ${hasGroups ? '' : `
           <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqToggleCatSort('${cat}')" title="Sort this category's items by name">Sort by name (${catSortDir==='desc'?'Z→A':'A→Z'})</button>
+            ${mqSortSelectHtml(cat, `mqSetCatSort('${cat}', this.value)`)}
             <input type="text" id="mq-cat-search-${cat}" oninput="mqFilterProductCards('${cat}')" onclick="event.stopPropagation()" placeholder="Search by name…" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;flex:1;min-width:160px;max-width:260px"/>
           </div>
           <div id="mq-cat-search-empty-${cat}" style="display:none;font-size:12px;color:#9ca3af;padding:0 0 0.75rem">No items match that search.</div>
@@ -6428,22 +6454,58 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // "Other" items in a partially-grouped one) — one control near "Pick a
     // collection" covers that case instead.
     let _mqProductSortDir = {};
+    // Which field a given sort key is sorting by — 'name' (default, keeps
+    // every existing key's old alphabetical behavior with no change) or
+    // 'price'. Added alongside _mqProductSortDir, not replacing it, so the
+    // 'specialty' key (Specialty Items' own sort control, untouched by this
+    // round) keeps working exactly as before. Jordan: "in groups... we can
+    // sort by price... can we add those same options to for when we are not
+    // in edit or creating group" — this is what lets the OUTSIDE category/
+    // group sort controls (mqSetCatSort/mqSetGroupSort below) offer price
+    // sorting too, not just the group manager modal's own dropdown.
+    let _mqProductSortField = {};
     function mqSortDirFor(key) { return _mqProductSortDir[key] === 'desc' ? 'desc' : 'asc'; }
+    function mqSortFieldFor(key) { return _mqProductSortField[key] === 'price' ? 'price' : 'name'; }
     function mqSortItemsByName(items, key, nameFn) {
       const dir = mqSortDirFor(key);
+      if (mqSortFieldFor(key) === 'price') {
+        return [...items].sort((a, b) => {
+          const cmp = (a.price||0) - (b.price||0);
+          return dir === 'desc' ? -cmp : cmp;
+        });
+      }
       const getName = nameFn || ((i) => i.baseName || '');
       return [...items].sort((a, b) => {
         const cmp = (getName(a) || '').localeCompare(getName(b) || '', undefined, { sensitivity: 'base', numeric: true });
         return dir === 'desc' ? -cmp : cmp;
       });
     }
-    window.mqToggleCatSort = function(cat) {
-      _mqProductSortDir[cat] = mqSortDirFor(cat) === 'asc' ? 'desc' : 'asc';
-      // This button only ever shows when the category has no groups (see
+    // A single small <select> (Name A→Z / Name Z→A / Price low→high / Price
+    // high→low) used for both the category-level "no group" sort control
+    // and each named group's own sort control — onchangeExpr is the exact
+    // onclick-style JS the caller wants run with the chosen "field-dir"
+    // value (e.g. "mqSetCatSort('door', this.value)"), so this one render
+    // helper works for both mqSetCatSort's 2-arg signature and
+    // mqSetGroupSort's 3-arg one without needing to know which.
+    function mqSortSelectHtml(key, onchangeExpr) {
+      const mode = `${mqSortFieldFor(key)}-${mqSortDirFor(key)}`;
+      const opt = (val, label) => `<option value="${val}" ${mode===val?'selected':''}>${label}</option>`;
+      return `<select onchange="event.stopPropagation();${onchangeExpr}" title="Sort these items" style="font-size:11px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer">
+        ${opt('name-asc','Sort: Name (A→Z)')}
+        ${opt('name-desc','Sort: Name (Z→A)')}
+        ${opt('price-asc','Sort: Price (low→high)')}
+        ${opt('price-desc','Sort: Price (high→low)')}
+      </select>`;
+    }
+    window.mqSetCatSort = function(cat, mode) {
+      const [field, dir] = mode.split('-');
+      _mqProductSortField[cat] = field;
+      _mqProductSortDir[cat] = dir;
+      // This control only ever shows when the category has no groups (see
       // catSection), so its own "mq-cat-search-${cat}" box is the only
       // search in play here. Re-rendering the grid below wipes that input
       // back to empty, so its typed value is carried across the rebuild by
-      // hand, same as mqToggleGroupSort does for its own group's box.
+      // hand, same as mqSetGroupSort does for its own group's box.
       const searchVal = document.getElementById(`mq-cat-search-${cat}`)?.value || '';
       const grid = document.getElementById(`mq-cat-grid-${cat}`);
       if (grid) grid.innerHTML = catGridHtml(cat);
@@ -6453,14 +6515,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (searchVal) window.mqFilterProductCards(cat);
       }
     };
-    window.mqToggleGroupSort = function(cat, groupName) {
+    window.mqSetGroupSort = function(cat, groupName, mode) {
       const key = `${cat}::${groupName}`;
-      _mqProductSortDir[key] = mqSortDirFor(key) === 'asc' ? 'desc' : 'asc';
+      const [field, dir] = mode.split('-');
+      _mqProductSortField[key] = field;
+      _mqProductSortDir[key] = dir;
       const slug = mqGroupSlug(cat, groupName);
-      // Same reasoning as mqToggleCatSort above — carry this ONE group's
-      // own search text across the grid rebuild, since only that group's
-      // input (not the whole category) is relevant now that search is
-      // scoped per-group.
+      // Same reasoning as mqSetCatSort above — carry this ONE group's own
+      // search text across the grid rebuild, since only that group's input
+      // (not the whole category) is relevant now that search is scoped
+      // per-group.
       const searchVal = document.getElementById(`mq-group-search-${slug}`)?.value || '';
       const grid = document.getElementById(`mq-cat-grid-${cat}`);
       if (grid) grid.innerHTML = catGridHtml(cat);
@@ -6629,7 +6693,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         // fully ungrouped category, since that's the one control Jordan
         // asked for covering "items that don't have a group."
         const sortKey = g.name ? `${cat}::${g.name}` : cat;
-        const sortDir = mqSortDirFor(sortKey);
         const sortedMembers = mqSortItemsByName(g.members, sortKey);
         return `
         <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap;cursor:pointer" onclick="mqToggleProductGroup('${cat}','${groupKey.replace(/'/g,"\\'")}')">
@@ -6640,7 +6703,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
             <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
-            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqToggleGroupSort('${cat}','${g.name.replace(/'/g,"\\'")}')" title="Sort this group's items by name">Sort by name (${sortDir==='desc'?'Z→A':'A→Z'})</button>
+            ${mqSortSelectHtml(sortKey, `mqSetGroupSort('${cat}','${g.name.replace(/'/g,"\\'")}', this.value)`)}
             ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
           ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
         </div>
@@ -6745,7 +6808,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <input type="text" id="mq-gm-search" placeholder="Search items…" oninput="mqGroupManagerSearch(this.value)" style="flex:1;font-size:13px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
               <select id="mq-gm-sort" onchange="mqGroupManagerSort(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;flex-shrink:0">
                 <option value="default">Default order</option>
-                <option value="name">Name (A–Z)</option>
+                <option value="name-asc">Name (A–Z)</option>
+                <option value="name-desc">Name (Z–A)</option>
                 <option value="price-asc">Price (low→high)</option>
                 <option value="price-desc">Price (high→low)</option>
               </select>
@@ -6789,11 +6853,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       document.getElementById('mq-gm-delete').style.display = isNew ? 'none' : 'inline-block';
       _gmCheckedIds = new Set(members.map(i => i.id));
       _gmSearchText = '';
-      _gmSortBy = 'default';
+      // Jordan: "if they are sorted by price outside the edit group screen
+      // and then enter the edit group screen, can they carry that sorting
+      // into the edit group screen?" — an EXISTING group that already has
+      // an outside sort choice (set via mqSetGroupSort, or carried over
+      // from a previous save below) opens straight into that same sort;
+      // a brand-new group (no outside key can exist yet) or a group that's
+      // never had its outside sort touched just starts at "Default order",
+      // exactly as before.
+      const outsideKey = groupName ? `${cat}::${groupName}` : null;
+      const outsideTouched = outsideKey && (outsideKey in _mqProductSortField || outsideKey in _mqProductSortDir);
+      _gmSortBy = outsideTouched
+        ? (mqSortFieldFor(outsideKey) === 'price' ? `price-${mqSortDirFor(outsideKey)}` : `name-${mqSortDirFor(outsideKey)}`)
+        : 'default';
       const searchInput = document.getElementById('mq-gm-search');
       if (searchInput) searchInput.value = '';
       const sortSelect = document.getElementById('mq-gm-sort');
-      if (sortSelect) sortSelect.value = 'default';
+      if (sortSelect) sortSelect.value = _gmSortBy;
       mqRenderGroupManagerItems();
       document.getElementById('mq-group-manager').style.display = 'flex';
     };
@@ -6817,7 +6893,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const groupName = _gmOriginalName;
       let items = [..._gmAllItems];
       if (_gmSearchText) items = items.filter(i => i.baseName.toLowerCase().includes(_gmSearchText));
-      if (_gmSortBy === 'name') items.sort((a,b) => a.baseName.localeCompare(b.baseName));
+      if (_gmSortBy === 'name-asc') items.sort((a,b) => a.baseName.localeCompare(b.baseName));
+      else if (_gmSortBy === 'name-desc') items.sort((a,b) => b.baseName.localeCompare(a.baseName));
       else if (_gmSortBy === 'price-asc') items.sort((a,b) => (a.price||0) - (b.price||0));
       else if (_gmSortBy === 'price-desc') items.sort((a,b) => (b.price||0) - (a.price||0));
       const list = document.getElementById('mq-gm-items');
@@ -6865,6 +6942,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
       try {
         await Promise.all(writes);
+        // Jordan: "if in edit or create group someone sorts by price or
+        // a-z or whatever can it carry on over into when the save the
+        // group" — apply whatever sort was picked in this modal to the
+        // group's own OUTSIDE sort control the moment the save actually
+        // lands, keyed by its final name (in case this same save also
+        // renamed it — a rename mid-edit means the outside key changes
+        // too, so this only takes effect once the new name is confirmed
+        // saved, not live while typing).
+        const outsideKey = `${cat}::${newName}`;
+        if (_gmSortBy === 'default') {
+          delete _mqProductSortField[outsideKey];
+          delete _mqProductSortDir[outsideKey];
+        } else {
+          const [field, dir] = _gmSortBy.split('-');
+          _mqProductSortField[outsideKey] = field;
+          _mqProductSortDir[outsideKey] = dir;
+        }
+        // A rename leaves the OLD name's outside sort state orphaned —
+        // clear it out so some future, unrelated group that happens to
+        // reuse the old name doesn't silently inherit stale sort settings.
+        if (_gmOriginalName && _gmOriginalName !== newName) {
+          const oldKey = `${cat}::${_gmOriginalName}`;
+          delete _mqProductSortField[oldKey];
+          delete _mqProductSortDir[oldKey];
+        }
         mqCloseGroupManager();
         // A brand-new group here can be this category's very FIRST one —
         // that flips "hasGroups" for the whole category, so the top-level
@@ -6955,7 +7057,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Jordan: "lets have specialty items alphabetical by default as well
     // and able to sort the same way too." Split out from the specSection
     // template above so mqToggleSpecSort can rebuild just this grid (same
-    // pattern as catGridHtml/mqToggleCatSort) without re-rendering the
+    // pattern as catGridHtml/mqSetCatSort) without re-rendering the
     // filter controls around it. Sorts fresh off the current
     // _mqProductSortDir['specialty'] every call, same 'specialty' key
     // the sort button's own label reads from above.
