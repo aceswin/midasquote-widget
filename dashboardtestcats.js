@@ -1232,8 +1232,8 @@ window.logoutMember = async function () {
                  Shown/hidden by mqUpdateSpecScrollArrows based on whether
                  #mq-spec-table-wrap actually has more to scroll in that
                  direction; see that function for details. -->
-            <button id="mq-spec-scroll-left" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(-1)" title="Scroll table left" style="display:none;position:fixed;left:236px;bottom:28px;z-index:50;width:38px;height:38px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:16px;align-items:center;justify-content:center">◀</button>
-            <button id="mq-spec-scroll-right" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(1)" title="Scroll table right — more columns to see" style="display:none;position:fixed;right:24px;bottom:28px;z-index:50;width:38px;height:38px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:16px;align-items:center;justify-content:center">▶</button>
+            <button id="mq-spec-scroll-left" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(-1)" title="Scroll table left" style="display:none;position:fixed;left:236px;top:50%;transform:translateY(-50%);z-index:50;width:52px;height:52px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:22px;align-items:center;justify-content:center">◀</button>
+            <button id="mq-spec-scroll-right" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(1)" title="Scroll table right — more columns to see" style="display:none;position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:50;width:52px;height:52px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:22px;align-items:center;justify-content:center">▶</button>
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
