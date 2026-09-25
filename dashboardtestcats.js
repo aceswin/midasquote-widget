@@ -1241,16 +1241,22 @@ window.logoutMember = async function () {
               </div>
             </div>
             <div id="mq-spec-msg"></div>
-            <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
-              <br><br>
-              🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
-              <br><br>
-              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
-              <br><br>
-              🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
-              <br><br>
-              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
+            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4">
+              <div onclick="mqToggleSpecTips()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer">
+                <div style="font-size:13px;font-weight:700;color:#166534">💡 Tips for this page</div>
+                <span id="mq-spec-tips-arrow" style="font-size:13px;color:#166534;transition:transform 0.2s;transform:rotate(-90deg)">▼</span>
+              </div>
+              <div id="mq-spec-tips-body" class="mqph-hl" style="display:none;padding:0 16px 14px;font-size:13px;color:#166534;line-height:1.7">
+                💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
+                <br><br>
+                🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
+                <br><br>
+                🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
+                <br><br>
+                🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
+                <br><br>
+                📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
+              </div>
             </div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
@@ -5064,7 +5070,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table mq-table-compact" id="mq-spec-table">
-        <thead><tr><th style="width:28px"></th><th style="width:210px">Item name</th><th style="width:130px">Category</th><th style="width:150px">Price</th><th style="width:70px">Per lin ft?</th><th style="width:70px">Per sq ft?</th><th style="width:90px">Offer supply/install choice?</th><th style="width:230px">Installed price / Mode</th><th style="width:170px">Project types</th><th style="width:70px">Pro only?</th><th style="width:60px">Active</th></tr></thead>
+        <thead><tr><th style="width:28px"></th><th style="width:210px">Item name</th><th style="width:130px">Category</th><th style="width:150px">Price</th><th style="width:140px">How is this priced?</th><th style="width:90px">Offer supply/install choice?</th><th style="width:230px">Installed price / Mode</th><th style="width:170px">Project types</th><th style="width:70px">Pro only?</th><th style="width:60px">Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -5108,8 +5114,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                   ${variantCount ? `<button class="mq-btn mq-btn-sm" style="font-size:10px;padding:3px 6px;white-space:nowrap" title="Applies the rate above to every 📏 Sized variant on this item that's priced per sq/lin ft" onclick="mqMassUpdateVariantRates('${r.id}')">Apply to all sized</button><div style="font-size:9px;color:#9ca3af;line-height:1.3">Mass-updates 📏 Sized variants' rate</div>` : `${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}`}
                 </div>
               </td>
-              <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
-              <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
+              <td>
+                <select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 6px;border-radius:6px;border:1px solid #d1d5db;width:132px;background:#fff">
+                  <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
+                  <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per linear ft</option>
+                  <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
+                </select>
+                <input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} style="display:none"/>
+                <input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} style="display:none"/>
+              </td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
@@ -5118,7 +5131,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             </tr>
             <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
               <td></td>
-              <td colspan="10" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
+              <td colspan="9" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -5251,6 +5264,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (e.target && e.target.id === 'mq-spec-table-wrap') mqUpdateSpecScrollArrows();
   }, true);
   window.addEventListener('resize', mqUpdateSpecScrollArrows);
+
+  // Tips box collapsed by default (Jordan's request, 2026-09-25 — the
+  // always-visible 5-paragraph tip box was pushing new users past a wall of
+  // text before they'd even seen the "+ New item" button). Same toggle
+  // pattern as mqToggleMkSection: a body div's display and an arrow's
+  // rotation, nothing fancier needed.
+  window.mqToggleSpecTips = function() {
+    const body = el('mq-spec-tips-body');
+    const arrow = el('mq-spec-tips-arrow');
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+  };
 
   // Which categories should be listed for reordering under a given project
   // type, and in what order — starts from that project type's saved order
@@ -8771,6 +8798,42 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // it so those inputs appear/disappear in step with the checkbox instead
     // of only catching up the next time the panel is opened.
     mqRefreshVariantsPanel(id);
+  };
+
+  // The main Specialty items table shows a single "How is this priced?"
+  // dropdown (Flat rate / Per linear ft / Per sq ft) instead of two separate
+  // checkboxes, to cut down on visual clutter. Under the hood the two
+  // checkboxes (mq-spec-perft-/mq-spec-persqft-) still exist in the DOM,
+  // just hidden — every other piece of code (mqSaveSpecUnit's own UI sync,
+  // the variants panel refresh, etc.) still reads/writes them by ID exactly
+  // as before, so this is purely a front-end swap with zero change to the
+  // actual save/pricing logic. This only drives the main table row's pair
+  // of hidden checkboxes — the separate lin ft/sq ft checkboxes inside the
+  // expanded variants panel are untouched.
+  window.mqSpecPricingModeChange = function(id, mode) {
+    const ftBox = document.getElementById(`mq-spec-perft-${id}`);
+    const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
+    if (mode === 'linft') {
+      if (ftBox) ftBox.checked = true;
+      mqSaveSpecUnit(id, 'Per linear foot', true);
+    } else if (mode === 'sqft') {
+      if (sqftBox) sqftBox.checked = true;
+      mqSaveSpecUnit(id, 'Per square foot', true);
+    } else {
+      // Flat rate — clear whichever of the two was previously on. Only one
+      // can ever be true at once (mutual exclusion is enforced elsewhere),
+      // so at most one of these branches actually fires.
+      const wasFt = ftBox?.checked;
+      const wasSqft = sqftBox?.checked;
+      if (wasFt) {
+        ftBox.checked = false;
+        mqSaveSpecUnit(id, 'Per linear foot', false);
+      }
+      if (wasSqft) {
+        sqftBox.checked = false;
+        mqSaveSpecUnit(id, 'Per square foot', false);
+      }
+    }
   };
 
   // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
