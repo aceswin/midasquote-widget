@@ -734,22 +734,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
          spacing. */
       #midasquote-dashboard .mq-table-compact th,
       #midasquote-dashboard .mq-table-compact td{padding-left:8px;padding-right:8px}
-      /* Specialty items table only — on a narrower desktop window (not
-         narrow enough to hit the mobile breakpoint below, which already
-         handles this via .mq-table's own min-width:560px override), the
-         table's width:100% just squeezed every column down to fit instead
-         of overflowing, so .mq-table-wrap's overflow-x:auto scrollbar never
-         actually had anything to scroll — columns got cramped/cut off with
-         no way to reach them. min-width:max-content means the table never
-         shrinks below what its own content (images, buttons, every column)
-         actually needs, so once the window is too narrow for that, it
-         genuinely overflows .mq-table-wrap and the horizontal scrollbar
-         shows up, same as it already does on mobile. Scoped to #mq-spec-table
-         specifically so Leads/Products/other tables — not reported as having
-         this problem — keep their current (padding-based) behavior.
-         Jordan reported items disappearing off the right edge with no
-         scrollbar on a smaller screen, 2026-09-25. */
-      #midasquote-dashboard #mq-spec-table{min-width:max-content}
       #midasquote-dashboard .mq-table-compact th:first-child,
       #midasquote-dashboard .mq-table-compact td:first-child{padding-left:12px}
       /* The Specialty Items table has more columns than any other table on
@@ -5068,7 +5052,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-itemorder-box">${mqItemOrderBoxHTML(savedFilters.room, savedFilters.category)}</div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
-      <table class="mq-table" id="mq-spec-table">
+      <table class="mq-table mq-table-compact" id="mq-spec-table">
         <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
