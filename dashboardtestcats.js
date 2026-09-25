@@ -5070,7 +5070,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
       <table class="mq-table mq-table-compact" id="mq-spec-table">
-        <thead><tr><th style="width:28px"></th><th style="width:210px">Item name</th><th style="width:130px">Category</th><th style="width:150px">Price</th><th style="width:140px">How is this priced?</th><th style="width:90px">Offer supply/install choice?</th><th style="width:230px">Installed price / Mode</th><th style="width:170px">Project types</th><th style="width:70px">Pro only?</th><th style="width:60px">Active</th></tr></thead>
+        <thead><tr><th style="width:28px"></th><th style="width:210px">Item name</th><th style="width:130px">Category</th><th style="width:150px">Price</th><th style="width:108px">How is this priced?</th><th style="width:100px">Install option? <span onclick="mqShowSpecHelpPopover(this,'Lets the customer choose supply-only vs. supplied &amp; installed pricing for this specific item.',event)" style="cursor:pointer;color:#9ca3af;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;vertical-align:middle">?</span></th><th style="width:230px">Installed price / Mode</th><th style="width:170px">Project types</th><th style="width:70px">Pro only?</th><th style="width:60px">Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -5115,9 +5115,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 </div>
               </td>
               <td>
-                <select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 6px;border-radius:6px;border:1px solid #d1d5db;width:132px;background:#fff">
+                <select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
                   <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
-                  <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per linear ft</option>
+                  <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
                   <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
                 </select>
                 <input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} style="display:none"/>
@@ -8870,6 +8870,36 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
   };
 
+  // Same dropdown-over-hidden-checkboxes pattern as mqSpecPricingModeChange
+  // above, applied to the install side's own per-lin-ft/per-sq-ft pair
+  // (mq-spec-installperft-/mq-spec-installpersqft-) so the "Installed price
+  // / Mode" cell doesn't need two separate checkboxes either. Delegates all
+  // real save/UI-sync work to the existing, trusted mqSaveSpecInstallUnit —
+  // this is purely a front-end swap, no change to what gets saved or how.
+  window.mqSpecInstallPricingModeChange = function(id, mode) {
+    const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
+    const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
+    if (mode === 'linft') {
+      if (ftBox) ftBox.checked = true;
+      mqSaveSpecInstallUnit(id, 'Install per linear foot', true);
+    } else if (mode === 'sqft') {
+      if (sqftBox) sqftBox.checked = true;
+      mqSaveSpecInstallUnit(id, 'Install per square foot', true);
+    } else {
+      // Per item — clear whichever of the two was previously on.
+      const wasFt = ftBox?.checked;
+      const wasSqft = sqftBox?.checked;
+      if (wasFt) {
+        ftBox.checked = false;
+        mqSaveSpecInstallUnit(id, 'Install per linear foot', false);
+      }
+      if (wasSqft) {
+        sqftBox.checked = false;
+        mqSaveSpecInstallUnit(id, 'Install per square foot', false);
+      }
+    }
+  };
+
   // A shop owner thinking in metric shouldn't have to do the sqft/linft
   // math themselves just to set a rate — this small blue calculator icon
   // (shown only once Per lin ft / Per sq ft is actually checked, since a
@@ -9011,9 +9041,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
         ${mqSpecMinPriceHTML(r, true)}
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per lin ft</label>
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per sq ft</label>
-          <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+          <select id="mq-spec-installmode-select-${r.id}" onchange="mqSpecInstallPricingModeChange('${r.id}', this.value)" style="font-size:11px;padding:4px 4px;border-radius:6px;border:1px solid #d1d5db;width:96px;background:#fff">
+            <option value="perItem" ${(!installPerFt && !installPerSqFt) ? 'selected' : ''}>Per item</option>
+            <option value="linft" ${installPerFt ? 'selected' : ''}>Per lin ft</option>
+            <option value="sqft" ${installPerSqFt ? 'selected' : ''}>Per sq ft</option>
+          </select>
+          <input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} style="display:none"/>
+          <input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} style="display:none"/>
+          <span onclick="mqShowSpecHelpPopover(this,'Choose Per item if install is priced per item, not per linear or square foot. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
         <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
