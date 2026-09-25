@@ -1241,7 +1241,7 @@ window.logoutMember = async function () {
               </div>
             </div>
             <div id="mq-spec-msg"></div>
-            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4">
+            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4;max-width:480px">
               <div onclick="mqToggleSpecTips()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer">
                 <div style="font-size:13px;font-weight:700;color:#166534">💡 Tips for this page</div>
                 <span id="mq-spec-tips-arrow" style="font-size:13px;color:#166534;transition:transform 0.2s;transform:rotate(-90deg)">▼</span>
@@ -5110,8 +5110,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
               <td>
                 <div style="display:flex;flex-direction:column;gap:3px;width:94px">
-                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" placeholder="${variantCount ? 'New rate' : ''}" style="width:80px" ${variantCount ? `title="Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone."` : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-                  ${variantCount ? `<button class="mq-btn mq-btn-sm" style="font-size:10px;padding:3px 6px;white-space:nowrap" title="Applies the rate above to every 📏 Sized variant on this item that's priced per sq/lin ft" onclick="mqMassUpdateVariantRates('${r.id}')">Apply to all sized</button><div style="font-size:9px;color:#9ca3af;line-height:1.3">Mass-updates 📏 Sized variants' rate</div>` : `${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}`}
+                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" placeholder="${variantCount ? 'Rate' : ''}" style="width:94px" ${variantCount ? `title="Type a new $/sq ft or $/lin ft rate here, then click Apply — it updates every sized variant on this item that is priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone."` : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+                  ${variantCount ? `<div style="display:flex;align-items:center;gap:4px"><button class="mq-btn mq-btn-sm" style="font-size:10px;padding:3px 6px;white-space:nowrap" onclick="mqMassUpdateVariantRates('${r.id}')">Apply rate</button><span onclick="mqShowSpecHelpPopover(this,'Sets this rate on every variant below that is priced per square foot or per linear foot, based on its size. Flat-rate and non-sized variants are left alone.',event)" style="cursor:pointer;color:#9ca3af;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">?</span></div>` : `${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}`}
                 </div>
               </td>
               <td>
@@ -8570,14 +8570,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // The flat Price field is meaningless once variants exist (each variant
     // has its own price instead) -- but rather than just disabling it, it's
     // repurposed as a bulk rate-entry box (see mqMassUpdateVariantRates):
-    // type a new $/sq or lin ft rate there and "Apply to all sized" updates
-    // every 📏 Sized, per sq/lin ft variant on this item at once. Keep this
-    // in sync with the table row's own initial render of this same field.
+    // type a new $/sq or lin ft rate there and "Apply rate" updates every
+    // sized, per sq/lin ft variant on this item at once. Keep this in sync
+    // with the table row's own initial render of this same field.
     const priceInput = document.getElementById(`mq-spec-price-${id}`);
     if (priceInput) {
       priceInput.disabled = false;
-      priceInput.placeholder = n > 0 ? 'New rate' : '';
-      priceInput.title = n > 0 ? "Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone." : '';
+      priceInput.placeholder = n > 0 ? 'Rate' : '';
+      priceInput.title = n > 0 ? 'Type a new $/sq ft or $/lin ft rate here, then click Apply — it updates every sized variant on this item that is priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone.' : '';
     }
   }
 
