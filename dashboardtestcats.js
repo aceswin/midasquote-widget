@@ -734,6 +734,22 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
          spacing. */
       #midasquote-dashboard .mq-table-compact th,
       #midasquote-dashboard .mq-table-compact td{padding-left:8px;padding-right:8px}
+      /* Specialty items table only — on a narrower desktop window (not
+         narrow enough to hit the mobile breakpoint below, which already
+         handles this via .mq-table's own min-width:560px override), the
+         table's width:100% just squeezed every column down to fit instead
+         of overflowing, so .mq-table-wrap's overflow-x:auto scrollbar never
+         actually had anything to scroll — columns got cramped/cut off with
+         no way to reach them. min-width:max-content means the table never
+         shrinks below what its own content (images, buttons, every column)
+         actually needs, so once the window is too narrow for that, it
+         genuinely overflows .mq-table-wrap and the horizontal scrollbar
+         shows up, same as it already does on mobile. Scoped to #mq-spec-table
+         specifically so Leads/Products/other tables — not reported as having
+         this problem — keep their current (padding-based) behavior.
+         Jordan reported items disappearing off the right edge with no
+         scrollbar on a smaller screen, 2026-09-25. */
+      #midasquote-dashboard #mq-spec-table{min-width:max-content}
       #midasquote-dashboard .mq-table-compact th:first-child,
       #midasquote-dashboard .mq-table-compact td:first-child{padding-left:12px}
       /* The Specialty Items table has more columns than any other table on
