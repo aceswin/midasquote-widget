@@ -792,6 +792,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
+        #midasquote-dashboard .mq-spec-scroll-arrow{display:none!important}
         #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
         #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
         #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
@@ -1224,6 +1225,15 @@ window.logoutMember = async function () {
           <!-- SPECIALTY ITEMS -->
           <div class="mq-page" id="mq-page-specialty">
             <button class="mq-help-btn" onclick="mqShowHelp('specialty')"><span class="mq-help-badge">?</span> Need help?</button>
+            <!-- Table scroll nudges — fixed to the viewport (not the table),
+                 so they stay visible and clickable no matter how far down
+                 the list you've scrolled, instead of only being reachable
+                 via a scrollbar sitting at the very bottom of a tall table.
+                 Shown/hidden by mqUpdateSpecScrollArrows based on whether
+                 #mq-spec-table-wrap actually has more to scroll in that
+                 direction; see that function for details. -->
+            <button id="mq-spec-scroll-left" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(-1)" title="Scroll table left" style="display:none;position:fixed;left:236px;bottom:28px;z-index:50;width:38px;height:38px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:16px;align-items:center;justify-content:center">◀</button>
+            <button id="mq-spec-scroll-right" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(1)" title="Scroll table right — more columns to see" style="display:none;position:fixed;right:24px;bottom:28px;z-index:50;width:38px;height:38px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:16px;align-items:center;justify-content:center">▶</button>
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
@@ -5007,6 +5017,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window._mqSpecRecords = specs;
     if (!specs.length) {
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
+      mqUpdateSpecScrollArrows(); // no table at all now — make sure any previously-shown arrows get hidden
       return;
     }
     // Photos live on the shop record, keyed 'spec_<id>' — same map My
@@ -5198,7 +5209,48 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // mqVariantsPanelHTML above), so their drag handles can be wired up now
     // rather than waiting for the panel to first be opened.
     specs.forEach(r => mqWireVariantDrag(r.id));
+    mqUpdateSpecScrollArrows();
   }
+
+  // Fixed-to-viewport nudge arrows for #mq-spec-table-wrap, so there's
+  // always a visible, clickable way to reach columns hidden off the right
+  // edge on a smaller screen — not just the table's own horizontal
+  // scrollbar, which sits at the very bottom of the whole (often very
+  // tall) table and is easy to never notice. Shown only when there's
+  // actually more to scroll in that direction; both hidden once the wrap
+  // fits everything or is already scrolled all the way to an edge.
+  function mqUpdateSpecScrollArrows() {
+    const wrap = el('mq-spec-table-wrap');
+    const leftBtn = el('mq-spec-scroll-left');
+    const rightBtn = el('mq-spec-scroll-right');
+    if (!wrap || !leftBtn || !rightBtn) { if (leftBtn) leftBtn.style.display = 'none'; if (rightBtn) rightBtn.style.display = 'none'; return; }
+    const maxScroll = wrap.scrollWidth - wrap.clientWidth;
+    if (maxScroll <= 4) { // nothing to scroll at all — table already fits
+      leftBtn.style.display = 'none';
+      rightBtn.style.display = 'none';
+      return;
+    }
+    leftBtn.style.display = wrap.scrollLeft > 4 ? 'flex' : 'none';
+    rightBtn.style.display = wrap.scrollLeft < maxScroll - 4 ? 'flex' : 'none';
+  }
+  window.mqScrollSpecTable = function(dir) {
+    const wrap = el('mq-spec-table-wrap');
+    if (!wrap) return;
+    wrap.scrollBy({ left: dir * 320, behavior: 'smooth' });
+    // scrollBy's animation hasn't finished when this runs, so re-check
+    // shortly after rather than relying on the scroll listener alone.
+    setTimeout(mqUpdateSpecScrollArrows, 350);
+  };
+  // Table wrap is rebuilt from scratch (innerHTML) by renderSpecialty on
+  // every add/delete/reorder, so a listener bound directly to it would be
+  // silently lost each time. Binding scroll on document with capture:true
+  // instead survives that — 'scroll' doesn't bubble, but it does fire
+  // during the capture phase on ancestors, including document, no matter
+  // which element (old or freshly-recreated) actually scrolled.
+  document.addEventListener('scroll', function(e) {
+    if (e.target && e.target.id === 'mq-spec-table-wrap') mqUpdateSpecScrollArrows();
+  }, true);
+  window.addEventListener('resize', mqUpdateSpecScrollArrows);
 
   // Which categories should be listed for reordering under a given project
   // type, and in what order — starts from that project type's saved order
