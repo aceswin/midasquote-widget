@@ -725,9 +725,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
          hidden entirely on mobile in the media query below, since a narrow
          phone screen has no room for a second, embedded phone-width widget. */
       #midasquote-dashboard .mq-widget-preview-panel{flex-shrink:0;width:410px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;position:sticky;top:90px;align-self:flex-start;transition:width 0.15s}
-      #midasquote-dashboard .mq-widget-preview-panel.collapsed{width:auto;padding:12px}
+      /* Collapsed state: a narrow full-height vertical tab (not a short wide
+         bar) — width shrinks to 40px, height stretches to fill most of the
+         viewport, and the label rotates to read top-to-bottom. Click
+         anywhere on the strip (the whole header fills the height) to expand. */
+      #midasquote-dashboard .mq-widget-preview-panel.collapsed{width:40px;padding:14px 0;height:calc(100vh - 160px);min-height:320px;overflow:hidden}
       #midasquote-dashboard .mq-widget-preview-panel.collapsed #mq-widget-preview-body{display:none}
-      #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-label{display:none}
+      #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-header{flex-direction:column;justify-content:flex-start;height:100%;gap:14px}
+      #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-label{display:block;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;font-size:12px;letter-spacing:0.02em}
       #midasquote-dashboard .mq-widget-preview-resize-handle{position:absolute;left:-6px;top:0;bottom:0;width:10px;cursor:ew-resize;z-index:6;border-radius:6px}
       #midasquote-dashboard .mq-widget-preview-resize-handle:hover,#midasquote-dashboard .mq-widget-preview-resize-handle.mq-resizing{background:#e5e7eb}
       #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-resize-handle{display:none}
