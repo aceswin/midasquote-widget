@@ -83,7 +83,28 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     return allRecords;
   }
 
-  async function atUpdate(table, id, fields) {
+  // Jordan: "once in a while when adding new groups or editing new groups
+  // its says 'Couldnt save group' but then still seems to save it fine
+  // amnyway." Root cause: Airtable enforces 5 requests/second PER BASE, and
+  // several call sites (mqSaveGroupManager chief among them — saving a
+  // group with several items, some spanning 2 underlying ids each, fires
+  // every write via Promise.all with zero throttling) can easily burst past
+  // that in one go. Airtable answers an over-the-limit request with 429 and
+  // does NOT process it — atUpdate used to throw on that immediately, which
+  // fails the whole Promise.all and pops the "Could not save" alert even
+  // though every OTHER write in that same batch already went through fine.
+  // It "still seems to save it fine anyway" because each item's in-memory
+  // groupName is set synchronously in the forEach loop, before any of the
+  // writes are even awaited — so the on-screen grid already reflects the
+  // intended end state regardless of what the network actually did, masking
+  // that one write may not have actually landed in Airtable.
+  // Fix: retry a 429 with a short backoff (honoring Airtable's own
+  // Retry-After header when it sends one) instead of failing immediately —
+  // up to 3 attempts, which comfortably covers a momentary burst. Any other
+  // failure (a genuine 4xx/5xx, e.g. a real validation error) still throws
+  // right away exactly as before; only a rate-limit response is retried.
+  async function atUpdate(table, id, fields, attempt) {
+    attempt = attempt || 0;
     const res = await fetch(`${AT_BASE}/${table}/${id}`, {
       method: 'PATCH', headers: AT_HEADS,
       // typecast:true lets Airtable auto-add a new option to a Single Select
@@ -92,10 +113,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: JSON.stringify({ fields, typecast: true })
     });
     if (!res.ok) {
+      if (res.status === 429 && attempt < 3) {
+        const retryAfterSec = parseFloat(res.headers.get('Retry-After'));
+        const delayMs = !isNaN(retryAfterSec) ? retryAfterSec * 1000 : 300 * Math.pow(2, attempt);
+        await new Promise(r => setTimeout(r, delayMs));
+        return atUpdate(table, id, fields, attempt + 1);
+      }
       const errBody = await res.text().catch(() => '');
       console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
     }
+    mqScheduleWidgetPreviewRefresh();
     return await res.json();
   }
 
@@ -109,6 +137,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
     }
+    mqScheduleWidgetPreviewRefresh();
     return await res.json();
   }
 
@@ -120,7 +149,26 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       const errBody = await res.text().catch(() => '');
       throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
     }
+    mqScheduleWidgetPreviewRefresh();
     return await res.json();
+  }
+
+  // Live preview pilot (Specialty items tab) — every real write funnels
+  // through atUpdate/atCreate/atDelete above, so hooking the refresh in here
+  // once covers every field/add/delete on that tab automatically, instead of
+  // adding a refresh call at each of the ~15 individual save sites. Debounced
+  // so a burst of several quick writes (e.g. a Promise.all across a few
+  // linked ids) only reloads the iframe once, ~700ms after the last one
+  // settles. No-ops entirely when the panel isn't on the page or is
+  // collapsed, so this is silently harmless on every other tab.
+  let _mqWidgetPreviewRefreshTimer = null;
+  function mqScheduleWidgetPreviewRefresh() {
+    const panel = document.getElementById('mq-widget-preview-panel');
+    if (!panel || panel.classList.contains('collapsed')) return;
+    clearTimeout(_mqWidgetPreviewRefreshTimer);
+    _mqWidgetPreviewRefreshTimer = setTimeout(() => {
+      if (typeof window.mqRefreshWidgetPreview === 'function') window.mqRefreshWidgetPreview();
+    }, 700);
   }
 
 
@@ -301,7 +349,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>See (and edit) the original quote behind a rate</strong> — opening Edit on a Box Material, Door Style, Drawer Config, or Hinge now shows the real job price that rate came from, so you can update it by typing a new job total instead of doing the math yourself.</p>
         <p style="margin-top:1.25rem"><strong>How some of the trickier pricing actually works:</strong></p>
         <p><strong>Extended (36"–40") upper cabinets</strong> add a flat 30% on top of the material/door cost and the install cost for upper cabinets only — base cabinets are never affected, since it's only the uppers that get taller to reach the ceiling.</p>
-        <p><strong>Tall cabinets</strong> are priced per unit: your wizard's baseline unit price (24" wide, baseline material & door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced just because it shares a door style with the rest of the kitchen.</p>
+        <p><strong>Tall cabinets</strong> are priced per unit: your wizard's baseline unit price (24" wide, baseline material & door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced.</p>
       `
     },
     specialty: {
@@ -444,11 +492,16 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="font-size:40px;margin-bottom:12px">👋</div>
         <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
         <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+          This dashboard is best viewed on a desktop or laptop — some tabs and tools aren't set up for a phone or small tablet screen yet, so managing your shop from a computer will be a smoother experience.
+          <br><br>
           Every tab has a <strong style="color:#2563eb">❓ Need help?</strong> button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
           <br><br>
           Only offer some of what MidasQuote can quote? In Shop Info → <strong>🗂️ Estimator tabs</strong>, you can turn off whichever tabs don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
           <br><br>
           Take your time exploring — there's no rush, and almost everything here autosaves as you go.
+          <br><br>
+          <strong>Support &amp; suggestions</strong><br>
+          MidasQuote is constantly improving with your help. Please don't be shy to share ideas that would make MidasQuote better for your shop — every single suggestion is taken seriously and implemented if possible.
         </div>
         <button onclick="mqCloseWelcomeModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, let's go!</button>
       </div>`;
@@ -668,6 +721,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb:hover{background:#6b7280}
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
+      /* Live preview pilot (Specialty items tab). Desktop only by design —
+         hidden entirely on mobile in the media query below, since a narrow
+         phone screen has no room for a second, embedded phone-width widget. */
+      #midasquote-dashboard .mq-widget-preview-panel{flex-shrink:0;width:410px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;position:sticky;top:90px;align-self:flex-start;transition:width 0.15s}
+      #midasquote-dashboard .mq-widget-preview-panel.collapsed{width:auto;padding:12px}
+      #midasquote-dashboard .mq-widget-preview-panel.collapsed #mq-widget-preview-body{display:none}
+      #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-label{display:none}
+      #midasquote-dashboard .mq-widget-preview-header{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:700;color:#111;user-select:none}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
       #midasquote-dashboard .mq-page.active{display:block}
@@ -760,6 +821,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
+        #midasquote-dashboard .mq-widget-preview-panel{display:none}
         #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
         #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
         #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
@@ -789,6 +851,10 @@ window.logoutMember = async function () {
     const token = shop['Shop token'] || '';
     const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
     window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
+    // Live preview pilot (Specialty items tab only, for now) — same URL the
+    // "Preview widget" button above opens in a new tab, just embedded in an
+    // iframe instead. See mqRefreshWidgetPreview/mqScheduleWidgetPreviewRefresh.
+    window._mqWidgetPreviewUrl = `https://widget.midasquote.com/?shop=${token}`;
 
     return `
       <div class="mq-topbar">
@@ -815,17 +881,19 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
           <div class="mq-nav-section">Setup</div>
           <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
-          <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
           <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
+          <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
-          <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
+          <div class="mq-nav-section">Launch &amp; Grow</div>
+          <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
-          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
+          <div class="mq-nav-section">Account</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
           <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
+          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
         </div>
 
         <div class="mq-content">
@@ -1190,29 +1258,50 @@ window.logoutMember = async function () {
           <!-- SPECIALTY ITEMS -->
           <div class="mq-page" id="mq-page-specialty">
             <button class="mq-help-btn" onclick="mqShowHelp('specialty')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-section-header">
-              <div>
-                <div class="mq-page-title">Specialty items</div>
-                <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
+            <div style="display:flex;gap:20px;align-items:flex-start">
+              <div style="flex:1;min-width:0">
+                <div class="mq-section-header">
+                  <div>
+                    <div class="mq-page-title">Specialty items</div>
+                    <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
+                  </div>
+                </div>
+                <div id="mq-spec-msg"></div>
+                <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
+                  💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
+                  <br><br>
+                  🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
+                  <br><br>
+                  🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
+                  <br><br>
+                  🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
+                  <br><br>
+                  📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
+                </div>
+                <div style="margin-bottom:1rem">
+                  <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
+                </div>
+                <div class="mq-card" style="padding:0;overflow:hidden">
+                  <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
+                </div>
               </div>
-            </div>
-            <div id="mq-spec-msg"></div>
-            <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
-              <br><br>
-              🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
-              <br><br>
-              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
-              <br><br>
-              🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
-              <br><br>
-              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
-            </div>
-            <div style="margin-bottom:1rem">
-              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
-            </div>
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
+
+              <!-- LIVE PREVIEW (pilot) — same widget the "Preview widget" button
+                   opens in a new tab, embedded here instead. Refreshes itself a
+                   moment after a change actually saves (see
+                   mqScheduleWidgetPreviewRefresh); the button below is a manual
+                   fallback in case autosave-triggered refresh is ever missed. -->
+              <div class="mq-widget-preview-panel" id="mq-widget-preview-panel">
+                <div class="mq-widget-preview-header" onclick="mqToggleWidgetPreviewPanel()">
+                  <span id="mq-widget-preview-arrow" style="display:inline-block;transition:transform 0.2s">▼</span>
+                  <span class="mq-widget-preview-label">👁️ Live preview <span style="font-weight:400;color:#9ca3af;font-size:11px">(pilot)</span></span>
+                </div>
+                <div id="mq-widget-preview-body">
+                  <div style="font-size:11px;color:#9ca3af;margin:8px 0 10px">Updates on its own shortly after a change saves. Use the button below any time it doesn't.</div>
+                  <button class="mq-btn mq-btn-sm" style="width:100%;margin-bottom:10px" onclick="mqRefreshWidgetPreview()">🔄 Refresh preview</button>
+                  <iframe id="mq-widget-preview-frame" src="https://widget.midasquote.com/?shop=${token}" style="width:100%;max-width:375px;height:700px;border:1px solid #e5e7eb;border-radius:10px;display:block"></iframe>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -5935,6 +6024,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (arrow) arrow.style.transform = opening ? 'rotate(-90deg)' : 'rotate(0deg)';
   };
 
+  // Jordan: "on variant cards can we make a 'hide all from showroom' check
+  // box so it will hide all the items of a variant from the showroom if
+  // checked... i have like 50 variants and am having to uncheck each one
+  // individually." Bulk-sets every variant's own "Hide from showroom"
+  // checkbox at once, instead of opening the group and clicking through
+  // each one. Scoped with the exact data-spec-group="<itemId>" attribute
+  // each variant card's wrapper already carries (see the flatMap below) --
+  // an exact match, not a prefix match, so there's no risk of it ever
+  // touching a different item's variants. Works whether the group is
+  // currently expanded or collapsed (display:none doesn't remove the
+  // checkboxes from the DOM, so this reaches every variant either way), and
+  // it doesn't need its own save path -- flipping these standard
+  // mq-hidden-<key> checkboxes and reusing mqSaveProducts (My Products'
+  // existing sweep-every-checkbox save) is all that's needed to persist it.
+  window.mqHideAllSpecVariants = function(itemId, hide) {
+    document.querySelectorAll(`[data-spec-group="${itemId}"] [id^="mq-hidden-"]`).forEach(cb => { cb.checked = hide; });
+    mqMarkProductsDirty();
+    if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts();
+  };
+
   // Live preview for the group card's own dedicated "shared image" slot --
   // same visual behavior as mqPreviewPhoto, just pointed at the
   // mq-specshared-* ids instead of mq-photo-<key> (that field is
@@ -6316,7 +6425,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
       const hasGroups = GROUPABLE_CATS.includes(cat) && items.some(i => i.groupName);
-      const catSortDir = mqSortDirFor(cat);
       return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
@@ -6337,7 +6445,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </div>` : ''}
           ${hasGroups ? '' : `
           <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqToggleCatSort('${cat}')" title="Sort this category's items by name">Sort by name (${catSortDir==='desc'?'Z→A':'A→Z'})</button>
+            ${mqSortSelectHtml(cat, `mqSetCatSort('${cat}', this.value)`)}
             <input type="text" id="mq-cat-search-${cat}" oninput="mqFilterProductCards('${cat}')" onclick="event.stopPropagation()" placeholder="Search by name…" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;flex:1;min-width:160px;max-width:260px"/>
           </div>
           <div id="mq-cat-search-empty-${cat}" style="display:none;font-size:12px;color:#9ca3af;padding:0 0 0.75rem">No items match that search.</div>
@@ -6408,22 +6516,76 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // "Other" items in a partially-grouped one) — one control near "Pick a
     // collection" covers that case instead.
     let _mqProductSortDir = {};
+    // Which field a given sort key is sorting by — 'name' (default, keeps
+    // every existing key's old alphabetical behavior with no change) or
+    // 'price'. Added alongside _mqProductSortDir, not replacing it, so the
+    // 'specialty' key (Specialty Items' own sort control, untouched by this
+    // round) keeps working exactly as before. Jordan: "in groups... we can
+    // sort by price... can we add those same options to for when we are not
+    // in edit or creating group" — this is what lets the OUTSIDE category/
+    // group sort controls (mqSetCatSort/mqSetGroupSort below) offer price
+    // sorting too, not just the group manager modal's own dropdown.
+    let _mqProductSortField = {};
     function mqSortDirFor(key) { return _mqProductSortDir[key] === 'desc' ? 'desc' : 'asc'; }
+    function mqSortFieldFor(key) { return _mqProductSortField[key] === 'price' ? 'price' : 'name'; }
     function mqSortItemsByName(items, key, nameFn) {
       const dir = mqSortDirFor(key);
+      if (mqSortFieldFor(key) === 'price') {
+        return [...items].sort((a, b) => {
+          const cmp = (a.price||0) - (b.price||0);
+          return dir === 'desc' ? -cmp : cmp;
+        });
+      }
       const getName = nameFn || ((i) => i.baseName || '');
       return [...items].sort((a, b) => {
         const cmp = (getName(a) || '').localeCompare(getName(b) || '', undefined, { sensitivity: 'base', numeric: true });
         return dir === 'desc' ? -cmp : cmp;
       });
     }
-    window.mqToggleCatSort = function(cat) {
-      _mqProductSortDir[cat] = mqSortDirFor(cat) === 'asc' ? 'desc' : 'asc';
-      // This button only ever shows when the category has no groups (see
+    // A single small <select> (Name A→Z / Name Z→A / Price low→high / Price
+    // high→low) used for both the category-level "no group" sort control
+    // and each named group's own sort control — onchangeExpr is the exact
+    // onclick-style JS the caller wants run with the chosen "field-dir"
+    // value (e.g. "mqSetCatSort('door', this.value)"), so this one render
+    // helper works for both mqSetCatSort's 2-arg signature and
+    // mqSetGroupSort's 3-arg one without needing to know which.
+    function mqSortSelectHtml(key, onchangeExpr) {
+      const mode = `${mqSortFieldFor(key)}-${mqSortDirFor(key)}`;
+      const opt = (val, label) => `<option value="${val}" ${mode===val?'selected':''}>${label}</option>`;
+      // Two bugs Jordan caught after this control shipped, both fixed here:
+      // 1. Width/wrapping onto its own line — #midasquote-dashboard has a
+      //    global `select{width:100%}` rule (same one the group search
+      //    <input> above already has to fight off with its own inline
+      //    max-width), which stretched this control to fill the whole flex
+      //    row instead of sizing to its own text like "Edit group" does.
+      //    width:auto in the inline style (inline always wins over that
+      //    external rule) restores the old compact, content-sized look and
+      //    puts it back on the same line right after "Edit group".
+      // 2. Items vanishing the instant you open the dropdown — clicking a
+      //    <select> to open it fires a real, bubbling "click" event on the
+      //    select itself (same as clicking anything else), separate from
+      //    "onchange". That click was bubbling straight up to the group
+      //    header row's own onclick="mqToggleProductGroup(...)" and
+      //    collapsing the group before you'd even picked an option. The
+      //    search <input> right below already guards against this exact
+      //    thing with its own onclick stopPropagation; this control just
+      //    needs the same guard.
+      return `<select onclick="event.stopPropagation()" onchange="event.stopPropagation();${onchangeExpr}" title="Sort these items" style="font-size:11px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;width:auto">
+        ${opt('name-asc','Sort: Name (A→Z)')}
+        ${opt('name-desc','Sort: Name (Z→A)')}
+        ${opt('price-asc','Sort: Price (low→high)')}
+        ${opt('price-desc','Sort: Price (high→low)')}
+      </select>`;
+    }
+    window.mqSetCatSort = function(cat, mode) {
+      const [field, dir] = mode.split('-');
+      _mqProductSortField[cat] = field;
+      _mqProductSortDir[cat] = dir;
+      // This control only ever shows when the category has no groups (see
       // catSection), so its own "mq-cat-search-${cat}" box is the only
       // search in play here. Re-rendering the grid below wipes that input
       // back to empty, so its typed value is carried across the rebuild by
-      // hand, same as mqToggleGroupSort does for its own group's box.
+      // hand, same as mqSetGroupSort does for its own group's box.
       const searchVal = document.getElementById(`mq-cat-search-${cat}`)?.value || '';
       const grid = document.getElementById(`mq-cat-grid-${cat}`);
       if (grid) grid.innerHTML = catGridHtml(cat);
@@ -6433,14 +6595,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (searchVal) window.mqFilterProductCards(cat);
       }
     };
-    window.mqToggleGroupSort = function(cat, groupName) {
+    window.mqSetGroupSort = function(cat, groupName, mode) {
       const key = `${cat}::${groupName}`;
-      _mqProductSortDir[key] = mqSortDirFor(key) === 'asc' ? 'desc' : 'asc';
+      const [field, dir] = mode.split('-');
+      _mqProductSortField[key] = field;
+      _mqProductSortDir[key] = dir;
       const slug = mqGroupSlug(cat, groupName);
-      // Same reasoning as mqToggleCatSort above — carry this ONE group's
-      // own search text across the grid rebuild, since only that group's
-      // input (not the whole category) is relevant now that search is
-      // scoped per-group.
+      // Same reasoning as mqSetCatSort above — carry this ONE group's own
+      // search text across the grid rebuild, since only that group's input
+      // (not the whole category) is relevant now that search is scoped
+      // per-group.
       const searchVal = document.getElementById(`mq-group-search-${slug}`)?.value || '';
       const grid = document.getElementById(`mq-cat-grid-${cat}`);
       if (grid) grid.innerHTML = catGridHtml(cat);
@@ -6609,7 +6773,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         // fully ungrouped category, since that's the one control Jordan
         // asked for covering "items that don't have a group."
         const sortKey = g.name ? `${cat}::${g.name}` : cat;
-        const sortDir = mqSortDirFor(sortKey);
         const sortedMembers = mqSortItemsByName(g.members, sortKey);
         return `
         <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:${gi===0?'0':'14px'} 0 2px;flex-wrap:wrap;cursor:pointer" onclick="mqToggleProductGroup('${cat}','${groupKey.replace(/'/g,"\\'")}')">
@@ -6620,7 +6783,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',-1)" title="Move up">↑</button>
             <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqMoveProductGroup('${cat}','${g.name.replace(/'/g,"\\'")}',1)" title="Move down">↓</button>
             <button class="mq-btn mq-btn-secondary mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqOpenGroupManager('${cat}','${g.name.replace(/'/g,"\\'")}')">Edit group</button>
-            <button class="mq-btn mq-btn-sm" style="padding:2px 8px" onclick="event.stopPropagation();mqToggleGroupSort('${cat}','${g.name.replace(/'/g,"\\'")}')" title="Sort this group's items by name">Sort by name (${sortDir==='desc'?'Z→A':'A→Z'})</button>
+            ${mqSortSelectHtml(sortKey, `mqSetGroupSort('${cat}','${g.name.replace(/'/g,"\\'")}', this.value)`)}
             ${g.desc ? `<span style="font-size:11px;color:#6b7280;font-style:italic">"${g.desc}"</span>` : ''}
           ` : `<span style="font-size:11px;color:#9ca3af">Not grouped — sorted cheapest to most expensive on the widget</span>`}
         </div>
@@ -6725,7 +6888,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <input type="text" id="mq-gm-search" placeholder="Search items…" oninput="mqGroupManagerSearch(this.value)" style="flex:1;font-size:13px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box"/>
               <select id="mq-gm-sort" onchange="mqGroupManagerSort(this.value)" style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;flex-shrink:0">
                 <option value="default">Default order</option>
-                <option value="name">Name (A–Z)</option>
+                <option value="name-asc">Name (A–Z)</option>
+                <option value="name-desc">Name (Z–A)</option>
                 <option value="price-asc">Price (low→high)</option>
                 <option value="price-desc">Price (high→low)</option>
               </select>
@@ -6769,11 +6933,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       document.getElementById('mq-gm-delete').style.display = isNew ? 'none' : 'inline-block';
       _gmCheckedIds = new Set(members.map(i => i.id));
       _gmSearchText = '';
-      _gmSortBy = 'default';
+      // Jordan: "if they are sorted by price outside the edit group screen
+      // and then enter the edit group screen, can they carry that sorting
+      // into the edit group screen?" — an EXISTING group that already has
+      // an outside sort choice (set via mqSetGroupSort, or carried over
+      // from a previous save below) opens straight into that same sort;
+      // a brand-new group (no outside key can exist yet) or a group that's
+      // never had its outside sort touched just starts at "Default order",
+      // exactly as before.
+      const outsideKey = groupName ? `${cat}::${groupName}` : null;
+      const outsideTouched = outsideKey && (outsideKey in _mqProductSortField || outsideKey in _mqProductSortDir);
+      _gmSortBy = outsideTouched
+        ? (mqSortFieldFor(outsideKey) === 'price' ? `price-${mqSortDirFor(outsideKey)}` : `name-${mqSortDirFor(outsideKey)}`)
+        : 'default';
       const searchInput = document.getElementById('mq-gm-search');
       if (searchInput) searchInput.value = '';
       const sortSelect = document.getElementById('mq-gm-sort');
-      if (sortSelect) sortSelect.value = 'default';
+      if (sortSelect) sortSelect.value = _gmSortBy;
       mqRenderGroupManagerItems();
       document.getElementById('mq-group-manager').style.display = 'flex';
     };
@@ -6797,7 +6973,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const groupName = _gmOriginalName;
       let items = [..._gmAllItems];
       if (_gmSearchText) items = items.filter(i => i.baseName.toLowerCase().includes(_gmSearchText));
-      if (_gmSortBy === 'name') items.sort((a,b) => a.baseName.localeCompare(b.baseName));
+      if (_gmSortBy === 'name-asc') items.sort((a,b) => a.baseName.localeCompare(b.baseName));
+      else if (_gmSortBy === 'name-desc') items.sort((a,b) => b.baseName.localeCompare(a.baseName));
       else if (_gmSortBy === 'price-asc') items.sort((a,b) => (a.price||0) - (b.price||0));
       else if (_gmSortBy === 'price-desc') items.sort((a,b) => (b.price||0) - (a.price||0));
       const list = document.getElementById('mq-gm-items');
@@ -6845,6 +7022,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
       try {
         await Promise.all(writes);
+        // Jordan: "if in edit or create group someone sorts by price or
+        // a-z or whatever can it carry on over into when the save the
+        // group" — apply whatever sort was picked in this modal to the
+        // group's own OUTSIDE sort control the moment the save actually
+        // lands, keyed by its final name (in case this same save also
+        // renamed it — a rename mid-edit means the outside key changes
+        // too, so this only takes effect once the new name is confirmed
+        // saved, not live while typing).
+        const outsideKey = `${cat}::${newName}`;
+        if (_gmSortBy === 'default') {
+          delete _mqProductSortField[outsideKey];
+          delete _mqProductSortDir[outsideKey];
+        } else {
+          const [field, dir] = _gmSortBy.split('-');
+          _mqProductSortField[outsideKey] = field;
+          _mqProductSortDir[outsideKey] = dir;
+        }
+        // A rename leaves the OLD name's outside sort state orphaned —
+        // clear it out so some future, unrelated group that happens to
+        // reuse the old name doesn't silently inherit stale sort settings.
+        if (_gmOriginalName && _gmOriginalName !== newName) {
+          const oldKey = `${cat}::${_gmOriginalName}`;
+          delete _mqProductSortField[oldKey];
+          delete _mqProductSortDir[oldKey];
+        }
         mqCloseGroupManager();
         // A brand-new group here can be this category's very FIRST one —
         // that flips "hasGroups" for the whole category, so the top-level
@@ -6935,7 +7137,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Jordan: "lets have specialty items alphabetical by default as well
     // and able to sort the same way too." Split out from the specSection
     // template above so mqToggleSpecSort can rebuild just this grid (same
-    // pattern as catGridHtml/mqToggleCatSort) without re-rendering the
+    // pattern as catGridHtml/mqSetCatSort) without re-rendering the
     // filter controls around it. Sorts fresh off the current
     // _mqProductSortDir['specialty'] every call, same 'specialty' key
     // the sort button's own label reads from above.
@@ -7021,6 +7223,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           // grid-column spans or nested grids needed anywhere, which is what
           // caused the full-screen-width button bug in the previous round.
           const badgeHtml = `<span style="position:absolute;top:6px;right:6px;font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:999px;white-space:nowrap">${variants.length} var.</span>`;
+          // Jordan: "i have like 50 variants and am having to uncheck each
+          // one individually" -- a single checkbox on the template card that
+          // bulk-flips every one of this item's variant "Hide from showroom"
+          // boxes via mqHideAllSpecVariants. Pre-checked only when EVERY
+          // variant is already hidden, so reopening the page shows an
+          // accurate state rather than always starting unchecked; a mixed
+          // state (some hidden, some not) just starts unchecked like any
+          // other bulk-action box, since a plain checkbox can't show
+          // "partial" without extra wiring this didn't seem worth adding.
+          const allVariantsHidden = variants.length > 0 && variants.every(v => savedHidden['spec_' + r.id + '_v' + v.id]);
+          const hideAllHtml = `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;font-weight:600;margin-bottom:6px;cursor:pointer">
+                <input type="checkbox" id="mq-hideall-spec-${r.id}" ${allVariantsHidden ? 'checked' : ''} onchange="mqHideAllSpecVariants('${r.id}', this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+                🙈 Hide all ${variants.length} variants from showroom
+              </label>`;
           const footerHtml = `<div onclick="mqToggleSpecPhotoGroup('${r.id}')" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;cursor:pointer;padding-top:8px;margin-top:8px;border-top:1px solid #fde68a">
                 <span style="font-size:11px;color:#92400e;font-weight:600">${variants.length} variants</span>
                 <span id="mq-specgroup-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#dc2626;flex-shrink:0">▼</span>
@@ -7031,6 +7247,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 ${badgeHtml}
               </div>
               <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
+              ${hideAllHtml}
               <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
               <div style="font-size:11px;color:#6b7280;line-height:1.4">Applying one photo to all variants at once is a paid feature. Upgrade from the Account tab, or leave this blank and set each variant's own photo individually below.</div>
               ${footerHtml}`
@@ -7043,6 +7260,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 ${badgeHtml}
               </div>
               <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px">${itemName}</div>
+              ${hideAllHtml}
               <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">🖼️ Optional: one photo for all ${variants.length} variants</div>
               <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">A shortcut for when every variant looks the same — upload, paste, or choose a photo below and (after you confirm) it fills in all ${variants.length} variants at once. You can leave this blank and set each variant's own photo instead, and you can always change any variant's photo individually later either way.</div>
               <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
@@ -8026,6 +8244,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const frame = el('mq-showroom-preview-frame');
     const base = window._mqShowroomUrl;
     if (frame && base) frame.src = base + '&_r=' + Date.now();
+  };
+
+  // Live preview pilot (Specialty items) — same cross-origin cache-busting
+  // reload trick as mqRefreshShowroomPreview above. Called automatically by
+  // mqScheduleWidgetPreviewRefresh after a save, by the panel's own manual
+  // "Refresh preview" button, and once more when the panel is re-expanded
+  // (in case a change saved while it was collapsed and got skipped).
+  window.mqRefreshWidgetPreview = function() {
+    const frame = el('mq-widget-preview-frame');
+    const base = window._mqWidgetPreviewUrl;
+    if (frame && base) frame.src = base + '&_r=' + Date.now();
+  };
+
+  window.mqToggleWidgetPreviewPanel = function() {
+    const panel = el('mq-widget-preview-panel');
+    const arrow = el('mq-widget-preview-arrow');
+    if (!panel) return;
+    const collapsing = !panel.classList.contains('collapsed');
+    panel.classList.toggle('collapsed', collapsing);
+    if (arrow) arrow.style.transform = collapsing ? 'rotate(-90deg)' : 'rotate(0deg)';
+    if (!collapsing) window.mqRefreshWidgetPreview();
   };
 
   window.mqToggleFinancing = async function() {
