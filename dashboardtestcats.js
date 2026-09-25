@@ -123,7 +123,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
     }
-    mqScheduleWidgetPreviewRefresh();
     return await res.json();
   }
 
@@ -137,7 +136,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
       throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
     }
-    mqScheduleWidgetPreviewRefresh();
     return await res.json();
   }
 
@@ -149,26 +147,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       const errBody = await res.text().catch(() => '');
       throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
     }
-    mqScheduleWidgetPreviewRefresh();
     return await res.json();
-  }
-
-  // Live preview pilot (Specialty items tab) — every real write funnels
-  // through atUpdate/atCreate/atDelete above, so hooking the refresh in here
-  // once covers every field/add/delete on that tab automatically, instead of
-  // adding a refresh call at each of the ~15 individual save sites. Debounced
-  // so a burst of several quick writes (e.g. a Promise.all across a few
-  // linked ids) only reloads the iframe once, ~700ms after the last one
-  // settles. No-ops entirely when the panel isn't on the page or is
-  // collapsed, so this is silently harmless on every other tab.
-  let _mqWidgetPreviewRefreshTimer = null;
-  function mqScheduleWidgetPreviewRefresh() {
-    const panel = document.getElementById('mq-widget-preview-panel');
-    if (!panel || panel.classList.contains('collapsed')) return;
-    clearTimeout(_mqWidgetPreviewRefreshTimer);
-    _mqWidgetPreviewRefreshTimer = setTimeout(() => {
-      if (typeof window.mqRefreshWidgetPreview === 'function') window.mqRefreshWidgetPreview();
-    }, 700);
   }
 
 
@@ -721,22 +700,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb:hover{background:#6b7280}
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
-      /* Live preview pilot (Specialty items tab). Desktop only by design —
-         hidden entirely on mobile in the media query below, since a narrow
-         phone screen has no room for a second, embedded phone-width widget. */
-      #midasquote-dashboard .mq-widget-preview-panel{flex-shrink:0;width:410px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;position:sticky;top:90px;align-self:flex-start;transition:width 0.15s}
-      /* Collapsed state: a narrow full-height vertical tab (not a short wide
-         bar) — width shrinks to 40px, height stretches to fill most of the
-         viewport, and the label rotates to read top-to-bottom. Click
-         anywhere on the strip (the whole header fills the height) to expand. */
-      #midasquote-dashboard .mq-widget-preview-panel.collapsed{width:40px;padding:14px 0;height:calc(100vh - 160px);min-height:320px;overflow:hidden}
-      #midasquote-dashboard .mq-widget-preview-panel.collapsed #mq-widget-preview-body{display:none}
-      #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-header{flex-direction:column;justify-content:flex-start;height:100%;gap:14px}
-      #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-label{display:block;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;font-size:12px;letter-spacing:0.02em}
-      #midasquote-dashboard .mq-widget-preview-resize-handle{position:absolute;left:-6px;top:0;bottom:0;width:10px;cursor:ew-resize;z-index:6;border-radius:6px}
-      #midasquote-dashboard .mq-widget-preview-resize-handle:hover,#midasquote-dashboard .mq-widget-preview-resize-handle.mq-resizing{background:#e5e7eb}
-      #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-resize-handle{display:none}
-      #midasquote-dashboard .mq-widget-preview-header{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:700;color:#111;user-select:none}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
       #midasquote-dashboard .mq-page.active{display:block}
@@ -829,7 +792,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
-        #midasquote-dashboard .mq-widget-preview-panel{display:none}
         #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
         #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
         #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
@@ -859,10 +821,6 @@ window.logoutMember = async function () {
     const token = shop['Shop token'] || '';
     const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
     window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
-    // Live preview pilot (Specialty items tab only, for now) — same URL the
-    // "Preview widget" button above opens in a new tab, just embedded in an
-    // iframe instead. See mqRefreshWidgetPreview/mqScheduleWidgetPreviewRefresh.
-    window._mqWidgetPreviewUrl = `https://widget.midasquote.com/?shop=${token}`;
 
     return `
       <div class="mq-topbar">
@@ -1266,51 +1224,29 @@ window.logoutMember = async function () {
           <!-- SPECIALTY ITEMS -->
           <div class="mq-page" id="mq-page-specialty">
             <button class="mq-help-btn" onclick="mqShowHelp('specialty')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div style="display:flex;gap:20px;align-items:flex-start">
-              <div style="flex:1;min-width:0">
-                <div class="mq-section-header">
-                  <div>
-                    <div class="mq-page-title">Specialty items</div>
-                    <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
-                  </div>
-                </div>
-                <div id="mq-spec-msg"></div>
-                <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-                  💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
-                  <br><br>
-                  🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
-                  <br><br>
-                  🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
-                  <br><br>
-                  🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
-                  <br><br>
-                  📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
-                </div>
-                <div style="margin-bottom:1rem">
-                  <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
-                </div>
-                <div class="mq-card" style="padding:0;overflow:hidden">
-                  <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
-                </div>
+            <div class="mq-section-header">
+              <div>
+                <div class="mq-page-title">Specialty items</div>
+                <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
-
-              <!-- LIVE PREVIEW (pilot) — same widget the "Preview widget" button
-                   opens in a new tab, embedded here instead. Refreshes itself a
-                   moment after a change actually saves (see
-                   mqScheduleWidgetPreviewRefresh); the button below is a manual
-                   fallback in case autosave-triggered refresh is ever missed. -->
-              <div class="mq-widget-preview-panel" id="mq-widget-preview-panel">
-                <div class="mq-widget-preview-resize-handle" onmousedown="mqStartPreviewResize(event)" title="Drag to widen or narrow"></div>
-                <div class="mq-widget-preview-header" onclick="mqToggleWidgetPreviewPanel()">
-                  <span id="mq-widget-preview-arrow" style="display:inline-block;transition:transform 0.2s">▼</span>
-                  <span class="mq-widget-preview-label">👁️ Live preview <span style="font-weight:400;color:#9ca3af;font-size:11px">(pilot)</span></span>
-                </div>
-                <div id="mq-widget-preview-body">
-                  <div style="font-size:11px;color:#9ca3af;margin:8px 0 10px">Updates on its own shortly after a change saves. Use the button below any time it doesn't. Drag the left edge of this panel to widen or narrow it.</div>
-                  <button class="mq-btn mq-btn-sm" style="width:100%;margin-bottom:10px" onclick="mqRefreshWidgetPreview()">🔄 Refresh preview</button>
-                  <iframe id="mq-widget-preview-frame" src="https://widget.midasquote.com/?shop=${token}" style="width:100%;height:700px;border:1px solid #e5e7eb;border-radius:10px;display:block"></iframe>
-                </div>
-              </div>
+            </div>
+            <div id="mq-spec-msg"></div>
+            <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
+              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
+              <br><br>
+              🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
+              <br><br>
+              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
+              <br><br>
+              🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
+              <br><br>
+              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
+            </div>
+            <div style="margin-bottom:1rem">
+              <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
+            </div>
+            <div class="mq-card" style="padding:0;overflow:hidden">
+              <div id="mq-spec-list"><div class="mq-loading">Loading specialty items...</div></div>
             </div>
           </div>
 
@@ -8253,60 +8189,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const frame = el('mq-showroom-preview-frame');
     const base = window._mqShowroomUrl;
     if (frame && base) frame.src = base + '&_r=' + Date.now();
-  };
-
-  // Live preview pilot (Specialty items) — same cross-origin cache-busting
-  // reload trick as mqRefreshShowroomPreview above. Called automatically by
-  // mqScheduleWidgetPreviewRefresh after a save, by the panel's own manual
-  // "Refresh preview" button, and once more when the panel is re-expanded
-  // (in case a change saved while it was collapsed and got skipped).
-  window.mqRefreshWidgetPreview = function() {
-    const frame = el('mq-widget-preview-frame');
-    const base = window._mqWidgetPreviewUrl;
-    if (frame && base) frame.src = base + '&_r=' + Date.now();
-  };
-
-  window.mqToggleWidgetPreviewPanel = function() {
-    const panel = el('mq-widget-preview-panel');
-    const arrow = el('mq-widget-preview-arrow');
-    if (!panel) return;
-    const collapsing = !panel.classList.contains('collapsed');
-    panel.classList.toggle('collapsed', collapsing);
-    if (arrow) arrow.style.transform = collapsing ? 'rotate(-90deg)' : 'rotate(0deg)';
-    if (!collapsing) window.mqRefreshWidgetPreview();
-  };
-
-  // Drag-to-resize for the live preview panel. Dragging the handle on the
-  // panel's left edge widens/narrows it (clamped so it never gets unusably
-  // small or eats the whole layout). Ignored while the panel is collapsed —
-  // the handle is hidden then anyway (see .collapsed .mq-widget-preview-resize-handle),
-  // but this guards against a stray event too.
-  window.mqStartPreviewResize = function(e) {
-    const panel = el('mq-widget-preview-panel');
-    const handle = e && e.target;
-    if (!panel || panel.classList.contains('collapsed')) return;
-    e.preventDefault();
-    const startX = e.clientX;
-    const startWidth = panel.getBoundingClientRect().width;
-    const MIN_W = 340, MAX_W = 760;
-    if (handle && handle.classList) handle.classList.add('mq-resizing');
-    const prevTransition = panel.style.transition;
-    panel.style.transition = 'none'; // avoid the collapse/expand transition lagging behind the drag
-    function onMove(ev) {
-      const delta = startX - ev.clientX; // dragging left (toward panel) widens it
-      let next = startWidth + delta;
-      if (next < MIN_W) next = MIN_W;
-      if (next > MAX_W) next = MAX_W;
-      panel.style.width = next + 'px';
-    }
-    function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      if (handle && handle.classList) handle.classList.remove('mq-resizing');
-      panel.style.transition = prevTransition;
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
   };
 
   window.mqToggleFinancing = async function() {
