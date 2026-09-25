@@ -728,6 +728,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-widget-preview-panel.collapsed{width:auto;padding:12px}
       #midasquote-dashboard .mq-widget-preview-panel.collapsed #mq-widget-preview-body{display:none}
       #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-label{display:none}
+      #midasquote-dashboard .mq-widget-preview-resize-handle{position:absolute;left:-6px;top:0;bottom:0;width:10px;cursor:ew-resize;z-index:6;border-radius:6px}
+      #midasquote-dashboard .mq-widget-preview-resize-handle:hover,#midasquote-dashboard .mq-widget-preview-resize-handle.mq-resizing{background:#e5e7eb}
+      #midasquote-dashboard .mq-widget-preview-panel.collapsed .mq-widget-preview-resize-handle{display:none}
       #midasquote-dashboard .mq-widget-preview-header{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:700;color:#111;user-select:none}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
@@ -1292,14 +1295,15 @@ window.logoutMember = async function () {
                    mqScheduleWidgetPreviewRefresh); the button below is a manual
                    fallback in case autosave-triggered refresh is ever missed. -->
               <div class="mq-widget-preview-panel" id="mq-widget-preview-panel">
+                <div class="mq-widget-preview-resize-handle" onmousedown="mqStartPreviewResize(event)" title="Drag to widen or narrow"></div>
                 <div class="mq-widget-preview-header" onclick="mqToggleWidgetPreviewPanel()">
                   <span id="mq-widget-preview-arrow" style="display:inline-block;transition:transform 0.2s">▼</span>
                   <span class="mq-widget-preview-label">👁️ Live preview <span style="font-weight:400;color:#9ca3af;font-size:11px">(pilot)</span></span>
                 </div>
                 <div id="mq-widget-preview-body">
-                  <div style="font-size:11px;color:#9ca3af;margin:8px 0 10px">Updates on its own shortly after a change saves. Use the button below any time it doesn't.</div>
+                  <div style="font-size:11px;color:#9ca3af;margin:8px 0 10px">Updates on its own shortly after a change saves. Use the button below any time it doesn't. Drag the left edge of this panel to widen or narrow it.</div>
                   <button class="mq-btn mq-btn-sm" style="width:100%;margin-bottom:10px" onclick="mqRefreshWidgetPreview()">🔄 Refresh preview</button>
-                  <iframe id="mq-widget-preview-frame" src="https://widget.midasquote.com/?shop=${token}" style="width:100%;max-width:375px;height:700px;border:1px solid #e5e7eb;border-radius:10px;display:block"></iframe>
+                  <iframe id="mq-widget-preview-frame" src="https://widget.midasquote.com/?shop=${token}" style="width:100%;height:700px;border:1px solid #e5e7eb;border-radius:10px;display:block"></iframe>
                 </div>
               </div>
             </div>
@@ -8265,6 +8269,39 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     panel.classList.toggle('collapsed', collapsing);
     if (arrow) arrow.style.transform = collapsing ? 'rotate(-90deg)' : 'rotate(0deg)';
     if (!collapsing) window.mqRefreshWidgetPreview();
+  };
+
+  // Drag-to-resize for the live preview panel. Dragging the handle on the
+  // panel's left edge widens/narrows it (clamped so it never gets unusably
+  // small or eats the whole layout). Ignored while the panel is collapsed —
+  // the handle is hidden then anyway (see .collapsed .mq-widget-preview-resize-handle),
+  // but this guards against a stray event too.
+  window.mqStartPreviewResize = function(e) {
+    const panel = el('mq-widget-preview-panel');
+    const handle = e && e.target;
+    if (!panel || panel.classList.contains('collapsed')) return;
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = panel.getBoundingClientRect().width;
+    const MIN_W = 340, MAX_W = 760;
+    if (handle && handle.classList) handle.classList.add('mq-resizing');
+    const prevTransition = panel.style.transition;
+    panel.style.transition = 'none'; // avoid the collapse/expand transition lagging behind the drag
+    function onMove(ev) {
+      const delta = startX - ev.clientX; // dragging left (toward panel) widens it
+      let next = startWidth + delta;
+      if (next < MIN_W) next = MIN_W;
+      if (next > MAX_W) next = MAX_W;
+      panel.style.width = next + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      if (handle && handle.classList) handle.classList.remove('mq-resizing');
+      panel.style.transition = prevTransition;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
   };
 
   window.mqToggleFinancing = async function() {
