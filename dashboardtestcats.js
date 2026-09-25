@@ -5108,21 +5108,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td>
-                <div style="display:flex;flex-direction:column;gap:3px;width:94px">
-                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" placeholder="${variantCount ? 'Rate' : ''}" style="width:94px" ${variantCount ? `title="Type a new $/sq ft or $/lin ft rate here, then click Apply — it updates every sized variant on this item that is priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone."` : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-                  ${variantCount ? `<div style="display:flex;align-items:center;gap:4px"><button class="mq-btn mq-btn-sm" style="font-size:10px;padding:3px 6px;white-space:nowrap" onclick="mqMassUpdateVariantRates('${r.id}')">Apply rate</button><span onclick="mqShowSpecHelpPopover(this,'Sets this rate on every variant below that is priced per square foot or per linear foot, based on its size. Flat-rate and non-sized variants are left alone.',event)" style="cursor:pointer;color:#9ca3af;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">?</span></div>` : `${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}`}
-                </div>
-              </td>
-              <td>
-                <select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
-                  <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
-                  <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
-                  <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
-                </select>
-                <input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} style="display:none"/>
-                <input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} style="display:none"/>
-              </td>
+              <td id="mq-spec-pricecell-${r.id}">${mqSpecPriceCellHTML(r)}</td>
+              <td id="mq-spec-pricedcell-${r.id}">${mqSpecPricedCellHTML(r)}</td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
@@ -8419,17 +8406,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Min price has to be set per-variant, not shared like everything else
     // below — a variant's own price is what its own minimum gets checked
     // against (e.g. "Maple" and "Painted MDF" doors can easily want
-    // different floors). Same show/hide rule as the main row's Min $ field:
-    // only once this item is priced per lin ft or per sq ft (see
-    // mqSpecMinPriceHTML) — flat-rate items have nothing for a minimum to
-    // compare against.
-    const perFt = !!r.fields['Per linear foot'];
-    const perSqFt = !!r.fields['Per square foot'];
-    const showMin = perFt || perSqFt;
-    const minInputHTML = (v, vi) => !showMin ? '' : `
+    // different floors). Show/hide rule: only once THAT SPECIFIC variant is
+    // marked 📏 Sized and priced per lin ft or per sq ft — a flat-rate or
+    // non-sized variant has nothing for a minimum to compare against.
+    //
+    // This used to be gated on the ITEM-level "How is this priced?"
+    // dropdown instead (one on/off switch for every variant's Min $ field
+    // at once) — but that dropdown does not actually drive a variant's own
+    // pricing method (each variant picks that independently via its own
+    // 📏 Sized + rate-mode controls below), so a variant that was itself
+    // Flat $ could still show a Min $ field, and vice versa. Gating on the
+    // variant's own state instead removes that mismatch entirely.
+    const minInputHTML = (v, vi) => {
+      const showMin = !!(v.sized && (v.rateMode === 'sqft' || v.rateMode === 'linft'));
+      if (!showMin) return '';
+      return `
         <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
         <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
-        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${v.rateMode==='linft'?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+    };
     // The dimension/rate row, only shown once "📏 Sized" is checked for
     // that variant. `width:100%` on this wrapper forces it onto its own
     // line inside the variant row's flex-wrap, without needing a separate
@@ -8500,13 +8495,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // opens directly under whichever item's pill you click), so it needs to
     // be unmistakable which item's variants you're looking at rather than
     // just trusting position on the page.
+    // Shown only when there's at least one 📏 Sized, per sq/lin ft variant
+    // for it to actually apply to — matches mqMassUpdateVariantRates's own
+    // guard, so this tool never appears as a live-looking control that
+    // would just error out if used. Lives here, next to the sized-variant
+    // controls it affects, instead of in the main row's Price cell where it
+    // used to sit — see mqSpecPriceCellHTML for why that moved.
+    const hasSizedRateVariants = variants.some(v => v.sized && (v.rateMode === 'sqft' || v.rateMode === 'linft'));
+    const bulkRateHTML = !hasSizedRateVariants ? '' : `
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px">
+        <span style="font-size:11px;color:#4338ca;font-weight:600;white-space:nowrap">Reprice every 📏 Sized variant:</span>
+        <input type="number" id="mq-spec-bulkrate-${r.id}" placeholder="Rate" style="width:90px;font-size:12px;padding:5px 7px;border:1px solid #a5b4fc;border-radius:5px;background:#fff"/>
+        <button class="mq-btn mq-btn-sm" onclick="mqMassUpdateVariantRates('${r.id}')">Apply</button>
+        <span onclick="mqShowSpecHelpPopover(this,'Sets this one rate on every variant below that is marked Sized and priced per square foot or per linear foot. Flat-rate and non-sized variants are left alone — handy after duplicating a whole sized lineup to reprice it for a new wood or material.',event)" style="cursor:pointer;color:#4338ca;font-weight:700;border:1px solid #a5b4fc;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">?</span>
+      </div>`;
     return `
       <div style="border-left:3px solid #c7d2fe;padding-left:10px">
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
+        ${bulkRateHTML}
         <div id="mq-spec-variants-list-${r.id}">${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}</div>
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
         ${variants.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px">Drag the ⠿ handle to reorder — the first one listed is what customers see selected by default.</div>` : ''}
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> variants (e.g. differently-sized doors) let you type two dimensions and a $/sq ft or $/lin ft rate instead of calculating each price by hand — ⧉ duplicate a sized variant to quickly add the next size in the same run.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Each variant has its own price — the Price and "How is this priced?" fields in the main row above just point down here once any variant exists, since each one is set per variant instead. Category, project types, Active, and Pro only stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> variants (e.g. differently-sized doors) let you type two dimensions and a $/sq ft or $/lin ft rate instead of calculating each price by hand — a Min $ floor appears once a variant is priced that way, and ⧉ duplicating a sized variant is the quickest way to add the next size in the same run.</div>` : ''}
       </div>`;
   }
 
@@ -8567,18 +8577,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.style.background = n ? '#eef2ff' : '#f3f4f6';
       pill.style.color = n ? '#4338ca' : '#6b7280';
     }
-    // The flat Price field is meaningless once variants exist (each variant
-    // has its own price instead) -- but rather than just disabling it, it's
-    // repurposed as a bulk rate-entry box (see mqMassUpdateVariantRates):
-    // type a new $/sq or lin ft rate there and "Apply rate" updates every
-    // sized, per sq/lin ft variant on this item at once. Keep this in sync
-    // with the table row's own initial render of this same field.
-    const priceInput = document.getElementById(`mq-spec-price-${id}`);
-    if (priceInput) {
-      priceInput.disabled = false;
-      priceInput.placeholder = n > 0 ? 'Rate' : '';
-      priceInput.title = n > 0 ? 'Type a new $/sq ft or $/lin ft rate here, then click Apply — it updates every sized variant on this item that is priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone.' : '';
-    }
+    // The Price and "How is this priced?" cells swap between a real,
+    // editable control (no variants yet) and a plain "set per variant"
+    // note (1+ variants) — see mqSpecPriceCellHTML/mqSpecPricedCellHTML for
+    // why. Re-render both from scratch every time a variant is added or
+    // removed, since which of those two states applies can flip.
+    const priceCell = document.getElementById(`mq-spec-pricecell-${id}`);
+    if (priceCell) priceCell.innerHTML = mqSpecPriceCellHTML(r);
+    const pricedCell = document.getElementById(`mq-spec-pricedcell-${id}`);
+    if (pricedCell) pricedCell.innerHTML = mqSpecPricedCellHTML(r);
   }
 
   window.mqToggleVariantsPanel = function(id) {
@@ -8700,21 +8707,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // would be way easier to be able to reprice the whole lot by using the
   // original price spot..."
   //
-  // The item's own Price field (id="mq-spec-price-<id>") already goes
-  // unused the moment it has variants — each variant has its own price
-  // instead. Rather than leaving it disabled, it's now repurposed as a
-  // bulk rate-entry box for exactly this: whatever number is currently
-  // typed there gets applied as the new `rate` on every "📏 Sized" variant
-  // on this item that's priced per sq ft or per lin ft (a flat-rate or
-  // non-sized variant has no rate to update, so those are left completely
-  // alone), then each updated variant's price is re-derived through the
-  // same mqApplySizedVariantCalcs already used everywhere else, exactly as
-  // if that rate had been typed into that one variant's own rate field by
+  // This bulk-rate box originally lived in the item's own (by-then-unused)
+  // Price field in the main row. Jordan later pointed out that sitting up
+  // there — right next to a "How is this priced?" dropdown that LOOKED
+  // like it controlled variant pricing but did not — made the whole area
+  // confusing to read. It now lives in a small toolbar inside the variants
+  // panel itself (id="mq-spec-bulkrate-<id>"), directly next to the
+  // "📏 Sized" controls it actually affects. Whatever number is typed there
+  // gets applied as the new `rate` on every "📏 Sized" variant on this item
+  // that's priced per sq ft or per lin ft (a flat-rate or non-sized variant
+  // has no rate to update, so those are left completely alone), then each
+  // updated variant's price is re-derived through the same
+  // mqApplySizedVariantCalcs already used everywhere else, exactly as if
+  // that rate had been typed into that one variant's own rate field by
   // hand.
   window.mqMassUpdateVariantRates = async function(id) {
     const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
-    const input = document.getElementById(`mq-spec-price-${id}`);
+    const input = document.getElementById(`mq-spec-bulkrate-${id}`);
     const newRate = parseFloat(input?.value);
     if (!input || isNaN(newRate)) { showMsg('mq-spec-msg', 'Enter a rate first.', 'error'); return; }
     const variants = mqParseVariants(r);
@@ -8944,6 +8954,52 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
       <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
     </div>`;
+  }
+
+  // Once an item has 1+ variants, its own top-level Price and "How is this
+  // priced?" controls stop being the real answer for that item — each
+  // variant gets its own price, and (via its own "📏 Sized" checkbox in the
+  // variants panel below) its own separate pricing method and dimensions.
+  // Jordan's own words after looking at this: "at the top I can apparently
+  // add a flat rate to all items variants, but how could i do that if they
+  // are labelled sized? So confusing... certain things that cant work
+  // should be hidden maybe to avoid confusion." She is right — leaving a
+  // live-looking dropdown and price box in the main row that do not
+  // actually drive that item's variant pricing was the real source of the
+  // confusion, not just wording. So the moment a first variant exists,
+  // both cells swap to a plain, non-interactive pointer down to the
+  // variants panel instead of a control that looks functional but is not
+  // the real answer. The bulk "apply one rate to every sized variant" tool
+  // that used to live in this Price cell (added earlier for Jordan: reprice
+  // a duplicated 50-variant item in one shot) moves down into the variants
+  // panel itself, right next to the sized-variant controls it actually
+  // affects — see the variants-panel bulk-rate toolbar below.
+  //
+  // mqRefreshSpecVariantUI calls these same two functions (via
+  // mq-spec-pricecell-<id> / mq-spec-pricedcell-<id>) to swap the cells
+  // live the moment a variant is added or the last one removed, without
+  // needing a full row re-render.
+  function mqSpecPriceCellHTML(r) {
+    const variantCount = mqParseVariants(r).length;
+    if (variantCount) {
+      return `<div style="font-size:11px;color:#9ca3af;font-style:italic;line-height:1.3;width:94px">Priced per variant ↓</div>`;
+    }
+    return `<div style="display:flex;flex-direction:column;gap:3px;width:94px">
+      <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:94px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+      ${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}
+    </div>`;
+  }
+
+  function mqSpecPricedCellHTML(r) {
+    const variantCount = mqParseVariants(r).length;
+    const pickerHTML = variantCount
+      ? `<div style="font-size:11px;color:#9ca3af;font-style:italic;line-height:1.3">Set per variant ↓</div>`
+      : `<select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
+          <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
+          <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
+          <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
+        </select>`;
+    return `${pickerHTML}<input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} style="display:none"/><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} style="display:none"/>`;
   }
 
   window.mqShowSpecRateCalc = function(triggerEl, id, isInstall, event) {
