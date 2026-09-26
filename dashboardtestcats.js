@@ -272,7 +272,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     gettingstarted: {
       title: 'Getting started',
       body: `
-        <p>Work through these in order the first time you set up your shop — each step builds on the one before it, and by the end your widget is ready for real customers.</p>
+        <p>Work through the MidasQuote setup tabs in order the first time you set up your shop — each step builds on the one before it, and by the end your widget is ready for real customers.</p>
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 1</span><span class="mq-step-title">Shop info</span></div>
           <div class="mq-step-body">
@@ -1030,7 +1030,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-step:first-child{padding-top:0}
       #midasquote-dashboard .mq-step:last-child{border-bottom:none;padding-bottom:0}
       #midasquote-dashboard .mq-step-head{display:flex;align-items:center;gap:11px;margin-bottom:0.9rem}
-      #midasquote-dashboard .mq-step-num{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;height:26px;background:#111;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:0.03em;border-radius:999px}
+      #midasquote-dashboard .mq-step-num{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;height:26px;background:#333;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:0.03em;border-radius:999px}
       #midasquote-dashboard .mq-step-title{font-size:16.5px;font-weight:800;color:#111}
       #midasquote-dashboard .mq-step-body{font-size:14.5px;color:#374151;line-height:1.85}
       #midasquote-dashboard .mq-step-body p{margin:0 0 0.9rem}
