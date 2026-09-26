@@ -549,13 +549,27 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // click-triggered (which is what people instinctively try anyway),
   // dismissed by clicking anywhere else.
   window.mqShowSpecHelpPopover = function(triggerEl, text, event) {
-    if (event) event.stopPropagation();
+    // preventDefault, not just stopPropagation, matters here: several of
+    // these "?" icons (e.g. next to "📏 Sized" in mqVariantsPanelHTML) sit
+    // inside a <label> that wraps a checkbox. A browser forwards a click on
+    // ANY element inside such a label to the checkbox as a built-in
+    // activation behavior — that's separate from normal event bubbling, so
+    // stopPropagation alone (which only stops the event reaching other
+    // listeners) never stopped it; Jordan found clicking "?" was silently
+    // checking/unchecking Sized. preventDefault on the click is what
+    // actually suppresses that forwarding.
+    if (event) { event.preventDefault(); event.stopPropagation(); }
     let pop = document.getElementById('mq-spec-help-popover');
     const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
     if (!pop) {
       pop = document.createElement('div');
       pop.id = 'mq-spec-help-popover';
-      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:230px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
+      // Jordan found the popover too wide to read comfortably — narrower
+      // and wrapping to 3 lines is easier on the eye than one long wide
+      // block, even though it makes the popover taller. This is the one
+      // shared popover element every "?" in this panel uses, so narrowing
+      // it here narrows all of them, not just the Sized one she flagged.
+      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:160px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
       document.body.appendChild(pop);
     }
     if (alreadyOpenForThis) { pop.style.display = 'none'; return; } // clicking the same icon again closes it
@@ -572,6 +586,23 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const ratePop = document.getElementById('mq-spec-rate-calc-popover');
     if (ratePop) ratePop.style.display = 'none';
   });
+
+  // Hovering the greyed-out "📏 Sized" label (see sizedLabelHTML in
+  // mqVariantsPanelHTML) tells a shop owner to go change "How is this
+  // priced?" — but that dropdown sits up in the item's main row, away from
+  // the variants panel they're actually looking at, and Jordan asked for
+  // some way to make it obvious which control that is at a glance. This
+  // glows that dropdown's border while the label is hovered, and clears it
+  // on mouseleave — the dropdown is always present in the DOM (see the
+  // "correction" note above mqSpecPricedCellHTML: it stays live even with
+  // variants), it just might be off-screen if the page is scrolled, which
+  // this doesn't try to fix by auto-scrolling.
+  window.mqHighlightPricingMode = function(id, on) {
+    const el = document.getElementById(`mq-spec-pricingmode-${id}`);
+    if (!el) return;
+    el.style.transition = 'box-shadow 0.15s ease';
+    el.style.boxShadow = on ? '0 0 0 3px rgba(37,99,235,0.45)' : '';
+  };
 
   window.mqShowSpecialtyTipsModal = function() {
     let modal = document.getElementById('mq-specialty-tips-modal');
@@ -658,11 +689,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
-      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
-      #midasquote-dashboard .mq-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
-      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#111;display:flex;align-items:center;gap:8px}
-      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#6b7280}
-      #midasquote-dashboard .mq-topbar-actions{display:flex;align-items:center;gap:12px}
+      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#c8dad769;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
+      #midasquote-dashboard .mq-topbar{background:#1a1a1a;border-bottom:1px solid #2d2d2d;padding:10px 2rem;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:60px;position:fixed;top:0;left:0;right:0;z-index:100}
+      #midasquote-dashboard .mq-topbar-info{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;overflow:hidden}
+      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#d4af37;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #midasquote-dashboard .mq-topbar-actions{display:flex;flex-shrink:0;align-items:center;gap:8px 12px;white-space:nowrap}
       #midasquote-dashboard .mq-btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#111;font-family:inherit;transition:all 0.15s}
       #midasquote-dashboard .mq-btn:hover{background:#f9fafb}
       #midasquote-dashboard .mq-btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
@@ -673,8 +705,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px);width:100%}
       #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0;position:sticky;top:60px;align-self:flex-start;max-height:calc(100vh - 60px);overflow-y:auto}
       #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
-      #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#f9fafb}
-      #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
+      #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#c8dad769}
+      #midasquote-dashboard .mq-nav-item.active{color:#111;background:#c8dad769;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
       #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
@@ -792,10 +824,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
+        #midasquote-dashboard .mq-spec-scroll-arrow{display:none!important}
         #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
         #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
         #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
-        #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
+        #midasquote-dashboard .mq-topbar{padding:8px 1rem}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
         #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -824,12 +857,12 @@ window.logoutMember = async function () {
 
     return `
       <div class="mq-topbar">
-        <div>
+        <div class="mq-topbar-info">
           <div class="mq-topbar-brand">⚡ MidasQuote</div>
           <div class="mq-topbar-shop">${shop['Shop name'] || 'My Shop'}</div>
         </div>
         <div class="mq-topbar-actions">
-          <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#6b7280;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#6b7280'">Help</a>
+          <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#9ca3af;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#d4af37'" onmouseout="this.style.color='#9ca3af'">Help</a>
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
           <button 
   type="button"
@@ -1224,6 +1257,15 @@ window.logoutMember = async function () {
           <!-- SPECIALTY ITEMS -->
           <div class="mq-page" id="mq-page-specialty">
             <button class="mq-help-btn" onclick="mqShowHelp('specialty')"><span class="mq-help-badge">?</span> Need help?</button>
+            <!-- Table scroll nudges — fixed to the viewport (not the table),
+                 so they stay visible and clickable no matter how far down
+                 the list you've scrolled, instead of only being reachable
+                 via a scrollbar sitting at the very bottom of a tall table.
+                 Shown/hidden by mqUpdateSpecScrollArrows based on whether
+                 #mq-spec-table-wrap actually has more to scroll in that
+                 direction; see that function for details. -->
+            <button id="mq-spec-scroll-left" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(-1)" title="Scroll table left" style="display:none;position:fixed;left:236px;top:50%;transform:translateY(-50%);z-index:50;width:52px;height:52px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:22px;align-items:center;justify-content:center">◀</button>
+            <button id="mq-spec-scroll-right" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(1)" title="Scroll table right — more columns to see" style="display:none;position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:50;width:52px;height:52px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:22px;align-items:center;justify-content:center">▶</button>
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
@@ -1231,16 +1273,33 @@ window.logoutMember = async function () {
               </div>
             </div>
             <div id="mq-spec-msg"></div>
-            <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
-              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
-              <br><br>
-              🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
-              <br><br>
-              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
-              <br><br>
-              🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
-              <br><br>
-              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
+            <div id="mq-spec-tips-card" class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4;max-width:480px">
+              <div onclick="mqToggleSpecTips()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer">
+                <div style="font-size:13px;font-weight:700;color:#166534">❓ Tips for this page</div>
+                <span id="mq-spec-tips-arrow" style="font-size:13px;color:#166534;transition:transform 0.2s;transform:rotate(-90deg)">▼</span>
+              </div>
+              <!-- Jordan: the inner tips box had its own border sitting right
+                   inside the card's own border, "looks silly" as a box
+                   within a box. There's no border rule in this file's own
+                   CSS targeting this div directly — border:none here is a
+                   deliberate override in case it's inheriting one from the
+                   "mqph-hl" class or some ambient page style outside this
+                   file, so it wins regardless of where it was coming from. -->
+              <div id="mq-spec-tips-body" class="mqph-hl" style="display:none;padding:0 16px 14px;font-size:13px;color:#166534;line-height:1.7;border:none">
+                💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
+                <br><br>
+                🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
+                <br><br>
+                🎨 <strong>Variants:</strong> Add multiple variants under a single item — e.g. a "Pullouts" item with several different pullout options, each priced individually.
+                <br><br>
+                📐 <strong>Sizes:</strong> Under Variants, you can add Sized options and the math is done for you — great for refacing doors. E.g. a "Maple shaker doors" item with variants for 9"×30", 10"×30", 11"×30", and so on — the sq ft price for each is generated automatically based on the rate you enter.
+                <br><br>
+                🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price.
+                <br><br>
+                🌍 <strong>Thinking in metric?</strong> If you prefer to input your prices using metric, the calculator will automatically convert to feet for you.
+                <br><br>
+                📏 <strong>Minimum price:</strong> Sometimes small items may price too low using square foot, so you can set a minimum price to trigger if the sq ft price is less than the minimum.
+              </div>
             </div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
@@ -5007,6 +5066,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window._mqSpecRecords = specs;
     if (!specs.length) {
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
+      mqUpdateSpecScrollArrows(); // no table at all now — make sure any previously-shown arrows get hidden
       return;
     }
     // Photos live on the shop record, keyed 'spec_<id>' — same map My
@@ -5052,8 +5112,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-itemorder-box">${mqItemOrderBoxHTML(savedFilters.room, savedFilters.category)}</div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
-      <table class="mq-table" id="mq-spec-table">
-        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
+      <table class="mq-table mq-table-compact" id="mq-spec-table">
+        <thead><tr><th style="width:28px"></th><th style="width:210px">Item name</th><th style="width:130px">Category</th><th style="width:150px">Price</th><th style="width:108px">How is this priced?</th><th style="width:100px">Install option? <span onclick="mqShowSpecHelpPopover(this,'Lets the customer choose supply-only vs. supplied &amp; installed pricing for this specific item.',event)" style="cursor:pointer;color:#9ca3af;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;vertical-align:middle">?</span></th><th style="width:230px">Installed price / Mode</th><th style="width:170px">Project types</th><th style="width:70px">Pro only?</th><th style="width:60px">Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -5081,22 +5141,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                   <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
                   ${specThumbHtml}
                   <div onclick="mqNav('products', document.getElementById('mq-nav-products'));window.scrollTo({top:0,behavior:'smooth'})" style="font-size:10px;color:#9ca3af;margin-top:2px;cursor:pointer;width:fit-content" title="Go to My Products">Add/change images in My Products</div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
-                    <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
-                    <button class="mq-btn mq-btn-sm" title="Copy this item, all its settings, and every variant — handy for a similar item you don't want to rebuild from scratch" onclick="mqDuplicateSpec('${r.id}')">⧉ Duplicate</button>
+                  <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:2px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
+                      <button class="mq-btn mq-btn-sm" title="Copy this item, all its settings, and every variant — handy for a similar item you don't want to rebuild from scratch" onclick="mqDuplicateSpec('${r.id}')">⧉ Duplicate</button>
+                    </div>
                     <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
                   </div>
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td>
-                <div style="display:flex;flex-direction:column;gap:3px;width:94px">
-                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" placeholder="${variantCount ? 'New rate' : ''}" style="width:80px" ${variantCount ? `title="Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone."` : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-                  ${variantCount ? `<button class="mq-btn mq-btn-sm" style="font-size:10px;padding:3px 6px;white-space:nowrap" title="Applies the rate above to every 📏 Sized variant on this item that's priced per sq/lin ft" onclick="mqMassUpdateVariantRates('${r.id}')">Apply to all sized</button><div style="font-size:9px;color:#9ca3af;line-height:1.3">Mass-updates 📏 Sized variants' rate</div>` : `${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}`}
-                </div>
-              </td>
-              <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
-              <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
+              <td id="mq-spec-pricecell-${r.id}">${mqSpecPriceCellHTML(r)}</td>
+              <td id="mq-spec-pricedcell-${r.id}">${mqSpecPricedCellHTML(r)}</td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
@@ -5105,7 +5161,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             </tr>
             <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
               <td></td>
-              <td colspan="10" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
+              <td colspan="9" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -5196,7 +5252,69 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // mqVariantsPanelHTML above), so their drag handles can be wired up now
     // rather than waiting for the panel to first be opened.
     specs.forEach(r => mqWireVariantDrag(r.id));
+    mqUpdateSpecScrollArrows();
   }
+
+  // Fixed-to-viewport nudge arrows for #mq-spec-table-wrap, so there's
+  // always a visible, clickable way to reach columns hidden off the right
+  // edge on a smaller screen — not just the table's own horizontal
+  // scrollbar, which sits at the very bottom of the whole (often very
+  // tall) table and is easy to never notice. Shown only when there's
+  // actually more to scroll in that direction; both hidden once the wrap
+  // fits everything or is already scrolled all the way to an edge.
+  function mqUpdateSpecScrollArrows() {
+    const wrap = el('mq-spec-table-wrap');
+    const leftBtn = el('mq-spec-scroll-left');
+    const rightBtn = el('mq-spec-scroll-right');
+    if (!wrap || !leftBtn || !rightBtn) { if (leftBtn) leftBtn.style.display = 'none'; if (rightBtn) rightBtn.style.display = 'none'; return; }
+    const maxScroll = wrap.scrollWidth - wrap.clientWidth;
+    if (maxScroll <= 4) { // nothing to scroll at all — table already fits
+      leftBtn.style.display = 'none';
+      rightBtn.style.display = 'none';
+      return;
+    }
+    leftBtn.style.display = wrap.scrollLeft > 4 ? 'flex' : 'none';
+    rightBtn.style.display = wrap.scrollLeft < maxScroll - 4 ? 'flex' : 'none';
+  }
+  window.mqScrollSpecTable = function(dir) {
+    const wrap = el('mq-spec-table-wrap');
+    if (!wrap) return;
+    wrap.scrollBy({ left: dir * 320, behavior: 'smooth' });
+    // scrollBy's animation hasn't finished when this runs, so re-check
+    // shortly after rather than relying on the scroll listener alone.
+    setTimeout(mqUpdateSpecScrollArrows, 350);
+  };
+  // Table wrap is rebuilt from scratch (innerHTML) by renderSpecialty on
+  // every add/delete/reorder, so a listener bound directly to it would be
+  // silently lost each time. Binding scroll on document with capture:true
+  // instead survives that — 'scroll' doesn't bubble, but it does fire
+  // during the capture phase on ancestors, including document, no matter
+  // which element (old or freshly-recreated) actually scrolled.
+  document.addEventListener('scroll', function(e) {
+    if (e.target && e.target.id === 'mq-spec-table-wrap') mqUpdateSpecScrollArrows();
+  }, true);
+  window.addEventListener('resize', mqUpdateSpecScrollArrows);
+
+  // Tips box collapsed by default (Jordan's request, 2026-09-25 — the
+  // always-visible 5-paragraph tip box was pushing new users past a wall of
+  // text before they'd even seen the "+ New item" button). Same toggle
+  // pattern as mqToggleMkSection: a body div's display and an arrow's
+  // rotation, nothing fancier needed.
+  window.mqToggleSpecTips = function() {
+    const body = el('mq-spec-tips-body');
+    const arrow = el('mq-spec-tips-arrow');
+    const card = el('mq-spec-tips-card');
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+    // Jordan likes the collapsed card staying narrow (480px, so it doesn't
+    // dominate the page) but wants the tips to actually have room to
+    // breathe once she opens it, instead of wrapping tightly at that same
+    // narrow width. 'none' lets it size up to whatever the page's own
+    // layout allows; collapsing puts the 480px cap right back.
+    if (card) card.style.maxWidth = opening ? 'none' : '480px';
+  };
 
   // Which categories should be listed for reordering under a given project
   // type, and in what order — starts from that project type's saved order
@@ -8338,17 +8456,45 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Min price has to be set per-variant, not shared like everything else
     // below — a variant's own price is what its own minimum gets checked
     // against (e.g. "Maple" and "Painted MDF" doors can easily want
-    // different floors). Same show/hide rule as the main row's Min $ field:
-    // only once this item is priced per lin ft or per sq ft (see
-    // mqSpecMinPriceHTML) — flat-rate items have nothing for a minimum to
-    // compare against.
-    const perFt = !!r.fields['Per linear foot'];
-    const perSqFt = !!r.fields['Per square foot'];
-    const showMin = perFt || perSqFt;
-    const minInputHTML = (v, vi) => !showMin ? '' : `
+    // different floors).
+    //
+    // CORRECTION (2026-09-25): this used to be gated on THAT SPECIFIC
+    // variant's own 📏 Sized + rate-mode state, on the theory that "Sized"
+    // was each variant's real, independent pricing-method switch. Checking
+    // the actual widget quote math (widget.js calcCabinet) showed that's
+    // not what decides whether a variant's Min $ floor is ever applied —
+    // the widget only ever checks it against the ITEM-level "How is this
+    // priced?" setting (`s.perFt`/`s.perSqFt`, from the main row's Per
+    // linear foot/Per square foot fields), same as it always did before any
+    // of this redesign. A variant doesn't need to be individually "Sized"
+    // for its Price to be read as a $/lin ft or $/sq ft rate — it just needs
+    // the item itself to be set to Per lin ft/Per sq ft (see the "How is
+    // this priced?" dropdown in the main row above, and mqSpecPricedCellHTML
+    // for why it stays live even with variants). So this gates on the same
+    // item-level fields the widget actually reads, not on this variant's
+    // own Sized checkbox.
+    const itemPerFt = !!r.fields['Per linear foot'];
+    const itemPerSqFt = !!r.fields['Per square foot'];
+    // 📏 Sized calculates ONE fixed dollar Price from typed dimensions × a
+    // rate — that only makes sense when the item itself charges a flat
+    // price per variant (the customer just picks a variant and gets that
+    // exact price). Once the item is Per lin ft/Per sq ft, the customer
+    // types their OWN footage and that same Price field gets read as a
+    // $/unit rate instead (see priceUnitLabel below) — Sized's calculated
+    // number would then get double-counted as a rate, not a price. So
+    // Sized is only offered while the item is Flat rate; see the
+    // sizedConflict() flag near sizedControlsHTML for what happens to a
+    // variant that already has Sized checked when the item switches away
+    // from Flat rate (mqSpecPricingModeChange warns before allowing that).
+    const itemIsFlatRate = !itemPerFt && !itemPerSqFt;
+    const minInputHTML = (v, vi) => {
+      const showMin = itemPerFt || itemPerSqFt;
+      if (!showMin) return '';
+      return `
         <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
         <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
-        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${itemPerFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+    };
     // The dimension/rate row, only shown once "📏 Sized" is checked for
     // that variant. `width:100%` on this wrapper forces it onto its own
     // line inside the variant row's flex-wrap, without needing a separate
@@ -8364,12 +8510,51 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // row Jordan saw. Sized here to comfortably fit their own longest
     // option's text ("inches" / "$/lin ft") plus padding, and matched to
     // the same width as each other so the two sit neatly side by side.
-    const sizedControlsHTML = (v, vi) => !v.sized ? '' : `
+    // Sized only makes sense on a Flat rate item: it calculates ONE fixed
+    // dollar price for ONE fixed size, and that number is only meaningful
+    // as a face-value price. Once the item is Per lin ft/Per sq ft, the
+    // customer types their own footage and that same Price field gets read
+    // as a $/unit RATE instead — so a Sized variant's calculated price
+    // would get charged twice over (once inside the size calculation,
+    // again by the customer's own footage). Checked this against the real
+    // widget code, not just guessed: the widget renders exactly ONE
+    // quantity/footage box per ITEM (built once from the item's own Per lin
+    // ft/Per sq ft setting), not one per variant — picking a different
+    // variant chip only swaps price/photo/badge, it never rebuilds that
+    // box. So there is no way for an individual variant to have its own,
+    // different measuring method; Sized and "customer measures it
+    // themselves" are mutually exclusive at the item level, not just a UI
+    // preference. Tried letting Sized stay on with just a warning (see the
+    // git history around 2026-09-25) — Jordan's own test data showed why
+    // that was not a good idea (an 11"x22" Sized variant getting charged as
+    // a flat $7.00/lin ft rate), so this is back to blocking the combo, the
+    // same as the original guard-rail Jordan chose first. The one thing
+    // that changed from that original version: Sized can still end up
+    // checked on a variant whose item's mode was switched to per-unit AFTER
+    // it was marked Sized (mqSpecPricingModeChange warns before letting
+    // that happen going forward, but does not retroactively touch existing
+    // data) — this notice covers that leftover state, with a one-click way
+    // out. The dimension/rate controls are hidden while it is showing,
+    // since editing them would just be calculating a number that is about
+    // to be misread as a rate anyway.
+    const sizedConflictHTML = (v, vi) => `
+      <div style="width:100%;padding:6px 0 4px 24px">
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;font-size:11px;color:#991b1b;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span>⚠️ This item is priced ${itemPerFt?'Per linear foot':'Per square foot'}, so "Sized" doesn't apply — this variant's Price (${CUR()}${v.price||0}) is being charged to the customer as a ${itemPerFt?'$/lin ft':'$/sq ft'} rate, not the calculated size price it shows here.</span>
+          <button type="button" class="mq-btn mq-btn-sm" onclick="mqSaveSizedVariantField('${r.id}',${vi},'sized',false)">Turn off Sized</button>
+        </div>
+      </div>`;
+    const sizedControlsHTML = (v, vi) => {
+      if (!v.sized) return '';
+      if (!itemIsFlatRate) return sizedConflictHTML(v, vi);
+      return `
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px 24px;width:100%">
         <div style="font-size:10px;color:#9ca3af;width:100%">Input your sizes below — the variant name above will fill in automatically from them.</div>
-        <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="First dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
+        <span style="font-size:10px;color:#9ca3af;font-weight:700">L</span>
+        <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="Length" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
         <span style="font-size:11px;color:#9ca3af">×</span>
-        <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Second dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
+        <span style="font-size:10px;color:#9ca3af;font-weight:700">W</span>
+        <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Width" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
         <button type="button" class="mq-btn mq-btn-sm" title="Switch which number prints first in the auto-filled size — e.g. height × width vs. width × height. Doesn't change the price either way." onclick="mqSaveSizedVariantField('${r.id}',${vi},'swap',${v.swap ? 'false' : 'true'})">⇄ Switch order</button>
         <select title="Unit" style="width:92px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'unit',this.value)">
           <option value="in" ${v.unit!=='mm'?'selected':''}>inches</option>
@@ -8382,6 +8567,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </select>
         ${(v.rateMode==='sqft'||v.rateMode==='linft') ? `<input type="number" value="${v.rate||''}" placeholder="Rate" title="${v.rateMode==='sqft'?'Price per square foot — multiplied by this size\'s area to fill in Price above':'Price per linear foot — multiplied by this size\'s longer side to fill in Price above'}" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'rate',parseFloat(this.value)||0)"/>` : ''}
       </div>`;
+    };
     // Each row carries its own stable variant id (not its array index, which
     // shifts around on every add/remove/reorder) in data-variant-id, plus a
     // ⠿ drag handle — same handle-activated draggable pattern as the
@@ -8399,16 +8585,75 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // corners and a gap below it, so a variant (label/price/sized controls
     // and all) reads as one distinct unit at a glance, especially useful
     // once a shop owner has 20-30 of them stacked in a row.
+    // When the item itself is set to Per lin ft/Per sq ft (the "How is this
+    // priced?" dropdown above), every variant's Price is read by the widget
+    // as a $/lin ft or $/sq ft RATE, not a flat dollar amount — the label
+    // next to the input makes that plain instead of just showing "Price"
+    // for every mode, which was a big part of Jordan's original confusion
+    // ("no way for me to know or even choose" the pricing method).
+    const priceUnitLabel = itemPerFt ? '/ lin ft' : (itemPerSqFt ? '/ sq ft' : '');
+    // Sized only offered while the item is Flat rate (see the comment above
+    // sizedConflictHTML for why that's a real math constraint, not just a
+    // preference) — greyed out and unclickable otherwise. A variant that's
+    // already Sized from before the item switched modes stays checked (so
+    // the conflict is visible) but still disabled; its own row below shows
+    // the conflict warning via sizedControlsHTML. Round 1 of this feature
+    // just disabled the checkbox with a hover-only title for the reason —
+    // Jordan found that confusing on its own ("i dont see why it cant be
+    // available"). The fix wasn't to allow the combo (tried that; her own
+    // test data showed why not — see sizedConflictHTML), it was to make the
+    // reason easy to find: the "?" here is a click-to-read explainer
+    // (mqShowSpecHelpPopover, same pattern as every other "?" in this
+    // panel) and stays clickable in both the enabled and disabled states.
+    // Two different popovers, not one shared one — Jordan's first pass at
+    // this text tried to cover both "what Sized is" and "why it is greyed
+    // out" in a single dense paragraph, and she found that too much to read
+    // in a popup ("aint no way im ready all that"). Split into whichever
+    // question actually applies to the state the shop owner is looking at.
+    const sizedHelpTextEnabled = 'Sized items are 2 dimension items, like an 11&quot; x 30&quot; door. The sq ft/lin ft cost gets calculated for you automatically, based on the rate you set.';
+    const sizedHelpTextDisabled = 'Sized items generate a flat price automatically based on the sizes you enter. Switch &quot;How is this priced?&quot; above to Flat rate to use Sized.';
+    const sizedHelpIconHTML = (text) => `<span onclick="mqShowSpecHelpPopover(this,'${text}',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+    // The "?" is click-to-read (see sizedHelpIconHTML), matching every other
+    // "?" in this panel — but Jordan's first move was to hover over "Sized"
+    // itself, same as the original pre-"?" version worked, and got nothing.
+    // So the label also carries a plain `title` with the same text, for an
+    // instant native tooltip on hover — the "?" stays for anyone who doesn't
+    // discover hover, or is on a touch device where hover doesn't exist.
+    const sizedLabelHTML = (v, vi) => itemIsFlatRate ? `
+      <label title="${sizedHelpTextEnabled}" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap">
+        <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
+        📏 Sized
+        ${sizedHelpIconHTML(sizedHelpTextEnabled)}
+      </label>` : `
+      <label title="${sizedHelpTextDisabled}" onmouseenter="mqHighlightPricingMode('${r.id}',true)" onmouseleave="mqHighlightPricingMode('${r.id}',false)" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap">
+        <input type="checkbox" ${v.sized?'checked':''} disabled style="width:14px;height:14px;accent-color:#9ca3af;cursor:not-allowed"/>
+        📏 Sized
+        ${sizedHelpIconHTML(sizedHelpTextDisabled)}
+      </label>`;
     const rows = variants.map((v, vi) => `
       <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;flex-wrap:wrap;cursor:grab">
         <span class="mq-variant-drag-handle" title="Drag to reorder" style="color:#9ca3af;font-size:16px;cursor:grab;flex-shrink:0">⠿</span>
-        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
-        <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="${v.sized ? 'Size autofills ↓' : 'e.g. Maple'}" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
+        ${
+          // Once a variant is Sized AND the item is Per lin ft/Per sq ft —
+          // now only reachable as the leftover-conflict state covered by
+          // sizedConflictHTML above, since Sized itself is disabled going
+          // forward for a per-unit item — hide the normal editable Price
+          // box here in favor of a plain read-only readout. Jordan: this
+          // box "hangs around and is confusing" in that state, sitting next
+          // to a conflict warning that's telling you the number is wrong.
+          // Flat rate items keep the normal editable box, since there Price
+          // is a genuinely meaningful, standalone flat dollar amount even
+          // without Sized involved.
+          (v.sized && !itemIsFlatRate) ? `
+        <div style="font-size:12px;color:#374151;white-space:nowrap" title="Calculated by Sized below, from the dimensions and rate you enter there">= ${CUR()}${(v.price||0).toFixed(2)}${priceUnitLabel ? ` <span style="color:#9ca3af">${priceUnitLabel}</span>` : ''}</div>` : `
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" title="${priceUnitLabel ? `This variant's ${priceUnitLabel.replace('/ ','')} rate — multiplied by whatever the customer enters on the widget` : 'This variant\'s flat price'}" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+          ${priceUnitLabel ? `<span style="font-size:10px;color:#9ca3af;white-space:nowrap">${priceUnitLabel}</span>` : ''}
+        </div>`
+        }
         ${minInputHTML(v, vi)}
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap" title="Enter two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the label + price above fill in automatically">
-          <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
-          📏 Sized
-        </label>
+        ${sizedLabelHTML(v, vi)}
         <button class="mq-btn mq-btn-sm" title="Duplicate this variant — handy for adding the next size in the same run" onclick="mqDuplicateVariant('${r.id}',${vi})">⧉</button>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
         ${sizedControlsHTML(v, vi)}
@@ -8419,13 +8664,33 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // opens directly under whichever item's pill you click), so it needs to
     // be unmistakable which item's variants you're looking at rather than
     // just trusting position on the page.
+    // Shown only when there's at least one 📏 Sized, per sq/lin ft variant
+    // for it to actually apply to — matches mqMassUpdateVariantRates's own
+    // guard, so this tool never appears as a live-looking control that
+    // would just error out if used. Lives here, next to the sized-variant
+    // controls it affects, instead of in the main row's Price cell where it
+    // used to sit — see mqSpecPriceCellHTML for why that moved.
+    const hasSizedRateVariants = variants.some(v => v.sized && (v.rateMode === 'sqft' || v.rateMode === 'linft'));
+    const bulkRateHTML = !hasSizedRateVariants ? '' : `
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px">
+        <span style="font-size:11px;color:#4338ca;font-weight:600;white-space:nowrap">Reprice every 📏 Sized variant:</span>
+        <input type="number" id="mq-spec-bulkrate-${r.id}" placeholder="Rate" style="width:90px;font-size:12px;padding:5px 7px;border:1px solid #a5b4fc;border-radius:5px;background:#fff"/>
+        <button class="mq-btn mq-btn-sm" onclick="mqMassUpdateVariantRates('${r.id}')">Apply</button>
+        <span onclick="mqShowSpecHelpPopover(this,'Sets this one rate on every variant below that is marked Sized and priced per square foot or per linear foot. Flat-rate and non-sized variants are left alone — handy after duplicating a whole sized lineup to reprice it for a new wood or material.',event)" style="cursor:pointer;color:#4338ca;font-weight:700;border:1px solid #a5b4fc;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">?</span>
+      </div>`;
     return `
       <div style="border-left:3px solid #c7d2fe;padding-left:10px">
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
+        ${bulkRateHTML}
         <div id="mq-spec-variants-list-${r.id}">${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}</div>
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
         ${variants.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px">Drag the ⠿ handle to reorder — the first one listed is what customers see selected by default.</div>` : ''}
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> variants (e.g. differently-sized doors) let you type two dimensions and a $/sq ft or $/lin ft rate instead of calculating each price by hand — ⧉ duplicate a sized variant to quickly add the next size in the same run.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.6">
+          <div><strong>"How is this priced?"</strong> above still applies to every variant below it.</div>
+          <div>Category, project types, Active, and Pro only are shared too — only Price, Min $, and 📏 Sized are per variant.</div>
+          <div>Photos go under Products → Specialty Items, not here.</div>
+          <div><strong>📏 Sized</strong> just fills in Price for you from two dimensions and a rate — it does not change how the customer is charged.</div>
+        </div>` : ''}
       </div>`;
   }
 
@@ -8486,18 +8751,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.style.background = n ? '#eef2ff' : '#f3f4f6';
       pill.style.color = n ? '#4338ca' : '#6b7280';
     }
-    // The flat Price field is meaningless once variants exist (each variant
-    // has its own price instead) -- but rather than just disabling it, it's
-    // repurposed as a bulk rate-entry box (see mqMassUpdateVariantRates):
-    // type a new $/sq or lin ft rate there and "Apply to all sized" updates
-    // every 📏 Sized, per sq/lin ft variant on this item at once. Keep this
-    // in sync with the table row's own initial render of this same field.
-    const priceInput = document.getElementById(`mq-spec-price-${id}`);
-    if (priceInput) {
-      priceInput.disabled = false;
-      priceInput.placeholder = n > 0 ? 'New rate' : '';
-      priceInput.title = n > 0 ? "Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone." : '';
-    }
+    // The Price and "How is this priced?" cells swap between a real,
+    // editable control (no variants yet) and a plain "set per variant"
+    // note (1+ variants) — see mqSpecPriceCellHTML/mqSpecPricedCellHTML for
+    // why. Re-render both from scratch every time a variant is added or
+    // removed, since which of those two states applies can flip.
+    const priceCell = document.getElementById(`mq-spec-pricecell-${id}`);
+    if (priceCell) priceCell.innerHTML = mqSpecPriceCellHTML(r);
+    const pricedCell = document.getElementById(`mq-spec-pricedcell-${id}`);
+    if (pricedCell) pricedCell.innerHTML = mqSpecPricedCellHTML(r);
   }
 
   window.mqToggleVariantsPanel = function(id) {
@@ -8619,21 +8881,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // would be way easier to be able to reprice the whole lot by using the
   // original price spot..."
   //
-  // The item's own Price field (id="mq-spec-price-<id>") already goes
-  // unused the moment it has variants — each variant has its own price
-  // instead. Rather than leaving it disabled, it's now repurposed as a
-  // bulk rate-entry box for exactly this: whatever number is currently
-  // typed there gets applied as the new `rate` on every "📏 Sized" variant
-  // on this item that's priced per sq ft or per lin ft (a flat-rate or
-  // non-sized variant has no rate to update, so those are left completely
-  // alone), then each updated variant's price is re-derived through the
-  // same mqApplySizedVariantCalcs already used everywhere else, exactly as
-  // if that rate had been typed into that one variant's own rate field by
+  // This bulk-rate box originally lived in the item's own (by-then-unused)
+  // Price field in the main row. Jordan later pointed out that sitting up
+  // there — right next to a "How is this priced?" dropdown that LOOKED
+  // like it controlled variant pricing but did not — made the whole area
+  // confusing to read. It now lives in a small toolbar inside the variants
+  // panel itself (id="mq-spec-bulkrate-<id>"), directly next to the
+  // "📏 Sized" controls it actually affects. Whatever number is typed there
+  // gets applied as the new `rate` on every "📏 Sized" variant on this item
+  // that's priced per sq ft or per lin ft (a flat-rate or non-sized variant
+  // has no rate to update, so those are left completely alone), then each
+  // updated variant's price is re-derived through the same
+  // mqApplySizedVariantCalcs already used everywhere else, exactly as if
+  // that rate had been typed into that one variant's own rate field by
   // hand.
   window.mqMassUpdateVariantRates = async function(id) {
     const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
-    const input = document.getElementById(`mq-spec-price-${id}`);
+    const input = document.getElementById(`mq-spec-bulkrate-${id}`);
     const newRate = parseFloat(input?.value);
     if (!input || isNaN(newRate)) { showMsg('mq-spec-msg', 'Enter a rate first.', 'error'); return; }
     const variants = mqParseVariants(r);
@@ -8683,6 +8948,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqSaveSpecUnit = async function(id, field, checked) {
     const otherField = field === 'Per linear foot' ? 'Per square foot' : 'Per linear foot';
     const otherId = field === 'Per linear foot' ? `mq-spec-persqft-${id}` : `mq-spec-perft-${id}`;
+    // Keep the in-memory record's fields in step with what's being saved —
+    // mqRefreshVariantsPanel below rebuilds the variants panel straight from
+    // r.fields (itemPerFt/itemPerSqFt in mqVariantsPanelHTML), and without
+    // this it would keep rebuilding from the OLD, stale value until the next
+    // full page load — so the panel's Min $ gating, price-unit labels, and
+    // the new Sized enable/disable state (see mqVariantsPanelHTML) would
+    // silently lag one step behind whatever the dropdown/checkbox actually
+    // says, right when this fix most needs them to be in sync.
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (r) {
+      r.fields[field] = checked;
+      if (checked) r.fields[otherField] = false;
+    }
     try {
       const updates = { [field]: checked };
       if (checked) {
@@ -8719,6 +8997,66 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     mqRefreshVariantsPanel(id);
   };
 
+  // The main Specialty items table shows a single "How is this priced?"
+  // dropdown (Flat rate / Per linear ft / Per sq ft) instead of two separate
+  // checkboxes, to cut down on visual clutter. Under the hood the two
+  // checkboxes (mq-spec-perft-/mq-spec-persqft-) still exist in the DOM,
+  // just hidden — every other piece of code (mqSaveSpecUnit's own UI sync,
+  // the variants panel refresh, etc.) still reads/writes them by ID exactly
+  // as before, so this is purely a front-end swap with zero change to the
+  // actual save/pricing logic. This only drives the main table row's pair
+  // of hidden checkboxes — the separate lin ft/sq ft checkboxes inside the
+  // expanded variants panel are untouched.
+  window.mqSpecPricingModeChange = function(id, mode) {
+    // Switching a Flat-rate item to Per lin ft/Per sq ft while it has any
+    // 📏 Sized variant creates exactly the Price/rate double-up the Sized
+    // checkbox is now disabled to prevent going forward (see
+    // mqVariantsPanelHTML) — but that guard only stops a NEW Sized
+    // checkbox from being ticked; it doesn't stop the mode switch itself
+    // from creating the same conflict for a variant that was already
+    // Sized. Warn here, before saving anything, and let the shop owner back
+    // out — nothing is changed automatically either way; they still decide
+    // whether to fix it before or after switching.
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const prevMode = r ? (r.fields['Per linear foot'] ? 'linft' : (r.fields['Per square foot'] ? 'sqft' : 'flat')) : 'flat';
+    if (r && prevMode === 'flat' && (mode === 'linft' || mode === 'sqft')) {
+      const sizedVariants = mqParseVariants(r).filter(v => v.sized);
+      if (sizedVariants.length) {
+        const names = sizedVariants.map(v => v.label || '(unnamed)').join(', ');
+        const unitLabel = mode === 'linft' ? 'lin ft' : 'sq ft';
+        const ok = confirm(`${sizedVariants.length} variant${sizedVariants.length===1?'':'s'} below ${sizedVariants.length===1?'is':'are'} marked "📏 Sized" (${names}).\n\nSwitching this item to Per ${unitLabel} means those variants' calculated Price will now be charged to the customer as a $/${unitLabel} rate, not the size-based price shown now — almost never what you want.\n\nSwitch anyway? You can turn off Sized on each affected variant afterward.`);
+        if (!ok) {
+          const sel = document.getElementById(`mq-spec-pricingmode-${id}`);
+          if (sel) sel.value = prevMode;
+          return;
+        }
+      }
+    }
+    const ftBox = document.getElementById(`mq-spec-perft-${id}`);
+    const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
+    if (mode === 'linft') {
+      if (ftBox) ftBox.checked = true;
+      mqSaveSpecUnit(id, 'Per linear foot', true);
+    } else if (mode === 'sqft') {
+      if (sqftBox) sqftBox.checked = true;
+      mqSaveSpecUnit(id, 'Per square foot', true);
+    } else {
+      // Flat rate — clear whichever of the two was previously on. Only one
+      // can ever be true at once (mutual exclusion is enforced elsewhere),
+      // so at most one of these branches actually fires.
+      const wasFt = ftBox?.checked;
+      const wasSqft = sqftBox?.checked;
+      if (wasFt) {
+        ftBox.checked = false;
+        mqSaveSpecUnit(id, 'Per linear foot', false);
+      }
+      if (wasSqft) {
+        sqftBox.checked = false;
+        mqSaveSpecUnit(id, 'Per square foot', false);
+      }
+    }
+  };
+
   // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
   // install side's own pricing method — kept as separate fields entirely
   // from the supply-side ones, since an item can easily be priced one way
@@ -8750,6 +9088,36 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
       const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
       minWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'flex' : 'none';
+    }
+  };
+
+  // Same dropdown-over-hidden-checkboxes pattern as mqSpecPricingModeChange
+  // above, applied to the install side's own per-lin-ft/per-sq-ft pair
+  // (mq-spec-installperft-/mq-spec-installpersqft-) so the "Installed price
+  // / Mode" cell doesn't need two separate checkboxes either. Delegates all
+  // real save/UI-sync work to the existing, trusted mqSaveSpecInstallUnit —
+  // this is purely a front-end swap, no change to what gets saved or how.
+  window.mqSpecInstallPricingModeChange = function(id, mode) {
+    const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
+    const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
+    if (mode === 'linft') {
+      if (ftBox) ftBox.checked = true;
+      mqSaveSpecInstallUnit(id, 'Install per linear foot', true);
+    } else if (mode === 'sqft') {
+      if (sqftBox) sqftBox.checked = true;
+      mqSaveSpecInstallUnit(id, 'Install per square foot', true);
+    } else {
+      // Per item — clear whichever of the two was previously on.
+      const wasFt = ftBox?.checked;
+      const wasSqft = sqftBox?.checked;
+      if (wasFt) {
+        ftBox.checked = false;
+        mqSaveSpecInstallUnit(id, 'Install per linear foot', false);
+      }
+      if (wasSqft) {
+        sqftBox.checked = false;
+        mqSaveSpecInstallUnit(id, 'Install per square foot', false);
+      }
     }
   };
 
@@ -8797,6 +9165,63 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
       <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
     </div>`;
+  }
+
+  // CORRECTION (2026-09-25) — the redesign below this comment used to hide
+  // BOTH the Price cell and the "How is this priced?" cell once an item had
+  // 1+ variants, on the assumption that neither one still did anything once
+  // variants took over. Checking the actual widget quote math (widget.js
+  // calcCabinet, the specs.forEach supply-pricing loop) proved that
+  // assumption wrong for "How is this priced?": it is an ITEM-level setting
+  // (backed by the same "Per linear foot"/"Per square foot" fields, read as
+  // s.perFt/s.perSqFt) that still controls, for every variant, (a) what kind
+  // of quantity box the customer sees on the widget — a plain quantity, a
+  // linear-feet box, or a square-feet box — and (b) how that variant's own
+  // Price gets used: as a flat price, or as a $/lin ft or $/sq ft RATE
+  // multiplied by whatever the customer types in. Jordan confirmed this is
+  // exactly how it always worked ("they were totally able to be priced by
+  // square or linear or flat before... i have plenty of items that were set
+  // that way") and that hiding this dropdown behind "Set per variant ↓"
+  // broke her ability to see or change it for those items. So the dropdown
+  // stays real and live even with variants — it never actually moved to the
+  // variants panel; a variant's own "📏 Sized" feature is a separate,
+  // optional, dashboard-only shortcut for calculating what number to type
+  // into that variant's Price field, not a second, competing pricing-method
+  // switch. Price itself IS genuinely per-variant once variants exist (the
+  // widget only reads item-level Price when there are zero variants), so
+  // that cell still swaps to a "Priced per variant ↓" note — that part of
+  // the original diagnosis was correct.
+  //
+  // mqRefreshSpecVariantUI calls these same two functions (via
+  // mq-spec-pricecell-<id> / mq-spec-pricedcell-<id>) to swap/refresh the
+  // cells live the moment a variant is added or the last one removed,
+  // without needing a full row re-render.
+  function mqSpecPriceCellHTML(r) {
+    const variantCount = mqParseVariants(r).length;
+    if (variantCount) {
+      return `<div style="font-size:11px;color:#9ca3af;font-style:italic;line-height:1.3;width:94px">Priced per variant ↓</div>`;
+    }
+    return `<div style="display:flex;flex-direction:column;gap:3px;width:94px">
+      <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:94px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+      ${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}
+    </div>`;
+  }
+
+  function mqSpecPricedCellHTML(r) {
+    const variantCount = mqParseVariants(r).length;
+    const pickerHTML = `<select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
+        <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
+        <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
+        <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
+      </select>`;
+    // Still real and functional with variants — see the correction note
+    // above. This note just clarifies that it's one shared setting for
+    // every variant listed below, since that's the part that confused
+    // Jordan originally (a single dropdown "for all items' variants").
+    const variantNoteHTML = variantCount
+      ? `<div style="font-size:10px;color:#9ca3af;line-height:1.3;margin-top:3px;width:98px">Applies to every variant below ↓</div>`
+      : '';
+    return `${pickerHTML}${variantNoteHTML}<input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} style="display:none"/><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} style="display:none"/>`;
   }
 
   window.mqShowSpecRateCalc = function(triggerEl, id, isInstall, event) {
@@ -8894,9 +9319,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
         ${mqSpecMinPriceHTML(r, true)}
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per lin ft</label>
-          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per sq ft</label>
-          <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+          <select id="mq-spec-installmode-select-${r.id}" onchange="mqSpecInstallPricingModeChange('${r.id}', this.value)" style="font-size:11px;padding:4px 4px;border-radius:6px;border:1px solid #d1d5db;width:96px;background:#fff">
+            <option value="perItem" ${(!installPerFt && !installPerSqFt) ? 'selected' : ''}>Per item</option>
+            <option value="linft" ${installPerFt ? 'selected' : ''}>Per lin ft</option>
+            <option value="sqft" ${installPerSqFt ? 'selected' : ''}>Per sq ft</option>
+          </select>
+          <input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} style="display:none"/>
+          <input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} style="display:none"/>
+          <span onclick="mqShowSpecHelpPopover(this,'Choose Per item if install is priced per item, not per linear or square foot. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
         <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
@@ -12065,58 +12495,60 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     update();
   }
 
-  // Same technique as mqInitStickyNav, applied to the topbar — CSS
-  // position:sticky was silently failing on both for the same reason.
+  // CORRECTION (2026-09-25, second pass): the previous version of this
+  // function reimplemented CSS position:sticky in JS — toggling the topbar
+  // between normal flow and position:fixed based on scroll position, and
+  // resyncing its pixel left/width from the #midasquote-dashboard root's
+  // own getBoundingClientRect() every scroll/resize. That measured-width
+  // approach went through two real bugs in a row (a stale width that never
+  // re-synced on resize, fixed earlier today; then Jordan reported the black
+  // bar still wasn't reaching the true right edge of the window even after
+  // that fix). Root cause of the second one: #midasquote-dashboard breaks
+  // out of Webflow's page container using the classic `width:100vw` +
+  // negative-margin full-bleed trick (see its own CSS rule above) — and
+  // `100vw` is measured INCLUDING the vertical scrollbar's width, which is
+  // narrower than the page's actual visible content area. So the root's own
+  // rendered width (and therefore anything computed FROM it, like the old
+  // `rootRect.width`) could end up a little short of the true browser
+  // viewport — exactly the gap on the right Jordan saw.
+  //
+  // Real fix: stop deriving the topbar's horizontal position/width from the
+  // root at all. The topbar is now simply always `position:fixed;
+  // left:0; right:0` in its own CSS (see the .mq-topbar rule above) — fixed
+  // positioning is anchored to the true browser viewport, completely
+  // independent of whatever width #midasquote-dashboard's own vw-based CSS
+  // trick ends up with, so this can't drift out of sync with the real
+  // window edge the way a JS-measured pixel value could. It also means the
+  // topbar never needs to recompute anything on scroll or resize — the
+  // browser keeps it correctly full-width natively, for free, the same way
+  // it would for any other `position:fixed` element.
+  //
+  // The only thing left for this function to do is reserve the topbar's
+  // normal-flow space (a `position:fixed` element is taken out of flow
+  // entirely, so the page content below needs a spacer the same height, or
+  // it would render underneath the bar) and keep that spacer's height
+  // correct if the topbar's own rendered height ever changes (e.g. the
+  // mobile breakpoint's smaller padding).
   function mqInitStickyTopbar() {
     const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
     const root = document.getElementById('midasquote-dashboard');
     if (!topbar || !root) return;
 
-    // Holds the topbar's normal-flow space open once it goes fixed, so
-    // everything below it doesn't jump up to fill the gap.
     const placeholder = document.createElement('div');
-    placeholder.style.display = 'none';
     root.insertBefore(placeholder, topbar);
 
-    let stuck = false;
-
-    function update() {
-      const rootRect = root.getBoundingClientRect();
-      const rect = topbar.getBoundingClientRect();
-      const shouldStick = rootRect.top <= 0 && rootRect.bottom > rect.height;
-
-      if (shouldStick && !stuck) {
-        placeholder.style.width = rect.width + 'px';
-        placeholder.style.height = rect.height + 'px';
-        placeholder.style.display = 'block';
-        topbar.style.position = 'fixed';
-        topbar.style.top = '0px';
-        topbar.style.left = rootRect.left + 'px';
-        topbar.style.width = rect.width + 'px';
-        topbar.style.zIndex = '100';
-        stuck = true;
-      } else if (!shouldStick && stuck) {
-        topbar.style.position = '';
-        topbar.style.top = '';
-        topbar.style.left = '';
-        topbar.style.width = '';
-        topbar.style.zIndex = '';
-        placeholder.style.display = 'none';
-        stuck = false;
-      } else if (stuck) {
-        topbar.style.left = rootRect.left + 'px';
-      }
+    function syncHeight() {
+      placeholder.style.height = topbar.getBoundingClientRect().height + 'px';
     }
+    syncHeight();
 
     let ticking = false;
-    function onScrollOrResize() {
+    function onResize() {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => { update(); ticking = false; });
+      requestAnimationFrame(() => { syncHeight(); ticking = false; });
     }
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
-    update();
+    window.addEventListener('resize', onResize);
   }
 
   // Sticky column-header row for the Specialty Items table — while
