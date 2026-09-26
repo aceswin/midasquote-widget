@@ -818,7 +818,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
       @media (max-width: 768px) {
         #midasquote-dashboard .mq-layout{flex-direction:column}
-        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
+        #midasquote-dashboard .mq-sidebar{width:100%;padding:0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
         #midasquote-dashboard .mq-nav-section{display:none}
         #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
