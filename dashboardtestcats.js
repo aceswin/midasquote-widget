@@ -8501,9 +8501,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return `
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px 24px;width:100%">
         <div style="font-size:10px;color:#9ca3af;width:100%">Input your sizes below — the variant name above will fill in automatically from them.</div>
-        <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="First dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
+        <span style="font-size:10px;color:#9ca3af;font-weight:700">L</span>
+        <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="Length" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
         <span style="font-size:11px;color:#9ca3af">×</span>
-        <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Second dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
+        <span style="font-size:10px;color:#9ca3af;font-weight:700">W</span>
+        <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Width" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
         <button type="button" class="mq-btn mq-btn-sm" title="Switch which number prints first in the auto-filled size — e.g. height × width vs. width × height. Doesn't change the price either way." onclick="mqSaveSizedVariantField('${r.id}',${vi},'swap',${v.swap ? 'false' : 'true'})">⇄ Switch order</button>
         <select title="Unit" style="width:92px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'unit',this.value)">
           <option value="in" ${v.unit!=='mm'?'selected':''}>inches</option>
@@ -8554,18 +8556,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // reason easy to find: the "?" here is a click-to-read explainer
     // (mqShowSpecHelpPopover, same pattern as every other "?" in this
     // panel) and stays clickable in both the enabled and disabled states.
-    const sizedHelpText = 'Type two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the name and Price above fill in automatically for this variant. Meant for one fixed price at one fixed size — only offered while this item is priced Flat rate. If this item is Per lin ft or Per sq ft, the customer types their own footage instead, so a Sized variant would get its calculated Price charged as a $/unit rate on top of that, instead of used as one fixed price.';
-    const sizedHelpIconHTML = `<span onclick="mqShowSpecHelpPopover(this,'${sizedHelpText}',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+    // Two different popovers, not one shared one — Jordan's first pass at
+    // this text tried to cover both "what Sized is" and "why it is greyed
+    // out" in a single dense paragraph, and she found that too much to read
+    // in a popup ("aint no way im ready all that"). Split into whichever
+    // question actually applies to the state the shop owner is looking at.
+    const sizedHelpTextEnabled = 'Sized items are 2 dimension items, like an 11&quot; x 30&quot; door. The sq ft/lin ft cost gets calculated for you automatically, based on the rate you set.';
+    const sizedHelpTextDisabled = 'Sized items generate a flat price automatically based on the sizes you enter. Switch &quot;How is this priced?&quot; above to Flat rate to use Sized.';
+    const sizedHelpIconHTML = (text) => `<span onclick="mqShowSpecHelpPopover(this,'${text}',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
     const sizedLabelHTML = (v, vi) => itemIsFlatRate ? `
       <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap">
         <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
         📏 Sized
-        ${sizedHelpIconHTML}
+        ${sizedHelpIconHTML(sizedHelpTextEnabled)}
       </label>` : `
       <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap">
         <input type="checkbox" ${v.sized?'checked':''} disabled style="width:14px;height:14px;accent-color:#9ca3af;cursor:not-allowed"/>
         📏 Sized
-        ${sizedHelpIconHTML}
+        ${sizedHelpIconHTML(sizedHelpTextDisabled)}
       </label>`;
     const rows = variants.map((v, vi) => `
       <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;flex-wrap:wrap;cursor:grab">
