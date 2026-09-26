@@ -274,14 +274,24 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Work through these in order the first time you set up your shop — each step builds on the one before it, and by the end your widget is ready for real customers.</p>
         <ol style="margin:0 0 1rem;padding-left:1.25rem;line-height:2">
-          <li><strong>Shop info</strong> — your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.</li>
-          <li><strong>Project types</strong> — set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide.</li>
-          <li><strong>Pricing</strong> — run the pricing wizard to reverse-engineer your rates from real jobs you've quoted before. This is the core of your quoting math.</li>
-          <li><strong>Specialty items</strong> <span style="font-weight:400;color:#9ca3af">(optional)</span> — anything priced flat-rate, per linear foot, or per square foot that doesn't fit the pricing wizard.</li>
-          <li><strong>My Products</strong> — add real photos for what you've set up, so customers see your actual materials and doors instead of generic icons.</li>
-          <li><strong>Embed code</strong> — grab your widget's embed code or direct link and add it to your website.</li>
-          <li><strong>Test it</strong> — run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. See the Pricing tab below for where to adjust things if something's off.</li>
-          <li><strong>Go live</strong> — share your link or publish the embed, and you're ready for your first real customer.</li>
+          <li><strong>Shop info</strong> — your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.
+            <p style="margin-top:8px">Look further in Shop info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
+            <p style="margin-top:8px">You can even limit what you offer. Countertops only? No problem. Simply toggle off "cabinets only" and "both" to only offer countertops.</p>
+          </li>
+          <li><strong>Project types</strong> — set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones or create your own from scratch.</li>
+          <li><strong>Pricing</strong> — run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</li>
+          <li><strong>Specialty items</strong> <span style="font-weight:400;color:#9ca3af">(optional)</span> — are where you can be as creative as you like. You can offer any item you wish to list. It could be multiple variants of one door type, all pre-sized and charged per square foot automatically — perfect for refacing jobs that don't fit in well with the pricing wizard. It could be garbage pullouts, lazy susans, floating shelves, sinks, wainscoting, and on and on. Anything you can price at a flat rate, per square foot rate, or per linear foot rate can go here.
+            <p style="margin-top:8px">You can and should also divide items into categories for easiest viewing for your customers. You can also decide what specialty items show on what project types, and which items are meant for your eyes only (MidasQuote Pro) or for customers to see too.</p>
+            <p style="margin-top:8px">Once you really understand the flexibility of MidasQuote, you can create almost anything using the Specialty items section.</p>
+          </li>
+          <li><strong>My Products</strong> — add real photos (even gifs) for what you've set up, so customers see your actual materials and doors instead of generic icons. My Products section is what brings the widget to life. You also use the My Products section to control what products show for what project types.
+            <p style="margin-top:8px">Want to remove cabinets, doors, and drawers completely from a project type, but keep crown, valance, counters, and some custom specialty items? Simply check/uncheck the project types you want certain items or entire categories showing up in.</p>
+          </li>
+          <li><strong>Embed code</strong> — grab your widget's embed code or direct link and add it to your website. Customize the code to suit your site. Access your MidasQuote Pro link as well and follow instructions on how to add MidasQuote Pro as an app to your phone or computer for fast accessibility.</li>
+          <li><strong>Test it</strong> — run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. Make sure that the prices you are generating are always in a healthy range. If not, then you can recheck your pricing, adjust your range to be wider or higher, or adjust individual sections of your range (Base cabinet, uppers, installation) in the Project types tab.
+            <p style="margin-top:8px">Generally your quotes are going to come in pretty close to your real pricing, except for things like finished ends and a few crown returns that will be missed. We have tested MidasQuote on multiple jobs varying from a couple thousand dollars to $50,000 and higher, and it always comes in very close.</p>
+          </li>
+          <li><strong>Go live</strong> — share your link or publish the embed, and you're ready for your first real customer. If you have any problems along the way or any confusion, DO NOT hesitate to reach out. Your success is our success. You came here because you saw the value MidasQuote could provide for you, so let us make sure it's providing that value for you fully.</li>
         </ol>
         <p>Every tab below has its own detailed help if you get stuck on a specific step — this is just the map.</p>
       `
