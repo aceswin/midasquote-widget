@@ -342,8 +342,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     },
     overview: {
       title: 'Dashboard',
+      // guideBody is a shorter version shown only in the folder-tab Help
+      // guide (the "where to start" line there is redundant now that
+      // Getting started covers it as its own full walkthrough). The
+      // per-page "Need help?" popup on the actual Dashboard tab keeps the
+      // full body below, including that line.
+      guideBody: `
+        <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
+      `,
       body: `
         <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
+        <p>If you're just getting started, head to <strong>Shop info</strong> first, then <strong>Project types</strong>, then <strong>Pricing</strong> — that's the order that makes the rest of the dashboard make sense.</p>
       `
     },
     leads: {
@@ -364,7 +373,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Project type section title/hint</strong> — the heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
         <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
-        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount — below that, the monthly-payment line stays hidden, so it never shows up looking oddly small on a low-cost quote.</p>
+        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount to block the financing's monthly payment from showing up for a project that is only a couple hundred dollars. Just meant to keep things looking polished and professional.</p>
         <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
         <p><strong>🔒 Widget access</strong> — require a password before customers can use your widget at all, for when you don't want it fully public. Add as many passwords as you like; removing one instantly locks out anyone whose browser had it saved.</p>
         <p><strong>🗂️ Estimator tabs</strong> — a card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
@@ -390,9 +399,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Pricing',
       body: `
         <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
-        <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
-        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
-        <p><strong>🧪 Test your pricing once it's set up.</strong> Run a handful of test quotes through the widget for jobs you've actually quoted before, and compare the ballpark to what you really charged. If something's consistently off, there are three different places to adjust it depending on how widespread the issue is: an individual item's own rate (here in Pricing, or in Specialty Items — the actual per-linear-foot, per-square-foot, or flat rate for that one box material, door style, install rate, etc.), a specific project type's price adjustments (Project Types tab — nudges Base cabinets, Upper cabinets, Installation, or Total ballpark up or down just for that one project type, like the built-in -5% on Bathroom base cabinets), or the widget's overall estimate range (Shop Info → Quote range — low/high — widens or narrows how far the shown range sits from the calculated price, across every project type at once).</p>
+        <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need. You will want to include your handle installation costs when you set up your door installation quotes. You will be prompted and reminded in the wizard though.</p>
+        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking your quotes.</p>
+        <p><strong>🧪 Test your pricing once it's set up.</strong> Run a handful of test quotes through the widget for jobs you've actually quoted before, and compare the ballpark to what you really charged. If something's consistently off, there are three different places to adjust it depending on how widespread the issue is:</p>
+        <ul style="margin:0 0 1.15rem;padding-left:1.25rem;line-height:1.8">
+          <li>An individual item's own rate — here in Pricing, or in Specialty Items — the actual per-linear-foot, per-square-foot, or flat rate for that one box material, door style, install rate, etc.</li>
+          <li>A specific project type's price adjustments (Project Types tab) — nudges Base cabinets, Upper cabinets, Installation, or Total ballpark up or down just for that one project type, like the built-in -5% on Bathroom base cabinets.</li>
+          <li>The widget's overall estimate range (Shop Info → Quote range — low/high) — widens or narrows how far the shown range sits from the calculated price, across every project type at once.</li>
+        </ul>
         <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
         <p><strong>⭐ Baseline</strong> — Box Materials, Door Styles, and Hinges each have one item pinned as the baseline (marked with a ⭐ Baseline badge) that every other item in the category is priced against. It automatically re-pins to whichever item is genuinely cheapest the moment one is saved. Delete the current baseline and you'll be asked to pick what becomes the new one, with ties shown so you can choose.</p>
         <p><strong>Sort any item list</strong> by clicking its Name or Price column header — the active sort highlights in blue. Lists past 10 items scroll in place instead of pushing the page down.</p>
@@ -586,7 +600,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
     panel.innerHTML = `
       <div class="mq-help-panel-title"><span>${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${content.title}</div>
-      <div class="mq-help-panel-body">${content.body}</div>`;
+      <div class="mq-help-panel-body">${content.guideBody || content.body}</div>`;
     panel.scrollTop = 0;
 
     mqAlignHelpTabRow();
