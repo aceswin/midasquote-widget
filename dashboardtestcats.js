@@ -659,10 +659,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     s.textContent = `
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
       #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
-      #midasquote-dashboard .mq-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
-      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#111;display:flex;align-items:center;gap:8px}
-      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#6b7280}
-      #midasquote-dashboard .mq-topbar-actions{display:flex;align-items:center;gap:12px}
+      #midasquote-dashboard .mq-topbar{background:#1a1a1a;border-bottom:1px solid #2d2d2d;padding:10px 2rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;min-height:60px;position:sticky;top:0;z-index:100}
+      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#d4af37;display:flex;align-items:center;gap:8px}
+      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#9ca3af}
+      #midasquote-dashboard .mq-topbar-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
       #midasquote-dashboard .mq-btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#111;font-family:inherit;transition:all 0.15s}
       #midasquote-dashboard .mq-btn:hover{background:#f9fafb}
       #midasquote-dashboard .mq-btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
@@ -796,7 +796,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
         #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
         #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
-        #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
+        #midasquote-dashboard .mq-topbar{padding:8px 1rem}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
         #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -830,7 +830,7 @@ window.logoutMember = async function () {
           <div class="mq-topbar-shop">${shop['Shop name'] || 'My Shop'}</div>
         </div>
         <div class="mq-topbar-actions">
-          <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#6b7280;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#6b7280'">Help</a>
+          <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#9ca3af;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#d4af37'" onmouseout="this.style.color='#9ca3af'">Help</a>
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
           <button 
   type="button"
