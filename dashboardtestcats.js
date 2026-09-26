@@ -344,7 +344,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Dashboard',
       body: `
         <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
-        <p>If you're just getting started, head to <strong>Shop info</strong> first, then <strong>Project types</strong>, then <strong>Pricing</strong> — that's the order that makes the rest of the dashboard make sense.</p>
       `
     },
     leads: {
@@ -882,7 +881,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
-      @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap');
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
       #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#c8dad7b0;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
       #midasquote-dashboard .mq-topbar{background:#1a1a1a;border-bottom:1px solid #2d2d2d;padding:10px 2rem;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:60px;position:fixed;top:0;left:0;right:0;z-index:100}
@@ -1035,7 +1033,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-step:last-child{border-bottom:none;padding-bottom:0}
       #midasquote-dashboard .mq-step-head{display:flex;align-items:center;gap:11px;margin-bottom:0.9rem}
       #midasquote-dashboard .mq-step-num{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;height:26px;background:#333;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:0.03em;border-radius:8px}
-      #midasquote-dashboard .mq-step-title{font-family:'Baloo 2',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:18px;font-weight:700;color:#111}
+      #midasquote-dashboard .mq-step-title{font-size:16.5px;font-weight:800;color:#111}
       #midasquote-dashboard .mq-step-body{font-size:14.5px;color:#374151;line-height:1.85}
       #midasquote-dashboard .mq-step-body p{margin:0 0 0.9rem}
       #midasquote-dashboard .mq-step-body p:last-child{margin-bottom:0}
