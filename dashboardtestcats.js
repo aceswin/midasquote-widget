@@ -480,21 +480,23 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // the exact same MQ_HELP_CONTENT object every per-page "Need help?"
   // popup uses, so there's one source of truth — editing a topic's text
   // updates both the popup and this guide at once, nothing to keep in
-  // sync by hand. "Templates (Admin)" is left out unless
-  // window._mqIsAdminShop is set, same gating as the nav item itself.
+  // sync by hand. "Templates (Admin)" is deliberately left out of this
+  // list — it's an internal, admin-only page Jordan doesn't need a help
+  // tab for. Its own "Need help?" popup on that page still works fine,
+  // since MQ_HELP_CONTENT.templates itself is untouched — it's only
+  // excluded from this guide's tab order.
   // ============================================================
-  const MQ_HELP_GUIDE_ORDER = ['gettingstarted','overview','leads','shop','rooms','pricing','specialty','products','showroom','embed','marketing','proposals','billing','templates'];
+  const MQ_HELP_GUIDE_ORDER = ['gettingstarted','overview','leads','shop','rooms','pricing','specialty','products','showroom','embed','marketing','proposals','billing'];
   const MQ_HELP_GUIDE_ICONS = {
     gettingstarted:'🚀', overview:'📊', leads:'👥', shop:'🏪', rooms:'🚪', pricing:'💰',
     specialty:'⭐', products:'📦', showroom:'🖼️', embed:'🔗', marketing:'📣',
-    proposals:'📄', billing:'💳', templates:'🔧',
+    proposals:'📄', billing:'💳',
   };
   let mqHelpActiveTopic = null;
 
   function mqHelpGuideTopics() {
     return MQ_HELP_GUIDE_ORDER
-      .filter(id => MQ_HELP_CONTENT[id])
-      .filter(id => id !== 'templates' || window._mqIsAdminShop);
+      .filter(id => MQ_HELP_CONTENT[id]);
   }
 
   // Plain-text title+body for one topic, HTML tags stripped, lowercased —
@@ -912,7 +914,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-help-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
       #midasquote-dashboard #mq-help-search{font-family:inherit;font-size:13px;padding:9px 16px;border:1.5px solid #d1d5db;border-radius:999px;width:220px;flex-shrink:0;background:#fff}
       #midasquote-dashboard #mq-help-search:focus{outline:none;border-color:#1a1a1a}
-      #midasquote-dashboard .mq-help-folder{border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.10);max-width:900px}
+      #midasquote-dashboard .mq-help-folder{border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.10);max-width:1080px}
       #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px;padding:14px 14px 0}
       #midasquote-dashboard .mq-help-tab{background:#3f3f3f;color:rgba(255,255,255,0.72);border:none;border-radius:9px 9px 0 0;padding:11px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.15s,color 0.15s;white-space:nowrap}
       #midasquote-dashboard .mq-help-tab:hover{background:#545454;color:#fff}
