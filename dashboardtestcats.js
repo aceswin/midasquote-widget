@@ -987,7 +987,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item active" onclick="mqNav('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
           <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
           <div class="mq-nav-section">Setup</div>
-          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
+          <div class="mq-nav-item" onclick="mqNav('helpguide',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
           <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
           <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
@@ -1000,6 +1000,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
           <div class="mq-nav-section">Account</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
+          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
           <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
         </div>
 
@@ -1860,10 +1861,24 @@ window.logoutMember = async function () {
             </div>
           </div>
 
-          <!-- SUPPORT + HELP GUIDE -->
-          <div class="mq-page" id="mq-page-support">
+          <!-- HELP GUIDE -->
+          <div class="mq-page" id="mq-page-helpguide">
             <div class="mq-page-title">Help guide</div>
-            <div class="mq-page-sub">Have a question or an idea? Send it straight to us — your shop info is included automatically. Or browse the full help guide below for answers to common questions.</div>
+            <div class="mq-page-sub">Everything from every tab's "Need help?" popup, all in one place — search for a word, or jump straight to a topic below. Can't find what you need? Head to the <strong>Support</strong> tab to send us a message.</div>
+
+            <input type="text" id="mq-help-search" placeholder="Search the help guide… (e.g. \"password\", \"install rate\", \"metric\")" oninput="mqFilterHelpGuide(this.value)" style="width:100%;max-width:520px;font-size:14px;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-family:inherit;margin-bottom:1rem"/>
+
+            <div id="mq-help-topic-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem"></div>
+
+            <div id="mq-help-no-results" style="display:none;padding:2rem;text-align:center;color:#9ca3af;font-size:13px">No help topics match "<span id="mq-help-no-results-term"></span>".</div>
+
+            <div id="mq-help-accordion"></div>
+          </div>
+
+          <!-- SUPPORT -->
+          <div class="mq-page" id="mq-page-support">
+            <div class="mq-page-title">Support</div>
+            <div class="mq-page-sub">Have a question or an idea? Send it straight to us — your shop info is included automatically.</div>
             <div class="mq-card" style="max-width:520px">
               <div class="mq-field" style="margin-bottom:1rem">
                 <label class="mq-label">Your email <span style="color:#dc2626">*</span></label>
@@ -1888,21 +1903,6 @@ window.logoutMember = async function () {
               <button class="mq-btn mq-btn-primary" id="mq-support-submit-btn" onclick="mqSubmitSupport()">Send</button>
               <div id="mq-support-status" style="font-size:13px;margin-top:10px"></div>
             </div>
-
-            <div class="mq-divider" style="margin:2rem 0"></div>
-
-            <div style="margin-bottom:1rem">
-              <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:4px">📚 Help guide</div>
-              <div style="font-size:13px;color:#6b7280">Everything from every tab's "Need help?" popup, all in one place — search for a word, or jump straight to a topic below.</div>
-            </div>
-
-            <input type="text" id="mq-help-search" placeholder="Search the help guide… (e.g. \"password\", \"install rate\", \"metric\")" oninput="mqFilterHelpGuide(this.value)" style="width:100%;max-width:520px;font-size:14px;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-family:inherit;margin-bottom:1rem"/>
-
-            <div id="mq-help-topic-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem"></div>
-
-            <div id="mq-help-no-results" style="display:none;padding:2rem;text-align:center;color:#9ca3af;font-size:13px">No help topics match "<span id="mq-help-no-results-term"></span>".</div>
-
-            <div id="mq-help-accordion"></div>
           </div>
 
           <!-- MARKETING KIT -->
