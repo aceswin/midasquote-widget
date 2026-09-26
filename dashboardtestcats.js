@@ -8564,13 +8564,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const sizedHelpTextEnabled = 'Sized items are 2 dimension items, like an 11&quot; x 30&quot; door. The sq ft/lin ft cost gets calculated for you automatically, based on the rate you set.';
     const sizedHelpTextDisabled = 'Sized items generate a flat price automatically based on the sizes you enter. Switch &quot;How is this priced?&quot; above to Flat rate to use Sized.';
     const sizedHelpIconHTML = (text) => `<span onclick="mqShowSpecHelpPopover(this,'${text}',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+    // The "?" is click-to-read (see sizedHelpIconHTML), matching every other
+    // "?" in this panel — but Jordan's first move was to hover over "Sized"
+    // itself, same as the original pre-"?" version worked, and got nothing.
+    // So the label also carries a plain `title` with the same text, for an
+    // instant native tooltip on hover — the "?" stays for anyone who doesn't
+    // discover hover, or is on a touch device where hover doesn't exist.
     const sizedLabelHTML = (v, vi) => itemIsFlatRate ? `
-      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap">
+      <label title="${sizedHelpTextEnabled}" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap">
         <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
         📏 Sized
         ${sizedHelpIconHTML(sizedHelpTextEnabled)}
       </label>` : `
-      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap">
+      <label title="${sizedHelpTextDisabled}" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap">
         <input type="checkbox" ${v.sized?'checked':''} disabled style="width:14px;height:14px;accent-color:#9ca3af;cursor:not-allowed"/>
         📏 Sized
         ${sizedHelpIconHTML(sizedHelpTextDisabled)}
