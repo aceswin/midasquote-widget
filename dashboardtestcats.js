@@ -273,27 +273,61 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Getting started',
       body: `
         <p>Work through these in order the first time you set up your shop — each step builds on the one before it, and by the end your widget is ready for real customers.</p>
-        <ol style="margin:0 0 1rem;padding-left:1.25rem;line-height:2">
-          <li><strong>Shop info</strong> — your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.
-            <p style="margin-top:8px">Look further in Shop info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
-            <p style="margin-top:8px">You can even limit what you offer. Countertops only? No problem. Simply toggle off "cabinets only" and "both" to only offer countertops.</p>
-          </li>
-          <li><strong>Project types</strong> — set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones or create your own from scratch.</li>
-          <li><strong>Pricing</strong> — run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</li>
-          <li><strong>Specialty items</strong> <span style="font-weight:400;color:#9ca3af">(optional)</span> — are where you can be as creative as you like. You can offer any item you wish to list. It could be multiple variants of one door type, all pre-sized and charged per square foot automatically — perfect for refacing jobs that don't fit in well with the pricing wizard. It could be garbage pullouts, lazy susans, floating shelves, sinks, wainscoting, and on and on. Anything you can price at a flat rate, per square foot rate, or per linear foot rate can go here.
-            <p style="margin-top:8px">You can and should also divide items into categories for easiest viewing for your customers. You can also decide what specialty items show on what project types, and which items are meant for your eyes only (MidasQuote Pro) or for customers to see too.</p>
-            <p style="margin-top:8px">Once you really understand the flexibility of MidasQuote, you can create almost anything using the Specialty items section.</p>
-          </li>
-          <li><strong>My Products</strong> — add real photos (even gifs) for what you've set up, so customers see your actual materials and doors instead of generic icons. My Products section is what brings the widget to life. You also use the My Products section to control what products show for what project types.
-            <p style="margin-top:8px">Want to remove cabinets, doors, and drawers completely from a project type, but keep crown, valance, counters, and some custom specialty items? Simply check/uncheck the project types you want certain items or entire categories showing up in.</p>
-          </li>
-          <li><strong>Embed code</strong> — grab your widget's embed code or direct link and add it to your website. Customize the code to suit your site. Access your MidasQuote Pro link as well and follow instructions on how to add MidasQuote Pro as an app to your phone or computer for fast accessibility.</li>
-          <li><strong>Test it</strong> — run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. Make sure that the prices you are generating are always in a healthy range. If not, then you can recheck your pricing, adjust your range to be wider or higher, or adjust individual sections of your range (Base cabinet, uppers, installation) in the Project types tab.
-            <p style="margin-top:8px">Generally your quotes are going to come in pretty close to your real pricing, except for things like finished ends and a few crown returns that will be missed. We have tested MidasQuote on multiple jobs varying from a couple thousand dollars to $50,000 and higher, and it always comes in very close.</p>
-          </li>
-          <li><strong>Go live</strong> — share your link or publish the embed, and you're ready for your first real customer. If you have any problems along the way or any confusion, DO NOT hesitate to reach out. Your success is our success. You came here because you saw the value MidasQuote could provide for you, so let us make sure it's providing that value for you fully.</li>
-        </ol>
-        <p>Every tab below has its own detailed help if you get stuck on a specific step — this is just the map.</p>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 1</span><span class="mq-step-title">Shop info</span></div>
+          <div class="mq-step-body">
+            <p>Your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.</p>
+            <p>Look further in Shop info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
+            <p>You can even limit what you offer. Countertops only? No problem. Simply toggle off "cabinets only" and "both" to only offer countertops.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 2</span><span class="mq-step-title">Project types</span></div>
+          <div class="mq-step-body">
+            <p>Set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones or create your own from scratch.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 3</span><span class="mq-step-title">Pricing</span></div>
+          <div class="mq-step-body">
+            <p>Run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 4</span><span class="mq-step-title">Specialty items <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
+          <div class="mq-step-body">
+            <p>This is where you can be as creative as you like. You can offer any item you wish to list. It could be multiple variants of one door type, all pre-sized and charged per square foot automatically — perfect for refacing jobs that don't fit in well with the pricing wizard. It could be garbage pullouts, lazy susans, floating shelves, sinks, wainscoting, and on and on. Anything you can price at a flat rate, per square foot rate, or per linear foot rate can go here.</p>
+            <p>You can and should also divide items into categories for easiest viewing for your customers. You can also decide what specialty items show on what project types, and which items are meant for your eyes only (MidasQuote Pro) or for customers to see too.</p>
+            <p>Once you really understand the flexibility of MidasQuote, you can create almost anything using the Specialty items section.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 5</span><span class="mq-step-title">My Products</span></div>
+          <div class="mq-step-body">
+            <p>Add real photos (even gifs) for what you've set up, so customers see your actual materials and doors instead of generic icons. My Products section is what brings the widget to life. You also use the My Products section to control what products show for what project types.</p>
+            <p>Want to remove cabinets, doors, and drawers completely from a project type, but keep crown, valance, counters, and some custom specialty items? Simply check/uncheck the project types you want certain items or entire categories showing up in.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 6</span><span class="mq-step-title">Embed code</span></div>
+          <div class="mq-step-body">
+            <p>Grab your widget's embed code or direct link and add it to your website. Customize the code to suit your site. Access your MidasQuote Pro link as well and follow instructions on how to add MidasQuote Pro as an app to your phone or computer for fast accessibility.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 7</span><span class="mq-step-title">Test it</span></div>
+          <div class="mq-step-body">
+            <p>Run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. Make sure that the prices you are generating are always in a healthy range. If not, then you can recheck your pricing, adjust your range to be wider or higher, or adjust individual sections of your range (Base cabinet, uppers, installation) in the Project types tab.</p>
+            <p>Generally your quotes are going to come in pretty close to your real pricing, except for things like finished ends and a few crown returns that will be missed. We have tested MidasQuote on multiple jobs varying from a couple thousand dollars to $50,000 and higher, and it always comes in very close.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 8</span><span class="mq-step-title">Go live</span></div>
+          <div class="mq-step-body">
+            <p>Share your link or publish the embed, and you're ready for your first real customer. If you have any problems along the way or any confusion, DO NOT hesitate to reach out. Your success is our success. You came here because you saw the value MidasQuote could provide for you, so let us make sure it's providing that value for you fully.</p>
+          </div>
+        </div>
+        <p style="margin-top:1.4rem">Every tab below has its own detailed help if you get stuck on a specific step — this is just the map.</p>
       `
     },
     overview: {
@@ -925,12 +959,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard #mq-help-search{font-family:inherit;font-size:13px;padding:9px 16px;border:1.5px solid #d1d5db;border-radius:999px;width:220px;flex-shrink:0;background:#fff}
       #midasquote-dashboard #mq-help-search:focus{outline:none;border-color:#1a1a1a}
       #midasquote-dashboard .mq-help-folder{border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.10);max-width:1080px}
-      #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px;padding:14px 14px 0}
-      #midasquote-dashboard .mq-help-tab{background:#3f3f3f;color:rgba(255,255,255,0.72);border:none;border-radius:9px 9px 0 0;padding:11px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.15s,color 0.15s;white-space:nowrap}
-      #midasquote-dashboard .mq-help-tab:hover{background:#545454;color:#fff}
-      #midasquote-dashboard .mq-help-tab.active{background:#fff;color:#111}
+      #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px;padding:16px 14px 0}
+      #midasquote-dashboard .mq-help-tab{position:relative;top:4px;background:#333;color:rgba(255,255,255,0.62);border:none;border-radius:9px 9px 0 0;padding:10px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.15s,color 0.15s,top 0.15s,padding 0.15s;white-space:nowrap}
+      #midasquote-dashboard .mq-help-tab:hover{background:#4a4a4a;color:#fff}
+      #midasquote-dashboard .mq-help-tab.active{top:0;background:#fff;color:#111;padding-top:13px;padding-bottom:13px;box-shadow:0 -6px 14px rgba(0,0,0,0.16);z-index:2}
       #midasquote-dashboard .mq-help-tab-icon{margin-right:2px}
-      #midasquote-dashboard .mq-help-panel{background:#fff;padding:2.5rem;min-height:320px}
+      #midasquote-dashboard .mq-help-panel{background:#fff;padding:2.5rem;min-height:320px;position:relative;z-index:1}
       #midasquote-dashboard .mq-help-panel-title{font-size:23px;font-weight:800;color:#111;margin-bottom:1.5rem;padding-bottom:1.1rem;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px}
       #midasquote-dashboard .mq-help-panel-body{font-size:14.5px;color:#374151;line-height:1.9}
       #midasquote-dashboard .mq-help-panel-body p{margin:0 0 1.15rem}
@@ -939,6 +973,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-help-panel-body ol,
       #midasquote-dashboard .mq-help-panel-body ul{margin:0 0 1.15rem}
       #midasquote-dashboard .mq-help-panel-body li{margin-bottom:6px}
+      #midasquote-dashboard .mq-step{padding:1.6rem 0;border-bottom:1px solid #eef0f2}
+      #midasquote-dashboard .mq-step:first-child{padding-top:0}
+      #midasquote-dashboard .mq-step:last-child{border-bottom:none;padding-bottom:0}
+      #midasquote-dashboard .mq-step-head{display:flex;align-items:center;gap:11px;margin-bottom:0.9rem}
+      #midasquote-dashboard .mq-step-num{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;height:26px;background:#111;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:0.03em;border-radius:999px}
+      #midasquote-dashboard .mq-step-title{font-size:16.5px;font-weight:800;color:#111}
+      #midasquote-dashboard .mq-step-body{font-size:14.5px;color:#374151;line-height:1.85}
+      #midasquote-dashboard .mq-step-body p{margin:0 0 0.9rem}
+      #midasquote-dashboard .mq-step-body p:last-child{margin-bottom:0}
 
       @media (max-width: 768px) {
         #midasquote-dashboard .mq-layout{flex-direction:column}
