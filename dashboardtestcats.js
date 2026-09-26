@@ -284,13 +284,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 2</span><span class="mq-step-title">Project types</span></div>
           <div class="mq-step-body">
-            <p>Set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones or create your own from scratch.</p>
+            <p>Set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones, edit ours, or create your own from scratch.</p>
           </div>
         </div>
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 3</span><span class="mq-step-title">Pricing</span></div>
           <div class="mq-step-body">
             <p>Run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</p>
+            <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can bulk items of the same price, or add any more items you wish. You can also now configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
+            <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
           </div>
         </div>
         <div class="mq-step">
