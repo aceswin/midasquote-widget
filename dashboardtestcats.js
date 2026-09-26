@@ -555,7 +555,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!pop) {
       pop = document.createElement('div');
       pop.id = 'mq-spec-help-popover';
-      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:230px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
+      // Jordan found the popover too wide to read comfortably — narrower
+      // and wrapping to 3 lines is easier on the eye than one long wide
+      // block, even though it makes the popover taller. This is the one
+      // shared popover element every "?" in this panel uses, so narrowing
+      // it here narrows all of them, not just the Sized one she flagged.
+      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:160px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
       document.body.appendChild(pop);
     }
     if (alreadyOpenForThis) { pop.style.display = 'none'; return; } // clicking the same icon again closes it
@@ -572,6 +577,23 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const ratePop = document.getElementById('mq-spec-rate-calc-popover');
     if (ratePop) ratePop.style.display = 'none';
   });
+
+  // Hovering the greyed-out "📏 Sized" label (see sizedLabelHTML in
+  // mqVariantsPanelHTML) tells a shop owner to go change "How is this
+  // priced?" — but that dropdown sits up in the item's main row, away from
+  // the variants panel they're actually looking at, and Jordan asked for
+  // some way to make it obvious which control that is at a glance. This
+  // glows that dropdown's border while the label is hovered, and clears it
+  // on mouseleave — the dropdown is always present in the DOM (see the
+  // "correction" note above mqSpecPricedCellHTML: it stays live even with
+  // variants), it just might be off-screen if the page is scrolled, which
+  // this doesn't try to fix by auto-scrolling.
+  window.mqHighlightPricingMode = function(id, on) {
+    const el = document.getElementById(`mq-spec-pricingmode-${id}`);
+    if (!el) return;
+    el.style.transition = 'box-shadow 0.15s ease';
+    el.style.boxShadow = on ? '0 0 0 3px rgba(37,99,235,0.45)' : '';
+  };
 
   window.mqShowSpecialtyTipsModal = function() {
     let modal = document.getElementById('mq-specialty-tips-modal');
@@ -8576,7 +8598,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         📏 Sized
         ${sizedHelpIconHTML(sizedHelpTextEnabled)}
       </label>` : `
-      <label title="${sizedHelpTextDisabled}" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap">
+      <label title="${sizedHelpTextDisabled}" onmouseenter="mqHighlightPricingMode('${r.id}',true)" onmouseleave="mqHighlightPricingMode('${r.id}',false)" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap">
         <input type="checkbox" ${v.sized?'checked':''} disabled style="width:14px;height:14px;accent-color:#9ca3af;cursor:not-allowed"/>
         📏 Sized
         ${sizedHelpIconHTML(sizedHelpTextDisabled)}
