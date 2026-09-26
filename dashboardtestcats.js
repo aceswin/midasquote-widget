@@ -269,6 +269,23 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // just be dropped in above or below the text later without needing to
   // restructure anything.
   const MQ_HELP_CONTENT = {
+    gettingstarted: {
+      title: 'Getting started',
+      body: `
+        <p>Work through these in order the first time you set up your shop — each step builds on the one before it, and by the end your widget is ready for real customers.</p>
+        <ol style="margin:0 0 1rem;padding-left:1.25rem;line-height:2">
+          <li><strong>Shop info</strong> — your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.</li>
+          <li><strong>Project types</strong> — set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide.</li>
+          <li><strong>Pricing</strong> — run the pricing wizard to reverse-engineer your rates from real jobs you've quoted before. This is the core of your quoting math.</li>
+          <li><strong>Specialty items</strong> <span style="font-weight:400;color:#9ca3af">(optional)</span> — anything priced flat-rate, per linear foot, or per square foot that doesn't fit the pricing wizard.</li>
+          <li><strong>My Products</strong> — add real photos for what you've set up, so customers see your actual materials and doors instead of generic icons.</li>
+          <li><strong>Embed code</strong> — grab your widget's embed code or direct link and add it to your website.</li>
+          <li><strong>Test it</strong> — run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. See the Pricing tab below for where to adjust things if something's off.</li>
+          <li><strong>Go live</strong> — share your link or publish the embed, and you're ready for your first real customer.</li>
+        </ol>
+        <p>Every tab below has its own detailed help if you get stuck on a specific step — this is just the map.</p>
+      `
+    },
     overview: {
       title: 'Dashboard',
       body: `
@@ -457,15 +474,22 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   };
 
   // ============================================================
-  // HELP GUIDE (Help tab) — renders every MQ_HELP_CONTENT topic as a
-  // searchable, browsable accordion below the contact form. This reads
+  // HELP GUIDE (Help tab) — a folder-tab interface over every
+  // MQ_HELP_CONTENT topic, "Getting started" first, then one tab per
+  // dashboard page in the same order they appear in the left nav. Reads
   // the exact same MQ_HELP_CONTENT object every per-page "Need help?"
   // popup uses, so there's one source of truth — editing a topic's text
-  // updates both the popup and this guide at once, nothing to keep in sync
-  // by hand. "Templates (Admin)" is left out unless window._mqIsAdminShop
-  // is set, same gating as the nav item itself.
+  // updates both the popup and this guide at once, nothing to keep in
+  // sync by hand. "Templates (Admin)" is left out unless
+  // window._mqIsAdminShop is set, same gating as the nav item itself.
   // ============================================================
-  const MQ_HELP_GUIDE_ORDER = ['overview','leads','shop','rooms','pricing','specialty','products','showroom','embed','marketing','proposals','billing','templates'];
+  const MQ_HELP_GUIDE_ORDER = ['gettingstarted','overview','leads','shop','rooms','pricing','specialty','products','showroom','embed','marketing','proposals','billing','templates'];
+  const MQ_HELP_GUIDE_ICONS = {
+    gettingstarted:'🚀', overview:'📊', leads:'👥', shop:'🏪', rooms:'🚪', pricing:'💰',
+    specialty:'⭐', products:'📦', showroom:'🖼️', embed:'🔗', marketing:'📣',
+    proposals:'📄', billing:'💳', templates:'🔧',
+  };
+  let mqHelpActiveTopic = null;
 
   function mqHelpGuideTopics() {
     return MQ_HELP_GUIDE_ORDER
@@ -483,83 +507,43 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   function mqBuildHelpGuide() {
-    const chips = document.getElementById('mq-help-topic-chips');
-    const accordion = document.getElementById('mq-help-accordion');
-    if (!chips || !accordion) return;
+    const tabbar = document.getElementById('mq-help-tabbar');
+    const panel = document.getElementById('mq-help-panel');
+    if (!tabbar || !panel) return;
     const topics = mqHelpGuideTopics();
 
-    chips.innerHTML = `<button type="button" class="mq-btn mq-btn-secondary mq-btn-sm" onclick="mqClearHelpFilter()">All topics</button>` +
-      topics.map(id => `<button type="button" class="mq-btn mq-btn-secondary mq-btn-sm" onclick="mqJumpToHelpTopic('${id}')">${MQ_HELP_CONTENT[id].title}</button>`).join('');
+    tabbar.innerHTML = topics.map(id => `
+      <button type="button" class="mq-help-tab" id="mq-help-tab-${id}" onclick="mqSelectHelpTopic('${id}')">
+        <span class="mq-help-tab-icon">${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${MQ_HELP_CONTENT[id].title}
+      </button>`).join('');
 
-    accordion.innerHTML = topics.map(id => `
-      <div class="mq-card mq-help-topic" id="mq-help-topic-${id}" style="margin-bottom:10px">
-        <div class="mq-card-title" onclick="mqToggleHelpTopic('${id}')" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px">
-          <span id="mq-help-chevron-${id}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
-          ${MQ_HELP_CONTENT[id].title}
-        </div>
-        <div id="mq-help-body-${id}" style="display:none;font-size:14px;color:#374151;line-height:1.7;margin-top:10px">${MQ_HELP_CONTENT[id].body}</div>
-      </div>`).join('');
+    mqSelectHelpTopic(topics[0]);
   }
 
-  window.mqToggleHelpTopic = function(id) {
-    const body = document.getElementById('mq-help-body-' + id);
-    const chevron = document.getElementById('mq-help-chevron-' + id);
-    if (!body) return;
-    const isOpen = body.style.display !== 'none';
-    body.style.display = isOpen ? 'none' : 'block';
-    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
-  };
-  window.mqOpenHelpTopic = function(id) {
-    const body = document.getElementById('mq-help-body-' + id);
-    const chevron = document.getElementById('mq-help-chevron-' + id);
-    if (!body) return;
-    body.style.display = 'block';
-    if (chevron) chevron.style.transform = 'rotate(90deg)';
+  window.mqSelectHelpTopic = function(id) {
+    const content = MQ_HELP_CONTENT[id];
+    const panel = document.getElementById('mq-help-panel');
+    if (!content || !panel) return;
+    mqHelpActiveTopic = id;
+
+    document.querySelectorAll('#mq-help-tabbar .mq-help-tab').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('mq-help-tab-' + id)?.classList.add('active');
+
+    panel.innerHTML = `
+      <div class="mq-help-panel-title"><span>${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${content.title}</div>
+      <div class="mq-help-panel-body">${content.body}</div>`;
+    panel.scrollTop = 0;
   };
 
-  // Clicking a topic chip: clear any active search, expand that topic, and
-  // scroll it into view.
-  window.mqJumpToHelpTopic = function(id) {
-    mqClearHelpFilter();
-    mqOpenHelpTopic(id);
-    const card = document.getElementById('mq-help-topic-' + id);
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  window.mqClearHelpFilter = function() {
-    const search = document.getElementById('mq-help-search');
-    if (search) search.value = '';
-    mqFilterHelpGuide('');
-  };
-
-  // Typing in the search box: hide any topic whose title+body text doesn't
-  // contain the query, and auto-expand whichever ones do match so the
-  // matching text is actually visible without an extra click. Clearing the
-  // search shows every topic again, collapsed back to normal.
-  window.mqFilterHelpGuide = function(query) {
-    const topics = mqHelpGuideTopics();
+  // The search box doesn't filter the tabs (a folder tab bar is a fixed
+  // set, not a list to prune) — it just jumps straight to the first topic,
+  // in tab order, whose text contains the query. Clearing the box leaves
+  // you on whichever tab you're already reading.
+  window.mqHelpSearchJump = function(query) {
     const q = (query || '').trim().toLowerCase();
-    let anyMatch = false;
-    topics.forEach(id => {
-      const card = document.getElementById('mq-help-topic-' + id);
-      if (!card) return;
-      const matches = !q || mqHelpPlainText(id).includes(q);
-      card.style.display = matches ? 'block' : 'none';
-      if (matches) {
-        anyMatch = true;
-        if (q) mqOpenHelpTopic(id);
-      }
-      if (!q) {
-        const body = document.getElementById('mq-help-body-' + id);
-        const chevron = document.getElementById('mq-help-chevron-' + id);
-        if (body) body.style.display = 'none';
-        if (chevron) chevron.style.transform = 'rotate(0deg)';
-      }
-    });
-    const noResults = document.getElementById('mq-help-no-results');
-    const noResultsTerm = document.getElementById('mq-help-no-results-term');
-    if (noResults) noResults.style.display = (q && !anyMatch) ? 'block' : 'none';
-    if (noResultsTerm) noResultsTerm.textContent = query || '';
+    if (!q) return;
+    const match = mqHelpGuideTopics().find(id => mqHelpPlainText(id).includes(q));
+    if (match && match !== mqHelpActiveTopic) mqSelectHelpTopic(match);
   };
 
   // Shown exactly once per shop, ever — the moment a brand new shop owner
@@ -924,6 +908,26 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-empty{text-align:center;padding:3rem;color:#9ca3af;font-size:14px}
       #midasquote-dashboard .mq-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 
+      /* ── Help guide — folder-tab layout ── */
+      #midasquote-dashboard .mq-help-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+      #midasquote-dashboard #mq-help-search{font-family:inherit;font-size:13px;padding:9px 16px;border:1.5px solid #d1d5db;border-radius:999px;width:220px;flex-shrink:0;background:#fff}
+      #midasquote-dashboard #mq-help-search:focus{outline:none;border-color:#1a1a1a}
+      #midasquote-dashboard .mq-help-folder{border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.10);max-width:900px}
+      #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px;padding:14px 14px 0}
+      #midasquote-dashboard .mq-help-tab{background:#3f3f3f;color:rgba(255,255,255,0.72);border:none;border-radius:9px 9px 0 0;padding:11px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.15s,color 0.15s;white-space:nowrap}
+      #midasquote-dashboard .mq-help-tab:hover{background:#545454;color:#fff}
+      #midasquote-dashboard .mq-help-tab.active{background:#fff;color:#111}
+      #midasquote-dashboard .mq-help-tab-icon{margin-right:2px}
+      #midasquote-dashboard .mq-help-panel{background:#fff;padding:2.5rem;min-height:320px}
+      #midasquote-dashboard .mq-help-panel-title{font-size:23px;font-weight:800;color:#111;margin-bottom:1.5rem;padding-bottom:1.1rem;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px}
+      #midasquote-dashboard .mq-help-panel-body{font-size:14.5px;color:#374151;line-height:1.9}
+      #midasquote-dashboard .mq-help-panel-body p{margin:0 0 1.15rem}
+      #midasquote-dashboard .mq-help-panel-body p:last-child{margin-bottom:0}
+      #midasquote-dashboard .mq-help-panel-body h4{margin-top:1.5rem}
+      #midasquote-dashboard .mq-help-panel-body ol,
+      #midasquote-dashboard .mq-help-panel-body ul{margin:0 0 1.15rem}
+      #midasquote-dashboard .mq-help-panel-body li{margin-bottom:6px}
+
       @media (max-width: 768px) {
         #midasquote-dashboard .mq-layout{flex-direction:column}
         #midasquote-dashboard .mq-sidebar{width:100%;padding:0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
@@ -941,6 +945,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-card{padding:1.25rem}
         #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
         #midasquote-dashboard .mq-table{min-width:560px}
+        #midasquote-dashboard .mq-help-header-row{flex-direction:column;align-items:stretch}
+        #midasquote-dashboard #mq-help-search{width:100%}
+        #midasquote-dashboard .mq-help-tabbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+        #midasquote-dashboard .mq-help-panel{padding:1.5rem}
+        #midasquote-dashboard .mq-help-panel-title{font-size:19px}
       }
     `;
     document.head.appendChild(s);
@@ -1863,16 +1872,18 @@ window.logoutMember = async function () {
 
           <!-- HELP GUIDE -->
           <div class="mq-page" id="mq-page-helpguide">
-            <div class="mq-page-title">Help guide</div>
-            <div class="mq-page-sub">Everything from every tab's "Need help?" popup, all in one place — search for a word, or jump straight to a topic below. Can't find what you need? Head to the <strong>Support</strong> tab to send us a message.</div>
+            <div class="mq-help-header-row">
+              <div>
+                <div class="mq-page-title" style="margin-bottom:2px">Help guide</div>
+                <div class="mq-page-sub" style="margin-bottom:0">Step-by-step instructions for every part of your dashboard. Can't find what you need? Head to the <strong>Support</strong> tab to send us a message.</div>
+              </div>
+              <input type="text" id="mq-help-search" placeholder="🔍 Jump to a topic…" oninput="mqHelpSearchJump(this.value)"/>
+            </div>
 
-            <input type="text" id="mq-help-search" placeholder="Search the help guide… (e.g. \"password\", \"install rate\", \"metric\")" oninput="mqFilterHelpGuide(this.value)" style="width:100%;max-width:520px;font-size:14px;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-family:inherit;margin-bottom:1rem"/>
-
-            <div id="mq-help-topic-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem"></div>
-
-            <div id="mq-help-no-results" style="display:none;padding:2rem;text-align:center;color:#9ca3af;font-size:13px">No help topics match "<span id="mq-help-no-results-term"></span>".</div>
-
-            <div id="mq-help-accordion"></div>
+            <div class="mq-help-folder">
+              <div class="mq-help-tabbar" id="mq-help-tabbar"></div>
+              <div class="mq-help-panel" id="mq-help-panel"></div>
+            </div>
           </div>
 
           <!-- SUPPORT -->
