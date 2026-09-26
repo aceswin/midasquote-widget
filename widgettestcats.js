@@ -83,16 +83,37 @@
     catch(e) { return []; }
   }
 
-  // Implements the override rule: an item's own explicit project-type setting
-  // always wins outright. Only when an item has NEVER been individually
-  // configured does it inherit whatever the whole category is hidden for.
+  // The category's own hidden list is now a hard ceiling, not just a
+  // fallback default an item can quietly override — changed 2026-09-17 per
+  // Jordan: the category-level 🗂️ control on My Products is meant to be
+  // the master switch per project type ("if you don't want drawers, doors,
+  // or box materials to show in refacing/restaining/repainting... that
+  // should automatically uncheck every product under that section... and
+  // if someone tried to recheck it, it should say this section is hidden
+  // from this room type"). So an item can still use its own explicit
+  // setting to be MORE restrictive than its category, but never less —
+  // any project type the category hides is filtered out of an item's own
+  // explicit list too, not just used as its default when unconfigured.
+  // This also protects against stale data saved before this rule existed
+  // (an item explicitly scoped to a room the category has since hidden).
   // Returns an empty array to mean "visible everywhere" — same convention
   // already used throughout the rest of the file, so no other code needs to
-  // change to understand the result of this function.
+  // change to understand the result of this function, EXCEPT the one edge
+  // case handled below.
   function effectiveVisibleRooms(itemExplicitRooms, category) {
-    if (itemExplicitRooms && itemExplicitRooms.length) return itemExplicitRooms;
     const categoryRooms = window._mqCategoryRooms || {};
     const hiddenForCategory = categoryRooms[category] || [];
+    if (itemExplicitRooms && itemExplicitRooms.length) {
+      if (!hiddenForCategory.length) return itemExplicitRooms;
+      const filtered = itemExplicitRooms.filter(id => !hiddenForCategory.includes(id));
+      // If every one of the item's own explicitly-chosen project types
+      // happens to be one the category now hides, the item is explicitly
+      // visible for NONE of them — returning [] here would flip meaning
+      // under this file's "empty = everywhere" convention (the opposite
+      // of intended), so a sentinel id that can never match a real
+      // project type keeps it correctly hidden everywhere instead.
+      return filtered.length ? filtered : ['__none__'];
+    }
     if (!hiddenForCategory.length) return [];
     const allRoomIds = (window._mqRoomTypes || []).map(r => r.id);
     return allRoomIds.filter(id => !hiddenForCategory.includes(id));
@@ -163,6 +184,20 @@
         { id:'refacing',   name:'Refacing',    adjustment:0,  description:'Love your layout, just not the look? Refacing gives your cabinets a whole new personality — new doors, drawer fronts, crown, and valance — without the cost or mess of a full remodel.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/refacing.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/refacing.jpg' },
         { id:'repainting', name:'Repainting',  adjustment:0,  description:'Sometimes all it takes is a fresh coat. Give your existing cabinets new color and new life, without replacing a thing.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/repainting.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/repainting.jpg' },
         { id:'restaining', name:'Restaining',  adjustment:0,  description:'Bring back the natural beauty of your cabinets. A fresh stain can restore that warm, rich look you fell in love with in the first place.', active:true, coverImage:'https://aceswin.github.io/midasquote-widget/cover-images/restaining.jpg', measureText:"[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!", measureImage:'https://aceswin.github.io/midasquote-widget/measure-guides/restaining.jpg' },
+        // The 6 standalone-Countertops-tab defaults (forCountertops:true) --
+        // previously missing from this true "never saved anything at all"
+        // fallback, so any shop whose Airtable 'Room types' field was
+        // genuinely empty (every shop, until it saves at least once) showed
+        // a completely blank project-type selector on the Countertops tab,
+        // even though that tab is visible by default. Mirrors dashboard.js's
+        // defaultCountertopRoomTypes() so the widget's own last-resort
+        // fallback and the dashboard's defaults never drift apart.
+        { id:'ct_kitchen',    name:'Kitchen counters',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"New countertops can completely transform your kitchen. Pick your material and finish, and let's get you a ballpark price.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-kitchen.jpg', measureImage:'' },
+        { id:'ct_bathroom',   name:'Bathroom counters',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"A new vanity top is a quick way to freshen up any bathroom. Choose your material and we'll help you price it out.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-bathroom.jpg', measureImage:'' },
+        { id:'ct_laundry',    name:'Laundry counters',    materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Adding a counter to your laundry room makes folding and sorting so much easier. Pick a material and get your estimate.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-laundry.jpg', measureImage:'' },
+        { id:'ct_garage',     name:'Garage counters',     materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Durable counters for a workbench, hobby space, or storage area. Pick your material and see your ballpark price.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-garage.jpg', measureImage:'' },
+        { id:'ct_commercial', name:'Commercial counters', materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Give your business a polished look with new countertops — reception desks, break rooms, or workspaces. Choose your material to get started.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-commercial.jpg', measureImage:'' },
+        { id:'ct_other',      name:'Other counters',      materialAdjPct:0, installAdjPct:0, totalAdjPct:0, description:"Got a countertop project that doesn't fit the usual categories? Pick a material below and let's get you a ballpark estimate.", active:true, forCountertops:true, coverImage:'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-other.jpg', measureImage:'' },
       ];
     }
     // Draft project types (active:false) never show to customers, no matter
@@ -206,6 +241,14 @@
     // mqReorderSpecCategoryGroups, which applies this every time the
     // customer switches project type.
     try { window._mqSpecCategoryOrder = shop['Specialty category order'] ? JSON.parse(shop['Specialty category order']) : {}; } catch(e) { window._mqSpecCategoryOrder = {}; }
+
+    // Same idea, one level deeper — per-project-type order for items WITHIN
+    // one category (or the "Other" bucket) — e.g. two doors both filed
+    // under "Doors" shown in a different order for Refacing than for
+    // Kitchen. { [roomId]: { [categoryName-or-'__other__']: [itemId, ...] } }.
+    // See mqReorderSpecItemsWithinCategories, which applies this the same
+    // way mqReorderSpecCategoryGroups applies the category-level order above.
+    try { window._mqSpecItemOrder = shop['Specialty item order'] ? JSON.parse(shop['Specialty item order']) : {}; } catch(e) { window._mqSpecItemOrder = {}; }
 
     const p = payload.pricing || {};
 
@@ -681,7 +724,7 @@
            real overflow left to scroll to) for specialty item rows only. */
         #midasquote-widget .mq-spec-scroll-wrap .mq-vpicker-arrow.show{display:flex!important}
       }
-      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s}
+      #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s;cursor:pointer}
       #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
       #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
@@ -1460,7 +1503,16 @@
       // picked — it's an opt-out, not a style choice. Real ungrouped items
       // fall into the "Other" bucket instead.
       const groupAttr = it.value==='none' ? '__always__' : (it.groupName || (hasAnyGroup ? '__other__' : ''));
-      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-doors="${doorsAttr}" data-group="${groupAttr}" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
+      // The whole card selects on click now (Jordan: "make it so that if
+      // they click anywhere inside that card other than the image, it will
+      // select... i still want images to zoom like they do now") -- only
+      // the thumbnail is excluded, via its own existing
+      // event.stopPropagation() (it opens the zoom lightbox instead). The
+      // select button keeps its own onclick too (now also stopping
+      // propagation) so a direct tap on it doesn't fire mqPickVisual twice
+      // -- once from the button's own handler, once again as that click
+      // bubbles up to the card's.
+      return `<div class="mq-vpicker-chip${selectedClass}" data-vpicker-for="${selectId}" data-value="${it.value}" data-rooms="${roomsAttr}" data-doors="${doorsAttr}" data-group="${groupAttr}" onclick="mqPickVisual('${selectId}',this.querySelector('.mq-vpicker-select-btn'))" onmouseenter="mqHoverPreviewShow(this,'${safePhoto}','${safeLabel}')" onmouseleave="mqHoverPreviewHide()"><div style="position:relative">${thumb}${badgeHtml}${featuredBadgeHtml}</div><span class="mq-vpicker-label">${it.label}</span>${groupNote}<button type="button" class="mq-vpicker-select-btn" onclick="event.stopPropagation();mqPickVisual('${selectId}',this)">${selectBtnLabel}</button></div>`;
     }).join('');
     const vpickerWrap = `<div class="mq-vpicker-wrap"><button type="button" class="mq-vpicker-arrow mq-vpicker-arrow-left" id="mq-vparrow-left-${selectId}" onclick="mqScrollPickerRow('${selectId}',-1)" aria-label="Scroll left">‹</button><div class="mq-vpicker-row" id="mq-vprow-${selectId}" ${startUnselected?'data-no-auto-select="1"':''} onscroll="mqUpdatePickerArrow('${selectId}')">${chips}</div><button type="button" class="mq-vpicker-arrow" id="mq-vparrow-${selectId}" onclick="mqScrollPickerRow('${selectId}',1)" aria-label="Scroll right">›</button></div>`;
     if (!hasAnyGroup) return vpickerWrap;
@@ -1796,7 +1848,7 @@
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : 'quantity')}</span>
         </div>` : '';
       return `
-      <div class="mq-spec-item" id="${itemDomId}" data-rooms="${roomsAttr}">
+      <div class="mq-spec-item" id="${itemDomId}" data-rooms="${roomsAttr}" data-item-id="${s.id}">
         <div class="mq-spec-top">
           <div style="position:relative;flex-shrink:0" id="mq-spec-visual-${prefix}-${i}" data-group-key="${groupKey}">${mqSpecVisualHTML(s, groupKey, itemDomId)}</div>
           <div style="flex:1;min-width:0">
@@ -3163,7 +3215,7 @@
       document.getElementById('mq-tab-'+id).classList.add('active');
       el.classList.add('active');
       if (id === 'cabinets') { mqRenumberSteps('c'); window.mqUpdateStepFocus('c'); }
-      else if (id === 'both') { window.mqTogUseCab('b'); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
+      else if (id === 'both') { window.mqTogUseCab('b', {scroll:false}); mqRenumberSteps('b'); window.mqUpdateStepFocus('b'); }
       else if (id === 'countertops') {
         if (tabActuallyChanged) {
           // The standalone Countertops tab has no room dropdown, so it never
@@ -3213,6 +3265,12 @@
       document.getElementById(`mq-${prefix}-diff-tog`).classList.toggle('on',diffOn[prefix]);
       document.getElementById(`mq-${prefix}-shared`).style.display=diffOn[prefix]?'none':'block';
       document.getElementById(`mq-${prefix}-diff`).style.display=diffOn[prefix]?'block':'none';
+      // Same fix as mqTogDrawerConfig below — the upper/lower box material,
+      // door style, and hinge picker rows inside #mq-${prefix}-diff are
+      // already built, just hidden until "Different styles for uppers and
+      // lowers" is switched on, so their overflow arrows never got a real
+      // scrollWidth/clientWidth to measure until now.
+      if (diffOn[prefix] && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
     };
     window.mqTogVanityNote=(prefix)=>{
       // Intentionally hidden from customers — the % adjustment itself still
@@ -3269,13 +3327,33 @@
       // see an empty, orphaned category box with nothing inside it for this
       // project type.
       const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
+      let anySpecItemVisible = false;
       if (specBody) {
         specBody.querySelectorAll('.mq-spec-category-group').forEach(group => {
           const anyVisible = [...group.querySelectorAll('.mq-spec-item')].some(item => item.style.display !== 'none');
           group.style.display = anyVisible ? '' : 'none';
+          if (anyVisible) anySpecItemVisible = true;
         });
+        // A shop with no groups configured at all still renders its items
+        // as plain .mq-spec-item cards directly in the body (no
+        // .mq-spec-category-group wrapper) — check those too, same rule.
+        if (!specBody.querySelector('.mq-spec-category-group')) {
+          anySpecItemVisible = [...specBody.querySelectorAll('.mq-spec-item')].some(item => item.style.display !== 'none');
+        }
+      }
+      // Same "nothing left, so don't show an empty step" rule already
+      // applied above to Crown moulding/valance -- if this project type has
+      // zero visible specialty items (Jordan: "if its empty for a project
+      // type, it shouldnt show on the widget for that project type"), hide
+      // the entire "Details & Selections" section rather than leaving an
+      // empty box on the page. Renumber so later steps close the gap.
+      const specSec = document.getElementById(`mq-${prefix}-specialty-sec`);
+      if (specSec) {
+        specSec.style.display = anySpecItemVisible ? '' : 'none';
+        if (window.mqRenumberSteps) window.mqRenumberSteps(prefix);
       }
       mqReorderSpecCategoryGroups(prefix, roomId);
+      mqReorderSpecItemsWithinCategories(prefix, roomId);
     };
 
     // All of a shop's specialty categories are built into the page once, up
@@ -3313,6 +3391,42 @@
         if (g.style.display === 'none') return;
         g.style.margin = (seenVisible ? '14px' : '0') + ' 0 0';
         seenVisible = true;
+      });
+    };
+    // Same idea, one level deeper — items are also all built into the page
+    // once, up front, covering every project type at once, so a
+    // per-project-type-AND-category item order can't be baked in at build
+    // time either. Each category's cards live in their own horizontally
+    // scrolling row (.mq-spec-category-items when the shop has categories
+    // at all, .mq-spec-flat-items for a shop with none configured at all) —
+    // this physically re-stacks the cards WITHIN each row independently
+    // (repositioning within "Doors" never touches "Hardware", or "Doors" in
+    // a different project type) according to that room+category's saved
+    // order, falling back to whatever order they'd otherwise be in
+    // (cheapest-to-priciest, same as mqReorderSpecCategoryGroups falls back
+    // to render order) for anything not explicitly repositioned.
+    window.mqReorderSpecItemsWithinCategories = function(prefix, roomId) {
+      const specBody = document.getElementById(`mq-${prefix}-specialty-body`);
+      if (!specBody) return;
+      const orderByRoom = (window._mqSpecItemOrder || {})[roomId] || {};
+      specBody.querySelectorAll('.mq-spec-category-items, .mq-spec-flat-items').forEach(row => {
+        // A row's own category comes from its parent capsule's data-cat (the
+        // same raw key, including __other__, mqReorderSpecCategoryGroups
+        // already matches categories with). A shop with no categories at
+        // all has exactly one such row and no wrapping capsule — there's
+        // nowhere else for its (necessarily uncategorized) order to live,
+        // so it falls back to the same __other__ key.
+        const group = row.closest('.mq-spec-category-group');
+        const cat = group ? group.dataset.cat : '__other__';
+        const roomOrder = orderByRoom[cat] || [];
+        if (!roomOrder.length) return;
+        const items = [...row.children].filter(el => el.classList.contains('mq-spec-item'));
+        if (items.length < 2) return;
+        const pos = new Map(roomOrder.map((id, i) => [id, i]));
+        items
+          .map((el, i) => ({ el, p: pos.has(el.dataset.itemId) ? pos.get(el.dataset.itemId) : (1000 + i) }))
+          .sort((a, b) => a.p - b.p)
+          .forEach(({ el }) => row.appendChild(el));
       });
     };
     // Shows the shop owner's custom guidance note for whichever project type
@@ -4220,7 +4334,7 @@
           // it can tell the difference below from someone who unchecked
           // it themselves while cabinets were already present.
           useCabCbCt.dataset.forcedOffByNoCabinets = 'true';
-          window.mqTogUseCab('b');
+          window.mqTogUseCab('b', {scroll:false});
         } else if (cabActive && useCabCbCt && !useCabCbCt.checked && useCabCbCt.dataset.forcedOffByNoCabinets === 'true') {
           // Cabinets are back (room switched again) and this box is only
           // unchecked because of that earlier no-cabinets forcing, not
@@ -4228,7 +4342,7 @@
           // way it'd normally default, rather than leaving it stuck off.
           useCabCbCt.checked = true;
           useCabCbCt.dataset.forcedOffByNoCabinets = 'false';
-          window.mqTogUseCab('b');
+          window.mqTogUseCab('b', {scroll:false});
         }
         if (surfTitle) surfTitle.textContent = (cabActive && useCabCbCt?.checked) ? 'Additional countertop surfaces' : 'Countertop surfaces';
         if (!cabActive && surfContainer && !surfContainer.children.length) {
@@ -4354,7 +4468,7 @@
       if (prefix === 'b') {
         const useCabCt = document.getElementById('mq-b-use-cab');
         if (useCabCt) useCabCt.checked = true;
-        window.mqTogUseCab('b');
+        window.mqTogUseCab('b', {scroll:false});
         // Countertop material, backsplash, dishwasher/extra-space toggles,
         // and cutouts were never reset here — mqResetCountertopStandalone
         // covers this exact same set of fields for the standalone
@@ -4983,7 +5097,19 @@
 window.mqTogDrawerConfig=(prefix)=>{
       const tier=gv(`mq-${prefix}-drawer-tier`);
       const wrap=document.getElementById(`mq-${prefix}-drawer-config-wrap`);
-      if(wrap) wrap.style.display=tier==='none'?'none':'block';
+      const opening = tier!=='none';
+      if(wrap) wrap.style.display=opening?'block':'none';
+      // The "Drawer type" picker row was already built into the page (this
+      // wrap just starts display:none until "Some"/"Mostly drawers" is
+      // picked), so its scrollWidth/clientWidth both read as 0 while
+      // hidden — same underlying issue mqToggleCollapse already works
+      // around for whole sections. Without this, the row's left/right
+      // scroll arrows never appear even when there's genuinely more than
+      // one screen's worth of drawer types (Jordan: "I don't see them and
+      // can't access the drawer to the far right"), since the one-time
+      // overflow check at initial page load ran before this wrap was ever
+      // visible.
+      if (opening && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
     };
 
     window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
@@ -5949,6 +6075,22 @@ window.mqTogDrawerConfig=(prefix)=>{
       const hasCtInstall = hasCountertopInstall();
       const n=name||`Surface ${surfCounts[prefix]}`;
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
+      // Jordan: "when a new surface i added i want it to carry over
+      // whatever the install selections were and the removal selections,
+      // because they will likely be the same.. so just by default when
+      // they add another surface it will have that install and removal
+      // selection the same as the first surface automatically." Read
+      // straight off the DOM (not a stored JS value) so this always
+      // reflects whatever the first surface is CURRENTLY set to, even if
+      // it was changed after being added. A brand new project's very first
+      // surface has no earlier surface to copy from, so both stay null and
+      // each select simply falls back to its normal first-option default,
+      // exactly as before.
+      const firstSurfContainer = document.getElementById(containerId);
+      const firstSiSelect = firstSurfContainer?.querySelector(`select[id^="mqssi-s${prefix}"]`);
+      const firstRmSelect = firstSurfContainer?.querySelector(`select[id^="mqsrm-s${prefix}"]`);
+      const carrySi = firstSiSelect ? firstSiSelect.value : null;
+      const carryRm = firstRmSelect ? firstRmSelect.value : null;
       const card=document.createElement('div');
       card.className='mq-surface-card';card.id='mqsc-'+id;card.dataset.prefix=prefix;
       card.innerHTML=`
@@ -5980,12 +6122,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         </div>
         <div class="mq-grid2" style="margin-bottom:1rem">
           <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Install' : 'Supply'}</label>
-            <select id="mqssi-${id}" style="max-width:260px;min-width:140px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':'<option value="inherit">Same as project</option>'}<option value="supply">Supply only</option><option value="install">Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
+            <select id="mqssi-${id}" style="max-width:260px;min-width:140px;box-sizing:border-box">${hasCtInstall ? `${prefix==='ct'?'':`<option value="inherit"${carrySi==='inherit'?' selected':''}>Same as project</option>`}<option value="supply"${carrySi==='supply'?' selected':''}>Supply only</option><option value="install"${carrySi==='install'?' selected':''}>Supply + install</option>` : '<option value="supply">Supply only</option>'}</select></div>
           <div class="mq-field"><label class="mq-label">Backsplash</label>
             <select id="mqsbs-${id}" style="max-width:260px;min-width:140px" onchange="mqRefreshSurfBsFt('${id}')"><option value="none">None</option></select></div>
         </div>
         ${hasCtRemoval() ? `<div class="mq-field" style="margin-bottom:1rem"><label class="mq-label">Removal of existing countertop?</label>
-          <select id="mqsrm-${id}" style="max-width:260px;min-width:140px" onchange="mqSurfUpdatePreview('${id}')"><option value="no">No removal needed</option><option value="yes">Yes — remove &amp; dispose</option></select></div>` : ''}
+          <select id="mqsrm-${id}" style="max-width:260px;min-width:140px" onchange="mqSurfUpdatePreview('${id}')"><option value="no"${carryRm==='yes'?'':' selected'}>No removal needed</option><option value="yes"${carryRm==='yes'?' selected':''}>Yes — remove &amp; dispose</option></select></div>` : ''}
         <div id="mqs-edge-${id}"></div>
         <div id="mqs-addons-${id}"></div>
         <div class="mq-divider"></div>
@@ -6164,7 +6306,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       }
       return false;
     }
-    window.mqAddSurface=(prefix, skipValidation)=>{
+    window.mqAddSurface=(prefix, skipValidation, opts)=>{
       const containerId=prefix==='ct'?'mq-ct-surfaces':'mq-'+prefix+'-ct-surfaces';
       const container = document.getElementById(containerId);
       // Whichever surface is currently open (if any) has to actually be
@@ -6202,9 +6344,20 @@ window.mqTogDrawerConfig=(prefix)=>{
       // "id like it to put the 'countertop surfaces' heading as the focal
       // point, so just a little higher, so the user sees that their first
       // item was added."
-      const titleEl = document.getElementById(prefix==='ct' ? 'mq-ct-surfaces-title' : 'mq-b-ct-surfaces-title');
-      const newCard = document.getElementById('mqsc-'+newId);
-      (titleEl || newCard)?.scrollIntoView({behavior:'smooth', block:'start'});
+      // opts.scroll (default true) lets a programmatic caller opt out —
+      // mqTogUseCab passes {scroll:false} through here when IT was told
+      // not to scroll (see the comment there), so a project-type switch
+      // that silently seeds a surface behind the scenes (e.g. switching to
+      // Refacing/Restaining/Repainting, where cabinets aren't part of the
+      // job) doesn't yank the page down to a section the customer never
+      // asked to see. Every direct "+ Add another surface" click, and the
+      // snapshot-restore replay above, omit opts and keep scrolling exactly
+      // as before.
+      if (!opts || opts.scroll !== false) {
+        const titleEl = document.getElementById(prefix==='ct' ? 'mq-ct-surfaces-title' : 'mq-b-ct-surfaces-title');
+        const newCard = document.getElementById('mqsc-'+newId);
+        (titleEl || newCard)?.scrollIntoView({behavior:'smooth', block:'start'});
+      }
     };
     window.mqRemoveSurf=(prefix,id)=>{
       const removedName = gv(`mqsn-${id}`) || 'Surface';
@@ -6214,7 +6367,16 @@ window.mqTogDrawerConfig=(prefix)=>{
       mqRenumberSurfaces(prefix);
       mqShowSurfaceToast(prefix, `${removedName} removed`);
     };
-    window.mqTogUseCab=(prefix)=>{
+    // opts.scroll (default true) controls the "bring existing surfaces into
+    // view" jump below. That jump is meant as direct feedback for a customer
+    // who just clicked the checkbox themselves (see the onchange="..." on
+    // the checkbox's own markup) -- it should NOT fire just because this
+    // function gets re-run to re-sync UI state on its own, e.g. every time
+    // the Both tab is (re-)entered, or when a project type change forces the
+    // box on/off programmatically. Every one of THOSE call sites passes
+    // {scroll:false} explicitly; only the checkbox's own onchange omits it.
+    window.mqTogUseCab=(prefix, opts)=>{
+      const scrollOnExisting = !opts || opts.scroll !== false;
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
       const matDiv  = document.getElementById(`mq-${prefix}-cab-mat`);
       if(matDiv) matDiv.style.display=checked?'block':'none';
@@ -6238,13 +6400,23 @@ window.mqTogDrawerConfig=(prefix)=>{
       } else if (prefix === 'b') {
         const surfContainer = document.getElementById('mq-b-ct-surfaces');
         if (surfContainer && !surfContainer.children.length) {
-          window.mqAddSurface('b');
+          // Forward the same scroll intent this function itself was given
+          // — a direct checkbox click (scrollOnExisting true, the default)
+          // still scrolls to show the freshly seeded first surface, same as
+          // always, but a silent/programmatic call (scroll:false, e.g. from
+          // a project-type switch) stays silent instead of jumping the page.
+          window.mqAddSurface('b', false, {scroll: scrollOnExisting});
           surfContainer.dataset.autoAdded = 'true';
-        } else if (surfContainer) {
+        } else if (surfContainer && scrollOnExisting) {
           // Surface(s) already exist from an earlier uncheck — bring the
           // section's heading into view (same focal point every other add
           // scrolls to, see mqAddSurface) instead of piling on a redundant
-          // blank one.
+          // blank one. Only when the checkbox change was a real, direct
+          // click though (see the opts.scroll note above) — otherwise a
+          // shop's countertop-only project type (which already has this box
+          // unchecked and a surface auto-added) would silently jump the
+          // page down every single time someone just switches INTO the Both
+          // tab, with nothing having actually changed.
           const titleEl = document.getElementById('mq-b-ct-surfaces-title');
           (titleEl || surfContainer).scrollIntoView({behavior:'smooth', block:'start'});
         }
@@ -7173,14 +7345,88 @@ window.mqTogDrawerConfig=(prefix)=>{
     _mqStickyDebounce = setTimeout(mqLiveRecalcSticky, 250);
   }
 
+  // Cycled through instead of a single static "Loading estimator…" while
+  // the widget's initial shop-data fetch is in flight (Jordan: "can we make
+  // the estimator say something cool when its loading instead of just
+  // loading?"). Kept deliberately TRADE-NEUTRAL -- no cabinet-only wording
+  // ("table saw", "doors", "drawers") and no countertop-only wording
+  // ("slab", "polishing granite") -- since this shows before the widget
+  // even knows whether this particular shop sells cabinets, countertops, or
+  // both (Jordan's own follow-up: "just make sure it works for countertop
+  // stores and cabinet shops"). Every phrase below reads naturally for
+  // either trade.
+  const MQ_LOADING_PHRASES = ['Sharpening the pencils…','Measuring twice…','Squaring up the corners…','Warming up the workshop…','Dusting off the blueprints…','Double-checking the numbers…','Leveling things out…','Fine-tuning your estimate…'];
+
+  // ── Widget password protection ──
+  // Client-side by design (Jordan's call) — meant to keep an unlisted or
+  // trade-only widget away from casual visitors, not to protect anything
+  // sensitive, since the password list arrives in the same shop-data
+  // payload the widget already fetches either way. A shop with protection
+  // on but zero passwords saved fails CLOSED (no one gets in) rather than
+  // open, matching the dashboard's own "no one can get in until you add
+  // one" warning — this is not a special case in the check below, it falls
+  // out naturally since pwds.includes(stored) is false against an empty list.
+  function mqWidgetPwStorageKey() { return `mq_widget_pw_${shopToken}`; }
+  function mqCheckWidgetPassword(shop) {
+    let pwds = [];
+    try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
+    let stored = null;
+    try { stored = localStorage.getItem(mqWidgetPwStorageKey()); } catch(e) { stored = null; }
+    return !!stored && pwds.includes(stored);
+  }
+  function mqRenderPasswordGate(container, shop) {
+    const shopName = (shop['Shop name'] || 'This shop').replace(/</g,'&lt;');
+    container.innerHTML = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;max-width:360px;margin:0 auto;text-align:center;box-sizing:border-box">
+      <div style="font-size:2rem;margin-bottom:0.75rem">🔒</div>
+      <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">This estimator is password protected</div>
+      <div style="color:#4b5563;font-size:13px;margin-bottom:16px">Enter the password ${shopName} gave you to continue.</div>
+      <input type="password" id="mq-widget-pw-input" placeholder="Password" autocomplete="off" style="width:100%;font-size:14px;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;text-align:center;margin-bottom:10px;font-family:inherit;box-sizing:border-box"/>
+      <div id="mq-widget-pw-error" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px">That password is not correct — please try again.</div>
+      <button id="mq-widget-pw-submit" style="width:100%;background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Continue</button>
+    </div>`;
+    const input = container.querySelector('#mq-widget-pw-input');
+    const errorEl = container.querySelector('#mq-widget-pw-error');
+    const submitBtn = container.querySelector('#mq-widget-pw-submit');
+    const submit = () => {
+      const val = (input.value || '').trim();
+      let pwds = [];
+      try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
+      if (val && pwds.includes(val)) {
+        try { localStorage.setItem(mqWidgetPwStorageKey(), val); } catch(e) {}
+        init(); // re-run init(): mqCheckWidgetPassword now passes, so this renders the real widget
+      } else {
+        errorEl.style.display = 'block';
+        input.focus();
+        input.select();
+      }
+    };
+    if (submitBtn) submitBtn.addEventListener('click', submit);
+    if (input) {
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+      input.focus();
+    }
+  }
+
   async function init() {
     const container=document.getElementById('midasquote-widget');
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
     container.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;gap:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
       <div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#1a1a1a;border-radius:50%;animation:mqSpin 0.7s linear infinite;"></div>
-      <div style="font-size:14px;color:#4b5563;letter-spacing:0.01em;">Loading estimator…</div>
+      <div id="mq-loading-phrase" style="font-size:14px;color:#4b5563;letter-spacing:0.01em;">${MQ_LOADING_PHRASES[0]}</div>
       <style>@keyframes mqSpin{to{transform:rotate(360deg)}}</style>
     </div>`;
+    // Self-clearing: once container.innerHTML gets replaced by any of
+    // init()'s several exit paths (error, subscription-gate lock, or the
+    // real widget rendering), #mq-loading-phrase no longer exists, so the
+    // very next tick clears this on its own instead of needing a matching
+    // clearInterval() threaded into every one of those branches.
+    let mqLoadingPhraseIdx = 0;
+    const mqLoadingInterval = setInterval(() => {
+      const el = document.getElementById('mq-loading-phrase');
+      if (!el) { clearInterval(mqLoadingInterval); return; }
+      mqLoadingPhraseIdx = (mqLoadingPhraseIdx + 1) % MQ_LOADING_PHRASES.length;
+      el.textContent = MQ_LOADING_PHRASES[mqLoadingPhraseIdx];
+    }, 900);
     let data;
     try {
       data = await loadShopData(shopToken);
@@ -7213,6 +7459,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Estimator unavailable</div>
         <div>This quoting tool is temporarily offline. Please contact the shop directly for a quote.</div>
       </div>`;
+      return;
+    }
+
+    // ── Password gate ──
+    if (shop['Widget password protected'] === 'Yes' && !mqCheckWidgetPassword(shop)) {
+      mqRenderPasswordGate(container, shop);
       return;
     }
 

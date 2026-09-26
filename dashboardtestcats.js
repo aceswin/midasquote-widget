@@ -689,7 +689,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
-      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
+      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#c8dad7b0;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
       #midasquote-dashboard .mq-topbar{background:#1a1a1a;border-bottom:1px solid #2d2d2d;padding:10px 2rem;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:60px;position:fixed;top:0;left:0;right:0;z-index:100}
       #midasquote-dashboard .mq-topbar-info{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;overflow:hidden}
       #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#d4af37;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -705,8 +705,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px);width:100%}
       #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0;position:sticky;top:60px;align-self:flex-start;max-height:calc(100vh - 60px);overflow-y:auto}
       #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
-      #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#f9fafb}
-      #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
+      #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#c8dad7b0}
+      #midasquote-dashboard .mq-nav-item.active{color:#111;background:#c8dad7b0;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
       #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
@@ -1174,6 +1174,31 @@ window.logoutMember = async function () {
             </div>
 
             <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('access')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-access-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                🔒 Widget access
+              </div>
+              <div id="mq-shopsec-access-body" style="display:none">
+              <div class="mq-toggle-row" style="margin-bottom:0">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Require a password to use the widget</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">When on, a customer must enter one of the passwords below before they can get a quote. Meant for keeping an unlisted or trade-only widget away from casual visitors — not for storing anything sensitive, since it's checked in their browser.</div>
+                </div>
+                <div class="mq-toggle" id="mq-widgetpw-toggle" onclick="mqToggleWidgetPasswordProtection()"></div>
+              </div>
+              <div id="mq-widgetpw-wrap" style="display:none;margin-top:1rem;padding:12px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px">
+                <label class="mq-label">Passwords <span style="font-weight:400;color:#9ca3af">(any one of these unlocks the widget)</span></label>
+                <div id="mq-widgetpw-list" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px"></div>
+                <div style="display:flex;gap:8px">
+                  <input type="text" id="mq-widgetpw-new" placeholder="Add a password" style="flex:1;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
+                  <button type="button" class="mq-btn mq-btn-sm" onclick="mqAddWidgetPassword()">+ Add</button>
+                </div>
+                <span class="mq-hint" style="display:block;margin-top:8px">Once a customer enters a correct password, their browser remembers it — they will not be asked again unless you remove that specific password from this list.</span>
+              </div>
+              </div>
+            </div>
+
+            <div class="mq-card">
               <div class="mq-card-title" onclick="mqToggleShopSection('tabs')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-tabs-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🗂️ Estimator tabs
@@ -1275,13 +1300,24 @@ window.logoutMember = async function () {
             <div id="mq-spec-msg"></div>
             <div id="mq-spec-tips-card" class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4;max-width:480px">
               <div onclick="mqToggleSpecTips()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer">
-                <div style="font-size:13px;font-weight:700;color:#166534">💡 Tips for this page</div>
+                <div style="font-size:13px;font-weight:700;color:#166534">❓ Tips for this page</div>
                 <span id="mq-spec-tips-arrow" style="font-size:13px;color:#166534;transition:transform 0.2s;transform:rotate(-90deg)">▼</span>
               </div>
-              <div id="mq-spec-tips-body" class="mqph-hl" style="display:none;padding:0 16px 14px;font-size:13px;color:#166534;line-height:1.7">
+              <!-- Jordan: the inner tips box had its own border sitting right
+                   inside the card's own border, "looks silly" as a box
+                   within a box. There's no border rule in this file's own
+                   CSS targeting this div directly — border:none here is a
+                   deliberate override in case it's inheriting one from the
+                   "mqph-hl" class or some ambient page style outside this
+                   file, so it wins regardless of where it was coming from. -->
+              <div id="mq-spec-tips-body" class="mqph-hl" style="display:none;padding:0 16px 14px;font-size:13px;color:#166534;line-height:1.7;border:none">
                 💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
                 <br><br>
                 🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
+                <br><br>
+                🎨 <strong>Variants:</strong> Add multiple variants under a single item — e.g. a "Pullouts" item with several different pullout options, each priced individually.
+                <br><br>
+                📐 <strong>Sizes:</strong> Under Variants, you can add Sized options and the math is done for you — great for refacing doors. E.g. a "Maple shaker doors" item with variants for 9"×30", 10"×30", 11"×30", and so on — the sq ft price for each is generated automatically based on the rate you enter.
                 <br><br>
                 🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price.
                 <br><br>
@@ -3189,6 +3225,14 @@ window.logoutMember = async function () {
     if (notifyEveryToggle) {
       notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
     }
+    const widgetPwToggle = el('mq-widgetpw-toggle');
+    if (widgetPwToggle) {
+      const isOn = f['Widget password protected'] === 'Yes';
+      widgetPwToggle.classList.toggle('on', isOn);
+      const wrap = el('mq-widgetpw-wrap');
+      if (wrap) wrap.style.display = isOn ? 'block' : 'none';
+    }
+    mqRenderWidgetPasswordList();
 
     // ── Autosave: fire mqSaveShop 1.5s after the user stops editing any field ──
     let _shopAutoSaveTimer = null;
@@ -3814,16 +3858,21 @@ window.logoutMember = async function () {
   // unchecking zeroes it out (same convention as "0 = no adjustment"
   // everywhere else in this app, just given a clearer on/off affordance
   // here since a shop owner can now stack up to three of these at once).
+  // Grid layout (checkbox | label+hint | number | %) instead of the old
+  // flex row -- keeps the four rows in this box tightly aligned into
+  // consistent columns and trims the vertical gap between them, without
+  // touching the hint text itself (Jordan: "do the first one but leave the
+  // tips as is" -- compact the layout, not the wording/tooltip behavior).
   function mqRoomAdjRow(kind, idx, value, label, hint) {
     const inputId = `mq-room-adj-${kind}-${idx}`;
     const chkId = `mq-room-adj-${kind}-chk-${idx}`;
     const checked = parseFloat(value) !== 0;
     return `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-        <label for="${inputId}" style="font-size:12px;color:#374151;flex:1;min-width:0">${label} <span style="color:#9ca3af">— ${hint}</span></label>
-        <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center;flex-shrink:0"/>
-        <span style="font-size:12px;color:#6b7280;flex-shrink:0">%</span>
+      <div style="display:grid;grid-template-columns:16px 1fr 60px 14px;gap:8px;align-items:start;margin-bottom:4px">
+        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:16px;height:16px;margin-top:1px;accent-color:#1a1a1a"/>
+        <label for="${inputId}" style="font-size:12px;color:#374151;min-width:0;line-height:1.4">${label} <span style="color:#9ca3af">— ${hint}</span></label>
+        <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center"/>
+        <span style="font-size:12px;color:#6b7280;margin-top:3px">%</span>
       </div>`;
   }
   window.mqToggleRoomAdjInput = function(idx, kind) {
@@ -8326,6 +8375,78 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRec.fields['Notify on every estimate'] = !isOn ? 'Yes' : 'No';
       showMsg('mq-shop-msg', !isOn ? '✓ You\'ll be emailed for every estimate now.' : '✓ Back to only being notified when a customer gives their info.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  };
+
+  // Widget password protection — a shop-level toggle plus a list of plain
+  // access-code strings, both saved straight to Airtable the moment they
+  // change (same "toggle saves itself" pattern as mqToggleFinancing above),
+  // rather than waiting on the batched "Save changes" button. Read by
+  // widget.js's own password gate. Deliberately a client-side check (Jordan's
+  // call) — the widget receives this same password list in its normal
+  // shop-data payload, so this is meant to keep an unlisted/trade-only
+  // widget away from casual visitors, not to protect anything sensitive.
+  function mqGetWidgetPasswords(shopRec) {
+    try { return shopRec.fields['Widget passwords'] ? JSON.parse(shopRec.fields['Widget passwords']) : []; }
+    catch(e) { return []; }
+  }
+  function mqRenderWidgetPasswordList() {
+    const shopRec = window._mqShopRecord;
+    const list = el('mq-widgetpw-list');
+    if (!list || !shopRec) return;
+    const pwds = mqGetWidgetPasswords(shopRec);
+    list.innerHTML = pwds.length ? pwds.map((pw, idx) => `
+      <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #fecaca;border-radius:999px;padding:5px 10px;font-size:12px;color:#374151">
+        <span style="font-family:monospace">${(pw||'').replace(/</g,'&lt;')}</span>
+        <button type="button" onclick="mqRemoveWidgetPassword(${idx})" title="Remove this password" style="background:none;border:none;cursor:pointer;color:#991b1b;font-weight:700;padding:0;line-height:1;font-size:13px">✕</button>
+      </span>`).join('') : '<span style="font-size:12px;color:#9ca3af">No passwords added yet — while the toggle above is on, no one can get into the widget until you add at least one.</span>';
+  }
+  window.mqAddWidgetPassword = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const input = el('mq-widgetpw-new');
+    const val = (input && input.value || '').trim();
+    if (!val) return;
+    const pwds = mqGetWidgetPasswords(shopRec);
+    if (pwds.includes(val)) { showMsg('mq-shop-msg', 'That password is already on the list.', 'error'); return; }
+    pwds.push(val);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
+      shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
+      if (input) input.value = '';
+      mqRenderWidgetPasswordList();
+      showMsg('mq-shop-msg', '✓ Password added.');
+    } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
+  };
+  window.mqRemoveWidgetPassword = async function(idx) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const pwds = mqGetWidgetPasswords(shopRec);
+    pwds.splice(idx, 1);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
+      shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
+      mqRenderWidgetPasswordList();
+      showMsg('mq-shop-msg', '✓ Password removed.');
+    } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
+  };
+  window.mqToggleWidgetPasswordProtection = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const toggle = el('mq-widgetpw-toggle');
+    if (!toggle) return;
+    const isOn = toggle.classList.contains('on');
+    toggle.classList.toggle('on', !isOn);
+    const wrap = el('mq-widgetpw-wrap');
+    if (wrap) wrap.style.display = !isOn ? 'block' : 'none';
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget password protected': !isOn ? 'Yes' : 'No' });
+      shopRec.fields['Widget password protected'] = !isOn ? 'Yes' : 'No';
+      showMsg('mq-shop-msg', !isOn ? '✓ Widget now requires a password.' : '✓ Password requirement turned off.');
+    } catch(e) {
+      toggle.classList.toggle('on', isOn);
+      if (wrap) wrap.style.display = isOn ? 'block' : 'none';
+      showMsg('mq-shop-msg', 'Error saving.', 'error');
+    }
   };
 
   window.mqUpdateLeadStatus = async function(id, status) {
