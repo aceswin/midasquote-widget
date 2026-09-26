@@ -296,6 +296,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
         <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount — below that, the monthly-payment line stays hidden, so it never shows up looking oddly small on a low-cost quote.</p>
         <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
+        <p><strong>🔒 Widget access</strong> — require a password before customers can use your widget at all, for when you don't want it fully public. Add as many passwords as you like; removing one instantly locks out anyone whose browser had it saved.</p>
         <p><strong>🗂️ Estimator tabs</strong> — a card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
         <p>Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
       `
@@ -321,6 +322,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
         <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
         <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
+        <p><strong>🧪 Test your pricing once it's set up.</strong> Run a handful of test quotes through the widget for jobs you've actually quoted before, and compare the ballpark to what you really charged. If something's consistently off, there are three different places to adjust it depending on how widespread the issue is: an individual item's own rate (here in Pricing, or in Specialty Items — the actual per-linear-foot, per-square-foot, or flat rate for that one box material, door style, install rate, etc.), a specific project type's price adjustments (Project Types tab — nudges Base cabinets, Upper cabinets, Installation, or Total ballpark up or down just for that one project type, like the built-in -5% on Bathroom base cabinets), or the widget's overall estimate range (Shop Info → Quote range — low/high — widens or narrows how far the shown range sits from the calculated price, across every project type at once).</p>
         <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
         <p><strong>⭐ Baseline</strong> — Box Materials, Door Styles, and Hinges each have one item pinned as the baseline (marked with a ⭐ Baseline badge) that every other item in the category is priced against. It automatically re-pins to whichever item is genuinely cheapest the moment one is saved. Delete the current baseline and you'll be asked to pick what becomes the new one, with ties shown so you can choose.</p>
         <p><strong>Sort any item list</strong> by clicking its Name or Price column header — the active sort highlights in blue. Lists past 10 items scroll in place instead of pushing the page down.</p>
@@ -452,6 +454,112 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   window.mqCloseHelpModal = function() {
     const modal = document.getElementById('mq-help-modal');
     if (modal) modal.style.display = 'none';
+  };
+
+  // ============================================================
+  // HELP GUIDE (Help tab) — renders every MQ_HELP_CONTENT topic as a
+  // searchable, browsable accordion below the contact form. This reads
+  // the exact same MQ_HELP_CONTENT object every per-page "Need help?"
+  // popup uses, so there's one source of truth — editing a topic's text
+  // updates both the popup and this guide at once, nothing to keep in sync
+  // by hand. "Templates (Admin)" is left out unless window._mqIsAdminShop
+  // is set, same gating as the nav item itself.
+  // ============================================================
+  const MQ_HELP_GUIDE_ORDER = ['overview','leads','shop','rooms','pricing','specialty','products','showroom','embed','marketing','proposals','billing','templates'];
+
+  function mqHelpGuideTopics() {
+    return MQ_HELP_GUIDE_ORDER
+      .filter(id => MQ_HELP_CONTENT[id])
+      .filter(id => id !== 'templates' || window._mqIsAdminShop);
+  }
+
+  // Plain-text title+body for one topic, HTML tags stripped, lowercased —
+  // so a search for "install" matches text that happens to sit inside a
+  // <strong> tag the same as plain text.
+  function mqHelpPlainText(id) {
+    const c = MQ_HELP_CONTENT[id];
+    if (!c) return '';
+    return (c.title + ' ' + c.body).replace(/<[^>]*>/g, ' ').toLowerCase();
+  }
+
+  function mqBuildHelpGuide() {
+    const chips = document.getElementById('mq-help-topic-chips');
+    const accordion = document.getElementById('mq-help-accordion');
+    if (!chips || !accordion) return;
+    const topics = mqHelpGuideTopics();
+
+    chips.innerHTML = `<button type="button" class="mq-btn mq-btn-secondary mq-btn-sm" onclick="mqClearHelpFilter()">All topics</button>` +
+      topics.map(id => `<button type="button" class="mq-btn mq-btn-secondary mq-btn-sm" onclick="mqJumpToHelpTopic('${id}')">${MQ_HELP_CONTENT[id].title}</button>`).join('');
+
+    accordion.innerHTML = topics.map(id => `
+      <div class="mq-card mq-help-topic" id="mq-help-topic-${id}" style="margin-bottom:10px">
+        <div class="mq-card-title" onclick="mqToggleHelpTopic('${id}')" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px">
+          <span id="mq-help-chevron-${id}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+          ${MQ_HELP_CONTENT[id].title}
+        </div>
+        <div id="mq-help-body-${id}" style="display:none;font-size:14px;color:#374151;line-height:1.7;margin-top:10px">${MQ_HELP_CONTENT[id].body}</div>
+      </div>`).join('');
+  }
+
+  window.mqToggleHelpTopic = function(id) {
+    const body = document.getElementById('mq-help-body-' + id);
+    const chevron = document.getElementById('mq-help-chevron-' + id);
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+  };
+  window.mqOpenHelpTopic = function(id) {
+    const body = document.getElementById('mq-help-body-' + id);
+    const chevron = document.getElementById('mq-help-chevron-' + id);
+    if (!body) return;
+    body.style.display = 'block';
+    if (chevron) chevron.style.transform = 'rotate(90deg)';
+  };
+
+  // Clicking a topic chip: clear any active search, expand that topic, and
+  // scroll it into view.
+  window.mqJumpToHelpTopic = function(id) {
+    mqClearHelpFilter();
+    mqOpenHelpTopic(id);
+    const card = document.getElementById('mq-help-topic-' + id);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  window.mqClearHelpFilter = function() {
+    const search = document.getElementById('mq-help-search');
+    if (search) search.value = '';
+    mqFilterHelpGuide('');
+  };
+
+  // Typing in the search box: hide any topic whose title+body text doesn't
+  // contain the query, and auto-expand whichever ones do match so the
+  // matching text is actually visible without an extra click. Clearing the
+  // search shows every topic again, collapsed back to normal.
+  window.mqFilterHelpGuide = function(query) {
+    const topics = mqHelpGuideTopics();
+    const q = (query || '').trim().toLowerCase();
+    let anyMatch = false;
+    topics.forEach(id => {
+      const card = document.getElementById('mq-help-topic-' + id);
+      if (!card) return;
+      const matches = !q || mqHelpPlainText(id).includes(q);
+      card.style.display = matches ? 'block' : 'none';
+      if (matches) {
+        anyMatch = true;
+        if (q) mqOpenHelpTopic(id);
+      }
+      if (!q) {
+        const body = document.getElementById('mq-help-body-' + id);
+        const chevron = document.getElementById('mq-help-chevron-' + id);
+        if (body) body.style.display = 'none';
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+      }
+    });
+    const noResults = document.getElementById('mq-help-no-results');
+    const noResultsTerm = document.getElementById('mq-help-no-results-term');
+    if (noResults) noResults.style.display = (q && !anyMatch) ? 'block' : 'none';
+    if (noResultsTerm) noResultsTerm.textContent = query || '';
   };
 
   // Shown exactly once per shop, ever — the moment a brand new shop owner
@@ -737,7 +845,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-page.active{display:block}
       #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
       #midasquote-dashboard .mq-page-sub{font-size:13px;color:#6b7280;margin-bottom:2rem}
-      #midasquote-dashboard .mq-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.75rem;margin-bottom:1.5rem}
+      #midasquote-dashboard .mq-card{background:#fff;border:1px solid #000;border-radius:12px;padding:1.75rem;margin-bottom:1.5rem}
       #midasquote-dashboard .mq-card-title{font-size:13px;font-weight:600;color:#111;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
       #midasquote-dashboard .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
       #midasquote-dashboard .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem}
@@ -748,7 +856,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{outline:none;border-color:#1a1a1a}
       #midasquote-dashboard textarea{resize:vertical;min-height:40px}
       #midasquote-dashboard .mq-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.25rem;margin-bottom:2rem}
-      #midasquote-dashboard .mq-stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem}
+      #midasquote-dashboard .mq-stat{background:#fff;border:1px solid #000;border-radius:12px;padding:1.5rem}
       #midasquote-dashboard .mq-stat-val{font-size:26px;font-weight:700;color:#111;margin-bottom:6px}
       #midasquote-dashboard .mq-stat-lbl{font-size:12px;color:#6b7280;font-weight:500}
       #midasquote-dashboard .mq-stat-green .mq-stat-val{color:#16a34a}
@@ -786,7 +894,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard #mq-spec-table td:first-child{border-left:1px solid #e5e7eb;border-radius:8px 0 0 8px}
       #midasquote-dashboard #mq-spec-table td:last-child{border-right:1px solid #e5e7eb;border-radius:0 8px 8px 0}
       #midasquote-dashboard #mq-spec-table thead th{border-bottom:2px solid var(--border)}
-      #midasquote-dashboard #mq-spec-table-wrap{padding-left:14px}
+      #midasquote-dashboard #mq-spec-table-wrap{padding:14px}
       #midasquote-dashboard .mq-table tr:last-child td{border-bottom:none}
       #midasquote-dashboard .mq-table tr:hover td{background:#f9fafb}
       #midasquote-dashboard .mq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
@@ -818,10 +926,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
       @media (max-width: 768px) {
         #midasquote-dashboard .mq-layout{flex-direction:column}
-        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
+        #midasquote-dashboard .mq-sidebar{width:100%;padding:0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
         #midasquote-dashboard .mq-nav-section{display:none}
-        #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
-        #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
+        #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:1px solid transparent;padding:10px 14px;white-space:nowrap}
+        #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:transparent}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
         #midasquote-dashboard .mq-spec-scroll-arrow{display:none!important}
@@ -879,6 +987,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item active" onclick="mqNav('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
           <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
           <div class="mq-nav-section">Setup</div>
+          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
           <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
           <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
@@ -891,7 +1000,6 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
           <div class="mq-nav-section">Account</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
-          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
           <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
         </div>
 
@@ -1182,7 +1290,7 @@ window.logoutMember = async function () {
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Require a password to use the widget</div>
-                  <div style="font-size:12px;color:#6b7280;margin-top:2px">When on, a customer must enter one of the passwords below before they can get a quote. Meant for keeping an unlisted or trade-only widget away from casual visitors — not for storing anything sensitive, since it's checked in their browser.</div>
+                  <div style="font-size:12px;color:#6b7280;margin-top:2px">When on, a customer must enter one of the passwords below before they can get a quote. Use this when you don't want the widget fully public — only people you give a password to can get in.</div>
                 </div>
                 <div class="mq-toggle" id="mq-widgetpw-toggle" onclick="mqToggleWidgetPasswordProtection()"></div>
               </div>
@@ -1237,11 +1345,11 @@ window.logoutMember = async function () {
           <div class="mq-page" id="mq-page-rooms">
             <button class="mq-help-btn" onclick="mqShowHelp('rooms')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Project types</div>
-            <div class="mq-page-sub">Set up the project types your widget offers — rooms, service tiers, or anything else — and adjust pricing up or down for each one. Great for things like "Kitchen Reno — Premium" vs. "Luxury," or a bathroom vanity running smaller than a kitchen cabinet at the same length.</div>
+            <div class="mq-page-sub">Set up the project types you want to offer — as simple as Residential & Commercial, or as detailed as Standard, Premium, and Luxury tiers. Keep our premade project types and "How to measure" images, or replace either with your own to match your shop.</div>
             <div class="mq-card" id="mq-rooms-cabinet-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
-                💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
+                💡 You can adjust the ballpark outputs for bases, uppers, installation, or the total ballpark price. We've automatically taken off 5% for bathroom cabinets because they're smaller. You could also use this for a project type with a generally more difficult installation than normal — or if you typically charge 10% more for renos than new builds, add 10% to the overall ballpark range of your reno project type.
               </div>
               <div id="mq-rooms-list"></div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
@@ -1752,10 +1860,10 @@ window.logoutMember = async function () {
             </div>
           </div>
 
-          <!-- SUPPORT -->
+          <!-- SUPPORT + HELP GUIDE -->
           <div class="mq-page" id="mq-page-support">
-            <div class="mq-page-title">Support</div>
-            <div class="mq-page-sub">Have a question or an idea? Send it straight to us — your shop info is included automatically.</div>
+            <div class="mq-page-title">Help guide</div>
+            <div class="mq-page-sub">Have a question or an idea? Send it straight to us — your shop info is included automatically. Or browse the full help guide below for answers to common questions.</div>
             <div class="mq-card" style="max-width:520px">
               <div class="mq-field" style="margin-bottom:1rem">
                 <label class="mq-label">Your email <span style="color:#dc2626">*</span></label>
@@ -1780,6 +1888,21 @@ window.logoutMember = async function () {
               <button class="mq-btn mq-btn-primary" id="mq-support-submit-btn" onclick="mqSubmitSupport()">Send</button>
               <div id="mq-support-status" style="font-size:13px;margin-top:10px"></div>
             </div>
+
+            <div class="mq-divider" style="margin:2rem 0"></div>
+
+            <div style="margin-bottom:1rem">
+              <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:4px">📚 Help guide</div>
+              <div style="font-size:13px;color:#6b7280">Everything from every tab's "Need help?" popup, all in one place — search for a word, or jump straight to a topic below.</div>
+            </div>
+
+            <input type="text" id="mq-help-search" placeholder="Search the help guide… (e.g. \"password\", \"install rate\", \"metric\")" oninput="mqFilterHelpGuide(this.value)" style="width:100%;max-width:520px;font-size:14px;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-family:inherit;margin-bottom:1rem"/>
+
+            <div id="mq-help-topic-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem"></div>
+
+            <div id="mq-help-no-results" style="display:none;padding:2rem;text-align:center;color:#9ca3af;font-size:13px">No help topics match "<span id="mq-help-no-results-term"></span>".</div>
+
+            <div id="mq-help-accordion"></div>
           </div>
 
           <!-- MARKETING KIT -->
@@ -12865,7 +12988,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (shopRecord.fields['Shop name'] === 'Maple & Stone Cabinetry') {
       const navTemplates = el('mq-nav-templates');
       if (navTemplates) navTemplates.style.display = 'flex';
+      window._mqIsAdminShop = true;
     }
+    mqBuildHelpGuide();
 
     const leads = await loadLeads(shopRecord.fields['Shop token']);
     window._mqLeads = sortLeadsArray(leads);
