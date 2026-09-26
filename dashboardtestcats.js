@@ -603,7 +603,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     const offsets = tabs.map(t => t.offsetTop);
     const bottomOffset = Math.max.apply(null, offsets);
     const topOffset = Math.min.apply(null, offsets);
-    if (bottomOffset === topOffset) return; // only one row — nothing to flip
+    if (bottomOffset === topOffset) {
+      // Either everything genuinely fits on one line, or (far more often)
+      // this ran while the Help guide page was still hidden (display:none)
+      // during initial dashboard load, so every tab measured offsetTop 0.
+      // Either way we have no real row data to act on — clear the inline
+      // override instead of leaving it stuck on 'wrap', so the CSS default
+      // (wrap-reverse, which puts Getting started's row at the bottom)
+      // takes over once the page is actually visible.
+      tabbar.style.flexWrap = '';
+      return;
+    }
 
     tabbar.style.flexWrap = (activeTab.offsetTop === bottomOffset) ? 'wrap' : 'wrap-reverse';
   }
@@ -995,7 +1005,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard #mq-help-search{font-family:inherit;font-size:13px;padding:9px 16px;border:1.5px solid #d1d5db;border-radius:999px;width:220px;flex-shrink:0;background:#fff}
       #midasquote-dashboard #mq-help-search:focus{outline:none;border-color:#1a1a1a}
       #midasquote-dashboard .mq-help-folder{border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.10);max-width:1080px}
-      #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px;padding:16px 14px 0}
+      #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap-reverse;align-items:flex-end;gap:4px;padding:16px 14px 0}
       #midasquote-dashboard .mq-help-tab{position:relative;top:4px;background:#333;color:rgba(255,255,255,0.62);border:none;border-radius:9px 9px 0 0;padding:10px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.15s,color 0.15s,top 0.15s,padding 0.15s;white-space:nowrap}
       #midasquote-dashboard .mq-help-tab:hover{background:#4a4a4a;color:#fff}
       #midasquote-dashboard .mq-help-tab.active{top:0;background:#fff;color:#111;padding-top:13px;padding-bottom:13px;box-shadow:0 -6px 14px rgba(0,0,0,0.16);z-index:2}
