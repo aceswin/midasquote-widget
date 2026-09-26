@@ -7356,6 +7356,57 @@ window.mqTogDrawerConfig=(prefix)=>{
   // stores and cabinet shops"). Every phrase below reads naturally for
   // either trade.
   const MQ_LOADING_PHRASES = ['Sharpening the pencils…','Measuring twice…','Squaring up the corners…','Warming up the workshop…','Dusting off the blueprints…','Double-checking the numbers…','Leveling things out…','Fine-tuning your estimate…'];
+
+  // ── Widget password protection ──
+  // Client-side by design (Jordan's call) — meant to keep an unlisted or
+  // trade-only widget away from casual visitors, not to protect anything
+  // sensitive, since the password list arrives in the same shop-data
+  // payload the widget already fetches either way. A shop with protection
+  // on but zero passwords saved fails CLOSED (no one gets in) rather than
+  // open, matching the dashboard's own "no one can get in until you add
+  // one" warning — this is not a special case in the check below, it falls
+  // out naturally since pwds.includes(stored) is false against an empty list.
+  function mqWidgetPwStorageKey() { return `mq_widget_pw_${shopToken}`; }
+  function mqCheckWidgetPassword(shop) {
+    let pwds = [];
+    try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
+    let stored = null;
+    try { stored = localStorage.getItem(mqWidgetPwStorageKey()); } catch(e) { stored = null; }
+    return !!stored && pwds.includes(stored);
+  }
+  function mqRenderPasswordGate(container, shop) {
+    const shopName = (shop['Shop name'] || 'This shop').replace(/</g,'&lt;');
+    container.innerHTML = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;max-width:360px;margin:0 auto;text-align:center;box-sizing:border-box">
+      <div style="font-size:2rem;margin-bottom:0.75rem">🔒</div>
+      <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">This estimator is password protected</div>
+      <div style="color:#4b5563;font-size:13px;margin-bottom:16px">Enter the password ${shopName} gave you to continue.</div>
+      <input type="password" id="mq-widget-pw-input" placeholder="Password" autocomplete="off" style="width:100%;font-size:14px;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;text-align:center;margin-bottom:10px;font-family:inherit;box-sizing:border-box"/>
+      <div id="mq-widget-pw-error" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px">That password is not correct — please try again.</div>
+      <button id="mq-widget-pw-submit" style="width:100%;background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Continue</button>
+    </div>`;
+    const input = container.querySelector('#mq-widget-pw-input');
+    const errorEl = container.querySelector('#mq-widget-pw-error');
+    const submitBtn = container.querySelector('#mq-widget-pw-submit');
+    const submit = () => {
+      const val = (input.value || '').trim();
+      let pwds = [];
+      try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
+      if (val && pwds.includes(val)) {
+        try { localStorage.setItem(mqWidgetPwStorageKey(), val); } catch(e) {}
+        init(); // re-run init(): mqCheckWidgetPassword now passes, so this renders the real widget
+      } else {
+        errorEl.style.display = 'block';
+        input.focus();
+        input.select();
+      }
+    };
+    if (submitBtn) submitBtn.addEventListener('click', submit);
+    if (input) {
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+      input.focus();
+    }
+  }
+
   async function init() {
     const container=document.getElementById('midasquote-widget');
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
@@ -7408,6 +7459,12 @@ window.mqTogDrawerConfig=(prefix)=>{
         <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Estimator unavailable</div>
         <div>This quoting tool is temporarily offline. Please contact the shop directly for a quote.</div>
       </div>`;
+      return;
+    }
+
+    // ── Password gate ──
+    if (shop['Widget password protected'] === 'Yes' && !mqCheckWidgetPassword(shop)) {
+      mqRenderPasswordGate(container, shop);
       return;
     }
 
