@@ -8406,24 +8406,44 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Min price has to be set per-variant, not shared like everything else
     // below — a variant's own price is what its own minimum gets checked
     // against (e.g. "Maple" and "Painted MDF" doors can easily want
-    // different floors). Show/hide rule: only once THAT SPECIFIC variant is
-    // marked 📏 Sized and priced per lin ft or per sq ft — a flat-rate or
-    // non-sized variant has nothing for a minimum to compare against.
+    // different floors).
     //
-    // This used to be gated on the ITEM-level "How is this priced?"
-    // dropdown instead (one on/off switch for every variant's Min $ field
-    // at once) — but that dropdown does not actually drive a variant's own
-    // pricing method (each variant picks that independently via its own
-    // 📏 Sized + rate-mode controls below), so a variant that was itself
-    // Flat $ could still show a Min $ field, and vice versa. Gating on the
-    // variant's own state instead removes that mismatch entirely.
+    // CORRECTION (2026-09-25): this used to be gated on THAT SPECIFIC
+    // variant's own 📏 Sized + rate-mode state, on the theory that "Sized"
+    // was each variant's real, independent pricing-method switch. Checking
+    // the actual widget quote math (widget.js calcCabinet) showed that's
+    // not what decides whether a variant's Min $ floor is ever applied —
+    // the widget only ever checks it against the ITEM-level "How is this
+    // priced?" setting (`s.perFt`/`s.perSqFt`, from the main row's Per
+    // linear foot/Per square foot fields), same as it always did before any
+    // of this redesign. A variant doesn't need to be individually "Sized"
+    // for its Price to be read as a $/lin ft or $/sq ft rate — it just needs
+    // the item itself to be set to Per lin ft/Per sq ft (see the "How is
+    // this priced?" dropdown in the main row above, and mqSpecPricedCellHTML
+    // for why it stays live even with variants). So this gates on the same
+    // item-level fields the widget actually reads, not on this variant's
+    // own Sized checkbox.
+    const itemPerFt = !!r.fields['Per linear foot'];
+    const itemPerSqFt = !!r.fields['Per square foot'];
+    // 📏 Sized calculates ONE fixed dollar Price from typed dimensions × a
+    // rate — that only makes sense when the item itself charges a flat
+    // price per variant (the customer just picks a variant and gets that
+    // exact price). Once the item is Per lin ft/Per sq ft, the customer
+    // types their OWN footage and that same Price field gets read as a
+    // $/unit rate instead (see priceUnitLabel below) — Sized's calculated
+    // number would then get double-counted as a rate, not a price. So
+    // Sized is only offered while the item is Flat rate; see the
+    // sizedConflict() flag near sizedControlsHTML for what happens to a
+    // variant that already has Sized checked when the item switches away
+    // from Flat rate (mqSpecPricingModeChange warns before allowing that).
+    const itemIsFlatRate = !itemPerFt && !itemPerSqFt;
     const minInputHTML = (v, vi) => {
-      const showMin = !!(v.sized && (v.rateMode === 'sqft' || v.rateMode === 'linft'));
+      const showMin = itemPerFt || itemPerSqFt;
       if (!showMin) return '';
       return `
         <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
         <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
-        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${v.rateMode==='linft'?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
+        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${itemPerFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
     };
     // The dimension/rate row, only shown once "📏 Sized" is checked for
     // that variant. `width:100%` on this wrapper forces it onto its own
@@ -8440,7 +8460,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // row Jordan saw. Sized here to comfortably fit their own longest
     // option's text ("inches" / "$/lin ft") plus padding, and matched to
     // the same width as each other so the two sit neatly side by side.
-    const sizedControlsHTML = (v, vi) => !v.sized ? '' : `
+    // A variant can end up Sized while the item is ALSO Per lin ft/Per sq
+    // ft if the item's pricing mode was switched after the variant was
+    // already marked Sized (mqSpecPricingModeChange warns before letting
+    // that happen going forward, but doesn't retroactively touch existing
+    // data) — in that state, show a warning and a one-click way out instead
+    // of the normal dimension/rate controls, which would just be
+    // calculating a number that's about to be misread as a rate anyway.
+    const sizedConflictHTML = (v, vi) => `
+      <div style="width:100%;padding:6px 0 4px 24px">
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;font-size:11px;color:#991b1b;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span>⚠️ This item is priced ${itemPerFt?'Per linear foot':'Per square foot'}, so "Sized" doesn't apply — this variant's Price (${CUR()}${v.price||0}) is being charged to the customer as a ${itemPerFt?'$/lin ft':'$/sq ft'} rate, not the calculated size price it shows here.</span>
+          <button type="button" class="mq-btn mq-btn-sm" onclick="mqSaveSizedVariantField('${r.id}',${vi},'sized',false)">Turn off Sized</button>
+        </div>
+      </div>`;
+    const sizedControlsHTML = (v, vi) => {
+      if (!v.sized) return '';
+      if (!itemIsFlatRate) return sizedConflictHTML(v, vi);
+      return `
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px 24px;width:100%">
         <div style="font-size:10px;color:#9ca3af;width:100%">Input your sizes below — the variant name above will fill in automatically from them.</div>
         <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="First dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
@@ -8458,6 +8495,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </select>
         ${(v.rateMode==='sqft'||v.rateMode==='linft') ? `<input type="number" value="${v.rate||''}" placeholder="Rate" title="${v.rateMode==='sqft'?'Price per square foot — multiplied by this size\'s area to fill in Price above':'Price per linear foot — multiplied by this size\'s longer side to fill in Price above'}" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'rate',parseFloat(this.value)||0)"/>` : ''}
       </div>`;
+    };
     // Each row carries its own stable variant id (not its array index, which
     // shifts around on every add/remove/reorder) in data-variant-id, plus a
     // ⠿ drag handle — same handle-activated draggable pattern as the
@@ -8475,16 +8513,38 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // corners and a gap below it, so a variant (label/price/sized controls
     // and all) reads as one distinct unit at a glance, especially useful
     // once a shop owner has 20-30 of them stacked in a row.
+    // When the item itself is set to Per lin ft/Per sq ft (the "How is this
+    // priced?" dropdown above), every variant's Price is read by the widget
+    // as a $/lin ft or $/sq ft RATE, not a flat dollar amount — the label
+    // next to the input makes that plain instead of just showing "Price"
+    // for every mode, which was a big part of Jordan's original confusion
+    // ("no way for me to know or even choose" the pricing method).
+    const priceUnitLabel = itemPerFt ? '/ lin ft' : (itemPerSqFt ? '/ sq ft' : '');
+    // Sized only offered while the item is Flat rate (see itemIsFlatRate
+    // above) — greyed out and unclickable otherwise, rather than letting a
+    // shop owner create the Price/rate double-up in the first place. A
+    // variant that's already Sized from before the item switched modes
+    // stays checked (so the conflict is visible) but still disabled; its
+    // own row below shows the conflict warning via sizedControlsHTML.
+    const sizedLabelHTML = (v, vi) => itemIsFlatRate ? `
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap" title="Enter two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the label + price above fill in automatically">
+        <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
+        📏 Sized
+      </label>` : `
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap" title="Only available when this item is priced Flat rate — Sized calculates one fixed price for one fixed size, which doesn't apply once the customer types in their own ${itemPerFt?'linear footage':'square footage'}. Switch the \"How is this priced?\" dropdown above back to Flat rate to use Sized.">
+        <input type="checkbox" ${v.sized?'checked':''} disabled style="width:14px;height:14px;accent-color:#9ca3af;cursor:not-allowed"/>
+        📏 Sized
+      </label>`;
     const rows = variants.map((v, vi) => `
       <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;flex-wrap:wrap;cursor:grab">
         <span class="mq-variant-drag-handle" title="Drag to reorder" style="color:#9ca3af;font-size:16px;cursor:grab;flex-shrink:0">⠿</span>
         <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
-        <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" title="${priceUnitLabel ? `This variant's ${priceUnitLabel.replace('/ ','')} rate — multiplied by whatever the customer enters on the widget` : 'This variant\'s flat price'}" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
+          ${priceUnitLabel ? `<span style="font-size:10px;color:#9ca3af;white-space:nowrap">${priceUnitLabel}</span>` : ''}
+        </div>
         ${minInputHTML(v, vi)}
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap" title="Enter two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the label + price above fill in automatically">
-          <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
-          📏 Sized
-        </label>
+        ${sizedLabelHTML(v, vi)}
         <button class="mq-btn mq-btn-sm" title="Duplicate this variant — handy for adding the next size in the same run" onclick="mqDuplicateVariant('${r.id}',${vi})">⧉</button>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
         ${sizedControlsHTML(v, vi)}
@@ -8516,7 +8576,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div id="mq-spec-variants-list-${r.id}">${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}</div>
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
         ${variants.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px">Drag the ⠿ handle to reorder — the first one listed is what customers see selected by default.</div>` : ''}
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Each variant has its own price — the Price and "How is this priced?" fields in the main row above just point down here once any variant exists, since each one is set per variant instead. Category, project types, Active, and Pro only stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> variants (e.g. differently-sized doors) let you type two dimensions and a $/sq ft or $/lin ft rate instead of calculating each price by hand — a Min $ floor appears once a variant is priced that way, and ⧉ duplicating a sized variant is the quickest way to add the next size in the same run.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Each variant has its own Price — but the <strong>"How is this priced?"</strong> setting in the main row above (Flat rate / Per lin ft / Per sq ft) still applies to every variant here: it decides whether the customer enters a plain quantity, linear feet, or square feet on the widget, and each variant's Price is used as that flat price, or as the $/lin ft or $/sq ft rate. Category, project types, Active, and Pro only stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> is just a shortcut for filling in a variant's own Price: type two dimensions and a $/sq ft or $/lin ft rate here and we calculate that Price for you — it doesn't change how the customer is charged, which is still whatever "How is this priced?" above says. A Min $ floor appears once a variant is priced that way, and ⧉ duplicating a sized variant is the quickest way to add the next size in the same run.</div>` : ''}
       </div>`;
   }
 
@@ -8774,6 +8834,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqSaveSpecUnit = async function(id, field, checked) {
     const otherField = field === 'Per linear foot' ? 'Per square foot' : 'Per linear foot';
     const otherId = field === 'Per linear foot' ? `mq-spec-persqft-${id}` : `mq-spec-perft-${id}`;
+    // Keep the in-memory record's fields in step with what's being saved —
+    // mqRefreshVariantsPanel below rebuilds the variants panel straight from
+    // r.fields (itemPerFt/itemPerSqFt in mqVariantsPanelHTML), and without
+    // this it would keep rebuilding from the OLD, stale value until the next
+    // full page load — so the panel's Min $ gating, price-unit labels, and
+    // the new Sized enable/disable state (see mqVariantsPanelHTML) would
+    // silently lag one step behind whatever the dropdown/checkbox actually
+    // says, right when this fix most needs them to be in sync.
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    if (r) {
+      r.fields[field] = checked;
+      if (checked) r.fields[otherField] = false;
+    }
     try {
       const updates = { [field]: checked };
       if (checked) {
@@ -8821,6 +8894,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // of hidden checkboxes — the separate lin ft/sq ft checkboxes inside the
   // expanded variants panel are untouched.
   window.mqSpecPricingModeChange = function(id, mode) {
+    // Switching a Flat-rate item to Per lin ft/Per sq ft while it has any
+    // 📏 Sized variant creates exactly the Price/rate double-up the Sized
+    // checkbox is now disabled to prevent going forward (see
+    // mqVariantsPanelHTML) — but that guard only stops a NEW Sized
+    // checkbox from being ticked; it doesn't stop the mode switch itself
+    // from creating the same conflict for a variant that was already
+    // Sized. Warn here, before saving anything, and let the shop owner back
+    // out — nothing is changed automatically either way; they still decide
+    // whether to fix it before or after switching.
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const prevMode = r ? (r.fields['Per linear foot'] ? 'linft' : (r.fields['Per square foot'] ? 'sqft' : 'flat')) : 'flat';
+    if (r && prevMode === 'flat' && (mode === 'linft' || mode === 'sqft')) {
+      const sizedVariants = mqParseVariants(r).filter(v => v.sized);
+      if (sizedVariants.length) {
+        const names = sizedVariants.map(v => v.label || '(unnamed)').join(', ');
+        const unitLabel = mode === 'linft' ? 'lin ft' : 'sq ft';
+        const ok = confirm(`${sizedVariants.length} variant${sizedVariants.length===1?'':'s'} below ${sizedVariants.length===1?'is':'are'} marked "📏 Sized" (${names}).\n\nSwitching this item to Per ${unitLabel} means those variants' calculated Price will now be charged to the customer as a $/${unitLabel} rate, not the size-based price shown now — almost never what you want.\n\nSwitch anyway? You can turn off Sized on each affected variant afterward.`);
+        if (!ok) {
+          const sel = document.getElementById(`mq-spec-pricingmode-${id}`);
+          if (sel) sel.value = prevMode;
+          return;
+        }
+      }
+    }
     const ftBox = document.getElementById(`mq-spec-perft-${id}`);
     const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
     if (mode === 'linft') {
@@ -8956,29 +9053,35 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </div>`;
   }
 
-  // Once an item has 1+ variants, its own top-level Price and "How is this
-  // priced?" controls stop being the real answer for that item — each
-  // variant gets its own price, and (via its own "📏 Sized" checkbox in the
-  // variants panel below) its own separate pricing method and dimensions.
-  // Jordan's own words after looking at this: "at the top I can apparently
-  // add a flat rate to all items variants, but how could i do that if they
-  // are labelled sized? So confusing... certain things that cant work
-  // should be hidden maybe to avoid confusion." She is right — leaving a
-  // live-looking dropdown and price box in the main row that do not
-  // actually drive that item's variant pricing was the real source of the
-  // confusion, not just wording. So the moment a first variant exists,
-  // both cells swap to a plain, non-interactive pointer down to the
-  // variants panel instead of a control that looks functional but is not
-  // the real answer. The bulk "apply one rate to every sized variant" tool
-  // that used to live in this Price cell (added earlier for Jordan: reprice
-  // a duplicated 50-variant item in one shot) moves down into the variants
-  // panel itself, right next to the sized-variant controls it actually
-  // affects — see the variants-panel bulk-rate toolbar below.
+  // CORRECTION (2026-09-25) — the redesign below this comment used to hide
+  // BOTH the Price cell and the "How is this priced?" cell once an item had
+  // 1+ variants, on the assumption that neither one still did anything once
+  // variants took over. Checking the actual widget quote math (widget.js
+  // calcCabinet, the specs.forEach supply-pricing loop) proved that
+  // assumption wrong for "How is this priced?": it is an ITEM-level setting
+  // (backed by the same "Per linear foot"/"Per square foot" fields, read as
+  // s.perFt/s.perSqFt) that still controls, for every variant, (a) what kind
+  // of quantity box the customer sees on the widget — a plain quantity, a
+  // linear-feet box, or a square-feet box — and (b) how that variant's own
+  // Price gets used: as a flat price, or as a $/lin ft or $/sq ft RATE
+  // multiplied by whatever the customer types in. Jordan confirmed this is
+  // exactly how it always worked ("they were totally able to be priced by
+  // square or linear or flat before... i have plenty of items that were set
+  // that way") and that hiding this dropdown behind "Set per variant ↓"
+  // broke her ability to see or change it for those items. So the dropdown
+  // stays real and live even with variants — it never actually moved to the
+  // variants panel; a variant's own "📏 Sized" feature is a separate,
+  // optional, dashboard-only shortcut for calculating what number to type
+  // into that variant's Price field, not a second, competing pricing-method
+  // switch. Price itself IS genuinely per-variant once variants exist (the
+  // widget only reads item-level Price when there are zero variants), so
+  // that cell still swaps to a "Priced per variant ↓" note — that part of
+  // the original diagnosis was correct.
   //
   // mqRefreshSpecVariantUI calls these same two functions (via
-  // mq-spec-pricecell-<id> / mq-spec-pricedcell-<id>) to swap the cells
-  // live the moment a variant is added or the last one removed, without
-  // needing a full row re-render.
+  // mq-spec-pricecell-<id> / mq-spec-pricedcell-<id>) to swap/refresh the
+  // cells live the moment a variant is added or the last one removed,
+  // without needing a full row re-render.
   function mqSpecPriceCellHTML(r) {
     const variantCount = mqParseVariants(r).length;
     if (variantCount) {
@@ -8992,14 +9095,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   function mqSpecPricedCellHTML(r) {
     const variantCount = mqParseVariants(r).length;
-    const pickerHTML = variantCount
-      ? `<div style="font-size:11px;color:#9ca3af;font-style:italic;line-height:1.3">Set per variant ↓</div>`
-      : `<select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
-          <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
-          <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
-          <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
-        </select>`;
-    return `${pickerHTML}<input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} style="display:none"/><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} style="display:none"/>`;
+    const pickerHTML = `<select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
+        <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
+        <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
+        <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
+      </select>`;
+    // Still real and functional with variants — see the correction note
+    // above. This note just clarifies that it's one shared setting for
+    // every variant listed below, since that's the part that confused
+    // Jordan originally (a single dropdown "for all items' variants").
+    const variantNoteHTML = variantCount
+      ? `<div style="font-size:10px;color:#9ca3af;line-height:1.3;margin-top:3px;width:98px">Applies to every variant below ↓</div>`
+      : '';
+    return `${pickerHTML}${variantNoteHTML}<input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} style="display:none"/><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} style="display:none"/>`;
   }
 
   window.mqShowSpecRateCalc = function(triggerEl, id, isInstall, event) {
@@ -12312,7 +12420,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         placeholder.style.display = 'none';
         stuck = false;
       } else if (stuck) {
+        // Bug found 2026-09-25: this branch only ever re-synced `left`,
+        // never `width` — so once the topbar went position:fixed, its
+        // width stayed pinned to whatever it measured at the moment it
+        // first stuck. Narrowing the browser afterward (e.g. Chrome's own
+        // side panel opening, or just resizing the window) left the fixed
+        // topbar rendering at its old, now-too-wide pixel width instead of
+        // shrinking with everything else, so its right-side buttons
+        // (Help / Preview widget / Log out) ran off the visible edge
+        // instead of wrapping — exactly what Jordan saw when a side panel
+        // ate into the window's width. `rootRect.width` (not the topbar's
+        // own rect) is the right source here, since the topbar's own
+        // getBoundingClientRect() would just echo back its current
+        // (possibly stale) inline width once it's already fixed-position.
         topbar.style.left = rootRect.left + 'px';
+        topbar.style.width = rootRect.width + 'px';
+        // The topbar's own height can change once its width is corrected
+        // (e.g. the button row wraps to a second line at the new width) —
+        // keep the placeholder's reserved height in sync so the content
+        // below doesn't jump.
+        placeholder.style.height = topbar.getBoundingClientRect().height + 'px';
       }
     }
 
