@@ -659,10 +659,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     s.textContent = `
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
       #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
-      #midasquote-dashboard .mq-topbar{background:#1a1a1a;border-bottom:1px solid #2d2d2d;padding:10px 2rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;min-height:60px;position:sticky;top:0;z-index:100}
-      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#d4af37;display:flex;align-items:center;gap:8px}
-      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#9ca3af}
-      #midasquote-dashboard .mq-topbar-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+      #midasquote-dashboard .mq-topbar{background:#1a1a1a;border-bottom:1px solid #2d2d2d;padding:10px 2rem;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:60px;position:fixed;top:0;left:0;right:0;z-index:100}
+      #midasquote-dashboard .mq-topbar-info{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;overflow:hidden}
+      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#d4af37;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #midasquote-dashboard .mq-topbar-actions{display:flex;flex-shrink:0;align-items:center;gap:8px 12px;white-space:nowrap}
       #midasquote-dashboard .mq-btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#111;font-family:inherit;transition:all 0.15s}
       #midasquote-dashboard .mq-btn:hover{background:#f9fafb}
       #midasquote-dashboard .mq-btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
@@ -825,7 +826,7 @@ window.logoutMember = async function () {
 
     return `
       <div class="mq-topbar">
-        <div>
+        <div class="mq-topbar-info">
           <div class="mq-topbar-brand">⚡ MidasQuote</div>
           <div class="mq-topbar-shop">${shop['Shop name'] || 'My Shop'}</div>
         </div>
@@ -12381,77 +12382,60 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     update();
   }
 
-  // Same technique as mqInitStickyNav, applied to the topbar — CSS
-  // position:sticky was silently failing on both for the same reason.
+  // CORRECTION (2026-09-25, second pass): the previous version of this
+  // function reimplemented CSS position:sticky in JS — toggling the topbar
+  // between normal flow and position:fixed based on scroll position, and
+  // resyncing its pixel left/width from the #midasquote-dashboard root's
+  // own getBoundingClientRect() every scroll/resize. That measured-width
+  // approach went through two real bugs in a row (a stale width that never
+  // re-synced on resize, fixed earlier today; then Jordan reported the black
+  // bar still wasn't reaching the true right edge of the window even after
+  // that fix). Root cause of the second one: #midasquote-dashboard breaks
+  // out of Webflow's page container using the classic `width:100vw` +
+  // negative-margin full-bleed trick (see its own CSS rule above) — and
+  // `100vw` is measured INCLUDING the vertical scrollbar's width, which is
+  // narrower than the page's actual visible content area. So the root's own
+  // rendered width (and therefore anything computed FROM it, like the old
+  // `rootRect.width`) could end up a little short of the true browser
+  // viewport — exactly the gap on the right Jordan saw.
+  //
+  // Real fix: stop deriving the topbar's horizontal position/width from the
+  // root at all. The topbar is now simply always `position:fixed;
+  // left:0; right:0` in its own CSS (see the .mq-topbar rule above) — fixed
+  // positioning is anchored to the true browser viewport, completely
+  // independent of whatever width #midasquote-dashboard's own vw-based CSS
+  // trick ends up with, so this can't drift out of sync with the real
+  // window edge the way a JS-measured pixel value could. It also means the
+  // topbar never needs to recompute anything on scroll or resize — the
+  // browser keeps it correctly full-width natively, for free, the same way
+  // it would for any other `position:fixed` element.
+  //
+  // The only thing left for this function to do is reserve the topbar's
+  // normal-flow space (a `position:fixed` element is taken out of flow
+  // entirely, so the page content below needs a spacer the same height, or
+  // it would render underneath the bar) and keep that spacer's height
+  // correct if the topbar's own rendered height ever changes (e.g. the
+  // mobile breakpoint's smaller padding).
   function mqInitStickyTopbar() {
     const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
     const root = document.getElementById('midasquote-dashboard');
     if (!topbar || !root) return;
 
-    // Holds the topbar's normal-flow space open once it goes fixed, so
-    // everything below it doesn't jump up to fill the gap.
     const placeholder = document.createElement('div');
-    placeholder.style.display = 'none';
     root.insertBefore(placeholder, topbar);
 
-    let stuck = false;
-
-    function update() {
-      const rootRect = root.getBoundingClientRect();
-      const rect = topbar.getBoundingClientRect();
-      const shouldStick = rootRect.top <= 0 && rootRect.bottom > rect.height;
-
-      if (shouldStick && !stuck) {
-        placeholder.style.width = rect.width + 'px';
-        placeholder.style.height = rect.height + 'px';
-        placeholder.style.display = 'block';
-        topbar.style.position = 'fixed';
-        topbar.style.top = '0px';
-        topbar.style.left = rootRect.left + 'px';
-        topbar.style.width = rect.width + 'px';
-        topbar.style.zIndex = '100';
-        stuck = true;
-      } else if (!shouldStick && stuck) {
-        topbar.style.position = '';
-        topbar.style.top = '';
-        topbar.style.left = '';
-        topbar.style.width = '';
-        topbar.style.zIndex = '';
-        placeholder.style.display = 'none';
-        stuck = false;
-      } else if (stuck) {
-        // Bug found 2026-09-25: this branch only ever re-synced `left`,
-        // never `width` — so once the topbar went position:fixed, its
-        // width stayed pinned to whatever it measured at the moment it
-        // first stuck. Narrowing the browser afterward (e.g. Chrome's own
-        // side panel opening, or just resizing the window) left the fixed
-        // topbar rendering at its old, now-too-wide pixel width instead of
-        // shrinking with everything else, so its right-side buttons
-        // (Help / Preview widget / Log out) ran off the visible edge
-        // instead of wrapping — exactly what Jordan saw when a side panel
-        // ate into the window's width. `rootRect.width` (not the topbar's
-        // own rect) is the right source here, since the topbar's own
-        // getBoundingClientRect() would just echo back its current
-        // (possibly stale) inline width once it's already fixed-position.
-        topbar.style.left = rootRect.left + 'px';
-        topbar.style.width = rootRect.width + 'px';
-        // The topbar's own height can change once its width is corrected
-        // (e.g. the button row wraps to a second line at the new width) —
-        // keep the placeholder's reserved height in sync so the content
-        // below doesn't jump.
-        placeholder.style.height = topbar.getBoundingClientRect().height + 'px';
-      }
+    function syncHeight() {
+      placeholder.style.height = topbar.getBoundingClientRect().height + 'px';
     }
+    syncHeight();
 
     let ticking = false;
-    function onScrollOrResize() {
+    function onResize() {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => { update(); ticking = false; });
+      requestAnimationFrame(() => { syncHeight(); ticking = false; });
     }
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
-    update();
+    window.addEventListener('resize', onResize);
   }
 
   // Sticky column-header row for the Specialty Items table — while
