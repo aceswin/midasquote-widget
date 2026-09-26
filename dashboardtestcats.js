@@ -321,7 +321,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 7</span><span class="mq-step-title">Embed code</span></div>
           <div class="mq-step-body">
-            <p>Grab your widget's embed code or direct link and add it to your website. Customize the code to suit your site. Access your MidasQuote Pro link as well and follow instructions on how to add MidasQuote Pro as an app to your phone or computer for fast accessibility.</p>
+            <p>Grab your widget's embed code or direct link and add it to your website. Customize the code to suit your site. Access your MidasQuote Pro link as well and follow instructions on how to add MidasQuote or MidasQuote Pro as an app to your phone or computer for fast accessibility.</p>
           </div>
         </div>
         <div class="mq-step">
@@ -337,7 +337,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             <p>Share your link or publish the embed, and you're ready for your first real customer. If you have any problems along the way or any confusion, DO NOT hesitate to reach out. Your success is our success. You came here because you saw the value MidasQuote could provide for you, so let us make sure it's providing that value for you fully.</p>
           </div>
         </div>
-        <p style="margin-top:1.4rem">Every tab below has its own detailed help if you get stuck on a specific step — this is just the map.</p>
+        <p style="margin-top:1.4rem">To dive deeper into each tab, check out the help tabs at the top of this page.</p>
       `
     },
     overview: {
@@ -882,6 +882,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap');
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
       #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#c8dad7b0;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
       #midasquote-dashboard .mq-topbar{background:#1a1a1a;border-bottom:1px solid #2d2d2d;padding:10px 2rem;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:60px;position:fixed;top:0;left:0;right:0;z-index:100}
@@ -1033,8 +1034,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-step:first-child{padding-top:0}
       #midasquote-dashboard .mq-step:last-child{border-bottom:none;padding-bottom:0}
       #midasquote-dashboard .mq-step-head{display:flex;align-items:center;gap:11px;margin-bottom:0.9rem}
-      #midasquote-dashboard .mq-step-num{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;height:26px;background:#333;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:0.03em;border-radius:999px}
-      #midasquote-dashboard .mq-step-title{font-size:16.5px;font-weight:800;color:#111}
+      #midasquote-dashboard .mq-step-num{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;height:26px;background:#333;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:0.03em;border-radius:8px}
+      #midasquote-dashboard .mq-step-title{font-family:'Baloo 2',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:18px;font-weight:700;color:#111}
       #midasquote-dashboard .mq-step-body{font-size:14.5px;color:#374151;line-height:1.85}
       #midasquote-dashboard .mq-step-body p{margin:0 0 0.9rem}
       #midasquote-dashboard .mq-step-body p:last-child{margin-bottom:0}
