@@ -8461,24 +8461,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // row Jordan saw. Sized here to comfortably fit their own longest
     // option's text ("inches" / "$/lin ft") plus padding, and matched to
     // the same width as each other so the two sit neatly side by side.
-    // A variant can end up Sized while the item is ALSO Per lin ft/Per sq
-    // ft if the item's pricing mode was switched after the variant was
-    // already marked Sized (mqSpecPricingModeChange warns before letting
-    // that happen going forward, but doesn't retroactively touch existing
-    // data) — in that state, show a warning and a one-click way out instead
-    // of the normal dimension/rate controls, which would just be
-    // calculating a number that's about to be misread as a rate anyway.
-    const sizedConflictHTML = (v, vi) => `
-      <div style="width:100%;padding:6px 0 4px 24px">
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;font-size:11px;color:#991b1b;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span>⚠️ This item is priced ${itemPerFt?'Per linear foot':'Per square foot'}, so "Sized" doesn't apply — this variant's Price (${CUR()}${v.price||0}) is being charged to the customer as a ${itemPerFt?'$/lin ft':'$/sq ft'} rate, not the calculated size price it shows here.</span>
+    // A variant can be Sized while the item is ALSO Per lin ft/Per sq ft —
+    // either because the item's mode was switched after the variant was
+    // already Sized, or (now that Sized is always clickable — see
+    // mqToggleSizedWithWarning) because the shop owner deliberately checked
+    // it after the confirm() warning. Either way, this notice stays visible
+    // as a standing reminder of what's actually happening (the calculated
+    // Price becomes a $/unit rate, not a fixed size price) plus a one-click
+    // way out — the dimension/rate controls below it still work normally,
+    // they're not blocked.
+    const sizedRateNoticeHTML = (v, vi) => !itemIsFlatRate ? `
+      <div style="width:100%;padding:6px 0 2px 24px">
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:7px 10px;font-size:11px;color:#1e40af;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span>This item is priced ${itemPerFt?'Per linear foot':'Per square foot'}, so the Price this calculates gets charged to the customer as a ${itemPerFt?'$/lin ft':'$/sq ft'} rate — not a fixed price for this one size.</span>
           <button type="button" class="mq-btn mq-btn-sm" onclick="mqSaveSizedVariantField('${r.id}',${vi},'sized',false)">Turn off Sized</button>
         </div>
-      </div>`;
+      </div>` : '';
     const sizedControlsHTML = (v, vi) => {
       if (!v.sized) return '';
-      if (!itemIsFlatRate) return sizedConflictHTML(v, vi);
-      return `
+      return `${sizedRateNoticeHTML(v, vi)}
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px 24px;width:100%">
         <div style="font-size:10px;color:#9ca3af;width:100%">Input your sizes below — the variant name above will fill in automatically from them.</div>
         <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="First dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
@@ -8521,29 +8522,45 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // for every mode, which was a big part of Jordan's original confusion
     // ("no way for me to know or even choose" the pricing method).
     const priceUnitLabel = itemPerFt ? '/ lin ft' : (itemPerSqFt ? '/ sq ft' : '');
-    // Sized only offered while the item is Flat rate (see itemIsFlatRate
-    // above) — greyed out and unclickable otherwise, rather than letting a
-    // shop owner create the Price/rate double-up in the first place. A
-    // variant that's already Sized from before the item switched modes
-    // stays checked (so the conflict is visible) but still disabled; its
-    // own row below shows the conflict warning via sizedControlsHTML.
-    const sizedLabelHTML = (v, vi) => itemIsFlatRate ? `
-      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap" title="Enter two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the label + price above fill in automatically">
-        <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
+    // Sized is clickable no matter what mode the item is in — Jordan, after
+    // trying the earlier "grey it out when the item isn't Flat rate"
+    // version, found the disabled checkbox itself confusing ("i dont see
+    // why it cant be available"). So instead of blocking the combo
+    // outright, checking Sized while the item is Per lin ft/Per sq ft pops
+    // a confirm() explaining what changes (see mqToggleSizedWithWarning)
+    // and lets the shop owner proceed if they mean to. The "?" next to the
+    // label is a click-to-read explainer (mqShowSpecHelpPopover, same
+    // pattern as every other "?" in this panel) instead of a hover-only
+    // title attribute, which Jordan said wasn't discoverable enough.
+    const sizedHelpText = 'Type two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the name and Price above fill in automatically for this variant. Meant for one fixed price at one fixed size. If this item is priced Per lin ft or Per sq ft, the customer types their own footage instead, so the calculated Price for a Sized variant gets charged as a $/unit rate instead of that fixed price.';
+    const sizedLabelHTML = (v, vi) => `
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap">
+        <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqToggleSizedWithWarning('${r.id}',${vi},this)"/>
         📏 Sized
-      </label>` : `
-      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap" title="Only available when this item is priced Flat rate — Sized calculates one fixed price for one fixed size, which doesn't apply once the customer types in their own ${itemPerFt?'linear footage':'square footage'}. Switch the \"How is this priced?\" dropdown above back to Flat rate to use Sized.">
-        <input type="checkbox" ${v.sized?'checked':''} disabled style="width:14px;height:14px;accent-color:#9ca3af;cursor:not-allowed"/>
-        📏 Sized
+        <span onclick="mqShowSpecHelpPopover(this,'${sizedHelpText}',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
       </label>`;
     const rows = variants.map((v, vi) => `
       <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;flex-wrap:wrap;cursor:grab">
         <span class="mq-variant-drag-handle" title="Drag to reorder" style="color:#9ca3af;font-size:16px;cursor:grab;flex-shrink:0">⠿</span>
-        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
+        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="${v.sized ? 'Size autofills ↓' : 'e.g. Maple'}" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
+        ${
+          // Once a variant is Sized AND the item is Per lin ft/Per sq ft,
+          // hide the normal editable Price box here in favor of a plain
+          // read-only readout. Jordan: this box "hangs around and is
+          // confusing" in that combo — the Sized calculator below is the
+          // actual source of the number now, so an editable-looking Price
+          // box sitting right next to it (that gets silently overwritten
+          // the next time a dimension changes anyway) was just noise. Flat
+          // rate items keep the normal editable box, since there Price is
+          // a genuinely meaningful, standalone flat dollar amount even
+          // without Sized involved.
+          (v.sized && !itemIsFlatRate) ? `
+        <div style="font-size:12px;color:#374151;white-space:nowrap" title="Calculated by Sized below, from the dimensions and rate you enter there">= ${CUR()}${(v.price||0).toFixed(2)}${priceUnitLabel ? ` <span style="color:#9ca3af">${priceUnitLabel}</span>` : ''}</div>` : `
         <div style="display:flex;align-items:center;gap:3px">
           <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" title="${priceUnitLabel ? `This variant's ${priceUnitLabel.replace('/ ','')} rate — multiplied by whatever the customer enters on the widget` : 'This variant\'s flat price'}" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
           ${priceUnitLabel ? `<span style="font-size:10px;color:#9ca3af;white-space:nowrap">${priceUnitLabel}</span>` : ''}
-        </div>
+        </div>`
+        }
         ${minInputHTML(v, vi)}
         ${sizedLabelHTML(v, vi)}
         <button class="mq-btn mq-btn-sm" title="Duplicate this variant — handy for adding the next size in the same run" onclick="mqDuplicateVariant('${r.id}',${vi})">⧉</button>
@@ -8577,7 +8594,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div id="mq-spec-variants-list-${r.id}">${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}</div>
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
         ${variants.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px">Drag the ⠿ handle to reorder — the first one listed is what customers see selected by default.</div>` : ''}
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Each variant has its own Price — but the <strong>"How is this priced?"</strong> setting in the main row above (Flat rate / Per lin ft / Per sq ft) still applies to every variant here: it decides whether the customer enters a plain quantity, linear feet, or square feet on the widget, and each variant's Price is used as that flat price, or as the $/lin ft or $/sq ft rate. Category, project types, Active, and Pro only stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> is just a shortcut for filling in a variant's own Price: type two dimensions and a $/sq ft or $/lin ft rate here and we calculate that Price for you — it doesn't change how the customer is charged, which is still whatever "How is this priced?" above says. A Min $ floor appears once a variant is priced that way, and ⧉ duplicating a sized variant is the quickest way to add the next size in the same run.</div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.6">
+          <div><strong>"How is this priced?"</strong> above still applies to every variant below it.</div>
+          <div>Category, project types, Active, and Pro only are shared too — only Price, Min $, and 📏 Sized are per variant.</div>
+          <div>Photos go under Products → Specialty Items, not here.</div>
+          <div><strong>📏 Sized</strong> just fills in Price for you from two dimensions and a rate — it does not change how the customer is charged.</div>
+        </div>` : ''}
       </div>`;
   }
 
@@ -8711,6 +8733,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     mqRefreshVariantsPanel(id);
     mqRefreshSpecVariantUI(id);
     await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
+  };
+
+  // Wraps the "📏 Sized" checkbox's onchange. Jordan wanted Sized to stay
+  // clickable even when the item is Per lin ft/Per sq ft (previously it was
+  // just disabled/greyed out in that state — she found that more confusing
+  // than helpful: "i dont see why it cant be available"). So the checkbox
+  // itself is never disabled; instead, turning Sized ON while the item is
+  // per-unit priced pops a plain confirm() explaining that the calculated
+  // Price will be charged as a $/unit rate, not a fixed size price, and lets
+  // the shop owner cancel (checkbox reverts, nothing saved) or proceed
+  // (falls through to the normal save). Turning Sized OFF never needs a
+  // warning, so it always goes straight through.
+  window.mqToggleSizedWithWarning = function(id, vi, checkboxEl) {
+    const checked = checkboxEl.checked;
+    if (checked) {
+      const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+      const itemPerFt = !!(r && r.fields['Per linear foot']);
+      const itemPerSqFt = !!(r && r.fields['Per square foot']);
+      if (itemPerFt || itemPerSqFt) {
+        const unitLabel = itemPerFt ? 'lin ft' : 'sq ft';
+        const ok = confirm(`This item is priced Per ${unitLabel}, so the customer types their own footage on the widget. "Sized" will still calculate one dollar number from the dimensions you type here, but that number will then be charged to the customer as a $/${unitLabel} rate, not a fixed price for that one size.\n\nThat is fine if you are intentionally using it to work out a rate. If you just want one fixed price for one fixed size, switch this item to Flat rate above instead.\n\nTurn Sized on anyway?`);
+        if (!ok) { checkboxEl.checked = false; return; }
+      }
+    }
+    mqSaveSizedVariantField(id, vi, 'sized', checked);
   };
 
   // Duplicates ONE variant within the same item -- Jordan: "they should also
