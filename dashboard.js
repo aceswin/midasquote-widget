@@ -1241,7 +1241,7 @@ window.logoutMember = async function () {
             <div class="mq-card" id="mq-rooms-cabinet-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
-                💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
+                💡 You can adjust the ballpark outputs for bases, uppers, installation, or the total ballpark price. We've automatically taken off 5% for bathroom cabinets because they're smaller. You could also use this for a project type with a generally more difficult installation than normal — or if you typically charge 10% more for renos than new builds, add 10% to the overall ballpark range of your reno project type.
               </div>
               <div id="mq-rooms-list"></div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
