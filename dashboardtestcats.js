@@ -549,7 +549,16 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // click-triggered (which is what people instinctively try anyway),
   // dismissed by clicking anywhere else.
   window.mqShowSpecHelpPopover = function(triggerEl, text, event) {
-    if (event) event.stopPropagation();
+    // preventDefault, not just stopPropagation, matters here: several of
+    // these "?" icons (e.g. next to "📏 Sized" in mqVariantsPanelHTML) sit
+    // inside a <label> that wraps a checkbox. A browser forwards a click on
+    // ANY element inside such a label to the checkbox as a built-in
+    // activation behavior — that's separate from normal event bubbling, so
+    // stopPropagation alone (which only stops the event reaching other
+    // listeners) never stopped it; Jordan found clicking "?" was silently
+    // checking/unchecking Sized. preventDefault on the click is what
+    // actually suppresses that forwarding.
+    if (event) { event.preventDefault(); event.stopPropagation(); }
     let pop = document.getElementById('mq-spec-help-popover');
     const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
     if (!pop) {
