@@ -308,13 +308,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-body">
             <p>Add real photos (even gifs) for what you've set up, so customers see your actual materials and doors instead of generic icons. My Products section is what brings the widget to life. You also use the My Products section to control what products show for what project types.</p>
             <p>Want to remove cabinets, doors, and drawers completely from a project type, but keep crown, valance, counters, and some custom specialty items? Simply check/uncheck the project types you want certain items or entire categories showing up in.</p>
+            <p>If you don't have all the photos you need to get started, you can choose from our prefilled libraries for each different category. We also suggest using ChatGPT to generate images if you are in dire need. For example, taking a somewhat rough image and asking ChatGPT to clean it up can be very useful. Or even if you have a 3D image of a product from Mosaik or Cabinet Vision, just click and hold "Shift + Windows key + S" to take an instant snapshot of your screen to paste into GPT. Many of our images were made by combining real images with ChatGPT to make higher quality ones. It can really save a lot of time.</p>
           </div>
         </div>
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 6</span><span class="mq-step-title">Showroom <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
           <div class="mq-step-body">
-            <p>A shareable gallery built from the photos you've already added in My Products — pick "Default showroom" to show off your priced categories, or "Build my own" to show only custom categories you create here instead. Rename or hide anything without touching your actual pricing or the widget itself.</p>
-            <p>Your showroom has its own standalone link that works completely on its own, and can also be embedded right on your website as a self-sizing iframe if you'd rather it live on your own page.</p>
+            <p>A shareable gallery built from the photos you've already added in My Products, or a completely custom showroom displaying your real work images. Pick "Default showroom" to show off your priced categories, or "Build my own" to show only custom categories you create here instead. Rename or hide anything without touching your actual pricing or the widget itself.</p>
+            <p>Your showroom has its own standalone link that works completely on its own, and can also be embedded right on your website as a self-sizing iframe if you'd rather it live on your own page. Not all shops have a decent showroom on their website, so MidasQuote solves that problem for shops at no extra cost to you.</p>
           </div>
         </div>
         <div class="mq-step">
