@@ -1273,7 +1273,7 @@ window.logoutMember = async function () {
               </div>
             </div>
             <div id="mq-spec-msg"></div>
-            <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4;max-width:480px">
+            <div id="mq-spec-tips-card" class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4;max-width:480px">
               <div onclick="mqToggleSpecTips()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer">
                 <div style="font-size:13px;font-weight:700;color:#166534">💡 Tips for this page</div>
                 <span id="mq-spec-tips-arrow" style="font-size:13px;color:#166534;transition:transform 0.2s;transform:rotate(-90deg)">▼</span>
@@ -1283,11 +1283,11 @@ window.logoutMember = async function () {
                 <br><br>
                 🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
                 <br><br>
-                🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
+                🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price.
                 <br><br>
-                🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
+                🌍 <strong>Thinking in metric?</strong> If you prefer to input your prices using metric, the calculator will automatically convert to feet for you.
                 <br><br>
-                📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
+                📏 <strong>Minimum price:</strong> Sometimes small items may price too low using square foot, so you can set a minimum price to trigger if the sq ft price is less than the minimum.
               </div>
             </div>
             <div style="margin-bottom:1rem">
@@ -5292,10 +5292,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqToggleSpecTips = function() {
     const body = el('mq-spec-tips-body');
     const arrow = el('mq-spec-tips-arrow');
+    const card = el('mq-spec-tips-card');
     if (!body) return;
     const opening = body.style.display === 'none';
     body.style.display = opening ? 'block' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
+    // Jordan likes the collapsed card staying narrow (480px, so it doesn't
+    // dominate the page) but wants the tips to actually have room to
+    // breathe once she opens it, instead of wrapping tightly at that same
+    // narrow width. 'none' lets it size up to whatever the page's own
+    // layout allows; collapsing puts the 480px cap right back.
+    if (card) card.style.maxWidth = opening ? 'none' : '480px';
   };
 
   // Which categories should be listed for reordering under a given project
