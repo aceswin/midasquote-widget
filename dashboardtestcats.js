@@ -579,7 +579,43 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       <div class="mq-help-panel-title"><span>${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${content.title}</div>
       <div class="mq-help-panel-body">${content.body}</div>`;
     panel.scrollTop = 0;
+
+    mqAlignHelpTabRow();
   };
+
+  // Whichever tab row holds the active tab should be the row sitting right
+  // on top of the white content panel — that's what sells the "this is the
+  // open folder tab" illusion, since the panel's white background is what
+  // the active tab visually merges into. If the active tab landed in the
+  // top row (under normal wrapping), flip the tab bar to wrap-reverse so
+  // that row renders at the bottom instead, and the other row moves up top.
+  // Re-measures from a clean 'wrap' baseline every time so the two physical
+  // rows always mean the same thing regardless of which state we were
+  // previously in.
+  function mqAlignHelpTabRow() {
+    const tabbar = document.getElementById('mq-help-tabbar');
+    if (!tabbar) return;
+    const tabs = Array.from(tabbar.querySelectorAll('.mq-help-tab'));
+    const activeTab = tabbar.querySelector('.mq-help-tab.active');
+    if (!tabs.length || !activeTab) return;
+
+    tabbar.style.flexWrap = 'wrap';
+    const offsets = tabs.map(t => t.offsetTop);
+    const bottomOffset = Math.max.apply(null, offsets);
+    const topOffset = Math.min.apply(null, offsets);
+    if (bottomOffset === topOffset) return; // only one row — nothing to flip
+
+    tabbar.style.flexWrap = (activeTab.offsetTop === bottomOffset) ? 'wrap' : 'wrap-reverse';
+  }
+
+  (function mqWatchHelpTabRowResize() {
+    let t = null;
+    window.addEventListener('resize', function() {
+      if (!document.getElementById('mq-help-tabbar')) return;
+      clearTimeout(t);
+      t = setTimeout(mqAlignHelpTabRow, 150);
+    });
+  })();
 
   // The search box doesn't filter the tabs (a folder tab bar is a fixed
   // set, not a list to prune) — it just jumps straight to the first topic,
