@@ -661,6 +661,19 @@
       #midasquote-widget .mq-tab-sub{font-size:10px;opacity:0.7;line-height:1}
       #midasquote-widget .mq-tab-content{display:none;padding:15px}
       #midasquote-widget .mq-tab-content.active{display:block}
+      /* Jordan: 15px of side padding on every tab's content is fine on
+         desktop, but on a phone it's width that could go to the actual form
+         fields/pickers instead — bring it down to 5px below this breakpoint.
+         Deliberately placed AFTER the unconditional rule above (not inside
+         the earlier @media (max-width:600px) block near the top of this
+         stylesheet) — both rules share the exact same specificity, so with
+         equal specificity the LATER one in source order wins regardless of
+         which is inside a media query; nested inside that earlier block,
+         this 5px would have lost the cascade to the unconditional 15px rule
+         declared after it and never actually applied on a phone. */
+      @media (max-width:600px){
+        #midasquote-widget .mq-tab-content{padding:5px}
+      }
       #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:10px;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-sec{border-left:4px solid ${boxBorder}}
       #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:${focalColor};color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
@@ -809,12 +822,20 @@
       /* Background/border stay full-bleed on the outer bar, but the actual
          content centers within a max-width column — same width the results
          panel itself uses, so wide desktop screens don't stretch the price
-         and buttons apart to the far edges. */
+         and buttons apart to the far edges. #mq-sticky-breakdown-toggle
+         (the chevron-in-a-square open/close control) used to live up in a
+         reserved band above the bar (hence the old 48px top padding — see
+         prior checklist entries); Jordan asked to have it share the same
+         line as #mq-sticky-label ("Swap items...") instead, so it now sits
+         inline inside #mq-sticky-label-row as a normal flex child (no
+         absolute positioning), and the bar's padding is back to the same
+         10px every other side gets. */
       #mq-sticky-inner{position:relative;max-width:900px;width:100%;margin:0 auto}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       #mq-sticky-content{flex:1;min-width:0}
-      #mq-sticky-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+      #mq-sticky-label-row{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+      #mq-sticky-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
       #mq-sticky-price-wrap{position:relative;display:inline-block}
       #mq-sticky-price{font-size:19px;font-weight:800;color:#fff;display:inline-block;transition:color 0.3s;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
       #mq-sticky-price.pulse{animation:mqPricePulse 0.6s ease}
@@ -829,7 +850,7 @@
       #mq-sticky-financing-main{font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:0.01em;display:flex;align-items:center;justify-content:center;gap:6px}
       #mq-sticky-financing-disclaimer{font-size:10px;font-weight:400;color:rgba(255,255,255,0.55);font-style:italic;margin-top:3px}
       @media (max-width:420px){
-        #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
+        #mq-sticky-label{white-space:normal;overflow:visible;text-overflow:clip}
         #mq-sticky-content{flex:1 1 100%}
         #mq-sticky-ctas{flex:1 1 100%;margin-top:4px}
         #mq-sticky-ctas button{flex:1;padding:9px 8px;font-size:11px}
@@ -952,11 +973,14 @@
       .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
       .mq-hover-preview .mq-hp-label{font-size:12px;color:#374151;text-align:center;margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:180px}
       .mq-lightbox.show{display:flex}
-      .mq-lightbox-track-wrap{width:100%;max-width:100%}
-      .mq-lightbox-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;overscroll-behavior-x:contain;touch-action:pan-x}
+      .mq-lightbox-track-wrap{width:100%;max-width:100%;height:75vh}
+      .mq-lightbox-track{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;overscroll-behavior-x:contain;touch-action:pan-x}
       .mq-lightbox-track::-webkit-scrollbar{display:none}
-      .mq-lightbox-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
-      .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+      /* height:100%/overflow:hidden here (both new) give a zoomed image a
+         fixed, non-content-dependent box to pan around inside — see
+         mqLbInitGestures below for why that matters for the pinch/pan math. */
+      .mq-lightbox-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;min-width:0;height:100%;overflow:hidden}
+      .mq-lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5);transform-origin:center center}
       .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
       .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:12px}
       .mq-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.95);box-shadow:0 3px 14px rgba(0,0,0,0.35);font-size:26px;font-weight:700;color:#111;border:none;cursor:pointer;z-index:100002}
@@ -1178,6 +1202,226 @@
     wrap.innerHTML = `<span>${firstLetter}</span>`;
   };
 
+  // ============================================================
+  // Lightbox pinch/double-tap zoom + pan
+  // ============================================================
+  // Jordan's ask: on mobile the lightbox's zoom was barely bigger than the
+  // photo's normal size, so the "how to measure" guide photos (and every
+  // other photo that opens through this same shared lightbox — door/
+  // material pickers, specialty items, project photos) couldn't actually
+  // be read up close. Every image opened via mqPhotoLightbox can now be
+  // pinch-zoomed or double-tap-zoomed in further, then panned around
+  // while zoomed, same as a native Photos app.
+  //
+  // Built entirely on the Pointer Events API rather than raw Touch events,
+  // so touch AND mouse drive the exact same code path: desktop gets
+  // double-click-to-zoom and click-drag-to-pan "for free", which is also
+  // how the gesture math here was verified without a physical touchscreen
+  // (real mouse drags + synthetic 2-pointer PointerEvents dispatched in a
+  // real Chromium tab — see the checklist entry for this change).
+  const MQ_LB_MAX_ZOOM = 4;           // ceiling for pinch zoom
+  const MQ_LB_DOUBLE_TAP_ZOOM = 2.5;  // fixed zoom level a double-tap jumps to
+  const MQ_LB_DOUBLE_TAP_MS = 300;    // max gap between taps to count as a double-tap
+  const MQ_LB_TAP_MOVE_TOLERANCE = 10; // px of finger movement still allowed to count as a "tap"
+
+  function mqLbZoomState(img) {
+    if (!img._mqZoom) img._mqZoom = { scale: 1, tx: 0, ty: 0 };
+    return img._mqZoom;
+  }
+
+  function mqLbApply(img, animate) {
+    const z = mqLbZoomState(img);
+    img.style.transition = animate ? 'transform 0.2s ease-out' : 'none';
+    img.style.transform = `translate(${z.tx}px,${z.ty}px) scale(${z.scale})`;
+    // While zoomed, a single finger drags the photo around instead of
+    // swiping to the next one — touch-action:none hands 100% of that
+    // pointer's handling to our own pan logic below instead of letting the
+    // browser try to natively scroll the track underneath it.
+    img.style.touchAction = z.scale > 1.01 ? 'none' : 'pan-x';
+  }
+
+  // Keeps a zoomed photo from being panned past its own edges — same
+  // "cover" clamp math a native photo viewer uses. img.offsetWidth/Height
+  // reflect the photo's LAID-OUT (scale-1) size (CSS transforms never
+  // affect layout, only paint), and the parent slide now has a fixed,
+  // content-independent height (see the .mq-lightbox-slide CSS comment),
+  // so parent.clientWidth/Height is a stable stand-in for "the visible
+  // viewport this photo can pan around inside."
+  function mqLbClamp(img, tx, ty, scale) {
+    const parent = img.parentElement;
+    const vw = parent ? parent.clientWidth : window.innerWidth;
+    const vh = parent ? parent.clientHeight : window.innerHeight;
+    const baseW = img.offsetWidth, baseH = img.offsetHeight;
+    const maxTx = Math.max(0, (baseW * scale - vw) / 2);
+    const maxTy = Math.max(0, (baseH * scale - vh) / 2);
+    return {
+      tx: Math.min(maxTx, Math.max(-maxTx, tx)),
+      ty: Math.min(maxTy, Math.max(-maxTy, ty))
+    };
+  }
+
+  // Changes scale while keeping whatever content point currently sits
+  // under (anchorX, anchorY) — page/client coordinates — visually fixed on
+  // screen. This is the standard pinch-zoom anchor formula: called on every
+  // pinch pointermove (anchored to the current finger midpoint, so panning
+  // "for free" as two fingers spread while also moving together) and once
+  // for a double-tap's zoom in/out (anchored to the tap point).
+  function mqLbSetScale(img, newScale, anchorX, anchorY, animate) {
+    const z = mqLbZoomState(img);
+    newScale = Math.min(MQ_LB_MAX_ZOOM, Math.max(1, newScale));
+    const rect = img.getBoundingClientRect(); // reflects the CURRENT (pre-update) transform
+    const layoutCenterX = (rect.left + rect.width / 2) - z.tx;
+    const layoutCenterY = (rect.top + rect.height / 2) - z.ty;
+    // Content-space offset of the anchor point from center, in scale-1 units.
+    const u = (anchorX - layoutCenterX - z.tx) / z.scale;
+    const v = (anchorY - layoutCenterY - z.ty) / z.scale;
+    const tx1 = anchorX - layoutCenterX - u * newScale;
+    const ty1 = anchorY - layoutCenterY - v * newScale;
+    const clamped = mqLbClamp(img, tx1, ty1, newScale);
+    z.scale = newScale;
+    z.tx = clamped.tx;
+    z.ty = clamped.ty;
+    mqLbApply(img, animate);
+  }
+
+  function mqLbResetZoom(img, animate) {
+    if (!img) return;
+    const z = mqLbZoomState(img);
+    z.scale = 1; z.tx = 0; z.ty = 0;
+    mqLbApply(img, animate);
+  }
+
+  // Wires pinch-zoom, double-tap-zoom, and drag-to-pan onto every photo a
+  // lightbox track ever shows, via one delegated set of Pointer Event
+  // listeners (photos themselves are recreated fresh on every
+  // mqPhotoLightbox() open, so this only needs to run once per lightbox).
+  //
+  // Tap-detection is tracked independently of zoom/pan state (a common bug
+  // here: gating "was this a tap?" on a mode flag that also means "was
+  // this a pan?" silently breaks double-tap-to-zoom-OUT, since once zoomed
+  // in every pointer-down starts out looking like a potential pan). A
+  // gesture only ever fails to count as a tap because it actually moved
+  // (moved >= tolerance) or because a 2nd finger joined it (pinch) — never
+  // because the photo happened to already be zoomed in.
+  function mqLbInitGestures(track) {
+    const pointers = new Map(); // pointerId -> {x,y}, every finger/pointer currently down on a photo
+    let activeImg = null;
+    let isPinch = false;
+    let hadPinch = false; // true for the rest of this gesture once any pinch happened, even after a finger lifts back to 1
+    let pinchStartDist = 0, pinchStartScale = 1;
+    let singleStart = null; // {x,y,tx,ty} for the current lone pointer (pan reference point)
+    let moved = 0; // furthest the lone pointer has travelled since the gesture began, for tap-detection
+    let pendingTapTimer = null;
+    let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+
+    const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+
+    track.addEventListener('pointerdown', (e) => {
+      const img = e.target.closest('.mq-lightbox-slide img');
+      if (!img) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      try { img.setPointerCapture(e.pointerId); } catch (err) {}
+      if (pointers.size === 1) {
+        activeImg = img;
+        moved = 0;
+        isPinch = false;
+        hadPinch = false;
+        const z = mqLbZoomState(img);
+        singleStart = { x: e.clientX, y: e.clientY, tx: z.tx, ty: z.ty };
+      } else if (pointers.size === 2 && activeImg === img) {
+        clearTimeout(pendingTapTimer); // a 2nd finger landing means this was never a tap-to-close
+        isPinch = true;
+        hadPinch = true;
+        img.style.touchAction = 'none';
+        const pts = Array.from(pointers.values());
+        pinchStartDist = dist(pts[0], pts[1]);
+        pinchStartScale = mqLbZoomState(img).scale;
+      }
+    });
+
+    track.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId) || !activeImg) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (isPinch && pointers.size === 2) {
+        const pts = Array.from(pointers.values());
+        const newDist = dist(pts[0], pts[1]);
+        const mid = midpoint(pts[0], pts[1]);
+        const ratio = pinchStartDist > 0 ? newDist / pinchStartDist : 1;
+        mqLbSetScale(activeImg, pinchStartScale * ratio, mid.x, mid.y, false);
+      } else if (!isPinch && singleStart) {
+        const dx = e.clientX - singleStart.x;
+        const dy = e.clientY - singleStart.y;
+        moved = Math.max(moved, Math.hypot(dx, dy));
+        const z = mqLbZoomState(activeImg);
+        if (z.scale > 1.01) {
+          const clamped = mqLbClamp(activeImg, singleStart.tx + dx, singleStart.ty + dy, z.scale);
+          z.tx = clamped.tx; z.ty = clamped.ty;
+          mqLbApply(activeImg, false);
+        }
+      }
+    });
+
+    // isRealUp is false for pointercancel (the browser taking the gesture
+    // over for its own native scrolling, or an interrupted touch) — never
+    // treat that as a tap, only a genuine pointerup can close/zoom.
+    function endPointer(e, isRealUp) {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.delete(e.pointerId);
+      if (!activeImg) return;
+      if (isPinch) {
+        // Snap back to a clean "not zoomed" state if the pinch ended up
+        // only barely past 1x — otherwise a near-invisible residual zoom
+        // would silently leave touch-action:none behind, disabling swipe-
+        // between-images for a zoom level nobody can actually see.
+        if (mqLbZoomState(activeImg).scale < 1.08) mqLbResetZoom(activeImg, true);
+        if (pointers.size === 1) {
+          // One finger is still down — hand off into a continued pan
+          // instead of ending the gesture, so lifting the 2nd pinch finger
+          // doesn't interrupt a one-finger drag right after.
+          const remaining = Array.from(pointers.values())[0];
+          const z2 = mqLbZoomState(activeImg);
+          isPinch = false;
+          singleStart = { x: remaining.x, y: remaining.y, tx: z2.tx, ty: z2.ty };
+        } else {
+          activeImg = null;
+        }
+        return;
+      }
+      if (pointers.size > 0) return; // still mid-gesture on another pointer
+      const img = activeImg;
+      const wasTap = isRealUp && !hadPinch && moved < MQ_LB_TAP_MOVE_TOLERANCE;
+      activeImg = null;
+      hadPinch = false;
+      if (!wasTap) return;
+      const now = Date.now();
+      const isDoubleTap = (now - lastTapTime) < MQ_LB_DOUBLE_TAP_MS &&
+        dist({ x: e.clientX, y: e.clientY }, { x: lastTapX, y: lastTapY }) < 30;
+      if (isDoubleTap) {
+        clearTimeout(pendingTapTimer);
+        lastTapTime = 0;
+        const z = mqLbZoomState(img);
+        if (z.scale > 1.01) mqLbResetZoom(img, true);
+        else mqLbSetScale(img, MQ_LB_DOUBLE_TAP_ZOOM, e.clientX, e.clientY, true);
+        return;
+      }
+      lastTapTime = now; lastTapX = e.clientX; lastTapY = e.clientY;
+      clearTimeout(pendingTapTimer);
+      // No second tap yet — wait out the double-tap window before treating
+      // this as a genuine single tap. Matches the lightbox's original
+      // "tap anywhere to close" behavior (the overlay's own click handler
+      // skips IMG targets so the two don't fight over the same tap), and
+      // applies whether or not the photo is currently zoomed in.
+      pendingTapTimer = setTimeout(() => {
+        const lbEl = document.getElementById('mq-lightbox');
+        if (lbEl) lbEl.classList.remove('show');
+      }, MQ_LB_DOUBLE_TAP_MS);
+    }
+
+    track.addEventListener('pointerup', (e) => endPointer(e, true));
+    track.addEventListener('pointercancel', (e) => endPointer(e, false));
+  }
+
   // Optional 3rd/4th args let this open as part of a related set (currently
   // just the measuring-guide carousel) — pass an array of {src,label} plus
   // the starting index, and the lightbox shows nav arrows/swipe to move
@@ -1199,7 +1443,7 @@
       lb.innerHTML = `
         <div class="mq-lightbox-track-wrap"><div class="mq-lightbox-track" id="mq-lightbox-track"></div></div>
         <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
-        <div class="mq-lightbox-hint">Tap anywhere to close</div>
+        <div class="mq-lightbox-hint">Pinch or double-tap to zoom · Tap to close</div>
         <button type="button" class="mq-lightbox-nav mq-lightbox-nav-left" id="mq-lightbox-prev" aria-label="Previous image">‹</button>
         <button type="button" class="mq-lightbox-nav mq-lightbox-nav-right" id="mq-lightbox-next" aria-label="Next image">›</button>`;
       // Appended to document.body (not the widget container) so position:fixed
@@ -1210,8 +1454,12 @@
       // suppresses it once a touch sequence has scrolled), so this still
       // closes correctly on a genuine tap without needing to special-case
       // the track — swiping through images just naturally won't trigger it.
+      // IMG targets are excluded here because mqLbInitGestures below owns
+      // tap-to-close for the photo itself, so it can tell a single tap
+      // (close) apart from the first half of a double-tap (zoom).
       lb.addEventListener('click', (e) => {
         if (e.target.closest('.mq-lightbox-nav')) return; // nav buttons handle their own clicks
+        if (e.target.tagName === 'IMG') return; // handled by mqLbInitGestures instead
         lb.classList.remove('show');
       });
       document.getElementById('mq-lightbox-prev').addEventListener('click', (e) => {
@@ -1228,6 +1476,7 @@
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(mqLightboxSyncFromScroll, 100);
       });
+      mqLbInitGestures(trackEl);
     }
     const track = document.getElementById('mq-lightbox-track');
     const imgList = (images && images.length > 1) ? images : [{ src, label }];
@@ -1253,6 +1502,7 @@
     const targetLeft = startIdx * track.clientWidth;
     track.scrollLeft = targetLeft;
     lb._images = imgList;
+    lb._lbLastIdx = startIdx; // tracked so mqLightboxSyncFromScroll can reset zoom on the slide we swipe away from
     document.getElementById('mq-lightbox-prev').classList.toggle('show', imgList.length > 1);
     document.getElementById('mq-lightbox-next').classList.toggle('show', imgList.length > 1);
     document.getElementById('mq-lightbox-label').textContent = imgList[startIdx] ? imgList[startIdx].label : (label||'');
@@ -1283,6 +1533,15 @@
     const track = document.getElementById('mq-lightbox-track');
     if (!lb || !track || !lb._images) return;
     const idx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    // Swiping to a different photo resets whichever slide we're leaving —
+    // each photo should always start fresh at fit-to-screen the next time
+    // it's viewed, not still zoomed in from before.
+    if (lb._lbLastIdx !== undefined && lb._lbLastIdx !== idx) {
+      const prevSlide = track.children[lb._lbLastIdx];
+      const prevImg = prevSlide && prevSlide.querySelector('img');
+      if (prevImg) mqLbResetZoom(prevImg, false);
+    }
+    lb._lbLastIdx = idx;
     const item = lb._images[idx];
     if (item) document.getElementById('mq-lightbox-label').textContent = item.label || '';
   }
@@ -4863,7 +5122,7 @@
       const stickyToggle = document.getElementById('mq-sticky-breakdown-toggle');
       const stickyBreakdown = document.getElementById('mq-sticky-breakdown');
       const stickyPrice = document.getElementById('mq-sticky-price');
-      if (stickyToggle) stickyToggle.style.display = allEntries.length ? 'inline' : 'none';
+      if (stickyToggle) stickyToggle.style.display = allEntries.length ? 'flex' : 'none';
       if (stickyBreakdown) {
         if (!allEntries.length) {
           stickyBreakdown.style.display = 'none';
@@ -4872,14 +5131,27 @@
           // price is the only number on screen — keep it visible.
           if (stickyPrice) stickyPrice.style.display = 'inline-block';
         } else {
-          stickyBreakdown.style.display = 'block';
-          if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
+          // Jordan: "lets start with the breakdown hidden by default." This
+          // used to unconditionally force stickyBreakdown open on every
+          // single call — which fires on every recalculation, i.e. on
+          // basically any input change — so a customer's manual collapse
+          // click never actually stuck; it silently popped back open the
+          // moment anything else changed. Now this only refreshes the
+          // breakdown's CONTENT and reads whatever visibility it already
+          // had — closed the first time entries ever appear (its starting
+          // display:none, same as always), open only if the customer (or
+          // mqToggleStickyBreakdown) explicitly opened it — rather than
+          // forcing a particular state every render. ▴/▾ (not text) per
+          // Jordan: a bigger, obvious chevron read better than the words
+          // "Hide breakdown"/"Show breakdown" ever did.
+          const isOpen = stickyBreakdown.style.display === 'block';
+          if (stickyToggle) stickyToggle.textContent = isOpen ? '▴' : '▾';
           // The breakdown's own Total row (below) shows the same number as
           // the top-left price — once the breakdown is open that would be
           // a duplicate, so hide the top-left one and let the Total row do
           // the job as the one visible total. mqToggleStickyBreakdown keeps
           // this in sync if the customer manually collapses the panel.
-          if (stickyPrice) stickyPrice.style.display = 'none';
+          if (stickyPrice) stickyPrice.style.display = isOpen ? 'none' : 'inline-block';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
             + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 0;margin-top:6px;border-top:1px solid rgba(255,255,255,0.25);color:#fff"><span style="font-size:13.5px;font-weight:700">Total</span><span style="font-size:20px;font-weight:800">${totalText}</span></div>`
             + `<div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px"><button type="button" onclick="mqScrollToTop()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↑ Back to top</button><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
@@ -6079,18 +6351,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       // whatever the install selections were and the removal selections,
       // because they will likely be the same.. so just by default when
       // they add another surface it will have that install and removal
-      // selection the same as the first surface automatically." Read
-      // straight off the DOM (not a stored JS value) so this always
+      // selection the same as the first surface automatically." Later
+      // extended to also carry the material and backsplash selections for
+      // the same reason ("so they dint have to remember to reinput them").
+      // Read straight off the DOM (not a stored JS value) so this always
       // reflects whatever the first surface is CURRENTLY set to, even if
       // it was changed after being added. A brand new project's very first
-      // surface has no earlier surface to copy from, so both stay null and
-      // each select simply falls back to its normal first-option default,
-      // exactly as before.
+      // surface has no earlier surface to copy from, so all four stay null
+      // and each field simply falls back to its normal default, exactly as
+      // before.
       const firstSurfContainer = document.getElementById(containerId);
       const firstSiSelect = firstSurfContainer?.querySelector(`select[id^="mqssi-s${prefix}"]`);
       const firstRmSelect = firstSurfContainer?.querySelector(`select[id^="mqsrm-s${prefix}"]`);
+      const firstMatSelect = firstSurfContainer?.querySelector(`select[id^="mqsm-s${prefix}"]`);
+      const firstBsSelect = firstSurfContainer?.querySelector(`select[id^="mqsbs-s${prefix}"]`);
       const carrySi = firstSiSelect ? firstSiSelect.value : null;
       const carryRm = firstRmSelect ? firstRmSelect.value : null;
+      const carryMat = firstMatSelect ? firstMatSelect.value : null;
+      const carryBs = firstBsSelect ? firstBsSelect.value : null;
       const card=document.createElement('div');
       card.className='mq-surface-card';card.id='mqsc-'+id;card.dataset.prefix=prefix;
       card.innerHTML=`
@@ -6144,6 +6422,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       window.mqRefreshCtAddons(`mqsm-${id}`, `mqs-edge-${id}`, `mqs-addons-${id}`);
       window.mqRefreshSurfBsFt(id);
       window.mqSurfUpdatePreview(id);
+      // Carry the material and backsplash selections over too (see comment
+      // above). Material has to go through mqRestoreFieldValue rather than
+      // a plain el.value= — it's a visual chip picker with a hidden
+      // <select> behind it, and mqRestoreFieldValue is the same helper
+      // mqRestoreFormState already uses to reselect a saved surface's
+      // material chip when restoring surfaces after a tab switch, so this
+      // reuses an already-proven path instead of reimplementing chip
+      // selection here. Restoring material
+      // re-fires its onchange cascade (mqRefreshBsOpts included), which is
+      // what actually rebuilds mqsbs-${id}'s backsplash option list for
+      // that material — backsplash has to be restored AFTER material, or
+      // its carried-over value would have nothing valid to select yet.
+      if (carryMat && carryMat !== 'none' && document.getElementById(`mqsm-${id}`)?.value !== carryMat) {
+        mqRestoreFieldValue(`mqsm-${id}`, carryMat);
+      }
+      if (carryBs) {
+        mqRestoreFieldValue(`mqsbs-${id}`, carryBs);
+      }
       mqRefreshAllPickerVisibility(prefix);
       mqRenumberSurfaces(prefix);
       return id;
@@ -6960,8 +7256,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       <div id="mq-sticky-inner">
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
-            <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-contact-link" onclick="mqRequestContact()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">🙋 I'd like to be contacted</button> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button></div>
+            <div id="mq-sticky-label-row">
+              <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+              <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" aria-label="Show price breakdown" style="display:none;align-items:center;justify-content:center;width:26px;height:26px;flex-shrink:0;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.5);border-radius:6px;color:#fff;font-size:16px;line-height:1;cursor:pointer;font-family:inherit;padding:0">▾</button>
+            </div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
+            <div id="mq-sticky-links-row" style="margin-top:2px"><button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-contact-link" onclick="mqRequestContact()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">🙋 I'd like to be contacted</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
@@ -6985,7 +7285,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // exclusive — collapsing the breakdown by hand should bring the price
     // back, same as when there's nothing to show a breakdown for at all.
     if (price) price.style.display = opening ? 'none' : 'inline-block';
-    if (toggle) toggle.textContent = opening ? '▴ Hide breakdown' : '▾ Breakdown';
+    if (toggle) toggle.textContent = opening ? '▴' : '▾';
     mqAdjustWidgetBottomPadding();
   };
   // The bar is position:fixed, so it never pushes page content out of the
