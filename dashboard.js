@@ -838,8 +838,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">⭐</div>
-        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
-        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+        <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to pre-populate items for shops that offer refacing, restaining, or repainting services.
           <br><br>
           A quick heads-up: specialty item lists get messy fast once you start adding a lot of them. It's worth organizing items into <strong>categories</strong> (using the Category column) right from the start — categorized items group together neatly instead of turning into one long, hard-to-scan list.
@@ -850,7 +850,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
         </div>
-        <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+        <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
     modal.style.display = 'flex';
   };
@@ -882,8 +882,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">📦</div>
-        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
-        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+        <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           <strong>This is where you add photos</strong> for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon. Click <em>"📤 Upload a photo"</em> on any item to use your own, or click <em>"📷 Choose from library"</em> to pick one of our curated photos instead — no need to find or shoot a photo yourself for every item.
           <br><br>
           You can also remove any item from any project type here — just uncheck it under that item's project types.
@@ -894,7 +894,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info on this tab.
         </div>
-        <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+        <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
     modal.style.display = 'flex';
   };
@@ -905,6 +905,51 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (shopRecord && !shopRecord.fields['Products tips popup seen']) {
       shopRecord.fields['Products tips popup seen'] = true;
       atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Products tips popup seen': true }).catch(()=>{});
+    }
+  };
+
+  // Shown exactly once per shop, the first time they land on the Pricing
+  // tab — this is the single most important setup step (it's what actually
+  // drives the widget's quote math), so this leads with why it matters,
+  // then the recommended order of operations: run the wizard first with a
+  // small starter set (baseline box material included), then fill in the
+  // rest — crown/valance, tall cabinets, countertops — afterward using the
+  // "+ Add" buttons. Same dismiss-once-on-the-shop-record pattern as the
+  // other first-visit popups (requires a 'Pricing tips popup seen' field on
+  // the Shops table, same as 'Specialty tips popup seen' / 'Products tips
+  // popup seen').
+  window.mqShowPricingTipsModal = function() {
+    let modal = document.getElementById('mq-pricing-tips-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-pricing-tips-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+        <div style="font-size:40px;margin-bottom:12px">💰</div>
+        <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+          <strong>The Pricing tab is the heart of the widget</strong> — without it, the only items shown on the widget are your specialty items.
+          <br><br>
+          Run the pricing wizard first, using only a few of the basic items you sell — no more than 3–5 for each category (<strong>Box Materials, Door Styles, Drawer Configurations</strong>). Be sure to include your cheapest box material (e.g. White Melamine) — it'll automatically become the baseline material the rest of your quotes are priced against.
+          <br><br>
+          You can always add more items later using the <strong>"+ Add"</strong> buttons for each category. Once you've also set up <strong>Crown Moulding</strong>, <strong>Valance</strong> (if you offer them), <strong>Tall Cabinets</strong>, and <strong>countertops</strong>, your widget will really start to take shape.
+          <br><br>
+          If you get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info — or email us any time at <a href="mailto:support@midasquote.com" style="color:#2563eb">support@midasquote.com</a>, we're happy to help.
+        </div>
+        <button onclick="mqClosePricingTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+      </div>`;
+    modal.style.display = 'flex';
+  };
+  window.mqClosePricingTipsModal = function() {
+    const modal = document.getElementById('mq-pricing-tips-modal');
+    if (modal) modal.style.display = 'none';
+    const shopRecord = window._mqShopRecord;
+    if (shopRecord && !shopRecord.fields['Pricing tips popup seen']) {
+      shopRecord.fields['Pricing tips popup seen'] = true;
+      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Pricing tips popup seen': true }).catch(()=>{});
     }
   };
 
@@ -13377,6 +13422,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // still read pricing-helper-v2.js's own cached (and possibly stale)
       // shopRecord instead of whatever window._mqShopRecord currently is.
       mqApplyEstimatorTabScopeToPricing();
+      if (window._mqShopRecord && !window._mqShopRecord.fields['Pricing tips popup seen']) {
+        window.mqShowPricingTipsModal();
+      }
     }
     if (page === 'showroom') {
       const catsWrap = document.getElementById('mq-showroom-cats');
