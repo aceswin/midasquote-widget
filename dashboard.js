@@ -1005,7 +1005,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard #mq-spec-table td{padding:12px 9px}
       #midasquote-dashboard #mq-spec-table td{vertical-align:top;padding-top:14px}
       #midasquote-dashboard #mq-spec-table{border-collapse:separate;border-spacing:0 10px}
-      #midasquote-dashboard #mq-spec-table td{background:#d7e3e2a8;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
+      #midasquote-dashboard #mq-spec-table td{background:#d7e3e24f;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
       #midasquote-dashboard #mq-spec-table td:first-child{border-left:1px solid #e5e7eb;border-radius:8px 0 0 8px}
       #midasquote-dashboard #mq-spec-table td:last-child{border-right:1px solid #e5e7eb;border-radius:0 8px 8px 0}
       #midasquote-dashboard #mq-spec-table thead th{border-bottom:2px solid var(--border)}
