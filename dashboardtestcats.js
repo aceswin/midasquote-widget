@@ -485,15 +485,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Showroom',
       body: `
         <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page.</p>
-        <p><strong>🎭 Showroom style</strong> at the top switches your whole showroom between two looks: "Default showroom" shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup).</p>
-        <p>"Build my own" allows you to create custom categories like "Kitchens," "Commercial work," etc., plus Specialty Items on the page (optional).</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:16px 0 8px">🎭 Showroom style</h4>
+        <p><strong>Default showroom</strong> shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup).</p>
+        <p><strong>Build my own</strong> allows you to create custom categories like "Kitchens," "Commercial work," etc., plus Specialty Items on the page (optional).</p>
         <p>Switching between Default and Build My Own is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Managing categories</h4>
         <p>The line under your shop name on the showroom page ("Browse the materials, door styles..." by default) is fixed for Default showroom, since it's describing your actual priced categories. While Build My Own is active, a <strong>Showroom subheading</strong> box appears right below the style picker so you can write your own — leave it blank to use the built-in "Browse some of our past projects and features..." line instead.</p>
-        <p>For a priced category, "✏️ Rename" and "🚫 Hide category" only change what shows on your <em>showroom</em> — your actual pricing, categories, and the widget are never touched. Each item underneath has its own "Remove from showroom" button, same idea — the item itself is untouched, it just stops appearing here. An item needs a photo (added on My Products) before it shows up in this list at all.</p>
-        <p>"+ New category" adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
-        <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
-        <p>The live preview below is your actual showroom page, not a mockup — it's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
-        <p>Your showroom has its own link that works completely on its own — paste it into your own website's navigation if you'd like, it doesn't need the widget at all.</p>
+        <p><strong>✏️ Rename &amp; 🚫 Hide category</strong> — for a priced category, these only change what shows on your <em>showroom</em> — your actual pricing, categories, and the widget are never touched. Each item underneath has its own "Remove from showroom" button, same idea — the item itself is untouched, it just stops appearing here. An item needs a photo (added on My Products) before it shows up in this list at all.</p>
+        <p><strong>"+ New category"</strong> adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
+        <p><strong>Reordering</strong> — use the ▲▼ arrows on any category to change the order it appears in on your showroom page. Priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🔗 Preview &amp; sharing</h4>
+        <p><strong>Live preview</strong> — below is your actual showroom page, not a mockup. It's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
+        <p><strong>Standalone link</strong> — your showroom has its own link that works completely on its own. Paste it into your own website's navigation if you'd like — it doesn't need the widget at all.</p>
         <p><strong>🧩 Embed on a page</strong> — beyond the standalone link, your showroom can be embedded right on your own website as a self-sizing iframe — grab the code from the "Embed on a page" card. You can independently show or hide the shop info block, top navigation, hero banner, and project-type filter bar just for the embedded version, so it blends into your site instead of duplicating your own header/nav.</p>
         <p><strong>🖱️ "See our showroom" button</strong> — choose whether the widget's own showroom button opens the popup page (default) or sends customers straight to your embedded page instead.</p>
       `
