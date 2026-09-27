@@ -269,8 +269,87 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // just be dropped in above or below the text later without needing to
   // restructure anything.
   const MQ_HELP_CONTENT = {
+    gettingstarted: {
+      title: 'Getting started',
+      body: `
+        <p>Work through the MidasQuote setup tabs in order the first time you set up your shop — each step builds on the one before it, and by the end your widget is ready for real customers.</p>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 1</span><span class="mq-step-title">Shop info</span></div>
+          <div class="mq-step-body">
+            <p>Your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.</p>
+            <p>Look further in Shop info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
+            <p>You can even limit what you offer. Countertops only? No problem. Simply toggle off "cabinets only" and "both" to only offer countertops.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 2</span><span class="mq-step-title">Project types</span></div>
+          <div class="mq-step-body">
+            <p>Set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones, edit ours, or create your own from scratch.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 3</span><span class="mq-step-title">Pricing</span></div>
+          <div class="mq-step-body">
+            <p>Run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</p>
+            <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can bulk items of the same price, or add any more items you wish. You can also now configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
+            <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 4</span><span class="mq-step-title">Specialty items <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
+          <div class="mq-step-body">
+            <p>This is where you can be as creative as you like. You can offer any item you wish to list. It could be multiple variants of one door type, all pre-sized and charged per square foot automatically — perfect for refacing jobs that don't fit in well with the pricing wizard. It could be garbage pullouts, lazy susans, floating shelves, sinks, wainscoting, and on and on. Anything you can price at a flat rate, per square foot rate, or per linear foot rate can go here.</p>
+            <p>You can and should also divide items into categories for easiest viewing for your customers. You can also decide what specialty items show on what project types, and which items are meant for your eyes only (MidasQuote Pro) or for customers to see too.</p>
+            <p>Once you really understand the flexibility of MidasQuote, you can create almost anything using the Specialty items section.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 5</span><span class="mq-step-title">My Products</span></div>
+          <div class="mq-step-body">
+            <p>Add real photos (even gifs) for what you've set up, so customers see your actual materials and doors instead of generic icons. My Products section is what brings the widget to life. You also use the My Products section to control what products show for what project types.</p>
+            <p>Want to remove cabinets, doors, and drawers completely from a project type, but keep crown, valance, counters, and some custom specialty items? Simply check/uncheck the project types you want certain items or entire categories showing up in.</p>
+            <p>If you don't have all the photos you need to get started, you can choose from our prefilled libraries for each different category. We also suggest using ChatGPT to generate images if you are in dire need. For example, taking a somewhat rough image and asking ChatGPT to clean it up can be very useful. Or even if you have a 3D image of a product from Mosaik or Cabinet Vision, just click and hold "Shift + Windows key + S" to take an instant snapshot of your screen to paste into GPT. Many of our images were made by combining real images with ChatGPT to make higher quality ones. It can really save a lot of time.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 6</span><span class="mq-step-title">Showroom <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
+          <div class="mq-step-body">
+            <p>A shareable gallery built from the photos you've already added in My Products, or a completely custom showroom displaying your real work images. Pick "Default showroom" to show off your priced categories, or "Build my own" to show only custom categories you create here instead. Rename or hide anything without touching your actual pricing or the widget itself.</p>
+            <p>Your showroom has its own standalone link that works completely on its own, and can also be embedded right on your website as a self-sizing iframe if you'd rather it live on your own page. Not all shops have a decent showroom on their website, so MidasQuote solves that problem for shops at no extra cost to you.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 7</span><span class="mq-step-title">Embed code</span></div>
+          <div class="mq-step-body">
+            <p>Grab your widget's embed code or direct link and add it to your website. Customize the code to suit your site. Access your MidasQuote Pro link as well and follow instructions on how to add MidasQuote or MidasQuote Pro as an app to your phone or computer for fast accessibility.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 8</span><span class="mq-step-title">Test it</span></div>
+          <div class="mq-step-body">
+            <p>Run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. Make sure that the prices you are generating are always in a healthy range. If not, then you can recheck your pricing, adjust your range to be wider or higher, or adjust individual sections of your range (Base cabinet, uppers, installation) in the Project types tab.</p>
+            <p>Generally your quotes are going to come in pretty close to your real pricing, except for things like finished ends and a few crown returns that will be missed. We have tested MidasQuote on multiple jobs varying from a couple thousand dollars to $50,000 and higher, and it always comes in very close.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 9</span><span class="mq-step-title">Go live</span></div>
+          <div class="mq-step-body">
+            <p>Share your link or publish the embed, and you're ready for your first real customer. If you have any problems along the way or any confusion, DO NOT hesitate to reach out. Your success is our success. You came here because you saw the value MidasQuote could provide for you, so let us make sure it's providing that value for you fully.</p>
+          </div>
+        </div>
+        <p style="margin-top:1.4rem">To dive deeper into each tab, check out the help tabs at the top of this page.</p>
+      `
+    },
     overview: {
       title: 'Dashboard',
+      // guideBody is a shorter version shown only in the folder-tab Help
+      // guide (the "where to start" line there is redundant now that
+      // Getting started covers it as its own full walkthrough). The
+      // per-page "Need help?" popup on the actual Dashboard tab keeps the
+      // full body below, including that line.
+      guideBody: `
+        <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
+      `,
       body: `
         <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
         <p>If you're just getting started, head to <strong>Shop info</strong> first, then <strong>Project types</strong>, then <strong>Pricing</strong> — that's the order that makes the rest of the dashboard make sense.</p>
@@ -294,8 +373,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p><strong>Project type section title/hint</strong> — the heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
         <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
-        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount — below that, the monthly-payment line stays hidden, so it never shows up looking oddly small on a low-cost quote.</p>
+        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount to block the financing's monthly payment from showing up for a project that is only a couple hundred dollars. Just meant to keep things looking polished and professional.</p>
         <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
+        <p><strong>🔒 Widget access</strong> — require a password before customers can use your widget at all, for when you don't want it fully public. Add as many passwords as you like; removing one instantly locks out anyone whose browser had it saved.</p>
         <p><strong>🗂️ Estimator tabs</strong> — a card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
         <p>Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
       `
@@ -319,31 +399,41 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Pricing',
       body: `
         <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
-        <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
-        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
+        <p>Start by running the pricing wizard with a few of your most commonly sold items. No need to add everything here. Just keep it to a max of 5 items for each category (box materials, drawer styles, door styles, hinges). No need to list items with matching prices either. You can easily add multiple items of the same or different price using the "Mini pricing wizards" afterwards.</p>
+        <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need. It's your choice to add handles/knobs. If you install handles but don't supply them, then you still need to make sure you include handle installation in your door installation pricing (You will be reminded in the pricing wizard). If you do supply handles, then it's still best to add in the installation costs when reminded in the pricing wizard. Simply because if a customer doesn't include handles in their ballpark, then at least your estimate will still have the installation of them covered.</p>
+        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking your quotes.</p>
+        <p><strong>🧪 Test your pricing once it's set up.</strong> Run a handful of test quotes through the widget for jobs you've actually quoted before, and compare the ballpark to what you really charged. If something's consistently off, there are three different places to adjust it depending on how widespread the issue is:</p>
+        <ul style="margin:0 0 1.15rem;padding-left:1.25rem;line-height:1.8">
+          <li>An individual item's own rate — here in Pricing, or in Specialty Items — the actual per-linear-foot, per-square-foot, or flat rate for that one box material, door style, install rate, etc.</li>
+          <li>A specific project type's price adjustments (Project Types tab) — nudges Base cabinets, Upper cabinets, Installation, or Total ballpark up or down just for that one project type, like the built-in -5% on Bathroom base cabinets.</li>
+          <li>The widget's overall estimate range (Shop Info → Quote range — low/high) — widens or narrows how far the shown range sits from the calculated price, across every project type at once.</li>
+        </ul>
         <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
-        <p><strong>⭐ Baseline</strong> — Box Materials, Door Styles, and Hinges each have one item pinned as the baseline (marked with a ⭐ Baseline badge) that every other item in the category is priced against. It automatically re-pins to whichever item is genuinely cheapest the moment one is saved. Delete the current baseline and you'll be asked to pick what becomes the new one, with ties shown so you can choose.</p>
-        <p><strong>Sort any item list</strong> by clicking its Name or Price column header — the active sort highlights in blue. Lists past 10 items scroll in place instead of pushing the page down.</p>
+        <p><strong>⭐ Baseline</strong> — Box Materials, Door Styles, and Hinges each have one item pinned as the baseline (marked with a ⭐ Baseline badge) that every other item in the category is priced against. It automatically re-pins to whichever item is genuinely cheapest the moment one is saved. Delete the current baseline and you'll be asked to pick what becomes the new one.</p>
+        <p><strong>Sort any item list</strong> by clicking its Name or Price column header — the active sort highlights in blue.</p>
         <p><strong>✏️ Edit install/removal rates</strong> — requote your whole Installation & Removal set at once, pre-filled with your current rates. Deleting any one rate deletes the whole set, since the widget needs all of them to price every job type correctly.</p>
         <p><strong>See (and edit) the original quote behind a rate</strong> — opening Edit on a Box Material, Door Style, Drawer Config, or Hinge now shows the real job price that rate came from, so you can update it by typing a new job total instead of doing the math yourself.</p>
         <p style="margin-top:1.25rem"><strong>How some of the trickier pricing actually works:</strong></p>
         <p><strong>Extended (36"–40") upper cabinets</strong> add a flat 30% on top of the material/door cost and the install cost for upper cabinets only — base cabinets are never affected, since it's only the uppers that get taller to reach the ceiling.</p>
         <p><strong>Tall cabinets</strong> are priced per unit: your wizard's baseline unit price (24" wide, baseline material & door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced.</p>
+        <p><strong>Countertop pricing</strong> covers more than just your per-square-foot material rate. Set a backsplash rate and separate cutout charges for sinks and cooktops, so those don't get missed on a job that needs them. Edges and addons — a specific edge profile, or any extra beyond the standard edge — each get their own price and photo, and you choose which materials each one applies to. A minimum price is available too, so a small countertop doesn't accidentally price too low off the square-foot rate alone.</p>
+        <p><strong>Crown Moulding and Valance</strong> price the same way as your other cabinet categories, and can be linked to specific door styles — handy if certain profiles are only meant to pair with certain doors.</p>
       `
     },
     specialty: {
       title: 'Specialty items',
       body: `
-        <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
-        <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
+        <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding for when you are offering refacing, restaining, or repainting services. We have even pre-added some of these items for you to give you a better idea. You can keep or delete them.</p>
+        <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead. You can also use our newly added "sized" option to add multiple sizes of an item with square footage generated for you. Read more in the "Sized variants" definition.</p>
         <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Edit categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
-        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it: enter 16.80 as the install price, not ${CUR()}71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
+        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is labor only — the widget adds it on top of the supply price above. If you don't offer a choice for an item, just leave "Offer supply/install choice?" unchecked and then pick which label is true from the dropdown instead.</p>
         <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
         <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
         <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
         <p><strong>🌍 Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
-        <p><strong>Variants</strong> — give one item multiple options (like Maple/Oak/MDF under one "Crown Molding" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
+        <p><strong>Variants</strong> — give one item multiple options (like Lemans pullout/Lazy susan/Magic corner under one "Corner cabinet solutions" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
+        <p><strong>Sized variants</strong> — a newly added feature is the ability to create multiple sized variants of a product, such as "Maple shaker door" with 20 different size increments like 30"x10", 30"x11", 30"x12", 30"x13", and so on. And the really helpful part of it is that you can apply one rate to all of them and it will autocalculate their costs based on their individual sizing, saving you a lot of calculator time.</p>
         <p><strong>Pro only</strong> — hides an item from the customer-facing widget entirely while keeping it available in MidasQuote Pro.</p>
         <p>Everything on this tab autosaves the moment you change it — there's no "Save" button to remember here.</p>
       `
@@ -351,14 +441,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     proposals: {
       title: 'Proposals',
       body: `
-        <p>Build proposal templates here — your team then picks one from <strong>MidasQuote Pro</strong>, right under a completed real-number estimate, to turn it into a clean, printable proposal for the customer to review and sign.</p>
+        <p>Once you get MidasQuote honed in, you can generate fast, printable PDF proposals — designed to your specifications — right from <strong>MidasQuote Pro</strong>.</p>
         <p>You start with three ready-made templates — <strong>Simple</strong>, <strong>Standard</strong>, and <strong>Large Project</strong> — but you can rewrite any of them completely, or add as many of your own as you'd like.</p>
         <p><strong>The Body box is the whole proposal.</strong> Write it exactly like you'd write your own — your own wording, your own layout, your own order. Nothing is fixed except the branded header at the very top (your logo, shop name, accent colour, and the date) — everything below that is entirely yours to write.</p>
-        <p><strong>Tokens</strong> are how real data drops into your text. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you. Same idea for <code>{items}</code> (a styled list) or <code>{items_plain}</code> (the same list with no box or colour, if you'd rather it match your own paper proposal's look), <code>{totals_box}</code> or <code>{totals_plain}</code>, <code>{hr}</code> (a plain horizontal divider), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{customer_phone}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line — this app doesn't do e-signatures, this is for printing and signing in person).</p>
+        <p><strong>Tokens</strong> — use tokens to drop pre-organized lists and items into your proposal. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you.</p>
+        <p>Same idea for <code>{items}</code> (a styled list) or <code>{items_plain}</code> (the same list with no box or colour, if you'd rather it match your own paper proposal's look), <code>{totals_box}</code> or <code>{totals_plain}</code>, <code>{hr}</code> (a plain horizontal divider), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{customer_phone}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line).</p>
         <p><strong>Show individual item prices</strong> — on by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
         <p><strong>Deposit</strong> and <strong>Tax</strong> settings below the header row feed the <code>{deposit}</code> and <code>{tax}</code> tokens — set the percentage or flat amount here, then place the token wherever you want it to show up in the body text.</p>
         <p><strong>👁 Preview</strong> — shows exactly what this template will actually produce, filled with sample data (a fake customer, sample line items), so you can see how it looks without leaving the dashboard or running a real quote first.</p>
-        <p>Proposals themselves — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
+        <p><strong>Proposals themselves</strong> — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
       `
     },
     embed: {
@@ -377,30 +468,39 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:0 0 8px">📸 Photos</h4>
         <p>Add real photos for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon.</p>
         <p>Don't have your own photo for something? Many common items already have one of our own curated photos ready to use — just pick "Choose from library" instead of uploading your own.</p>
-        <p>Every category starts collapsed — click any category's header to open just that one. When a customer taps a photo to zoom in on the widget, they can swipe left/right through the rest of that same group automatically — no setup needed here.</p>
+        <p>Every category starts collapsed — click any category's header to open just that one.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🙈 Which project types see each item</h4>
         <p><strong>One item at a time:</strong> every item has its own project-type checkboxes right here — the same setting as on the Specialty Items tab. Uncheck a type on that item and it's hidden just for that type.</p>
-        <p><strong>A whole category at once:</strong> at the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category is now hidden for those types in one click, no need to touch them individually. For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically. You can still give one item its own exception afterward by unchecking or rechecking just that item's own project types.</p>
+        <p><strong>A whole category at once:</strong> at the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category (and the category itself) is now hidden for those types in one click, no need to touch them individually.</p>
+        <p>For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Groups</h4>
         <p>In Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together — a few styles or finishes that belong together, or just several items priced the same. Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🏆 Best sellers</h4>
-        <p><strong>🏆 Best seller badge</strong> — mark any item's photo to show a small badge on the widget; the badge's label (default "Best seller") is customizable from Marketing Kit.</p>
+        <p><strong>🏆 Best seller badge</strong> — mark any item's photo to show a small badge on the widget; the badge's label (default "Best seller") is customizable from the top of the "My Products" page.</p>
       `
     },
     showroom: {
       title: 'Showroom',
       body: `
-        <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page — nothing extra to scroll past.</p>
-        <p><strong>🎭 Showroom style</strong> at the top switches your whole showroom between two looks: "Default showroom" shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup) — and this tab shows those same categories to manage. "Build my own" shows only your custom categories plus Specialty Items on the page — and this tab switches to showing just those, tucking your priced categories out of sight (nothing about them is deleted, they're exactly as you left them) — it also hides the project-type filter bar at the top of your showroom, since there'd be nothing left for it to filter. Specialty Items always show, in the tab and on the page, no matter which style is picked. Switching is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
+        <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page.</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:16px 0 8px">🎭 Showroom style</h4>
+        <p><strong>Default showroom</strong> shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup).</p>
+        <p><strong>Build my own</strong> allows you to create custom categories like "Kitchens," "Commercial work," etc., plus Specialty Items on the page (optional).</p>
+        <p>Switching between Default and Build My Own is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Managing categories</h4>
         <p>The line under your shop name on the showroom page ("Browse the materials, door styles..." by default) is fixed for Default showroom, since it's describing your actual priced categories. While Build My Own is active, a <strong>Showroom subheading</strong> box appears right below the style picker so you can write your own — leave it blank to use the built-in "Browse some of our past projects and features..." line instead.</p>
-        <p>For a priced category, "✏️ Rename" and "🚫 Hide category" only change what shows on your <em>showroom</em> — your actual pricing, categories, and the widget are never touched. Each item underneath has its own "Remove from showroom" button, same idea — the item itself is untouched, it just stops appearing here. An item needs a photo (added on My Products) before it shows up in this list at all.</p>
-        <p>"+ New category" adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
-        <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
-        <p>The live preview below is your actual showroom page, not a mockup — it's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
-        <p>Your showroom has its own link that works completely on its own — paste it into your own website's navigation if you'd like, it doesn't need the widget at all.</p>
+        <p><strong>✏️ Rename &amp; 🚫 Hide category</strong> — use these buttons to rename or hide entire categories.</p>
+        <p><strong>"+ New category"</strong> adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
+        <p><strong>Reordering</strong> — use the ▲▼ arrows on any category to change the order it appears in on your showroom page. Priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
+
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🔗 Preview &amp; sharing</h4>
+        <p><strong>Live preview</strong> — below is your actual showroom page, not a mockup. It's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
+        <p><strong>Standalone link</strong> — your showroom has its own link that works completely on its own. Paste it into your own website's navigation if you'd like — it doesn't need the widget at all.</p>
         <p><strong>🧩 Embed on a page</strong> — beyond the standalone link, your showroom can be embedded right on your own website as a self-sizing iframe — grab the code from the "Embed on a page" card. You can independently show or hide the shop info block, top navigation, hero banner, and project-type filter bar just for the embedded version, so it blends into your site instead of duplicating your own header/nav.</p>
         <p><strong>🖱️ "See our showroom" button</strong> — choose whether the widget's own showroom button opens the popup page (default) or sends customers straight to your embedded page instead.</p>
       `
@@ -454,6 +554,127 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (modal) modal.style.display = 'none';
   };
 
+  // ============================================================
+  // HELP GUIDE (Help tab) — a folder-tab interface over every
+  // MQ_HELP_CONTENT topic, "Getting started" first, then one tab per
+  // dashboard page in the same order they appear in the left nav. Reads
+  // the exact same MQ_HELP_CONTENT object every per-page "Need help?"
+  // popup uses, so there's one source of truth — editing a topic's text
+  // updates both the popup and this guide at once, nothing to keep in
+  // sync by hand. "Templates (Admin)" is deliberately left out of this
+  // list — it's an internal, admin-only page Jordan doesn't need a help
+  // tab for. Its own "Need help?" popup on that page still works fine,
+  // since MQ_HELP_CONTENT.templates itself is untouched — it's only
+  // excluded from this guide's tab order.
+  // ============================================================
+  const MQ_HELP_GUIDE_ORDER = ['gettingstarted','overview','leads','shop','rooms','pricing','specialty','products','showroom','embed','marketing','proposals','billing'];
+  const MQ_HELP_GUIDE_ICONS = {
+    gettingstarted:'🚀', overview:'📊', leads:'👥', shop:'🏪', rooms:'🚪', pricing:'💰',
+    specialty:'⭐', products:'📦', showroom:'🖼️', embed:'🔗', marketing:'📣',
+    proposals:'📄', billing:'💳',
+  };
+  let mqHelpActiveTopic = null;
+
+  function mqHelpGuideTopics() {
+    return MQ_HELP_GUIDE_ORDER
+      .filter(id => MQ_HELP_CONTENT[id]);
+  }
+
+  // Plain-text title+body for one topic, HTML tags stripped, lowercased —
+  // so a search for "install" matches text that happens to sit inside a
+  // <strong> tag the same as plain text.
+  function mqHelpPlainText(id) {
+    const c = MQ_HELP_CONTENT[id];
+    if (!c) return '';
+    return (c.title + ' ' + c.body).replace(/<[^>]*>/g, ' ').toLowerCase();
+  }
+
+  function mqBuildHelpGuide() {
+    const tabbar = document.getElementById('mq-help-tabbar');
+    const panel = document.getElementById('mq-help-panel');
+    if (!tabbar || !panel) return;
+    const topics = mqHelpGuideTopics();
+
+    tabbar.innerHTML = topics.map(id => `
+      <button type="button" class="mq-help-tab" id="mq-help-tab-${id}" onclick="mqSelectHelpTopic('${id}')">
+        <span class="mq-help-tab-icon">${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${MQ_HELP_CONTENT[id].title}
+      </button>`).join('');
+
+    mqSelectHelpTopic(topics[0]);
+  }
+
+  window.mqSelectHelpTopic = function(id) {
+    const content = MQ_HELP_CONTENT[id];
+    const panel = document.getElementById('mq-help-panel');
+    if (!content || !panel) return;
+    mqHelpActiveTopic = id;
+
+    document.querySelectorAll('#mq-help-tabbar .mq-help-tab').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('mq-help-tab-' + id)?.classList.add('active');
+
+    panel.innerHTML = `
+      <div class="mq-help-panel-title"><span>${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${content.title}</div>
+      <div class="mq-help-panel-body">${content.guideBody || content.body}</div>`;
+    panel.scrollTop = 0;
+
+    mqAlignHelpTabRow();
+  };
+
+  // Whichever tab row holds the active tab should be the row sitting right
+  // on top of the white content panel — that's what sells the "this is the
+  // open folder tab" illusion, since the panel's white background is what
+  // the active tab visually merges into. If the active tab landed in the
+  // top row (under normal wrapping), flip the tab bar to wrap-reverse so
+  // that row renders at the bottom instead, and the other row moves up top.
+  // Re-measures from a clean 'wrap' baseline every time so the two physical
+  // rows always mean the same thing regardless of which state we were
+  // previously in.
+  function mqAlignHelpTabRow() {
+    const tabbar = document.getElementById('mq-help-tabbar');
+    if (!tabbar) return;
+    const tabs = Array.from(tabbar.querySelectorAll('.mq-help-tab'));
+    const activeTab = tabbar.querySelector('.mq-help-tab.active');
+    if (!tabs.length || !activeTab) return;
+
+    tabbar.style.flexWrap = 'wrap';
+    const offsets = tabs.map(t => t.offsetTop);
+    const bottomOffset = Math.max.apply(null, offsets);
+    const topOffset = Math.min.apply(null, offsets);
+    if (bottomOffset === topOffset) {
+      // Either everything genuinely fits on one line, or (far more often)
+      // this ran while the Help guide page was still hidden (display:none)
+      // during initial dashboard load, so every tab measured offsetTop 0.
+      // Either way we have no real row data to act on — clear the inline
+      // override instead of leaving it stuck on 'wrap', so the CSS default
+      // (wrap-reverse, which puts Getting started's row at the bottom)
+      // takes over once the page is actually visible.
+      tabbar.style.flexWrap = '';
+      return;
+    }
+
+    tabbar.style.flexWrap = (activeTab.offsetTop === bottomOffset) ? 'wrap' : 'wrap-reverse';
+  }
+
+  (function mqWatchHelpTabRowResize() {
+    let t = null;
+    window.addEventListener('resize', function() {
+      if (!document.getElementById('mq-help-tabbar')) return;
+      clearTimeout(t);
+      t = setTimeout(mqAlignHelpTabRow, 150);
+    });
+  })();
+
+  // The search box doesn't filter the tabs (a folder tab bar is a fixed
+  // set, not a list to prune) — it just jumps straight to the first topic,
+  // in tab order, whose text contains the query. Clearing the box leaves
+  // you on whichever tab you're already reading.
+  window.mqHelpSearchJump = function(query) {
+    const q = (query || '').trim().toLowerCase();
+    if (!q) return;
+    const match = mqHelpGuideTopics().find(id => mqHelpPlainText(id).includes(q));
+    if (match && match !== mqHelpActiveTopic) mqSelectHelpTopic(match);
+  };
+
   // Shown exactly once per shop, ever — the moment a brand new shop owner
   // first loads their dashboard. Tracked on the shop record itself in
   // Airtable (not localStorage), so it correctly stays dismissed even if
@@ -474,6 +695,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           This dashboard is best viewed on a desktop or laptop — some tabs and tools aren't set up for a phone or small tablet screen yet, so managing your shop from a computer will be a smoother experience.
           <br><br>
           Every tab has a <strong style="color:#2563eb">❓ Need help?</strong> button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
+          <br><br>
+          Want the bigger picture instead? <strong style="color:#2563eb">📖 Help guide</strong> in the sidebar covers every part of the dashboard in one place, organized by topic — good for a first read-through before you dive in.
           <br><br>
           Only offer some of what MidasQuote can quote? In Shop Info → <strong>🗂️ Estimator tabs</strong>, you can turn off whichever tabs don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
           <br><br>
@@ -782,7 +1005,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard #mq-spec-table td{padding:12px 9px}
       #midasquote-dashboard #mq-spec-table td{vertical-align:top;padding-top:14px}
       #midasquote-dashboard #mq-spec-table{border-collapse:separate;border-spacing:0 10px}
-      #midasquote-dashboard #mq-spec-table td{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
+      #midasquote-dashboard #mq-spec-table td{background:#d7e3e2a8;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
       #midasquote-dashboard #mq-spec-table td:first-child{border-left:1px solid #e5e7eb;border-radius:8px 0 0 8px}
       #midasquote-dashboard #mq-spec-table td:last-child{border-right:1px solid #e5e7eb;border-radius:0 8px 8px 0}
       #midasquote-dashboard #mq-spec-table thead th{border-bottom:2px solid var(--border)}
@@ -816,6 +1039,35 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-empty{text-align:center;padding:3rem;color:#9ca3af;font-size:14px}
       #midasquote-dashboard .mq-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 
+      /* ── Help guide — folder-tab layout ── */
+      #midasquote-dashboard .mq-help-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+      #midasquote-dashboard #mq-help-search{font-family:inherit;font-size:13px;padding:9px 16px;border:1.5px solid #d1d5db;border-radius:999px;width:220px;flex-shrink:0;background:#fff}
+      #midasquote-dashboard #mq-help-search:focus{outline:none;border-color:#1a1a1a}
+      #midasquote-dashboard .mq-help-folder{border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.10);max-width:1080px}
+      #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap-reverse;align-items:flex-end;gap:4px;padding:16px 14px 0}
+      #midasquote-dashboard .mq-help-tab{position:relative;top:4px;background:#333;color:rgba(255,255,255,0.62);border:none;border-radius:9px 9px 0 0;padding:10px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.15s,color 0.15s,top 0.15s,padding 0.15s;white-space:nowrap}
+      #midasquote-dashboard .mq-help-tab:hover{background:#4a4a4a;color:#fff}
+      #midasquote-dashboard .mq-help-tab.active{top:0;background:#fff;color:#111;padding-top:13px;padding-bottom:13px;box-shadow:0 -6px 14px rgba(0,0,0,0.16);z-index:2}
+      #midasquote-dashboard .mq-help-tab-icon{margin-right:2px}
+      #midasquote-dashboard .mq-help-panel{background:#fff;padding:2.5rem;min-height:320px;position:relative;z-index:1}
+      #midasquote-dashboard .mq-help-panel-title{font-size:23px;font-weight:800;color:#111;margin-bottom:1.5rem;padding-bottom:1.1rem;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px}
+      #midasquote-dashboard .mq-help-panel-body{font-size:14.5px;color:#374151;line-height:1.9}
+      #midasquote-dashboard .mq-help-panel-body p{margin:0 0 1.15rem}
+      #midasquote-dashboard .mq-help-panel-body p:last-child{margin-bottom:0}
+      #midasquote-dashboard .mq-help-panel-body h4{margin-top:1.5rem}
+      #midasquote-dashboard .mq-help-panel-body ol,
+      #midasquote-dashboard .mq-help-panel-body ul{margin:0 0 1.15rem}
+      #midasquote-dashboard .mq-help-panel-body li{margin-bottom:6px}
+      #midasquote-dashboard .mq-step{padding:1.6rem 0;border-bottom:1px solid #eef0f2}
+      #midasquote-dashboard .mq-step:first-child{padding-top:0}
+      #midasquote-dashboard .mq-step:last-child{border-bottom:none;padding-bottom:0}
+      #midasquote-dashboard .mq-step-head{display:flex;align-items:center;gap:11px;margin-bottom:0.9rem}
+      #midasquote-dashboard .mq-step-num{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;height:26px;background:#333;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:0.03em;border-radius:8px}
+      #midasquote-dashboard .mq-step-title{font-size:16.5px;font-weight:800;color:#111}
+      #midasquote-dashboard .mq-step-body{font-size:14.5px;color:#374151;line-height:1.85}
+      #midasquote-dashboard .mq-step-body p{margin:0 0 0.9rem}
+      #midasquote-dashboard .mq-step-body p:last-child{margin-bottom:0}
+
       @media (max-width: 768px) {
         #midasquote-dashboard .mq-layout{flex-direction:column}
         #midasquote-dashboard .mq-sidebar{width:100%;padding:0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
@@ -833,6 +1085,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-card{padding:1.25rem}
         #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
         #midasquote-dashboard .mq-table{min-width:560px}
+        #midasquote-dashboard .mq-help-header-row{flex-direction:column;align-items:stretch}
+        #midasquote-dashboard #mq-help-search{width:100%}
+        #midasquote-dashboard .mq-help-tabbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+        #midasquote-dashboard .mq-help-panel{padding:1.5rem}
+        #midasquote-dashboard .mq-help-panel-title{font-size:19px}
       }
     `;
     document.head.appendChild(s);
@@ -879,14 +1136,15 @@ window.logoutMember = async function () {
           <div class="mq-nav-item active" onclick="mqNav('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
           <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
           <div class="mq-nav-section">Setup</div>
+          <div class="mq-nav-item" onclick="mqNav('helpguide',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
           <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
           <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
           <div class="mq-nav-item" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
+          <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
           <div class="mq-nav-section">Launch &amp; Grow</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
-          <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
           <div class="mq-nav-section">Account</div>
@@ -1749,6 +2007,22 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Your leads and pricing data will be available for 30 days after cancellation.</p>
               <button class="mq-btn mq-btn-danger" onclick="mqOpenBillingPortal()">Cancel subscription</button>
+            </div>
+          </div>
+
+          <!-- HELP GUIDE -->
+          <div class="mq-page" id="mq-page-helpguide">
+            <div class="mq-help-header-row">
+              <div>
+                <div class="mq-page-title" style="margin-bottom:2px">Help guide</div>
+                <div class="mq-page-sub" style="margin-bottom:0">Step-by-step instructions for every part of your dashboard. Can't find what you need? Head to the <strong>Support</strong> tab to send us a message.</div>
+              </div>
+              <input type="text" id="mq-help-search" placeholder="🔍 Jump to a topic…" oninput="mqHelpSearchJump(this.value)"/>
+            </div>
+
+            <div class="mq-help-folder">
+              <div class="mq-help-tabbar" id="mq-help-tabbar"></div>
+              <div class="mq-help-panel" id="mq-help-panel"></div>
             </div>
           </div>
 
@@ -12865,7 +13139,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (shopRecord.fields['Shop name'] === 'Maple & Stone Cabinetry') {
       const navTemplates = el('mq-nav-templates');
       if (navTemplates) navTemplates.style.display = 'flex';
+      window._mqIsAdminShop = true;
     }
+    mqBuildHelpGuide();
 
     const leads = await loadLeads(shopRecord.fields['Shop token']);
     window._mqLeads = sortLeadsArray(leads);
