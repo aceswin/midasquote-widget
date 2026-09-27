@@ -6079,18 +6079,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       // whatever the install selections were and the removal selections,
       // because they will likely be the same.. so just by default when
       // they add another surface it will have that install and removal
-      // selection the same as the first surface automatically." Read
-      // straight off the DOM (not a stored JS value) so this always
+      // selection the same as the first surface automatically." Later
+      // extended to also carry the material and backsplash selections for
+      // the same reason ("so they dint have to remember to reinput them").
+      // Read straight off the DOM (not a stored JS value) so this always
       // reflects whatever the first surface is CURRENTLY set to, even if
       // it was changed after being added. A brand new project's very first
-      // surface has no earlier surface to copy from, so both stay null and
-      // each select simply falls back to its normal first-option default,
-      // exactly as before.
+      // surface has no earlier surface to copy from, so all four stay null
+      // and each field simply falls back to its normal default, exactly as
+      // before.
       const firstSurfContainer = document.getElementById(containerId);
       const firstSiSelect = firstSurfContainer?.querySelector(`select[id^="mqssi-s${prefix}"]`);
       const firstRmSelect = firstSurfContainer?.querySelector(`select[id^="mqsrm-s${prefix}"]`);
+      const firstMatSelect = firstSurfContainer?.querySelector(`select[id^="mqsm-s${prefix}"]`);
+      const firstBsSelect = firstSurfContainer?.querySelector(`select[id^="mqsbs-s${prefix}"]`);
       const carrySi = firstSiSelect ? firstSiSelect.value : null;
       const carryRm = firstRmSelect ? firstRmSelect.value : null;
+      const carryMat = firstMatSelect ? firstMatSelect.value : null;
+      const carryBs = firstBsSelect ? firstBsSelect.value : null;
       const card=document.createElement('div');
       card.className='mq-surface-card';card.id='mqsc-'+id;card.dataset.prefix=prefix;
       card.innerHTML=`
@@ -6144,6 +6150,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       window.mqRefreshCtAddons(`mqsm-${id}`, `mqs-edge-${id}`, `mqs-addons-${id}`);
       window.mqRefreshSurfBsFt(id);
       window.mqSurfUpdatePreview(id);
+      // Carry the material and backsplash selections over too (see comment
+      // above). Material has to go through mqRestoreFieldValue rather than
+      // a plain el.value= — it's a visual chip picker with a hidden
+      // <select> behind it, and mqRestoreFieldValue is the same helper
+      // mqRestoreFormState already uses to reselect a saved surface's
+      // material chip when restoring surfaces after a tab switch, so this
+      // reuses an already-proven path instead of reimplementing chip
+      // selection here. Restoring material
+      // re-fires its onchange cascade (mqRefreshBsOpts included), which is
+      // what actually rebuilds mqsbs-${id}'s backsplash option list for
+      // that material — backsplash has to be restored AFTER material, or
+      // its carried-over value would have nothing valid to select yet.
+      if (carryMat && carryMat !== 'none' && document.getElementById(`mqsm-${id}`)?.value !== carryMat) {
+        mqRestoreFieldValue(`mqsm-${id}`, carryMat);
+      }
+      if (carryBs) {
+        mqRestoreFieldValue(`mqsbs-${id}`, carryBs);
+      }
       mqRefreshAllPickerVisibility(prefix);
       mqRenumberSurfaces(prefix);
       return id;
