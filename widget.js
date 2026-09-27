@@ -816,13 +816,22 @@
       .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
       .mq-modal-skip{width:100%;padding:8px;font-size:14px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
       .mq-modal-copy-btn{flex-shrink:0;padding:6px 12px;font-size:13px;font-weight:600;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111;cursor:pointer;font-family:inherit}
-      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:48px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
       #mq-sticky-bar.show{display:block}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
       /* Background/border stay full-bleed on the outer bar, but the actual
          content centers within a max-width column — same width the results
          panel itself uses, so wide desktop screens don't stretch the price
-         and buttons apart to the far edges. */
+         and buttons apart to the far edges. Extra top padding (48px vs the
+         10px every other side gets) reserves room for
+         #mq-sticky-breakdown-toggle — Jordan wanted the text link ("Hide
+         breakdown"/"Show breakdown") replaced with just a bigger, obvious
+         chevron in a small square, up in the corner rather than inline next
+         to the price. It sits absolutely positioned at top:-38px;right:10px
+         of #mq-sticky-inner — i.e. up in this reserved band, its 30px height
+         landing well clear of #mq-sticky-label ("Swap items to change your
+         estimate...") below it, not level with it (an earlier version at
+         top:0 learned that lesson the hard way). */
       #mq-sticky-inner{position:relative;max-width:900px;width:100%;margin:0 auto}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -4876,7 +4885,7 @@
       const stickyToggle = document.getElementById('mq-sticky-breakdown-toggle');
       const stickyBreakdown = document.getElementById('mq-sticky-breakdown');
       const stickyPrice = document.getElementById('mq-sticky-price');
-      if (stickyToggle) stickyToggle.style.display = allEntries.length ? 'inline' : 'none';
+      if (stickyToggle) stickyToggle.style.display = allEntries.length ? 'flex' : 'none';
       if (stickyBreakdown) {
         if (!allEntries.length) {
           stickyBreakdown.style.display = 'none';
@@ -4888,16 +4897,18 @@
           // Jordan: "lets start with the breakdown hidden by default." This
           // used to unconditionally force stickyBreakdown open on every
           // single call — which fires on every recalculation, i.e. on
-          // basically any input change — so a customer's manual "Hide
-          // breakdown ✕" click never actually stuck; it silently popped
-          // back open the moment anything else changed. Now this only
-          // refreshes the breakdown's CONTENT and reads whatever visibility
-          // it already had — closed the first time entries ever appear
-          // (its starting display:none, same as always), open only if the
-          // customer (or mqToggleStickyBreakdown) explicitly opened it —
-          // rather than forcing a particular state every render.
+          // basically any input change — so a customer's manual collapse
+          // click never actually stuck; it silently popped back open the
+          // moment anything else changed. Now this only refreshes the
+          // breakdown's CONTENT and reads whatever visibility it already
+          // had — closed the first time entries ever appear (its starting
+          // display:none, same as always), open only if the customer (or
+          // mqToggleStickyBreakdown) explicitly opened it — rather than
+          // forcing a particular state every render. ▴/▾ (not text) per
+          // Jordan: a bigger, obvious chevron read better than the words
+          // "Hide breakdown"/"Show breakdown" ever did.
           const isOpen = stickyBreakdown.style.display === 'block';
-          if (stickyToggle) stickyToggle.textContent = isOpen ? 'Hide breakdown ✕' : '▾ Show breakdown';
+          if (stickyToggle) stickyToggle.textContent = isOpen ? '▴' : '▾';
           // The breakdown's own Total row (below) shows the same number as
           // the top-left price — once the breakdown is open that would be
           // a duplicate, so hide the top-left one and let the Total row do
@@ -7006,10 +7017,11 @@ window.mqTogDrawerConfig=(prefix)=>{
     bar.style.borderTop = `2px solid ${accent}`;
     bar.innerHTML = `
       <div id="mq-sticky-inner">
+        <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" aria-label="Show price breakdown" style="display:none;position:absolute;top:-38px;right:10px;width:30px;height:30px;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.5);border-radius:7px;color:#fff;font-size:18px;line-height:1;cursor:pointer;font-family:inherit;padding:0">▾</button>
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Show breakdown</button></div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
             <div id="mq-sticky-links-row" style="margin-top:2px"><button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-contact-link" onclick="mqRequestContact()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">🙋 I'd like to be contacted</button></div>
           </div>
           <div id="mq-sticky-ctas">
@@ -7034,7 +7046,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // exclusive — collapsing the breakdown by hand should bring the price
     // back, same as when there's nothing to show a breakdown for at all.
     if (price) price.style.display = opening ? 'none' : 'inline-block';
-    if (toggle) toggle.textContent = opening ? 'Hide breakdown ✕' : '▾ Show breakdown';
+    if (toggle) toggle.textContent = opening ? '▴' : '▾';
     mqAdjustWidgetBottomPadding();
   };
   // The bar is position:fixed, so it never pushes page content out of the
