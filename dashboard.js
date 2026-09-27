@@ -690,8 +690,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">👋</div>
-        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
-        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+        <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
+        <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           This dashboard is best viewed on a desktop or laptop — some tabs and tools aren't set up for a phone or small tablet screen yet, so managing your shop from a computer will be a smoother experience.
           <br><br>
           Every tab has a <strong style="color:#2563eb">❓ Need help?</strong> button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
@@ -705,7 +705,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <strong>Support &amp; suggestions</strong><br>
           MidasQuote is constantly improving with your help. Please don't be shy to share ideas that would make MidasQuote better for your shop — every single suggestion is taken seriously and implemented if possible.
         </div>
-        <button onclick="mqCloseWelcomeModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, let's go!</button>
+        <button onclick="mqCloseWelcomeModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, let's go!</button>
       </div>`;
     modal.style.display = 'flex';
   };
