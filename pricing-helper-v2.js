@@ -740,10 +740,10 @@ window.mqphGoToWizard = function() {
         const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
         return `
           ${specBox([
-            `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
+            `<strong>Upper cabinets — box only, no doors, with shelves</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `<strong>No doors · No drawers · No hardware · Supply only</strong>`,
+            `<strong>No doors · With shelves · No hardware · Supply only</strong>`,
           ])}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
           <div id="mqph-r-bl-u" class="mqph-result"></div>`;
@@ -2656,9 +2656,9 @@ window.mqphGoToWizard = function() {
         priceLabel: 'Your total price for this job?',
         hint: null,
         spec: specBox(isUpper ? [
-          `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
+          `<strong>Upper cabinets — box only, no doors, with shelves</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
-          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · Supply only`,
+          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · With shelves · Supply only`,
         ] : [
           `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
