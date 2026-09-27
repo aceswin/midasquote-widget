@@ -829,11 +829,14 @@
       .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
       .mq-hover-preview .mq-hp-label{font-size:12px;color:#374151;text-align:center;margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:180px}
       .mq-lightbox.show{display:flex}
-      .mq-lightbox-track-wrap{width:100%;max-width:100%}
-      .mq-lightbox-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;overscroll-behavior-x:contain;touch-action:pan-x}
+      .mq-lightbox-track-wrap{width:100%;max-width:100%;height:75vh}
+      .mq-lightbox-track{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;overscroll-behavior-x:contain;touch-action:pan-x}
       .mq-lightbox-track::-webkit-scrollbar{display:none}
-      .mq-lightbox-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
-      .mq-lightbox img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+      /* height:100%/overflow:hidden here (both new) give a zoomed image a
+         fixed, non-content-dependent box to pan around inside — see
+         mqLbInitGestures below for why that matters for the pinch/pan math. */
+      .mq-lightbox-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;min-width:0;height:100%;overflow:hidden}
+      .mq-lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5);transform-origin:center center}
       .mq-lightbox-label{color:#fff;font-size:14px;font-weight:500;text-align:center}
       .mq-lightbox-hint{color:rgba(255,255,255,0.45);font-size:12px}
       .mq-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.95);box-shadow:0 3px 14px rgba(0,0,0,0.35);font-size:26px;font-weight:700;color:#111;border:none;cursor:pointer;z-index:100002}
@@ -1049,6 +1052,226 @@
     wrap.innerHTML = `<span>${firstLetter}</span>`;
   };
 
+  // ============================================================
+  // Lightbox pinch/double-tap zoom + pan
+  // ============================================================
+  // Jordan's ask: on mobile the lightbox's zoom was barely bigger than the
+  // photo's normal size, so the "how to measure" guide photos (and every
+  // other photo that opens through this same shared lightbox — door/
+  // material pickers, specialty items, project photos) couldn't actually
+  // be read up close. Every image opened via mqPhotoLightbox can now be
+  // pinch-zoomed or double-tap-zoomed in further, then panned around
+  // while zoomed, same as a native Photos app.
+  //
+  // Built entirely on the Pointer Events API rather than raw Touch events,
+  // so touch AND mouse drive the exact same code path: desktop gets
+  // double-click-to-zoom and click-drag-to-pan "for free", which is also
+  // how the gesture math here was verified without a physical touchscreen
+  // (real mouse drags + synthetic 2-pointer PointerEvents dispatched in a
+  // real Chromium tab — see the checklist entry for this change).
+  const MQ_LB_MAX_ZOOM = 4;           // ceiling for pinch zoom
+  const MQ_LB_DOUBLE_TAP_ZOOM = 2.5;  // fixed zoom level a double-tap jumps to
+  const MQ_LB_DOUBLE_TAP_MS = 300;    // max gap between taps to count as a double-tap
+  const MQ_LB_TAP_MOVE_TOLERANCE = 10; // px of finger movement still allowed to count as a "tap"
+
+  function mqLbZoomState(img) {
+    if (!img._mqZoom) img._mqZoom = { scale: 1, tx: 0, ty: 0 };
+    return img._mqZoom;
+  }
+
+  function mqLbApply(img, animate) {
+    const z = mqLbZoomState(img);
+    img.style.transition = animate ? 'transform 0.2s ease-out' : 'none';
+    img.style.transform = `translate(${z.tx}px,${z.ty}px) scale(${z.scale})`;
+    // While zoomed, a single finger drags the photo around instead of
+    // swiping to the next one — touch-action:none hands 100% of that
+    // pointer's handling to our own pan logic below instead of letting the
+    // browser try to natively scroll the track underneath it.
+    img.style.touchAction = z.scale > 1.01 ? 'none' : 'pan-x';
+  }
+
+  // Keeps a zoomed photo from being panned past its own edges — same
+  // "cover" clamp math a native photo viewer uses. img.offsetWidth/Height
+  // reflect the photo's LAID-OUT (scale-1) size (CSS transforms never
+  // affect layout, only paint), and the parent slide now has a fixed,
+  // content-independent height (see the .mq-lightbox-slide CSS comment),
+  // so parent.clientWidth/Height is a stable stand-in for "the visible
+  // viewport this photo can pan around inside."
+  function mqLbClamp(img, tx, ty, scale) {
+    const parent = img.parentElement;
+    const vw = parent ? parent.clientWidth : window.innerWidth;
+    const vh = parent ? parent.clientHeight : window.innerHeight;
+    const baseW = img.offsetWidth, baseH = img.offsetHeight;
+    const maxTx = Math.max(0, (baseW * scale - vw) / 2);
+    const maxTy = Math.max(0, (baseH * scale - vh) / 2);
+    return {
+      tx: Math.min(maxTx, Math.max(-maxTx, tx)),
+      ty: Math.min(maxTy, Math.max(-maxTy, ty))
+    };
+  }
+
+  // Changes scale while keeping whatever content point currently sits
+  // under (anchorX, anchorY) — page/client coordinates — visually fixed on
+  // screen. This is the standard pinch-zoom anchor formula: called on every
+  // pinch pointermove (anchored to the current finger midpoint, so panning
+  // "for free" as two fingers spread while also moving together) and once
+  // for a double-tap's zoom in/out (anchored to the tap point).
+  function mqLbSetScale(img, newScale, anchorX, anchorY, animate) {
+    const z = mqLbZoomState(img);
+    newScale = Math.min(MQ_LB_MAX_ZOOM, Math.max(1, newScale));
+    const rect = img.getBoundingClientRect(); // reflects the CURRENT (pre-update) transform
+    const layoutCenterX = (rect.left + rect.width / 2) - z.tx;
+    const layoutCenterY = (rect.top + rect.height / 2) - z.ty;
+    // Content-space offset of the anchor point from center, in scale-1 units.
+    const u = (anchorX - layoutCenterX - z.tx) / z.scale;
+    const v = (anchorY - layoutCenterY - z.ty) / z.scale;
+    const tx1 = anchorX - layoutCenterX - u * newScale;
+    const ty1 = anchorY - layoutCenterY - v * newScale;
+    const clamped = mqLbClamp(img, tx1, ty1, newScale);
+    z.scale = newScale;
+    z.tx = clamped.tx;
+    z.ty = clamped.ty;
+    mqLbApply(img, animate);
+  }
+
+  function mqLbResetZoom(img, animate) {
+    if (!img) return;
+    const z = mqLbZoomState(img);
+    z.scale = 1; z.tx = 0; z.ty = 0;
+    mqLbApply(img, animate);
+  }
+
+  // Wires pinch-zoom, double-tap-zoom, and drag-to-pan onto every photo a
+  // lightbox track ever shows, via one delegated set of Pointer Event
+  // listeners (photos themselves are recreated fresh on every
+  // mqPhotoLightbox() open, so this only needs to run once per lightbox).
+  //
+  // Tap-detection is tracked independently of zoom/pan state (a common bug
+  // here: gating "was this a tap?" on a mode flag that also means "was
+  // this a pan?" silently breaks double-tap-to-zoom-OUT, since once zoomed
+  // in every pointer-down starts out looking like a potential pan). A
+  // gesture only ever fails to count as a tap because it actually moved
+  // (moved >= tolerance) or because a 2nd finger joined it (pinch) — never
+  // because the photo happened to already be zoomed in.
+  function mqLbInitGestures(track) {
+    const pointers = new Map(); // pointerId -> {x,y}, every finger/pointer currently down on a photo
+    let activeImg = null;
+    let isPinch = false;
+    let hadPinch = false; // true for the rest of this gesture once any pinch happened, even after a finger lifts back to 1
+    let pinchStartDist = 0, pinchStartScale = 1;
+    let singleStart = null; // {x,y,tx,ty} for the current lone pointer (pan reference point)
+    let moved = 0; // furthest the lone pointer has travelled since the gesture began, for tap-detection
+    let pendingTapTimer = null;
+    let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+
+    const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+
+    track.addEventListener('pointerdown', (e) => {
+      const img = e.target.closest('.mq-lightbox-slide img');
+      if (!img) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      try { img.setPointerCapture(e.pointerId); } catch (err) {}
+      if (pointers.size === 1) {
+        activeImg = img;
+        moved = 0;
+        isPinch = false;
+        hadPinch = false;
+        const z = mqLbZoomState(img);
+        singleStart = { x: e.clientX, y: e.clientY, tx: z.tx, ty: z.ty };
+      } else if (pointers.size === 2 && activeImg === img) {
+        clearTimeout(pendingTapTimer); // a 2nd finger landing means this was never a tap-to-close
+        isPinch = true;
+        hadPinch = true;
+        img.style.touchAction = 'none';
+        const pts = Array.from(pointers.values());
+        pinchStartDist = dist(pts[0], pts[1]);
+        pinchStartScale = mqLbZoomState(img).scale;
+      }
+    });
+
+    track.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId) || !activeImg) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (isPinch && pointers.size === 2) {
+        const pts = Array.from(pointers.values());
+        const newDist = dist(pts[0], pts[1]);
+        const mid = midpoint(pts[0], pts[1]);
+        const ratio = pinchStartDist > 0 ? newDist / pinchStartDist : 1;
+        mqLbSetScale(activeImg, pinchStartScale * ratio, mid.x, mid.y, false);
+      } else if (!isPinch && singleStart) {
+        const dx = e.clientX - singleStart.x;
+        const dy = e.clientY - singleStart.y;
+        moved = Math.max(moved, Math.hypot(dx, dy));
+        const z = mqLbZoomState(activeImg);
+        if (z.scale > 1.01) {
+          const clamped = mqLbClamp(activeImg, singleStart.tx + dx, singleStart.ty + dy, z.scale);
+          z.tx = clamped.tx; z.ty = clamped.ty;
+          mqLbApply(activeImg, false);
+        }
+      }
+    });
+
+    // isRealUp is false for pointercancel (the browser taking the gesture
+    // over for its own native scrolling, or an interrupted touch) — never
+    // treat that as a tap, only a genuine pointerup can close/zoom.
+    function endPointer(e, isRealUp) {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.delete(e.pointerId);
+      if (!activeImg) return;
+      if (isPinch) {
+        // Snap back to a clean "not zoomed" state if the pinch ended up
+        // only barely past 1x — otherwise a near-invisible residual zoom
+        // would silently leave touch-action:none behind, disabling swipe-
+        // between-images for a zoom level nobody can actually see.
+        if (mqLbZoomState(activeImg).scale < 1.08) mqLbResetZoom(activeImg, true);
+        if (pointers.size === 1) {
+          // One finger is still down — hand off into a continued pan
+          // instead of ending the gesture, so lifting the 2nd pinch finger
+          // doesn't interrupt a one-finger drag right after.
+          const remaining = Array.from(pointers.values())[0];
+          const z2 = mqLbZoomState(activeImg);
+          isPinch = false;
+          singleStart = { x: remaining.x, y: remaining.y, tx: z2.tx, ty: z2.ty };
+        } else {
+          activeImg = null;
+        }
+        return;
+      }
+      if (pointers.size > 0) return; // still mid-gesture on another pointer
+      const img = activeImg;
+      const wasTap = isRealUp && !hadPinch && moved < MQ_LB_TAP_MOVE_TOLERANCE;
+      activeImg = null;
+      hadPinch = false;
+      if (!wasTap) return;
+      const now = Date.now();
+      const isDoubleTap = (now - lastTapTime) < MQ_LB_DOUBLE_TAP_MS &&
+        dist({ x: e.clientX, y: e.clientY }, { x: lastTapX, y: lastTapY }) < 30;
+      if (isDoubleTap) {
+        clearTimeout(pendingTapTimer);
+        lastTapTime = 0;
+        const z = mqLbZoomState(img);
+        if (z.scale > 1.01) mqLbResetZoom(img, true);
+        else mqLbSetScale(img, MQ_LB_DOUBLE_TAP_ZOOM, e.clientX, e.clientY, true);
+        return;
+      }
+      lastTapTime = now; lastTapX = e.clientX; lastTapY = e.clientY;
+      clearTimeout(pendingTapTimer);
+      // No second tap yet — wait out the double-tap window before treating
+      // this as a genuine single tap. Matches the lightbox's original
+      // "tap anywhere to close" behavior (the overlay's own click handler
+      // skips IMG targets so the two don't fight over the same tap), and
+      // applies whether or not the photo is currently zoomed in.
+      pendingTapTimer = setTimeout(() => {
+        const lbEl = document.getElementById('mq-lightbox');
+        if (lbEl) lbEl.classList.remove('show');
+      }, MQ_LB_DOUBLE_TAP_MS);
+    }
+
+    track.addEventListener('pointerup', (e) => endPointer(e, true));
+    track.addEventListener('pointercancel', (e) => endPointer(e, false));
+  }
+
   // Optional 3rd/4th args let this open as part of a related set (currently
   // just the measuring-guide carousel) — pass an array of {src,label} plus
   // the starting index, and the lightbox shows nav arrows/swipe to move
@@ -1070,7 +1293,7 @@
       lb.innerHTML = `
         <div class="mq-lightbox-track-wrap"><div class="mq-lightbox-track" id="mq-lightbox-track"></div></div>
         <div class="mq-lightbox-label" id="mq-lightbox-label"></div>
-        <div class="mq-lightbox-hint">Tap anywhere to close</div>
+        <div class="mq-lightbox-hint">Pinch or double-tap to zoom · Tap to close</div>
         <button type="button" class="mq-lightbox-nav mq-lightbox-nav-left" id="mq-lightbox-prev" aria-label="Previous image">‹</button>
         <button type="button" class="mq-lightbox-nav mq-lightbox-nav-right" id="mq-lightbox-next" aria-label="Next image">›</button>`;
       // Appended to document.body (not the widget container) so position:fixed
@@ -1081,8 +1304,12 @@
       // suppresses it once a touch sequence has scrolled), so this still
       // closes correctly on a genuine tap without needing to special-case
       // the track — swiping through images just naturally won't trigger it.
+      // IMG targets are excluded here because mqLbInitGestures below owns
+      // tap-to-close for the photo itself, so it can tell a single tap
+      // (close) apart from the first half of a double-tap (zoom).
       lb.addEventListener('click', (e) => {
         if (e.target.closest('.mq-lightbox-nav')) return; // nav buttons handle their own clicks
+        if (e.target.tagName === 'IMG') return; // handled by mqLbInitGestures instead
         lb.classList.remove('show');
       });
       document.getElementById('mq-lightbox-prev').addEventListener('click', (e) => {
@@ -1099,6 +1326,7 @@
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(mqLightboxSyncFromScroll, 100);
       });
+      mqLbInitGestures(trackEl);
     }
     const track = document.getElementById('mq-lightbox-track');
     const imgList = (images && images.length > 1) ? images : [{ src, label }];
@@ -1124,6 +1352,7 @@
     const targetLeft = startIdx * track.clientWidth;
     track.scrollLeft = targetLeft;
     lb._images = imgList;
+    lb._lbLastIdx = startIdx; // tracked so mqLightboxSyncFromScroll can reset zoom on the slide we swipe away from
     document.getElementById('mq-lightbox-prev').classList.toggle('show', imgList.length > 1);
     document.getElementById('mq-lightbox-next').classList.toggle('show', imgList.length > 1);
     document.getElementById('mq-lightbox-label').textContent = imgList[startIdx] ? imgList[startIdx].label : (label||'');
@@ -1154,6 +1383,15 @@
     const track = document.getElementById('mq-lightbox-track');
     if (!lb || !track || !lb._images) return;
     const idx = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    // Swiping to a different photo resets whichever slide we're leaving —
+    // each photo should always start fresh at fit-to-screen the next time
+    // it's viewed, not still zoomed in from before.
+    if (lb._lbLastIdx !== undefined && lb._lbLastIdx !== idx) {
+      const prevSlide = track.children[lb._lbLastIdx];
+      const prevImg = prevSlide && prevSlide.querySelector('img');
+      if (prevImg) mqLbResetZoom(prevImg, false);
+    }
+    lb._lbLastIdx = idx;
     const item = lb._images[idx];
     if (item) document.getElementById('mq-lightbox-label').textContent = item.label || '';
   }
