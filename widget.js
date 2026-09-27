@@ -816,27 +816,26 @@
       .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
       .mq-modal-skip{width:100%;padding:8px;font-size:14px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
       .mq-modal-copy-btn{flex-shrink:0;padding:6px 12px;font-size:13px;font-weight:600;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111;cursor:pointer;font-family:inherit}
-      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:48px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
       #mq-sticky-bar.show{display:block}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
       /* Background/border stay full-bleed on the outer bar, but the actual
          content centers within a max-width column — same width the results
          panel itself uses, so wide desktop screens don't stretch the price
-         and buttons apart to the far edges. Extra top padding (48px vs the
-         10px every other side gets) reserves room for
-         #mq-sticky-breakdown-toggle — Jordan wanted the text link ("Hide
-         breakdown"/"Show breakdown") replaced with just a bigger, obvious
-         chevron in a small square, up in the corner rather than inline next
-         to the price. It sits absolutely positioned at top:-38px;right:10px
-         of #mq-sticky-inner — i.e. up in this reserved band, its 30px height
-         landing well clear of #mq-sticky-label ("Swap items to change your
-         estimate...") below it, not level with it (an earlier version at
-         top:0 learned that lesson the hard way). */
+         and buttons apart to the far edges. #mq-sticky-breakdown-toggle
+         (the chevron-in-a-square open/close control) used to live up in a
+         reserved band above the bar (hence the old 48px top padding — see
+         prior checklist entries); Jordan asked to have it share the same
+         line as #mq-sticky-label ("Swap items...") instead, so it now sits
+         inline inside #mq-sticky-label-row as a normal flex child (no
+         absolute positioning), and the bar's padding is back to the same
+         10px every other side gets. */
       #mq-sticky-inner{position:relative;max-width:900px;width:100%;margin:0 auto}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       #mq-sticky-content{flex:1;min-width:0}
-      #mq-sticky-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+      #mq-sticky-label-row{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+      #mq-sticky-label{font-size:13px;font-weight:600;color:rgba(255,255,255,0.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
       #mq-sticky-price-wrap{position:relative;display:inline-block}
       #mq-sticky-price{font-size:19px;font-weight:800;color:#fff;display:inline-block;transition:color 0.3s;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
       #mq-sticky-price.pulse{animation:mqPricePulse 0.6s ease}
@@ -851,7 +850,7 @@
       #mq-sticky-financing-main{font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:0.01em;display:flex;align-items:center;justify-content:center;gap:6px}
       #mq-sticky-financing-disclaimer{font-size:10px;font-weight:400;color:rgba(255,255,255,0.55);font-style:italic;margin-top:3px}
       @media (max-width:420px){
-        #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
+        #mq-sticky-label{white-space:normal;overflow:visible;text-overflow:clip}
         #mq-sticky-content{flex:1 1 100%}
         #mq-sticky-ctas{flex:1 1 100%;margin-top:4px}
         #mq-sticky-ctas button{flex:1;padding:9px 8px;font-size:11px}
@@ -7017,10 +7016,12 @@ window.mqTogDrawerConfig=(prefix)=>{
     bar.style.borderTop = `2px solid ${accent}`;
     bar.innerHTML = `
       <div id="mq-sticky-inner">
-        <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" aria-label="Show price breakdown" style="display:none;position:absolute;top:-38px;right:10px;width:30px;height:30px;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.5);border-radius:7px;color:#fff;font-size:18px;line-height:1;cursor:pointer;font-family:inherit;padding:0">▾</button>
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
-            <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+            <div id="mq-sticky-label-row">
+              <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+              <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" aria-label="Show price breakdown" style="display:none;align-items:center;justify-content:center;width:26px;height:26px;flex-shrink:0;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.5);border-radius:6px;color:#fff;font-size:16px;line-height:1;cursor:pointer;font-family:inherit;padding:0">▾</button>
+            </div>
             <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span></div>
             <div id="mq-sticky-links-row" style="margin-top:2px"><button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-contact-link" onclick="mqRequestContact()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">🙋 I'd like to be contacted</button></div>
           </div>

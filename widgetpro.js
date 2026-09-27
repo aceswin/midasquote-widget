@@ -526,6 +526,19 @@
       #midasquote-widget .mq-tab-sub{font-size:10px;opacity:0.7;line-height:1}
       #midasquote-widget .mq-tab-content{display:none;padding:15px}
       #midasquote-widget .mq-tab-content.active{display:block}
+      /* Jordan: 15px of side padding on every tab's content is fine on
+         desktop, but on a phone it's width that could go to the actual form
+         fields/pickers instead — bring it down to 5px below this breakpoint.
+         Deliberately placed AFTER the unconditional rule above (not inside
+         the earlier @media (max-width:600px) block near the top of this
+         stylesheet) — both rules share the exact same specificity, so with
+         equal specificity the LATER one in source order wins regardless of
+         which is inside a media query; nested inside that earlier block,
+         this 5px would have lost the cascade to the unconditional 15px rule
+         declared after it and never actually applied on a phone. */
+      @media (max-width:600px){
+        #midasquote-widget .mq-tab-content{padding:5px}
+      }
       #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #1e3a5f;border-radius:10px;padding:10px;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-sec{border-left:4px solid #0f2a52}
       #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:#0f2a52;color:#fbbf24;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
@@ -666,12 +679,19 @@
       /* Background/border stay full-bleed on the outer bar, but the actual
          content centers within a max-width column — same width the results
          panel itself uses, so wide desktop screens don't stretch the price
-         and buttons apart to the far edges. */
+         and buttons apart to the far edges. #mq-sticky-breakdown-toggle
+         (the chevron-in-a-square open/close control) used to live up in a
+         reserved band above the bar (hence the old 48px top padding — see
+         checklist), but now sits inline inside #mq-sticky-label-row as a
+         normal flex child (no absolute positioning), sharing the line with
+         "Swap items...", so the bar's padding is back to the same 10px
+         every other side gets. */
       #mq-sticky-inner{position:relative;max-width:900px;width:100%;margin:0 auto}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#0f2a52;border:2px solid #0f2a52;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       #mq-sticky-content{flex:1;min-width:0}
-      #mq-sticky-label{font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+      #mq-sticky-label-row{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+      #mq-sticky-label{font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
       #mq-sticky-price-wrap{position:relative;display:inline-block}
       #mq-sticky-price{font-size:19px;font-weight:800;color:#fff;display:inline-block;transition:color 0.3s;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
       #mq-sticky-price.pulse{animation:mqPricePulse 0.6s ease}
@@ -686,7 +706,7 @@
       #mq-sticky-financing-main{font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:0.01em;display:flex;align-items:center;justify-content:center;gap:6px}
       #mq-sticky-financing-disclaimer{font-size:10px;font-weight:400;color:rgba(255,255,255,0.55);font-style:italic;margin-top:3px}
       @media (max-width:420px){
-        #mq-sticky-label{display:block;white-space:normal;overflow:visible;text-overflow:clip;flex-basis:100%}
+        #mq-sticky-label{white-space:normal;overflow:visible;text-overflow:clip}
         #mq-sticky-content{flex:1 1 100%}
         #mq-sticky-ctas{flex:1 1 100%;margin-top:4px}
         #mq-sticky-ctas button{flex:1;padding:9px 8px;font-size:11px}
@@ -4621,7 +4641,7 @@
       const stickyToggle = document.getElementById('mq-sticky-breakdown-toggle');
       const stickyBreakdown = document.getElementById('mq-sticky-breakdown');
       const stickyPrice = document.getElementById('mq-sticky-price');
-      if (stickyToggle) stickyToggle.style.display = allEntries.length ? 'inline' : 'none';
+      if (stickyToggle) stickyToggle.style.display = allEntries.length ? 'flex' : 'none';
       if (stickyBreakdown) {
         if (!allEntries.length) {
           stickyBreakdown.style.display = 'none';
@@ -4630,14 +4650,25 @@
           // price is the only number on screen — keep it visible.
           if (stickyPrice) stickyPrice.style.display = 'inline-block';
         } else {
-          stickyBreakdown.style.display = 'block';
-          if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
+          // Jordan: "lets start with the breakdown hidden by default." This
+          // used to unconditionally force stickyBreakdown open on every
+          // single call — which fires on every recalculation, i.e. on
+          // basically any input change — so a customer's manual "Hide
+          // breakdown ✕" click never actually stuck; it silently popped
+          // back open the moment anything else changed. Now this only
+          // refreshes the breakdown's CONTENT and reads whatever visibility
+          // it already had — closed the first time entries ever appear
+          // (its starting display:none, same as always), open only if the
+          // customer (or mqToggleStickyBreakdown) explicitly opened it —
+          // rather than forcing a particular state every render.
+          const isOpen = stickyBreakdown.style.display === 'block';
+          if (stickyToggle) stickyToggle.textContent = isOpen ? '▴' : '▾';
           // The breakdown's own Total row (below) shows the same number as
           // the top-left price — once the breakdown is open that would be
           // a duplicate, so hide the top-left one and let the Total row do
           // the job as the one visible total. mqToggleStickyBreakdown keeps
           // this in sync if the customer manually collapses the panel.
-          if (stickyPrice) stickyPrice.style.display = 'none';
+          if (stickyPrice) stickyPrice.style.display = isOpen ? 'none' : 'inline-block';
           stickyBreakdown.innerHTML = buildRows('rgba(255,255,255,0.92)', 'rgba(255,255,255,0.5)')
             + `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 0;margin-top:6px;border-top:1px solid rgba(255,255,255,0.25);color:#fff"><span style="font-size:13.5px;font-weight:700">Total</span><span style="font-size:20px;font-weight:800">${totalText}</span></div>`
             + `<div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px"><button type="button" onclick="mqScrollToTop()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↑ Back to top</button><button type="button" onclick="mqResetEntireQuote()" style="background:none;border:none;font-size:11px;color:rgba(255,255,255,0.6);text-decoration:underline;cursor:pointer;font-family:inherit;padding:0">↺ Reset quote</button></div>`;
@@ -5842,18 +5873,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       // whatever the install selections were and the removal selections,
       // because they will likely be the same.. so just by default when
       // they add another surface it will have that install and removal
-      // selection the same as the first surface automatically." Read
-      // straight off the DOM (not a stored JS value) so this always
+      // selection the same as the first surface automatically." Later
+      // extended to also carry the material and backsplash selections for
+      // the same reason ("so they dint have to remember to reinput them").
+      // Read straight off the DOM (not a stored JS value) so this always
       // reflects whatever the first surface is CURRENTLY set to, even if
       // it was changed after being added. A brand new project's very first
-      // surface has no earlier surface to copy from, so both stay null and
-      // each select simply falls back to its normal first-option default,
-      // exactly as before.
+      // surface has no earlier surface to copy from, so all four stay null
+      // and each field simply falls back to its normal default, exactly as
+      // before.
       const firstSurfContainer = document.getElementById(containerId);
       const firstSiSelect = firstSurfContainer?.querySelector(`select[id^="mqssi-s${prefix}"]`);
       const firstRmSelect = firstSurfContainer?.querySelector(`select[id^="mqsrm-s${prefix}"]`);
+      const firstMatSelect = firstSurfContainer?.querySelector(`select[id^="mqsm-s${prefix}"]`);
+      const firstBsSelect = firstSurfContainer?.querySelector(`select[id^="mqsbs-s${prefix}"]`);
       const carrySi = firstSiSelect ? firstSiSelect.value : null;
       const carryRm = firstRmSelect ? firstRmSelect.value : null;
+      const carryMat = firstMatSelect ? firstMatSelect.value : null;
+      const carryBs = firstBsSelect ? firstBsSelect.value : null;
       const card=document.createElement('div');
       card.className='mq-surface-card';card.id='mqsc-'+id;card.dataset.prefix=prefix;
       card.innerHTML=`
@@ -5919,6 +5956,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       window.mqRefreshCtAddons(`mqsm-${id}`, `mqs-edge-${id}`, `mqs-addons-${id}`);
       window.mqRefreshSurfBsFt(id);
       window.mqSurfUpdatePreview(id);
+      // Carry the material and backsplash selections over too (see comment
+      // above). Material has to go through mqRestoreFieldValue rather than
+      // a plain el.value= — it's a visual chip picker with a hidden
+      // <select> behind it, and mqRestoreFieldValue is the same helper
+      // mqRestoreFormState already uses to reselect a saved surface's
+      // material chip when restoring surfaces after a tab switch, so this
+      // reuses an already-proven path instead of reimplementing chip
+      // selection here. Restoring material re-fires its onchange cascade
+      // (mqRefreshBsOpts included), which is what actually rebuilds
+      // mqsbs-${id}'s backsplash option list for that material — backsplash
+      // has to be restored AFTER material, or its carried-over value would
+      // have nothing valid to select yet.
+      if (carryMat && carryMat !== 'none' && document.getElementById(`mqsm-${id}`)?.value !== carryMat) {
+        mqRestoreFieldValue(`mqsm-${id}`, carryMat);
+      }
+      if (carryBs) {
+        mqRestoreFieldValue(`mqsbs-${id}`, carryBs);
+      }
       mqRefreshAllPickerVisibility(prefix);
       mqRenumberSurfaces(prefix);
       return id;
@@ -6683,8 +6738,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       <div id="mq-sticky-inner">
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
-            <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <span id="mq-sticky-real" style="display:none;font-size:12px;font-weight:700;color:#fbbf24;margin-left:8px;white-space:nowrap">💰 Real: <span id="mq-sticky-real-val">—</span></span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button></div>
+            <div id="mq-sticky-label-row">
+              <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
+              <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" aria-label="Show price breakdown" style="display:none;align-items:center;justify-content:center;width:26px;height:26px;flex-shrink:0;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.5);border-radius:6px;color:#fff;font-size:16px;line-height:1;cursor:pointer;font-family:inherit;padding:0">▾</button>
+            </div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <span id="mq-sticky-real" style="display:none;font-size:12px;font-weight:700;color:#fbbf24;margin-left:8px;white-space:nowrap">💰 Real: <span id="mq-sticky-real-val">—</span></span></div>
+            <div id="mq-sticky-links-row" style="margin-top:2px"><button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
@@ -6708,7 +6767,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // exclusive — collapsing the breakdown by hand should bring the price
     // back, same as when there's nothing to show a breakdown for at all.
     if (price) price.style.display = opening ? 'none' : 'inline-block';
-    if (toggle) toggle.textContent = opening ? '▴ Hide breakdown' : '▾ Breakdown';
+    if (toggle) toggle.textContent = opening ? '▴' : '▾';
     mqAdjustWidgetBottomPadding();
   };
   // The bar is position:fixed, so it never pushes page content out of the
