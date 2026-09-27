@@ -365,7 +365,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Leads',
       body: `
         <p>Every quote a customer runs through your widget shows up here automatically — their contact info (if they gave it), the project type, and the estimate they saw.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Statuses</div>
           <p style="margin:0">New / Contacted / Booked / Lost are just for your own tracking — customers never see these. Use the dropdown at the top to filter the list down to one status at a time.</p>
         </div>
@@ -376,43 +376,43 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Shop info',
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Brand colour</div>
           <p style="margin:0">Used for your widget's tab bar, buttons, and logo placeholder.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">MidasQuote default color scheme</div>
           <p style="margin:0">A collapsed section further down with four optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Left alone, it's the same polished blue scheme every shop starts with — click to expand it only if you want to customize any piece, like a dark background with light text.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Disclaimer text</div>
           <p style="margin:0">The fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Project type section title/hint</div>
           <p style="margin:0">The heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Quote range — low/high</div>
           <p style="margin:0">Controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Consultation link/email</div>
           <p style="margin:0">At least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Financing toggle</div>
           <p style="margin:0">Turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount to block the financing's monthly payment from showing up for a project that is only a couple hundred dollars. Just meant to keep things looking polished and professional.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Showroom toggle</div>
           <p style="margin:0">Controls whether the "See our showroom" button shows up in your widget's header at all.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🔒 Widget access</div>
           <p style="margin:0">Require a password before customers can use your widget at all, for when you don't want it fully public. Add as many passwords as you like; removing one instantly locks out anyone whose browser had it saved.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Estimator tabs</div>
           <p style="margin:0">A card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
         </div>
@@ -423,35 +423,35 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Project types',
       body: `
         <p>Each project type (Kitchen, Bathroom, Refacing, or anything custom you add) is its own self-contained setup: its own description, cover photo, "how to measure" guide, and pricing behavior.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Price adjustments</div>
           <p style="margin:0">Four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Live on widget / Draft</div>
           <p style="margin:0">Uncheck this while you're still setting a project type up, so customers don't see it half-finished.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Visibility</div>
           <p style="margin:0">Choose where a project type appears: in both the customer widget and MidasQuote Pro, only in MidasQuote Pro (good for anything you only ever quote yourself), or everywhere except MidasQuote Pro (for something you only want offered publicly, not used for your own internal quoting).</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Hide "How to measure" section</div>
           <p style="margin:0">For a project type that's entirely flat-rate items with nothing to actually measure (like a general "Odd jobs" type), this removes that whole section from the widget for that type only.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Show price as a range</div>
           <p style="margin:0">On by default, shows the usual ballpark spread (e.g. "${CUR()}2,375 – ${CUR()}3,000"). Uncheck it for a project type where a single clean number makes more sense instead (e.g. "${CUR()}2,600") — useful for flat-rate or fixed-price project types where a range wouldn't really apply. This also updates the wording around it automatically — "Estimated range" becomes "Your quote," and the ballpark disclaimer text adjusts to match, in every place the price shows up including the confirmation email.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Cover image and Measuring guide image</div>
           <p style="margin:0">Upload your own, or click "↺ Use default image" to fall back to MidasQuote's own default photo for that project type. Leaving it on the default means it automatically stays current if that default photo is ever updated — nothing to re-upload later.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">More than one measuring guide image?</div>
           <p style="margin:0">Click "+ Add another image" as many times as needed — once there's more than one, the widget automatically turns it into a swipeable carousel instead of a single static photo, and gives it a brief one-time "nudge" animation so customers notice there's more than one image to see.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Want a video instead of (or alongside) photos?</div>
           <p style="margin:0">Paste a YouTube, Vimeo, or Loom link — or a direct link to a video file — into any of the measuring guide image fields instead of a photo URL. It plays right there in the carousel with your other images, in whatever order you place it. There's no upload for video, only a link, since videos need to live somewhere that can actually stream them (YouTube, Vimeo, your own site) rather than something MidasQuote hosts for you.</p>
         </div>
@@ -463,12 +463,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
         <p>Start by running the pricing wizard with a few of your most commonly sold items. No need to add everything here. Just keep it to a max of 5 items for each category (box materials, drawer styles, door styles, hinges). No need to list items with matching prices either. You can easily add multiple items of the same or different price using the "Mini pricing wizards" afterwards.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Don't add handles or knobs here</div>
           <p style="margin:0">If you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need. It's your choice to add handles/knobs. If you install handles but don't supply them, then you still need to make sure you include handle installation in your door installation pricing (you'll be reminded in the pricing wizard). If you do supply handles, then it's still best to add in the installation costs when reminded in the pricing wizard — that way, if a customer doesn't include handles in their ballpark, your estimate will still have the installation of them covered.</p>
         </div>
         <p style="margin:1.1rem 0">Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking your quotes.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🧪 Test your pricing once it's set up</div>
           <p style="margin:0 0 0.7rem">Run a handful of test quotes through the widget for jobs you've actually quoted before, and compare the ballpark to what you really charged. If something's consistently off, there are three different places to adjust it depending on how widespread the issue is:</p>
           <ul style="margin:0;padding-left:1.25rem;line-height:1.8">
@@ -477,40 +477,40 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             <li>The widget's overall estimate range (Shop Info → Quote range — low/high) — widens or narrows how far the shown range sits from the calculated price, across every project type at once.</li>
           </ul>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Adding a new box material, door style, drawer config, or hinge?</div>
           <p style="margin:0">Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">⭐ Baseline</div>
           <p style="margin:0">Box Materials, Door Styles, and Hinges each have one item pinned as the baseline (marked with a ⭐ Baseline badge) that every other item in the category is priced against. It automatically re-pins to whichever item is genuinely cheapest the moment one is saved. Delete the current baseline and you'll be asked to pick what becomes the new one.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Sort any item list</div>
           <p style="margin:0">Click its Name or Price column header — the active sort highlights in blue.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">✏️ Edit install/removal rates</div>
           <p style="margin:0">Requote your whole Installation &amp; Removal set at once, pre-filled with your current rates. Deleting any one rate deletes the whole set, since the widget needs all of them to price every job type correctly.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">See (and edit) the original quote behind a rate</div>
           <p style="margin:0">Opening Edit on a Box Material, Door Style, Drawer Config, or Hinge now shows the real job price that rate came from, so you can update it by typing a new job total instead of doing the math yourself.</p>
         </div>
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">How some of the trickier pricing actually works</h4>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Extended (36"–40") upper cabinets</div>
           <p style="margin:0">Adds a flat 30% on top of the material/door cost and the install cost for upper cabinets only — base cabinets are never affected, since it's only the uppers that get taller to reach the ceiling.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Tall cabinets</div>
           <p style="margin:0">Priced per unit: your wizard's baseline unit price (24" wide, baseline material &amp; door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Countertop pricing</div>
           <p style="margin:0">Covers more than just your per-square-foot material rate. Set a backsplash rate and separate cutout charges for sinks and cooktops, so those don't get missed on a job that needs them. Edges and addons — a specific edge profile, or any extra beyond the standard edge — each get their own price and photo, and you choose which materials each one applies to. A minimum price is available too, so a small countertop doesn't accidentally price too low off the square-foot rate alone.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Crown Moulding and Valance</div>
           <p style="margin:0">Price the same way as your other cabinet categories, and can be linked to specific door styles — handy if certain profiles are only meant to pair with certain doors.</p>
         </div>
@@ -520,44 +520,44 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Specialty items',
       body: `
         <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding for when you are offering refacing, restaining, or repainting services. We have even pre-added some of these items for you to give you a better idea. You can keep or delete them.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Great for project types the wizard doesn't fit well</div>
           <p style="margin:0">The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead. You can also use our newly added "sized" option to add multiple sizes of an item with square footage generated for you. Read more in the "Sized variants" section below.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Category</div>
           <p style="margin:0">Group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Edit categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Offer supply/install choice?</div>
           <p style="margin:0">Check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is labor only — the widget adds it on top of the supply price above. If you don't offer a choice for an item, just leave "Offer supply/install choice?" unchecked and then pick which label is true from the dropdown instead.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Install priced differently than supply?</div>
           <p style="margin:0">E.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Project types column</div>
           <p style="margin:0">Click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Works for internal-only project types too</div>
           <p style="margin:0">A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         </div>
         <p style="margin:1.1rem 0">Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🌍 Thinking in metric?</div>
           <p style="margin:0">Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Variants</div>
           <p style="margin:0">Give one item multiple options (like Lemans pullout/Lazy susan/Magic corner under one "Corner cabinet solutions" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Sized variants</div>
           <p style="margin:0">A newly added feature is the ability to create multiple sized variants of a product, such as "Maple shaker door" with 20 different size increments like 30"x10", 30"x11", 30"x12", 30"x13", and so on. And the really helpful part of it is that you can apply one rate to all of them and it will autocalculate their costs based on their individual sizing, saving you a lot of calculator time.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Pro only</div>
           <p style="margin:0">Hides an item from the customer-facing widget entirely while keeping it available in MidasQuote Pro.</p>
         </div>
@@ -569,28 +569,28 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Once you get MidasQuote honed in, you can generate fast, printable PDF proposals — designed to your specifications — right from <strong>MidasQuote Pro</strong>.</p>
         <p>You start with three ready-made templates — <strong>Simple</strong>, <strong>Standard</strong>, and <strong>Large Project</strong> — but you can rewrite any of them completely, or add as many of your own as you'd like.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">The Body box is the whole proposal</div>
           <p style="margin:0">Write it exactly like you'd write your own — your own wording, your own layout, your own order. Nothing is fixed except the branded header at the very top (your logo, shop name, accent colour, and the date) — everything below that is entirely yours to write.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Tokens</div>
           <p style="margin:0 0 0.7rem">Use tokens to drop pre-organized lists and items into your proposal. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you.</p>
           <p style="margin:0">Same idea for <code>{items}</code> (a styled list) or <code>{items_plain}</code> (the same list with no box or colour, if you'd rather it match your own paper proposal's look), <code>{totals_box}</code> or <code>{totals_plain}</code>, <code>{hr}</code> (a plain horizontal divider), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{customer_phone}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line).</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Show individual item prices</div>
           <p style="margin:0">On by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Deposit and Tax</div>
           <p style="margin:0">Settings below the header row feed the <code>{deposit}</code> and <code>{tax}</code> tokens — set the percentage or flat amount here, then place the token wherever you want it to show up in the body text.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">👁 Preview</div>
           <p style="margin:0">Shows exactly what this template will actually produce, filled with sample data (a fake customer, sample line items), so you can see how it looks without leaving the dashboard or running a real quote first.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Proposals themselves</div>
           <p style="margin:0">The customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
         </div>
@@ -600,15 +600,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Embed code',
       body: `
         <p>Three ways to actually get the widget in front of people, each in its own collapsible section:</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Code for websites</div>
           <p style="margin:0">The embed code to paste into your own website (Wix, Squarespace, WordPress, Webflow, etc.).</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Direct link</div>
           <p style="margin:0">A plain link that opens your quote tool directly, no website needed.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">MidasQuote Pro</div>
           <p style="margin:0">A separate link just for you (or someone you trust, like a regular contractor). It shows the real exact numbers behind every quote alongside the same ballpark customers see. Not for sharing with customers.</p>
         </div>
@@ -624,15 +624,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>Every category starts collapsed — click any category's header to open just that one.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🙈 Which project types see each item</h4>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">One item at a time</div>
           <p style="margin:0">Every item has its own project-type checkboxes right here — the same setting as on the Specialty Items tab. Uncheck a type on that item and it's hidden just for that type.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">A whole category at once</div>
           <p style="margin:0">At the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category (and the category itself) is now hidden for those types in one click, no need to touch them individually.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <p style="margin:0">For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically.</p>
         </div>
 
@@ -649,50 +649,50 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:16px 0 8px">🎭 Showroom style</h4>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Default showroom</div>
           <p style="margin:0">Shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup).</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Build my own</div>
           <p style="margin:0">Allows you to create custom categories like "Kitchens," "Commercial work," etc., plus Specialty Items on the page (optional).</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <p style="margin:0">Switching between Default and Build My Own is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
         </div>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Managing categories</h4>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Showroom subheading</div>
           <p style="margin:0">The line under your shop name on the showroom page ("Browse the materials, door styles..." by default) is fixed for Default showroom, since it's describing your actual priced categories. While Build My Own is active, a <strong>Showroom subheading</strong> box appears right below the style picker so you can write your own — leave it blank to use the built-in "Browse some of our past projects and features..." line instead.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">✏️ Rename &amp; 🚫 Hide category</div>
           <p style="margin:0">Use these buttons to rename or hide entire categories.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">"+ New category"</div>
           <p style="margin:0">Adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Reordering</div>
           <p style="margin:0">Use the ▲▼ arrows on any category to change the order it appears in on your showroom page. Priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
         </div>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🔗 Preview &amp; sharing</h4>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Live preview</div>
           <p style="margin:0">Below is your actual showroom page, not a mockup. It's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Standalone link</div>
           <p style="margin:0">Your showroom has its own link that works completely on its own. Paste it into your own website's navigation if you'd like — it doesn't need the widget at all.</p>
         </div>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🧩 Embed on a page</div>
           <p style="margin:0">Beyond the standalone link, your showroom can be embedded right on your own website as a self-sizing iframe — grab the code from the "Embed on a page" card. You can independently show or hide the shop info block, top navigation, hero banner, and project-type filter bar just for the embedded version, so it blends into your site instead of duplicating your own header/nav.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🖱️ "See our showroom" button</div>
           <p style="margin:0">Choose whether the widget's own showroom button opens the popup page (default) or sends customers straight to your embedded page instead.</p>
         </div>
@@ -703,11 +703,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>This tab only shows up for the admin account — it controls the <em>defaults</em> every brand new shop starts with, not any one specific shop's live data.</p>
         <p>Editing a project type's description, image, or measuring guide here only affects <strong>shops created from now on</strong> — it never retroactively changes a shop that already exists.</p>
-        <div style="padding:1.1rem 0;border-bottom:1px solid #eef0f2">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">"↺ Use built-in default"</div>
           <p style="margin:0">Next to Refacing/Repainting/Restaining's cover image and measuring guide image, this fills in MidasQuote's current default photo for that field — review it, then Save like any other edit here. Unlike the same-looking button on the Project Types tab, this field <em>is</em> the default itself (what new shops start from), so there's nothing to "fall back to" — this just fills in the known-correct URL for you instead of needing it typed or pasted by hand.</p>
         </div>
-        <div style="padding:1.1rem 0 0">
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Push to all shops</div>
           <p style="margin:0">Pushes specialty item changes out to shops that already exist. Use this deliberately; it's the one action here that does touch live shops.</p>
         </div>
