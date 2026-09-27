@@ -338,6 +338,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           </div>
         </div>
         <p style="margin-top:1.4rem">To dive deeper into each tab, check out the help tabs at the top of this page.</p>
+        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-top:1.4rem;font-size:13px;color:#991b1b;line-height:1.6">
+          <div style="font-weight:700;font-size:14px;margin-bottom:6px">⚠️ What MidasQuote doesn't account for</div>
+          <p style="margin:0 0 10px">The goal of MidasQuote is to give fast (5 minutes or less) ballpark estimates, without overloading the customer with inputs. To do this, we have to sacrifice some options — things like finished ends, crown/valance returns to walls, side splashes, and island finished ends and back panels. These items need to be absorbed into the ballpark range.</p>
+          <p style="margin:0 0 10px">This is why it's best to keep your range fairly tight on the low end (no more than -5%) and with decent padding on the high end (+20% at least).</p>
+          <p style="margin:0">We're currently working on a simple remedy for islands that won't overwhelm the customer or require much additional quoting — if any — for the shop owner, but it's not quite finished yet.</p>
+        </div>
       `
     },
     overview: {
