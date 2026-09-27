@@ -484,7 +484,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           </ul>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Adding a new box material, door style, drawer config, or hinge?</div>
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Adding a new box material, door style, drawer config, or hinge with the same price as one listed?</div>
           <p style="margin:0">Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
