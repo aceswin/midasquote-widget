@@ -661,6 +661,19 @@
       #midasquote-widget .mq-tab-sub{font-size:10px;opacity:0.7;line-height:1}
       #midasquote-widget .mq-tab-content{display:none;padding:15px}
       #midasquote-widget .mq-tab-content.active{display:block}
+      /* Jordan: 15px of side padding on every tab's content is fine on
+         desktop, but on a phone it's width that could go to the actual form
+         fields/pickers instead — bring it down to 5px below this breakpoint.
+         Deliberately placed AFTER the unconditional rule above (not inside
+         the earlier @media (max-width:600px) block near the top of this
+         stylesheet) — both rules share the exact same specificity, so with
+         equal specificity the LATER one in source order wins regardless of
+         which is inside a media query; nested inside that earlier block,
+         this 5px would have lost the cascade to the unconditional 15px rule
+         declared after it and never actually applied on a phone. */
+      @media (max-width:600px){
+        #midasquote-widget .mq-tab-content{padding:5px}
+      }
       #midasquote-widget .mq-sec{background:#fff;border:1.5px solid #d1d5db;border-radius:10px;padding:10px;margin-bottom:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-sec{border-left:4px solid ${boxBorder}}
       #midasquote-widget .mq-step-badge{width:22px;height:22px;border-radius:50%;background:${focalColor};color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
@@ -803,19 +816,22 @@
       .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
       .mq-modal-skip{width:100%;padding:8px;font-size:14px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
       .mq-modal-copy-btn{flex-shrink:0;padding:6px 12px;font-size:13px;font-weight:600;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111;cursor:pointer;font-family:inherit}
-      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:22px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:30px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
       #mq-sticky-bar.show{display:block}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
       /* Background/border stay full-bleed on the outer bar, but the actual
          content centers within a max-width column — same width the results
          panel itself uses, so wide desktop screens don't stretch the price
          and buttons apart to the far edges. Extra top padding on the outer
-         bar (22px vs the 10px every other side gets) reserves room for
+         bar (30px vs the 10px every other side gets) reserves room for
          #mq-sticky-breakdown-toggle, which sits absolutely positioned in
-         this corner — top:0;right:0 of #mq-sticky-inner — above the price
-         row and CTA buttons instead of the flex row itself, since inline
-         next to "Book a consultation" the toggle either got buried among
-         those buttons or fought their responsive stacking on mobile. */
+         this corner — top:-20px;right:0 of #mq-sticky-inner, i.e. up in the
+         bar's own reserved top padding, above #mq-sticky-inner's content box
+         entirely — rather than top:0, which sat exactly level with
+         #mq-sticky-label ("Swap items to change your estimate...") and
+         visibly overlapped it. Also not nested inline next to "Book a
+         consultation" — the toggle either got buried among those buttons or
+         fought their responsive stacking on mobile. */
       #mq-sticky-inner{position:relative;max-width:900px;width:100%;margin:0 auto}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -6988,7 +7004,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     bar.style.borderTop = `2px solid ${accent}`;
     bar.innerHTML = `
       <div id="mq-sticky-inner">
-        <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;position:absolute;top:0;right:0;background:none;border:none;padding:0;margin:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;white-space:nowrap">▾ Show breakdown</button>
+        <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;position:absolute;top:-20px;right:0;background:none;border:none;padding:0;margin:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;white-space:nowrap">▾ Show breakdown</button>
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
