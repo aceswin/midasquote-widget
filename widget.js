@@ -803,13 +803,19 @@
       .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
       .mq-modal-skip{width:100%;padding:8px;font-size:14px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
       .mq-modal-copy-btn{flex-shrink:0;padding:6px 12px;font-size:13px;font-weight:600;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111;cursor:pointer;font-family:inherit}
-      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
+      #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#161616 0%,#2b2b2b 100%);border-top:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:22px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
       #mq-sticky-bar.show{display:block}
       @keyframes mqStickyIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
       /* Background/border stay full-bleed on the outer bar, but the actual
          content centers within a max-width column — same width the results
          panel itself uses, so wide desktop screens don't stretch the price
-         and buttons apart to the far edges. */
+         and buttons apart to the far edges. Extra top padding on the outer
+         bar (22px vs the 10px every other side gets) reserves room for
+         #mq-sticky-breakdown-toggle, which sits absolutely positioned in
+         this corner — top:0;right:0 of #mq-sticky-inner — above the price
+         row and CTA buttons instead of the flex row itself, since inline
+         next to "Book a consultation" the toggle either got buried among
+         those buttons or fought their responsive stacking on mobile. */
       #mq-sticky-inner{position:relative;max-width:900px;width:100%;margin:0 auto}
       #mq-sticky-close{position:absolute;top:-11px;right:10px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1a1a1a;border:2px solid #1a1a1a;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.35);padding:0}
       #mq-sticky-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -4873,7 +4879,7 @@
           if (stickyPrice) stickyPrice.style.display = 'inline-block';
         } else {
           stickyBreakdown.style.display = 'block';
-          if (stickyToggle) stickyToggle.textContent = '▴ Hide breakdown';
+          if (stickyToggle) stickyToggle.textContent = 'Hide breakdown ✕';
           // The breakdown's own Total row (below) shows the same number as
           // the top-left price — once the breakdown is open that would be
           // a duplicate, so hide the top-left one and let the Total row do
@@ -6982,10 +6988,11 @@ window.mqTogDrawerConfig=(prefix)=>{
     bar.style.borderTop = `2px solid ${accent}`;
     bar.innerHTML = `
       <div id="mq-sticky-inner">
+        <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;position:absolute;top:0;right:0;background:none;border:none;padding:0;margin:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;white-space:nowrap">▾ Show breakdown</button>
         <div id="mq-sticky-main">
           <div id="mq-sticky-content">
             <div id="mq-sticky-label">Swap items to change your estimate in real time</div>
-            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-contact-link" onclick="mqRequestContact()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">🙋 I'd like to be contacted</button> <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" style="display:none;background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">▾ Breakdown</button></div>
+            <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button> <button id="mq-sticky-contact-link" onclick="mqRequestContact()" style="background:none;border:none;padding:0;margin-left:9px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">🙋 I'd like to be contacted</button></div>
           </div>
           <div id="mq-sticky-ctas">
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
@@ -7009,7 +7016,7 @@ window.mqTogDrawerConfig=(prefix)=>{
     // exclusive — collapsing the breakdown by hand should bring the price
     // back, same as when there's nothing to show a breakdown for at all.
     if (price) price.style.display = opening ? 'none' : 'inline-block';
-    if (toggle) toggle.textContent = opening ? '▴ Hide breakdown' : '▾ Breakdown';
+    if (toggle) toggle.textContent = opening ? 'Hide breakdown ✕' : '▾ Show breakdown';
     mqAdjustWidgetBottomPadding();
   };
   // The bar is position:fixed, so it never pushes page content out of the
