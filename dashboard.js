@@ -1224,6 +1224,30 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
       #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
+      /* "Start here" nudge: pulsing highlight on the Help guide nav item plus
+         a callout bubble with an arrow, shown until a first-time shop clicks
+         it once (see mqInitHelpGuideNudge() and the window.mqNav wrapper's
+         dismiss logic further down). The bubble is positioned in JS with
+         position:fixed rather than nested/absolute inside .mq-sidebar,
+         because the sidebar needs overflow-y:auto (desktop) or
+         overflow-x:auto (mobile) for its own scrolling — and per the CSS
+         overflow spec, giving either axis a non-"visible" value makes the
+         OTHER axis compute to "auto" too, which was silently clipping an
+         absolutely-positioned bubble that tried to overflow the sidebar's
+         bounds in the other direction. Appended as a child of
+         #midasquote-dashboard (which has no transform of its own) so
+         position:fixed still anchors to the real viewport. */
+      @keyframes mqNudgePulse{0%{box-shadow:0 0 0 0 rgba(201,164,92,0.55)}70%{box-shadow:0 0 0 8px rgba(201,164,92,0)}100%{box-shadow:0 0 0 0 rgba(201,164,92,0)}}
+      @keyframes mqNudgeArrowBounceX{0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)}}
+      @keyframes mqNudgeArrowBounceY{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+      #midasquote-dashboard .mq-nav-item-nudge{border-radius:6px;animation:mqNudgePulse 1.8s infinite}
+      #midasquote-dashboard .mq-helpguide-nudge{position:fixed;display:flex;align-items:center;gap:6px;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;white-space:nowrap;z-index:200;pointer-events:none}
+      #midasquote-dashboard .mq-helpguide-nudge-arrow{display:inline-block;animation:mqNudgeArrowBounceX 1.2s infinite}
+      #midasquote-dashboard .mq-helpguide-nudge-arrow::before{content:'\\2190'}
+      /* Modifier applied by JS when the bubble sits below the item (mobile
+         horizontal nav bar) instead of to its right (desktop vertical nav). */
+      #midasquote-dashboard .mq-helpguide-nudge.mq-helpguide-nudge-below .mq-helpguide-nudge-arrow{animation-name:mqNudgeArrowBounceY}
+      #midasquote-dashboard .mq-helpguide-nudge.mq-helpguide-nudge-below .mq-helpguide-nudge-arrow::before{content:'\\2191'}
       /* Any table wider than the available content area (Specialty items,
          with its 11+ columns, is the usual culprit) needs to scroll within
          its own box instead of stretching .mq-content — and therefore the
@@ -1402,6 +1426,12 @@ window.logoutMember = async function () {
     const token = shop['Shop token'] || '';
     const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
     window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
+    // "Start here" nudge pointing at Help guide, shown until a shop clicks
+    // it once — requires a 'Help guide nudge seen' checkbox field on the
+    // Shops table (same one-time-per-shop pattern as 'Welcome popup seen'
+    // etc. above). Dismissed in the mqNav wrapper further down, not here,
+    // since this function only runs once at initial render.
+    const showHelpGuideNudge = !shop['Help guide nudge seen'];
 
     return `
       <div class="mq-topbar">
@@ -1427,7 +1457,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item active" onclick="mqNav('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
           <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
           <div class="mq-nav-section">Setup</div>
-          <div class="mq-nav-item" onclick="mqNav('helpguide',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
+          <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
           <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
           <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
@@ -13205,6 +13235,68 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     update();
   }
 
+  // "Start here" nudge pointing at the Help guide nav item (first-time shops
+  // only — see the 'Help guide nudge seen' Airtable field and buildHTML()'s
+  // showHelpGuideNudge). The callout bubble is built and positioned here in
+  // JS, as position:fixed, rather than nested inside .mq-sidebar with
+  // position:absolute, because .mq-sidebar needs its own overflow-y:auto
+  // (desktop) / overflow-x:auto (mobile) for scrolling — and setting either
+  // overflow axis to non-"visible" makes the OTHER axis compute to "auto"
+  // too, which silently clipped an absolutely-positioned bubble trying to
+  // overflow the sidebar's bounds. Dismissed (and this cleaned up) from the
+  // window.mqNav wrapper further down, the first time a shop actually clicks
+  // into Help guide.
+  function mqInitHelpGuideNudge() {
+    const navItem = document.getElementById('mq-nav-helpguide');
+    const root = document.getElementById('midasquote-dashboard');
+    if (!navItem || !root || !navItem.classList.contains('mq-nav-item-nudge')) return;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'mq-helpguide-nudge';
+    bubble.id = 'mq-helpguide-nudge';
+    bubble.innerHTML = '<span class="mq-helpguide-nudge-arrow"></span><span>Start here!</span>';
+    root.appendChild(bubble);
+
+    function position() {
+      if (!document.body.contains(navItem)) return;
+      const itemRect = navItem.getBoundingClientRect();
+      const bubbleRect = bubble.getBoundingClientRect();
+      // Same breakpoint as .mq-sidebar's own switch to a horizontal tab bar —
+      // checked live via matchMedia instead of duplicated as a magic number,
+      // so the two can't drift out of sync.
+      const isMobileBar = window.matchMedia('(max-width: 768px)').matches;
+      if (isMobileBar) {
+        bubble.classList.add('mq-helpguide-nudge-below');
+        let left = itemRect.left + (itemRect.width / 2) - (bubbleRect.width / 2);
+        left = Math.max(6, Math.min(left, window.innerWidth - bubbleRect.width - 6));
+        bubble.style.left = left + 'px';
+        bubble.style.top = (itemRect.bottom + 6) + 'px';
+      } else {
+        bubble.classList.remove('mq-helpguide-nudge-below');
+        bubble.style.left = (itemRect.right + 6) + 'px';
+        bubble.style.top = (itemRect.top + itemRect.height / 2 - bubbleRect.height / 2) + 'px';
+      }
+    }
+
+    let ticking = false;
+    function onScrollOrResize() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { position(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    position();
+
+    window._mqHelpGuideNudgeCleanup = function() {
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+      bubble.remove();
+      navItem.classList.remove('mq-nav-item-nudge');
+      window._mqHelpGuideNudgeCleanup = null;
+    };
+  }
+
   // CORRECTION (2026-09-25, second pass): the previous version of this
   // function reimplemented CSS position:sticky in JS — toggling the topbar
   // between normal flow and position:fixed based on scroll position, and
@@ -13441,6 +13533,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     mqInitStickyTopbar();
     mqInitStickyNav();
     mqInitStickySpecHeader();
+    mqInitHelpGuideNudge();
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
     if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
@@ -13537,6 +13630,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // never used the app before.
     if (window._mqShopRecord && window._mqShopRecord.fields['Welcome popup seen'] && window._mqShopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
       window.mqShowAnnouncementModal();
+    }
+    // Dismiss the "Start here" Help guide nudge the first time a shop
+    // actually clicks into Help guide — one-time-per-shop, same pattern as
+    // 'Welcome popup seen' etc. mqInitHelpGuideNudge()'s cleanup function
+    // tears down the floating bubble plus its scroll/resize listeners, so it
+    // disappears the instant they click even though buildHTML() only runs
+    // once at initial load.
+    if (page === 'helpguide' && window._mqShopRecord && !window._mqShopRecord.fields['Help guide nudge seen']) {
+      window._mqShopRecord.fields['Help guide nudge seen'] = true;
+      atUpdate(CONFIG.SHOPS_TABLE, window._mqShopRecord.id, { 'Help guide nudge seen': true }).catch(()=>{});
+      if (window._mqHelpGuideNudgeCleanup) window._mqHelpGuideNudgeCleanup();
     }
     mqCheckForNewerDeploy();
     mqToggleFloatingSave(MQ_PAGE_SAVE_ACTIONS[page] || null);
