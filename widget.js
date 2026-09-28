@@ -2198,39 +2198,45 @@
   // type (see mqRefreshMeasureGuide). Kept as its own function so both the
   // initial HTML render and the per-project-type swap can reuse the exact
   // same markup.
+  //
+  // CORRECTION (2026-09-27): this used to hand-roll its own HTML per room
+  // type (separate Upper/Base/Island/Corner-cabinet copy, with its own
+  // corner-cabinets.jpg baked in) instead of reusing the same
+  // DEFAULT_MEASURE_GUIDE_TEXT_* strings dashboard.js's "↺ Use default
+  // guide" button (`mqFillDefaultGuide`) inserts. The two had drifted apart
+  // — most visibly, Bathroom's dashboard-side default mentions "DO NOT
+  // include tall cabinets" (a newer feature) while this function's old
+  // Bathroom branch never did — so a shop that left the field blank saw
+  // materially different (and in Bathroom's case, outdated) instructions
+  // than a shop who clicked "Use default guide" once and saved. Jordan
+  // caught this via a live customer-facing kitchen guide still showing
+  // Island/Corner-cabinet copy long dropped from the dashboard-side
+  // default. Fixed by making leaving the field blank render the exact
+  // same DEFAULT_MEASURE_GUIDE_TEXT_* string dashboard.js would fill the
+  // textarea with, through the same renderSafeGuideText token parser a
+  // shop's own custom text already goes through — one source of wording,
+  // never two copies to keep in sync by hand again.
+  //
   // Countertop project types get their own measuring guide entirely --
   // shape-based surfaces, not linear-foot cabinet runs, so the cabinet
-  // guide below (upper/base/corner cabinets) doesn't apply to them at all.
-  // Routed through renderSafeGuideText (same [tip]/[calc]/**bold** token
-  // parsing a shop's own custom measureText gets) so this renders with the
-  // identical yellow tip-box treatment, rather than hand-duplicating that
-  // styling here.
+  // wording below doesn't apply to them at all.
   const DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP = "**Use the shape options to input your countertop sizes.** You may need more than one shape to complete your project. To add additional countertop shapes, click add another surface at the bottom.\n\n[tip]If your countertop is an odd shape, try your best to break it up into individual rectangle shapes. Use the [calc] to convert feet/mm into inches.[/tip]";
+  const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN = "[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]";
+  const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL = "[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]";
+  const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM = "[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]\n\n**Upper cabinets:** A section for every place where uppers will go.\n\n**Base cabinets:** Same idea — a section for every run of base cabinets.\n\n**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.";
+  const DEFAULT_MEASURE_GUIDE_TEXT_SQFT = "[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!";
   function defaultMeasureGuideHTML(roomId = 'kitchen', forCountertops) {
-    if (forCountertops) {
-      return `
-        <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
-        ${renderSafeGuideText(DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP)}`;
-    }
-    const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
-      <img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg" alt="How to measure corner cabinets" onclick="mqPhotoLightbox('https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg','How to measure corner cabinets')" onerror="this.style.display='none'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>
-    </div>`;
-    if (roomId === 'kitchen') {
-      return `
-        <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
-        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>All cabinet measurements will get converted into linear feet with the ${mqCalcIconInlineHTML()} calculator.</strong> When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.</div>
-        <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
-        <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
-        <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.</div>
-        ${cornerSection}`;
-    }
+    const text = forCountertops ? DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP
+      : roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
+      : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
+      // Refacing/Repainting/Restaining are priced per square foot, not
+      // linear feet — no corner-cabinet concept for them, so they get their
+      // own guide instead of falling through to the general one below.
+      : (roomId === 'refacing' || roomId === 'repainting' || roomId === 'restaining') ? DEFAULT_MEASURE_GUIDE_TEXT_SQFT
+      : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
     return `
       <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
-      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>All cabinet measurements will get converted into linear feet with the ${mqCalcIconInlineHTML()} calculator.</strong> When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.</div>
-      <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
-      <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
-      <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
-      ${roomId !== 'bathroom' ? cornerSection : ''}`;
+      ${renderSafeGuideText(text)}`;
   }
 
   // Renders shop-owner-supplied guide text safely: escapes everything first
