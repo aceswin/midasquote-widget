@@ -342,6 +342,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-head"><span class="mq-step-num">Step 10</span><span class="mq-step-title">MidasQuote Pro <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
           <div class="mq-step-body">
             <p>Once your widget is all set up for customers, you can fine-tune your quoting in MidasQuote Pro. Anything the customer-facing widget doesn't account for can be handled here instead — and more.</p>
+            <p>You'll find your MidasQuote Pro link on the Embed code tab (Step 7 above) — add it to your phone or laptop like an app so it's one tap away when you need it.</p>
           </div>
         </div>
         <p style="margin-top:1.4rem">To dive deeper into each tab, check out the help tabs at the top of this page.</p>
@@ -630,6 +631,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'MidasQuote Pro',
       body: `
         <p>Once your widget is all set up for customers, you can fine-tune your quoting in MidasQuote Pro. Anything the customer-facing widget doesn't account for can be handled here instead — and more.</p>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Add it to your phone or computer like an app</div>
+          <p style="margin:0">Your MidasQuote Pro link lives on the Embed code tab, right alongside your regular widget links. Open it there and use "Add to Home Screen" (or the one-tap Install button on Android and Desktop Chrome) so Pro opens like its own app instead of a browser tab — handy for quoting walk-in customers right from your phone.</p>
+        </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Already built in</div>
           <p style="margin:0">Crown and valance wall returns, and side splashes, are already accounted for in MidasQuote Pro.</p>
@@ -4817,8 +4822,43 @@ window.logoutMember = async function () {
       window._mqRooms = rooms;
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(rooms) });
       shopRec.fields['Room types'] = JSON.stringify(rooms);
+
+      // renderRoomsList() rebuilds the whole list's innerHTML (needed so the
+      // little "adjustment active" checkboxes and the Active-toggle's
+      // dim/label re-derive from the freshly saved values) — but every
+      // autosave calls this, including every single click of a percentage
+      // field's up/down spinner. Rebuilding destroys and recreates the very
+      // input the shop owner is mid-click on, which used to visibly "jump"
+      // the page out from under their cursor. Snapshotting focus/scroll
+      // first and restoring them after makes the rebuild invisible instead
+      // of ripping focus away — the fix Jordan asked for after this kept
+      // making him miss the spinner arrows while nudging Base cabinets/
+      // Uppers/Installation percentages up or down.
+      const activeEl = document.activeElement;
+      const activeId = activeEl && activeEl.id;
+      const activeSelStart = (activeEl && typeof activeEl.selectionStart === 'number') ? activeEl.selectionStart : null;
+      const scrollY = window.scrollY;
+
       renderRoomsList();
-      showMsg('mq-rooms-msg', '✓ Project types saved!');
+
+      if (activeId) {
+        const restored = document.getElementById(activeId);
+        if (restored) {
+          restored.focus({ preventScroll: true });
+          if (activeSelStart !== null && typeof restored.setSelectionRange === 'function') {
+            try { restored.setSelectionRange(activeSelStart, activeSelStart); } catch(e) {}
+          }
+        }
+      }
+      window.scrollTo(0, scrollY);
+
+      // Toast only (not the inline mq-rooms-msg banner) for the routine
+      // success case — that banner sits at the very top of the page and
+      // pushes everything below it down while it's shown, which is the
+      // other half of the same "page jumps during autosave" complaint.
+      // Errors below still use the full inline+toast showMsg since those
+      // are rare and worth staying visible for.
+      mqShowToast('✓ Project types saved!');
     } catch(e) { showMsg('mq-rooms-msg', 'Error saving — please try again.', 'error'); }
   };
 
