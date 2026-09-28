@@ -4976,6 +4976,29 @@ window.logoutMember = async function () {
     return `${datePart} · ${timePart}`;
   }
 
+  // Free trial expiry date, shown on the Account tab so a trialing shop
+  // knows the exact day they'll be moved to the free Demo tier (Jordan:
+  // "add a trial count down ... just the day their trial expires would be
+  // even better"). The real 30-day cutoff is ENFORCED server-side by the
+  // midasquote-signup-worker Cloudflare Worker's daily Cron Trigger — this
+  // is purely a client-side display of when that cutoff will land, computed
+  // from the Shops record's own Airtable `createdTime` (set automatically
+  // when the onboarding Worker creates the row at signup) + 30 days. No
+  // dedicated "trial start" field exists in Airtable to read instead — this
+  // was confirmed with Jordan rather than assumed, since getting a
+  // customer-facing date wrong would be worse than not showing one. If a
+  // dedicated field is ever added (e.g. because the signup-worker's own
+  // cutoff logic turns out to be based on something else), swap the
+  // `shopRecord.createdTime` line below for that field instead — everything
+  // downstream of it (formatting, days-left math) stays the same.
+  const MQ_FREE_TRIAL_DAYS = 30;
+  function mqFreeTrialExpiryDate(shopRecord) {
+    if (!shopRecord || !shopRecord.createdTime) return null;
+    const created = new Date(shopRecord.createdTime);
+    if (isNaN(created.getTime())) return null;
+    return new Date(created.getTime() + MQ_FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000);
+  }
+
   function renderLeads(leads, limit, selectable) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
 
@@ -13696,11 +13719,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           const demoNote = plan === 'Demo'
             ? 'your free trial has ended and you\'re on the limited free Demo tier (DEMO watermark, no MidasQuote Pro, no custom photos)'
             : 'you\'re on the free trial — full access, no card on file';
+          // Only shown while actually trialing — once Plan flips to 'Demo'
+          // the trial has already ended, so a countdown/expiry date no
+          // longer means anything (demoNote above already covers that case).
+          let trialExpiryHTML = '';
+          if (plan === 'Free Trial') {
+            const expiryDate = mqFreeTrialExpiryDate(window._mqShopRecord);
+            if (expiryDate) {
+              const dateStr = expiryDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              const daysLeft = Math.max(0, Math.ceil((expiryDate - new Date()) / (24 * 60 * 60 * 1000)));
+              trialExpiryHTML = `<p style="font-size:13px;color:#92400e;background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px">🗓️ Your free trial ends <strong>${dateStr}</strong> (${daysLeft} day${daysLeft === 1 ? '' : 's'} left).</p>`;
+            }
+          }
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
               <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan}</span>
               <span style="font-size:14px;font-weight:500;color:#111">Free plan</span>
             </div>
+            ${trialExpiryHTML}
             <p style="font-size:13px;color:#6b7280">You're not on a paid plan — ${demoNote}. Upgrade any time below, no interruption to your widget.</p>`;
           if (activeActions) activeActions.style.display = 'none';
           if (reactivateActions) reactivateActions.style.display = 'none';
