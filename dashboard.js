@@ -285,13 +285,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-head"><span class="mq-step-num">Step 2</span><span class="mq-step-title">Project types</span></div>
           <div class="mq-step-body">
             <p>Set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones, edit ours, or create your own from scratch.</p>
+            <p>Project types can also be used to increase or decrease ballpark percentages for specific parts of the quote — like uppers, bases, installation, and the total ballpark. For example, kick coverings aren't included in the pricing wizard, but to make up for that you could add something like 2% to your base cabinet quotes for any project type that includes bases. Learn more in this guide's "Project types" tab.</p>
           </div>
         </div>
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 3</span><span class="mq-step-title">Pricing</span></div>
           <div class="mq-step-body">
             <p>Run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</p>
-            <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can bulk items of the same price, or add any more items you wish. You can also now configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
+            <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also now configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
             <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
           </div>
         </div>
@@ -432,6 +433,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Price adjustments</div>
           <p style="margin:0">Four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Using price adjustments to cover what the pricing wizard doesn't</div>
+          <p style="margin:0">The pricing wizard doesn't have a dedicated spot for every real cost — kick cover material is a good example. It varies too much shop to shop (and often door style to door style) to build into the wizard itself, so instead of leaving it out of your ballpark entirely, add it here as a percentage. Say you spend on average an extra 2% on materials and labour per job covering your toe kicks — add 2% to Base cabinets on every project type that actually has base cabinets (skip it on a countertop-only or specialty-only project type, since there's nothing to apply it to). It won't be as precise as an item-level rate would be, but it closes the gap so your ballpark doesn't consistently come in low. The same trick works for any other small, hard-to-isolate cost the wizard doesn't ask about — just fold your best estimate in as a percentage on whichever of the four knobs (Base cabinets, Upper cabinets, Installation, Total ballpark) fits it best.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Live on widget / Draft</div>
