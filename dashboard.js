@@ -1451,15 +1451,19 @@ window.logoutMember = async function () {
     // same spot "↻ Reshow training video" occupies once hidden — hiding
     // and reshowing now swap in and out of that one slot instead of the
     // button jumping to a different position on the page.
+    //
+    // Second pass (Jordan, per his screenshot of the live page): "Watch
+    // the video →" no longer sits beside the player in a flex row that
+    // only stacks when it runs out of horizontal room — it's now always
+    // its own line directly above the video, left-aligned with it. This
+    // is the explicit permanent layout, not a wrap-width accident.
     return `
       <div id="mq-training-video-${key}" style="display:${hidden ? 'none' : 'block'};margin-bottom:1rem">
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;white-space:nowrap">Watch the video <span style="font-size:17px">→</span></div>
-          <div style="position:relative;width:100%;max-width:320px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
-            <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
-          </div>
+        <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px">Watch the video <span style="font-size:17px">→</span></div>
+        <div style="position:relative;width:100%;max-width:320px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
+          <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
         </div>
-        <button type="button" class="mq-btn mq-btn-sm" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
+        <button type="button" class="mq-btn mq-btn-sm" style="margin-top:10px" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
       </div>
       <div id="mq-training-video-reshow-${key}" style="display:${hidden ? 'block' : 'none'};margin-bottom:1rem">
         <button type="button" class="mq-btn mq-btn-sm" onclick="mqReshowTrainingVideo('${key}')">↻ Reshow training video</button>
@@ -3088,11 +3092,42 @@ window.logoutMember = async function () {
           html
         })
       });
+      // Auto-confirmation back to the submitter (Jordan's idea, 2026-09-29):
+      // fire off a "we got it" email to the shop owner right away. Two
+      // reasons this helps with the "am I getting sent to junk" worry —
+      // (1) it gives them something to look for immediately instead of
+      // wondering whether the form even worked, and (2) if THIS one lands
+      // in spam and they mark it "not spam" from their inbox, that teaches
+      // their mail provider that mail from us is wanted, which helps our
+      // actual support reply land in the inbox too. Best-effort only: if
+      // it fails, the real support ticket above already went through, so
+      // the failure is swallowed rather than shown to the shop owner.
+      try {
+        const confirmHtml = `
+          <p>Hi,</p>
+          <p>We got your message and will get back to you soon. Here's a copy for your records:</p>
+          <p><strong>Topic:</strong> ${topic}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/</g,'&lt;').replace(/\n/g, '<br>')}</p>
+          <p>Don't see our reply in a day or two? Check your spam/junk folder — if this confirmation ended up there, mark it "Not spam" / "Not junk" so our next email lands in your inbox instead.</p>
+          <p>— The MidasQuote Team</p>
+        `;
+        await fetch(CONFIG.EMAIL_WORKER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: email,
+            replyTo: 'support@midasquote.com',
+            subject: 'We got your message — MidasQuote Support',
+            html: confirmHtml
+          })
+        });
+      } catch(e) { console.error('Support confirmation email to submitter failed (the support ticket itself still sent fine)', e); }
       if (statusEl) {
         statusEl.style.color = '';
         statusEl.innerHTML = '<div style="color:#166534;font-weight:700;font-size:14px;margin-bottom:6px">✓ Sent!</div>'
           + '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.5;color:#78350f;font-weight:600">'
-          + '📩 If you don\'t receive an email in 24 hours, please check your <u>spam/junk folder</u>.'
+          + '📩 We just sent a confirmation to <u>' + email.replace(/</g,'&lt;') + '</u>. If you don\'t see it in a few minutes, check your <u>spam/junk folder</u> — and if it\'s there, mark it "Not spam" so our reply lands in your inbox too.'
           + '</div>';
       }
       if (messageEl) messageEl.value = '';
