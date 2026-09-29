@@ -1422,6 +1422,91 @@ window.logoutMember = async function () {
   }
 };
 
+  // ===================== Training videos =====================
+  // Short walkthrough videos Jordan records himself, shown right after a
+  // page's intro paragraph with a "Watch the video →" prompt (Jordan's
+  // first one is for Project Types). One entry per page here; add a new
+  // key + call mqTrainingVideoBlockHTML(key) from that page's markup to
+  // add another video later without touching anything else.
+  //
+  // Hosted on YouTube (Jordan's first attempt was GitHub — "I could host
+  // it in github for now" — but the file was too big for a plain git push,
+  // which blocks any single file over 100MB, so he switched to YouTube:
+  // https://youtu.be/nbTFS0b1C2g). Embedded via youtube-nocookie.com
+  // (YouTube's own privacy-enhanced embed domain — same video, doesn't set
+  // tracking cookies until the visitor actually plays it) inside a
+  // responsive 16:9 wrapper, since an <iframe> has no natural aspect ratio
+  // of its own the way a <video> tag does.
+  const MQ_TRAINING_VIDEOS = {
+    rooms: { youtubeId: 'nbTFS0b1C2g' },
+  };
+  function mqTrainingVideoBlockHTML(key) {
+    const video = MQ_TRAINING_VIDEOS[key];
+    if (!video) return '';
+    const hidden = !!(window._mqTrainingVideosHidden || {})[key];
+    // Jordan, after seeing the first version: drop the white card
+    // background entirely (no more background/border wrapper — this now
+    // just flows as plain page content), and move "Hide video" out of the
+    // flex row next to the player and down onto its own line, in the exact
+    // same spot "↻ Reshow training video" occupies once hidden — hiding
+    // and reshowing now swap in and out of that one slot instead of the
+    // button jumping to a different position on the page.
+    return `
+      <div id="mq-training-video-${key}" style="display:${hidden ? 'none' : 'block'};margin-bottom:1rem">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;white-space:nowrap">Watch the video <span style="font-size:17px">→</span></div>
+          <div style="position:relative;width:100%;max-width:320px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
+            <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
+          </div>
+        </div>
+        <button type="button" class="mq-btn mq-btn-sm" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
+      </div>
+      <div id="mq-training-video-reshow-${key}" style="display:${hidden ? 'block' : 'none'};margin-bottom:1rem">
+        <button type="button" class="mq-btn mq-btn-sm" onclick="mqReshowTrainingVideo('${key}')">↻ Reshow training video</button>
+      </div>`;
+  }
+  // Hidden/reshown state has to survive a logout (Jordan: "if they click
+  // hide, then keep it hidden even if they logout") — a page-scoped JS
+  // variable alone would reset on the next load, so this saves to the
+  // shop record the same way every other one-time-per-shop dismissal in
+  // this file does (see 'Help guide nudge seen' etc.), just as ONE JSON
+  // field keyed by video id instead of a separate checkbox field per
+  // video, since Jordan said more videos are coming.
+  //
+  // Requires a Long text field named exactly 'Training videos hidden' on
+  // the Shops table (not added by this session — same as every other
+  // Airtable schema change flagged in the checklist). Until that field
+  // exists, hide/reshow still works for the rest of that browser session,
+  // it just won't survive a logout/reload yet — the atUpdate below simply
+  // fails silently (logged to console) rather than breaking the toggle.
+  window.mqHideTrainingVideo = async function(key) {
+    const block = document.getElementById('mq-training-video-' + key);
+    if (block) block.style.display = 'none';
+    const reshow = document.getElementById('mq-training-video-reshow-' + key);
+    if (reshow) reshow.style.display = 'block';
+    const hidden = window._mqTrainingVideosHidden || {};
+    hidden[key] = true;
+    window._mqTrainingVideosHidden = hidden;
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, window._mqShopRecord.id, { 'Training videos hidden': JSON.stringify(hidden) });
+      window._mqShopRecord.fields['Training videos hidden'] = JSON.stringify(hidden);
+    } catch(e) { console.error('Failed to save hidden training video state — needs a "Training videos hidden" field on Shops', e); }
+  };
+  window.mqReshowTrainingVideo = async function(key) {
+    const block = document.getElementById('mq-training-video-' + key);
+    if (block) block.style.display = 'block';
+    const reshow = document.getElementById('mq-training-video-reshow-' + key);
+    if (reshow) reshow.style.display = 'none';
+    const hidden = window._mqTrainingVideosHidden || {};
+    delete hidden[key];
+    window._mqTrainingVideosHidden = hidden;
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, window._mqShopRecord.id, { 'Training videos hidden': JSON.stringify(hidden) });
+      window._mqShopRecord.fields['Training videos hidden'] = JSON.stringify(hidden);
+    } catch(e) { console.error('Failed to save reshown training video state — needs a "Training videos hidden" field on Shops', e); }
+  };
+  // =================== end training videos ===================
+
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
     const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
@@ -1432,6 +1517,14 @@ window.logoutMember = async function () {
     // etc. above). Dismissed in the mqNav wrapper further down, not here,
     // since this function only runs once at initial render.
     const showHelpGuideNudge = !shop['Help guide nudge seen'];
+
+    // Which training videos this shop has hidden — see mqTrainingVideoBlockHTML
+    // above. Parsed here (buildHTML only runs once at initial render, same
+    // as showHelpGuideNudge above) so the very first render already reflects
+    // a shop's earlier hide/reshow choice instead of always starting shown.
+    let trainingVideosHidden = {};
+    try { trainingVideosHidden = shop['Training videos hidden'] ? JSON.parse(shop['Training videos hidden']) : {}; } catch(e) { trainingVideosHidden = {}; }
+    window._mqTrainingVideosHidden = trainingVideosHidden;
 
     return `
       <div class="mq-topbar">
@@ -1817,6 +1910,7 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('rooms')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Project types</div>
             <div class="mq-page-sub">Set up the project types you want to offer — as simple as Residential & Commercial, or as detailed as Standard, Premium, and Luxury tiers. Keep our premade project types and "How to measure" images, or replace either with your own to match your shop.</div>
+            ${mqTrainingVideoBlockHTML('rooms')}
             <div class="mq-card" id="mq-rooms-cabinet-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
