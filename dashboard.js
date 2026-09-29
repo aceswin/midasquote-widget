@@ -3657,10 +3657,23 @@ window.logoutMember = async function () {
           'Active': true,
           'Visible rooms': master.fields['Visible rooms'] || '[]',
           'Template source ID': master.id,
+          // Copied verbatim, same as the single-shop "Push to just this
+          // shop" path (pushTemplateItemToOneShop) — a master item's
+          // variants/Sized variants need to reach a brand-new shop too,
+          // not just an existing one someone manually pushes to.
+          'Variants': master.fields['Variants'] || '[]',
         });
         if (created?.id) {
           const photoUrl = masterPhotos['spec_' + master.id];
           if (photoUrl) { shopPhotos['spec_' + created.id] = photoUrl; photosChanged = true; }
+          // Same re-keying as pushTemplateItemToOneShop: a variant's photo
+          // lives on the MASTER shop as 'spec_<masterId>_v<variantId>' —
+          // carry it to this new shop's own item id, variant id unchanged.
+          mqParseVariants(master).forEach(v => {
+            const masterKey = 'spec_' + master.id + '_v' + v.id;
+            const photoUrl2 = masterPhotos[masterKey];
+            if (photoUrl2) { shopPhotos['spec_' + created.id + '_v' + v.id] = photoUrl2; photosChanged = true; }
+          });
           shopHidden['spec_' + created.id] = true;
           hiddenChanged = true;
         }
@@ -6248,7 +6261,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       alert('Something went wrong renaming that category — please try again.');
       return;
     }
+    // If "Filter by category" was showing the category we just renamed,
+    // follow the rename instead of letting renderSpecialty's own
+    // filter-restore snap it back to "All categories" below. Nothing was
+    // ever actually HIDDEN by this (mqFilterSpecTable reads the dropdown's
+    // live value, and a value that no longer matches any option just reads
+    // back as "" — i.e. no filter, everything shows) — but leaving the
+    // dropdown looking reset to "All categories" right after a rename you
+    // were filtered into is a confusing loose end worth closing. Has to be
+    // done AFTER renderSpecialty rebuilds the dropdown, not before — the
+    // new category name isn't a valid <option> yet while the OLD dropdown
+    // is still in the DOM, so setting .value = newName before the rebuild
+    // silently fails (same no-matching-option behavior described above)
+    // and gets wiped out anyway.
+    const filterEl = document.getElementById('mq-spec-tab-filter-category');
+    const wasFilteredToRenamedCategory = !!filterEl && filterEl.value === oldName;
     renderSpecialty(window._mqSpecRecords, window._mqShopRecord);
+    if (wasFilteredToRenamedCategory) {
+      const newFilterEl = document.getElementById('mq-spec-tab-filter-category');
+      if (newFilterEl) {
+        newFilterEl.value = newName;
+        if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
+      }
+    }
     window.mqShowManageCategoriesModal();
   };
   window.mqDeleteCategory = async function(name) {
@@ -9143,6 +9178,42 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // one JSON field ('Variants') on the Specialty Items table, the same
   // pattern already used for 'Visible rooms' — no new Airtable table, no
   // separate relational linking, just an array on the record itself.
+  //
+  // The exact same 'Variants' field/table also holds MASTER TEMPLATE items
+  // (window._mqTemplateItems, the Templates (Admin) tab) — they're just
+  // Specialty Items rows tagged to the reserved MASTER_TEMPLATE shop
+  // instead of a real one. Jordan asked for Templates (Admin) to support
+  // variants and Sized variants "to match" the Specialty Items tab, rather
+  // than a second, separately-maintained copy of this whole panel that
+  // would inevitably drift from this one (see the widget.js/widgetpro.js
+  // mirroring rule elsewhere in this file for why that's worth avoiding).
+  // So every variant CRUD/refresh function below looks its record up
+  // through mqFindVariantOwnerRecord (checks both arrays) instead of
+  // hardcoding window._mqSpecRecords — the rendering (mqVariantsPanelHTML)
+  // and math (mqApplySizedVariantCalcs) needed zero changes, since they
+  // already only take a record, never reach into either global array
+  // themselves.
+  function mqFindVariantOwnerRecord(id) {
+    return (window._mqSpecRecords || []).find(x => x.id === id)
+      || (window._mqTemplateItems || []).find(x => x.id === id);
+  }
+  // Which shop's Photos map a given item's variant photos actually live
+  // on — a real shop's own record for a Specialty Items row, but the
+  // reserved master-template shop for a Templates (Admin) row (there is no
+  // "current shop" while looking at Templates). Used by mqDuplicateVariant,
+  // the only variant-photos write path this file has today.
+  async function mqVariantPhotoShopRecord(id) {
+    if ((window._mqSpecRecords || []).some(x => x.id === id)) return window._mqShopRecord;
+    if ((window._mqTemplateItems || []).some(x => x.id === id)) return await ensureMasterTemplateShop();
+    return null;
+  }
+  // Which page's toast/status line should report a variant save's result —
+  // the two tabs don't share one, so a save triggered from a Templates
+  // (Admin) card needs to land on mq-templates-msg, not the (hidden,
+  // off-page) mq-spec-msg.
+  function mqVariantsMsgId(id) {
+    return (window._mqTemplateItems || []).some(x => x.id === id) ? 'mq-templates-msg' : 'mq-spec-msg';
+  }
   function mqParseVariants(r) {
     try {
       const v = JSON.parse(r?.fields?.['Variants'] || '[]');
@@ -9495,7 +9566,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function mqRefreshVariantsPanel(id) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     const panel = document.getElementById(`mq-spec-variants-panel-${id}`);
     if (r && panel) {
       panel.innerHTML = mqVariantsPanelHTML(r);
@@ -9504,7 +9575,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function mqRefreshSpecVariantUI(id) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     if (!r) return;
     const n = mqParseVariants(r).length;
     const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
@@ -9530,12 +9601,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
     if (!row) return;
     const opening = row.style.display === 'none' || !row.style.display;
-    row.style.display = opening ? 'table-row' : 'none';
+    // Specialty Items renders this as a <tr> (needs 'table-row' to show
+    // correctly inside the table); Templates (Admin) renders the same panel
+    // inside a plain <div> card (needs 'block' instead — 'table-row' on a
+    // div renders with no card width/padding context and looks broken).
+    // Same toggle function either way — just picks the display value the
+    // actual element needs.
+    row.style.display = opening ? (row.tagName === 'TR' ? 'table-row' : 'block') : 'none';
     if (pill) pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, opening ? '▴' : '▾');
   };
 
   window.mqAddVariant = async function(id) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     if (!r) return;
     const variants = mqParseVariants(r);
     // A stable id, not the variant's array position — its photo (added
@@ -9550,7 +9627,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqRemoveVariant = async function(id, vi) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     if (!r) return;
     const variants = mqParseVariants(r);
     variants.splice(vi, 1);
@@ -9561,7 +9638,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqSaveVariantField = async function(id, vi, field, value) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     if (!r) return;
     const variants = mqParseVariants(r);
     if (!variants[vi]) return;
@@ -9577,7 +9654,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // owner sees the auto-filled label/price update live as they type instead
   // of only after their next save or reload.
   window.mqSaveSizedVariantField = async function(id, vi, field, value) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     if (!r) return;
     const variants = mqParseVariants(r);
     if (!variants[vi]) return;
@@ -9602,8 +9679,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // an identical door photo for every duplicated size would defeat the point
   // of duplicating in the first place.
   window.mqDuplicateVariant = async function(id, vi) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
-    const shopRec = window._mqShopRecord;
+    const r = mqFindVariantOwnerRecord(id);
+    const shopRec = await mqVariantPhotoShopRecord(id);
     if (!r) return;
     const variants = mqParseVariants(r);
     const source = variants[vi];
@@ -9659,11 +9736,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // that rate had been typed into that one variant's own rate field by
   // hand.
   window.mqMassUpdateVariantRates = async function(id) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     if (!r) return;
+    const msgId = mqVariantsMsgId(id);
     const input = document.getElementById(`mq-spec-bulkrate-${id}`);
     const newRate = parseFloat(input?.value);
-    if (!input || isNaN(newRate)) { showMsg('mq-spec-msg', 'Enter a rate first.', 'error'); return; }
+    if (!input || isNaN(newRate)) { showMsg(msgId, 'Enter a rate first.', 'error'); return; }
     const variants = mqParseVariants(r);
     let updated = 0;
     variants.forEach(v => {
@@ -9673,12 +9751,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         updated++;
       }
     });
-    if (!updated) { showMsg('mq-spec-msg', 'No 📏 Sized, per sq/lin ft variants to update on this item.', 'error'); return; }
+    if (!updated) { showMsg(msgId, 'No 📏 Sized, per sq/lin ft variants to update on this item.', 'error'); return; }
     r.fields['Variants'] = JSON.stringify(variants);
     mqRefreshVariantsPanel(id);
     mqRefreshSpecVariantUI(id);
     await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
-    showMsg('mq-spec-msg', `✓ Updated the rate on ${updated} variant${updated===1?'':'s'}.`);
+    showMsg(msgId, `✓ Updated the rate on ${updated} variant${updated===1?'':'s'}.`);
   };
 
   // Called after a variant row drag ends. Unlike mqSaveVariantField (which
@@ -9687,7 +9765,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // attributes, re-sorts the real variants array to match by id, and saves
   // the whole array — the same save shape mqAddVariant/mqRemoveVariant use.
   window.mqReorderVariants = async function(id) {
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     const list = document.getElementById(`mq-spec-variants-list-${id}`);
     if (!r || !list) return;
     const variants = mqParseVariants(r);
@@ -9719,7 +9797,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // the new Sized enable/disable state (see mqVariantsPanelHTML) would
     // silently lag one step behind whatever the dropdown/checkbox actually
     // says, right when this fix most needs them to be in sync.
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     if (r) {
       r.fields[field] = checked;
       if (checked) r.fields[otherField] = false;
@@ -9780,7 +9858,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Sized. Warn here, before saving anything, and let the shop owner back
     // out — nothing is changed automatically either way; they still decide
     // whether to fix it before or after switching.
-    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const r = mqFindVariantOwnerRecord(id);
     const prevMode = r ? (r.fields['Per linear foot'] ? 'linft' : (r.fields['Per square foot'] ? 'sqft' : 'flat')) : 'flat';
     if (r && prevMode === 'flat' && (mode === 'linft' || mode === 'sqft')) {
       const sizedVariants = mqParseVariants(r).filter(v => v.sized);
@@ -10399,6 +10477,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // templates don't have an equivalent, so it lives right on the card here).
   function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
+    const variantCount = mqParseVariants(r).length;
     const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
     const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
@@ -10406,12 +10485,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <input type="text" value="${itemName.replace(/"/g,'&quot;')}" id="mq-spec-name-${r.id}" placeholder="Item name" style="font-size:13px;font-weight:600;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
       ${mqCategoryPickerHTML(r, categoryList, true)}
       <input type="text" value="${(r.fields['Description']||'').replace(/"/g,'&quot;')}" id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;color:#6b7280" onblur="mqSaveSpecField('${r.id}','Description',this.value)"/>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <input type="number" value="${r.fields['Price']||''}" id="mq-spec-price-${r.id}" placeholder="Price" style="font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:70px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> lin ft</label>
-        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> sq ft</label>
+      <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+        <span id="mq-spec-pricecell-${r.id}">${mqSpecPriceCellHTML(r)}</span>
+        <span id="mq-spec-pricedcell-${r.id}">${mqSpecPricedCellHTML(r)}</span>
       </div>
-      ${mqSpecMinPriceHTML(r, false)}
+      <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;width:fit-content;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
+      <div id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa;border-radius:8px;padding:10px 4px 4px">
+        <div id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</div>
+      </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Offer supply/install choice</label>
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ⚡ Pro only</label>
@@ -10528,6 +10609,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos(); }
       );
     });
+
+    // Every item's variants panel already exists in the DOM at this point
+    // (inside its own hidden mq-spec-variants-row-<id>, built by
+    // mqVariantsPanelHTML above), so their drag handles can be wired up now
+    // rather than waiting for the panel to first be opened — same pattern
+    // renderSpecialty uses for the Specialty Items tab.
+    items.forEach(r => mqWireVariantDrag(r.id));
   }
 
   window.mqAddTemplateItem = async function() {
@@ -10563,7 +10651,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   // The actual work of pushing one master item into one specific, explicitly
-  // chosen shop — creating the record, copying the photo, and adding any
+  // chosen shop — creating the record, copying the photo(s), and adding any
   // project types the item needs that the shop doesn't have yet. This is now
   // the ONLY way a template item can ever land on a shop that already
   // exists (there is deliberately no bulk "push to all shops" anymore — a
@@ -10571,7 +10659,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // ensureProjectTypeTemplates, when they sign up). Called only from "Push
   // to just this shop," where fully replacing an existing match is the
   // intended, deliberate behavior — you picked this one shop on purpose.
-  async function pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms) {
+  //
+  // Takes the master template shop's WHOLE Photos map (not just this one
+  // item's URL) so it can also carry over any per-variant photos — see the
+  // 'Variants' copy below.
+  async function pushTemplateItemToOneShop(master, masterPhotos, shop, adminRooms) {
     const result = { created: false, replaced: false, roomsAdded: 0, error: false };
     try {
       const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
@@ -10630,16 +10722,34 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Active': true,
         'Visible rooms': master.fields['Visible rooms'] || '[]',
         'Template source ID': master.id,
+        // Jordan: Templates (Admin) couldn't create variants or Sized
+        // variants at all, so this field was never even reachable from
+        // there before — but leaving it out here would ALSO have silently
+        // dropped any variants a master item does have the moment it's
+        // pushed to a shop, even once the admin UI above supports adding
+        // them. Copied verbatim: variant ids don't need to change (a
+        // variant's photo key is 'spec_<itemId>_v<variantId>' — only the
+        // ITEM id differs per shop, handled below).
+        'Variants': master.fields['Variants'] || '[]',
       });
       if (!created?.id) {
         result.error = true;
         console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
         return result;
       }
-      if (masterPhotoUrl) {
+      const masterPhotoUrl = (masterPhotos || {})['spec_' + master.id];
+      // Every variant that has its own photo on the master item needs that
+      // photo carried over too, re-keyed to the shop's new item id (the
+      // variant's own id inside the key stays the same, since the whole
+      // Variants array — ids included — was copied verbatim above).
+      const variantPhotoEntries = mqParseVariants(master)
+        .map(v => ['spec_' + created.id + '_v' + v.id, (masterPhotos || {})['spec_' + master.id + '_v' + v.id]])
+        .filter(([, url]) => !!url);
+      if (masterPhotoUrl || variantPhotoEntries.length) {
         let shopPhotos = {};
         try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-        shopPhotos['spec_' + created.id] = masterPhotoUrl;
+        if (masterPhotoUrl) shopPhotos['spec_' + created.id] = masterPhotoUrl;
+        variantPhotoEntries.forEach(([key, url]) => { shopPhotos[key] = url; });
         await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
         shop.fields['Photos'] = JSON.stringify(shopPhotos);
       }
@@ -10670,14 +10780,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const masterShop = await ensureMasterTemplateShop();
       let masterPhotos = {};
       try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
-      const masterPhotoUrl = masterPhotos['spec_' + master.id];
 
       const shops = await atGet(CONFIG.SHOPS_TABLE, `RECORD_ID()="${shopId}"`);
       const shop = shops[0];
       if (!shop) { showMsg('mq-templates-msg', 'Could not find that shop — try refreshing the page.', 'error'); return; }
 
       const adminRooms = window._mqRooms || defaultRoomTypes();
-      const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
+      const r = await pushTemplateItemToOneShop(master, masterPhotos, shop, adminRooms);
       const roomsNote = r.roomsAdded ? `, added ${r.roomsAdded} new draft project type${r.roomsAdded===1?'':'s'}` : '';
       await new Promise(res => setTimeout(res, 500));
       if (r.error) {
