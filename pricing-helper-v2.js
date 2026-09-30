@@ -766,10 +766,10 @@ window.mqphGoToWizard = function() {
         const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
         return `
           ${specBox([
-            `<strong>Base cabinets — box only, no doors, no drawers, with shelf</strong>`,
+            `<strong>Base cabinets — box only, no doors, no drawers, with 2 shelves</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `<strong>No doors · No drawers · With shelf · Supply only · Include toe kick</strong>`,
+            `<strong>No doors · No drawers · With 2 shelves · Supply only · Include toe kick</strong>`,
           ])}
           ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was ${CUR()}${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
@@ -798,7 +798,7 @@ window.mqphGoToWizard = function() {
               <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
               ${specBox([
                 `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
-                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · With shelf · Supply only · Include toe kick`,
+                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · With 2 shelves · Supply only · Include toe kick`,
               ])}
               <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcMatUp(${idx})"/></div>
               <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
@@ -2660,9 +2660,9 @@ window.mqphGoToWizard = function() {
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
           `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · With shelves · Supply only`,
         ] : [
-          `<strong>Base cabinets — box only, no doors, no drawers, with shelf</strong>`,
+          `<strong>Base cabinets — box only, no doors, no drawers, with 2 shelves</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
-          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · With shelf · Supply only · Include toe kick`,
+          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · With 2 shelves · Supply only · Include toe kick`,
         ]),
         rateToPrice: (rate) => rate * 4,
         priceToRate: (price) => price / 4,
