@@ -1439,6 +1439,7 @@ window.logoutMember = async function () {
   // of its own the way a <video> tag does.
   const MQ_TRAINING_VIDEOS = {
     rooms: { youtubeId: 'nbTFS0b1C2g' },
+    pricing: { youtubeId: 'tQyYyFALg7c' },
   };
   function mqTrainingVideoBlockHTML(key) {
     const video = MQ_TRAINING_VIDEOS[key];
@@ -1469,6 +1470,15 @@ window.logoutMember = async function () {
         <button type="button" class="mq-btn mq-btn-sm" onclick="mqReshowTrainingVideo('${key}')">↻ Reshow training video</button>
       </div>`;
   }
+  // Exposed on window (unlike most of this file's helpers) because the
+  // Pricing tab's own content isn't rendered from this file's buildHTML —
+  // it's built by pricing-helper-v2.js, a separate script this file lazily
+  // injects only once the Pricing tab is first opened (see the
+  // 'pricing-helper-v2.js is a separate file/module' comment further down).
+  // That script runs in its own closure, so it can't see this file's
+  // module-private mqTrainingVideoBlockHTML unless it's put on window —
+  // same reason mqHideTrainingVideo/mqReshowTrainingVideo above already are.
+  window.mqTrainingVideoBlockHTML = mqTrainingVideoBlockHTML;
   // Hidden/reshown state has to survive a logout (Jordan: "if they click
   // hide, then keep it hidden even if they logout") — a page-scoped JS
   // variable alone would reset on the next load, so this saves to the
