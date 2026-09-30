@@ -2170,6 +2170,8 @@ window.mqphGoToWizard = function() {
         </div>
       </div>
 
+      ${typeof window.mqTrainingVideoBlockHTML === 'function' ? window.mqTrainingVideoBlockHTML('pricing') : ''}
+
       ${driftNotices.length ? driftNotices.map(n => `<div class="mqph-msg mqph-msg-success" style="display:block;margin-bottom:1rem">${n}</div>`).join('') : ''}
 
       ${!hasItems ? `
