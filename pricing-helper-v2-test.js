@@ -4417,7 +4417,8 @@ window.mqphGoToWizard = function() {
         </div>
         <div id="mqph-cat-body-islandpanel" style="display:none">
           <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
-            One setting for your whole shop — applies to every island no matter which door style the customer picks on that quote. Pick a door style to compare against below, then quote a regular panel (and a decorative one, if you offer it) 24"×30" in matching material/style in your own software. We turn those into a % of that door's own cost, and the widget applies that same % against whichever door the customer actually selects.
+            <p style="margin:0 0 10px">Islands tend to cost more because of finished side panels and back panels. All shops are different though, so we came up with a simple solution for all shops.</p>
+            <p style="margin:0">Since the side and back panels are determined by the door that's chosen, we use a comparative quote to establish the correct ratio to charge for panels (flat or decorative). You can optionally leave these blank and the widget will only ask for the island measurements and type — it just won't add on side or back panel costs. Or simply choose a door style below and enter the price you'd charge for a 24" × 34.5" finished flat panel, and the price you'd charge for a 24" × 34.5" decorative-style finished panel to match that door (if you offer decorative panels — leave it blank if you don't). We'll turn those prices into a ratio — say, 75% of that door's own cost — and apply that same ratio across every door style when it's chosen. So if you have mahogany doors, we can use the same ratio we calibrated on maple doors to find the cost. It's not flawless, but it ensures your islands carry the extra charges they should. Watch the video below for a fuller walkthrough and example.</p>
           </div>
           ${!hasDoors ? `
           <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">Add at least one door style above before setting up island panel pricing.</div>
@@ -4426,11 +4427,11 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field"><label>Compare against door style</label>
               <select id="mqph-island-refdoor" onchange="mqphCalcIslandPanelPct()">${doorOpts}</select>
             </div>
-            <div class="mqph-field"><label>Comparison regular panel price (${CUR()}/lin ft)</label>
-              <input type="number" id="mqph-island-panelcost" step="0.01" placeholder="0.00" value="${cfg.panelCostPerFt!=null?cfg.panelCostPerFt:''}" oninput="mqphCalcIslandPanelPct()"/>
+            <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" finished flat panel</label>
+              <input type="number" id="mqph-island-panelcost" step="0.01" placeholder="0.00" value="${cfg.panelFlatQuote!=null?cfg.panelFlatQuote:''}" oninput="mqphCalcIslandPanelPct()"/>
             </div>
-            <div class="mqph-field"><label>Comparison decorative panel price (${CUR()}/lin ft) <span style="font-weight:400;color:#9ca3af">(optional — leave blank if you don't offer decorative island panels)</span></label>
-              <input type="number" id="mqph-island-decorativecost" step="0.01" placeholder="0.00" value="${cfg.decorativeCostPerFt!=null?cfg.decorativeCostPerFt:''}" oninput="mqphCalcIslandPanelPct()"/>
+            <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" decorative panel <span style="font-weight:400;color:#9ca3af">(optional — leave blank if you don't offer decorative island panels)</span></label>
+              <input type="number" id="mqph-island-decorativecost" step="0.01" placeholder="0.00" value="${cfg.decorativeFlatQuote!=null?cfg.decorativeFlatQuote:''}" oninput="mqphCalcIslandPanelPct()"/>
             </div>
             <div id="mqph-island-pct-reveal" style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:1rem;line-height:1.6"></div>
             <button class="mqph-btn mqph-btn-primary" id="mqph-island-save-btn" style="width:100%" onclick="mqphSaveIslandPanelPricing()">Save island panel pricing →</button>
@@ -4439,6 +4440,15 @@ window.mqphGoToWizard = function() {
         </div>
       </div>`;
   }
+
+  // Shops quote a flat price for a finished 24"×34.5" panel (the size we
+  // tell them to use) rather than a $/lin ft rate directly — most shops
+  // think in flat per-panel quotes, not linear-foot rates, for a one-off
+  // comparison piece like this. 24" wide = 2 linear feet, so we reverse-
+  // engineer that flat quote into a $/lin ft rate (÷2) before comparing it
+  // to the reference door's own $/lin ft rate to get the ratio (Jordan
+  // 2026-10-01).
+  const ISLAND_PANEL_WIDTH_FT = 2; // 24" panel width ÷ 12 = 2 linear feet
 
   window.mqphCalcIslandPanelPct = function() {
     const reveal = document.getElementById('mqph-island-pct-reveal');
@@ -4454,11 +4464,13 @@ window.mqphGoToWizard = function() {
       reveal.innerHTML = `<span style="color:#92400e">Pick a door style with a rate above ${CUR()}0 to compute a percentage.</span>`;
       return;
     }
-    const panelPct = panelCost > 0 ? (panelCost/doorRate)*100 : 0;
-    const decPct = (decCost != null && decCost > 0) ? (decCost/doorRate)*100 : null;
+    const panelRatePerFt = panelCost > 0 ? panelCost / ISLAND_PANEL_WIDTH_FT : 0;
+    const decRatePerFt = (decCost != null && decCost > 0) ? decCost / ISLAND_PANEL_WIDTH_FT : null;
+    const panelPct = panelRatePerFt > 0 ? (panelRatePerFt/doorRate)*100 : 0;
+    const decPct = (decRatePerFt != null && decRatePerFt > 0) ? (decRatePerFt/doorRate)*100 : null;
     reveal.innerHTML = `
-      <div>Regular panels: <strong>${panelCost>0?`${Math.round(panelPct*10)/10}% of door cost`:'—'}</strong></div>
-      <div>Decorative panels: <strong>${decPct!=null?`${Math.round(decPct*10)/10}% of door cost`:'not offered'}</strong></div>`;
+      <div>Regular panels: <strong>${panelCost>0?`${Math.round(panelPct*10)/10}% of door cost`:'—'}</strong>${panelCost>0?` <span style="color:#9ca3af">(≈ ${CUR()}${panelRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>
+      <div>Decorative panels: <strong>${decPct!=null?`${Math.round(decPct*10)/10}% of door cost`:'not offered'}</strong>${decRatePerFt!=null?` <span style="color:#9ca3af">(≈ ${CUR()}${decRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>`;
   };
 
   window.mqphSaveIslandPanelPricing = async function() {
@@ -4470,15 +4482,17 @@ window.mqphGoToWizard = function() {
     const panelCost = panelCostRaw !== '' && panelCostRaw != null ? parseFloat(panelCostRaw) : 0;
     const decCost = decCostRaw !== '' && decCostRaw != null ? parseFloat(decCostRaw) : null;
     if (!doorId || !doorRate) { alert('Pick a door style with a rate above ' + CUR() + '0 to compare against.'); return; }
-    if (!panelCost || panelCost <= 0) { alert('Enter a comparison regular panel price before saving.'); return; }
+    if (!panelCost || panelCost <= 0) { alert('Enter the price you\'d charge for a 24" × 34.5" finished flat panel before saving.'); return; }
 
-    const panelPct = Math.round(((panelCost/doorRate)*100)*100)/100;
-    const decorativePct = (decCost != null && decCost > 0) ? Math.round(((decCost/doorRate)*100)*100)/100 : null;
+    const panelRatePerFt = panelCost / ISLAND_PANEL_WIDTH_FT;
+    const decRatePerFt = (decCost != null && decCost > 0) ? decCost / ISLAND_PANEL_WIDTH_FT : null;
+    const panelPct = Math.round(((panelRatePerFt/doorRate)*100)*100)/100;
+    const decorativePct = (decRatePerFt != null && decRatePerFt > 0) ? Math.round(((decRatePerFt/doorRate)*100)*100)/100 : null;
     const cfg = {
       refDoorId: doorId,
       refDoorName: doorRec.fields['Name'] || '',
-      panelCostPerFt: panelCost,
-      decorativeCostPerFt: (decCost != null && decCost > 0) ? decCost : null,
+      panelFlatQuote: panelCost,
+      decorativeFlatQuote: (decCost != null && decCost > 0) ? decCost : null,
       panelPct,
       decorativePct,
     };
