@@ -2198,39 +2198,45 @@
   // type (see mqRefreshMeasureGuide). Kept as its own function so both the
   // initial HTML render and the per-project-type swap can reuse the exact
   // same markup.
+  //
+  // CORRECTION (2026-09-27): this used to hand-roll its own HTML per room
+  // type (separate Upper/Base/Island/Corner-cabinet copy, with its own
+  // corner-cabinets.jpg baked in) instead of reusing the same
+  // DEFAULT_MEASURE_GUIDE_TEXT_* strings dashboard.js's "↺ Use default
+  // guide" button (`mqFillDefaultGuide`) inserts. The two had drifted apart
+  // — most visibly, Bathroom's dashboard-side default mentions "DO NOT
+  // include tall cabinets" (a newer feature) while this function's old
+  // Bathroom branch never did — so a shop that left the field blank saw
+  // materially different (and in Bathroom's case, outdated) instructions
+  // than a shop who clicked "Use default guide" once and saved. Jordan
+  // caught this via a live customer-facing kitchen guide still showing
+  // Island/Corner-cabinet copy long dropped from the dashboard-side
+  // default. Fixed by making leaving the field blank render the exact
+  // same DEFAULT_MEASURE_GUIDE_TEXT_* string dashboard.js would fill the
+  // textarea with, through the same renderSafeGuideText token parser a
+  // shop's own custom text already goes through — one source of wording,
+  // never two copies to keep in sync by hand again.
+  //
   // Countertop project types get their own measuring guide entirely --
   // shape-based surfaces, not linear-foot cabinet runs, so the cabinet
-  // guide below (upper/base/corner cabinets) doesn't apply to them at all.
-  // Routed through renderSafeGuideText (same [tip]/[calc]/**bold** token
-  // parsing a shop's own custom measureText gets) so this renders with the
-  // identical yellow tip-box treatment, rather than hand-duplicating that
-  // styling here.
+  // wording below doesn't apply to them at all.
   const DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP = "**Use the shape options to input your countertop sizes.** You may need more than one shape to complete your project. To add additional countertop shapes, click add another surface at the bottom.\n\n[tip]If your countertop is an odd shape, try your best to break it up into individual rectangle shapes. Use the [calc] to convert feet/mm into inches.[/tip]";
+  const DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN = "[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]";
+  const DEFAULT_MEASURE_GUIDE_TEXT_GENERAL = "[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]";
+  const DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM = "[tip]**All cabinet measurements will get converted into linear feet with the [calc]calculator.** When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.[/tip]\n\n**Upper cabinets:** A section for every place where uppers will go.\n\n**Base cabinets:** Same idea — a section for every run of base cabinets.\n\n**Tall Cabinets:** DO NOT include any tall cabinets in your measurements. They will be added in the tall cabinets section.";
+  const DEFAULT_MEASURE_GUIDE_TEXT_SQFT = "[tip]**Skip the math** — tap the [calc] next to the field and enter each section's width and height in whatever unit is easiest (feet, inches, or mm). We'll convert and total the square footage for you automatically, no matter how many sections you have.[/tip]\n\n**Measure in sections:** Break your cabinets into individual runs — it's much easier to get an accurate total this way than trying to measure everything at once.\n\n**Not sure?** Just use your best guess — this is a ballpark estimate!";
   function defaultMeasureGuideHTML(roomId = 'kitchen', forCountertops) {
-    if (forCountertops) {
-      return `
-        <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
-        ${renderSafeGuideText(DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP)}`;
-    }
-    const cornerSection = `<div style="margin-bottom:6px"><strong>Corner cabinets:</strong> At each corner, measure one wall all the way in, then stop the other wall short of the corner — about 1 foot for upper cabinets, about 2 feet for base cabinets, since that's roughly where the corner cabinet already covers the space either way. Don't worry about the exact number, this is a ballpark estimate.
-      <img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg" alt="How to measure corner cabinets" onclick="mqPhotoLightbox('https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg','How to measure corner cabinets')" onerror="this.style.display='none'" style="width:100%;max-width:280px;height:auto;border-radius:6px;margin-top:8px;cursor:zoom-in;display:block"/>
-    </div>`;
-    if (roomId === 'kitchen') {
-      return `
-        <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
-        <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>All cabinet measurements will get converted into linear feet with the ${mqCalcIconInlineHTML()} calculator.</strong> When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.</div>
-        <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
-        <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
-        <div style="margin-bottom:6px"><strong>Island cabinets:</strong> Add these in with your base cabinets — measure the island as another section under Base cabinets, not on its own.</div>
-        ${cornerSection}`;
-    }
+    const text = forCountertops ? DEFAULT_MEASURE_GUIDE_TEXT_COUNTERTOP
+      : roomId === 'kitchen' ? DEFAULT_MEASURE_GUIDE_TEXT_KITCHEN
+      : roomId === 'bathroom' ? DEFAULT_MEASURE_GUIDE_TEXT_BATHROOM
+      // Refacing/Repainting/Restaining are priced per square foot, not
+      // linear feet — no corner-cabinet concept for them, so they get their
+      // own guide instead of falling through to the general one below.
+      : (roomId === 'refacing' || roomId === 'repainting' || roomId === 'restaining') ? DEFAULT_MEASURE_GUIDE_TEXT_SQFT
+      : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
     return `
       <div style="font-weight:600;margin-bottom:18px;color:#111">📏 Quick measuring guide</div>
-      <div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px;color:#92400e;font-size:12px">💡 <strong>All cabinet measurements will get converted into linear feet with the ${mqCalcIconInlineHTML()} calculator.</strong> When you're ready, use the calculator to easily add in multiple sections and automatically convert inches/mm to feet.</div>
-      <div style="margin-bottom:6px"><strong>Upper cabinets:</strong> A section for every wall run where uppers will go.</div>
-      <div style="margin-bottom:6px"><strong>Base cabinets:</strong> Same idea — a section for every run of base cabinets.</div>
-      <div style="margin-bottom:6px"><strong>Not sure?</strong> Just use your best guess — this is a ballpark estimate!</div>
-      ${roomId !== 'bathroom' ? cornerSection : ''}`;
+      ${renderSafeGuideText(text)}`;
   }
 
   // Renders shop-owner-supplied guide text safely: escapes everything first
@@ -2631,6 +2637,32 @@
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
+        </div>
+        <div id="mq-${prefix}-island-btn-wrap" style="display:none;margin-top:4px">
+          <button type="button" class="mq-add-surface-btn" onclick="mqToggleIslandSection('${prefix}')">🏝️ + Add island</button>
+        </div>
+        <div id="mq-${prefix}-island-fields-wrap" style="display:none;margin-top:10px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:14px;font-weight:700;color:#111">🏝️ Island cabinets</span>
+            <button type="button" onclick="mqRemoveIslandSection('${prefix}')" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;padding:0">Remove</button>
+          </div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Island cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your island's sections & convert inches/mm to linear feet.</div>
+          </div>
+          <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input type="checkbox" id="mq-${prefix}-island-double" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              This is a double-row (back-to-back) island
+            </label>
+          </div>
+          <div class="mq-field" style="margin-top:10px">
+            <label class="mq-label" style="display:block;margin-bottom:8px">Island panels</label>
+            <select id="mq-${prefix}-island-panel">
+              <option value="regular">Regular panels (match box material)</option>
+              <option value="decorative">Decorative panels (match door style)</option>
+            </select>
+          </div>
         </div>
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
@@ -3530,6 +3562,36 @@
       // lowers" is switched on, so their overflow arrows never got a real
       // scrollWidth/clientWidth to measure until now.
       if (diffOn[prefix] && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
+    };
+    // Islands — "+ Add island" just reveals the fields block in place (no
+    // repeatable cards like Tall cabinets; a kitchen gets one island
+    // measurement, single- or double-row — see the Mixed islands decision
+    // 2026-09-30). Setting a value's cleared via "Remove" below rather than
+    // just hiding the block, so a hidden-then-reopened section never comes
+    // back with a stale leftover number still quietly priced in.
+    window.mqToggleIslandSection=(prefix)=>{
+      const btnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
+      const fieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      if (btnWrap) btnWrap.style.display = 'none';
+      if (fieldsWrap) fieldsWrap.style.display = 'block';
+    };
+    window.mqRemoveIslandSection=(prefix)=>{
+      const btnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
+      const fieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      if (fieldsWrap) fieldsWrap.style.display = 'none';
+      if (btnWrap) btnWrap.style.display = '';
+      const ftEl = document.getElementById(`mq-${prefix}-islandft`);
+      if (ftEl) ftEl.value = 0;
+      const doubleEl = document.getElementById(`mq-${prefix}-island-double`);
+      if (doubleEl) doubleEl.checked = false;
+      const panelEl = document.getElementById(`mq-${prefix}-island-panel`);
+      if (panelEl) panelEl.value = 'regular';
+      // Programmatic value changes above don't fire 'input'/'change' on
+      // their own — the container's delegated listener (which normally
+      // drives live recalc) never sees them, so the price would otherwise
+      // keep showing the removed island's cost until the next unrelated
+      // edit. Trigger it directly.
+      mqScheduleLiveRecalc();
     };
     window.mqTogVanityNote=(prefix)=>{
       // Intentionally hidden from customers — the % adjustment itself still
@@ -4501,6 +4563,32 @@
       const roomObjForMeasuring = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const measuringSec = document.getElementById(`mq-${prefix}-measuring-sec`);
       if (measuringSec) measuringSec.style.display = (roomObjForMeasuring && roomObjForMeasuring.hideMeasureGuide) ? 'none' : '';
+      // Island button — per-project-type opt-in (set in Project Types, off
+      // by default except the built-in Kitchen type). Switching to a project
+      // type that doesn't support islands hides BOTH the "+ Add island"
+      // button and, if it was already open, the fields themselves — and
+      // zeroes them out so a stale island entry from a previous project
+      // type can't silently keep charging after the switch (same guard
+      // calcCabinet below relies on, same pattern cabSectionActive already
+      // uses for Upper/Base).
+      const islandAllowed = cabActive && !!(roomObjForMeasuring && roomObjForMeasuring.showIslandButton);
+      const islandBtnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
+      const islandFieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      if (!islandAllowed) {
+        if (islandFieldsWrap) islandFieldsWrap.style.display = 'none';
+        if (islandBtnWrap) islandBtnWrap.style.display = 'none';
+        const islandFtEl = document.getElementById(`mq-${prefix}-islandft`);
+        if (islandFtEl) islandFtEl.value = 0;
+        const islandDoubleEl = document.getElementById(`mq-${prefix}-island-double`);
+        if (islandDoubleEl) islandDoubleEl.checked = false;
+      } else if (islandFieldsWrap && islandFieldsWrap.style.display === 'none') {
+        // Island supported here but not currently opened — show the button,
+        // keep the fields collapsed (don't force it open just because the
+        // project type supports it).
+        if (islandBtnWrap) islandBtnWrap.style.display = '';
+      }
+      const islandDoubleWrap = document.getElementById(`mq-${prefix}-island-double-wrap`);
+      if (islandDoubleWrap) islandDoubleWrap.style.display = (islandAllowed && roomObjForMeasuring.islandAllowDoubleRow) ? '' : 'none';
       // The "Cabinet details" divider only exists on the Both tab
       const cabDivider = document.getElementById(`mq-${prefix}-cabinet-divider`);
       if (cabDivider) cabDivider.style.display = cabActive ? '' : 'none';
@@ -5738,6 +5826,61 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bMatCost = bFt * bMatDoorHinge;
       const bInstallCost = bFt * bInstall;
 
+      // Islands — opt-in per project type (the "Add island" button, set up
+      // in Project Types). Nothing here fires unless the customer actually
+      // opens that section (islandSectionActive), so a project type/shop
+      // that never touches this feature prices exactly as before.
+      //   - Box: priced like an extra run of BASE cabinets (same material/
+      //     door/hinge/drawer rate as the rest of the kitchen, bMatDoorHinge)
+      //     for a single-row island, or like UPPERS (uMatDoorHinge) for a
+      //     double-row island — Jordan's own call: a double-row island's
+      //     second row runs shallower (~12–16"), closer to an upper box
+      //     than a full-depth base box, so it's approximated with the upper
+      //     rate rather than a whole new box-depth SKU. No height multiplier
+      //     either way — an island is floor height regardless.
+      //   - Install: always the normal BASE install rate, regardless of row
+      //     count — installing a floor-standing island is a base-cabinet-
+      //     style job either way (Jordan's call).
+      //   - Panel upcharge, "Regular panels" (plain box material on the
+      //     exposed ends/back): box price × the project type's own single-
+      //     or double-row upcharge % (set in Project Types, 0% until a shop
+      //     fills in real numbers — see mq-room-islandpct-single/double in
+      //     dashboard.js). Applied to box price only, not install, per
+      //     Jordan 2026-09-30.
+      //   - Panel upcharge, "Decorative panels" (matching door style):
+      //     islandFt × the shop's existing door-style rate per lin ft — no
+      //     separate rate to configure, reuses what's already there. This
+      //     is IN ADDITION to the door rate already baked into the box
+      //     price above (that one prices the island's own real doors/
+      //     drawer fronts; this one prices the extra decorative end/back
+      //     panels in the same door style).
+      const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
+      const islandFt = islandSectionActive ? gn(`mq-${prefix}-islandft`, 0) : 0;
+      const islandDouble = islandSectionActive && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
+      const islandPanel = islandSectionActive ? (gv(`mq-${prefix}-island-panel`) || 'regular') : 'regular';
+      let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0;
+      if (islandFt > 0) {
+        islandBoxCost = islandFt * (islandDouble ? uMatDoorHinge : bMatDoorHinge);
+        // bInstall already resolves to 0 when si !== 'install', already
+        // reflects the current drawer tier/door selection the same way the
+        // rest of the kitchen's base cabinets do, and already has the
+        // project type's own install % adjustment baked in — reusing it
+        // directly keeps island install cost fully consistent with the
+        // base cabinets it's modeled on, rather than recomputing a
+        // slightly different rate here.
+        islandInstallCost = islandFt * bInstall;
+        if (islandPanel === 'decorative') {
+          islandPanelCost = islandFt * bDoorRate;
+        } else {
+          const islandPct = islandDouble
+            ? (parseFloat(roomObj?.islandDoubleRowUpchargePct) || 0)
+            : (parseFloat(roomObj?.islandSingleRowUpchargePct) || 0);
+          islandPanelCost = islandBoxCost * (islandPct / 100);
+        }
+        islandCost = islandBoxCost + islandInstallCost + islandPanelCost;
+      }
+
       const lines=[];
       const uDoorLabel=uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
       const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
@@ -5745,6 +5888,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(uFt>0&&uInstallCost>0) lines.push({label:`Upper cabinet install (${uFt} lin ft)`,cost:Math.round(uInstallCost)});
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
       if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
+      if(islandFt>0) lines.push({label:`Island cabinets — ${islandDouble?'double-row':'single-row'}, ${islandPanel==='decorative'?'decorative':'regular'} panels (${islandFt} lin ft)`,cost:Math.round(islandCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       // Tall cabinets — loop over every card the customer added. Each one
@@ -5890,7 +6034,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const sub=uCost+bCost+specTotal+tallCabTotal+remCost+trimCost;
+      const sub=uCost+bCost+islandCost+specTotal+tallCabTotal+remCost+trimCost;
       const totalMult = (100 + totalAdjPct) / 100;
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});

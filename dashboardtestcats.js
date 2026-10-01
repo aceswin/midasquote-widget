@@ -1439,23 +1439,46 @@ window.logoutMember = async function () {
   // of its own the way a <video> tag does.
   const MQ_TRAINING_VIDEOS = {
     rooms: { youtubeId: 'nbTFS0b1C2g' },
+    pricing: { youtubeId: 'tQyYyFALg7c' },
   };
   function mqTrainingVideoBlockHTML(key) {
     const video = MQ_TRAINING_VIDEOS[key];
     if (!video) return '';
     const hidden = !!(window._mqTrainingVideosHidden || {})[key];
+    // Jordan, after seeing the first version: drop the white card
+    // background entirely (no more background/border wrapper — this now
+    // just flows as plain page content), and move "Hide video" out of the
+    // flex row next to the player and down onto its own line, in the exact
+    // same spot "↻ Reshow training video" occupies once hidden — hiding
+    // and reshowing now swap in and out of that one slot instead of the
+    // button jumping to a different position on the page.
+    //
+    // Second pass (Jordan, per his screenshot of the live page): "Watch
+    // the video →" no longer sits beside the player in a flex row that
+    // only stacks when it runs out of horizontal room — it's now always
+    // its own line directly above the video, left-aligned with it. This
+    // is the explicit permanent layout, not a wrap-width accident.
     return `
-      <div id="mq-training-video-${key}" style="display:${hidden ? 'none' : 'flex'};align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:1rem;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
-        <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;white-space:nowrap">Watch the video <span style="font-size:17px">→</span></div>
+      <div id="mq-training-video-${key}" style="display:${hidden ? 'none' : 'block'};margin-bottom:1rem">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px">Watch the video <span style="font-size:17px">→</span></div>
         <div style="position:relative;width:100%;max-width:320px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
           <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
         </div>
-        <button type="button" class="mq-btn mq-btn-sm" style="margin-left:auto;white-space:nowrap" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
+        <button type="button" class="mq-btn mq-btn-sm" style="margin-top:10px" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
       </div>
       <div id="mq-training-video-reshow-${key}" style="display:${hidden ? 'block' : 'none'};margin-bottom:1rem">
         <button type="button" class="mq-btn mq-btn-sm" onclick="mqReshowTrainingVideo('${key}')">↻ Reshow training video</button>
       </div>`;
   }
+  // Exposed on window (unlike most of this file's helpers) because the
+  // Pricing tab's own content isn't rendered from this file's buildHTML —
+  // it's built by pricing-helper-v2.js, a separate script this file lazily
+  // injects only once the Pricing tab is first opened (see the
+  // 'pricing-helper-v2.js is a separate file/module' comment further down).
+  // That script runs in its own closure, so it can't see this file's
+  // module-private mqTrainingVideoBlockHTML unless it's put on window —
+  // same reason mqHideTrainingVideo/mqReshowTrainingVideo above already are.
+  window.mqTrainingVideoBlockHTML = mqTrainingVideoBlockHTML;
   // Hidden/reshown state has to survive a logout (Jordan: "if they click
   // hide, then keep it hidden even if they logout") — a page-scoped JS
   // variable alone would reset on the next load, so this saves to the
@@ -1485,7 +1508,7 @@ window.logoutMember = async function () {
   };
   window.mqReshowTrainingVideo = async function(key) {
     const block = document.getElementById('mq-training-video-' + key);
-    if (block) block.style.display = 'flex';
+    if (block) block.style.display = 'block';
     const reshow = document.getElementById('mq-training-video-reshow-' + key);
     if (reshow) reshow.style.display = 'none';
     const hidden = window._mqTrainingVideosHidden || {};
@@ -3079,11 +3102,42 @@ window.logoutMember = async function () {
           html
         })
       });
+      // Auto-confirmation back to the submitter (Jordan's idea, 2026-09-29):
+      // fire off a "we got it" email to the shop owner right away. Two
+      // reasons this helps with the "am I getting sent to junk" worry —
+      // (1) it gives them something to look for immediately instead of
+      // wondering whether the form even worked, and (2) if THIS one lands
+      // in spam and they mark it "not spam" from their inbox, that teaches
+      // their mail provider that mail from us is wanted, which helps our
+      // actual support reply land in the inbox too. Best-effort only: if
+      // it fails, the real support ticket above already went through, so
+      // the failure is swallowed rather than shown to the shop owner.
+      try {
+        const confirmHtml = `
+          <p>Hi,</p>
+          <p>We got your message and will get back to you soon. Here's a copy for your records:</p>
+          <p><strong>Topic:</strong> ${topic}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/</g,'&lt;').replace(/\n/g, '<br>')}</p>
+          <p>Don't see our reply in a day or two? Check your spam/junk folder — if this confirmation ended up there, mark it "Not spam" / "Not junk" so our next email lands in your inbox instead.</p>
+          <p>— The MidasQuote Team</p>
+        `;
+        await fetch(CONFIG.EMAIL_WORKER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: email,
+            replyTo: 'support@midasquote.com',
+            subject: 'We got your message — MidasQuote Support',
+            html: confirmHtml
+          })
+        });
+      } catch(e) { console.error('Support confirmation email to submitter failed (the support ticket itself still sent fine)', e); }
       if (statusEl) {
         statusEl.style.color = '';
         statusEl.innerHTML = '<div style="color:#166534;font-weight:700;font-size:14px;margin-bottom:6px">✓ Sent!</div>'
           + '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.5;color:#78350f;font-weight:600">'
-          + '📩 If you don\'t receive an email in 24 hours, please check your <u>spam/junk folder</u>.'
+          + '📩 We just sent a confirmation to <u>' + email.replace(/</g,'&lt;') + '</u>. If you don\'t see it in a few minutes, check your <u>spam/junk folder</u> — and if it\'s there, mark it "Not spam" so our reply lands in your inbox too.'
           + '</div>';
       }
       if (messageEl) messageEl.value = '';
@@ -4373,7 +4427,7 @@ window.logoutMember = async function () {
     // it only has one default image and wasn't part of this request.
     const _mqDefaultMeasureGallery = MQ_DEFAULT_MEASURE_IMAGE_SET.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f);
     return [
-      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
+      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1), showIslandButton:true },
       { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.jpg', measureText:'', measureImage:'' },
       { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
       { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
@@ -4630,6 +4684,34 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
           </label>
+          ${!isCountertop ? `
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-addisland-${idx}" ${r.showIslandButton?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+            🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
+          </label>
+          <div id="mq-room-island-settings-${idx}" style="display:${r.showIslandButton?'block':'none'};margin:0 0 10px 24px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;margin-bottom:8px;cursor:pointer">
+              <input type="checkbox" id="mq-room-islanddouble-${idx}" ${r.islandAllowDoubleRow?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              Allow double-row (back-to-back) islands
+            </label>
+            <div style="display:flex;gap:16px;flex-wrap:wrap">
+              <div>
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:3px">Single-row panel upcharge</label>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input type="number" id="mq-room-islandpct-single-${idx}" value="${r.islandSingleRowUpchargePct || 0}" step="0.5" min="0" onchange="mqSaveRooms()" style="width:70px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:right"/>
+                  <span style="font-size:12px;color:#6b7280">%</span>
+                </div>
+              </div>
+              <div id="mq-room-islandpct-double-wrap-${idx}" style="display:${r.islandAllowDoubleRow?'block':'none'}">
+                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:3px">Double-row panel upcharge</label>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input type="number" id="mq-room-islandpct-double-${idx}" value="${r.islandDoubleRowUpchargePct || 0}" step="0.5" min="0" onchange="mqSaveRooms()" style="width:70px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:right"/>
+                  <span style="font-size:12px;color:#6b7280">%</span>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Applied on top of the island's box price when the customer picks "Regular panels" (plain box material on the exposed ends/back, instead of a matching door style). If they pick "Decorative panels" instead, we use your door style's own upcharge rate automatically — no extra setup needed. Leave at 0% until you've worked out real numbers — the island will still price correctly (box + install), just with no panel upcharge added on top yet.</div>
+          </div>` : ''}
           ${isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
@@ -4805,6 +4887,10 @@ window.logoutMember = async function () {
             hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
+            showIslandButton: document.getElementById(`mq-room-addisland-${oldIdx}`)?.checked === true,
+            islandAllowDoubleRow: document.getElementById(`mq-room-islanddouble-${oldIdx}`)?.checked === true,
+            islandSingleRowUpchargePct: parseFloat(document.getElementById(`mq-room-islandpct-single-${oldIdx}`)?.value) || 0,
+            islandDoubleRowUpchargePct: parseFloat(document.getElementById(`mq-room-islandpct-double-${oldIdx}`)?.value) || 0,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
@@ -4938,6 +5024,10 @@ window.logoutMember = async function () {
         hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
+        showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
+        islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
+        islandSingleRowUpchargePct: parseFloat(el(`mq-room-islandpct-single-${idx}`)?.value) || 0,
+        islandDoubleRowUpchargePct: parseFloat(el(`mq-room-islandpct-double-${idx}`)?.value) || 0,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
