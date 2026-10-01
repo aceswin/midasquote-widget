@@ -33,7 +33,6 @@
   const scriptTag = document.currentScript;
   const shopToken = new URLSearchParams(scriptTag.src.split('?')[1] || '').get('shop');
   if (!shopToken) { console.error('MidasQuote: No shop token found.'); return; }
-//This is the widget test file
   // Generate a session ID once per page load — used to group quote attempts
   // from the same visitor in the dashboard, even if they skip contact info.
   const _mqSessionId = Math.random().toString(36).slice(2,10).toUpperCase();
@@ -2516,7 +2515,16 @@
   }
 
   function cabinetForm(prefix, specs, data) {
-    const { li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
+    const { shop, li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
+    // Decorative island panels are optional per shop (see calcCabinet's
+    // island pricing comment) — only offer the option in the picker at all
+    // if the shop has actually quoted a comparison decorative panel in the
+    // Pricing tab's "Island panel pricing" setup. Otherwise a customer could
+    // pick an option that prices as if it were worth 0% extra, which looks
+    // like a bug rather than "this shop doesn't offer that."
+    let islandPanelCfgForMarkup = {};
+    try { islandPanelCfgForMarkup = shop['Island panel pricing'] ? JSON.parse(shop['Island panel pricing']) : {}; } catch(e) { islandPanelCfgForMarkup = {}; }
+    const islandOffersDecorative = islandPanelCfgForMarkup.decorativePct !== undefined && islandPanelCfgForMarkup.decorativePct !== null && islandPanelCfgForMarkup.decorativePct !== '';
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -2660,7 +2668,7 @@
             <label class="mq-label" style="display:block;margin-bottom:8px">Island panels</label>
             <select id="mq-${prefix}-island-panel">
               <option value="regular">Regular panels (match box material)</option>
-              <option value="decorative">Decorative panels (match door style)</option>
+              ${islandOffersDecorative ? `<option value="decorative">Decorative panels (match door style)</option>` : ''}
             </select>
           </div>
         </div>
@@ -5830,38 +5838,51 @@ window.mqTogDrawerConfig=(prefix)=>{
       // in Project Types). Nothing here fires unless the customer actually
       // opens that section (islandSectionActive), so a project type/shop
       // that never touches this feature prices exactly as before.
-      //   - Box: priced like an extra run of BASE cabinets (same material/
-      //     door/hinge/drawer rate as the rest of the kitchen, bMatDoorHinge)
-      //     for a single-row island, or like UPPERS (uMatDoorHinge) for a
-      //     double-row island — Jordan's own call: a double-row island's
-      //     second row runs shallower (~12–16"), closer to an upper box
-      //     than a full-depth base box, so it's approximated with the upper
-      //     rate rather than a whole new box-depth SKU. No height multiplier
+      //   - Box: single-row prices like an extra run of BASE cabinets
+      //     (bMatDoorHinge). Double-row (back-to-back) is really TWO rows —
+      //     a full base-depth row plus a shallower (~12–16") upper-depth
+      //     row behind it — so as of Jordan's 2026-09-30 correction it's
+      //     priced as BOTH rates together (bMatDoorHinge + uMatDoorHinge),
+      //     not upper alone like the original build. No height multiplier
       //     either way — an island is floor height regardless.
       //   - Install: always the normal BASE install rate, regardless of row
       //     count — installing a floor-standing island is a base-cabinet-
       //     style job either way (Jordan's call).
-      //   - Panel upcharge, "Regular panels" (plain box material on the
-      //     exposed ends/back): box price × the project type's own single-
-      //     or double-row upcharge % (set in Project Types, 0% until a shop
-      //     fills in real numbers — see mq-room-islandpct-single/double in
-      //     dashboard.js). Applied to box price only, not install, per
-      //     Jordan 2026-09-30.
-      //   - Panel upcharge, "Decorative panels" (matching door style):
-      //     islandFt × the shop's existing door-style rate per lin ft — no
-      //     separate rate to configure, reuses what's already there. This
-      //     is IN ADDITION to the door rate already baked into the box
-      //     price above (that one prices the island's own real doors/
-      //     drawer fronts; this one prices the extra decorative end/back
-      //     panels in the same door style).
+      //   - Panel cost (both "Regular" and "Decorative"): as of 2026-09-30
+      //     this is no longer a % of box price, or a flat pass-through of
+      //     the door rate — it's exposedPanelFt × the customer's selected
+      //     door's own rate (bDoorRate) × a shop-wide % calibrated once in
+      //     the Pricing tab ("Island panel pricing" — see
+      //     mqphSaveIslandPanelPricing in pricing-helper-v2.js). That shop
+      //     quotes a real panel (and, optionally, a real decorative panel)
+      //     against one reference door style, and we turn that into a %
+      //     of THAT door's cost — then the widget applies the same % against
+      //     whichever door style the customer actually picked on this quote.
+      //   - exposedPanelFt is what actually needs a finished panel, not the
+      //     whole island run: a single-row island exposes both ends (2ft
+      //     each) AND its full back length (nothing behind it to hide it),
+      //     so 4 + islandFt. A double-row (back-to-back) island has no
+      //     exposed back — the second row covers it — just two deeper 3ft
+      //     ends, so a flat 6 regardless of islandFt (Jordan 2026-09-30).
+      //   - Decorative panels are optional per shop — if the shop never
+      //     quoted a comparison decorative panel, islandDecorativePct is
+      //     null and the "Decorative panels" <option> isn't even rendered
+      //     in cabinetForm, so islandPanel can't actually come back
+      //     'decorative' in that case — the null-guard below is just
+      //     defensive.
+      let islandPanelCfg = {};
+      try { islandPanelCfg = shop['Island panel pricing'] ? JSON.parse(shop['Island panel pricing']) : {}; } catch(e) { islandPanelCfg = {}; }
+      const islandPanelPct = parseFloat(islandPanelCfg.panelPct) || 0;
+      const islandDecorativePct = (islandPanelCfg.decorativePct !== undefined && islandPanelCfg.decorativePct !== null && islandPanelCfg.decorativePct !== '') ? parseFloat(islandPanelCfg.decorativePct) : null;
+
       const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
       const islandFt = islandSectionActive ? gn(`mq-${prefix}-islandft`, 0) : 0;
       const islandDouble = islandSectionActive && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
       const islandPanel = islandSectionActive ? (gv(`mq-${prefix}-island-panel`) || 'regular') : 'regular';
-      let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0;
+      let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandExposedFt = 0;
       if (islandFt > 0) {
-        islandBoxCost = islandFt * (islandDouble ? uMatDoorHinge : bMatDoorHinge);
+        islandBoxCost = islandFt * (islandDouble ? (bMatDoorHinge + uMatDoorHinge) : bMatDoorHinge);
         // bInstall already resolves to 0 when si !== 'install', already
         // reflects the current drawer tier/door selection the same way the
         // rest of the kitchen's base cabinets do, and already has the
@@ -5870,14 +5891,9 @@ window.mqTogDrawerConfig=(prefix)=>{
         // base cabinets it's modeled on, rather than recomputing a
         // slightly different rate here.
         islandInstallCost = islandFt * bInstall;
-        if (islandPanel === 'decorative') {
-          islandPanelCost = islandFt * bDoorRate;
-        } else {
-          const islandPct = islandDouble
-            ? (parseFloat(roomObj?.islandDoubleRowUpchargePct) || 0)
-            : (parseFloat(roomObj?.islandSingleRowUpchargePct) || 0);
-          islandPanelCost = islandBoxCost * (islandPct / 100);
-        }
+        islandExposedFt = islandDouble ? 6 : (4 + islandFt);
+        const effectivePanelPct = (islandPanel === 'decorative' && islandDecorativePct != null) ? islandDecorativePct : islandPanelPct;
+        islandPanelCost = islandExposedFt * bDoorRate * (effectivePanelPct / 100);
         islandCost = islandBoxCost + islandInstallCost + islandPanelCost;
       }
 
@@ -6096,10 +6112,38 @@ window.mqTogDrawerConfig=(prefix)=>{
         const dwChecked = document.getElementById(`mq-${prefix}-cab-dw`)?.checked;
         const extraChecked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
         const extraFt = extraChecked ? gn(`mq-${prefix}-cab-extra-ft`, 0) : 0;
-        const totalCtFt = bFt + (dwChecked?2:0) + extraFt;
+        const baseCtFt = bFt + (dwChecked?2:0) + extraFt;
+        // Island countertop — merged into this same combined cabinet-run
+        // line rather than its own separate line item (Jordan 2026-09-30).
+        // Only counts here when the customer has actually opened the
+        // island section for this prefix (same gating calcCabinet uses) —
+        // a project type/shop that never touches islands sees no change.
+        // Uses the island's OWN depth, not the standard countertop depth
+        // (ctDepth, 25.5") a base-cabinet run assumes — a single-row island
+        // happens to share that same 25.5", but a double-row (back-to-back)
+        // island needs the wider 39" Jordan specified.
+        const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+        const islandOpenForCt = islandFieldsEl && islandFieldsEl.style.display !== 'none';
+        const islandFtForCt = islandOpenForCt ? gn(`mq-${prefix}-islandft`, 0) : 0;
+        const islandDoubleForCt = islandOpenForCt && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
+        const islandCtDepthIn = islandDoubleForCt ? 39 : 25.5;
+        const totalCtFt = baseCtFt + islandFtForCt;
         if (totalCtFt > 0) {
-          const linFt = totalCtFt;
-          const sqft  = linFt * (ctDepth / 12);
+          // linFt stays the wall-run footage only (base cabinets + dishwasher
+          // + extra) — used for the backsplash calc and the "lin ft" shown
+          // in the label, since a freestanding island has no wall behind it
+          // to backsplash against.
+          const linFt = baseCtFt;
+          const sqft  = (baseCtFt * (ctDepth/12)) + (islandFtForCt * (islandCtDepthIn/12));
+          // A lin-ft-priced material's rate assumes material runs at the
+          // standard ctDepth per linear foot — an island at a different
+          // depth needs its footage scaled to match (39"/25.5" ≈ 1.53× for
+          // a double-row island) so lin-ft-priced materials aren't
+          // undercharged for the extra width, same as sqft-priced materials
+          // already are via the depth difference above. Used for lin-ft
+          // pricing, edge/cutout addons, and linft-unit removal — NOT for
+          // the backsplash calc, which stays on linFt (wall-run only).
+          const pricingLinFt = baseCtFt + (islandFtForCt * (islandCtDepthIn / ctDepth));
           const mat   = gv(matId);
           const si    = gv(ctSiId);
           const m     = mat === 'none' ? null : (CT_MAT[mat] || null);
@@ -6107,8 +6151,8 @@ window.mqTogDrawerConfig=(prefix)=>{
             // Real (unclamped) cost for this run — the minimum, if any, is
             // applied once at the end against this material's pooled total
             // across every counter/run in this project type, not here.
-            const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
-            const installCost = (si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0) * installMult;
+            const supplyCost = m.supplyUnit  === 'lin ft' ? pricingLinFt*m.ps : sqft*m.ps;
+            const installCost = (si==='install' ? (m.installUnit==='lin ft' ? pricingLinFt*m.pi : sqft*m.pi) : 0) * installMult;
             const pool = poolFor(mat, m);
             pool.rawSupply += supplyCost; pool.hasSupply = true;
             if (si==='install') { pool.rawInstall += installCost; pool.hasInstall = true; }
@@ -6132,11 +6176,11 @@ window.mqTogDrawerConfig=(prefix)=>{
             const coChecked = document.getElementById(coId)?.checked;
             const cutoutCost = coChecked ? cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`${cutsId}-q-${i}`)*(o.rate||0),0) : 0;
             const removalChecked = gv(removalId) === 'yes';
-            const removalCost = removalChecked ? (m.removalUnit==='linft' ? linFt : sqft) * (m.removalRate||0) : 0;
-            const addonsRes = ctAddonsCost(m, `mq-${prefix}-cab-edge-sel`, `mq-${prefix}-cab-addons-a`, linFt, sqft, ctDepth);
+            const removalCost = removalChecked ? (m.removalUnit==='linft' ? pricingLinFt : sqft) * (m.removalRate||0) : 0;
+            const addonsRes = ctAddonsCost(m, `mq-${prefix}-cab-edge-sel`, `mq-${prefix}-cab-addons-a`, pricingLinFt, sqft, ctDepth);
             const cost = supplyCost + installCost + bsCost + cutoutCost + removalCost + addonsRes.cost;
             sub += cost;
-            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${removalChecked?' + removal':''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
+            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft${islandFtForCt>0?` + ${islandFtForCt} ft island, ${islandDoubleForCt?'double-row':'single-row'}`:''}, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${removalChecked?' + removal':''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
           }
         }
       }

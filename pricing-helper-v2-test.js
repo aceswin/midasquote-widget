@@ -8,6 +8,13 @@
 (function() {
 
   const LINE_ITEMS_TABLE = 'tblCkJsJ2OC6DgXok';
+  // Same Shops table dashboard.js's own CONFIG.SHOPS_TABLE points at — this
+  // file runs as its own separate script/closure (see mqph2Init below) and
+  // has no access to dashboard.js's CONFIG object, so it needs its own
+  // copy of the table id to save shop-wide settings like Island panel
+  // pricing directly to the Shop record, the same way LINE_ITEMS_TABLE
+  // above is its own separate copy rather than a shared reference.
+  const SHOPS_TABLE = 'tbl8PoF2Mu3sAdlMs';
 
   let shopRecord = null;
   let pricingRecord = null;
@@ -483,6 +490,17 @@ let wizardBaseline = null;
         <p style="font-size:13px;color:#6b7280;line-height:1.6">Start with the materials, door styles, and drawer configs you sell most — your everyday go-tos, not the rare special orders. A focused list gives customers a better experience and makes your widget feel clean and professional.</p>
       </div>
 
+      <!-- Added per Jordan: the wizard used to offer a "Skip — same price for
+           all materials/door styles" button on its Additional
+           materials/Additional door styles steps, which sounded like it would
+           carry the baseline price over to the rest of the group -- it
+           actually just left them with NO price recorded at all. That button
+           is gone now (see buildWizardSteps' Step 4/Step 6 skipLabel removal
+           below); this tip heads the confusion off before it starts, by
+           steering same-priced items away from the wizard's one-quote-per-
+           item flow in the first place. -->
+      <div class="mqph-warn">💡 <strong>If you have multiple items offered at the same price, just add ONE of them here — add the rest later in regular pricing.</strong> It's much faster to add multiple items of the same price after the wizard than to quote each one individually here.</div>
+
       ${CATEGORIES.map(cat => {
         const allItems = (existing[cat.id] || []).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
         let items;
@@ -689,7 +707,7 @@ window.mqphGoToWizard = function() {
           ✅ Separate upper and base rates<br/>
           ✅ Installation and removal rates
         </div>
-        <div class="mqph-warn">⚠️ <strong>Running the wizard replaces all existing pricing.</strong> Specialty items, countertop rates, and crown/valance rates are not affected.</div>
+        <div class="mqph-warn">⚠️ <strong>Running the wizard replaces all existing pricing.</strong> Specialty items, countertop rates, tall cabinet rates, and crown/valance rates are not affected.</div>
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:13px;color:#374151">Need to add or change your shop items first?</span>
           <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>
@@ -729,10 +747,10 @@ window.mqphGoToWizard = function() {
         const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
         return `
           ${specBox([
-            `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
+            `<strong>Upper cabinets — box only, no doors, with shelves</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `<strong>No doors · No drawers · No hardware · Supply only</strong>`,
+            `<strong>No doors · With shelves · No hardware · Supply only</strong>`,
           ])}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-u-price" placeholder="0.00" oninput="mqphCalc('bl-u')"/></div>
           <div id="mqph-r-bl-u" class="mqph-result"></div>`;
@@ -755,10 +773,10 @@ window.mqphGoToWizard = function() {
         const matName = wizardBaseline?.matName || materials[0]?.fields['Name'] || '—';
         return `
           ${specBox([
-            `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
+            `<strong>Base cabinets — box only, no doors, no drawers, with 2 shelves</strong>`,
             `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
             `Material: <span class="mqph-spec-tag">${matName}</span>`,
-            `<strong>No doors · No drawers · Supply only · Include toe kick</strong>`,
+            `<strong>No doors · No drawers · With 2 shelves · Supply only · Include toe kick</strong>`,
           ])}
           ${wizardBaseline?.upperRate>0?`<p style="font-size:12px;color:#6b7280;margin-bottom:12px">Your upper rate was ${CUR()}${wizardBaseline.upperRate.toFixed(2)}/ft — bases are usually higher (toe kick).</p>`:''}
           <div class="mqph-input-row"><label>Your total price for this job?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-bl-b-price" placeholder="0.00" oninput="mqphCalc('bl-b')"/></div>
@@ -787,13 +805,23 @@ window.mqphGoToWizard = function() {
               <div class="mqph-item-block-label">📦 ${m.fields['Name']}</div>
               ${specBox([
                 `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
-                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · Supply only · Include toe kick`,
+                `Material: <span class="mqph-spec-tag">${m.fields['Name']}</span> · No doors · No drawers · With 2 shelves · Supply only · Include toe kick`,
               ])}
               <div class="mqph-input-row"><label>Your price?</label><span class="mqph-pfx">${CUR()}</span><input type="number" id="mqph-mat-${idx}" placeholder="0.00" oninput="mqphCalcMatUp(${idx})"/></div>
               <div id="mqph-r-mat-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
-        skipLabel:'Skip — same price for all materials',
+        // No "Skip — same price for all materials" button anymore (Jordan:
+        // "lets remove that button that says 'Skip, all items have the same
+        // price'... i think its confusing"). It sounded like it would carry
+        // the baseline price over to these materials, but it actually left
+        // them with NO price recorded at all -- clicking "Next →" with the
+        // price fields left blank does the exact same thing (onNext only
+        // pushes a wizardItems entry for a material whose price is > 0), so
+        // nothing is lost, just the misleading shortcut. The item-setup
+        // screen's new tip (see buildItemSetupHTML) heads this off earlier
+        // by steering same-priced items away from this step in the first
+        // place — add one here, add the rest later in regular pricing.
         nextLabel:'Next →',
   onNext:() => {
           const blIdx = wizardBaseline?.matIndex ?? 0;
@@ -869,7 +897,10 @@ window.mqphGoToWizard = function() {
               <div id="mqph-r-door-${idx}" class="mqph-result"></div>
             </div>`).join('');
         },
-        skipLabel:'Skip — same price for all door styles',
+        // Same reasoning as Step 4's removed "Skip — same price for all
+        // materials" button just above -- see that comment. "Next →" with
+        // blank price fields is the identical no-op skip, minus the
+        // misleading "same price" wording.
         nextLabel:'Next →',
         onNext:() => {
           const blIdx = wizardBaseline?.doorIndex ?? 0;
@@ -2146,6 +2177,8 @@ window.mqphGoToWizard = function() {
         </div>
       </div>
 
+      ${typeof window.mqTrainingVideoBlockHTML === 'function' ? window.mqTrainingVideoBlockHTML('pricing') : ''}
+
       ${driftNotices.length ? driftNotices.map(n => `<div class="mqph-msg mqph-msg-success" style="display:block;margin-bottom:1rem">${n}</div>`).join('') : ''}
 
       ${!hasItems ? `
@@ -2216,6 +2249,7 @@ window.mqphGoToWizard = function() {
       ${buildCTHtml()}
       ${buildTrimHtml()}
       ${buildTallCabHtml()}
+      ${buildIslandPanelHtml()}
 
       <!-- Bulk price edit overlay — Doors, Box Materials, Crown, Valance only -->
       <div class="mqph-overlay" id="mqph-bulk-overlay">
@@ -2632,13 +2666,13 @@ window.mqphGoToWizard = function() {
         priceLabel: 'Your total price for this job?',
         hint: null,
         spec: specBox(isUpper ? [
-          `<strong>Upper cabinets — box only, no doors, no drawers</strong>`,
+          `<strong>Upper cabinets — box only, no doors, with shelves</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} upper</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} upper</span> = 4 lin ft ${mqphMmTag(48)}`,
-          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · Supply only`,
+          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · With shelves · Supply only`,
         ] : [
-          `<strong>Base cabinets — box only, no doors, no drawers</strong>`,
+          `<strong>Base cabinets — box only, no doors, no drawers, with 2 shelves</strong>`,
           `Cabinets: <span class="mqph-spec-tag">1 × 30" ${mqphMmTag(30)} base</span> + <span class="mqph-spec-tag">1 × 18" ${mqphMmTag(18)} base</span> = 4 lin ft ${mqphMmTag(48)}`,
-          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · Supply only · Include toe kick`,
+          `Material: <span class="mqph-spec-tag">${matName}</span> · No doors · No drawers · With 2 shelves · Supply only · Include toe kick`,
         ]),
         rateToPrice: (rate) => rate * 4,
         priceToRate: (price) => price / 4,
@@ -4332,6 +4366,137 @@ window.mqphGoToWizard = function() {
         </div>
       </div>`;
   }
+
+  // Island panel pricing — one shop-wide pair of percentages (not a
+  // per-project-type setting) used for every island's exposed end/back
+  // panels, no matter which door style the customer actually picks on a
+  // given quote. Added 2026-09-30 per Jordan: islands used to carry a
+  // separate single-row/double-row upcharge % per project type (set in
+  // dashboard.js's Project Types editor) applied against the island's own
+  // box cost — Jordan replaced that with this calibration instead, because
+  // what a panel really costs is a function of the shop's own door/panel
+  // material costs, not something that should vary by project type. The
+  // shop picks one door style to compare against, quotes a real panel (and,
+  // optionally, a real decorative panel) in matching material/style, and
+  // this turns those into two %-of-door-cost figures. The widget then
+  // applies whichever % against whatever door the customer selects on
+  // their own quote (see calcCabinet's islandPanelCost in widget.js/
+  // widgetpro.js) — not against the reference door's price, which is only
+  // ever used here, once, to derive the ratio.
+  //
+  // Decorative panels are optional: a shop that doesn't offer them at all
+  // just leaves that comparison price blank, decorativePct stays null, and
+  // the widget's "Island panels" select only renders "Regular panels" (see
+  // cabinetForm in widget.js/widgetpro.js) — no half-configured option ever
+  // reaches a customer.
+  //
+  // Stored as one JSON blob directly on the Shop record ('Island panel
+  // pricing') rather than as its own Line Items category — it isn't a
+  // priced, add/delete/toggle-able catalog item like a door or material,
+  // just a couple of shop-wide settings, so it follows the same pattern as
+  // other one-off JSON shop fields (Room types, Hidden widget tabs, etc. in
+  // dashboard.js) instead.
+  function getIslandPanelCfg() {
+    try { return (shopRecord.fields['Island panel pricing']) ? JSON.parse(shopRecord.fields['Island panel pricing']) : {}; }
+    catch(e) { return {}; }
+  }
+
+  function buildIslandPanelHtml() {
+    const doors = getByCategory('door');
+    const cfg = getIslandPanelCfg();
+    const hasDoors = doors.length > 0;
+    const summary = (cfg.panelPct != null)
+      ? `Regular ${Math.round(cfg.panelPct*10)/10}%${cfg.decorativePct != null ? ` · Decorative ${Math.round(cfg.decorativePct*10)/10}%` : ' · Decorative not offered'}`
+      : 'Not set up yet';
+    const doorOpts = doors.map(d => `<option value="${d.id}" ${cfg.refDoorId===d.id?'selected':''}>${d.fields['Name']} (${CUR()}${(d.fields['Rate']||0).toLocaleString()}/lin ft)</option>`).join('');
+
+    return `
+      <div class="mqph-ct-block" id="mqph-scope-islandpanel">
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('islandpanel')" style="cursor:pointer">
+          <span class="mqph-cat-title"><span id="mqph-cat-arrow-islandpanel" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏝️ Island panel pricing <span style="font-size:12px;font-weight:400;color:#9ca3af">(${summary})</span></span>
+        </div>
+        <div id="mqph-cat-body-islandpanel" style="display:none">
+          <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
+            One setting for your whole shop — applies to every island no matter which door style the customer picks on that quote. Pick a door style to compare against below, then quote a regular panel (and a decorative one, if you offer it) 24"×30" in matching material/style in your own software. We turn those into a % of that door's own cost, and the widget applies that same % against whichever door the customer actually selects.
+          </div>
+          ${!hasDoors ? `
+          <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">Add at least one door style above before setting up island panel pricing.</div>
+          ` : `
+          <div style="padding:0 16px 16px">
+            <div class="mqph-field"><label>Compare against door style</label>
+              <select id="mqph-island-refdoor" onchange="mqphCalcIslandPanelPct()">${doorOpts}</select>
+            </div>
+            <div class="mqph-field"><label>Comparison regular panel price (${CUR()}/lin ft)</label>
+              <input type="number" id="mqph-island-panelcost" step="0.01" placeholder="0.00" value="${cfg.panelCostPerFt!=null?cfg.panelCostPerFt:''}" oninput="mqphCalcIslandPanelPct()"/>
+            </div>
+            <div class="mqph-field"><label>Comparison decorative panel price (${CUR()}/lin ft) <span style="font-weight:400;color:#9ca3af">(optional — leave blank if you don't offer decorative island panels)</span></label>
+              <input type="number" id="mqph-island-decorativecost" step="0.01" placeholder="0.00" value="${cfg.decorativeCostPerFt!=null?cfg.decorativeCostPerFt:''}" oninput="mqphCalcIslandPanelPct()"/>
+            </div>
+            <div id="mqph-island-pct-reveal" style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:1rem;line-height:1.6"></div>
+            <button class="mqph-btn mqph-btn-primary" id="mqph-island-save-btn" style="width:100%" onclick="mqphSaveIslandPanelPricing()">Save island panel pricing →</button>
+          </div>
+          `}
+        </div>
+      </div>`;
+  }
+
+  window.mqphCalcIslandPanelPct = function() {
+    const reveal = document.getElementById('mqph-island-pct-reveal');
+    if (!reveal) return;
+    const doorId = document.getElementById('mqph-island-refdoor')?.value;
+    const doorRec = lineItems.find(r => r.id === doorId);
+    const doorRate = doorRec?.fields['Rate'] || 0;
+    const panelCostRaw = document.getElementById('mqph-island-panelcost')?.value;
+    const decCostRaw = document.getElementById('mqph-island-decorativecost')?.value;
+    const panelCost = panelCostRaw !== '' && panelCostRaw != null ? parseFloat(panelCostRaw) : 0;
+    const decCost = decCostRaw !== '' && decCostRaw != null ? parseFloat(decCostRaw) : null;
+    if (!doorRate) {
+      reveal.innerHTML = `<span style="color:#92400e">Pick a door style with a rate above ${CUR()}0 to compute a percentage.</span>`;
+      return;
+    }
+    const panelPct = panelCost > 0 ? (panelCost/doorRate)*100 : 0;
+    const decPct = (decCost != null && decCost > 0) ? (decCost/doorRate)*100 : null;
+    reveal.innerHTML = `
+      <div>Regular panels: <strong>${panelCost>0?`${Math.round(panelPct*10)/10}% of door cost`:'—'}</strong></div>
+      <div>Decorative panels: <strong>${decPct!=null?`${Math.round(decPct*10)/10}% of door cost`:'not offered'}</strong></div>`;
+  };
+
+  window.mqphSaveIslandPanelPricing = async function() {
+    const doorId = document.getElementById('mqph-island-refdoor')?.value;
+    const doorRec = lineItems.find(r => r.id === doorId);
+    const doorRate = doorRec?.fields['Rate'] || 0;
+    const panelCostRaw = document.getElementById('mqph-island-panelcost')?.value;
+    const decCostRaw = document.getElementById('mqph-island-decorativecost')?.value;
+    const panelCost = panelCostRaw !== '' && panelCostRaw != null ? parseFloat(panelCostRaw) : 0;
+    const decCost = decCostRaw !== '' && decCostRaw != null ? parseFloat(decCostRaw) : null;
+    if (!doorId || !doorRate) { alert('Pick a door style with a rate above ' + CUR() + '0 to compare against.'); return; }
+    if (!panelCost || panelCost <= 0) { alert('Enter a comparison regular panel price before saving.'); return; }
+
+    const panelPct = Math.round(((panelCost/doorRate)*100)*100)/100;
+    const decorativePct = (decCost != null && decCost > 0) ? Math.round(((decCost/doorRate)*100)*100)/100 : null;
+    const cfg = {
+      refDoorId: doorId,
+      refDoorName: doorRec.fields['Name'] || '',
+      panelCostPerFt: panelCost,
+      decorativeCostPerFt: (decCost != null && decCost > 0) ? decCost : null,
+      panelPct,
+      decorativePct,
+    };
+
+    const btn = document.getElementById('mqph-island-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Island panel pricing': JSON.stringify(cfg) });
+      shopRecord.fields['Island panel pricing'] = JSON.stringify(cfg);
+      _mqphExpandedCats.add('islandpanel');
+      await loadAndRender();
+    } catch(e) {
+      console.error('Failed to save island panel pricing', e);
+      alert('Something went wrong saving this — please try again.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Save island panel pricing →'; }
+    }
+  };
 
   // Tall cabinet mini wizard state
   let tallCabWiz = { step: 0, name: '', editId: null, price: null };

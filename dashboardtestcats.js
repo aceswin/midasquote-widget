@@ -4694,23 +4694,7 @@ window.logoutMember = async function () {
               <input type="checkbox" id="mq-room-islanddouble-${idx}" ${r.islandAllowDoubleRow?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
               Allow double-row (back-to-back) islands
             </label>
-            <div style="display:flex;gap:16px;flex-wrap:wrap">
-              <div>
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:3px">Single-row panel upcharge</label>
-                <div style="display:flex;align-items:center;gap:4px">
-                  <input type="number" id="mq-room-islandpct-single-${idx}" value="${r.islandSingleRowUpchargePct || 0}" step="0.5" min="0" onchange="mqSaveRooms()" style="width:70px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:right"/>
-                  <span style="font-size:12px;color:#6b7280">%</span>
-                </div>
-              </div>
-              <div id="mq-room-islandpct-double-wrap-${idx}" style="display:${r.islandAllowDoubleRow?'block':'none'}">
-                <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:3px">Double-row panel upcharge</label>
-                <div style="display:flex;align-items:center;gap:4px">
-                  <input type="number" id="mq-room-islandpct-double-${idx}" value="${r.islandDoubleRowUpchargePct || 0}" step="0.5" min="0" onchange="mqSaveRooms()" style="width:70px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:right"/>
-                  <span style="font-size:12px;color:#6b7280">%</span>
-                </div>
-              </div>
-            </div>
-            <div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">Applied on top of the island's box price when the customer picks "Regular panels" (plain box material on the exposed ends/back, instead of a matching door style). If they pick "Decorative panels" instead, we use your door style's own upcharge rate automatically — no extra setup needed. Leave at 0% until you've worked out real numbers — the island will still price correctly (box + install), just with no panel upcharge added on top yet.</div>
+            <div style="font-size:11px;color:#9ca3af;line-height:1.5">Island panel pricing (what % of your door cost to charge for the exposed end/back panels) is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
           </div>` : ''}
           ${isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
@@ -4889,8 +4873,6 @@ window.logoutMember = async function () {
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
             showIslandButton: document.getElementById(`mq-room-addisland-${oldIdx}`)?.checked === true,
             islandAllowDoubleRow: document.getElementById(`mq-room-islanddouble-${oldIdx}`)?.checked === true,
-            islandSingleRowUpchargePct: parseFloat(document.getElementById(`mq-room-islandpct-single-${oldIdx}`)?.value) || 0,
-            islandDoubleRowUpchargePct: parseFloat(document.getElementById(`mq-room-islandpct-double-${oldIdx}`)?.value) || 0,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
@@ -5026,8 +5008,6 @@ window.logoutMember = async function () {
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
         showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
         islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
-        islandSingleRowUpchargePct: parseFloat(el(`mq-room-islandpct-single-${idx}`)?.value) || 0,
-        islandDoubleRowUpchargePct: parseFloat(el(`mq-room-islandpct-double-${idx}`)?.value) || 0,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
@@ -14158,7 +14138,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
