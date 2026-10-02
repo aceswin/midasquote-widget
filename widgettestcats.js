@@ -915,17 +915,30 @@
       #midasquote-widget .mq-add-surface-btn:hover{box-shadow:0 4px 12px rgba(0,0,0,0.18);transform:translateY(-1px)}
       #midasquote-widget .mq-add-surface-btn:active{transform:translateY(0);box-shadow:0 1px 3px rgba(0,0,0,0.14)}
       /* Island's own "+ Add island" button deliberately breaks from the
-         shared .mq-add-surface-btn look (brand/focal colour, white text) —
-         Jordan 2026-10-02 wanted it tied to the same Box background/Box
-         text colour pair Shop info already uses for the "Start here"/
-         "Supply/install" highlight boxes instead, so it visually reads as
-         part of that same highlight-box language rather than a generic
-         brand-coloured action button. Source order (this rule comes after
-         .mq-add-surface-btn above) is what lets it win at equal
-         specificity — no !important needed. The "+ Add a tall cabinet"
-         and "+ Add another surface" buttons elsewhere keep the original
-         focal-colour look; only the island button gets this second class. */
-      #midasquote-widget .mq-island-btn{background:${boxBg};color:${boxText}}
+         shared .mq-add-surface-btn look (brand/focal colour, white text,
+         full-width) — Jordan 2026-10-02 wanted it tied to the same Box
+         background/Box text/Box border colour trio Shop info already uses
+         for the "Start here"/"Supply/install" highlight boxes instead, so
+         it visually reads as part of that same highlight-box language
+         rather than a generic full-width brand-coloured action button.
+         Source order (this rule comes after .mq-add-surface-btn above) is
+         what lets it win at equal specificity — no !important needed. The
+         "+ Add a tall cabinet" and "+ Add another surface" buttons
+         elsewhere keep the original full-width focal-colour look; only
+         the island button gets this second class.
+         Follow-up the same day: Jordan felt the full-width version looked
+         oversized next to the compact ft inputs above it, and asked for a
+         1px border plus an opinion on width/alignment. Narrowed it to
+         auto-width (sized by its own padding/text, not the section's full
+         width) and left-aligned — it reads as one specific action tied to
+         the fields right above it, not a section-wide call to action, and
+         left keeps it anchored under those fields the same way "Use the
+         calculator..." and every other hint/link in this section already
+         sits at the left edge rather than centered. Border uses Box
+         border colour, same field the highlight boxes already border
+         with, so all three box-family colours (bg/text/border) are
+         represented here as one deliberate set rather than two of three. */
+      #midasquote-widget .mq-island-btn{background:${boxBg};color:${boxText};border:1px solid ${boxBorder};width:auto;display:inline-block;padding:12px 26px}
       #midasquote-widget .mq-surface-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border:1px solid #e5e7eb;border-left:4px solid ${bc};border-radius:10px;margin-bottom:10px;background:#f9fafb;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
       #midasquote-widget .mq-surface-summary-info{flex:1;min-width:0;font-size:14px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
       #midasquote-widget .mq-surface-summary-actions{display:flex;gap:8px;flex-shrink:0}
