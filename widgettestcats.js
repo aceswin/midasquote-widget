@@ -914,6 +914,18 @@
       #midasquote-widget .mq-add-surface-btn{width:100%;padding:12px;font-size:14.5px;font-weight:700;border:none;border-radius:9px;background:${focalColor};color:#fff;cursor:pointer;margin-top:6px;font-family:inherit;box-shadow:0 2px 6px rgba(0,0,0,0.14);transition:transform .12s ease,box-shadow .12s ease}
       #midasquote-widget .mq-add-surface-btn:hover{box-shadow:0 4px 12px rgba(0,0,0,0.18);transform:translateY(-1px)}
       #midasquote-widget .mq-add-surface-btn:active{transform:translateY(0);box-shadow:0 1px 3px rgba(0,0,0,0.14)}
+      /* Island's own "+ Add island" button deliberately breaks from the
+         shared .mq-add-surface-btn look (brand/focal colour, white text) —
+         Jordan 2026-10-02 wanted it tied to the same Box background/Box
+         text colour pair Shop info already uses for the "Start here"/
+         "Supply/install" highlight boxes instead, so it visually reads as
+         part of that same highlight-box language rather than a generic
+         brand-coloured action button. Source order (this rule comes after
+         .mq-add-surface-btn above) is what lets it win at equal
+         specificity — no !important needed. The "+ Add a tall cabinet"
+         and "+ Add another surface" buttons elsewhere keep the original
+         focal-colour look; only the island button gets this second class. */
+      #midasquote-widget .mq-island-btn{background:${boxBg};color:${boxText}}
       #midasquote-widget .mq-surface-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border:1px solid #e5e7eb;border-left:4px solid ${bc};border-radius:10px;margin-bottom:10px;background:#f9fafb;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
       #midasquote-widget .mq-surface-summary-info{flex:1;min-width:0;font-size:14px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
       #midasquote-widget .mq-surface-summary-actions{display:flex;gap:8px;flex-shrink:0}
@@ -2647,7 +2659,7 @@
             <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
         </div>
         <div id="mq-${prefix}-island-btn-wrap" style="display:none;margin-top:4px">
-          <button type="button" class="mq-add-surface-btn" onclick="mqToggleIslandSection('${prefix}')">🏝️ + Add island</button>
+          <button type="button" class="mq-add-surface-btn mq-island-btn" onclick="mqToggleIslandSection('${prefix}')">🏝️ + Add island</button>
         </div>
         <div id="mq-${prefix}-island-fields-wrap" style="display:none;margin-top:10px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
