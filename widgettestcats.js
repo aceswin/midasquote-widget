@@ -2667,7 +2667,7 @@
           <div class="mq-field" style="margin-top:10px">
             <label class="mq-label" style="display:block;margin-bottom:8px">Island panels</label>
             <select id="mq-${prefix}-island-panel">
-              <option value="regular">Regular panels (match box material)</option>
+              <option value="regular">Regular flat panels</option>
               ${islandOffersDecorative ? `<option value="decorative">Decorative panels (match door style)</option>` : ''}
             </select>
           </div>
@@ -5842,8 +5842,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       //     (bMatDoorHinge). Double-row (back-to-back) is really TWO rows —
       //     a full base-depth row plus a shallower (~12–16") upper-depth
       //     row behind it — so as of Jordan's 2026-09-30 correction it's
-      //     priced as BOTH rates together (bMatDoorHinge + uMatDoorHinge),
-      //     not upper alone like the original build. No height multiplier
+      //     priced as both rows together, not upper alone like the original
+      //     build. The back row uses the UPPER box's material rate (it's
+      //     the shallow one) but — per Jordan's 2026-10-01 follow-up — the
+      //     BASE cabinet's own door/hinge selection, not the upper's: an
+      //     island's back side isn't really an "upper," it's just shallow,
+      //     so its doors should match whatever door style/hardware the
+      //     customer picked for their base cabinets, same as the front row.
+      //     That's islandBackRowMatDoorHinge below. No height multiplier
       //     either way — an island is floor height regardless.
       //   - Install: always the normal BASE install rate, regardless of row
       //     count — installing a floor-standing island is a base-cabinet-
@@ -5880,9 +5886,19 @@ window.mqTogDrawerConfig=(prefix)=>{
       const islandFt = islandSectionActive ? gn(`mq-${prefix}-islandft`, 0) : 0;
       const islandDouble = islandSectionActive && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
       const islandPanel = islandSectionActive ? (gv(`mq-${prefix}-island-panel`) || 'regular') : 'regular';
+      // Back row of a double-row island: upper box's material rate (it's
+      // the shallow ~12–16" row) but the BASE cabinet's own door/hinge
+      // rate, not the upper's — Jordan 2026-10-01: an island's back side
+      // should still match whatever door style the customer picked for
+      // their base cabinets, same as the front row, since it isn't really
+      // an "upper" cabinet at all, just a shallower one. Deliberately its
+      // own variable rather than reusing uMatDoorHinge (which real upper
+      // cabinets elsewhere in this same calc still need priced with the
+      // upper's own door/hinge selection).
+      const islandBackRowMatDoorHinge = uMat.rateU * upperVanityMult + bDoorRate + bHingeRate;
       let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandExposedFt = 0;
       if (islandFt > 0) {
-        islandBoxCost = islandFt * (islandDouble ? (bMatDoorHinge + uMatDoorHinge) : bMatDoorHinge);
+        islandBoxCost = islandFt * (islandDouble ? (bMatDoorHinge + islandBackRowMatDoorHinge) : bMatDoorHinge);
         // bInstall already resolves to 0 when si !== 'install', already
         // reflects the current drawer tier/door selection the same way the
         // rest of the kitchen's base cabinets do, and already has the
