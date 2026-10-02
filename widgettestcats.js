@@ -2506,7 +2506,7 @@
   // "Open"/"Close" + arrow on the right. `key` must be unique per section
   // (used to build the mq-${key}-body / -arrow / -label ids mqToggleCollapse
   // and mqRenumberSteps both key off of).
-  function collapsibleHeader(key, title, startOpen) {
+  function collapsibleHeader(key, title, startOpen, titleId) {
     // stopPropagation so this doesn't also trigger the surrounding section's
     // own "click anywhere to open" handler (mqOpenIfClosed) — this header's
     // click already fully manages toggling both directions by itself. Since
@@ -2514,8 +2514,13 @@
     // ever seeing the click, it's called explicitly here too, so clicking
     // the header clears the grey/upcoming state exactly like clicking
     // anywhere else in the section already does.
+    // titleId is optional — a couple of sections (countertop "surfaces"
+    // titles) have their text rewritten elsewhere by id (mqAddSurface's
+    // scroll target, mqTogUseCab's label swap), so this lets the generic
+    // header still carry that exact id instead of forcing every caller to
+    // hand-roll its own <p class="mq-sec-title"> markup.
     return `<div class="mq-sec-header-row" onclick="event.stopPropagation();mqToggleCollapse('${key}');mqJumpToSectionIfNeeded(event.currentTarget.closest('.mq-sec'))">
-      <p class="mq-sec-title">${title}</p>
+      <p class="mq-sec-title"${titleId ? ` id="${titleId}"` : ''}>${title}</p>
       <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <span id="mq-${key}-label" style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">${startOpen ? 'Close' : 'Open'}</span>
         <span class="mq-collapse-arrow${startOpen ? ' open' : ''}" id="mq-${key}-arrow">▶</span>
@@ -2646,8 +2651,9 @@
           <div id="mq-${prefix}-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
         </div>
       </div>
-      <div class="mq-sec" id="mq-${prefix}-si-field">
-        <p class="mq-sec-title">${hasInstall ? 'Supply + install' : 'Supply'}</p>
+      <div class="mq-sec" id="mq-${prefix}-si-field" onclick="mqOpenIfClosed('${prefix}-si')">
+        ${collapsibleHeader(`${prefix}-si`, hasInstall ? 'Supply + install' : 'Supply')}
+        <div id="mq-${prefix}-si-body" style="display:none">
         <div class="mq-focal-box">
           <div class="mq-field"><label class="mq-label mq-focal-box-label" style="font-size:14px;font-weight:700">${hasInstall ? 'Supply + install?' : 'Supply'}</label>
             <p class="mq-hint mq-focal-box-label" style="margin-bottom:8px">${hasInstall ? "Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install)." : 'This shop offers supply only — installation is not included.'}</p>
@@ -2655,48 +2661,11 @@
           <div class="mq-field" style="margin-top:0.75rem"><label class="mq-label mq-focal-box-label" style="font-size:14px;font-weight:700;margin-bottom:8px;display:block">Remove existing cabinets?</label>
             <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
         </div>
+        </div>
       </div>
-      <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec">
-        <p class="mq-sec-title">Cabinet measurements</p>
-        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
-        <div class="mq-grid3">
-          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
-          </div>
-          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
-          </div>
-          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
-            <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
-        </div>
-        <div id="mq-${prefix}-island-btn-wrap" style="display:none;margin-top:4px">
-          <button type="button" class="mq-add-surface-btn mq-island-btn" onclick="mqToggleIslandSection('${prefix}')">🏝️ + Add island</button>
-        </div>
-        <div id="mq-${prefix}-island-fields-wrap" style="display:none;margin-top:10px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <span style="font-size:14px;font-weight:700;color:#111">🏝️ Island cabinets</span>
-            <button type="button" onclick="mqRemoveIslandSection('${prefix}')" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;padding:0">Remove</button>
-          </div>
-          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Island cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your island's sections & convert inches/mm to linear feet.</div>
-          </div>
-          <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
-            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-              <input type="checkbox" id="mq-${prefix}-island-double" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              This is a double-row (back-to-back) island
-            </label>
-          </div>
-          <div class="mq-field" style="margin-top:10px">
-            <label class="mq-label" style="display:block;margin-bottom:8px">Island panels</label>
-            <select id="mq-${prefix}-island-panel">
-              <option value="regular">Regular flat panels</option>
-              ${islandOffersDecorative ? `<option value="decorative">Decorative panels (match door style)</option>` : ''}
-            </select>
-          </div>
-        </div>
+      <div class="mq-sec" id="mq-${prefix}-cabinet-selections-sec" onclick="mqOpenIfClosed('${prefix}-cabinet-selections')">
+        ${collapsibleHeader(`${prefix}-cabinet-selections`, 'Cabinet selections')}
+        <div id="mq-${prefix}-cabinet-selections-body" style="display:none">
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
           <label style="font-size:14px;cursor:pointer">Different styles for uppers and lowers</label>
@@ -2737,9 +2706,55 @@
               <select id="mq-${prefix}-b-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           </div>
         </div>
+        </div>
       </div>
-      ${hasDrawers?`<div class="mq-sec" id="mq-${prefix}-drawers-sec">
-        <p class="mq-sec-title">Drawers</p>
+      <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec" onclick="mqOpenIfClosed('${prefix}-cabinet-measurements')">
+        ${collapsibleHeader(`${prefix}-cabinet-measurements`, 'Cabinet measurements')}
+        <div id="mq-${prefix}-cabinet-measurements-body" style="display:none">
+        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
+        <div class="mq-grid3">
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
+          </div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
+          </div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
+            <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
+        </div>
+        <div id="mq-${prefix}-island-btn-wrap" style="display:none;margin-top:4px">
+          <button type="button" class="mq-add-surface-btn mq-island-btn" onclick="mqToggleIslandSection('${prefix}')">🏝️ + Add island</button>
+        </div>
+        <div id="mq-${prefix}-island-fields-wrap" style="display:none;margin-top:10px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:14px;font-weight:700;color:#111">🏝️ Island cabinets</span>
+            <button type="button" onclick="mqRemoveIslandSection('${prefix}')" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;padding:0">Remove</button>
+          </div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Island cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your island's sections & convert inches/mm to linear feet.</div>
+          </div>
+          <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input type="checkbox" id="mq-${prefix}-island-double" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              This is a double-row (back-to-back) island
+            </label>
+          </div>
+          <div class="mq-field" style="margin-top:10px">
+            <label class="mq-label" style="display:block;margin-bottom:8px">Island panels</label>
+            <select id="mq-${prefix}-island-panel">
+              <option value="regular">Regular flat panels</option>
+              ${islandOffersDecorative ? `<option value="decorative">Decorative panels (match door style)</option>` : ''}
+            </select>
+          </div>
+        </div>
+        </div>
+      </div>
+      ${hasDrawers?`<div class="mq-sec" id="mq-${prefix}-drawers-sec" onclick="mqOpenIfClosed('${prefix}-drawers')">
+        ${collapsibleHeader(`${prefix}-drawers`, 'Drawers')}
+        <div id="mq-${prefix}-drawers-body" style="display:none">
         <div class="mq-field">
           <label class="mq-label">Drawer amount</label>
           <div style="font-size:13px;color:#4b5563;margin-bottom:6px;line-height:1.5">🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full drawer banks.</div>
@@ -2755,6 +2770,7 @@
           <label class="mq-label">Drawer type</label>
           ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems, null, 'drawer')}
           <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
+        </div>
         </div>
       </div>`:''}
       ${Object.keys(TALL_CAB).length > 0 ? `
@@ -2976,12 +2992,14 @@
             <div id="mq-ct-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
           </div>
         </div>
-        <div class="mq-sec">
-          <p class="mq-sec-title" id="mq-ct-surfaces-title">Countertop surfaces</p>
+        <div class="mq-sec" id="mq-ct-surfaces-sec" onclick="mqOpenIfClosed('ct-surfaces')">
+          ${collapsibleHeader('ct-surfaces', 'Countertop surfaces', false, 'mq-ct-surfaces-title')}
+          <div id="mq-ct-surfaces-body" style="display:none">
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
           <div class="mq-empty-calc-msg" id="mq-ct-surface-add-msg" style="display:none"></div>
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
+          </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
         <div class="mq-empty-calc-msg" id="mq-ct-empty-calc-msg" style="display:none">No selections have been made, or no linear feet was entered — please double-check before calculating.</div>
@@ -3014,7 +3032,9 @@
         ${cabinetForm('b', specs, data)}
         <div id="mq-b-countertop-details-sec">
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
-        <div class="mq-sec" id="mq-b-ct-options-sec"><p class="mq-sec-title">Countertop options</p>
+        <div class="mq-sec" id="mq-b-ct-options-sec" onclick="mqOpenIfClosed('b-ct-options')">
+          ${collapsibleHeader('b-ct-options', 'Countertop options')}
+          <div id="mq-b-ct-options-body" style="display:none">
           <div class="mq-grid2">
             <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Supply + install?' : 'Supply'}</label>
               ${hasCtInstall ? '' : '<p class="mq-hint" style="margin-bottom:6px">This shop offers supply only — installation is not included.</p>'}
@@ -3065,11 +3085,15 @@
               <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
           </div>
+          </div>
         </div>
-        <div class="mq-sec"><p class="mq-sec-title" id="mq-b-ct-surfaces-title">Additional countertop surfaces</p>
+        <div class="mq-sec" id="mq-b-ct-surfaces-sec" onclick="mqOpenIfClosed('b-ct-surfaces')">
+          ${collapsibleHeader('b-ct-surfaces', 'Additional countertop surfaces', false, 'mq-b-ct-surfaces-title')}
+          <div id="mq-b-ct-surfaces-body" style="display:none">
           <div id="mq-b-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
           <div class="mq-empty-calc-msg" id="mq-b-surface-add-msg" style="display:none"></div>
+          </div>
         </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
@@ -4424,6 +4448,12 @@
       if (!scope) return [];
       return [...scope.querySelectorAll('.mq-sec')].filter(sec => sec.offsetParent !== null);
     }
+    // Exposed globally for the same reason as mqScrollWithOffset above —
+    // mqCheckBottomBounceAutoOpen (a sibling function declared outside
+    // wireWidget's scope) needs to check a section's position against the
+    // current guided step without being able to reach these closure-local
+    // names directly.
+    window.mqGetVisibleSections = mqGetVisibleSections;
 
     window.mqRenumberSteps = function(prefix) {
       const sections = mqGetVisibleSections(prefix);
@@ -4447,6 +4477,11 @@
     // step. Changing project type restarts the flow at step 1, since
     // section visibility itself may have changed.
     let _mqStepIndex = { c: 0, b: 0 };
+    // Same reasoning as mqGetVisibleSections just above — exposed as a
+    // reference (not copied) so mqCheckBottomBounceAutoOpen always sees
+    // whatever the guided-step flow has mutated this to, without owning a
+    // second, driftable copy of it.
+    window._mqStepIndex = _mqStepIndex;
 
     function mqEnsureStepFooter(sec, prefix, index, total) {
       const current = _mqStepIndex[prefix] || 0;
@@ -4477,6 +4512,19 @@
         sec.classList.remove('mq-step-current', 'mq-step-done', 'mq-step-upcoming');
         sec.classList.add(i < current ? 'mq-step-done' : i === current ? 'mq-step-current' : 'mq-step-upcoming');
         mqEnsureStepFooter(sec, prefix, i, sections.length);
+        // Only one section stays open at a time — every section that isn't
+        // the current step collapses back to its default (closed) state as
+        // soon as focus moves away from it, whether that section is ahead
+        // (upcoming) or behind (done). "Project basics" and any other
+        // section with no `-body` wrapper naturally no-op here since the
+        // querySelector below just returns null for them.
+        if (i !== current) {
+          const body = sec.querySelector('[id$="-body"]');
+          if (body && body.style.display !== 'none') {
+            const key = body.id.replace(/^mq-/, '').replace(/-body$/, '');
+            window.mqToggleCollapse(key);
+          }
+        }
       });
       // If the current step is a collapsible section that's still closed,
       // open it automatically — no point being "the focused step" if its
@@ -4510,12 +4558,46 @@
       setTimeout(() => { if (!btn.disabled) btn.click(); }, 500);
     }
 
+    // Continue/Back trigger a smooth scroll toward the newly-current
+    // section. While that animation is in flight, the section it's
+    // scrolling AWAY FROM (now collapsed and much shorter than before —
+    // that's the whole point of the new accordion behavior) can briefly
+    // cross the scroll-spy's center trigger line on the way past, which
+    // would otherwise call mqJumpToSectionIfNeeded and snap the step index
+    // right back to wherever the scroll started from. This short lock tells
+    // the scroll-spy to sit out any crossings that happen while an explicit
+    // Continue/Back is still settling, so the step index this function just
+    // set is the one that sticks. Clicking directly into a section (the
+    // document click listener below) is unaffected — only the passive
+    // scroll-triggered observer checks this flag.
+    // Tracks, per tab, how long to distrust a BACKWARD scroll-spy
+    // correction after an explicit Continue/Back just set the step index.
+    // The section being scrolled AWAY FROM just collapsed (much shorter
+    // now than before — the whole point of the accordion), and when the
+    // target is near the end of a now much shorter page there may not be
+    // enough room left to actually scroll it to center; the resulting
+    // smooth-scroll animation (clamped, bouncing, settling) can cross the
+    // centerline back over that previous section one or more times before
+    // it's done, which would otherwise make the passive scroll-spy snap
+    // the step right back to where it just came from. A flat "ignore
+    // everything for Nms" lock was tried first but a fixed window either
+    // raced (too short) or blocked a genuine subsequent scroll (too long);
+    // this is narrower — it only ever suppresses a correction that would
+    // move the index BACKWARD from what Continue/Back just set, so a real
+    // forward scroll during the window still works immediately, and a
+    // direct click (handled separately, never gated by this) always wins.
+    let _mqStepNavLockUntil = {};
+    function mqLockStepNav(prefix) {
+      _mqStepNavLockUntil[prefix] = Date.now() + 1800;
+    }
+
     window.mqStepContinue = function(prefix) {
       const sections = mqGetVisibleSections(prefix);
       const wasLast = (_mqStepIndex[prefix] || 0) >= sections.length - 1;
       _mqStepIndex[prefix] = Math.min((_mqStepIndex[prefix] || 0) + 1, sections.length - 1);
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
+      mqLockStepNav(prefix);
       const next = sections[_mqStepIndex[prefix]];
       if (next) mqScrollTopNearCenter(next);
     };
@@ -4523,6 +4605,7 @@
     window.mqStepBack = function(prefix) {
       _mqStepIndex[prefix] = Math.max((_mqStepIndex[prefix] || 0) - 1, 0);
       window.mqUpdateStepFocus(prefix);
+      mqLockStepNav(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
       if (cur) mqScrollTopNearCenter(cur);
@@ -4565,7 +4648,20 @@
     function mqObserveSectionsForScrollSpy() {
       if (!_mqScrollSpyObserver) {
         _mqScrollSpyObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => { if (entry.isIntersecting) mqJumpToSectionIfNeeded(entry.target); });
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const tab = entry.target.closest('.mq-tab-content');
+            const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
+            if (prefix) {
+              const sections = mqGetVisibleSections(prefix);
+              const idx = sections.indexOf(entry.target);
+              const current = _mqStepIndex[prefix] || 0;
+              // See mqLockStepNav above — only a BACKWARD correction gets
+              // suppressed, and only while that lock is still active.
+              if (idx !== -1 && idx < current && Date.now() < (_mqStepNavLockUntil[prefix] || 0)) return;
+            }
+            mqJumpToSectionIfNeeded(entry.target);
+          });
         }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
       }
       document.querySelectorAll('#midasquote-widget .mq-sec').forEach(sec => _mqScrollSpyObserver.observe(sec));
@@ -4589,6 +4685,8 @@
       const cabActive = rowHasReal(`mq-${prefix}-mat`);
       const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
+      const cabSelSec = document.getElementById(`mq-${prefix}-cabinet-selections-sec`);
+      if (cabSelSec) cabSelSec.style.display = cabActive ? '' : 'none';
       // Measuring shows for most project types — each one can have its own
       // tailored guide (set in the dashboard) — but a shop owner can flag a
       // specific project type (e.g. a flat-rate-only "Odd jobs" type) to
@@ -7373,14 +7471,27 @@ window.mqTogDrawerConfig=(prefix)=>{
   // scrolling to open it.
   //
   // This catches that specific case: whenever the page hits the bottom of
-  // its scrollable range, look for a section that's (a) still collapsed,
-  // (b) has never been opened before — mqToggleCollapse marks that, so a
-  // section someone deliberately closed again is left alone — and (c) is
-  // currently sitting in the bottom half of the viewport. Opens just the
-  // first (topmost) one that matches, one at a time. If opening it reveals
-  // another lower down, the same check runs again the next time scrolling
-  // reaches the (now taller) bottom of the page, so it can cascade through
-  // several in a row without ever opening more than one at once.
+  // its scrollable range, look for a section that's (a) still collapsed and
+  // (b) currently sitting in the bottom half of the viewport. Rather than
+  // just flipping it open directly, it's routed through
+  // mqJumpToSectionIfNeeded — the same "arriving at a section" path a
+  // normal scroll or click already uses — so this stays consistent with
+  // the single-section-open rule: it becomes the new current step, its
+  // footer/dimming state updates, and whatever was open before collapses
+  // right along with it, instead of ending up with two sections open at
+  // once just because this one happened to be unreachable by the
+  // scroll-spy centerline. One at a time — if opening it reveals another
+  // lower down, the same check runs again the next time scrolling reaches
+  // the (now taller) bottom of the page.
+  //
+  // Only ever considers a section AHEAD of the current step (never one
+  // that's already done). Under the accordion rule every non-current
+  // section sits closed, including ones already stepped past — on a short
+  // page those can easily end up "in the bottom half of the viewport" too
+  // (there's just not much page left), and without this check this would
+  // mistake "already visited, now collapsed" for "never reached, stuck
+  // closed" and yank the step index backward to whatever most recently
+  // collapsed, right as Continue was trying to move it forward.
   function mqCheckBottomBounceAutoOpen() {
     const doc = document.documentElement;
     const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 4;
@@ -7390,12 +7501,18 @@ window.mqTogDrawerConfig=(prefix)=>{
     for (const sec of sections) {
       const body = sec.querySelector('[id$="-body"]');
       if (!body || body.style.display !== 'none') continue; // already open, nothing to do
-      if (body.dataset.mqEverOpened) continue; // was opened before, closed on purpose — leave it
       const rect = sec.getBoundingClientRect();
       if (rect.bottom <= 0 || rect.top >= window.innerHeight) continue; // not actually on screen
       if (rect.top < midpoint) continue; // only ones sitting below the middle of the screen
-      const key = body.id.replace(/^mq-/, '').replace(/-body$/, '');
-      window.mqToggleCollapse(key);
+      const tab = sec.closest('.mq-tab-content');
+      const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
+      if (prefix && window.mqGetVisibleSections && window._mqStepIndex) {
+        const visible = window.mqGetVisibleSections(prefix);
+        const idx = visible.indexOf(sec);
+        const current = window._mqStepIndex[prefix] || 0;
+        if (idx !== -1 && idx <= current) continue; // already current or done — leave it collapsed
+      }
+      window.mqJumpToSectionIfNeeded(sec);
       return; // one at a time — the next bottom-bounce picks up any further ones
     }
   }
