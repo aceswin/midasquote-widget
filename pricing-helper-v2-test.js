@@ -132,6 +132,7 @@ let wizardBaseline = null;
       /* ── Buttons ── */
       .mqph-btn{padding:10px 20px !important;font-size:13px !important;font-weight:600 !important;border-radius:8px !important;cursor:pointer !important;border:none !important;font-family:inherit !important;transition:all 0.15s !important;line-height:1.2 !important}
       .mqph-btn-primary{background:#1a1a1a !important;color:#fff !important}.mqph-btn-primary:hover{opacity:0.88 !important}
+      .mqph-btn-saved{background:#16a34a !important;color:#fff !important}.mqph-btn-saved:hover{opacity:0.88 !important}
       .mqph-btn-secondary{background:#fff !important;color:#111 !important;border:1px solid #e5e7eb !important}.mqph-btn-secondary:hover{background:#f9fafb !important}
       .mqph-btn-danger{background:#fff !important;color:#dc2626 !important;border:1px solid #fca5a5 !important}.mqph-btn-danger:hover{background:#fef2f2 !important}
       .mqph-btn-sm{padding:5px 12px !important;font-size:12px !important}
@@ -4409,6 +4410,18 @@ window.mqphGoToWizard = function() {
       ? `Regular ${Math.round(cfg.panelPct*10)/10}%${cfg.decorativePct != null ? ` · Decorative ${Math.round(cfg.decorativePct*10)/10}%` : ' · Decorative not offered'}`
       : 'Not set up yet';
     const doorOpts = doors.map(d => `<option value="${d.id}" ${cfg.refDoorId===d.id?'selected':''}>${d.fields['Name']} (${CUR()}${(d.fields['Rate']||0).toLocaleString()}/lin ft)</option>`).join('');
+    // The fields below are always freshly populated straight from `cfg` at
+    // render time, so right after a render they're in lockstep with
+    // whatever's actually saved — meaning "has this shop saved island
+    // panel pricing at all" (cfg.panelPct != null) is a safe stand-in for
+    // "does the save button's label/color match what's currently saved"
+    // the moment this HTML is built. Once the shop types into any of the
+    // three inputs, mqphResetIslandSaveBtn() (wired to each one's
+    // oninput/onchange, alongside the existing mqphCalcIslandPanelPct()
+    // call) flips the live button back to the unsaved look without
+    // needing a full re-render — Jordan 2026-10-01: wanted the button
+    // itself to confirm a save happened, not just the category summary.
+    const isSaved = cfg.panelPct != null;
 
     return `
       <div class="mqph-ct-block" id="mqph-scope-islandpanel">
@@ -4425,16 +4438,16 @@ window.mqphGoToWizard = function() {
           ` : `
           <div style="padding:0 16px 16px">
             <div class="mqph-field"><label>Compare against door style</label>
-              <select id="mqph-island-refdoor" onchange="mqphCalcIslandPanelPct()">${doorOpts}</select>
+              <select id="mqph-island-refdoor" onchange="mqphCalcIslandPanelPct();mqphResetIslandSaveBtn()">${doorOpts}</select>
             </div>
             <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" finished flat panel</label>
-              <input type="number" id="mqph-island-panelcost" step="0.01" placeholder="0.00" value="${cfg.panelFlatQuote!=null?cfg.panelFlatQuote:''}" oninput="mqphCalcIslandPanelPct()"/>
+              <input type="number" id="mqph-island-panelcost" step="0.01" placeholder="0.00" value="${cfg.panelFlatQuote!=null?cfg.panelFlatQuote:''}" oninput="mqphCalcIslandPanelPct();mqphResetIslandSaveBtn()"/>
             </div>
             <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" decorative panel <span style="font-weight:400;color:#9ca3af">(optional — leave blank if you don't offer decorative island panels)</span></label>
-              <input type="number" id="mqph-island-decorativecost" step="0.01" placeholder="0.00" value="${cfg.decorativeFlatQuote!=null?cfg.decorativeFlatQuote:''}" oninput="mqphCalcIslandPanelPct()"/>
+              <input type="number" id="mqph-island-decorativecost" step="0.01" placeholder="0.00" value="${cfg.decorativeFlatQuote!=null?cfg.decorativeFlatQuote:''}" oninput="mqphCalcIslandPanelPct();mqphResetIslandSaveBtn()"/>
             </div>
             <div id="mqph-island-pct-reveal" style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:1rem;line-height:1.6"></div>
-            <button class="mqph-btn mqph-btn-primary" id="mqph-island-save-btn" style="width:100%" onclick="mqphSaveIslandPanelPricing()">Save island panel pricing →</button>
+            <button class="mqph-btn ${isSaved ? 'mqph-btn-saved' : 'mqph-btn-primary'}" id="mqph-island-save-btn" style="width:100%" onclick="mqphSaveIslandPanelPricing()">${isSaved ? '✓ Island panel pricing saved' : 'Save island panel pricing →'}</button>
           </div>
           `}
         </div>
@@ -4449,6 +4462,23 @@ window.mqphGoToWizard = function() {
   // to the reference door's own $/lin ft rate to get the ratio (Jordan
   // 2026-10-01).
   const ISLAND_PANEL_WIDTH_FT = 2; // 24" panel width ÷ 12 = 2 linear feet
+
+  // Wired to the three island-panel-pricing inputs' oninput/onchange,
+  // alongside the existing mqphCalcIslandPanelPct() call — the moment a
+  // shop touches any of them, whatever's currently saved no longer
+  // necessarily matches what's on screen, so the button drops back to its
+  // plain "unsaved" look. A real save (mqphSaveIslandPanelPricing) always
+  // re-renders the whole section from the freshly-saved config afterward,
+  // which is what puts the button back into its green "saved" state —
+  // this function only ever needs to move it the other direction
+  // (Jordan 2026-10-01).
+  window.mqphResetIslandSaveBtn = function() {
+    const btn = document.getElementById('mqph-island-save-btn');
+    if (!btn || !btn.classList.contains('mqph-btn-saved')) return;
+    btn.classList.remove('mqph-btn-saved');
+    btn.classList.add('mqph-btn-primary');
+    btn.textContent = 'Save island panel pricing →';
+  };
 
   window.mqphCalcIslandPanelPct = function() {
     const reveal = document.getElementById('mqph-island-pct-reveal');
@@ -4508,7 +4538,16 @@ window.mqphGoToWizard = function() {
       console.error('Failed to save island panel pricing', e);
       alert('Something went wrong saving this — please try again.');
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Save island panel pricing →'; }
+      // On success this `btn` node has already been discarded by
+      // loadAndRender() (the whole section re-renders from the
+      // newly-saved cfg, including a fresh green "saved" button) — these
+      // lines then run harmlessly against a detached node. On failure
+      // it's still the live node, and its classList is untouched by the
+      // "Saving…" step above, so whichever state it was already in
+      // (plain, or green from an earlier successful save) tells us the
+      // right label to restore rather than always forcing it back to the
+      // unsaved label.
+      if (btn) { btn.disabled = false; btn.textContent = btn.classList.contains('mqph-btn-saved') ? '✓ Island panel pricing saved' : 'Save island panel pricing →'; }
     }
   };
 
