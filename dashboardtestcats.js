@@ -4694,7 +4694,10 @@ window.logoutMember = async function () {
               <input type="checkbox" id="mq-room-islanddouble-${idx}" ${r.islandAllowDoubleRow?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
               Allow double-row (back-to-back) islands
             </label>
-            <div style="font-size:11px;color:#9ca3af;line-height:1.5">Island panel pricing is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
+            <div style="font-size:11px;color:#9ca3af;line-height:1.5;margin-bottom:8px">Island panel pricing is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
+            <div style="border-top:1px dashed #e5e7eb;padding-top:8px">
+              ${mqRoomAdjRow('island-mat', idx, r.islandMaterialAdjPct || 0, 'Islands', 'independent from the Base/Upper cabinets % above — only affects island cabinet materials, not the rest of this project type')}
+            </div>
           </div>` : ''}
           ${isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
@@ -4873,6 +4876,7 @@ window.logoutMember = async function () {
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
             showIslandButton: document.getElementById(`mq-room-addisland-${oldIdx}`)?.checked === true,
             islandAllowDoubleRow: document.getElementById(`mq-room-islanddouble-${oldIdx}`)?.checked === true,
+            islandMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-island-mat-${oldIdx}`)?.value) || 0,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
@@ -4956,7 +4960,7 @@ window.logoutMember = async function () {
   window.mqAddRoom = function(forCountertops) {
     if (!window._mqRooms) window._mqRooms = [];
     const newId = (forCountertops ? 'ctroom_' : 'room_') + Date.now();
-    const newRoom = { id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' };
+    const newRoom = { id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, islandMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' };
     if (forCountertops) newRoom.forCountertops = true;
     window._mqRooms.push(newRoom);
     _mqExpandedRoomIds.add(newId);
@@ -5008,6 +5012,7 @@ window.logoutMember = async function () {
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
         showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
         islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
+        islandMaterialAdjPct: parseFloat(el(`mq-room-adj-island-mat-${idx}`)?.value) || 0,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),

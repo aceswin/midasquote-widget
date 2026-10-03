@@ -6122,12 +6122,27 @@ window.mqTogDrawerConfig=(prefix)=>{
       const roomObj = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const materialAdjPct = roomObj ? (parseFloat(roomObj.materialAdjPct !== undefined ? roomObj.materialAdjPct : roomObj.adjustment) || 0) : 0;
       const upperMaterialAdjPct = roomObj ? (parseFloat(roomObj.upperMaterialAdjPct)||0) : 0;
+      // Islands used to silently inherit the Base/Upper cabinet % above (via
+      // bMatDoorHinge/uMat.rateU*upperVanityMult getting reused directly in
+      // the island cost below) — Jordan 2026-10-03: "base cabinets if
+      // inflated % wise, i think that would include island cabs...
+      // probably shouldnt... should probably have a separate spot." This is
+      // now its own independent knob, defaulting to 0 (no adjustment) for
+      // every project type unless a shop explicitly sets it on the Project
+      // Types screen's island settings — it no longer falls back to, or
+      // combines with, materialAdjPct/upperMaterialAdjPct in any way.
+      // BEHAVIOR CHANGE: any shop that already had a nonzero Base/Upper
+      // cabinet % AND islands enabled for that same project type will see
+      // island pricing for that project type change (drop the old bleed-
+      // through) the next time this ships — flagged to Jordan.
+      const islandMaterialAdjPct = roomObj ? (parseFloat(roomObj.islandMaterialAdjPct)||0) : 0;
       const installAdjPct  = roomObj ? (parseFloat(roomObj.installAdjPct)||0) : 0;
       const totalAdjPct    = roomObj ? (parseFloat(roomObj.totalAdjPct)||0) : 0;
       const hasRoomAdjustment = materialAdjPct !== 0;
       const roomAdjPct = materialAdjPct; // kept for anything still reading the old name
       const vanityMult = (100 + materialAdjPct) / 100;
       const upperVanityMult = (100 + upperMaterialAdjPct) / 100;
+      const islandVanityMult = (100 + islandMaterialAdjPct) / 100;
       const installMult = (100 + installAdjPct) / 100;
 
       const uInstall = (si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0) * installMult;
@@ -6215,6 +6230,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       // island — a single-row island has no "back row" to extend.
       const islandDw = islandSectionActive && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
       const islandBackFt = islandDw ? islandFt + 2 : islandFt;
+      // Front row of the island: same formula as bMatDoorHinge (the wall-
+      // run base cabinets), but with the island's own independent %
+      // adjustment (islandVanityMult) instead of the general base-cabinet
+      // one (vanityMult) — see the islandMaterialAdjPct comment above.
+      // Deliberately its own variable now rather than reusing bMatDoorHinge
+      // directly (which the wall-run base cabinets elsewhere in this same
+      // calc still need priced with the general vanityMult).
+      const islandFrontRowMatDoorHinge = bMat.rateB * islandVanityMult + bDoorRate + drawerRate + bHingeRate;
       // Back row of a double-row island: upper box's material rate (it's
       // the shallow ~12–16" row) but the BASE cabinet's own door/hinge
       // rate, not the upper's — Jordan 2026-10-01: an island's back side
@@ -6223,11 +6246,12 @@ window.mqTogDrawerConfig=(prefix)=>{
       // an "upper" cabinet at all, just a shallower one. Deliberately its
       // own variable rather than reusing uMatDoorHinge (which real upper
       // cabinets elsewhere in this same calc still need priced with the
-      // upper's own door/hinge selection).
-      const islandBackRowMatDoorHinge = uMat.rateU * upperVanityMult + bDoorRate + bHingeRate;
+      // upper's own door/hinge selection) — and, as of 2026-10-03, uses the
+      // same islandVanityMult as the front row above, not upperVanityMult.
+      const islandBackRowMatDoorHinge = uMat.rateU * islandVanityMult + bDoorRate + bHingeRate;
       let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandExposedFt = 0;
       if (islandFt > 0) {
-        islandBoxCost = (islandFt * bMatDoorHinge) + (islandDouble ? islandBackFt * islandBackRowMatDoorHinge : 0);
+        islandBoxCost = (islandFt * islandFrontRowMatDoorHinge) + (islandDouble ? islandBackFt * islandBackRowMatDoorHinge : 0);
         // bInstall already resolves to 0 when si !== 'install', already
         // reflects the current drawer tier/door selection the same way the
         // rest of the kitchen's base cabinets do, and already has the
