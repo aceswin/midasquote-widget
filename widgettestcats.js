@@ -2713,12 +2713,12 @@
         <div id="mq-${prefix}-cabinet-measurements-body" style="display:none">
         ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
         <div class="mq-grid3">
-          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
-          </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
+          </div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
@@ -7538,47 +7538,56 @@ window.mqTogDrawerConfig=(prefix)=>{
   // The guided-flow scroll-spy (mqObserveSectionsForScrollSpy, inside
   // wireWidget) opens each section as it crosses the exact vertical center
   // of the screen while scrolling. That works for most sections, but one
-  // sitting near the very bottom of the page can end up parked in the
-  // lower half of the viewport WITHOUT ever actually crossing that center
-  // line, if the page runs out of room to scroll before it gets there —
-  // there's nothing further to scroll to, so the trigger line never
-  // reaches it. Left alone, that section just stays closed with no way for
-  // scrolling to open it.
+  // sitting near the very bottom of the page can end up parked on screen
+  // WITHOUT ever actually crossing that center line, if the page runs out
+  // of room to scroll before it gets there — there's nothing further to
+  // scroll to, so the trigger line never reaches it. Left alone, that
+  // section just stays closed with no way for scrolling to open it.
   //
   // This catches that specific case: whenever the page hits the bottom of
-  // its scrollable range, look for a section that's (a) still collapsed and
-  // (b) currently sitting in the bottom half of the viewport. Rather than
-  // just flipping it open directly, it's routed through
-  // mqJumpToSectionIfNeeded — the same "arriving at a section" path a
-  // normal scroll or click already uses — so this stays consistent with
-  // the single-section-open rule: it becomes the new current step, its
-  // footer/dimming state updates, and whatever was open before collapses
-  // right along with it, instead of ending up with two sections open at
-  // once just because this one happened to be unreachable by the
-  // scroll-spy centerline. One at a time — if opening it reveals another
-  // lower down, the same check runs again the next time scrolling reaches
-  // the (now taller) bottom of the page.
+  // its scrollable range, look for a section that's still collapsed and on
+  // screen at all — no longer restricted to the bottom HALF of the
+  // viewport specifically (Jordan: the last items, like the Countertops/
+  // Additional countertops sections, "took a bit of trying" to pop open).
+  // Once there's truly nowhere further to scroll, a still-closed section
+  // ahead of the current step is stuck regardless of exactly where it
+  // happens to sit on screen at that moment — how tall the sections before
+  // it were determines that, not whether it still needs opening. The
+  // "at the bottom" check itself is also a little more forgiving now
+  // (24px of slack instead of 4) since mobile browsers can shift
+  // `window.innerHeight` slightly as their address bar collapses/expands
+  // during a scroll, which made the old tight threshold miss and need a
+  // few tries before it happened to land exactly right.
+  //
+  // Rather than just flipping it open directly, it's routed through
+  // mqScrollJumpWithCatchup/mqJumpToSectionIfNeeded — the same "arriving at
+  // a section" path a normal scroll or click already uses — so this stays
+  // consistent with the rest of the step flow: it becomes the new current
+  // step and its footer updates. After opening one, it re-checks itself
+  // shortly after (once layout settles) rather than waiting for another
+  // manual scroll nudge — if the page is still sitting at the bottom (the
+  // section that just opened didn't add much height, or there's more than
+  // one still stuck), the next one opens right away too, chaining through
+  // however many are left instead of needing a separate scroll for each.
   //
   // Only ever considers a section AHEAD of the current step (never one
   // that's already done). Under the accordion rule every non-current
   // section sits closed, including ones already stepped past — on a short
-  // page those can easily end up "in the bottom half of the viewport" too
-  // (there's just not much page left), and without this check this would
-  // mistake "already visited, now collapsed" for "never reached, stuck
-  // closed" and yank the step index backward to whatever most recently
-  // collapsed, right as Continue was trying to move it forward.
+  // page those can easily end up on screen too (there's just not much page
+  // left), and without this check this would mistake "already visited, now
+  // collapsed" for "never reached, stuck closed" and yank the step index
+  // backward to whatever most recently collapsed, right as Continue was
+  // trying to move it forward.
   function mqCheckBottomBounceAutoOpen() {
     const doc = document.documentElement;
-    const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 4;
+    const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 24;
     if (!atBottom) return;
-    const midpoint = window.innerHeight / 2;
     const sections = document.querySelectorAll('#midasquote-widget .mq-sec');
     for (const sec of sections) {
       const body = sec.querySelector('[id$="-body"]');
       if (!body || body.style.display !== 'none') continue; // already open, nothing to do
       const rect = sec.getBoundingClientRect();
       if (rect.bottom <= 0 || rect.top >= window.innerHeight) continue; // not actually on screen
-      if (rect.top < midpoint) continue; // only ones sitting below the middle of the screen
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
       if (prefix) {
@@ -7591,7 +7600,11 @@ window.mqTogDrawerConfig=(prefix)=>{
         }
       }
       (window.mqScrollJumpWithCatchup || window.mqJumpToSectionIfNeeded)(sec);
-      return; // one at a time — the next bottom-bounce picks up any further ones
+      // Still at the bottom after this one opens? Check again shortly so
+      // the next stuck section (if any) opens right away too, instead of
+      // waiting on another manual scroll.
+      setTimeout(mqCheckBottomBounceAutoOpen, 400);
+      return; // one at a time — the chained re-check above picks up any further ones
     }
   }
   function mqInitBottomBounceAutoOpen() {
