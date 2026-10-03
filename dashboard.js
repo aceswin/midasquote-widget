@@ -4427,7 +4427,7 @@ window.logoutMember = async function () {
     // it only has one default image and wasn't part of this request.
     const _mqDefaultMeasureGallery = MQ_DEFAULT_MEASURE_IMAGE_SET.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f);
     return [
-      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
+      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1), showIslandButton:true },
       { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.jpg', measureText:'', measureImage:'' },
       { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
       { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
@@ -4684,6 +4684,18 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
           </label>
+          ${!isCountertop ? `
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-addisland-${idx}" ${r.showIslandButton?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+            🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
+          </label>
+          <div id="mq-room-island-settings-${idx}" style="display:${r.showIslandButton?'block':'none'};margin:0 0 10px 24px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;cursor:pointer">
+              <input type="checkbox" id="mq-room-islanddouble-${idx}" ${r.islandAllowDoubleRow?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              Allow double-row (back-to-back) islands
+            </label>
+            <div style="font-size:11px;color:#9ca3af;line-height:1.5">Island panel pricing is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
+          </div>` : ''}
           ${isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
@@ -4692,6 +4704,7 @@ window.logoutMember = async function () {
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
             ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
+            ${r.showIslandButton ? mqRoomAdjRow('island-mat', idx, r.islandMaterialAdjPct || 0, 'Islands', 'independent from the Base/Upper cabinets % above') : ''}
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
             ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
           </div>`}
@@ -4859,6 +4872,9 @@ window.logoutMember = async function () {
             hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
+            showIslandButton: document.getElementById(`mq-room-addisland-${oldIdx}`)?.checked === true,
+            islandAllowDoubleRow: document.getElementById(`mq-room-islanddouble-${oldIdx}`)?.checked === true,
+            islandMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-island-mat-${oldIdx}`)?.value) || 0,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
@@ -4942,7 +4958,7 @@ window.logoutMember = async function () {
   window.mqAddRoom = function(forCountertops) {
     if (!window._mqRooms) window._mqRooms = [];
     const newId = (forCountertops ? 'ctroom_' : 'room_') + Date.now();
-    const newRoom = { id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' };
+    const newRoom = { id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, islandMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' };
     if (forCountertops) newRoom.forCountertops = true;
     window._mqRooms.push(newRoom);
     _mqExpandedRoomIds.add(newId);
@@ -4992,6 +5008,9 @@ window.logoutMember = async function () {
         hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
+        showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
+        islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
+        islandMaterialAdjPct: parseFloat(el(`mq-room-adj-island-mat-${idx}`)?.value) || 0,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),

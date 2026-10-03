@@ -8,6 +8,13 @@
 (function() {
 
   const LINE_ITEMS_TABLE = 'tblCkJsJ2OC6DgXok';
+  // Same Shops table dashboard.js's own CONFIG.SHOPS_TABLE points at — this
+  // file runs as its own separate script/closure (see mqph2Init below) and
+  // has no access to dashboard.js's CONFIG object, so it needs its own
+  // copy of the table id to save shop-wide settings like Island panel
+  // pricing directly to the Shop record, the same way LINE_ITEMS_TABLE
+  // above is its own separate copy rather than a shared reference.
+  const SHOPS_TABLE = 'tbl8PoF2Mu3sAdlMs';
 
   let shopRecord = null;
   let pricingRecord = null;
@@ -125,6 +132,7 @@ let wizardBaseline = null;
       /* ── Buttons ── */
       .mqph-btn{padding:10px 20px !important;font-size:13px !important;font-weight:600 !important;border-radius:8px !important;cursor:pointer !important;border:none !important;font-family:inherit !important;transition:all 0.15s !important;line-height:1.2 !important}
       .mqph-btn-primary{background:#1a1a1a !important;color:#fff !important}.mqph-btn-primary:hover{opacity:0.88 !important}
+      .mqph-btn-saved{background:#16a34a !important;color:#fff !important}.mqph-btn-saved:hover{opacity:0.88 !important}
       .mqph-btn-secondary{background:#fff !important;color:#111 !important;border:1px solid #e5e7eb !important}.mqph-btn-secondary:hover{background:#f9fafb !important}
       .mqph-btn-danger{background:#fff !important;color:#dc2626 !important;border:1px solid #fca5a5 !important}.mqph-btn-danger:hover{background:#fef2f2 !important}
       .mqph-btn-sm{padding:5px 12px !important;font-size:12px !important}
@@ -2221,7 +2229,7 @@ window.mqphGoToWizard = function() {
             ${mqphSortRecs(cat, recs).map(r=>`
               <div class="mqph-row">
                 <div style="flex:1;min-width:0">
-                  <div class="mqph-row-name">${r.fields['Name']||'—'}${['material','door','hinge'].includes(cat) && r.fields['Is baseline'] ? ' <span title="New items in this category are priced as an upcharge against this one" style="font-size:11px;font-weight:600;color:#92400e">⭐ Baseline</span>' : ''}</div>
+                  <div class="mqph-row-name"${cat==='door' ? ` id="mqph-door-row-name-${r.id}"` : ''}>${r.fields['Name']||'—'}${['material','door','hinge'].includes(cat) && r.fields['Is baseline'] ? ' <span title="New items in this category are priced as an upcharge against this one" style="font-size:11px;font-weight:600;color:#92400e">⭐ Baseline</span>' : ''}${cat==='door' ? `<span id="mqph-door-row-decobadge-${r.id}" title="Customers who pick this door can be offered a decorative (match-the-door) island panel" style="${r.fields['Hide decorative island panel']===true?'display:none;':''}font-size:11px;font-weight:600;color:#1d4ed8"> 🎨 Decorative panel</span>` : ''}</div>
                   ${r.fields['Description']?`<div class="mqph-row-desc">${r.fields['Description']}</div>`:''}
                 </div>
                 <div class="mqph-row-rate">${(r.fields['Rate']||0) === 0 ? '<span style="font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:2px 7px">Not priced individually (Part of baseline)</span>' : (r.fields['Category']==='zone'||r.fields['Unit']==='km'||r.fields['Unit']==='%') ? (r.fields['Rate']||0).toLocaleString() : CUR() +(r.fields['Rate']||0).toLocaleString()}</div>
@@ -2242,6 +2250,7 @@ window.mqphGoToWizard = function() {
       ${buildCTHtml()}
       ${buildTrimHtml()}
       ${buildTallCabHtml()}
+      ${buildIslandPanelHtml()}
 
       <!-- Bulk price edit overlay — Doors, Box Materials, Crown, Valance only -->
       <div class="mqph-overlay" id="mqph-bulk-overlay">
@@ -2904,6 +2913,12 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqph-item-active').checked = rec.fields['Active']!==false;
     const lockNote = document.getElementById('mqph-item-unit-lock-note');
     if (lockNote) lockNote.style.display = unitLocked ? 'block' : 'none';
+    // Decorative-island-panel tagging moved out of this modal (Jordan
+    // 2026-10-03) — it now lives as a checklist inside the "Island panel
+    // pricing" section itself (see buildIslandPanelHtml/
+    // mqphToggleDecorativeDoor below), right next to the shop-wide
+    // decorative pricing setup it depends on, instead of needing each door
+    // opened individually here.
     mqphRenderEditRequote(rec);
     document.getElementById('mqph-modal-overlay').classList.add('show');
   };
@@ -2934,6 +2949,17 @@ window.mqphGoToWizard = function() {
       Description:document.getElementById('mqph-item-desc').value.trim(),
       Active:document.getElementById('mqph-item-active').checked,
     };
+    // Note: `Hide decorative island panel` (door-only) is intentionally
+    // NOT touched here — it's edited exclusively via the checklist in the
+    // Island panel pricing section (mqphToggleDecorativeDoor), not through
+    // this raw modal, so a save here never overwrites it. Also means a
+    // brand-new door created through this modal is left with this field
+    // unset — by design, per Jordan 2026-10-03: unset reads as "show the
+    // decorative option" (see mqphToggleDecorativeDoor's comment for why
+    // it's an inverted "Hide" field rather than the "Offers" field this
+    // was originally built with), so a shop that never visits the
+    // checklist still gets the option shown for every door rather than
+    // silently missing it.
     try {
       if (currentEditId) { await atUpdate(LINE_ITEMS_TABLE,currentEditId,fields); }
       else { fields['Sort order']=lineItems.length+1; await atCreate(LINE_ITEMS_TABLE,fields); }
@@ -3692,6 +3718,12 @@ window.mqphGoToWizard = function() {
     body.style.display = opening ? 'block' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
     if (opening) _mqphExpandedCats.add(cat); else _mqphExpandedCats.delete(cat);
+    // The Island panel pricing % preview box only ever gets filled in by
+    // the three price inputs' own oninput/onchange — it was never run
+    // once on render, so opening this section with values already saved
+    // showed a blank box instead of the actual saved ratio (Jordan
+    // 2026-10-03 screenshot). Populate it the moment the section opens.
+    if (opening && cat === 'islandpanel' && typeof mqphCalcIslandPanelPct === 'function') mqphCalcIslandPanelPct();
   };
   // Re-applies whichever sections were open before the last rebuild —
   // called right after buildEditorHTML() replaces the page's innerHTML.
@@ -3701,6 +3733,11 @@ window.mqphGoToWizard = function() {
       const arrow = document.getElementById(`mqph-cat-arrow-${cat}`);
       if (body) body.style.display = 'block';
       if (arrow) arrow.style.transform = 'rotate(90deg)';
+      // Same blank-box fix as mqphToggleCategory, for the case where the
+      // section is being re-opened automatically after a rebuild (e.g.
+      // right after Save, or after Select all/Clear all) rather than by a
+      // fresh click.
+      if (cat === 'islandpanel' && typeof mqphCalcIslandPanelPct === 'function') mqphCalcIslandPanelPct();
     });
   }
 
@@ -4357,6 +4394,336 @@ window.mqphGoToWizard = function() {
           </div>
         </div>
       </div>`;
+  }
+
+  // Island panel pricing — one shop-wide pair of percentages (not a
+  // per-project-type setting) used for every island's exposed end/back
+  // panels, no matter which door style the customer actually picks on a
+  // given quote. Added 2026-09-30 per Jordan: islands used to carry a
+  // separate single-row/double-row upcharge % per project type (set in
+  // dashboard.js's Project Types editor) applied against the island's own
+  // box cost — Jordan replaced that with this calibration instead, because
+  // what a panel really costs is a function of the shop's own door/panel
+  // material costs, not something that should vary by project type. The
+  // shop picks one door style to compare against, quotes a real panel (and,
+  // optionally, a real decorative panel) in matching material/style, and
+  // this turns those into two %-of-door-cost figures. The widget then
+  // applies whichever % against whatever door the customer selects on
+  // their own quote (see calcCabinet's islandPanelCost in widget.js/
+  // widgetpro.js) — not against the reference door's price, which is only
+  // ever used here, once, to derive the ratio.
+  //
+  // Decorative panels are optional: a shop that doesn't offer them at all
+  // just leaves that comparison price blank, decorativePct stays null, and
+  // the widget's "Island panels" select only renders "Regular panels" (see
+  // cabinetForm in widget.js/widgetpro.js) — no half-configured option ever
+  // reaches a customer.
+  //
+  // Stored as one JSON blob directly on the Shop record ('Island panel
+  // pricing') rather than as its own Line Items category — it isn't a
+  // priced, add/delete/toggle-able catalog item like a door or material,
+  // just a couple of shop-wide settings, so it follows the same pattern as
+  // other one-off JSON shop fields (Room types, Hidden widget tabs, etc. in
+  // dashboard.js) instead.
+  function getIslandPanelCfg() {
+    try { return (shopRecord.fields['Island panel pricing']) ? JSON.parse(shopRecord.fields['Island panel pricing']) : {}; }
+    catch(e) { return {}; }
+  }
+
+  function buildIslandPanelHtml() {
+    const doors = getByCategory('door');
+    const cfg = getIslandPanelCfg();
+    const hasDoors = doors.length > 0;
+    const summary = (cfg.panelPct != null)
+      ? `Regular ${Math.round(cfg.panelPct*10)/10}%${cfg.decorativePct != null ? ` · Decorative ${Math.round(cfg.decorativePct*10)/10}%` : ' · Decorative not offered'}`
+      : 'Not set up yet';
+    const doorOpts = doors.map(d => `<option value="${d.id}" ${cfg.refDoorId===d.id?'selected':''}>${d.fields['Name']} (${CUR()}${(d.fields['Rate']||0).toLocaleString()}/lin ft)</option>`).join('');
+    // The fields below are always freshly populated straight from `cfg` at
+    // render time, so right after a render they're in lockstep with
+    // whatever's actually saved — meaning "has this shop saved island
+    // panel pricing at all" (cfg.panelPct != null) is a safe stand-in for
+    // "does the save button's label/color match what's currently saved"
+    // the moment this HTML is built. Once the shop types into any of the
+    // three inputs, mqphResetIslandSaveBtn() (wired to each one's
+    // oninput/onchange, alongside the existing mqphCalcIslandPanelPct()
+    // call) flips the live button back to the unsaved look without
+    // needing a full re-render — Jordan 2026-10-01: wanted the button
+    // itself to confirm a save happened, not just the category summary.
+    const isSaved = cfg.panelPct != null;
+    // Per Jordan 2026-10-03: not every door style actually comes in a
+    // matching decorative panel (e.g. a shop's maple shaker door does,
+    // its melamine slab door doesn't), so which doors offer "Decorative
+    // finished ends" at all is tagged per door, right here next to the
+    // shop-wide decorative pricing it depends on — rather than buried in
+    // each door's own raw Edit modal (where this lived briefly before
+    // Jordan asked for it to move). Each checkbox self-saves instantly
+    // (mqphToggleDecorativeDoor) — no separate Save button needed, since
+    // unlike the ratio above there's no derived calculation to stage.
+    // Only shown once decorative pricing has actually been SAVED
+    // (cfg.decorativePct, not whatever's currently typed into the
+    // decorative-cost field above) — tagging doors for an option that
+    // isn't even configured yet would be meaningless.
+    // Defaults to ON, not off (Jordan 2026-10-03: "by default lets have
+    // all the doors selected ... in case a shop somehow misses that") —
+    // read off the INVERTED field `Hide decorative island panel`, so a
+    // door only counts as opted OUT once that's been explicitly set true.
+    // (A straight "`Offers decorative island panel` !== false" reading —
+    // what this used to be — can never actually stick once unchecked:
+    // Airtable Checkbox fields round-trip `false` as simply absent, same
+    // as never-touched, so the "off" state silently snapped back to "on"
+    // on every reload. See mqphToggleDecorativeDoor's comment below for
+    // the full explanation. Don't revert to the positive-field reading.)
+    // Applies everywhere this field is read: the checklist checkboxes
+    // below, the "Select all"/"Clear all" state, the door list's 🎨 badge
+    // above, and the widget's own customer-facing gate (widget.js/
+    // widgetpro.js mqRefreshIslandPanelOption).
+    const allDoorsDecorative = doors.length > 0 && doors.every(d => d.fields['Hide decorative island panel'] !== true);
+
+    return `
+      <div class="mqph-ct-block" id="mqph-scope-islandpanel">
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('islandpanel')" style="cursor:pointer">
+          <span class="mqph-cat-title"><span id="mqph-cat-arrow-islandpanel" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏝️ Island panel pricing <span style="font-size:12px;font-weight:400;color:#9ca3af">(${summary})</span></span>
+        </div>
+        <div id="mqph-cat-body-islandpanel" style="display:none">
+          <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
+            <p style="margin:0 0 10px">Islands tend to cost more because of finished side panels and back panels. All shops are different though, so we came up with a simple solution for all shops.</p>
+            <p style="margin:0">Since the side and back panels are determined by the door that's chosen, we use a comparative quote to establish the correct ratio to charge for panels (flat or decorative). You can optionally leave these blank and the widget will only ask for the island measurements and type — it just won't add on side or back panel costs. Or simply choose a door style below and enter the price you'd charge for a 24" × 34.5" finished flat panel, and the price you'd charge for a 24" × 34.5" decorative-style finished panel to match that door (if you offer decorative panels — leave it blank if you don't). We'll turn those prices into a ratio — say, 75% of that door's own cost — and apply that same ratio across every door style when it's chosen. So if you have mahogany doors, we can use the same ratio we calibrated on maple doors to find the cost. It's not flawless, but it ensures your islands carry the extra charges they should. Watch the video below for a fuller walkthrough and example.</p>
+          </div>
+          ${!hasDoors ? `
+          <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">Add at least one door style above before setting up island panel pricing.</div>
+          ` : `
+          <div style="padding:0 16px 16px">
+            <div class="mqph-field"><label>Compare against door style</label>
+              <select id="mqph-island-refdoor" onchange="mqphCalcIslandPanelPct();mqphResetIslandSaveBtn()">${doorOpts}</select>
+            </div>
+            <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" finished flat panel</label>
+              <input type="number" id="mqph-island-panelcost" step="0.01" placeholder="0.00" value="${cfg.panelFlatQuote!=null?cfg.panelFlatQuote:''}" oninput="mqphCalcIslandPanelPct();mqphResetIslandSaveBtn()"/>
+            </div>
+            <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" decorative panel <span style="font-weight:400;color:#9ca3af">(optional — leave blank if you don't offer decorative island panels)</span></label>
+              <input type="number" id="mqph-island-decorativecost" step="0.01" placeholder="0.00" value="${cfg.decorativeFlatQuote!=null?cfg.decorativeFlatQuote:''}" oninput="mqphCalcIslandPanelPct();mqphResetIslandSaveBtn()"/>
+            </div>
+            <p style="margin:-4px 0 12px;font-size:12px;color:#9ca3af">If you don't use finished end panels, you can enter 0 for these.</p>
+            <div id="mqph-island-pct-reveal" style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:1rem;line-height:1.6"></div>
+            <button class="mqph-btn ${isSaved ? 'mqph-btn-saved' : 'mqph-btn-primary'}" id="mqph-island-save-btn" style="width:100%" onclick="mqphSaveIslandPanelPricing()">${isSaved ? '✓ Island panel pricing saved' : 'Save island panel pricing →'}</button>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e5e7eb">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:10px">
+                <label style="font-weight:600;font-size:13px;color:#374151">Offer decorative panels with the following door styles</label>
+                ${cfg.decorativePct != null ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" id="mqph-island-decoselectall-btn" style="flex-shrink:0" onclick="mqphToggleAllDecorativeDoors()">${allDoorsDecorative ? 'Clear all' : 'Select all'}</button>` : ''}
+              </div>
+              ${cfg.decorativePct != null ? `
+              <p style="margin:0 0 8px;font-size:12px;color:#9ca3af">Only the door styles checked here will offer "Decorative finished ends" as an island panel choice on the widget — leave a door unchecked if it doesn't actually come in a matching decorative panel (melamine slab, for instance).</p>
+              <div style="max-height:220px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;padding:2px 10px">
+                ${doors.map(d => `
+                <label style="display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid #f3f4f6;font-size:13px;cursor:pointer" id="mqph-island-decorow-${d.id}">
+                  <input type="checkbox" id="mqph-island-decocb-${d.id}" ${d.fields['Hide decorative island panel']!==true?'checked':''} onchange="mqphToggleDecorativeDoor('${d.id}',this.checked)" style="width:auto;flex-shrink:0"/>
+                  <span>${d.fields['Name']||'—'}</span>
+                </label>`).join('')}
+              </div>
+              ` : `
+              <p style="margin:0;font-size:12px;color:#9ca3af">Enter a price for a decorative panel above and save it first — once decorative panel pricing is set up, you can choose which door styles actually offer it here.</p>
+              `}
+            </div>
+          </div>
+          `}
+        </div>
+      </div>`;
+  }
+
+  // Shops quote a flat price for a finished 24"×34.5" panel (the size we
+  // tell them to use) rather than a $/lin ft rate directly — most shops
+  // think in flat per-panel quotes, not linear-foot rates, for a one-off
+  // comparison piece like this. 24" wide = 2 linear feet, so we reverse-
+  // engineer that flat quote into a $/lin ft rate (÷2) before comparing it
+  // to the reference door's own $/lin ft rate to get the ratio (Jordan
+  // 2026-10-01).
+  const ISLAND_PANEL_WIDTH_FT = 2; // 24" panel width ÷ 12 = 2 linear feet
+
+  // Wired to the three island-panel-pricing inputs' oninput/onchange,
+  // alongside the existing mqphCalcIslandPanelPct() call — the moment a
+  // shop touches any of them, whatever's currently saved no longer
+  // necessarily matches what's on screen, so the button drops back to its
+  // plain "unsaved" look. A real save (mqphSaveIslandPanelPricing) always
+  // re-renders the whole section from the freshly-saved config afterward,
+  // which is what puts the button back into its green "saved" state —
+  // this function only ever needs to move it the other direction
+  // (Jordan 2026-10-01).
+  window.mqphResetIslandSaveBtn = function() {
+    const btn = document.getElementById('mqph-island-save-btn');
+    if (!btn || !btn.classList.contains('mqph-btn-saved')) return;
+    btn.classList.remove('mqph-btn-saved');
+    btn.classList.add('mqph-btn-primary');
+    btn.textContent = 'Save island panel pricing →';
+  };
+
+  window.mqphCalcIslandPanelPct = function() {
+    const reveal = document.getElementById('mqph-island-pct-reveal');
+    if (!reveal) return;
+    const doorId = document.getElementById('mqph-island-refdoor')?.value;
+    const doorRec = lineItems.find(r => r.id === doorId);
+    const doorRate = doorRec?.fields['Rate'] || 0;
+    const panelCostRaw = document.getElementById('mqph-island-panelcost')?.value;
+    const decCostRaw = document.getElementById('mqph-island-decorativecost')?.value;
+    // Distinguish "nothing typed yet" from "typed an explicit 0" -- a shop
+    // intentionally entering 0 (no finished end panels) should see "0% of
+    // door cost" confirming that choice, not the same "—" shown before
+    // they've touched the field at all (Jordan 2026-10-02).
+    const panelEntered = panelCostRaw !== '' && panelCostRaw != null && !isNaN(parseFloat(panelCostRaw));
+    const panelCost = panelEntered ? parseFloat(panelCostRaw) : 0;
+    const decCost = decCostRaw !== '' && decCostRaw != null ? parseFloat(decCostRaw) : null;
+    if (!doorRate) {
+      reveal.innerHTML = `<span style="color:#92400e">Pick a door style with a rate above ${CUR()}0 to compute a percentage.</span>`;
+      return;
+    }
+    const panelRatePerFt = panelCost > 0 ? panelCost / ISLAND_PANEL_WIDTH_FT : 0;
+    const decRatePerFt = (decCost != null && decCost > 0) ? decCost / ISLAND_PANEL_WIDTH_FT : null;
+    const panelPct = panelRatePerFt > 0 ? (panelRatePerFt/doorRate)*100 : 0;
+    const decPct = (decRatePerFt != null && decRatePerFt > 0) ? (decRatePerFt/doorRate)*100 : null;
+    reveal.innerHTML = `
+      <div>Regular panels: <strong>${panelEntered?`${Math.round(panelPct*10)/10}% of door cost`:'—'}</strong>${panelCost>0?` <span style="color:#9ca3af">(≈ ${CUR()}${panelRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>
+      <div>Decorative panels: <strong>${decPct!=null?`${Math.round(decPct*10)/10}% of door cost`:'not offered'}</strong>${decRatePerFt!=null?` <span style="color:#9ca3af">(≈ ${CUR()}${decRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>`;
+  };
+
+  window.mqphSaveIslandPanelPricing = async function() {
+    const doorId = document.getElementById('mqph-island-refdoor')?.value;
+    const doorRec = lineItems.find(r => r.id === doorId);
+    const doorRate = doorRec?.fields['Rate'] || 0;
+    const panelCostRaw = document.getElementById('mqph-island-panelcost')?.value;
+    const decCostRaw = document.getElementById('mqph-island-decorativecost')?.value;
+    const panelCost = panelCostRaw !== '' && panelCostRaw != null ? parseFloat(panelCostRaw) : 0;
+    const decCost = decCostRaw !== '' && decCostRaw != null ? parseFloat(decCostRaw) : null;
+    if (!doorId || !doorRate) { alert('Pick a door style with a rate above ' + CUR() + '0 to compare against.'); return; }
+    // 0 is a valid, intentional value here (Jordan 2026-10-02) -- a
+    // lower-end shop that doesn't use finished end panels at all (just the
+    // box material, front and back) should be able to save that
+    // explicitly. Originally this also required the field to be
+    // non-blank (treating blank as "untouched, don't save" rather than
+    // "0"), but Jordan 2026-10-03 asked for blank to just mean 0 outright
+    // -- "if the price lines are blank it wont save. only if i type zero.
+    // make blank mean zero please" -- so blank now saves the same as
+    // typing 0 (panelCost above already resolves blank to 0; only a
+    // genuinely non-numeric entry or a negative number still blocks).
+    if (isNaN(panelCost) || panelCost < 0) { alert('Enter a valid price (0 or higher) for the finished flat panel — leave it blank or enter 0 if your shop doesn\'t charge extra for finished end panels.'); return; }
+
+    const panelRatePerFt = panelCost / ISLAND_PANEL_WIDTH_FT;
+    const decRatePerFt = (decCost != null && decCost > 0) ? decCost / ISLAND_PANEL_WIDTH_FT : null;
+    const panelPct = Math.round(((panelRatePerFt/doorRate)*100)*100)/100;
+    const decorativePct = (decRatePerFt != null && decRatePerFt > 0) ? Math.round(((decRatePerFt/doorRate)*100)*100)/100 : null;
+    const cfg = {
+      refDoorId: doorId,
+      refDoorName: doorRec.fields['Name'] || '',
+      panelFlatQuote: panelCost,
+      decorativeFlatQuote: (decCost != null && decCost > 0) ? decCost : null,
+      panelPct,
+      decorativePct,
+    };
+
+    const btn = document.getElementById('mqph-island-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Island panel pricing': JSON.stringify(cfg) });
+      shopRecord.fields['Island panel pricing'] = JSON.stringify(cfg);
+      _mqphExpandedCats.add('islandpanel');
+      await loadAndRender();
+    } catch(e) {
+      console.error('Failed to save island panel pricing', e);
+      alert('Something went wrong saving this — please try again.');
+    } finally {
+      // On success this `btn` node has already been discarded by
+      // loadAndRender() (the whole section re-renders from the
+      // newly-saved cfg, including a fresh green "saved" button) — these
+      // lines then run harmlessly against a detached node. On failure
+      // it's still the live node, and its classList is untouched by the
+      // "Saving…" step above, so whichever state it was already in
+      // (plain, or green from an earlier successful save) tells us the
+      // right label to restore rather than always forcing it back to the
+      // unsaved label.
+      if (btn) { btn.disabled = false; btn.textContent = btn.classList.contains('mqph-btn-saved') ? '✓ Island panel pricing saved' : 'Save island panel pricing →'; }
+    }
+  };
+
+  // Per-door decorative-island-panel tagging — lives in the Island panel
+  // pricing checklist (buildIslandPanelHtml), not a separate Save button.
+  // Each toggle saves instantly, same lightweight pattern as mqphToggle
+  // (the per-item Active switch) above: flip the UI, update the in-memory
+  // `lineItems` record so the rest of the page stays consistent without a
+  // full reload, then persist. Also patches the matching door's "🎨
+  // Decorative panel" badge in the Door Styles category list directly (by
+  // id) in case that section happens to be open at the same time.
+  //
+  // Stored as `Hide decorative island panel` (true = don't offer it),
+  // NOT the positive `Offers decorative island panel` the UI's wording
+  // suggests — deliberately inverted. Jordan 2026-10-03: "Clear all
+  // doesn't work for unchecking." Root cause: Airtable Checkbox fields can
+  // only ever come back as `true` or be completely ABSENT from the
+  // record — PATCHing one with `false` does uncheck it, but the next GET
+  // just omits the key again, identically to a field that was never
+  // touched at all. There is no way to tell "explicitly off" apart from
+  // "never set" using a single field whose on-state is the default. So a
+  // scheme built on "`!== false` means on" can never actually persist an
+  // "off" — the moment the page reloads, Airtable hands back "absent"
+  // again and that reads right back as on. Flipping which state is
+  // default-shown fixes this for free: the field's absent/false state
+  // (what Airtable actually guarantees you get back) now MEANS the
+  // desired default (show), and the one state Airtable persists reliably
+  // (`true`) is used for the one state that actually needs to stick
+  // (hide). Never go back to writing `false`/unchecking this kind of
+  // field to mean "off" — always flip the field's polarity instead so
+  // "off" is the one explicitly SET.
+  window.mqphToggleDecorativeDoor = async function(doorId, checked) {
+    const rec = lineItems.find(r => r.id === doorId);
+    if (!rec) return;
+    const hide = !checked;
+    rec.fields['Hide decorative island panel'] = hide;
+    const badge = document.getElementById(`mqph-door-row-decobadge-${doorId}`);
+    if (badge) badge.style.display = checked ? '' : 'none';
+    mqphSyncSelectAllDecorativeBtn();
+    try {
+      await atUpdate(LINE_ITEMS_TABLE, doorId, { 'Hide decorative island panel': hide });
+    } catch(e) {
+      console.error('Failed to save decorative island panel tag', e);
+      alert('Something went wrong saving that — please try again.');
+      // Roll back the optimistic UI update so the checkbox/badge don't
+      // silently disagree with what's actually saved.
+      rec.fields['Hide decorative island panel'] = !hide;
+      const cb = document.getElementById(`mqph-island-decocb-${doorId}`);
+      if (cb) cb.checked = !checked;
+      if (badge) badge.style.display = !checked ? '' : 'none';
+      mqphSyncSelectAllDecorativeBtn();
+    }
+  };
+
+  // "Select all" / "Clear all" toggles every door style at once. Unlike the
+  // single-door toggle above, this fires several writes together, so it
+  // follows this file's existing bulk-save pattern (e.g. mqphSaveBulkEdit)
+  // instead: Promise.all the writes, then re-render from the refreshed
+  // data rather than hand-patching every row/checkbox individually.
+  window.mqphToggleAllDecorativeDoors = async function() {
+    const doors = getByCategory('door');
+    if (!doors.length) return;
+    const turningOn = !doors.every(d => d.fields['Hide decorative island panel'] !== true);
+    const hide = !turningOn;
+    const btn = document.getElementById('mqph-island-decoselectall-btn');
+    if (btn) { btn.disabled = true; }
+    try {
+      await Promise.all(doors.map(d => atUpdate(LINE_ITEMS_TABLE, d.id, { 'Hide decorative island panel': hide })));
+      doors.forEach(d => { d.fields['Hide decorative island panel'] = hide; });
+      _mqphExpandedCats.add('islandpanel');
+      await loadAndRender();
+    } catch(e) {
+      console.error('Failed to update decorative island panel tags', e);
+      alert('Something went wrong saving that — please try again.');
+      if (btn) btn.disabled = false;
+    }
+  };
+
+  // Keeps the "Select all"/"Clear all" button's label in sync after a
+  // single-door toggle, without needing a full re-render for that alone.
+  function mqphSyncSelectAllDecorativeBtn() {
+    const btn = document.getElementById('mqph-island-decoselectall-btn');
+    if (!btn) return;
+    const doors = getByCategory('door');
+    const allOn = doors.length > 0 && doors.every(d => d.fields['Hide decorative island panel'] !== true);
+    btn.textContent = allOn ? 'Clear all' : 'Select all';
   }
 
   // Tall cabinet mini wizard state
