@@ -2550,13 +2550,14 @@
     // calcCabinet's island pricing comment) — the static markup below always
     // renders just the "Standard finished ends" option; whether "Decorative
     // finished ends" is available at all is now decided live, in
-    // mqRefreshIslandPanelOption (wireWidget), which checks both the shop's
-    // "Island panel pricing" setup AND whether the customer's currently-
-    // selected base door is NOT tagged `Hide decorative island panel`. That
-    // function runs once at initial setup and again on every base-door
-    // change, so it has to be the sole place this gate is evaluated — doing
-    // it here too (statically, at render time) would only reflect whichever
-    // door happened to be selected first.
+    // mqRefreshIslandPanelOption (wireWidget), which looks up which island
+    // panel style (if any) the customer's currently-selected base door is
+    // tagged to (`Island panel style`, set on the Pricing tab) and checks
+    // whether THAT style offers decorative panels. That function runs once
+    // at initial setup and again on every base-door change, so it has to be
+    // the sole place this gate is evaluated — doing it here too (statically,
+    // at render time) would only reflect whichever door happened to be
+    // selected first.
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -2741,13 +2742,13 @@
           <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
               <input type="checkbox" id="mq-${prefix}-island-double" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              This is a double-row (back-to-back) island
+              This is a double-row (back-to-back) island <span style="color:#6b7280;font-weight:400">(No need to double measure, we will add it in for you)</span>
             </label>
           </div>
           <div class="mq-field" id="mq-${prefix}-island-dw-wrap" style="display:none;margin-top:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
               <input type="checkbox" id="mq-${prefix}-island-dw" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              Is there a dishwasher in the island? <span style="color:#6b7280;font-weight:400">If so, we will account for it.</span>
+              Is there a dishwasher in the island? <span style="color:#6b7280;font-weight:400">If checked, we will account for one.</span>
             </label>
           </div>
           <div class="mq-field" style="margin-top:10px">
@@ -3635,18 +3636,15 @@
       // one just became authoritative.
       mqRefreshIslandPanelOption(prefix);
     };
-    // Decorative island panels are gated TWO ways now (per Jordan
-    // 2026-10-02): the shop has to have actually calibrated a decorative
-    // panel price at all (shop['Island panel pricing'].decorativePct —
-    // same shop-wide gate cabinetForm used to check statically), AND the
-    // customer's currently-selected BASE door must NOT be individually
-    // tagged `Hide decorative island panel` on the Pricing tab (e.g.
-    // shaker doors come in a matching panel, melamine slab doesn't). Both
-    // conditions can change independently after first render — the shop
-    // gate never does within one widget load, but the door selection
-    // obviously does — so this re-derives the door side fresh every call
-    // rather than once, and has to run on every base-door change, not just
-    // at initial setup.
+    // Decorative island panels are gated by which island panel STYLE (per
+    // Jordan 2026-10-03 rework — see calcCabinet's island pricing comment
+    // for the full story) the customer's currently-selected BASE door is
+    // tagged to, and whether THAT style offers decorative panels at all.
+    // No door, or a door tagged to no style (or a since-removed one), means
+    // no decorative option — same as a style that was never calibrated.
+    // Re-derives this fresh every call rather than once, and has to run on
+    // every base-door change, not just at initial setup, since the door
+    // selection obviously changes after first render.
     //
     // "Base door" here means whichever <select> calcCabinet itself treats
     // as authoritative for bDoorRate: mq-${prefix}-b-door when "different
@@ -3657,34 +3655,21 @@
     window.mqRefreshIslandPanelOption = function(prefix) {
       const sel = document.getElementById(`mq-${prefix}-island-panel`);
       if (!sel) return;
-      let islandPanelCfg = {};
-      try { islandPanelCfg = shop['Island panel pricing'] ? JSON.parse(shop['Island panel pricing']) : {}; } catch(e) { islandPanelCfg = {}; }
-      const shopOffersDecorative = islandPanelCfg.decorativePct !== undefined && islandPanelCfg.decorativePct !== null && islandPanelCfg.decorativePct !== '';
+      let islandPanelStyles = [];
+      try { islandPanelStyles = shop['Island panel styles'] ? JSON.parse(shop['Island panel styles']) : []; } catch(e) { islandPanelStyles = []; }
       const bDoorKey = diffOn[prefix] ? gv(`mq-${prefix}-b-door`) : gv(`mq-${prefix}-door`);
       const m = /^dyn_(\d+)$/.exec(bDoorKey || '');
       // Legacy/fallback shops (hasDynamic===false) use hardcoded keys like
       // 'slab'/'shaker' instead of dyn_N, so this regex never matches and
       // decorative correctly never shows for them — consistent with the
-      // whole feature depending on real per-door line items plus shop-wide
-      // pricing calibration anyway. Same for bDoorKey==='none' (no door
-      // selected) — panel cost is already $0 with no door picked regardless
-      // (bDoorRate===0), so hiding the option there too is just honest.
+      // whole feature depending on real per-door line items plus a style
+      // actually calibrated for them anyway. Same for bDoorKey==='none' (no
+      // door selected) — panel cost is already $0 with no door picked
+      // regardless (bDoorRate===0), so hiding the option there too is just
+      // honest.
       const doorRec = m ? (li.doorStyles||[])[parseInt(m[1], 10)] : null;
-      // Defaults to ON, not off (Jordan 2026-10-03) — read off the
-      // INVERTED field `Hide decorative island panel`, not a positive
-      // "Offers..." field. A door only counts as opted out once that's
-      // been explicitly checked true on the Pricing tab's checklist, so a
-      // shop that's never touched that checklist still has every door
-      // offering the decorative option instead of silently offering none.
-      // Has to be the inverted field specifically — Airtable Checkbox
-      // fields can only ever read back as `true` or be completely absent,
-      // never a real `false`, so a positive field whose unset/false state
-      // is supposed to mean "on" can never actually have an "off" written
-      // to it that survives a reload (it silently reverts to "on" every
-      // time). See pricing-helper-v2.js's mqphToggleDecorativeDoor
-      // comment for the full story — matches the same reading there.
-      const doorOffersDecorative = !!doorRec && doorRec['Hide decorative island panel'] !== true;
-      const showDecorative = shopOffersDecorative && doorOffersDecorative;
+      const matchedStyle = (doorRec && doorRec['Island panel style']) ? islandPanelStyles.find(s => s.id === doorRec['Island panel style']) : null;
+      const showDecorative = !!matchedStyle && matchedStyle.offersDecorative === true && matchedStyle.decorativePct != null;
       const existingOption = sel.querySelector('option[value="decorative"]');
       if (showDecorative && !existingOption) {
         sel.insertAdjacentHTML('beforeend', `<option value="decorative">Decorative finished ends</option>`);
@@ -6198,32 +6183,51 @@ window.mqTogDrawerConfig=(prefix)=>{
       //   - Install: always the normal BASE install rate, regardless of row
       //     count — installing a floor-standing island is a base-cabinet-
       //     style job either way (Jordan's call).
-      //   - Panel cost (both "Regular" and "Decorative"): as of 2026-09-30
-      //     this is no longer a % of box price, or a flat pass-through of
-      //     the door rate — it's exposedPanelFt × the customer's selected
-      //     door's own rate (bDoorRate) × a shop-wide % calibrated once in
-      //     the Pricing tab ("Island panel pricing" — see
-      //     mqphSaveIslandPanelPricing in pricing-helper-v2.js). That shop
-      //     quotes a real panel (and, optionally, a real decorative panel)
-      //     against one reference door style, and we turn that into a %
-      //     of THAT door's cost — then the widget applies the same % against
-      //     whichever door style the customer actually picked on this quote.
+      //   - Panel cost (both "Regular" and "Decorative"): exposedPanelFt ×
+      //     the customer's selected door's own rate (bDoorRate) × a % —
+      //     but as of Jordan's 2026-10-03 rework, that % comes from
+      //     whichever island panel STYLE the customer's selected door is
+      //     tagged to (`Island panel style`, set on the Pricing tab's
+      //     per-style door-tagging list — see mqphSaveIslandStyle /
+      //     mqphToggleIslandStyleDoor in pricing-helper-v2.js), not one
+      //     single shop-wide %. Reasoning: a panel's cost legitimately
+      //     scales with the door's SPECIES (maple vs. rift oak vs. hickory
+      //     really do cost proportionally different flat panels, and that
+      //     should track whichever door the customer picks), but NOT with
+      //     the door's STYLE/profile (shaker vs. raised panel) — a flat
+      //     panel costs the same regardless of style. One shop-wide ratio
+      //     conflated both, so a shop with both shaker and raised panel
+      //     doors got wildly different (and wrong) panel prices depending
+      //     on style alone. Grouping doors into shop-named styles, each
+      //     calibrated against its own reference door, fixes that: species
+      //     differences within one style still scale correctly against the
+      //     chosen door's own rate (same mechanism as before), but a
+      //     style's ratio never leaks onto a door from a different style.
+      //     A door untagged to any style (or tagged to one that's since
+      //     been removed) gets $0 panel upcharge — box and install still
+      //     price normally — rather than guessing; the Pricing tab's
+      //     Island panel pricing section surfaces untagged doors in its
+      //     header so this doesn't go unnoticed.
       //   - exposedPanelFt is what actually needs a finished panel, not the
       //     whole island run: a single-row island exposes both ends (2ft
       //     each) AND its full back length (nothing behind it to hide it),
       //     so 4 + islandFt. A double-row (back-to-back) island has no
       //     exposed back — the second row covers it — just two deeper 3ft
       //     ends, so a flat 6 regardless of islandFt (Jordan 2026-09-30).
-      //   - Decorative panels are optional per shop — if the shop never
-      //     quoted a comparison decorative panel, islandDecorativePct is
-      //     null and the "Decorative panels" <option> isn't even rendered
-      //     in cabinetForm, so islandPanel can't actually come back
-      //     'decorative' in that case — the null-guard below is just
+      //   - Decorative panels are optional per style — if the matched
+      //     style never offers decorative (or no style matched at all),
+      //     islandDecorativePct is null and the "Decorative panels"
+      //     <option> isn't even rendered in cabinetForm (see
+      //     mqRefreshIslandPanelOption), so islandPanel can't actually come
+      //     back 'decorative' in that case — the null-guard below is just
       //     defensive.
-      let islandPanelCfg = {};
-      try { islandPanelCfg = shop['Island panel pricing'] ? JSON.parse(shop['Island panel pricing']) : {}; } catch(e) { islandPanelCfg = {}; }
-      const islandPanelPct = parseFloat(islandPanelCfg.panelPct) || 0;
-      const islandDecorativePct = (islandPanelCfg.decorativePct !== undefined && islandPanelCfg.decorativePct !== null && islandPanelCfg.decorativePct !== '') ? parseFloat(islandPanelCfg.decorativePct) : null;
+      let islandPanelStyles = [];
+      try { islandPanelStyles = shop['Island panel styles'] ? JSON.parse(shop['Island panel styles']) : []; } catch(e) { islandPanelStyles = []; }
+      const bDoorStyleMatch = /^dyn_(\d+)$/.exec(bDoorKey || '');
+      const bDoorRec = bDoorStyleMatch ? (li.doorStyles||[])[parseInt(bDoorStyleMatch[1], 10)] : null;
+      const matchedIslandStyle = (bDoorRec && bDoorRec['Island panel style']) ? islandPanelStyles.find(s => s.id === bDoorRec['Island panel style']) : null;
+      const islandPanelPct = matchedIslandStyle ? (parseFloat(matchedIslandStyle.panelPct) || 0) : 0;
+      const islandDecorativePct = (matchedIslandStyle && matchedIslandStyle.offersDecorative === true && matchedIslandStyle.decorativePct != null) ? parseFloat(matchedIslandStyle.decorativePct) : null;
 
       const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
