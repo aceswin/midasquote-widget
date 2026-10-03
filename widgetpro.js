@@ -2260,7 +2260,7 @@
   // "Open"/"Close" + arrow on the right. `key` must be unique per section
   // (used to build the mq-${key}-body / -arrow / -label ids mqToggleCollapse
   // and mqRenumberSteps both key off of).
-  function collapsibleHeader(key, title, startOpen) {
+  function collapsibleHeader(key, title, startOpen, titleId) {
     // stopPropagation so this doesn't also trigger the surrounding section's
     // own "click anywhere to open" handler (mqOpenIfClosed) — this header's
     // click already fully manages toggling both directions by itself. Since
@@ -2268,8 +2268,13 @@
     // ever seeing the click, it's called explicitly here too, so clicking
     // the header clears the grey/upcoming state exactly like clicking
     // anywhere else in the section already does.
+    // titleId is optional — a couple of sections (countertop "surfaces"
+    // titles) have their text rewritten elsewhere by id (mqAddSurface's
+    // scroll target, mqTogUseCab's label swap), so this lets the generic
+    // header still carry that exact id instead of forcing every caller to
+    // hand-roll its own <p class="mq-sec-title"> markup.
     return `<div class="mq-sec-header-row" onclick="event.stopPropagation();mqToggleCollapse('${key}');mqJumpToSectionIfNeeded(event.currentTarget.closest('.mq-sec'))">
-      <p class="mq-sec-title">${title}</p>
+      <p class="mq-sec-title"${titleId ? ` id="${titleId}"` : ''}>${title}</p>
       <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <span id="mq-${key}-label" style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">${startOpen ? 'Close' : 'Open'}</span>
         <span class="mq-collapse-arrow${startOpen ? ' open' : ''}" id="mq-${key}-arrow">▶</span>
@@ -2294,7 +2299,18 @@
   }
 
   function cabinetForm(prefix, specs, data) {
-    const { li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
+    const { shop, li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
+    // Decorative island panels are optional per shop AND per door style (see
+    // calcCabinet's island pricing comment) — the static markup below always
+    // renders just the "Standard finished ends" option; whether "Decorative
+    // finished ends" is available at all is now decided live, in
+    // mqRefreshIslandPanelOption (wireWidget), which checks both the shop's
+    // "Island panel pricing" setup AND whether the customer's currently-
+    // selected base door is NOT tagged `Hide decorative island panel`. That
+    // function runs once at initial setup and again on every base-door
+    // change, so it has to be the sole place this gate is evaluated — doing
+    // it here too (statically, at render time) would only reflect whichever
+    // door happened to be selected first.
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -2384,8 +2400,9 @@
           <div id="mq-${prefix}-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
         </div>
       </div>
-      <div class="mq-sec" id="mq-${prefix}-si-field">
-        <p class="mq-sec-title">${hasInstall ? 'Supply + install' : 'Supply'}</p>
+      <div class="mq-sec" id="mq-${prefix}-si-field" onclick="mqOpenIfClosed('${prefix}-si')">
+        ${collapsibleHeader(`${prefix}-si`, hasInstall ? 'Supply + install' : 'Supply')}
+        <div id="mq-${prefix}-si-body" style="display:none">
         <div style="background:linear-gradient(135deg,#0f2a52,#1e3a5f);border:2px solid #fbbf24;border-radius:12px;padding:16px 18px">
           <div class="mq-field"><label class="mq-label" style="font-size:14px;font-weight:700;color:#fbbf24">${hasInstall ? 'Supply + install?' : 'Supply'}</label>
             <p class="mq-hint" style="margin-bottom:8px;color:#cbd5e1">${hasInstall ? "Let us know if you just need the cabinets themselves (supply only), or if you'd also like us to install them for you (supply + install)." : 'This shop offers supply only — installation is not included.'}</p>
@@ -2393,22 +2410,11 @@
           <div class="mq-field" style="margin-top:0.75rem"><label class="mq-label" style="font-size:14px;font-weight:700;color:#fbbf24;margin-bottom:8px;display:block">Remove existing cabinets?</label>
             <select id="mq-${prefix}-removal"><option value="no">No removal needed</option><option value="yes">Yes — remove & dispose</option></select></div>
         </div>
-      </div>
-      <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec">
-        <p class="mq-sec-title">Cabinet measurements</p>
-        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
-        <div class="mq-grid3">
-          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
-          </div>
-          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
-            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
-          </div>
-          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
-            <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
         </div>
+      </div>
+      <div class="mq-sec" id="mq-${prefix}-cabinet-selections-sec" onclick="mqOpenIfClosed('${prefix}-cabinet-selections')">
+        ${collapsibleHeader(`${prefix}-cabinet-selections`, 'Cabinet selections')}
+        <div id="mq-${prefix}-cabinet-selections-body" style="display:none">
         <div class="mq-tog-row" onclick="mqTogDiff('${prefix}')">
           <div class="mq-tog" id="mq-${prefix}-diff-tog"></div>
           <label style="font-size:14px;cursor:pointer">Different styles for uppers and lowers</label>
@@ -2419,7 +2425,7 @@
             <select id="mq-${prefix}-mat" style="display:none">${mOpts}</select></div>
           <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
             ${pickerRow(`mq-${prefix}-door`, dItems, null, 'door')}
-            <select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
+            <select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value);mqRefreshIslandPanelOption('${prefix}')" style="display:none">${dOpts}</select></div>
           ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
             ${pickerRow(`mq-${prefix}-hinge`, hingeItems)}
             <select id="mq-${prefix}-hinge" style="display:none">${hingeOpts}</select></div>`:''}
@@ -2443,15 +2449,66 @@
               <select id="mq-${prefix}-b-mat" style="display:none">${mOpts}</select></div>
             <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
               ${pickerRow(`mq-${prefix}-b-door`, dItems, null, 'door')}
-              <select id="mq-${prefix}-b-door" style="display:none">${dOpts}</select></div>
+              <select id="mq-${prefix}-b-door" onchange="mqRefreshIslandPanelOption('${prefix}')" style="display:none">${dOpts}</select></div>
             ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
               ${pickerRow(`mq-${prefix}-b-hinge`, hingeItems)}
               <select id="mq-${prefix}-b-hinge" style="display:none">${hingeOpts}</select></div>`:''}
           </div>
         </div>
+        </div>
       </div>
-      ${hasDrawers?`<div class="mq-sec" id="mq-${prefix}-drawers-sec">
-        <p class="mq-sec-title">Drawers</p>
+      <div class="mq-sec" id="mq-${prefix}-cabinet-measurements-sec" onclick="mqOpenIfClosed('${prefix}-cabinet-measurements')">
+        ${collapsibleHeader(`${prefix}-cabinet-measurements`, 'Cabinet measurements')}
+        <div id="mq-${prefix}-cabinet-measurements-body" style="display:none">
+        ${Object.keys(TALL_CAB).length > 0 ? `<div style="background:#f0fdf4;border:2px solid #4ade80;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;line-height:1.5">📐 <strong>Note:</strong> Do not include tall cabinets (eg. Pantry cabinet, Tall oven unit, etc.) in your linear foot measurements. Add them in the tall cabinets section.</div>` : ''}
+        <div class="mq-grid3">
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Base cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-bft" value="0" min="0" max="60" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','b',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','b',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-bft`,'linear','Base cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
+          </div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Upper cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div class="mq-qty-ctrl"><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',-0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',-0.5,event)" ontouchend="mqLinFtHoldStop()">−</button><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-uft" value="0" min="0" max="60" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div><button class="mq-qty-btn" type="button" style="display:none" onmousedown="mqLinFtHoldStart('${prefix}','u',0.5,event)" onmouseup="mqLinFtHoldStop()" onmouseleave="mqLinFtHoldStop()" ontouchstart="mqLinFtHoldStart('${prefix}','u',0.5,event)" ontouchend="mqLinFtHoldStop()">+</button></div>${calcBtn(`mq-${prefix}-uft`,'linear','Upper cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your sections & convert inches/mm to linear feet.</div>
+          </div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Height (uppers)</label>
+            <select id="mq-${prefix}-ht"><option value="standard">Standard (30")</option><option value="tall">Extended (36–40")</option></select></div>
+        </div>
+        <div id="mq-${prefix}-island-btn-wrap" style="display:none;margin-top:4px">
+          <button type="button" class="mq-add-surface-btn" onclick="mqToggleIslandSection('${prefix}')">🏝️ + Add island</button>
+        </div>
+        <div id="mq-${prefix}-island-fields-wrap" style="display:none;margin-top:10px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:14px;font-weight:700;color:#111">🏝️ Island cabinets</span>
+            <button type="button" onclick="mqRemoveIslandSection('${prefix}')" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;padding:0">Remove</button>
+          </div>
+          <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Island cabinets (lin ft)</label>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
+            <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your island's sections & convert inches/mm to linear feet.</div>
+          </div>
+          <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input type="checkbox" id="mq-${prefix}-island-double" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              This is a double-row (back-to-back) island
+            </label>
+          </div>
+          <div class="mq-field" id="mq-${prefix}-island-dw-wrap" style="display:none;margin-top:10px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input type="checkbox" id="mq-${prefix}-island-dw" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              If checked, we will account for one.
+            </label>
+          </div>
+          <div class="mq-field" style="margin-top:10px">
+            <label class="mq-label" style="display:block;margin-bottom:8px">Island panels</label>
+            <select id="mq-${prefix}-island-panel">
+              <option value="regular">Standard finished ends</option>
+            </select>
+          </div>
+        </div>
+        </div>
+      </div>
+      ${hasDrawers?`<div class="mq-sec" id="mq-${prefix}-drawers-sec" onclick="mqOpenIfClosed('${prefix}-drawers')">
+        ${collapsibleHeader(`${prefix}-drawers`, 'Drawers')}
+        <div id="mq-${prefix}-drawers-body" style="display:none">
         <div class="mq-field">
           <label class="mq-label">Drawer amount</label>
           <div style="font-size:13px;color:#4b5563;margin-bottom:6px;line-height:1.5">🗄️ <strong>Mostly drawers</strong> means that, aside from your sink and corner cabinets, 50% or more of your base cabinets are full drawer banks.</div>
@@ -2467,6 +2524,7 @@
           <label class="mq-label">Drawer type</label>
           ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems, null, 'drawer')}
           <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
+        </div>
         </div>
       </div>`:''}
       ${Object.keys(TALL_CAB).length > 0 ? `
@@ -2720,12 +2778,14 @@
             <div id="mq-ct-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7">${defaultMeasureGuideHTML()}</div>
           </div>
         </div>
-        <div class="mq-sec">
-          <p class="mq-sec-title" id="mq-ct-surfaces-title">Countertop surfaces</p>
+        <div class="mq-sec" id="mq-ct-surfaces-sec" onclick="mqOpenIfClosed('ct-surfaces')">
+          ${collapsibleHeader('ct-surfaces', 'Countertop surfaces', false, 'mq-ct-surfaces-title')}
+          <div id="mq-ct-surfaces-body" style="display:none">
           <div id="mq-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('ct')">+ Add another surface</button>
           <div class="mq-empty-calc-msg" id="mq-ct-surface-add-msg" style="display:none"></div>
           <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
+          </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-ct-calc-btn" onclick="mqCalcCountertops()">Calculate countertop estimate</button>
         <div class="mq-empty-calc-msg" id="mq-ct-empty-calc-msg" style="display:none">No selections have been made, or no linear feet was entered — please double-check before calculating.</div>
@@ -2763,7 +2823,9 @@
         ${cabinetForm('b', specs, data)}
         <div id="mq-b-countertop-details-sec">
         <div class="mq-both-divider"><div class="mq-both-divider-line"></div><div class="mq-both-divider-label">🪨 Countertop details</div><div class="mq-both-divider-line"></div></div>
-        <div class="mq-sec" id="mq-b-ct-options-sec"><p class="mq-sec-title">Countertop options</p>
+        <div class="mq-sec" id="mq-b-ct-options-sec" onclick="mqOpenIfClosed('b-ct-options')">
+          ${collapsibleHeader('b-ct-options', 'Countertop options')}
+          <div id="mq-b-ct-options-body" style="display:none">
           <div class="mq-grid2">
             <div class="mq-field"><label class="mq-label">${hasCtInstall ? 'Supply + install?' : 'Supply'}</label>
               ${hasCtInstall ? '' : '<p class="mq-hint" style="margin-bottom:6px">This shop offers supply only — installation is not included.</p>'}
@@ -2826,11 +2888,15 @@
               <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
           </div>
+          </div>
         </div>
-        <div class="mq-sec"><p class="mq-sec-title" id="mq-b-ct-surfaces-title">Additional countertop surfaces</p>
+        <div class="mq-sec" id="mq-b-ct-surfaces-sec" onclick="mqOpenIfClosed('b-ct-surfaces')">
+          ${collapsibleHeader('b-ct-surfaces', 'Additional countertop surfaces', false, 'mq-b-ct-surfaces-title')}
+          <div id="mq-b-ct-surfaces-body" style="display:none">
           <div id="mq-b-ct-surfaces"></div>
           <button class="mq-add-surface-btn" onclick="mqAddSurface('b')">+ Add another surface</button>
           <div class="mq-empty-calc-msg" id="mq-b-surface-add-msg" style="display:none"></div>
+          </div>
         </div>
         </div>
         <button class="mq-calc-btn mq-calc-btn-both" id="mq-b-calc-btn" onclick="mqCalcBoth()">Calculate full project estimate ✨</button>
@@ -3342,6 +3408,128 @@
       // lowers" is switched on, so their overflow arrows never got a real
       // scrollWidth/clientWidth to measure until now.
       if (diffOn[prefix] && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
+      // Switching "Different styles for uppers and lowers" on/off swaps
+      // which <select> is authoritative for the base door (mq-${prefix}-
+      // b-door vs the shared mq-${prefix}-door — see calcCabinet's own
+      // diffOn[prefix]?...:... ternary for bDoorKey), and the two selects
+      // aren't kept in sync with each other while hidden, so the
+      // decorative-island-panel gate has to be re-checked against whichever
+      // one just became authoritative.
+      mqRefreshIslandPanelOption(prefix);
+    };
+    // Decorative island panels are gated TWO ways now (per Jordan
+    // 2026-10-02): the shop has to have actually calibrated a decorative
+    // panel price at all (shop['Island panel pricing'].decorativePct —
+    // same shop-wide gate cabinetForm used to check statically), AND the
+    // customer's currently-selected BASE door must NOT be individually
+    // tagged `Hide decorative island panel` on the Pricing tab (e.g.
+    // shaker doors come in a matching panel, melamine slab doesn't). Both
+    // conditions can change independently after first render — the shop
+    // gate never does within one widget load, but the door selection
+    // obviously does — so this re-derives the door side fresh every call
+    // rather than once, and has to run on every base-door change, not just
+    // at initial setup.
+    //
+    // "Base door" here means whichever <select> calcCabinet itself treats
+    // as authoritative for bDoorRate: mq-${prefix}-b-door when "different
+    // styles for uppers/lowers" is on, otherwise the shared mq-${prefix}-
+    // door. Decorative panel cost is explicitly priced off bDoorRate (see
+    // islandPanelCost in calcCabinet), never the upper door, so the upper
+    // door select intentionally isn't wired to call this at all.
+    window.mqRefreshIslandPanelOption = function(prefix) {
+      const sel = document.getElementById(`mq-${prefix}-island-panel`);
+      if (!sel) return;
+      let islandPanelCfg = {};
+      try { islandPanelCfg = shop['Island panel pricing'] ? JSON.parse(shop['Island panel pricing']) : {}; } catch(e) { islandPanelCfg = {}; }
+      const shopOffersDecorative = islandPanelCfg.decorativePct !== undefined && islandPanelCfg.decorativePct !== null && islandPanelCfg.decorativePct !== '';
+      const bDoorKey = diffOn[prefix] ? gv(`mq-${prefix}-b-door`) : gv(`mq-${prefix}-door`);
+      const m = /^dyn_(\d+)$/.exec(bDoorKey || '');
+      // Legacy/fallback shops (hasDynamic===false) use hardcoded keys like
+      // 'slab'/'shaker' instead of dyn_N, so this regex never matches and
+      // decorative correctly never shows for them — consistent with the
+      // whole feature depending on real per-door line items plus shop-wide
+      // pricing calibration anyway. Same for bDoorKey==='none' (no door
+      // selected) — panel cost is already $0 with no door picked regardless
+      // (bDoorRate===0), so hiding the option there too is just honest.
+      const doorRec = m ? (li.doorStyles||[])[parseInt(m[1], 10)] : null;
+      // Defaults to ON, not off (Jordan 2026-10-03) — reads the INVERTED
+      // field `Hide decorative island panel`, not a positive "Offers..."
+      // field. See widget.js's fuller comment on this exact line for why:
+      // Airtable Checkbox fields can't actually persist an explicit
+      // `false` (it round-trips as simply absent, same as untouched), so
+      // only a field whose "off" state is the one explicitly SET can
+      // ever reliably turn off.
+      const doorOffersDecorative = !!doorRec && doorRec['Hide decorative island panel'] !== true;
+      const showDecorative = shopOffersDecorative && doorOffersDecorative;
+      const existingOption = sel.querySelector('option[value="decorative"]');
+      if (showDecorative && !existingOption) {
+        sel.insertAdjacentHTML('beforeend', `<option value="decorative">Decorative finished ends</option>`);
+      } else if (!showDecorative && existingOption) {
+        // Falls back to 'regular' rather than leaving the select on a value
+        // that no longer has a matching <option> — an orphaned selected
+        // value on a native <select> silently reverts to whichever option
+        // IS still there anyway, but doing it explicitly keeps gv() and the
+        // live price in sync with what the customer now actually sees.
+        if (sel.value === 'decorative') sel.value = 'regular';
+        existingOption.remove();
+      }
+    };
+    // Islands — "+ Add island" just reveals the fields block in place (no
+    // repeatable cards like Tall cabinets; a kitchen gets one island
+    // measurement, single- or double-row — see the Mixed islands decision
+    // 2026-09-30). Setting a value's cleared via "Remove" below rather than
+    // just hiding the block, so a hidden-then-reopened section never comes
+    // back with a stale leftover number still quietly priced in.
+    window.mqToggleIslandSection=(prefix)=>{
+      const btnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
+      const fieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      if (btnWrap) btnWrap.style.display = 'none';
+      if (fieldsWrap) fieldsWrap.style.display = 'block';
+    };
+    window.mqRemoveIslandSection=(prefix)=>{
+      const btnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
+      const fieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      if (fieldsWrap) fieldsWrap.style.display = 'none';
+      if (btnWrap) btnWrap.style.display = '';
+      const ftEl = document.getElementById(`mq-${prefix}-islandft`);
+      if (ftEl) ftEl.value = 0;
+      const doubleEl = document.getElementById(`mq-${prefix}-island-double`);
+      if (doubleEl) doubleEl.checked = false;
+      const panelEl = document.getElementById(`mq-${prefix}-island-panel`);
+      if (panelEl) panelEl.value = 'regular';
+      const dwEl = document.getElementById(`mq-${prefix}-island-dw`);
+      if (dwEl) dwEl.checked = false;
+      const dwWrap = document.getElementById(`mq-${prefix}-island-dw-wrap`);
+      if (dwWrap) dwWrap.style.display = 'none';
+      if (window.mqTogDwOption) window.mqTogDwOption(prefix); // island dw cleared — restore the countertop "add space for dishwasher" checkbox if this room uses it
+      // Programmatic value changes above don't fire 'input'/'change' on
+      // their own — the container's delegated listener (which normally
+      // drives live recalc) never sees them, so the price would otherwise
+      // keep showing the removed island's cost until the next unrelated
+      // edit. Trigger it directly.
+      mqScheduleLiveRecalc();
+    };
+    // Island "double-row (back-to-back)" + "dishwasher in the island" work
+    // together: the dw question only makes sense for a double-row island
+    // (a single row's dishwasher doesn't create a mismatched back row), so
+    // toggling double-row shows/hides it, and it self-clears if double-row
+    // gets unchecked while it was on. Checking it also hides the separate
+    // "Add extra space for a dishwasher" checkbox in the Both tab's
+    // countertop section (mqTogDwOption, below) — that one's for a
+    // dishwasher along the wall run, which would double-count the same
+    // appliance if both were checked at once.
+    window.mqTogIslandDw=(prefix)=>{
+      const doubleEl = document.getElementById(`mq-${prefix}-island-double`);
+      const dwWrap = document.getElementById(`mq-${prefix}-island-dw-wrap`);
+      const isDouble = doubleEl?.checked === true;
+      if (dwWrap) dwWrap.style.display = isDouble ? '' : 'none';
+      if (!isDouble) {
+        const dwEl = document.getElementById(`mq-${prefix}-island-dw`);
+        if (dwEl) dwEl.checked = false;
+      }
+      if (window.mqTogDwOption) window.mqTogDwOption(prefix);
+      if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix);
+      mqScheduleLiveRecalc();
     };
     window.mqTogVanityNote=(prefix)=>{
       // Intentionally hidden from customers — the % adjustment itself still
@@ -4109,6 +4297,12 @@
       if (!scope) return [];
       return [...scope.querySelectorAll('.mq-sec')].filter(sec => sec.offsetParent !== null);
     }
+    // Exposed globally for the same reason as mqScrollWithOffset elsewhere —
+    // mqCheckBottomBounceAutoOpen (a sibling function declared outside
+    // wireWidget's scope) needs to check a section's position against the
+    // current guided step without being able to reach these closure-local
+    // names directly.
+    window.mqGetVisibleSections = mqGetVisibleSections;
 
     window.mqRenumberSteps = function(prefix) {
       const sections = mqGetVisibleSections(prefix);
@@ -4132,6 +4326,11 @@
     // step. Changing project type restarts the flow at step 1, since
     // section visibility itself may have changed.
     let _mqStepIndex = { c: 0, b: 0 };
+    // Same reasoning as mqGetVisibleSections just above — exposed as a
+    // reference (not copied) so mqCheckBottomBounceAutoOpen always sees
+    // whatever the guided-step flow has mutated this to, without owning a
+    // second, driftable copy of it.
+    window._mqStepIndex = _mqStepIndex;
 
     function mqEnsureStepFooter(sec, prefix, index, total) {
       const current = _mqStepIndex[prefix] || 0;
@@ -4195,12 +4394,33 @@
       setTimeout(() => { if (!btn.disabled) btn.click(); }, 500);
     }
 
+    // Tracks, per tab, how long to distrust a BACKWARD scroll-spy
+    // correction after an explicit Continue/Back just set the step index.
+    // The section being scrolled AWAY FROM just collapsed (much shorter
+    // now than before — the whole point of the accordion), and when the
+    // target is near the end of a now much shorter page there may not be
+    // enough room left to actually scroll it to center; the resulting
+    // smooth-scroll animation (clamped, bouncing, settling) can cross the
+    // centerline back over that previous section one or more times before
+    // it's done, which would otherwise make the passive scroll-spy snap
+    // the step right back to where it just came from. This is narrower
+    // than a flat "ignore everything" lock — it only ever suppresses a
+    // correction that would move the index BACKWARD from what
+    // Continue/Back just set, so a real forward scroll during the window
+    // still works immediately, and a direct click (handled separately,
+    // never gated by this) always wins.
+    let _mqStepNavLockUntil = {};
+    function mqLockStepNav(prefix) {
+      _mqStepNavLockUntil[prefix] = Date.now() + 1800;
+    }
+
     window.mqStepContinue = function(prefix) {
       const sections = mqGetVisibleSections(prefix);
       const wasLast = (_mqStepIndex[prefix] || 0) >= sections.length - 1;
       _mqStepIndex[prefix] = Math.min((_mqStepIndex[prefix] || 0) + 1, sections.length - 1);
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
+      mqLockStepNav(prefix);
       const next = sections[_mqStepIndex[prefix]];
       if (next) mqScrollTopNearCenter(next);
     };
@@ -4208,6 +4428,7 @@
     window.mqStepBack = function(prefix) {
       _mqStepIndex[prefix] = Math.max((_mqStepIndex[prefix] || 0) - 1, 0);
       window.mqUpdateStepFocus(prefix);
+      mqLockStepNav(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
       if (cur) mqScrollTopNearCenter(cur);
@@ -4231,9 +4452,72 @@
       }
     };
 
+    // A fast scroll on mobile can cross several short, still-collapsed
+    // sections before the flow ever gets a chance to react — each closed
+    // section is just a header row, so a whole run of them can cross the
+    // scroll-spy's centerline inside one scroll/animation frame. The ask:
+    // no matter how fast that happens, every section in between must still
+    // fully open, in order — "2 opens after 1, then 3 after 2," not a jump
+    // straight to wherever the scroll landed. This walks the step index one
+    // section at a time toward the real target, pausing briefly on each —
+    // exactly like a real step: mqUpdateStepFocus opens it and the section
+    // picks up wherever it was before (nothing forced shut, per the earlier
+    // fix above) — and smooth-scrolling to it, before settling on the
+    // section the scroll actually landed on. A gap of 0 or 1 (nothing was
+    // skipped) still jumps straight there, unchanged. A direct click always
+    // wins and cancels any walk in progress (mqCancelCatchup), since that's
+    // an explicit choice, not a skip to correct for.
+    let _mqCatchupActive = {};
+    let _mqCatchupToken = {};
+    // Reference (not copied), same reasoning as mqGetVisibleSections/
+    // _mqStepIndex above — mqCheckBottomBounceAutoOpen (outside this
+    // closure) needs to know when a walk already owns a tab's scrolling.
+    window._mqCatchupActive = _mqCatchupActive;
+    function mqCancelCatchup(prefix) {
+      if (!prefix) return;
+      _mqCatchupToken[prefix] = {};
+      _mqCatchupActive[prefix] = false;
+    }
+    function mqScrollJumpWithCatchup(sec, fromIdx) {
+      const tab = sec.closest('.mq-tab-content');
+      if (!tab) return;
+      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
+      if (!prefix) return;
+      const sections = mqGetVisibleSections(prefix);
+      const idx = sections.indexOf(sec);
+      // fromIdx lets the scroll-spy (see below) tell this exactly where the
+      // flow stood BEFORE the current batch of intersection changes, since
+      // _mqStepIndex itself may already have moved by the time this runs.
+      const current = (fromIdx == null) ? (_mqStepIndex[prefix] || 0) : fromIdx;
+      if (idx === -1 || idx === current) return;
+      const gap = Math.abs(idx - current);
+      if (gap <= 1) { window.mqJumpToSectionIfNeeded(sec); return; } // adjacent — nothing was skipped
+      const dir = idx > current ? 1 : -1;
+      const token = {};
+      _mqCatchupToken[prefix] = token;
+      _mqCatchupActive[prefix] = true;
+      function advance(step) {
+        if (_mqCatchupToken[prefix] !== token) return; // superseded — a click or a newer jump took over
+        _mqStepIndex[prefix] = step;
+        window.mqUpdateStepFocus(prefix);
+        const el = sections[step];
+        if (el) mqScrollTopNearCenter(el);
+        if (step === idx) {
+          setTimeout(() => { if (_mqCatchupToken[prefix] === token) _mqCatchupActive[prefix] = false; }, 320);
+          return;
+        }
+        setTimeout(() => advance(step + dir), 320);
+      }
+      advance(current + dir);
+    }
+    window.mqScrollJumpWithCatchup = mqScrollJumpWithCatchup;
+
     document.addEventListener('click', (e) => {
       const sec = e.target.closest('#midasquote-widget .mq-sec');
       if (!sec) return;
+      const tab = sec.closest('.mq-tab-content');
+      const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
+      if (prefix) mqCancelCatchup(prefix);
       mqJumpToSectionIfNeeded(sec);
     });
 
@@ -4241,16 +4525,54 @@
     // Continue or tapping into it — a shrunk-viewport IntersectionObserver
     // (top and bottom both pulled in 50%) leaves only a thin trigger line
     // at the exact vertical center of the screen; whichever section is
-    // crossing that line becomes the current step, reusing the exact same
-    // logic a click already runs. Re-observing is cheap and safe to repeat
-    // (observing an already-observed element is a no-op), so this just gets
-    // called again anywhere section visibility/DOM already gets refreshed,
-    // rather than needing a separate mutation-tracking setup.
+    // crossing that line becomes the current step. A slow scroll that only
+    // ever crosses one section at a time reuses the exact same instant-jump
+    // logic a click runs.
+    //
+    // A fast scroll is different: several sections can cross that thin
+    // centerline between two ticks, so the browser hands ALL of them to
+    // this callback in a single batch. Processing them one at a time, in
+    // order, used to silently defeat the catch-up walk above — jumping to
+    // entry #1 moves the step index forward by 1, which makes entry #2 look
+    // "adjacent" to that NEW position instead of to wherever the flow
+    // actually started, and so on down the batch, so a 5-section skip read
+    // as five separate 1-section hops and the walk never ran at all (this
+    // was the real bug behind the walk "not working" the first time this
+    // was tried). Fixed by resolving the WHOLE batch first, per tab: snapshot
+    // each tab's step index once before touching anything, keep only
+    // whichever entry in this batch is farthest from that snapshot (that's
+    // where the scroll actually ended up), and run exactly one jump per tab
+    // from that original position — never from a position an earlier entry
+    // in this same batch already moved.
     let _mqScrollSpyObserver = null;
     function mqObserveSectionsForScrollSpy() {
       if (!_mqScrollSpyObserver) {
         _mqScrollSpyObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => { if (entry.isIntersecting) mqJumpToSectionIfNeeded(entry.target); });
+          const startIdx = {};
+          const farthest = {};
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const tab = entry.target.closest('.mq-tab-content');
+            const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
+            if (!prefix) { mqJumpToSectionIfNeeded(entry.target); return; }
+            if (_mqCatchupActive[prefix]) return; // a walk already owns this tab right now — let it finish
+            if (!(prefix in startIdx)) startIdx[prefix] = _mqStepIndex[prefix] || 0;
+            const sections = mqGetVisibleSections(prefix);
+            const idx = sections.indexOf(entry.target);
+            if (idx === -1) return;
+            const dist = Math.abs(idx - startIdx[prefix]);
+            if (!farthest[prefix] || dist > farthest[prefix].dist) {
+              farthest[prefix] = { target: entry.target, idx, dist };
+            }
+          });
+          Object.keys(farthest).forEach(prefix => {
+            const { target, idx } = farthest[prefix];
+            const current = startIdx[prefix];
+            // See mqLockStepNav above — only a BACKWARD correction gets
+            // suppressed, and only while that lock is still active.
+            if (idx < current && Date.now() < (_mqStepNavLockUntil[prefix] || 0)) return;
+            mqScrollJumpWithCatchup(target, current);
+          });
         }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
       }
       document.querySelectorAll('#midasquote-widget .mq-sec').forEach(sec => _mqScrollSpyObserver.observe(sec));
@@ -4274,9 +4596,55 @@
       const cabActive = rowHasReal(`mq-${prefix}-mat`);
       const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
+      const cabSelSec = document.getElementById(`mq-${prefix}-cabinet-selections-sec`);
+      if (cabSelSec) cabSelSec.style.display = cabActive ? '' : 'none';
       const roomObjForMeasuring = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const measuringSec = document.getElementById(`mq-${prefix}-measuring-sec`);
       if (measuringSec) measuringSec.style.display = (roomObjForMeasuring && roomObjForMeasuring.hideMeasureGuide) ? 'none' : '';
+      // Island button — per-project-type opt-in (set in Project Types, off
+      // by default except the built-in Kitchen type). Switching to a project
+      // type that doesn't support islands hides BOTH the "+ Add island"
+      // button and, if it was already open, the fields themselves — and
+      // zeroes them out so a stale island entry from a previous project
+      // type can't silently keep charging after the switch (same guard
+      // calcCabinet below relies on, same pattern cabSectionActive already
+      // uses for Upper/Base).
+      const islandAllowed = cabActive && !!(roomObjForMeasuring && roomObjForMeasuring.showIslandButton);
+      const islandBtnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
+      const islandFieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      if (!islandAllowed) {
+        if (islandFieldsWrap) islandFieldsWrap.style.display = 'none';
+        if (islandBtnWrap) islandBtnWrap.style.display = 'none';
+        const islandFtEl = document.getElementById(`mq-${prefix}-islandft`);
+        if (islandFtEl) islandFtEl.value = 0;
+        const islandDoubleEl = document.getElementById(`mq-${prefix}-island-double`);
+        if (islandDoubleEl) islandDoubleEl.checked = false;
+        const islandDwElOff = document.getElementById(`mq-${prefix}-island-dw`);
+        if (islandDwElOff) islandDwElOff.checked = false;
+      } else if (islandFieldsWrap && islandFieldsWrap.style.display === 'none') {
+        // Island supported here but not currently opened — show the button,
+        // keep the fields collapsed (don't force it open just because the
+        // project type supports it).
+        if (islandBtnWrap) islandBtnWrap.style.display = '';
+      }
+      const islandDoubleWrap = document.getElementById(`mq-${prefix}-island-double-wrap`);
+      const islandDoubleShown = islandAllowed && roomObjForMeasuring.islandAllowDoubleRow;
+      if (islandDoubleWrap) islandDoubleWrap.style.display = islandDoubleShown ? '' : 'none';
+      // Dishwasher-in-island question only makes sense while double-row is
+      // both offered and actually checked — same dependency mqTogIslandDw
+      // enforces on a live toggle, re-applied here so a project-type switch
+      // (which can silently flip islandDoubleShown or the checkbox itself)
+      // can't leave it shown with nothing to depend on, or hidden-but-still-
+      // checked-and-priced.
+      const islandDoubleElNow = document.getElementById(`mq-${prefix}-island-double`);
+      const islandDwWrapNow = document.getElementById(`mq-${prefix}-island-dw-wrap`);
+      const islandDoubleCheckedNow = islandDoubleShown && islandDoubleElNow?.checked === true;
+      if (islandDwWrapNow) islandDwWrapNow.style.display = islandDoubleCheckedNow ? '' : 'none';
+      if (!islandDoubleCheckedNow) {
+        const islandDwElNow = document.getElementById(`mq-${prefix}-island-dw`);
+        if (islandDwElNow) islandDwElNow.checked = false;
+      }
+      if (window.mqTogDwOption) window.mqTogDwOption(prefix); // keep the wall-run dishwasher checkbox's visibility in sync with the above, regardless of call order
       // The "Cabinet details" divider only exists on the Both tab
       const cabDivider = document.getElementById(`mq-${prefix}-cabinet-divider`);
       if (cabDivider) cabDivider.style.display = cabActive ? '' : 'none';
@@ -5015,7 +5383,15 @@
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
       if (!wrap) return; // only exists on the Both tab
       const room = gv(`mq-${prefix}-room`);
-      const showDw = room==='kitchen' || room==='other';
+      // Hidden whenever the island's own "Is there a dishwasher in the
+      // island?" checkbox is active — that one already adds its 2ft to the
+      // countertop span (see calcCountertop), so showing this wall-run
+      // dishwasher checkbox too would let the same appliance get counted
+      // twice if someone checked both.
+      const islandDwWrap = document.getElementById(`mq-${prefix}-island-dw-wrap`);
+      const islandDwActive = islandDwWrap && islandDwWrap.style.display !== 'none'
+        && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
+      const showDw = (room==='kitchen' || room==='other') && !islandDwActive;
       wrap.style.display = showDw ? 'block' : 'none';
       if (!showDw) {
         const dwCheckbox = document.getElementById(`mq-${prefix}-cab-dw`);
@@ -5445,12 +5821,27 @@ window.mqTogDrawerConfig=(prefix)=>{
       const roomObj = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
       const materialAdjPct = roomObj ? (parseFloat(roomObj.materialAdjPct !== undefined ? roomObj.materialAdjPct : roomObj.adjustment) || 0) : 0;
       const upperMaterialAdjPct = roomObj ? (parseFloat(roomObj.upperMaterialAdjPct)||0) : 0;
+      // Islands used to silently inherit the Base/Upper cabinet % above (via
+      // bMatDoorHinge/uMat.rateU*upperVanityMult getting reused directly in
+      // the island cost below) — Jordan 2026-10-03: "base cabinets if
+      // inflated % wise, i think that would include island cabs...
+      // probably shouldnt... should probably have a separate spot." This is
+      // now its own independent knob, defaulting to 0 (no adjustment) for
+      // every project type unless a shop explicitly sets it on the Project
+      // Types screen's island settings — it no longer falls back to, or
+      // combines with, materialAdjPct/upperMaterialAdjPct in any way.
+      // BEHAVIOR CHANGE: any shop that already had a nonzero Base/Upper
+      // cabinet % AND islands enabled for that same project type will see
+      // island pricing for that project type change (drop the old bleed-
+      // through) the next time this ships — flagged to Jordan.
+      const islandMaterialAdjPct = roomObj ? (parseFloat(roomObj.islandMaterialAdjPct)||0) : 0;
       const installAdjPct  = roomObj ? (parseFloat(roomObj.installAdjPct)||0) : 0;
       const totalAdjPct    = roomObj ? (parseFloat(roomObj.totalAdjPct)||0) : 0;
       const hasRoomAdjustment = materialAdjPct !== 0;
       const roomAdjPct = materialAdjPct; // kept for anything still reading the old name
       const vanityMult = (100 + materialAdjPct) / 100;
       const upperVanityMult = (100 + upperMaterialAdjPct) / 100;
+      const islandVanityMult = (100 + islandMaterialAdjPct) / 100;
       const installMult = (100 + installAdjPct) / 100;
 
       const uInstall = (si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0) * installMult;
@@ -5473,6 +5864,109 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bMatCost = bFt * bMatDoorHinge;
       const bInstallCost = bFt * bInstall;
 
+      // Islands — opt-in per project type (the "Add island" button, set up
+      // in Project Types). Nothing here fires unless the customer actually
+      // opens that section (islandSectionActive), so a project type/shop
+      // that never touches this feature prices exactly as before.
+      //   - Box: single-row prices like an extra run of BASE cabinets
+      //     (bMatDoorHinge). Double-row (back-to-back) is really TWO rows —
+      //     a full base-depth row plus a shallower (~12–16") upper-depth
+      //     row behind it — so as of Jordan's 2026-09-30 correction it's
+      //     priced as both rows together, not upper alone like the original
+      //     build. The back row uses the UPPER box's material rate (it's
+      //     the shallow one) but — per Jordan's 2026-10-01 follow-up — the
+      //     BASE cabinet's own door/hinge selection, not the upper's: an
+      //     island's back side isn't really an "upper," it's just shallow,
+      //     so its doors should match whatever door style/hardware the
+      //     customer picked for their base cabinets, same as the front row.
+      //     That's islandBackRowMatDoorHinge below. No height multiplier
+      //     either way — an island is floor height regardless.
+      //   - Install: always the normal BASE install rate, regardless of row
+      //     count — installing a floor-standing island is a base-cabinet-
+      //     style job either way (Jordan's call).
+      //   - Panel cost (both "Regular" and "Decorative"): as of 2026-09-30
+      //     this is no longer a % of box price, or a flat pass-through of
+      //     the door rate — it's exposedPanelFt × the customer's selected
+      //     door's own rate (bDoorRate) × a shop-wide % calibrated once in
+      //     the Pricing tab ("Island panel pricing" — see
+      //     mqphSaveIslandPanelPricing in pricing-helper-v2.js). That shop
+      //     quotes a real panel (and, optionally, a real decorative panel)
+      //     against one reference door style, and we turn that into a %
+      //     of THAT door's cost — then the widget applies the same % against
+      //     whichever door style the customer actually picked on this quote.
+      //   - exposedPanelFt is what actually needs a finished panel, not the
+      //     whole island run: a single-row island exposes both ends (2ft
+      //     each) AND its full back length (nothing behind it to hide it),
+      //     so 4 + islandFt. A double-row (back-to-back) island has no
+      //     exposed back — the second row covers it — just two deeper 3ft
+      //     ends, so a flat 6 regardless of islandFt (Jordan 2026-09-30).
+      //   - Decorative panels are optional per shop — if the shop never
+      //     quoted a comparison decorative panel, islandDecorativePct is
+      //     null and the "Decorative panels" <option> isn't even rendered
+      //     in cabinetForm, so islandPanel can't actually come back
+      //     'decorative' in that case — the null-guard below is just
+      //     defensive.
+      let islandPanelCfg = {};
+      try { islandPanelCfg = shop['Island panel pricing'] ? JSON.parse(shop['Island panel pricing']) : {}; } catch(e) { islandPanelCfg = {}; }
+      const islandPanelPct = parseFloat(islandPanelCfg.panelPct) || 0;
+      const islandDecorativePct = (islandPanelCfg.decorativePct !== undefined && islandPanelCfg.decorativePct !== null && islandPanelCfg.decorativePct !== '') ? parseFloat(islandPanelCfg.decorativePct) : null;
+
+      const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
+      const islandFt = islandSectionActive ? gn(`mq-${prefix}-islandft`, 0) : 0;
+      const islandDouble = islandSectionActive && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
+      const islandPanel = islandSectionActive ? (gv(`mq-${prefix}-island-panel`) || 'regular') : 'regular';
+      // Dishwasher built into a double-row (back-to-back) island (Jordan
+      // 2026-10-02): the customer enters the FRONT row's cabinet footage
+      // (islandFt) same as always — the dishwasher itself isn't a cabinet,
+      // so it's never part of that number. But the back row has no
+      // dishwasher gap to match, so it still runs the full physical length
+      // of the island, which is 2ft (24") longer than the front row's
+      // cabinet footage whenever this is checked. islandBackFt captures
+      // that: equal to islandFt when there's no island dishwasher (the
+      // original single-length assumption for both rows, unchanged), and
+      // islandFt+2 when there is one. Only meaningful for a double-row
+      // island — a single-row island has no "back row" to extend.
+      const islandDw = islandSectionActive && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
+      const islandBackFt = islandDw ? islandFt + 2 : islandFt;
+      // Front row of the island: same formula as bMatDoorHinge (the wall-
+      // run base cabinets), but with the island's own independent %
+      // adjustment (islandVanityMult) instead of the general base-cabinet
+      // one (vanityMult) — see the islandMaterialAdjPct comment above.
+      // Deliberately its own variable now rather than reusing bMatDoorHinge
+      // directly (which the wall-run base cabinets elsewhere in this same
+      // calc still need priced with the general vanityMult).
+      const islandFrontRowMatDoorHinge = bMat.rateB * islandVanityMult + bDoorRate + drawerRate + bHingeRate;
+      // Back row of a double-row island: uses the same islandVanityMult as
+      // the front row above (not upperVanityMult) — see widget.js's fuller
+      // comment on this exact line for the full reasoning.
+      const islandBackRowMatDoorHinge = uMat.rateU * islandVanityMult + bDoorRate + bHingeRate;
+      let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandExposedFt = 0;
+      if (islandFt > 0) {
+        islandBoxCost = (islandFt * islandFrontRowMatDoorHinge) + (islandDouble ? islandBackFt * islandBackRowMatDoorHinge : 0);
+        // bInstall already resolves to 0 when si !== 'install', already
+        // reflects the current drawer tier/door selection the same way the
+        // rest of the kitchen's base cabinets do, and already has the
+        // project type's own install % adjustment baked in — reusing it
+        // directly keeps island install cost fully consistent with the
+        // base cabinets it's modeled on, rather than recomputing a
+        // slightly different rate here. Deliberately still keyed off the
+        // front-row islandFt even when the dishwasher adds 2ft to the back
+        // row — install here has always been a flat "island install job"
+        // rate off the entered footage regardless of row count (Jordan's
+        // original call), not per-row-foot, so the dishwasher's extra back-
+        // row length doesn't change it either.
+        islandInstallCost = islandFt * bInstall;
+        // Exposed panel footage (both ends + any uncovered back) stays the
+        // flat "6" a double-row island already uses regardless of length —
+        // a dishwasher in the middle of the run doesn't change how much of
+        // the two ends needs a finished panel.
+        islandExposedFt = islandDouble ? 6 : (4 + islandFt);
+        const effectivePanelPct = (islandPanel === 'decorative' && islandDecorativePct != null) ? islandDecorativePct : islandPanelPct;
+        islandPanelCost = islandExposedFt * bDoorRate * (effectivePanelPct / 100);
+        islandCost = islandBoxCost + islandInstallCost + islandPanelCost;
+      }
+
       const lines=[];
       const uDoorLabel=uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
       const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
@@ -5480,6 +5974,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(uFt>0&&uInstallCost>0) lines.push({label:`Upper cabinet install (${uFt} lin ft)`,cost:Math.round(uInstallCost)});
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
       if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
+      if(islandFt>0) lines.push({label:`Island cabinets — ${islandDouble?'double-row':'single-row'}, ${islandPanel==='decorative'?'decorative':'regular'} panels (${islandFt} lin ft${islandDw?`, back row ${islandBackFt} lin ft w/ dishwasher`:''})`,cost:Math.round(islandCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       // Tall cabinets — loop over every card the customer added. Each one
@@ -5624,7 +6119,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const sub=uCost+bCost+specTotal+tallCabTotal+remCost+trimCost;
+      const sub=uCost+bCost+islandCost+specTotal+tallCabTotal+remCost+trimCost;
       const totalMult = (100 + totalAdjPct) / 100;
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
@@ -5686,10 +6181,48 @@ window.mqTogDrawerConfig=(prefix)=>{
         const dwChecked = document.getElementById(`mq-${prefix}-cab-dw`)?.checked;
         const extraChecked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
         const extraFt = extraChecked ? gn(`mq-${prefix}-cab-extra-ft`, 0) : 0;
-        const totalCtFt = bFt + (dwChecked?2:0) + extraFt;
+        const baseCtFt = bFt + (dwChecked?2:0) + extraFt;
+        // Island countertop — merged into this same combined cabinet-run
+        // line rather than its own separate line item (Jordan 2026-09-30).
+        // Only counts here when the customer has actually opened the
+        // island section for this prefix (same gating calcCabinet uses) —
+        // a project type/shop that never touches islands sees no change.
+        // Uses the island's OWN depth, not the standard countertop depth
+        // (ctDepth, 25.5") a base-cabinet run assumes — a single-row island
+        // happens to share that same 25.5", but a double-row (back-to-back)
+        // island needs the wider 39" Jordan specified.
+        const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+        const islandOpenForCt = islandFieldsEl && islandFieldsEl.style.display !== 'none';
+        const islandFtForCt = islandOpenForCt ? gn(`mq-${prefix}-islandft`, 0) : 0;
+        const islandDoubleForCt = islandOpenForCt && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
+        const islandDwForCt = islandOpenForCt && islandDoubleForCt && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
+        // The countertop sits on top of the WHOLE island, dishwasher gap
+        // included — if the island dishwasher checkbox is on, the
+        // countertop needs to span islandFtForCt+2, not just the entered
+        // cabinet footage, same +2ft the back row gets in calcCabinet above
+        // (Jordan 2026-10-02). Kept as its own variable (islandCtLenFt)
+        // rather than overwriting islandFtForCt, since islandFtForCt alone
+        // is still what the line-item label below shows as "the island's
+        // cabinet footage."
+        const islandCtLenFt = islandDwForCt ? islandFtForCt + 2 : islandFtForCt;
+        const islandCtDepthIn = islandDoubleForCt ? 39 : 25.5;
+        const totalCtFt = baseCtFt + islandCtLenFt;
         if (totalCtFt > 0) {
-          const linFt = totalCtFt;
-          const sqft  = linFt * (ctDepth / 12);
+          // linFt stays the wall-run footage only (base cabinets + dishwasher
+          // + extra) — used for the backsplash calc and the "lin ft" shown
+          // in the label, since a freestanding island has no wall behind it
+          // to backsplash against.
+          const linFt = baseCtFt;
+          const sqft  = (baseCtFt * (ctDepth/12)) + (islandCtLenFt * (islandCtDepthIn/12));
+          // A lin-ft-priced material's rate assumes material runs at the
+          // standard ctDepth per linear foot — an island at a different
+          // depth needs its footage scaled to match (39"/25.5" ≈ 1.53× for
+          // a double-row island) so lin-ft-priced materials aren't
+          // undercharged for the extra width, same as sqft-priced materials
+          // already are via the depth difference above. Used for lin-ft
+          // pricing, edge/cutout addons, and linft-unit removal — NOT for
+          // the backsplash calc, which stays on linFt (wall-run only).
+          const pricingLinFt = baseCtFt + (islandCtLenFt * (islandCtDepthIn / ctDepth));
           const mat   = gv(matId);
           const si    = gv(ctSiId);
           const m     = mat === 'none' ? null : (CT_MAT[mat] || null);
@@ -5697,8 +6230,8 @@ window.mqTogDrawerConfig=(prefix)=>{
             // Real (unclamped) cost for this run — the minimum, if any, is
             // applied once at the end against this material's pooled total
             // across every counter/run in this project type, not here.
-            const supplyCost = m.supplyUnit  === 'lin ft' ? linFt*m.ps : sqft*m.ps;
-            const installCost = (si==='install' ? (m.installUnit==='lin ft' ? linFt*m.pi : sqft*m.pi) : 0) * installMult;
+            const supplyCost = m.supplyUnit  === 'lin ft' ? pricingLinFt*m.ps : sqft*m.ps;
+            const installCost = (si==='install' ? (m.installUnit==='lin ft' ? pricingLinFt*m.pi : sqft*m.pi) : 0) * installMult;
             const pool = poolFor(mat, m);
             pool.rawSupply += supplyCost; pool.hasSupply = true;
             if (si==='install') { pool.rawInstall += installCost; pool.hasInstall = true; }
@@ -5722,11 +6255,11 @@ window.mqTogDrawerConfig=(prefix)=>{
             const coChecked = document.getElementById(coId)?.checked;
             const cutoutCost = coChecked ? cutoutOptionsFor(m).reduce((sum,o,i)=>sum+gn(`${cutsId}-q-${i}`)*(o.rate||0),0) : 0;
             const removalChecked = gv(removalId) === 'yes';
-            const removalCost = removalChecked ? (m.removalUnit==='linft' ? linFt : sqft) * (m.removalRate||0) : 0;
-            const addonsRes = ctAddonsCost(m, `mq-${prefix}-cab-edge-sel`, `mq-${prefix}-cab-addons-a`, linFt, sqft, ctDepth);
+            const removalCost = removalChecked ? (m.removalUnit==='linft' ? pricingLinFt : sqft) * (m.removalRate||0) : 0;
+            const addonsRes = ctAddonsCost(m, `mq-${prefix}-cab-edge-sel`, `mq-${prefix}-cab-addons-a`, pricingLinFt, sqft, ctDepth);
             const cost = supplyCost + installCost + bsCost + cutoutCost + removalCost + addonsRes.cost;
             sub += cost;
-            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${removalChecked?' + removal':''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
+            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft${islandCtLenFt>0?` + ${islandCtLenFt} ft island${islandDwForCt?' w/ dishwasher':''}, ${islandDoubleForCt?'double-row':'single-row'}`:''}, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${removalChecked?' + removal':''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
           }
         }
       }
@@ -6787,6 +7320,14 @@ window.mqTogDrawerConfig=(prefix)=>{
     mqRefreshAllPickerVisibility('b');
     mqRefreshSectionVisibility('c');
     mqRefreshSectionVisibility('b');
+    // Decorative island panel option — same first-load treatment as the
+    // room-visibility calls above: the base door <select>'s default
+    // first-<option> is already "picked" on render but never fired a
+    // 'change' event for it, so without this the "Decorative finished
+    // ends" option would silently depend on the customer manually
+    // reselecting a door once before it could ever show up.
+    mqRefreshIslandPanelOption('c');
+    mqRefreshIslandPanelOption('b');
     // The standalone Countertops tab's own project-type selector (added
     // alongside 'c'/'b' above) needs this same first-load treatment —
     // without it, a native <select> auto-selects its first <option> on
@@ -6875,38 +7416,73 @@ window.mqTogDrawerConfig=(prefix)=>{
   // The guided-flow scroll-spy (mqObserveSectionsForScrollSpy, inside
   // wireWidget) opens each section as it crosses the exact vertical center
   // of the screen while scrolling. That works for most sections, but one
-  // sitting near the very bottom of the page can end up parked in the
-  // lower half of the viewport WITHOUT ever actually crossing that center
-  // line, if the page runs out of room to scroll before it gets there —
-  // there's nothing further to scroll to, so the trigger line never
-  // reaches it. Left alone, that section just stays closed with no way for
-  // scrolling to open it.
+  // sitting near the very bottom of the page can end up parked on screen
+  // WITHOUT ever actually crossing that center line, if the page runs out
+  // of room to scroll before it gets there — there's nothing further to
+  // scroll to, so the trigger line never reaches it. Left alone, that
+  // section just stays closed with no way for scrolling to open it.
   //
   // This catches that specific case: whenever the page hits the bottom of
-  // its scrollable range, look for a section that's (a) still collapsed,
-  // (b) has never been opened before — mqToggleCollapse marks that, so a
-  // section someone deliberately closed again is left alone — and (c) is
-  // currently sitting in the bottom half of the viewport. Opens just the
-  // first (topmost) one that matches, one at a time. If opening it reveals
-  // another lower down, the same check runs again the next time scrolling
-  // reaches the (now taller) bottom of the page, so it can cascade through
-  // several in a row without ever opening more than one at once.
+  // its scrollable range, look for a section that's still collapsed and on
+  // screen at all — no longer restricted to the bottom HALF of the
+  // viewport specifically (Jordan: the last items, like the Countertops/
+  // Additional countertops sections, "took a bit of trying" to pop open).
+  // Once there's truly nowhere further to scroll, a still-closed section
+  // ahead of the current step is stuck regardless of exactly where it
+  // happens to sit on screen at that moment — how tall the sections before
+  // it were determines that, not whether it still needs opening. The
+  // "at the bottom" check itself is also a little more forgiving now
+  // (24px of slack instead of 4) since mobile browsers can shift
+  // `window.innerHeight` slightly as their address bar collapses/expands
+  // during a scroll, which made the old tight threshold miss and need a
+  // few tries before it happened to land exactly right.
+  //
+  // Rather than just flipping it open directly, it's routed through
+  // mqScrollJumpWithCatchup/mqJumpToSectionIfNeeded — the same "arriving at
+  // a section" path a normal scroll or click already uses — so this stays
+  // consistent with the rest of the step flow: it becomes the new current
+  // step and its footer updates. After opening one, it re-checks itself
+  // shortly after (once layout settles) rather than waiting for another
+  // manual scroll nudge — if the page is still sitting at the bottom (the
+  // section that just opened didn't add much height, or there's more than
+  // one still stuck), the next one opens right away too, chaining through
+  // however many are left instead of needing a separate scroll for each.
+  //
+  // Only ever considers a section AHEAD of the current step (never one
+  // that's already done). Under the accordion rule every non-current
+  // section sits closed, including ones already stepped past — on a short
+  // page those can easily end up on screen too (there's just not much page
+  // left), and without this check this would mistake "already visited, now
+  // collapsed" for "never reached, stuck closed" and yank the step index
+  // backward to whatever most recently collapsed, right as Continue was
+  // trying to move it forward.
   function mqCheckBottomBounceAutoOpen() {
     const doc = document.documentElement;
-    const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 4;
+    const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 24;
     if (!atBottom) return;
-    const midpoint = window.innerHeight / 2;
     const sections = document.querySelectorAll('#midasquote-widget .mq-sec');
     for (const sec of sections) {
       const body = sec.querySelector('[id$="-body"]');
       if (!body || body.style.display !== 'none') continue; // already open, nothing to do
-      if (body.dataset.mqEverOpened) continue; // was opened before, closed on purpose — leave it
       const rect = sec.getBoundingClientRect();
       if (rect.bottom <= 0 || rect.top >= window.innerHeight) continue; // not actually on screen
-      if (rect.top < midpoint) continue; // only ones sitting below the middle of the screen
-      const key = body.id.replace(/^mq-/, '').replace(/-body$/, '');
-      window.mqToggleCollapse(key);
-      return; // one at a time — the next bottom-bounce picks up any further ones
+      const tab = sec.closest('.mq-tab-content');
+      const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
+      if (prefix) {
+        if (window._mqCatchupActive && window._mqCatchupActive[prefix]) return; // a catch-up walk already owns this tab's scroll right now
+        if (window.mqGetVisibleSections && window._mqStepIndex) {
+          const visible = window.mqGetVisibleSections(prefix);
+          const idx = visible.indexOf(sec);
+          const current = window._mqStepIndex[prefix] || 0;
+          if (idx !== -1 && idx <= current) continue; // already current or done — leave it collapsed
+        }
+      }
+      (window.mqScrollJumpWithCatchup || window.mqJumpToSectionIfNeeded)(sec);
+      // Still at the bottom after this one opens? Check again shortly so
+      // the next stuck section (if any) opens right away too, instead of
+      // waiting on another manual scroll.
+      setTimeout(mqCheckBottomBounceAutoOpen, 400);
+      return; // one at a time — the chained re-check above picks up any further ones
     }
   }
   function mqInitBottomBounceAutoOpen() {

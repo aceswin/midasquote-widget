@@ -4504,8 +4504,7 @@ window.mqphGoToWizard = function() {
             </div>
             <p style="margin:-4px 0 12px;font-size:12px;color:#9ca3af">If you don't use finished end panels, you can enter 0 for these.</p>
             <div id="mqph-island-pct-reveal" style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:1rem;line-height:1.6"></div>
-            <button class="mqph-btn ${isSaved ? 'mqph-btn-saved' : 'mqph-btn-primary'}" id="mqph-island-save-btn" style="width:100%" onclick="mqphSaveIslandPanelPricing()">${isSaved ? '✓ Island panel pricing saved' : 'Save island panel pricing →'}</button>
-            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e5e7eb">
+            <div style="margin-top:4px;margin-bottom:16px;padding-top:14px;border-top:1px solid #e5e7eb">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:10px">
                 <label style="font-weight:600;font-size:13px;color:#374151">Offer decorative panels with the following door styles</label>
                 ${cfg.decorativePct != null ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" id="mqph-island-decoselectall-btn" style="flex-shrink:0" onclick="mqphToggleAllDecorativeDoors()">${allDoorsDecorative ? 'Clear all' : 'Select all'}</button>` : ''}
@@ -4523,6 +4522,7 @@ window.mqphGoToWizard = function() {
               <p style="margin:0;font-size:12px;color:#9ca3af">Enter a price for a decorative panel above and save it first — once decorative panel pricing is set up, you can choose which door styles actually offer it here.</p>
               `}
             </div>
+            <button class="mqph-btn ${isSaved ? 'mqph-btn-saved' : 'mqph-btn-primary'}" id="mqph-island-save-btn" style="width:100%" onclick="mqphSaveIslandPanelPricing()">${isSaved ? '✓ Island panel pricing saved' : 'Save island panel pricing →'}</button>
           </div>
           `}
         </div>

@@ -2747,7 +2747,7 @@
           <div class="mq-field" id="mq-${prefix}-island-dw-wrap" style="display:none;margin-top:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
               <input type="checkbox" id="mq-${prefix}-island-dw" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              Is there a dishwasher in the island? <span style="color:#6b7280;font-weight:400">If so, we will account for it.</span>
+              If checked, we will account for one.
             </label>
           </div>
           <div class="mq-field" style="margin-top:10px">
