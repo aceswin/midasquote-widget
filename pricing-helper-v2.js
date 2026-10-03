@@ -4777,6 +4777,11 @@ window.mqphGoToWizard = function() {
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-islandpanel" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏝️ Island panel pricing <span style="font-size:12px;font-weight:400;color:${summaryColor}">(${summary})</span></span>
         </div>
         <div id="mqph-cat-body-islandpanel" style="display:none">
+          <div style="margin:12px 16px">
+            <div style="position:relative;width:100%;padding-top:56.25%;background:#000;border-radius:8px;overflow:hidden">
+              <iframe src="https://www.youtube.com/embed/lz96aZkXLRs" title="Island panel pricing walkthrough" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+            </div>
+          </div>
           <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
             <div style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600" onclick="mqphToggleIslandInfo()">
               <span id="mqph-island-info-arrow" style="display:inline-block;font-size:11px;transition:transform 0.2s;${window._mqIslandInfoExpanded?'transform:rotate(90deg)':''}">▶</span>
@@ -4789,7 +4794,7 @@ window.mqphGoToWizard = function() {
               <p style="margin:0 0 10px">For example, if the style is Shaker and you choose Maple Shaker as the door to price against, you simply quote the flat panel cost you'd charge for an island with Maple Shaker doors, and the decorative panel cost you'd charge for the same island.</p>
               <p style="margin:0 0 10px">This creates a ratio for each — maybe the flat panel works out to 75% of the door's linear-foot cost, and the decorative panel works out to 90%. From then on, whenever a customer adds an island and has a Shaker door selected, that ratio scales with whatever door is chosen — so if it's a Cherry Shaker door that costs more, the panel cost will be 75% of that door's cost per linear foot.</p>
               <p style="margin:0 0 10px">Since a raised panel door is more expensive than a shaker door, we need a separate price for that style. If you use Maple Raised Panel as your door to price against, you'll likely use the same flat panel price as you did for Maple Shaker, but the ratio will differ — and that ratio then applies to all the raised panel doors. Conversely, your decorative panel ratio will likely be the same as it was for Maple Shaker, so you could reuse that ratio instead of requoting.</p>
-              <p style="margin:0">Style names are internal only — customers never see them. Feel free to watch the video to help make this clearer.</p>
+              <p style="margin:0">Style names are internal only — customers never see them. Feel free to watch the video above to help make this clearer.</p>
             </div>
           </div>
           ${showFlash ? `<div id="mqph-island-flash" style="margin:0 16px 12px;background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ All doors tagged!</div>` : ''}
