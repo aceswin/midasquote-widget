@@ -4566,6 +4566,12 @@ window.mqphGoToWizard = function() {
     const name = pending.name !== undefined ? pending.name : (style.name || '');
     const refDoorId = pending.refDoorId !== undefined ? pending.refDoorId : (style.refDoorId || '');
     const panelCostVal = pending.panelFlatQuote !== undefined ? pending.panelFlatQuote : (style.panelFlatQuote != null ? style.panelFlatQuote : '');
+    // Legacy styles saved before this flag existed never had a choice to
+    // make, so missing/undefined defaults to true (flat offered) — only an
+    // EXPLICIT false turns it off. Jordan 2026-10-03: "some shops may be so
+    // fancy that they dont offer flat, so just as easy for them to not
+    // offer flat as an option as well."
+    const offersFlat = pending.offersFlat !== undefined ? pending.offersFlat : (style.offersFlat !== false);
     const offersDecorative = pending.offersDecorative !== undefined ? pending.offersDecorative : !!style.offersDecorative;
     const decCostVal = pending.decorativeFlatQuote !== undefined ? pending.decorativeFlatQuote : (style.decorativeFlatQuote != null ? style.decorativeFlatQuote : '');
     const decorativeRatioMode = pending.decorativeRatioMode !== undefined ? pending.decorativeRatioMode : (style.decorativeRatioMode || 'manual');
@@ -4589,7 +4595,7 @@ window.mqphGoToWizard = function() {
     // anything immediately keeps isDirty true regardless of that set.
     const isExpanded = isDirty || window._mqIslandExpandedStyles.has(style.id);
     if (!isExpanded) {
-      const panelPctText = style.panelPct != null ? `${Math.round(style.panelPct*10)/10}% panels` : '— panels';
+      const panelPctText = style.offersFlat === false ? 'flat not offered' : (style.panelPct != null ? `${Math.round(style.panelPct*10)/10}% panels` : '— panels');
       const decText = (style.offersDecorative && style.decorativePct != null) ? ` · ${Math.round(style.decorativePct*10)/10}% decorative` : '';
       const safeName = (style.name || 'Untitled style').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       return `
@@ -4621,9 +4627,14 @@ window.mqphGoToWizard = function() {
           <option value="">— pick a door —</option>${doorOpts}
         </select>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:10px 0">
+        <input type="checkbox" id="mqph-style-${style.id}-offersflat" ${offersFlat?'checked':''} onchange="mqphSetIslandStyleField('${style.id}','offersFlat',this.checked)" style="width:auto"/>
+        Does this door style offer flat panels?
+      </label>
+      ${offersFlat ? `
       <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" finished flat panel in this style's material</label>
         <input type="number" id="mqph-style-${style.id}-panelcost" step="0.01" placeholder="0.00" value="${panelCostVal}" oninput="mqphSetIslandStyleField('${style.id}','panelFlatQuote',this.value);mqphCalcStylePanelPct('${style.id}')"/>
-      </div>
+      </div>` : ''}
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:10px 0">
         <input type="checkbox" id="mqph-style-${style.id}-offersdec" ${offersDecorative?'checked':''} onchange="mqphSetIslandStyleField('${style.id}','offersDecorative',this.checked)" style="width:auto"/>
         Does this door style offer decorative panels?
@@ -4705,8 +4716,10 @@ window.mqphGoToWizard = function() {
         </div>
         <div id="mqph-cat-body-islandpanel" style="display:none">
           <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
-            <p style="margin:0 0 10px">Islands tend to cost more because of finished side panels and back panels. What a panel actually costs depends on the SPECIES of wood (maple vs. rift oak vs. hickory, say) but NOT on the door's style/profile (shaker vs. raised panel) — so group your doors into style families below and price each family separately, rather than one ratio for everything.</p>
-            <p style="margin:0">For each style, pick one door to represent it, quote the real flat panel price in that door's material (and, if you offer it, a matching decorative panel) — we turn that into a ratio against that door's own rate. Then tag every door that belongs to that style. Species differences within the same style still scale correctly against whichever door the customer actually picks, but a style's ratio never leaks onto a door from a different style. Style names are internal only — customers never see them.</p>
+            <p style="margin:0 0 10px">Islands tend to cost more because of finished side panels and back panels. To make this very simple, we'll create a ratio cost for your panels (flat or decorative) based on your different door styles.</p>
+            <p style="margin:0 0 10px">For example, if you have flat doors, shaker doors, and raised panel doors, you'd create those three distinct styles below.</p>
+            <p style="margin:0 0 10px">For each style, you decide whether that door style offers decorative panels, just flat panels, or both — then enter the price of a flat panel and/or a decorative panel based on one door you select to represent that style.</p>
+            <p style="margin:0">For example, if the style is Shaker and you choose Maple Shaker as the door to price against, you simply quote the flat panel cost you'd charge for a Maple Shaker door, and the decorative panel cost you'd charge for a Shaker door. This creates a ratio for each — maybe the flat panel works out to 75% of the door's linear-foot cost, and the decorative panel works out to 90%. From then on, whenever a customer adds an island and has a Shaker door selected, that ratio determines the extra cost of the panels — no matter what material is used, the ratio is applied based on the style. So you only need to quote once per style instead of once per door. Style names are internal only — customers never see them.</p>
           </div>
           ${showFlash ? `<div id="mqph-island-flash" style="margin:0 16px 12px;background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ All doors tagged!</div>` : ''}
           ${!hasDoors ? `
@@ -4778,11 +4791,11 @@ window.mqphGoToWizard = function() {
       btn.classList.add('mqph-btn-primary');
       btn.textContent = 'Save this style →';
     }
-    // Toggling "offers decorative" changes whether the decorative price
-    // field is even shown at all — needs the card's own markup rebuilt,
-    // not just the % reveal, so it goes through the section-wide
+    // Toggling "offers flat" or "offers decorative" changes whether that
+    // price field is even shown at all — needs the card's own markup
+    // rebuilt, not just the % reveal, so it goes through the section-wide
     // re-render rather than a live recalc alone.
-    if (field === 'offersDecorative') mqphRerenderIslandPanelSection();
+    if (field === 'offersFlat' || field === 'offersDecorative') mqphRerenderIslandPanelSection();
   };
 
   window.mqphCalcStylePanelPct = function(styleId) {
@@ -4791,12 +4804,17 @@ window.mqphGoToWizard = function() {
     const doorId = document.getElementById(`mqph-style-${styleId}-refdoor`)?.value;
     const doorRec = lineItems.find(r => r.id === doorId);
     const doorRate = doorRec?.fields['Rate'] || 0;
-    const panelCostRaw = document.getElementById(`mqph-style-${styleId}-panelcost`)?.value;
+    const offersFlat = document.getElementById(`mqph-style-${styleId}-offersflat`)?.checked;
+    const panelCostRaw = offersFlat ? document.getElementById(`mqph-style-${styleId}-panelcost`)?.value : '';
     const offersDec = document.getElementById(`mqph-style-${styleId}-offersdec`)?.checked;
-    const panelEntered = panelCostRaw !== '' && panelCostRaw != null && !isNaN(parseFloat(panelCostRaw));
+    const panelEntered = offersFlat && panelCostRaw !== '' && panelCostRaw != null && !isNaN(parseFloat(panelCostRaw));
     const panelCost = panelEntered ? parseFloat(panelCostRaw) : 0;
     if (!doorRate) {
       reveal.innerHTML = `<span style="color:#92400e">Pick a door with a rate above ${CUR()}0 to compute a percentage.</span>`;
+      return;
+    }
+    if (!offersFlat && !offersDec) {
+      reveal.innerHTML = `<span style="color:#92400e">⚠️ This style needs to offer at least flat panels or decorative panels — check at least one above.</span>`;
       return;
     }
     const panelRatePerFt = panelCost > 0 ? panelCost / ISLAND_PANEL_WIDTH_FT : 0;
@@ -4827,13 +4845,13 @@ window.mqphGoToWizard = function() {
     }
 
     reveal.innerHTML = `
-      <div>Regular panels: <strong>${panelEntered?`${Math.round(panelPct*10)/10}% of door cost`:'—'}</strong>${panelCost>0?` <span style="color:#9ca3af">(≈ ${CUR()}${panelRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>
+      ${offersFlat ? `<div>Flat panels: <strong>${panelEntered?`${Math.round(panelPct*10)/10}% of door cost`:'—'}</strong>${panelCost>0?` <span style="color:#9ca3af">(≈ ${CUR()}${panelRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>` : ''}
       ${offersDec ? `<div>Decorative panels: <strong>${decPct!=null?`${Math.round(decPct*10)/10}% of door cost`:'—'}</strong>${decRatePerFt!=null?` <span style="color:#9ca3af">(≈ ${CUR()}${decRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>` : ''}`;
   };
 
   window.mqphAddIslandStyle = function() {
     const id = 'style_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-    window._mqIslandDraftStyles.push({ id, name:'', refDoorId:'', refDoorName:'', panelFlatQuote:null, panelRatePerFt:null, panelPct:null, offersDecorative:false, decorativeFlatQuote:null, decorativeRatePerFt:null, decorativePct:null, decorativeRatioMode:'manual', decorativeCopySourceId:null });
+    window._mqIslandDraftStyles.push({ id, name:'', refDoorId:'', refDoorName:'', offersFlat:true, panelFlatQuote:null, panelRatePerFt:null, panelPct:null, offersDecorative:false, decorativeFlatQuote:null, decorativeRatePerFt:null, decorativePct:null, decorativeRatioMode:'manual', decorativeCopySourceId:null });
     _mqphExpandedCats.add('islandpanel');
     mqphRerenderIslandPanelSection();
   };
@@ -4889,18 +4907,34 @@ window.mqphGoToWizard = function() {
     const doorId = document.getElementById(`mqph-style-${styleId}-refdoor`)?.value;
     const doorRec = lineItems.find(r => r.id === doorId);
     const doorRate = doorRec?.fields['Rate'] || 0;
-    const panelCostRaw = document.getElementById(`mqph-style-${styleId}-panelcost`)?.value;
+    const offersFlat = document.getElementById(`mqph-style-${styleId}-offersflat`)?.checked || false;
     const offersDecorative = document.getElementById(`mqph-style-${styleId}-offersdec`)?.checked || false;
     if (!name) { alert('Give this style a name (e.g. "Shaker") before saving.'); return; }
     if (!doorId || !doorRate) { alert('Pick a door style with a rate above ' + CUR() + '0 to compare against.'); return; }
-    const panelCost = panelCostRaw !== '' && panelCostRaw != null ? parseFloat(panelCostRaw) : 0;
-    // Blank/0 is valid and intentional (same rule as the old single-ratio
-    // form, Jordan 2026-10-02/03) -- a style that never needs finished end
-    // panels at all should be able to save that explicitly.
-    if (isNaN(panelCost) || panelCost < 0) { alert('Enter a valid price (0 or higher) for the finished flat panel — leave it blank or enter 0 if this style never needs finished end panels.'); return; }
+    // Jordan 2026-10-03: a style needs to offer at least ONE of the two —
+    // "some shops may be so fancy that they dont offer flat" (decorative-
+    // only is fine), but offering neither would leave the style with no
+    // price at all and no way for a customer to ever pick anything useful.
+    if (!offersFlat && !offersDecorative) { alert('This style needs to offer at least flat panels or decorative panels — check at least one.'); return; }
 
-    const panelRatePerFt = panelCost / ISLAND_PANEL_WIDTH_FT;
-    const panelPct = Math.round(((panelRatePerFt/doorRate)*100)*100)/100;
+    // Flat panel pricing — only collected/validated when this style
+    // actually offers flat panels. offersFlat===false stores null rather
+    // than 0 so it's distinguishable from "offers flat panels for free"
+    // (0 was already a valid, intentional flat price before this — see
+    // the comment below); null instead means the flat option doesn't
+    // exist for this style at all, same as decorativePct when decorative
+    // isn't offered.
+    let panelCost = null, panelRatePerFt = null, panelPct = null;
+    if (offersFlat) {
+      const panelCostRaw = document.getElementById(`mqph-style-${styleId}-panelcost`)?.value;
+      panelCost = panelCostRaw !== '' && panelCostRaw != null ? parseFloat(panelCostRaw) : 0;
+      // Blank/0 is valid and intentional (same rule as the old single-ratio
+      // form, Jordan 2026-10-02/03) -- a style that never needs finished end
+      // panels at all should be able to save that explicitly.
+      if (isNaN(panelCost) || panelCost < 0) { alert('Enter a valid price (0 or higher) for the finished flat panel — leave it blank or enter 0 if this style never needs finished end panels.'); return; }
+      panelRatePerFt = panelCost / ISLAND_PANEL_WIDTH_FT;
+      panelPct = Math.round(((panelRatePerFt/doorRate)*100)*100)/100;
+    }
 
     // Decorative ratio: either quoted manually for this style, or copied
     // from another style's already-saved ratio (Jordan 2026-10-03). A
@@ -4935,6 +4969,7 @@ window.mqphGoToWizard = function() {
       name,
       refDoorId: doorId,
       refDoorName: doorRec.fields['Name'] || '',
+      offersFlat,
       panelFlatQuote: panelCost,
       panelRatePerFt,
       panelPct,

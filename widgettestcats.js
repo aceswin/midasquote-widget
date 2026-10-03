@@ -2546,14 +2546,19 @@
 
   function cabinetForm(prefix, specs, data) {
     const { shop, li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
-    // Decorative island panels are optional per shop AND per door style (see
-    // calcCabinet's island pricing comment) — the static markup below always
-    // renders just the "Standard finished ends" option; whether "Decorative
-    // finished ends" is available at all is now decided live, in
-    // mqRefreshIslandPanelOption (wireWidget), which looks up which island
-    // panel style (if any) the customer's currently-selected base door is
-    // tagged to (`Island panel style`, set on the Pricing tab) and checks
-    // whether THAT style offers decorative panels. That function runs once
+    // Which island panel options exist at all is per shop AND per door
+    // style (see calcCabinet's island pricing comment) — the static markup
+    // below always renders just the "Standard finished ends" option as a
+    // safe default; whether "Decorative finished ends" is available, AND
+    // whether "Standard finished ends" itself stays available, is decided
+    // live in mqRefreshIslandPanelOption (wireWidget), which looks up which
+    // island panel style (if any) the customer's currently-selected base
+    // door is tagged to (`Island panel style`, set on the Pricing tab) and
+    // checks whether THAT style offers decorative panels, flat panels, or
+    // both. A style can be decorative-only now (Jordan 2026-10-03: "some
+    // shops may be so fancy that they dont offer flat"), which is the one
+    // case where "Standard finished ends" gets removed rather than just
+    // "Decorative finished ends" staying absent. That function runs once
     // at initial setup and again on every base-door change, so it has to be
     // the sole place this gate is evaluated — doing it here too (statically,
     // at render time) would only reflect whichever door happened to be
@@ -3636,15 +3641,16 @@
       // one just became authoritative.
       mqRefreshIslandPanelOption(prefix);
     };
-    // Decorative island panels are gated by which island panel STYLE (per
-    // Jordan 2026-10-03 rework — see calcCabinet's island pricing comment
-    // for the full story) the customer's currently-selected BASE door is
-    // tagged to, and whether THAT style offers decorative panels at all.
-    // No door, or a door tagged to no style (or a since-removed one), means
-    // no decorative option — same as a style that was never calibrated.
-    // Re-derives this fresh every call rather than once, and has to run on
-    // every base-door change, not just at initial setup, since the door
-    // selection obviously changes after first render.
+    // Which island panel options show up at all is gated by which island
+    // panel STYLE (per Jordan 2026-10-03 rework — see calcCabinet's island
+    // pricing comment for the full story) the customer's currently-selected
+    // BASE door is tagged to, and whether THAT style offers decorative
+    // panels, flat panels, or both. No door, or a door tagged to no style
+    // (or a since-removed one), means flat-only, same as a style that was
+    // never calibrated — never hide BOTH options at once. Re-derives this
+    // fresh every call rather than once, and has to run on every base-door
+    // change, not just at initial setup, since the door selection obviously
+    // changes after first render.
     //
     // "Base door" here means whichever <select> calcCabinet itself treats
     // as authoritative for bDoorRate: mq-${prefix}-b-door when "different
@@ -3661,26 +3667,45 @@
       const m = /^dyn_(\d+)$/.exec(bDoorKey || '');
       // Legacy/fallback shops (hasDynamic===false) use hardcoded keys like
       // 'slab'/'shaker' instead of dyn_N, so this regex never matches and
-      // decorative correctly never shows for them — consistent with the
+      // this always falls back to flat-only for them — consistent with the
       // whole feature depending on real per-door line items plus a style
       // actually calibrated for them anyway. Same for bDoorKey==='none' (no
       // door selected) — panel cost is already $0 with no door picked
-      // regardless (bDoorRate===0), so hiding the option there too is just
-      // honest.
+      // regardless (bDoorRate===0), so defaulting to flat-only there too is
+      // just honest.
       const doorRec = m ? (li.doorStyles||[])[parseInt(m[1], 10)] : null;
       const matchedStyle = (doorRec && doorRec['Island panel style']) ? islandPanelStyles.find(s => s.id === doorRec['Island panel style']) : null;
       const showDecorative = !!matchedStyle && matchedStyle.offersDecorative === true && matchedStyle.decorativePct != null;
-      const existingOption = sel.querySelector('option[value="decorative"]');
-      if (showDecorative && !existingOption) {
+      // A style saved before this flag existed (or no style matched at all)
+      // defaults to offering flat, same as always — only an EXPLICIT false
+      // (a shop that deliberately set up a decorative-only style, e.g. "too
+      // fancy to offer flat") hides it (Jordan 2026-10-03).
+      const showRegular = !matchedStyle || matchedStyle.offersFlat !== false;
+
+      const existingDecorative = sel.querySelector('option[value="decorative"]');
+      if (showDecorative && !existingDecorative) {
         sel.insertAdjacentHTML('beforeend', `<option value="decorative">Decorative finished ends</option>`);
-      } else if (!showDecorative && existingOption) {
+      } else if (!showDecorative && existingDecorative) {
         // Falls back to 'regular' rather than leaving the select on a value
         // that no longer has a matching <option> — an orphaned selected
         // value on a native <select> silently reverts to whichever option
         // IS still there anyway, but doing it explicitly keeps gv() and the
         // live price in sync with what the customer now actually sees.
         if (sel.value === 'decorative') sel.value = 'regular';
-        existingOption.remove();
+        existingDecorative.remove();
+      }
+
+      const existingRegular = sel.querySelector('option[value="regular"]');
+      // Never remove BOTH options — if a style somehow offers neither (bad
+      // config; pricing-helper-v2.js's own save-time validation shouldn't
+      // ever let this happen), keep 'regular' so the customer always has at
+      // least one usable choice rather than a dead/empty select.
+      const keepRegular = showRegular || !showDecorative;
+      if (!keepRegular && existingRegular) {
+        if (sel.value === 'regular') sel.value = 'decorative';
+        existingRegular.remove();
+      } else if (keepRegular && !existingRegular) {
+        sel.insertAdjacentHTML('afterbegin', `<option value="regular">Standard finished ends</option>`);
       }
     };
     // Islands — "+ Add island" just reveals the fields block in place (no
@@ -3705,7 +3730,11 @@
       const doubleEl = document.getElementById(`mq-${prefix}-island-double`);
       if (doubleEl) doubleEl.checked = false;
       const panelEl = document.getElementById(`mq-${prefix}-island-panel`);
-      if (panelEl) panelEl.value = 'regular';
+      // 'regular' isn't guaranteed to exist anymore (a decorative-only
+      // style removes it, see mqRefreshIslandPanelOption) — fall back to
+      // whatever option IS there rather than setting a value with no
+      // matching <option>, which a native <select> just silently ignores.
+      if (panelEl) panelEl.value = panelEl.querySelector('option[value="regular"]') ? 'regular' : (panelEl.options[0]?.value || 'regular');
       const dwEl = document.getElementById(`mq-${prefix}-island-dw`);
       if (dwEl) dwEl.checked = false;
       const dwWrap = document.getElementById(`mq-${prefix}-island-dw-wrap`);
@@ -6221,6 +6250,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       //     mqRefreshIslandPanelOption), so islandPanel can't actually come
       //     back 'decorative' in that case — the null-guard below is just
       //     defensive.
+      //   - Flat panels are now optional too (Jordan 2026-10-03: a shop can
+      //     be decorative-only, "so fancy they dont offer flat") —
+      //     panelPct is null on a style with offersFlat===false, which
+      //     `|| 0` below turns into 0, and the "Standard finished ends"
+      //     <option> is removed in that case too (same function), so
+      //     islandPanel can't come back 'regular' for a style like that
+      //     either. The 0 fallback is just as defensive as the decorative
+      //     null-guard — a properly-saved style never actually needs it.
       let islandPanelStyles = [];
       try { islandPanelStyles = shop['Island panel styles'] ? JSON.parse(shop['Island panel styles']) : []; } catch(e) { islandPanelStyles = []; }
       const bDoorStyleMatch = /^dyn_(\d+)$/.exec(bDoorKey || '');
