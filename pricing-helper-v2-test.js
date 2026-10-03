@@ -4672,8 +4672,7 @@ window.mqphGoToWizard = function() {
     <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:14px;background:#fff">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <input type="text" id="mqph-style-${style.id}-name" placeholder="Style name (e.g. Shaker) — internal only, customers never see this" value="${name.replace(/"/g,'&quot;')}" oninput="mqphSetIslandStyleField('${style.id}','name',this.value)" style="flex:1;font-weight:600;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px"/>
-        ${isSaved && !isDirty ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphToggleIslandStyleCollapse('${style.id}')">▲ Collapse</button>` : ''}
-        ${isSaved && isDirty ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphDiscardIslandStyleEdits('${style.id}')">↩ Discard changes</button>` : ''}
+        ${isSaved ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphToggleIslandStyleCollapse('${style.id}')">▲ Collapse</button>` : ''}
         <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveIslandStyle('${style.id}',${isSaved})">${isSaved ? '🗑 Remove style' : '✕ Discard'}</button>
       </div>
       <div class="mqph-field"><label>Compare against door style</label>
@@ -4928,28 +4927,28 @@ window.mqphGoToWizard = function() {
     mqphRerenderIslandPanelSection();
   };
 
-  // Manually re-opens or re-collapses an already-saved, clean style card —
-  // a brand-new draft or a card with any pending edit always renders
-  // expanded regardless of this set (see the isExpanded check in
-  // mqphIslandStyleCardHtml).
+  // Manually re-opens or re-collapses an already-saved style card — a
+  // brand-new draft always renders expanded regardless of this set (see
+  // the isExpanded check in mqphIslandStyleCardHtml). The "▲ Collapse"
+  // button now always shows for a saved style, dirty or not (Jordan
+  // 2026-10-03 didn't want a separate "Discard changes" button — "it
+  // should just still say collapse. maybe if they changed something and go
+  // to collapse it, it could say collapse without saving? then they can
+  // choose yes or no"): collapsing a style with unsaved pending edits
+  // confirms first, and only drops those edits (no Airtable write to
+  // undo — nothing was ever saved) if they say yes; saying no leaves it
+  // expanded exactly as it was, untouched.
   window.mqphToggleIslandStyleCollapse = function(styleId) {
-    if (window._mqIslandExpandedStyles.has(styleId)) window._mqIslandExpandedStyles.delete(styleId);
-    else window._mqIslandExpandedStyles.add(styleId);
-    mqphRerenderIslandPanelSection();
-  };
-
-  // Reverts an already-saved style back to its last-saved values without
-  // touching Airtable — Jordan 2026-10-03: "as soon as you make a change
-  // to a style thats been listed, you lose the ability to collapse it
-  // afterward." Root cause: mqphSetIslandStyleField stamps a pending edit
-  // the instant ANY input fires, even if you type the exact value right
-  // back, and isDirty (which gates the "▲ Collapse" button) has no way to
-  // clear itself short of actually saving. This just drops the pending
-  // edits for this one style, which snaps isDirty back to false and
-  // brings the Collapse button back — same escape hatch "🗑 Remove style"
-  // already gives an unsaved DRAFT, just without deleting anything here.
-  window.mqphDiscardIslandStyleEdits = function(styleId) {
-    delete window._mqIslandPendingEdits[styleId];
+    const pending = window._mqIslandPendingEdits[styleId] || {};
+    const isDirty = Object.keys(pending).length > 0;
+    const currentlyExpanded = isDirty || window._mqIslandExpandedStyles.has(styleId);
+    if (currentlyExpanded) {
+      if (isDirty && !confirm('Collapse without saving? Your changes to this style won\'t be saved.')) return;
+      delete window._mqIslandPendingEdits[styleId];
+      window._mqIslandExpandedStyles.delete(styleId);
+    } else {
+      window._mqIslandExpandedStyles.add(styleId);
+    }
     mqphRerenderIslandPanelSection();
   };
 
