@@ -2546,15 +2546,17 @@
 
   function cabinetForm(prefix, specs, data) {
     const { shop, li, hasDynamic, shopPhotos, shopFeatured, roomTypes } = data;
-    // Decorative island panels are optional per shop (see calcCabinet's
-    // island pricing comment) — only offer the option in the picker at all
-    // if the shop has actually quoted a comparison decorative panel in the
-    // Pricing tab's "Island panel pricing" setup. Otherwise a customer could
-    // pick an option that prices as if it were worth 0% extra, which looks
-    // like a bug rather than "this shop doesn't offer that."
-    let islandPanelCfgForMarkup = {};
-    try { islandPanelCfgForMarkup = shop['Island panel pricing'] ? JSON.parse(shop['Island panel pricing']) : {}; } catch(e) { islandPanelCfgForMarkup = {}; }
-    const islandOffersDecorative = islandPanelCfgForMarkup.decorativePct !== undefined && islandPanelCfgForMarkup.decorativePct !== null && islandPanelCfgForMarkup.decorativePct !== '';
+    // Decorative island panels are optional per shop AND per door style (see
+    // calcCabinet's island pricing comment) — the static markup below always
+    // renders just the "Standard finished ends" option; whether "Decorative
+    // finished ends" is available at all is now decided live, in
+    // mqRefreshIslandPanelOption (wireWidget), which checks both the shop's
+    // "Island panel pricing" setup AND whether the customer's currently-
+    // selected base door is tagged `Offers decorative island panel`. That
+    // function runs once at initial setup and again on every base-door
+    // change, so it has to be the sole place this gate is evaluated — doing
+    // it here too (statically, at render time) would only reflect whichever
+    // door happened to be selected first.
     const mOpts = makeOpts(li.materials, '<option value="melamine">Melamine</option><option value="plywood">Plywood</option>');
     const dOpts = `<option value="none">No doors</option>` + makeOpts(li.doorStyles, '<option value="slab">Slab</option><option value="shaker">Shaker</option>');
     const hingeOpts = makeOpts(li.hinges, '<option value="softclose">Soft-close</option><option value="regular">Regular</option>');
@@ -2676,7 +2678,7 @@
             <select id="mq-${prefix}-mat" style="display:none">${mOpts}</select></div>
           <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
             ${pickerRow(`mq-${prefix}-door`, dItems, null, 'door')}
-            <select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value)" style="display:none">${dOpts}</select></div>
+            <select id="mq-${prefix}-door" onchange="mqApplyLinkedTrim('${prefix}', this.value);mqRefreshIslandPanelOption('${prefix}')" style="display:none">${dOpts}</select></div>
           ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
             ${pickerRow(`mq-${prefix}-hinge`, hingeItems)}
             <select id="mq-${prefix}-hinge" style="display:none">${hingeOpts}</select></div>`:''}
@@ -2700,7 +2702,7 @@
               <select id="mq-${prefix}-b-mat" style="display:none">${mOpts}</select></div>
             <div class="mq-field" style="margin-top:10px"><label class="mq-label">Door style</label>
               ${pickerRow(`mq-${prefix}-b-door`, dItems, null, 'door')}
-              <select id="mq-${prefix}-b-door" style="display:none">${dOpts}</select></div>
+              <select id="mq-${prefix}-b-door" onchange="mqRefreshIslandPanelOption('${prefix}')" style="display:none">${dOpts}</select></div>
             ${hasHinges?`<div class="mq-field" style="margin-top:10px"><label class="mq-label">Door hinges</label>
               ${pickerRow(`mq-${prefix}-b-hinge`, hingeItems)}
               <select id="mq-${prefix}-b-hinge" style="display:none">${hingeOpts}</select></div>`:''}
@@ -2745,14 +2747,13 @@
           <div class="mq-field" id="mq-${prefix}-island-dw-wrap" style="display:none;margin-top:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
               <input type="checkbox" id="mq-${prefix}-island-dw" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              Is there a dishwasher in the island? <span style="color:#6b7280;font-weight:400">(+24" to the back row)</span>
+              Is there a dishwasher in the island? <span style="color:#6b7280;font-weight:400">If so, we will account for it.</span>
             </label>
           </div>
           <div class="mq-field" style="margin-top:10px">
             <label class="mq-label" style="display:block;margin-bottom:8px">Island panels</label>
             <select id="mq-${prefix}-island-panel">
-              <option value="regular">Regular flat panels</option>
-              ${islandOffersDecorative ? `<option value="decorative">Decorative panels (match door style)</option>` : ''}
+              <option value="regular">Standard finished ends</option>
             </select>
           </div>
         </div>
@@ -3625,6 +3626,64 @@
       // lowers" is switched on, so their overflow arrows never got a real
       // scrollWidth/clientWidth to measure until now.
       if (diffOn[prefix] && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
+      // Switching "Different styles for uppers and lowers" on/off swaps
+      // which <select> is authoritative for the base door (mq-${prefix}-
+      // b-door vs the shared mq-${prefix}-door — see calcCabinet's own
+      // diffOn[prefix]?...:... ternary for bDoorKey), and the two selects
+      // aren't kept in sync with each other while hidden, so the
+      // decorative-island-panel gate has to be re-checked against whichever
+      // one just became authoritative.
+      mqRefreshIslandPanelOption(prefix);
+    };
+    // Decorative island panels are gated TWO ways now (per Jordan
+    // 2026-10-02): the shop has to have actually calibrated a decorative
+    // panel price at all (shop['Island panel pricing'].decorativePct —
+    // same shop-wide gate cabinetForm used to check statically), AND the
+    // customer's currently-selected BASE door has to be individually
+    // tagged `Offers decorative island panel` on the Pricing tab (e.g.
+    // shaker doors come in a matching panel, melamine slab doesn't). Both
+    // conditions can change independently after first render — the shop
+    // gate never does within one widget load, but the door selection
+    // obviously does — so this re-derives the door side fresh every call
+    // rather than once, and has to run on every base-door change, not just
+    // at initial setup.
+    //
+    // "Base door" here means whichever <select> calcCabinet itself treats
+    // as authoritative for bDoorRate: mq-${prefix}-b-door when "different
+    // styles for uppers/lowers" is on, otherwise the shared mq-${prefix}-
+    // door. Decorative panel cost is explicitly priced off bDoorRate (see
+    // islandPanelCost in calcCabinet), never the upper door, so the upper
+    // door select intentionally isn't wired to call this at all.
+    window.mqRefreshIslandPanelOption = function(prefix) {
+      const sel = document.getElementById(`mq-${prefix}-island-panel`);
+      if (!sel) return;
+      let islandPanelCfg = {};
+      try { islandPanelCfg = shop['Island panel pricing'] ? JSON.parse(shop['Island panel pricing']) : {}; } catch(e) { islandPanelCfg = {}; }
+      const shopOffersDecorative = islandPanelCfg.decorativePct !== undefined && islandPanelCfg.decorativePct !== null && islandPanelCfg.decorativePct !== '';
+      const bDoorKey = diffOn[prefix] ? gv(`mq-${prefix}-b-door`) : gv(`mq-${prefix}-door`);
+      const m = /^dyn_(\d+)$/.exec(bDoorKey || '');
+      // Legacy/fallback shops (hasDynamic===false) use hardcoded keys like
+      // 'slab'/'shaker' instead of dyn_N, so this regex never matches and
+      // decorative correctly never shows for them — consistent with the
+      // whole feature depending on real per-door line items plus shop-wide
+      // pricing calibration anyway. Same for bDoorKey==='none' (no door
+      // selected) — panel cost is already $0 with no door picked regardless
+      // (bDoorRate===0), so hiding the option there too is just honest.
+      const doorRec = m ? (li.doorStyles||[])[parseInt(m[1], 10)] : null;
+      const doorOffersDecorative = !!(doorRec && doorRec['Offers decorative island panel']);
+      const showDecorative = shopOffersDecorative && doorOffersDecorative;
+      const existingOption = sel.querySelector('option[value="decorative"]');
+      if (showDecorative && !existingOption) {
+        sel.insertAdjacentHTML('beforeend', `<option value="decorative">Decorative finished ends</option>`);
+      } else if (!showDecorative && existingOption) {
+        // Falls back to 'regular' rather than leaving the select on a value
+        // that no longer has a matching <option> — an orphaned selected
+        // value on a native <select> silently reverts to whichever option
+        // IS still there anyway, but doing it explicitly keeps gv() and the
+        // live price in sync with what the customer now actually sees.
+        if (sel.value === 'decorative') sel.value = 'regular';
+        existingOption.remove();
+      }
     };
     // Islands — "+ Add island" just reveals the fields block in place (no
     // repeatable cards like Tall cabinets; a kitchen gets one island
@@ -7520,6 +7579,14 @@ window.mqTogDrawerConfig=(prefix)=>{
     mqRefreshAllPickerVisibility('b');
     mqRefreshSectionVisibility('c');
     mqRefreshSectionVisibility('b');
+    // Decorative island panel option — same first-load treatment as the
+    // room-visibility calls above: the base door <select>'s default
+    // first-<option> is already "picked" on render but never fired a
+    // 'change' event for it, so without this the "Decorative finished
+    // ends" option would silently depend on the customer manually
+    // reselecting a door once before it could ever show up.
+    mqRefreshIslandPanelOption('c');
+    mqRefreshIslandPanelOption('b');
     // The standalone Countertops tab's own project-type selector (added
     // alongside 'c'/'b' above) needs this same first-load treatment —
     // without it, a native <select> auto-selects its first <option> on
