@@ -4716,7 +4716,7 @@ window.mqphGoToWizard = function() {
         ${taggableGroups.length ? `
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px">
           <span style="font-size:12px;color:#374151;white-space:nowrap">Tag a whole group:</span>
-          <select id="mqph-style-${style.id}-grouptag" style="flex:1;min-width:160px;font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px">
+          <select id="mqph-style-${style.id}-grouptag" onchange="mqphOnIslandGroupPicked('${style.id}')" style="flex:1;min-width:160px;font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px">
             <option value="">— pick a group —</option>
             ${taggableGroups.map(g => `<option value="${g.name.replace(/"/g,'&quot;')}">${g.name} (${g.count} door${g.count===1?'':'s'})</option>`).join('')}
           </select>
@@ -5216,7 +5216,34 @@ window.mqphGoToWizard = function() {
       const failedIds = new Set(failed.map(d => d.id));
       toTag.forEach(d => { if (failedIds.has(d.id)) d.fields['Island panel style'] = prevTags.get(d.id); });
       alert(`${toTag.length - failed.length} of ${toTag.length} doors in "${groupName}" were tagged — ${failed.length} failed and were rolled back. Try tagging the group again to pick up the rest.`);
-      mqphRerenderIslandPanelSection();
+    }
+    // Re-render unconditionally, success or failure (Jordan 2026-10-03:
+    // "even after is checkboxed the doors it still showed 'tagging 2
+    // doors'... having it say that after successfully tagging makes it
+    // look like its not working even though it is") — this was the actual
+    // bug: that only happened above when `failed.length` was truthy, so a
+    // fully successful batch left the button stuck on "Tagging N…"
+    // forever with no further render to clear it, even though every door
+    // really had been tagged.
+    mqphRerenderIslandPanelSection();
+  };
+
+  // Highlights the "Tag group" button the moment a group is actually
+  // picked, so it's obvious there's one more click needed — Jordan
+  // 2026-10-03: "as soon as they select a group lets highlight the 'tag
+  // group' button so they know they need to click it." A direct class
+  // swap, not a re-render, so it doesn't interrupt picking from the
+  // dropdown.
+  window.mqphOnIslandGroupPicked = function(styleId) {
+    const sel = document.getElementById(`mqph-style-${styleId}-grouptag`);
+    const btn = document.getElementById(`mqph-style-${styleId}-grouptag-btn`);
+    if (!sel || !btn) return;
+    if (sel.value) {
+      btn.classList.remove('mqph-btn-secondary');
+      btn.classList.add('mqph-btn-primary');
+    } else {
+      btn.classList.remove('mqph-btn-primary');
+      btn.classList.add('mqph-btn-secondary');
     }
   };
 
