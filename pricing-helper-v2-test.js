@@ -4637,7 +4637,7 @@ window.mqphGoToWizard = function() {
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:10px 0">
         <input type="checkbox" id="mqph-style-${style.id}-offersflat" ${offersFlat?'checked':''} onchange="mqphSetIslandStyleField('${style.id}','offersFlat',this.checked)" style="width:auto"/>
-        Does this door style offer flat panels?
+        This door style offers flat panels
       </label>
       ${offersFlat ? `
       <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" finished flat panel in this style's material</label>
@@ -4645,7 +4645,7 @@ window.mqphGoToWizard = function() {
       </div>` : ''}
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:10px 0">
         <input type="checkbox" id="mqph-style-${style.id}-offersdec" ${offersDecorative?'checked':''} onchange="mqphSetIslandStyleField('${style.id}','offersDecorative',this.checked)" style="width:auto"/>
-        Does this door style offer decorative panels?
+        This door style offers decorative panels
       </label>
       ${offersDecorative ? `
       ${decSources.length ? `
