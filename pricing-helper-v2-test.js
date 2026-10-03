@@ -4446,6 +4446,7 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" decorative panel <span style="font-weight:400;color:#9ca3af">(optional — leave blank if you don't offer decorative island panels)</span></label>
               <input type="number" id="mqph-island-decorativecost" step="0.01" placeholder="0.00" value="${cfg.decorativeFlatQuote!=null?cfg.decorativeFlatQuote:''}" oninput="mqphCalcIslandPanelPct();mqphResetIslandSaveBtn()"/>
             </div>
+            <p style="margin:-4px 0 12px;font-size:12px;color:#9ca3af">If you don't use finished end panels, you can enter 0 for these.</p>
             <div id="mqph-island-pct-reveal" style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:1rem;line-height:1.6"></div>
             <button class="mqph-btn ${isSaved ? 'mqph-btn-saved' : 'mqph-btn-primary'}" id="mqph-island-save-btn" style="width:100%" onclick="mqphSaveIslandPanelPricing()">${isSaved ? '✓ Island panel pricing saved' : 'Save island panel pricing →'}</button>
           </div>
@@ -4488,7 +4489,12 @@ window.mqphGoToWizard = function() {
     const doorRate = doorRec?.fields['Rate'] || 0;
     const panelCostRaw = document.getElementById('mqph-island-panelcost')?.value;
     const decCostRaw = document.getElementById('mqph-island-decorativecost')?.value;
-    const panelCost = panelCostRaw !== '' && panelCostRaw != null ? parseFloat(panelCostRaw) : 0;
+    // Distinguish "nothing typed yet" from "typed an explicit 0" -- a shop
+    // intentionally entering 0 (no finished end panels) should see "0% of
+    // door cost" confirming that choice, not the same "—" shown before
+    // they've touched the field at all (Jordan 2026-10-02).
+    const panelEntered = panelCostRaw !== '' && panelCostRaw != null && !isNaN(parseFloat(panelCostRaw));
+    const panelCost = panelEntered ? parseFloat(panelCostRaw) : 0;
     const decCost = decCostRaw !== '' && decCostRaw != null ? parseFloat(decCostRaw) : null;
     if (!doorRate) {
       reveal.innerHTML = `<span style="color:#92400e">Pick a door style with a rate above ${CUR()}0 to compute a percentage.</span>`;
@@ -4499,7 +4505,7 @@ window.mqphGoToWizard = function() {
     const panelPct = panelRatePerFt > 0 ? (panelRatePerFt/doorRate)*100 : 0;
     const decPct = (decRatePerFt != null && decRatePerFt > 0) ? (decRatePerFt/doorRate)*100 : null;
     reveal.innerHTML = `
-      <div>Regular panels: <strong>${panelCost>0?`${Math.round(panelPct*10)/10}% of door cost`:'—'}</strong>${panelCost>0?` <span style="color:#9ca3af">(≈ ${CUR()}${panelRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>
+      <div>Regular panels: <strong>${panelEntered?`${Math.round(panelPct*10)/10}% of door cost`:'—'}</strong>${panelCost>0?` <span style="color:#9ca3af">(≈ ${CUR()}${panelRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>
       <div>Decorative panels: <strong>${decPct!=null?`${Math.round(decPct*10)/10}% of door cost`:'not offered'}</strong>${decRatePerFt!=null?` <span style="color:#9ca3af">(≈ ${CUR()}${decRatePerFt.toFixed(2)}/lin ft)</span>`:''}</div>`;
   };
 
@@ -4512,7 +4518,14 @@ window.mqphGoToWizard = function() {
     const panelCost = panelCostRaw !== '' && panelCostRaw != null ? parseFloat(panelCostRaw) : 0;
     const decCost = decCostRaw !== '' && decCostRaw != null ? parseFloat(decCostRaw) : null;
     if (!doorId || !doorRate) { alert('Pick a door style with a rate above ' + CUR() + '0 to compare against.'); return; }
-    if (!panelCost || panelCost <= 0) { alert('Enter the price you\'d charge for a 24" × 34.5" finished flat panel before saving.'); return; }
+    // 0 is a valid, intentional value here (Jordan 2026-10-02) -- a
+    // lower-end shop that doesn't use finished end panels at all (just the
+    // box material, front and back) should be able to save that explicitly
+    // rather than being forced to either enter some nonzero price or never
+    // save this section at all. What's actually required is a real NUMBER
+    // in the field -- blank, or something that doesn't parse to a number,
+    // still isn't a valid save.
+    if (panelCostRaw === '' || panelCostRaw == null || isNaN(panelCost) || panelCost < 0) { alert('Enter the price you\'d charge for a 24" × 34.5" finished flat panel before saving — enter 0 if your shop doesn\'t charge extra for finished end panels.'); return; }
 
     const panelRatePerFt = panelCost / ISLAND_PANEL_WIDTH_FT;
     const decRatePerFt = (decCost != null && decCost > 0) ? decCost / ISLAND_PANEL_WIDTH_FT : null;
