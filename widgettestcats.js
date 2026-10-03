@@ -4512,19 +4512,6 @@
         sec.classList.remove('mq-step-current', 'mq-step-done', 'mq-step-upcoming');
         sec.classList.add(i < current ? 'mq-step-done' : i === current ? 'mq-step-current' : 'mq-step-upcoming');
         mqEnsureStepFooter(sec, prefix, i, sections.length);
-        // Only one section stays open at a time — every section that isn't
-        // the current step collapses back to its default (closed) state as
-        // soon as focus moves away from it, whether that section is ahead
-        // (upcoming) or behind (done). "Project basics" and any other
-        // section with no `-body` wrapper naturally no-op here since the
-        // querySelector below just returns null for them.
-        if (i !== current) {
-          const body = sec.querySelector('[id$="-body"]');
-          if (body && body.style.display !== 'none') {
-            const key = body.id.replace(/^mq-/, '').replace(/-body$/, '');
-            window.mqToggleCollapse(key);
-          }
-        }
       });
       // If the current step is a collapsible section that's still closed,
       // open it automatically — no point being "the focused step" if its
