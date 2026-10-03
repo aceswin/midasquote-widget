@@ -4495,6 +4495,14 @@ window.mqphGoToWizard = function() {
   // of this flag — Jordan 2026-10-03: "i think both. it will flash and
   // then after the flash will show up in the header right after."
   window._mqIslandJustCompletedFlash = window._mqIslandJustCompletedFlash || false;
+  // Whether the "How island panel pricing works" explanation is expanded —
+  // Jordan 2026-10-03 wanted the description collapsible, same declutter
+  // reasoning as the style cards auto-collapsing. Collapsed by default
+  // (view-only, never saved to Airtable, same as every other UI-only flag
+  // in this section) so a shop that's already set this up once isn't
+  // staring at a wall of explanation text every time they open the
+  // section — one click brings it back for a shop that needs the refresher.
+  window._mqIslandInfoExpanded = window._mqIslandInfoExpanded || false;
 
   // Shops quote a flat price for a finished 24"×34.5" panel (the size we
   // tell them to use) rather than a $/lin ft rate directly — most shops
@@ -4716,10 +4724,19 @@ window.mqphGoToWizard = function() {
         </div>
         <div id="mqph-cat-body-islandpanel" style="display:none">
           <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
-            <p style="margin:0 0 10px">Islands tend to cost more because of finished side panels and back panels. To make this very simple, we'll create a ratio cost for your panels (flat or decorative) based on your different door styles.</p>
-            <p style="margin:0 0 10px">For example, if you have flat doors, shaker doors, and raised panel doors, you'd create those three distinct styles below.</p>
-            <p style="margin:0 0 10px">For each style, you decide whether that door style offers decorative panels, just flat panels, or both — then enter the price of a flat panel and/or a decorative panel based on one door you select to represent that style.</p>
-            <p style="margin:0">For example, if the style is Shaker and you choose Maple Shaker as the door to price against, you simply quote the flat panel cost you'd charge for a Maple Shaker door, and the decorative panel cost you'd charge for a Shaker door. This creates a ratio for each — maybe the flat panel works out to 75% of the door's linear-foot cost, and the decorative panel works out to 90%. From then on, whenever a customer adds an island and has a Shaker door selected, that ratio determines the extra cost of the panels — no matter what material is used, the ratio is applied based on the style. So you only need to quote once per style instead of once per door. Style names are internal only — customers never see them.</p>
+            <div style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600" onclick="mqphToggleIslandInfo()">
+              <span id="mqph-island-info-arrow" style="display:inline-block;font-size:11px;transition:transform 0.2s;${window._mqIslandInfoExpanded?'transform:rotate(90deg)':''}">▶</span>
+              <span>How island panel pricing works</span>
+            </div>
+            <div id="mqph-island-info-body" style="display:${window._mqIslandInfoExpanded?'block':'none'};margin-top:8px">
+              <p style="margin:0 0 10px">Islands tend to cost more because of finished side panels and back panels. To make this very simple, we'll create a ratio cost for your panels (flat or decorative) based on your different door styles.</p>
+              <p style="margin:0 0 10px">For example, if you have flat doors, shaker doors, and raised panel doors, you'd create those three distinct styles below.</p>
+              <p style="margin:0 0 10px">For each style, you decide whether that door style offers decorative panels, just flat panels, or both — then enter the price of a flat panel and/or a decorative panel based on one door you select to represent that style.</p>
+              <p style="margin:0 0 10px">For example, if the style is Shaker and you choose Maple Shaker as the door to price against, you simply quote the flat panel cost you'd charge for an island with Maple Shaker doors, and the decorative panel cost you'd charge for the same island.</p>
+              <p style="margin:0 0 10px">This creates a ratio for each — maybe the flat panel works out to 75% of the door's linear-foot cost, and the decorative panel works out to 90%. From then on, whenever a customer adds an island and has a Shaker door selected, that ratio scales with whatever door is chosen — so if it's a Cherry Shaker door that costs more, the panel cost will be 75% of that door's cost per linear foot.</p>
+              <p style="margin:0 0 10px">Since a raised panel door is more expensive than a shaker door, we need a separate price for that style. If you use Maple Raised Panel as your door to price against, you'll likely use the same panel price as you did for Maple Shaker, but the ratio will differ — and that ratio then applies to all the raised panel doors.</p>
+              <p style="margin:0">Style names are internal only — customers never see them. Feel free to watch the video to help make this clearer.</p>
+            </div>
           </div>
           ${showFlash ? `<div id="mqph-island-flash" style="margin:0 16px 12px;background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ All doors tagged!</div>` : ''}
           ${!hasDoors ? `
@@ -4864,6 +4881,20 @@ window.mqphGoToWizard = function() {
     if (window._mqIslandExpandedStyles.has(styleId)) window._mqIslandExpandedStyles.delete(styleId);
     else window._mqIslandExpandedStyles.add(styleId);
     mqphRerenderIslandPanelSection();
+  };
+
+  // Toggles the "How island panel pricing works" explanation open/closed —
+  // a direct DOM flip (not a full section re-render) since nothing else on
+  // the page depends on its state, same lightweight pattern as the
+  // door-search/sort toggles. The underlying flag still persists across a
+  // full re-render triggered by anything else (see buildIslandPanelHtml),
+  // so saving a style elsewhere doesn't snap this back shut.
+  window.mqphToggleIslandInfo = function() {
+    window._mqIslandInfoExpanded = !window._mqIslandInfoExpanded;
+    const body = document.getElementById('mqph-island-info-body');
+    const arrow = document.getElementById('mqph-island-info-arrow');
+    if (body) body.style.display = window._mqIslandInfoExpanded ? 'block' : 'none';
+    if (arrow) arrow.style.transform = window._mqIslandInfoExpanded ? 'rotate(90deg)' : '';
   };
 
   // Switches a style's decorative pricing between "enter manually" and
