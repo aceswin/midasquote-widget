@@ -2738,8 +2738,14 @@
           </div>
           <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-              <input type="checkbox" id="mq-${prefix}-island-double" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              <input type="checkbox" id="mq-${prefix}-island-double" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
               This is a double-row (back-to-back) island
+            </label>
+          </div>
+          <div class="mq-field" id="mq-${prefix}-island-dw-wrap" style="display:none;margin-top:10px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input type="checkbox" id="mq-${prefix}-island-dw" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              Is there a dishwasher in the island? <span style="color:#6b7280;font-weight:400">(+24" to the back row)</span>
             </label>
           </div>
           <div class="mq-field" style="margin-top:10px">
@@ -3643,11 +3649,38 @@
       if (doubleEl) doubleEl.checked = false;
       const panelEl = document.getElementById(`mq-${prefix}-island-panel`);
       if (panelEl) panelEl.value = 'regular';
+      const dwEl = document.getElementById(`mq-${prefix}-island-dw`);
+      if (dwEl) dwEl.checked = false;
+      const dwWrap = document.getElementById(`mq-${prefix}-island-dw-wrap`);
+      if (dwWrap) dwWrap.style.display = 'none';
+      if (window.mqTogDwOption) window.mqTogDwOption(prefix); // island dw cleared — restore the countertop "add space for dishwasher" checkbox if this room uses it
       // Programmatic value changes above don't fire 'input'/'change' on
       // their own — the container's delegated listener (which normally
       // drives live recalc) never sees them, so the price would otherwise
       // keep showing the removed island's cost until the next unrelated
       // edit. Trigger it directly.
+      mqScheduleLiveRecalc();
+    };
+    // Island "double-row (back-to-back)" + "dishwasher in the island" work
+    // together: the dw question only makes sense for a double-row island
+    // (a single row's dishwasher doesn't create a mismatched back row), so
+    // toggling double-row shows/hides it, and it self-clears if double-row
+    // gets unchecked while it was on. Checking it also hides the separate
+    // "Add extra space for a dishwasher" checkbox in the Both tab's
+    // countertop section (mqTogDwOption, below) — that one's for a
+    // dishwasher along the wall run, which would double-count the same
+    // appliance if both were checked at once.
+    window.mqTogIslandDw=(prefix)=>{
+      const doubleEl = document.getElementById(`mq-${prefix}-island-double`);
+      const dwWrap = document.getElementById(`mq-${prefix}-island-dw-wrap`);
+      const isDouble = doubleEl?.checked === true;
+      if (dwWrap) dwWrap.style.display = isDouble ? '' : 'none';
+      if (!isDouble) {
+        const dwEl = document.getElementById(`mq-${prefix}-island-dw`);
+        if (dwEl) dwEl.checked = false;
+      }
+      if (window.mqTogDwOption) window.mqTogDwOption(prefix);
+      if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix);
       mqScheduleLiveRecalc();
     };
     window.mqTogVanityNote=(prefix)=>{
@@ -4787,6 +4820,8 @@
         if (islandFtEl) islandFtEl.value = 0;
         const islandDoubleEl = document.getElementById(`mq-${prefix}-island-double`);
         if (islandDoubleEl) islandDoubleEl.checked = false;
+        const islandDwElOff = document.getElementById(`mq-${prefix}-island-dw`);
+        if (islandDwElOff) islandDwElOff.checked = false;
       } else if (islandFieldsWrap && islandFieldsWrap.style.display === 'none') {
         // Island supported here but not currently opened — show the button,
         // keep the fields collapsed (don't force it open just because the
@@ -4794,7 +4829,23 @@
         if (islandBtnWrap) islandBtnWrap.style.display = '';
       }
       const islandDoubleWrap = document.getElementById(`mq-${prefix}-island-double-wrap`);
-      if (islandDoubleWrap) islandDoubleWrap.style.display = (islandAllowed && roomObjForMeasuring.islandAllowDoubleRow) ? '' : 'none';
+      const islandDoubleShown = islandAllowed && roomObjForMeasuring.islandAllowDoubleRow;
+      if (islandDoubleWrap) islandDoubleWrap.style.display = islandDoubleShown ? '' : 'none';
+      // Dishwasher-in-island question only makes sense while double-row is
+      // both offered and actually checked — same dependency mqTogIslandDw
+      // enforces on a live toggle, re-applied here so a project-type switch
+      // (which can silently flip islandDoubleShown or the checkbox itself)
+      // can't leave it shown with nothing to depend on, or hidden-but-still-
+      // checked-and-priced.
+      const islandDoubleElNow = document.getElementById(`mq-${prefix}-island-double`);
+      const islandDwWrapNow = document.getElementById(`mq-${prefix}-island-dw-wrap`);
+      const islandDoubleCheckedNow = islandDoubleShown && islandDoubleElNow?.checked === true;
+      if (islandDwWrapNow) islandDwWrapNow.style.display = islandDoubleCheckedNow ? '' : 'none';
+      if (!islandDoubleCheckedNow) {
+        const islandDwElNow = document.getElementById(`mq-${prefix}-island-dw`);
+        if (islandDwElNow) islandDwElNow.checked = false;
+      }
+      if (window.mqTogDwOption) window.mqTogDwOption(prefix); // keep the wall-run dishwasher checkbox's visibility in sync with the above, regardless of call order
       // The "Cabinet details" divider only exists on the Both tab
       const cabDivider = document.getElementById(`mq-${prefix}-cabinet-divider`);
       if (cabDivider) cabDivider.style.display = cabActive ? '' : 'none';
@@ -5561,7 +5612,15 @@
       const wrap = document.getElementById(`mq-${prefix}-cab-dw-wrap`);
       if (!wrap) return; // only exists on the Both tab
       const room = gv(`mq-${prefix}-room`);
-      const showDw = room==='kitchen' || room==='other';
+      // Hidden whenever the island's own "Is there a dishwasher in the
+      // island?" checkbox is active — that one already adds its 2ft to the
+      // countertop span (see calcCountertop), so showing this wall-run
+      // dishwasher checkbox too would let the same appliance get counted
+      // twice if someone checked both.
+      const islandDwWrap = document.getElementById(`mq-${prefix}-island-dw-wrap`);
+      const islandDwActive = islandDwWrap && islandDwWrap.style.display !== 'none'
+        && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
+      const showDw = (room==='kitchen' || room==='other') && !islandDwActive;
       wrap.style.display = showDw ? 'block' : 'none';
       if (!showDw) {
         const dwCheckbox = document.getElementById(`mq-${prefix}-cab-dw`);
@@ -6084,6 +6143,19 @@ window.mqTogDrawerConfig=(prefix)=>{
       const islandFt = islandSectionActive ? gn(`mq-${prefix}-islandft`, 0) : 0;
       const islandDouble = islandSectionActive && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
       const islandPanel = islandSectionActive ? (gv(`mq-${prefix}-island-panel`) || 'regular') : 'regular';
+      // Dishwasher built into a double-row (back-to-back) island (Jordan
+      // 2026-10-02): the customer enters the FRONT row's cabinet footage
+      // (islandFt) same as always — the dishwasher itself isn't a cabinet,
+      // so it's never part of that number. But the back row has no
+      // dishwasher gap to match, so it still runs the full physical length
+      // of the island, which is 2ft (24") longer than the front row's
+      // cabinet footage whenever this is checked. islandBackFt captures
+      // that: equal to islandFt when there's no island dishwasher (the
+      // original single-length assumption for both rows, unchanged), and
+      // islandFt+2 when there is one. Only meaningful for a double-row
+      // island — a single-row island has no "back row" to extend.
+      const islandDw = islandSectionActive && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
+      const islandBackFt = islandDw ? islandFt + 2 : islandFt;
       // Back row of a double-row island: upper box's material rate (it's
       // the shallow ~12–16" row) but the BASE cabinet's own door/hinge
       // rate, not the upper's — Jordan 2026-10-01: an island's back side
@@ -6096,15 +6168,24 @@ window.mqTogDrawerConfig=(prefix)=>{
       const islandBackRowMatDoorHinge = uMat.rateU * upperVanityMult + bDoorRate + bHingeRate;
       let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandExposedFt = 0;
       if (islandFt > 0) {
-        islandBoxCost = islandFt * (islandDouble ? (bMatDoorHinge + islandBackRowMatDoorHinge) : bMatDoorHinge);
+        islandBoxCost = (islandFt * bMatDoorHinge) + (islandDouble ? islandBackFt * islandBackRowMatDoorHinge : 0);
         // bInstall already resolves to 0 when si !== 'install', already
         // reflects the current drawer tier/door selection the same way the
         // rest of the kitchen's base cabinets do, and already has the
         // project type's own install % adjustment baked in — reusing it
         // directly keeps island install cost fully consistent with the
         // base cabinets it's modeled on, rather than recomputing a
-        // slightly different rate here.
+        // slightly different rate here. Deliberately still keyed off the
+        // front-row islandFt even when the dishwasher adds 2ft to the back
+        // row — install here has always been a flat "island install job"
+        // rate off the entered footage regardless of row count (Jordan's
+        // original call), not per-row-foot, so the dishwasher's extra back-
+        // row length doesn't change it either.
         islandInstallCost = islandFt * bInstall;
+        // Exposed panel footage (both ends + any uncovered back) stays the
+        // flat "6" a double-row island already uses regardless of length —
+        // a dishwasher in the middle of the run doesn't change how much of
+        // the two ends needs a finished panel.
         islandExposedFt = islandDouble ? 6 : (4 + islandFt);
         const effectivePanelPct = (islandPanel === 'decorative' && islandDecorativePct != null) ? islandDecorativePct : islandPanelPct;
         islandPanelCost = islandExposedFt * bDoorRate * (effectivePanelPct / 100);
@@ -6118,7 +6199,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(uFt>0&&uInstallCost>0) lines.push({label:`Upper cabinet install (${uFt} lin ft)`,cost:Math.round(uInstallCost)});
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
       if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
-      if(islandFt>0) lines.push({label:`Island cabinets — ${islandDouble?'double-row':'single-row'}, ${islandPanel==='decorative'?'decorative':'regular'} panels (${islandFt} lin ft)`,cost:Math.round(islandCost)});
+      if(islandFt>0) lines.push({label:`Island cabinets — ${islandDouble?'double-row':'single-row'}, ${islandPanel==='decorative'?'decorative':'regular'} panels (${islandFt} lin ft${islandDw?`, back row ${islandBackFt} lin ft w/ dishwasher`:''})`,cost:Math.round(islandCost)});
       if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       // Tall cabinets — loop over every card the customer added. Each one
@@ -6340,15 +6421,25 @@ window.mqTogDrawerConfig=(prefix)=>{
         const islandOpenForCt = islandFieldsEl && islandFieldsEl.style.display !== 'none';
         const islandFtForCt = islandOpenForCt ? gn(`mq-${prefix}-islandft`, 0) : 0;
         const islandDoubleForCt = islandOpenForCt && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
+        const islandDwForCt = islandOpenForCt && islandDoubleForCt && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
+        // The countertop sits on top of the WHOLE island, dishwasher gap
+        // included — if the island dishwasher checkbox is on, the
+        // countertop needs to span islandFtForCt+2, not just the entered
+        // cabinet footage, same +2ft the back row gets in calcCabinet above
+        // (Jordan 2026-10-02). Kept as its own variable (islandCtLenFt)
+        // rather than overwriting islandFtForCt, since islandFtForCt alone
+        // is still what the line-item label below shows as "the island's
+        // cabinet footage."
+        const islandCtLenFt = islandDwForCt ? islandFtForCt + 2 : islandFtForCt;
         const islandCtDepthIn = islandDoubleForCt ? 39 : 25.5;
-        const totalCtFt = baseCtFt + islandFtForCt;
+        const totalCtFt = baseCtFt + islandCtLenFt;
         if (totalCtFt > 0) {
           // linFt stays the wall-run footage only (base cabinets + dishwasher
           // + extra) — used for the backsplash calc and the "lin ft" shown
           // in the label, since a freestanding island has no wall behind it
           // to backsplash against.
           const linFt = baseCtFt;
-          const sqft  = (baseCtFt * (ctDepth/12)) + (islandFtForCt * (islandCtDepthIn/12));
+          const sqft  = (baseCtFt * (ctDepth/12)) + (islandCtLenFt * (islandCtDepthIn/12));
           // A lin-ft-priced material's rate assumes material runs at the
           // standard ctDepth per linear foot — an island at a different
           // depth needs its footage scaled to match (39"/25.5" ≈ 1.53× for
@@ -6357,7 +6448,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           // already are via the depth difference above. Used for lin-ft
           // pricing, edge/cutout addons, and linft-unit removal — NOT for
           // the backsplash calc, which stays on linFt (wall-run only).
-          const pricingLinFt = baseCtFt + (islandFtForCt * (islandCtDepthIn / ctDepth));
+          const pricingLinFt = baseCtFt + (islandCtLenFt * (islandCtDepthIn / ctDepth));
           const mat   = gv(matId);
           const si    = gv(ctSiId);
           const m     = mat === 'none' ? null : (CT_MAT[mat] || null);
@@ -6394,7 +6485,7 @@ window.mqTogDrawerConfig=(prefix)=>{
             const addonsRes = ctAddonsCost(m, `mq-${prefix}-cab-edge-sel`, `mq-${prefix}-cab-addons-a`, pricingLinFt, sqft, ctDepth);
             const cost = supplyCost + installCost + bsCost + cutoutCost + removalCost + addonsRes.cost;
             sub += cost;
-            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft${islandFtForCt>0?` + ${islandFtForCt} ft island, ${islandDoubleForCt?'double-row':'single-row'}`:''}, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${removalChecked?' + removal':''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
+            lines.push({label:`Cabinet run — ${m.label} (${linFt} lin ft${islandCtLenFt>0?` + ${islandCtLenFt} ft island${islandDwForCt?' w/ dishwasher':''}, ${islandDoubleForCt?'double-row':'single-row'}`:''}, ~${Math.round(sqft*10)/10} sqft) · ${si==='install'?'Supply + install':'Supply only'}${(bsOpt&&bsLinFt>0)?` + backsplash (${bsOpt.label}, ${bsLinFt} lin ft)`:''}${removalChecked?' + removal':''}${addonsRes.labelParts.length?` + ${addonsRes.labelParts.join(', ')}`:''}`, cost:Math.round(cost)});
           }
         }
       }
