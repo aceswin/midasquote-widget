@@ -2552,7 +2552,7 @@
     // finished ends" is available at all is now decided live, in
     // mqRefreshIslandPanelOption (wireWidget), which checks both the shop's
     // "Island panel pricing" setup AND whether the customer's currently-
-    // selected base door is tagged `Offers decorative island panel`. That
+    // selected base door is NOT tagged `Hide decorative island panel`. That
     // function runs once at initial setup and again on every base-door
     // change, so it has to be the sole place this gate is evaluated — doing
     // it here too (statically, at render time) would only reflect whichever
@@ -3639,8 +3639,8 @@
     // 2026-10-02): the shop has to have actually calibrated a decorative
     // panel price at all (shop['Island panel pricing'].decorativePct —
     // same shop-wide gate cabinetForm used to check statically), AND the
-    // customer's currently-selected BASE door has to be individually
-    // tagged `Offers decorative island panel` on the Pricing tab (e.g.
+    // customer's currently-selected BASE door must NOT be individually
+    // tagged `Hide decorative island panel` on the Pricing tab (e.g.
     // shaker doors come in a matching panel, melamine slab doesn't). Both
     // conditions can change independently after first render — the shop
     // gate never does within one widget load, but the door selection
@@ -3670,13 +3670,20 @@
       // selected) — panel cost is already $0 with no door picked regardless
       // (bDoorRate===0), so hiding the option there too is just honest.
       const doorRec = m ? (li.doorStyles||[])[parseInt(m[1], 10)] : null;
-      // Defaults to ON, not off (Jordan 2026-10-03) — a door only counts as
-      // opted out once it's been explicitly unchecked on the Pricing tab's
-      // checklist (`=== false`), so a shop that's never touched that
-      // checklist still has every door offering the decorative option
-      // instead of silently offering none. Matches the same default-on
-      // reading of this field in pricing-helper-v2.js's checklist/badge.
-      const doorOffersDecorative = !!doorRec && doorRec['Offers decorative island panel'] !== false;
+      // Defaults to ON, not off (Jordan 2026-10-03) — read off the
+      // INVERTED field `Hide decorative island panel`, not a positive
+      // "Offers..." field. A door only counts as opted out once that's
+      // been explicitly checked true on the Pricing tab's checklist, so a
+      // shop that's never touched that checklist still has every door
+      // offering the decorative option instead of silently offering none.
+      // Has to be the inverted field specifically — Airtable Checkbox
+      // fields can only ever read back as `true` or be completely absent,
+      // never a real `false`, so a positive field whose unset/false state
+      // is supposed to mean "on" can never actually have an "off" written
+      // to it that survives a reload (it silently reverts to "on" every
+      // time). See pricing-helper-v2.js's mqphToggleDecorativeDoor
+      // comment for the full story — matches the same reading there.
+      const doorOffersDecorative = !!doorRec && doorRec['Hide decorative island panel'] !== true;
       const showDecorative = shopOffersDecorative && doorOffersDecorative;
       const existingOption = sel.querySelector('option[value="decorative"]');
       if (showDecorative && !existingOption) {
