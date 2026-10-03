@@ -4550,6 +4550,47 @@ window.mqphGoToWizard = function() {
     });
   }
 
+  // Runs `fn` over `items` a few at a time with a short pause between
+  // batches, instead of one giant Promise.all — Airtable's REST API caps
+  // out around 5 requests/second per base, and Jordan 2026-10-03 mentioned
+  // a shop with ~180 doors in a single group, which would blow well past
+  // that if fired all at once (the writes would just start failing with
+  // 429s, invisibly, since the old single Promise.all in
+  // mqphRemoveIslandStyle's untag-on-remove had the exact same latent
+  // issue — fixed alongside this for the same reason). Promise.allSettled
+  // per batch so one failure doesn't abort the rest; returns the items
+  // whose write failed so the caller can roll back just those.
+  async function mqphThrottledBatch(items, fn, batchSize = 5, delayMs = 1100) {
+    const failed = [];
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const results = await Promise.allSettled(batch.map(fn));
+      results.forEach((r, j) => { if (r.status === 'rejected') failed.push(batch[j]); });
+      if (i + batchSize < items.length) await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    return failed;
+  }
+
+  // Door groups (the shop's own "Group name" field, same one bulk-add
+  // uses — see mqphToggleMiniBulk) that have at least one door left to
+  // tag to THIS style, scoped to the normal tagging pool (so a group
+  // entirely tagged to a DIFFERENT style never shows up as taggable here).
+  // Jordan 2026-10-03: "it would be for it to also pay attention to if
+  // there are any door groups made and then instead of clicking every door
+  // that applies to a style they can just apply it to a whole group...
+  // because my one shop has like 180 doors in one group... if no groups
+  // exist then it just wont show the option."
+  function mqphStyleDoorGroupsInPool(styleId) {
+    const pool = mqphStyleDoorPool(styleId);
+    const counts = {};
+    pool.forEach(d => {
+      if (d.fields['Island panel style'] === styleId) return; // already tagged here -- nothing left to do for it
+      const g = (d.fields['Group name'] || '').trim();
+      if (g) counts[g] = (counts[g] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   function mqphBuildStyleDoorListHtml(styleId) {
     const pool = mqphStyleDoorPool(styleId);
     const ui = window._mqIslandTagUi[styleId] || { query:'', sortBy:'name', sortDir:'asc' };
@@ -4622,12 +4663,17 @@ window.mqphGoToWizard = function() {
     // 2026-10-03: "after the first style that created a decorative panel
     // ratio, for the next styles... give them the option").
     const decSources = mqphEligibleDecorativeSources(style.id);
+    // Door groups with something left to tag here — only shown at all if
+    // at least one exists, per Jordan 2026-10-03: "if no groups exist then
+    // it just wont show the option."
+    const taggableGroups = mqphStyleDoorGroupsInPool(style.id);
 
     return `
     <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:14px;background:#fff">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <input type="text" id="mqph-style-${style.id}-name" placeholder="Style name (e.g. Shaker) — internal only, customers never see this" value="${name.replace(/"/g,'&quot;')}" oninput="mqphSetIslandStyleField('${style.id}','name',this.value)" style="flex:1;font-weight:600;font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px"/>
         ${isSaved && !isDirty ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphToggleIslandStyleCollapse('${style.id}')">▲ Collapse</button>` : ''}
+        ${isSaved && isDirty ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqphDiscardIslandStyleEdits('${style.id}')">↩ Discard changes</button>` : ''}
         <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqphRemoveIslandStyle('${style.id}',${isSaved})">${isSaved ? '🗑 Remove style' : '✕ Discard'}</button>
       </div>
       <div class="mqph-field"><label>Compare against door style</label>
@@ -4668,6 +4714,15 @@ window.mqphGoToWizard = function() {
       <div id="mqph-style-${style.id}-pct-reveal" style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin:8px 0 12px;line-height:1.6"></div>
       <div style="border-top:1px solid #e5e7eb;padding-top:12px;margin-bottom:14px">
         <label style="font-weight:600;font-size:13px;color:#374151;display:block;margin-bottom:6px">Which doors use this style? <span style="font-weight:400;color:#9ca3af">(${taggedCount} tagged)</span></label>
+        ${taggableGroups.length ? `
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px">
+          <span style="font-size:12px;color:#374151;white-space:nowrap">Tag a whole group:</span>
+          <select id="mqph-style-${style.id}-grouptag" style="flex:1;min-width:160px;font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px">
+            <option value="">— pick a group —</option>
+            ${taggableGroups.map(g => `<option value="${g.name.replace(/"/g,'&quot;')}">${g.name} (${g.count} door${g.count===1?'':'s'})</option>`).join('')}
+          </select>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" id="mqph-style-${style.id}-grouptag-btn" onclick="mqphTagIslandStyleGroup('${style.id}', document.getElementById('mqph-style-${style.id}-grouptag').value)">Tag group</button>
+        </div>` : ''}
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
           <input type="text" placeholder="Search doors…" value="${(ui.query||'').replace(/"/g,'&quot;')}" oninput="mqphSetIslandStyleSearch('${style.id}',this.value)" style="flex:1;min-width:140px;font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px"/>
           <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" id="mqph-style-${style.id}-sortname-btn" onclick="mqphSetIslandStyleSort('${style.id}','name')">Name ${ui.sortBy==='name'?(ui.sortDir==='asc'?'▲':'▼'):''}</button>
@@ -4883,6 +4938,21 @@ window.mqphGoToWizard = function() {
     mqphRerenderIslandPanelSection();
   };
 
+  // Reverts an already-saved style back to its last-saved values without
+  // touching Airtable — Jordan 2026-10-03: "as soon as you make a change
+  // to a style thats been listed, you lose the ability to collapse it
+  // afterward." Root cause: mqphSetIslandStyleField stamps a pending edit
+  // the instant ANY input fires, even if you type the exact value right
+  // back, and isDirty (which gates the "▲ Collapse" button) has no way to
+  // clear itself short of actually saving. This just drops the pending
+  // edits for this one style, which snaps isDirty back to false and
+  // brings the Collapse button back — same escape hatch "🗑 Remove style"
+  // already gives an unsaved DRAFT, just without deleting anything here.
+  window.mqphDiscardIslandStyleEdits = function(styleId) {
+    delete window._mqIslandPendingEdits[styleId];
+    mqphRerenderIslandPanelSection();
+  };
+
   // Toggles the "How island panel pricing works" explanation open/closed —
   // a direct DOM flip (not a full section re-render) since nothing else on
   // the page depends on its state, same lightweight pattern as the
@@ -5049,8 +5119,16 @@ window.mqphGoToWizard = function() {
     if (!confirm(`Remove "${styleName}"?${taggedDoors.length ? ` ${taggedDoors.length} door${taggedDoors.length===1?'':'s'} tagged to it will become untagged.` : ''} This can't be undone.`)) return;
     try {
       if (taggedDoors.length) {
-        await Promise.all(taggedDoors.map(d => atUpdate(LINE_ITEMS_TABLE, d.id, { 'Island panel style': '' })));
-        taggedDoors.forEach(d => { d.fields['Island panel style'] = ''; });
+        // Throttled rather than one big Promise.all — a shop can easily
+        // have 100+ doors tagged to one style (Jordan 2026-10-03 mentioned
+        // ~180 in a single group), which would blow past Airtable's rate
+        // limit if fired all at once (see mqphThrottledBatch).
+        const failed = await mqphThrottledBatch(taggedDoors, d => atUpdate(LINE_ITEMS_TABLE, d.id, { 'Island panel style': '' }));
+        const failedIds = new Set(failed.map(d => d.id));
+        taggedDoors.forEach(d => { if (!failedIds.has(d.id)) d.fields['Island panel style'] = ''; });
+        if (failed.length) {
+          alert(`Removed "${styleName}", but ${failed.length} of ${taggedDoors.length} tagged door${taggedDoors.length===1?'':'s'} couldn't be untagged — please check ${failed.length===1?'it':'them'} manually (search for "${styleName}" won't find it anymore, but the old tag may still be sitting on the door record).`);
+        }
       }
       await saveIslandPanelStylesArray(styles.filter(s => s.id !== styleId));
       delete window._mqIslandPendingEdits[styleId];
@@ -5095,6 +5173,50 @@ window.mqphGoToWizard = function() {
       console.error('Failed to save island panel style tag', e);
       alert('Something went wrong saving that — please try again.');
       rec.fields['Island panel style'] = prevTag;
+      mqphRerenderIslandPanelSection();
+    }
+  };
+
+  // Tags every door in one "Group name" group (the same grouping bulk-add
+  // uses) to this style in one action, instead of checking doors one at a
+  // time — Jordan 2026-10-03: "my one shop has like 180 doors in one
+  // group. he would probably much prefer to just tag the whole group."
+  // Only touches doors still eligible for THIS style (mqphStyleDoorPool) —
+  // a door already tagged to a different existing style is deliberately
+  // left alone rather than silently stolen by a bulk action; the dropdown
+  // that calls this (mqphStyleDoorGroupsInPool) already only counts those
+  // still-eligible doors, so the confirm count matches what will change.
+  window.mqphTagIslandStyleGroup = async function(styleId, groupName) {
+    if (!groupName) { alert('Pick a group to tag first.'); return; }
+    const pool = mqphStyleDoorPool(styleId);
+    const toTag = pool.filter(d => (d.fields['Group name'] || '').trim() === groupName && d.fields['Island panel style'] !== styleId);
+    if (!toTag.length) { alert(`Every door in "${groupName}" is already tagged to this style.`); return; }
+    if (!confirm(`Tag all ${toTag.length} door${toTag.length===1?'':'s'} in "${groupName}" to this style?`)) return;
+
+    // Same all-doors-tagged flash detection as the single-door toggle,
+    // just computed once for the whole batch rather than per door.
+    const savedStyleIds = new Set(getIslandPanelStyles().map(s => s.id));
+    const allDoors = getByCategory('door');
+    const untaggedBefore = allDoors.filter(d => !d.fields['Island panel style'] || !savedStyleIds.has(d.fields['Island panel style'])).length;
+
+    const prevTags = new Map(toTag.map(d => [d.id, d.fields['Island panel style'] || '']));
+    toTag.forEach(d => { d.fields['Island panel style'] = styleId; });
+
+    const untaggedAfter = allDoors.filter(d => !d.fields['Island panel style'] || !savedStyleIds.has(d.fields['Island panel style'])).length;
+    if (untaggedBefore > 0 && untaggedAfter === 0) window._mqIslandJustCompletedFlash = true;
+
+    mqphRerenderIslandPanelSection();
+    const btn = document.getElementById(`mqph-style-${styleId}-grouptag-btn`);
+    if (btn) { btn.disabled = true; btn.textContent = `Tagging ${toTag.length}…`; }
+
+    // Throttled, not one big Promise.all — see mqphThrottledBatch. For 180
+    // doors this takes under a minute in the background; the price is
+    // already correct immediately from the optimistic update above.
+    const failed = await mqphThrottledBatch(toTag, d => atUpdate(LINE_ITEMS_TABLE, d.id, { 'Island panel style': styleId }));
+    if (failed.length) {
+      const failedIds = new Set(failed.map(d => d.id));
+      toTag.forEach(d => { if (failedIds.has(d.id)) d.fields['Island panel style'] = prevTags.get(d.id); });
+      alert(`${toTag.length - failed.length} of ${toTag.length} doors in "${groupName}" were tagged — ${failed.length} failed and were rolled back. Try tagging the group again to pick up the rest.`);
       mqphRerenderIslandPanelSection();
     }
   };
