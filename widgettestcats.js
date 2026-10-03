@@ -4615,10 +4615,7 @@
     // jumps the flow straight to it — nothing here is actually gated, this
     // just keeps the visual state honest for anyone navigating on their own,
     // in either direction (e.g. jumping back from Specialty Items to Doors
-    // by tapping that section directly, same as scrolling up would). This is
-    // an explicit, deliberate choice by the user, so it always jumps straight
-    // there — no catch-up walk (see mqScrollJumpWithCatchup below, used for
-    // passive scroll-driven jumps instead).
+    // by tapping that section directly, same as scrolling up would).
     window.mqJumpToSectionIfNeeded = function(sec) {
       const tab = sec.closest('.mq-tab-content');
       if (!tab) return;
@@ -4632,67 +4629,9 @@
       }
     }
 
-    // A fast flick-scroll (easy to do with a thumb on a phone) can carry the
-    // scroll-spy's centerline straight past several sections in one motion
-    // — e.g. landing on a countertop section having never actually opened
-    // the cabinet sections in between. The ask: no matter how fast the
-    // scroll, every section between where the flow was and where it lands
-    // must still fully open, in order of appearance — one at a time, not a
-    // straight-line jump to the end. This walks the step index forward (or
-    // back) one section at a time, pausing briefly on each — exactly like a
-    // real step: mqUpdateStepFocus opens it and closes whatever was open
-    // before it — and smooth-scrolling to it, before finally settling on the
-    // section the scroll actually landed on. A direct click always wins and
-    // cancels any walk in progress (mqCancelCatchup) since that's an
-    // explicit choice, not a skip to correct for.
-    let _mqCatchupActive = {};
-    let _mqCatchupToken = {};
-    // Reference (not copied), same reasoning as mqGetVisibleSections/
-    // _mqStepIndex above — mqCheckBottomBounceAutoOpen (outside this
-    // closure) needs to know when a walk already owns a tab's scrolling.
-    window._mqCatchupActive = _mqCatchupActive;
-    function mqCancelCatchup(prefix) {
-      if (!prefix) return;
-      _mqCatchupToken[prefix] = {};
-      _mqCatchupActive[prefix] = false;
-    }
-    function mqScrollJumpWithCatchup(sec) {
-      const tab = sec.closest('.mq-tab-content');
-      if (!tab) return;
-      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
-      if (!prefix) return;
-      const sections = mqGetVisibleSections(prefix);
-      const idx = sections.indexOf(sec);
-      const current = _mqStepIndex[prefix] || 0;
-      if (idx === -1 || idx === current) return;
-      const gap = Math.abs(idx - current);
-      if (gap <= 1) { window.mqJumpToSectionIfNeeded(sec); return; } // adjacent — nothing was skipped
-      const dir = idx > current ? 1 : -1;
-      const token = {};
-      _mqCatchupToken[prefix] = token;
-      _mqCatchupActive[prefix] = true;
-      function advance(step) {
-        if (_mqCatchupToken[prefix] !== token) return; // superseded — a click or a newer jump took over
-        _mqStepIndex[prefix] = step;
-        window.mqUpdateStepFocus(prefix);
-        const el = sections[step];
-        if (el) mqScrollTopNearCenter(el);
-        if (step === idx) {
-          setTimeout(() => { if (_mqCatchupToken[prefix] === token) _mqCatchupActive[prefix] = false; }, 320);
-          return;
-        }
-        setTimeout(() => advance(step + dir), 320);
-      }
-      advance(current + dir);
-    }
-    window.mqScrollJumpWithCatchup = mqScrollJumpWithCatchup;
-
     document.addEventListener('click', (e) => {
       const sec = e.target.closest('#midasquote-widget .mq-sec');
       if (!sec) return;
-      const tab = sec.closest('.mq-tab-content');
-      const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
-      if (prefix) mqCancelCatchup(prefix);
       mqJumpToSectionIfNeeded(sec);
     });
 
@@ -4700,15 +4639,11 @@
     // Continue or tapping into it — a shrunk-viewport IntersectionObserver
     // (top and bottom both pulled in 50%) leaves only a thin trigger line
     // at the exact vertical center of the screen; whichever section is
-    // crossing that line becomes the current step. A slow scroll that only
-    // ever crosses one section at a time reuses the exact same instant-jump
-    // logic a click runs; a fast flick that skips straight past several
-    // sections instead goes through the catch-up walk above, so every
-    // skipped section still gets its turn to open, in order. Re-observing is
-    // cheap and safe to repeat (observing an already-observed element is a
-    // no-op), so this just gets called again anywhere section
-    // visibility/DOM already gets refreshed, rather than needing a separate
-    // mutation-tracking setup.
+    // crossing that line becomes the current step, reusing the exact same
+    // logic a click already runs. Re-observing is cheap and safe to repeat
+    // (observing an already-observed element is a no-op), so this just gets
+    // called again anywhere section visibility/DOM already gets refreshed,
+    // rather than needing a separate mutation-tracking setup.
     let _mqScrollSpyObserver = null;
     function mqObserveSectionsForScrollSpy() {
       if (!_mqScrollSpyObserver) {
@@ -4718,11 +4653,6 @@
             const tab = entry.target.closest('.mq-tab-content');
             const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
             if (prefix) {
-              // A catch-up walk already in progress for this tab is what's
-              // driving the centerline across sections right now — let it
-              // finish on its own instead of reacting to its own scrolling
-              // and starting a second, overlapping walk.
-              if (_mqCatchupActive[prefix]) return;
               const sections = mqGetVisibleSections(prefix);
               const idx = sections.indexOf(entry.target);
               const current = _mqStepIndex[prefix] || 0;
@@ -4730,7 +4660,7 @@
               // suppressed, and only while that lock is still active.
               if (idx !== -1 && idx < current && Date.now() < (_mqStepNavLockUntil[prefix] || 0)) return;
             }
-            mqScrollJumpWithCatchup(entry.target);
+            mqJumpToSectionIfNeeded(entry.target);
           });
         }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
       }
@@ -7576,16 +7506,13 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (rect.top < midpoint) continue; // only ones sitting below the middle of the screen
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
-      if (prefix) {
-        if (window._mqCatchupActive && window._mqCatchupActive[prefix]) return; // a catch-up walk already owns this tab's scroll right now
-        if (window.mqGetVisibleSections && window._mqStepIndex) {
-          const visible = window.mqGetVisibleSections(prefix);
-          const idx = visible.indexOf(sec);
-          const current = window._mqStepIndex[prefix] || 0;
-          if (idx !== -1 && idx <= current) continue; // already current or done — leave it collapsed
-        }
+      if (prefix && window.mqGetVisibleSections && window._mqStepIndex) {
+        const visible = window.mqGetVisibleSections(prefix);
+        const idx = visible.indexOf(sec);
+        const current = window._mqStepIndex[prefix] || 0;
+        if (idx !== -1 && idx <= current) continue; // already current or done — leave it collapsed
       }
-      (window.mqScrollJumpWithCatchup || window.mqJumpToSectionIfNeeded)(sec);
+      window.mqJumpToSectionIfNeeded(sec);
       return; // one at a time — the next bottom-bounce picks up any further ones
     }
   }
