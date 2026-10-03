@@ -4777,10 +4777,8 @@ window.mqphGoToWizard = function() {
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-islandpanel" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏝️ Island panel pricing <span style="font-size:12px;font-weight:400;color:${summaryColor}">(${summary})</span></span>
         </div>
         <div id="mqph-cat-body-islandpanel" style="display:none">
-          <div style="margin:12px 16px">
-            <div style="position:relative;width:100%;padding-top:56.25%;background:#000;border-radius:8px;overflow:hidden">
-              <iframe src="https://www.youtube.com/embed/lz96aZkXLRs" title="Island panel pricing walkthrough" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
-            </div>
+          <div style="margin:12px 16px 0">
+            ${typeof window.mqTrainingVideoBlockHTML === 'function' ? window.mqTrainingVideoBlockHTML('islandPanel') : ''}
           </div>
           <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
             <div style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600" onclick="mqphToggleIslandInfo()">
