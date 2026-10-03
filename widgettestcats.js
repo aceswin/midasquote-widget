@@ -3670,7 +3670,13 @@
       // selected) — panel cost is already $0 with no door picked regardless
       // (bDoorRate===0), so hiding the option there too is just honest.
       const doorRec = m ? (li.doorStyles||[])[parseInt(m[1], 10)] : null;
-      const doorOffersDecorative = !!(doorRec && doorRec['Offers decorative island panel']);
+      // Defaults to ON, not off (Jordan 2026-10-03) — a door only counts as
+      // opted out once it's been explicitly unchecked on the Pricing tab's
+      // checklist (`=== false`), so a shop that's never touched that
+      // checklist still has every door offering the decorative option
+      // instead of silently offering none. Matches the same default-on
+      // reading of this field in pricing-helper-v2.js's checklist/badge.
+      const doorOffersDecorative = !!doorRec && doorRec['Offers decorative island panel'] !== false;
       const showDecorative = shopOffersDecorative && doorOffersDecorative;
       const existingOption = sel.querySelector('option[value="decorative"]');
       if (showDecorative && !existingOption) {
