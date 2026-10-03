@@ -2741,13 +2741,13 @@
           <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
               <input type="checkbox" id="mq-${prefix}-island-double" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              This is a double-row (back-to-back) island
+              This is a double-row (back-to-back) island <span style="color:#6b7280;font-weight:400">(No need to double measure, we will add it in for you)</span>
             </label>
           </div>
           <div class="mq-field" id="mq-${prefix}-island-dw-wrap" style="display:none;margin-top:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
               <input type="checkbox" id="mq-${prefix}-island-dw" onchange="mqTogIslandDw('${prefix}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              If checked, we will account for one.
+              Is there a dishwasher in the island? <span style="color:#6b7280;font-weight:400">If checked, we will account for one.</span>
             </label>
           </div>
           <div class="mq-field" style="margin-top:10px">
