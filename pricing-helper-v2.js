@@ -252,6 +252,16 @@ let wizardBaseline = null;
       .mqph-field input,.mqph-field select,.mqph-field textarea{font-family:inherit !important;font-size:13px !important;color:#111 !important;background:#fff !important;border:1px solid #d1d5db !important;border-radius:8px !important;padding:8px 10px !important;width:100% !important}
       .mqph-field input:focus,.mqph-field select:focus{outline:none !important;border-color:#1a1a1a !important}
       .mqph-field textarea{resize:vertical !important;min-height:60px !important}
+      /* Island panel pricing section (Jordan 2026-10-04): tighter spacing, and the price boxes sit beside their labels at a sensible width instead of stretching full width */
+      #mqph-scope-islandpanel .mqph-field{margin-bottom:0.6rem !important;gap:4px !important}
+      #mqph-scope-islandpanel .mqph-field.mqph-field-inline{flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:6px 16px !important;flex-wrap:wrap !important}
+      #mqph-scope-islandpanel .mqph-field.mqph-field-inline label{flex:1 1 260px !important;line-height:1.4 !important}
+      #mqph-scope-islandpanel .mqph-field.mqph-field-inline input{flex:0 0 130px !important;width:130px !important}
+      .mqph-info-h{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#1d4ed8;margin:0 0 3px}
+      .mqph-info-sec{padding:9px 0;border-top:1px solid #bfdbfe}
+      .mqph-info-sec:first-child{border-top:none;padding-top:2px}
+      .mqph-info-sec p{margin:0 0 6px;line-height:1.55}
+      .mqph-info-sec p:last-child{margin-bottom:0}
       .mqph-msg{padding:10px 14px !important;border-radius:8px !important;font-size:13px !important;margin-bottom:1rem !important;display:none !important}
       .mqph-msg-success{background:#dcfce7 !important;color:#166534 !important;border:1px solid #86efac !important}
       .mqph-msg-error{background:#fee2e2 !important;color:#991b1b !important;border:1px solid #fca5a5 !important}
@@ -4701,7 +4711,7 @@ window.mqphGoToWizard = function() {
         This door style offers flat panels
       </label>
       ${offersFlat ? `
-      <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" finished flat panel in this style's material</label>
+      <div class="mqph-field mqph-field-inline"><label>Price you'd charge for a 24" × 34.5" finished flat panel in this style's material</label>
         <input type="number" id="mqph-style-${style.id}-panelcost" step="0.01" placeholder="0.00" value="${panelCostVal}" oninput="mqphSetIslandStyleField('${style.id}','panelFlatQuote',this.value);mqphCalcStylePanelPct('${style.id}')"/>
       </div>
       </div>` : ''}
@@ -4723,7 +4733,7 @@ window.mqphGoToWizard = function() {
       </div>
       <div style="font-size:12px;color:#065f46;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;margin:4px 0 8px">Using that style's decorative ratio for this one too — no separate decorative price needed here. Switch to "Enter manually" any time to quote your own.</div>
       ` : `
-      <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" decorative panel to match <span style="display:inline-block;margin-top:4px;font-size:13px;font-weight:800;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:2px 8px;text-transform:none;letter-spacing:0">⚠️ (If this includes furniture kick, please include that with the panel price)</span></label>
+      <div class="mqph-field mqph-field-inline"><label>Price you'd charge for a 24" × 34.5" decorative panel to match <span style="display:inline-block;margin-top:4px;font-size:13px;font-weight:800;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:2px 8px;text-transform:none;letter-spacing:0">⚠️ (If this includes furniture kick, please include that with the panel price)</span></label>
         <input type="number" id="mqph-style-${style.id}-deccost" step="0.01" placeholder="0.00" value="${decCostVal}" oninput="mqphSetIslandStyleField('${style.id}','decorativeFlatQuote',this.value);mqphCalcStylePanelPct('${style.id}')"/>
       </div>`}
       ` : ''}
@@ -4803,35 +4813,36 @@ window.mqphGoToWizard = function() {
               <span>How island panel pricing works</span>
             </div>
             <div id="mqph-island-info-body" style="display:${window._mqIslandInfoExpanded?'block':'none'};margin-top:8px">
-              <p style="margin:0 0 10px">Islands tend to cost more because of finished side panels and back panels. To make this very simple, we'll create a ratio cost for your panels (flat or decorative) based on your different door styles.</p>
-              <p style="margin:0 0 10px">For example, if you have flat doors, shaker doors, and raised panel doors, you'd create those three distinct styles below.</p>
-              <p style="margin:0 0 10px">For each style, you decide whether that door style offers decorative panels, just flat panels, or both — then enter the price of a flat panel and/or a decorative panel based on one door you select to represent that style.</p>
-              <p style="margin:0 0 10px">For example, if the style is Shaker and you choose Maple Shaker as the door to price against, you simply quote the flat panel cost you'd charge for an island with Maple Shaker doors, and the decorative panel cost you'd charge for the same island.</p>
-              <p style="margin:0 0 10px">This creates a ratio for each — maybe the flat panel works out to 75% of the door's linear-foot cost, and the decorative panel works out to 90%. From then on, whenever a customer adds an island and has a Shaker door selected, that ratio scales with whatever door is chosen — so if it's a Cherry Shaker door that costs more, the panel cost will be 75% of that door's cost per linear foot.</p>
-              <p style="margin:0 0 10px">Since a raised panel door is more expensive than a shaker door, we need a separate price for that style. If you use Maple Raised Panel as your door to price against, you'll likely use the same flat panel price as you did for Maple Shaker, but the ratio will differ — and that ratio then applies to all the raised panel doors. Conversely, your decorative panel ratio will likely be the same as it was for Maple Shaker, so you could reuse that ratio instead of requoting.</p>
-              <p style="margin:0">Style names are internal only — customers never see them. Feel free to watch the video above to help make this clearer.</p>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">The idea</div>
+                <p>Islands tend to cost more because of finished side panels and back panels. To make this very simple, we'll create a ratio cost for your panels (flat or decorative) based on your different door styles.</p>
+                <p>For example, if you have flat doors, shaker doors, and raised panel doors, you'd create those three distinct styles below.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">What you enter for each style</div>
+                <p>For each style, you decide whether that door style offers decorative panels, just flat panels, or both — then enter the price of a flat panel and/or a decorative panel based on one door you select to represent that style.</p>
+                <p>For example, if the style is Shaker and you choose Maple Shaker as the door to price against, you simply quote the flat panel cost you'd charge for an island with Maple Shaker doors, and the decorative panel cost you'd charge for the same island.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">How the ratio works</div>
+                <p>This creates a ratio for each — maybe the flat panel works out to 75% of the door's linear-foot cost, and the decorative panel works out to 90%. From then on, whenever a customer adds an island and has a Shaker door selected, that ratio scales with whatever door is chosen — so if it's a Cherry Shaker door that costs more, the panel cost will be 75% of that door's cost per linear foot.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">Different styles, different ratios</div>
+                <p>Since a raised panel door is more expensive than a shaker door, we need a separate price for that style. If you use Maple Raised Panel as your door to price against, you'll likely use the same flat panel price as you did for Maple Shaker, but the ratio will differ — and that ratio then applies to all the raised panel doors. Conversely, your decorative panel ratio will likely be the same as it was for Maple Shaker, so you could reuse that ratio instead of requoting.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">Furniture kick &amp; installation</div>
+                <p>If furniture kick comes with your decorative panels, include it in your decorative panel price — and include its installation in your decorative panel install price.</p>
+                <p>Installation prices are entered once, in their own box below your styles, and apply to every style.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">Good to know</div>
+                <p>Style names are internal only — customers never see them. Feel free to watch the video above to help make this clearer.</p>
+              </div>
             </div>
           </div>
           ${showFlash ? `<div id="mqph-island-flash" style="margin:0 16px 12px;background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ All doors tagged!</div>` : ''}
-          ${(() => {
-            const saved = getIslandInstallRates();
-            const pend = window._mqIslandInstallPending;
-            const flatVal = pend ? pend.flat : (saved.flat || '');
-            const decVal = pend ? pend.decorative : (saved.decorative || '');
-            const isDirty = !!pend;
-            return `
-          <div id="mqph-island-install-box" style="margin:0 16px 14px;border:1px solid #e5e7eb;border-radius:8px;padding:14px;background:#fff">
-            <div style="font-weight:600;font-size:14px;color:#111827;margin-bottom:2px">Panel installation prices</div>
-            <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Installing a panel costs the same whatever the door style, so you only enter these once — they apply to every style. Optional: leave 0.00 if you don't charge extra for installing panels. Only added to a quote when the customer picks supply + install.</div>
-            <div class="mqph-field"><label>Price you'd charge to INSTALL a 24" × 34.5" flat panel</label>
-              <input type="number" id="mqph-island-install-flat" step="0.01" min="0" placeholder="0.00" value="${flatVal}" oninput="mqphOnIslandInstallInput()"/>
-            </div>
-            <div class="mqph-field"><label>Price you'd charge to INSTALL a 24" × 34.5" decorative panel <span style="font-weight:400;color:#6b7280">(furniture kick install included)</span></label>
-              <input type="number" id="mqph-island-install-dec" step="0.01" min="0" placeholder="0.00" value="${decVal}" oninput="mqphOnIslandInstallInput()"/>
-            </div>
-            <button class="mqph-btn ${isDirty ? 'mqph-btn-primary' : 'mqph-btn-saved'}" id="mqph-island-install-save-btn" style="width:100%" onclick="mqphSaveIslandInstallRates()">${isDirty ? 'Save install prices →' : '✓ Install prices saved'}</button>
-          </div>`;
-          })()}
           ${!hasDoors ? `
           <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">Add at least one door style above before setting up island panel pricing.</div>
           ` : `
@@ -4840,6 +4851,25 @@ window.mqphGoToWizard = function() {
             <button class="mqph-btn mqph-btn-secondary" style="width:100%" onclick="mqphAddIslandStyle()">+ ${allStyles.length>0?'Add another':'Add a'} door style</button>
           </div>
           `}
+          ${(() => {
+            const saved = getIslandInstallRates();
+            const pend = window._mqIslandInstallPending;
+            const flatVal = pend ? pend.flat : (saved.flat || '');
+            const decVal = pend ? pend.decorative : (saved.decorative || '');
+            const isDirty = !!pend;
+            return `
+          <div id="mqph-island-install-box" style="margin:6px 16px 16px;border:2px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#f9fafb">
+            <div style="font-weight:700;font-size:14px;color:#111827;margin-bottom:2px">🔧 Panel installation prices <span style="font-weight:400;font-size:12px;color:#6b7280">(separate from your styles above)</span></div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Entered once — these apply to every style. Optional (leave 0.00 if you don't charge extra). Only added to a quote when the customer picks supply + install.</div>
+            <div class="mqph-field mqph-field-inline"><label>Price you'd charge to INSTALL a 24" × 34.5" flat panel</label>
+              <input type="number" id="mqph-island-install-flat" step="0.01" min="0" placeholder="0.00" value="${flatVal}" oninput="mqphOnIslandInstallInput()"/>
+            </div>
+            <div class="mqph-field mqph-field-inline"><label>Price you'd charge to INSTALL a 24" × 34.5" decorative panel <span style="font-weight:400;color:#6b7280">(furniture kick install included)</span></label>
+              <input type="number" id="mqph-island-install-dec" step="0.01" min="0" placeholder="0.00" value="${decVal}" oninput="mqphOnIslandInstallInput()"/>
+            </div>
+            <button class="mqph-btn ${isDirty ? 'mqph-btn-primary' : 'mqph-btn-saved'}" id="mqph-island-install-save-btn" style="width:100%" onclick="mqphSaveIslandInstallRates()">${isDirty ? 'Save install prices →' : '✓ Install prices saved'}</button>
+          </div>`;
+          })()}
         </div>
       </div>`;
   }
