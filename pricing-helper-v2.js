@@ -257,9 +257,10 @@ let wizardBaseline = null;
       #mqph-scope-islandpanel .mqph-field.mqph-field-inline{flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:6px 16px !important;flex-wrap:wrap !important}
       #mqph-scope-islandpanel .mqph-field.mqph-field-inline label{flex:1 1 260px !important;line-height:1.4 !important}
       #mqph-scope-islandpanel .mqph-field.mqph-field-inline input{flex:0 0 130px !important;width:130px !important}
-      .mqph-info-h{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#1d4ed8;margin:0 0 3px}
-      .mqph-info-sec{padding:9px 0;border-top:1px solid #bfdbfe}
-      .mqph-info-sec:first-child{border-top:none;padding-top:2px}
+      .mqph-info-h{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#1d4ed8;margin:0 0 6px}
+      .mqph-info-sec{padding:16px 0 14px;border-top:1px solid #bfdbfe}
+      .mqph-info-sec:first-child{border-top:none;padding-top:4px}
+      .mqph-info-sec:last-child{padding-bottom:2px}
       .mqph-info-sec p{margin:0 0 6px;line-height:1.55}
       .mqph-info-sec p:last-child{margin-bottom:0}
       .mqph-msg{padding:10px 14px !important;border-radius:8px !important;font-size:13px !important;margin-bottom:1rem !important;display:none !important}
