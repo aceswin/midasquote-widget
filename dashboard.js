@@ -971,14 +971,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'sep2026-countertop-shapes';
+  const MQ_LATEST_ANNOUNCEMENT = 'oct2026-island-pricing-videos';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p style="margin-bottom:14px"><strong>Countertop shapes</strong> — customers quoting a countertop can now choose Straight, L-Shape, or U-Shape and measure each section on its own, instead of trying to boil an irregular counter down into one combined number. It's a quicker, more accurate way for them to get you measurements you can actually trust.</p>
-      <p style="margin-bottom:14px;padding:12px 14px;background:#f9fafb;border-radius:8px;font-size:13px;color:#4b5563;line-height:1.6">📬 <strong>Quick reminder:</strong> replies to your support form submissions occasionally land in junk or spam mail instead of your inbox. If you've submitted a request and haven't heard back, it's worth a quick check there before following up again.</p>
+      <p style="margin-bottom:14px"><strong>Island pricing</strong> — customers can now add an island to a cabinet quote, single-row or double-row (back-to-back), with an option for a built-in dishwasher. Turn it on for any project type in <strong>Project Types</strong>. Then, in the Pricing tab, the new <strong>Island panel pricing</strong> section lets you price finished flat and decorative panels once per door style — tag your doors to a style (or a whole door group at once) and the price scales with whichever door the customer picks. Panel installation prices are entered once and apply to every style.</p>
+      <p style="margin-bottom:14px"><strong>Training videos</strong> — short walkthrough videos now sit at the top of Project Types, the Pricing tab, and the new Island panel pricing section. Hide any of them once you've watched it, and bring it back whenever you like.</p>
+      <p style="margin-bottom:14px"><strong>Help guide overhaul</strong> — a new folder-tab layout, a step-by-step Getting started walkthrough, and a brand new MidasQuote Pro topic.</p>
       <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
-      <p style="font-size:13px;color:#4b5563;line-height:1.6">More countertop updates — photos and videos walking customers through exactly how to measure their space, plus new options for refacing-style projects using specialty item variants.</p>
+      <p style="font-size:13px;color:#4b5563;line-height:1.6">More training videos covering other parts of the dashboard.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
