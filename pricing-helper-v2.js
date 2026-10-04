@@ -4450,6 +4450,22 @@ window.mqphGoToWizard = function() {
     shopRecord.fields['Island panel styles'] = JSON.stringify(styles);
   }
 
+  // Panel INSTALL prices (Jordan 2026-10-04): install labour is the same no
+  // matter which door style a panel goes on, so there are exactly TWO shop-
+  // wide numbers — one for installing a flat panel, one for a decorative
+  // panel (furniture kick install included) — each quoted per 24" × 34.5"
+  // panel, same as the panel price itself. Deliberately NOT part of any
+  // style (an earlier version asked for it again on every style card).
+  // Stored as JSON {flat, decorative} in the Shops table's 'Island panel
+  // install rates' field (Long text). Blank/missing = $0 (optional).
+  function getIslandInstallRates() {
+    try {
+      const o = shopRecord.fields['Island panel install rates'] ? JSON.parse(shopRecord.fields['Island panel install rates']) : {};
+      return { flat: parseFloat(o.flat) || 0, decorative: parseFloat(o.decorative) || 0 };
+    } catch(e) { return { flat: 0, decorative: 0 }; }
+  }
+  window._mqIslandInstallPending = window._mqIslandInstallPending || null;
+
   // Badge shown next to a door's name in the Door Styles catalog list,
   // reflecting which island panel style (if any) it's tagged to — replaces
   // the old 🎨 "Decorative panel" badge, which tracked the retired
@@ -4623,12 +4639,6 @@ window.mqphGoToWizard = function() {
     const offersFlat = pending.offersFlat !== undefined ? pending.offersFlat : (style.offersFlat !== false);
     const offersDecorative = pending.offersDecorative !== undefined ? pending.offersDecorative : !!style.offersDecorative;
     const decCostVal = pending.decorativeFlatQuote !== undefined ? pending.decorativeFlatQuote : (style.decorativeFlatQuote != null ? style.decorativeFlatQuote : '');
-    // Install price for ONE 24"x34.5" panel (Jordan 2026-10-04) — optional,
-    // blank/0 = no separate panel install charge. A plain flat dollar quote
-    // (not a ratio of the door rate), since install labour doesn't change
-    // with species/door cost.
-    const panelInstallVal = pending.panelInstallQuote !== undefined ? pending.panelInstallQuote : (style.panelInstallQuote != null && style.panelInstallQuote !== 0 ? style.panelInstallQuote : '');
-    const decInstallVal = pending.decorativeInstallQuote !== undefined ? pending.decorativeInstallQuote : (style.decorativeInstallQuote != null && style.decorativeInstallQuote !== 0 ? style.decorativeInstallQuote : '');
     const decorativeRatioMode = pending.decorativeRatioMode !== undefined ? pending.decorativeRatioMode : (style.decorativeRatioMode || 'manual');
     const decorativeCopySourceId = pending.decorativeCopySourceId !== undefined ? pending.decorativeCopySourceId : (style.decorativeCopySourceId || '');
     // Saved-and-unedited is the only state the green "saved" button shows
@@ -4694,8 +4704,6 @@ window.mqphGoToWizard = function() {
       <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" finished flat panel in this style's material</label>
         <input type="number" id="mqph-style-${style.id}-panelcost" step="0.01" placeholder="0.00" value="${panelCostVal}" oninput="mqphSetIslandStyleField('${style.id}','panelFlatQuote',this.value);mqphCalcStylePanelPct('${style.id}')"/>
       </div>
-      <div class="mqph-field"><label>Price you'd charge to INSTALL a 24" × 34.5" flat panel <span style="font-weight:400;color:#6b7280">(optional — leave 0.00 if you don't charge for it)</span></label>
-        <input type="number" id="mqph-style-${style.id}-panelinstall" step="0.01" min="0" placeholder="0.00" value="${panelInstallVal}" oninput="mqphSetIslandStyleField('${style.id}','panelInstallQuote',this.value)"/>
       </div>` : ''}
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:10px 0">
         <input type="checkbox" id="mqph-style-${style.id}-offersdec" ${offersDecorative?'checked':''} onchange="mqphSetIslandStyleField('${style.id}','offersDecorative',this.checked)" style="width:auto"/>
@@ -4718,9 +4726,6 @@ window.mqphGoToWizard = function() {
       <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" decorative panel to match <span style="display:inline-block;margin-top:4px;font-size:13px;font-weight:800;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:2px 8px;text-transform:none;letter-spacing:0">⚠️ (If this includes furniture kick, please include that with the panel price)</span></label>
         <input type="number" id="mqph-style-${style.id}-deccost" step="0.01" placeholder="0.00" value="${decCostVal}" oninput="mqphSetIslandStyleField('${style.id}','decorativeFlatQuote',this.value);mqphCalcStylePanelPct('${style.id}')"/>
       </div>`}
-      <div class="mqph-field"><label>Price you'd charge to INSTALL a 24" × 34.5" decorative panel <span style="font-weight:400;color:#6b7280">(furniture kick install included — optional, leave 0.00 if you don't charge for it)</span></label>
-        <input type="number" id="mqph-style-${style.id}-decinstall" step="0.01" min="0" placeholder="0.00" value="${decInstallVal}" oninput="mqphSetIslandStyleField('${style.id}','decorativeInstallQuote',this.value)"/>
-      </div>
       ` : ''}
       <div id="mqph-style-${style.id}-pct-reveal" style="font-size:12px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin:8px 0 12px;line-height:1.6"></div>
       <div style="border-top:1px solid #e5e7eb;padding-top:12px;margin-bottom:14px">
@@ -4808,6 +4813,25 @@ window.mqphGoToWizard = function() {
             </div>
           </div>
           ${showFlash ? `<div id="mqph-island-flash" style="margin:0 16px 12px;background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ All doors tagged!</div>` : ''}
+          ${(() => {
+            const saved = getIslandInstallRates();
+            const pend = window._mqIslandInstallPending;
+            const flatVal = pend ? pend.flat : (saved.flat || '');
+            const decVal = pend ? pend.decorative : (saved.decorative || '');
+            const isDirty = !!pend;
+            return `
+          <div id="mqph-island-install-box" style="margin:0 16px 14px;border:1px solid #e5e7eb;border-radius:8px;padding:14px;background:#fff">
+            <div style="font-weight:600;font-size:14px;color:#111827;margin-bottom:2px">Panel installation prices</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Installing a panel costs the same whatever the door style, so you only enter these once — they apply to every style. Optional: leave 0.00 if you don't charge extra for installing panels. Only added to a quote when the customer picks supply + install.</div>
+            <div class="mqph-field"><label>Price you'd charge to INSTALL a 24" × 34.5" flat panel</label>
+              <input type="number" id="mqph-island-install-flat" step="0.01" min="0" placeholder="0.00" value="${flatVal}" oninput="mqphOnIslandInstallInput()"/>
+            </div>
+            <div class="mqph-field"><label>Price you'd charge to INSTALL a 24" × 34.5" decorative panel <span style="font-weight:400;color:#6b7280">(furniture kick install included)</span></label>
+              <input type="number" id="mqph-island-install-dec" step="0.01" min="0" placeholder="0.00" value="${decVal}" oninput="mqphOnIslandInstallInput()"/>
+            </div>
+            <button class="mqph-btn ${isDirty ? 'mqph-btn-primary' : 'mqph-btn-saved'}" id="mqph-island-install-save-btn" style="width:100%" onclick="mqphSaveIslandInstallRates()">${isDirty ? 'Save install prices →' : '✓ Install prices saved'}</button>
+          </div>`;
+          })()}
           ${!hasDoors ? `
           <div style="padding:1rem 16px;font-size:13px;color:#9ca3af">Add at least one door style above before setting up island panel pricing.</div>
           ` : `
@@ -4937,7 +4961,7 @@ window.mqphGoToWizard = function() {
 
   window.mqphAddIslandStyle = function() {
     const id = 'style_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-    window._mqIslandDraftStyles.push({ id, name:'', refDoorId:'', refDoorName:'', offersFlat:true, panelFlatQuote:null, panelRatePerFt:null, panelPct:null, panelInstallQuote:0, offersDecorative:false, decorativeFlatQuote:null, decorativeInstallQuote:0, decorativeRatePerFt:null, decorativePct:null, decorativeRatioMode:'manual', decorativeCopySourceId:null });
+    window._mqIslandDraftStyles.push({ id, name:'', refDoorId:'', refDoorName:'', offersFlat:true, panelFlatQuote:null, panelRatePerFt:null, panelPct:null, offersDecorative:false, decorativeFlatQuote:null, decorativeRatePerFt:null, decorativePct:null, decorativeRatioMode:'manual', decorativeCopySourceId:null });
     _mqphExpandedCats.add('islandpanel');
     mqphRerenderIslandPanelSection();
   };
@@ -4973,6 +4997,45 @@ window.mqphGoToWizard = function() {
   // door-search/sort toggles. The underlying flag still persists across a
   // full re-render triggered by anything else (see buildIslandPanelHtml),
   // so saving a style elsewhere doesn't snap this back shut.
+  window.mqphOnIslandInstallInput = function() {
+    window._mqIslandInstallPending = {
+      flat: document.getElementById('mqph-island-install-flat')?.value ?? '',
+      decorative: document.getElementById('mqph-island-install-dec')?.value ?? '',
+    };
+    const btn = document.getElementById('mqph-island-install-save-btn');
+    if (btn && btn.classList.contains('mqph-btn-saved')) {
+      btn.classList.remove('mqph-btn-saved');
+      btn.classList.add('mqph-btn-primary');
+      btn.textContent = 'Save install prices →';
+    }
+  };
+
+  window.mqphSaveIslandInstallRates = async function() {
+    const parse = (id, label) => {
+      const raw = document.getElementById(id)?.value;
+      const v = (raw !== '' && raw != null) ? parseFloat(raw) : 0;
+      if (isNaN(v) || v < 0) { alert('Enter a valid ' + label + ' install price (0 or higher), or leave it blank.'); return undefined; }
+      return v;
+    };
+    const flat = parse('mqph-island-install-flat', 'flat panel');
+    if (flat === undefined) return;
+    const decorative = parse('mqph-island-install-dec', 'decorative panel');
+    if (decorative === undefined) return;
+    const btn = document.getElementById('mqph-island-install-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      const json = JSON.stringify({ flat, decorative });
+      await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Island panel install rates': json });
+      shopRecord.fields['Island panel install rates'] = json;
+      window._mqIslandInstallPending = null;
+      mqphRerenderIslandPanelSection();
+    } catch(e) {
+      console.error('Failed to save island panel install rates', e);
+      alert('Something went wrong saving this — please try again.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Save install prices →'; }
+    }
+  };
+
   window.mqphToggleIslandInfo = function() {
     window._mqIslandInfoExpanded = !window._mqIslandInfoExpanded;
     const body = document.getElementById('mqph-island-info-body');
@@ -5079,27 +5142,6 @@ window.mqphGoToWizard = function() {
       decorativeFlatQuote = (decCost != null && decCost > 0) ? decCost : null;
     }
 
-    // Panel INSTALL quotes (Jordan 2026-10-04): optional — blank or 0 is
-    // fine ("they shouldnt but we wont force them"). Stored as plain dollars
-    // per ONE 24" panel; the widget converts to $/lin ft the same way the
-    // panel price itself is, and only charges it when the customer picks
-    // supply + install. null when that panel type isn't offered at all.
-    const parseInstallQuote = (elId, label) => {
-      const raw = document.getElementById(elId)?.value;
-      const v = (raw !== '' && raw != null) ? parseFloat(raw) : 0;
-      if (isNaN(v) || v < 0) { alert('Enter a valid ' + label + ' install price (0 or higher), or leave it blank.'); return undefined; }
-      return v;
-    };
-    let panelInstallQuote = null, decorativeInstallQuote = null;
-    if (offersFlat) {
-      panelInstallQuote = parseInstallQuote(`mqph-style-${styleId}-panelinstall`, 'flat panel');
-      if (panelInstallQuote === undefined) return;
-    }
-    if (offersDecorative) {
-      decorativeInstallQuote = parseInstallQuote(`mqph-style-${styleId}-decinstall`, 'decorative panel');
-      if (decorativeInstallQuote === undefined) return;
-    }
-
     const newStyleObj = {
       id: styleId,
       name,
@@ -5109,12 +5151,10 @@ window.mqphGoToWizard = function() {
       panelFlatQuote: panelCost,
       panelRatePerFt,
       panelPct,
-      panelInstallQuote,
       offersDecorative,
       decorativeFlatQuote,
       decorativeRatePerFt,
       decorativePct,
-      decorativeInstallQuote,
       decorativeRatioMode: finalDecMode,
       decorativeCopySourceId: finalDecSource,
     };

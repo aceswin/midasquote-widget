@@ -5957,14 +5957,15 @@ window.mqTogDrawerConfig=(prefix)=>{
       const matchedIslandStyle = (bDoorRec && bDoorRec['Island panel style']) ? islandPanelStyles.find(s => s.id === bDoorRec['Island panel style']) : null;
       const islandPanelPct = matchedIslandStyle ? (parseFloat(matchedIslandStyle.panelPct) || 0) : 0;
       const islandDecorativePct = (matchedIslandStyle && matchedIslandStyle.offersDecorative === true && matchedIslandStyle.decorativePct != null) ? parseFloat(matchedIslandStyle.decorativePct) : null;
-      // Panel INSTALL quotes (Jordan 2026-10-04): a flat dollar price to
-      // install ONE 24" panel, one for flat and one for decorative (the
-      // decorative one includes the furniture kick install). Optional —
-      // missing/blank/0 on a style means no separate panel install charge.
-      // Not a ratio of the door rate: install labour doesn't scale with
-      // species, so this stays the same whichever door in the style is picked.
-      const islandPanelInstallQuoteFlat = matchedIslandStyle ? (parseFloat(matchedIslandStyle.panelInstallQuote) || 0) : 0;
-      const islandPanelInstallQuoteDec = matchedIslandStyle ? (parseFloat(matchedIslandStyle.decorativeInstallQuote) || 0) : 0;
+      // Panel INSTALL prices (Jordan 2026-10-04): ONE shop-wide price to
+      // install a 24" panel for flat and one for decorative (the decorative
+      // one includes the furniture kick install) — install labour doesn't
+      // change per door style, so these live on the Shop record, not on any
+      // style. Optional: missing/blank/0 = no separate panel install charge.
+      let islandInstallRates = { flat: 0, decorative: 0 };
+      try { const o = shop['Island panel install rates'] ? JSON.parse(shop['Island panel install rates']) : {}; islandInstallRates = { flat: parseFloat(o.flat) || 0, decorative: parseFloat(o.decorative) || 0 }; } catch(e) {}
+      const islandPanelInstallQuoteFlat = islandInstallRates.flat;
+      const islandPanelInstallQuoteDec = islandInstallRates.decorative;
 
       const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
