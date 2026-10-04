@@ -257,12 +257,12 @@ let wizardBaseline = null;
       #mqph-scope-islandpanel .mqph-field.mqph-field-inline{flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:6px 16px !important;flex-wrap:wrap !important}
       #mqph-scope-islandpanel .mqph-field.mqph-field-inline label{flex:1 1 260px !important;line-height:1.4 !important}
       #mqph-scope-islandpanel .mqph-field.mqph-field-inline input{flex:0 0 130px !important;width:130px !important}
-      .mqph-info-h{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#1d4ed8;margin:0 0 6px}
-      .mqph-info-sec{padding:16px 0 14px;border-top:1px solid #bfdbfe}
-      .mqph-info-sec:first-child{border-top:none;padding-top:4px}
-      .mqph-info-sec:last-child{padding-bottom:2px}
-      .mqph-info-sec p{margin:0 0 6px;line-height:1.55}
-      .mqph-info-sec p:last-child{margin-bottom:0}
+      .mqph-info-h{font-size:11px !important;font-weight:800 !important;letter-spacing:0.06em !important;text-transform:uppercase !important;color:#1d4ed8 !important;margin:0 0 6px !important}
+      .mqph-info-sec{padding:16px 0 14px !important;border-top:1px solid #bfdbfe !important}
+      .mqph-info-sec:first-child{border-top:none !important;padding-top:4px !important}
+      .mqph-info-sec:last-child{padding-bottom:2px !important}
+      .mqph-info-sec p{margin:0 0 8px !important;line-height:1.55 !important}
+      .mqph-info-sec p:last-child{margin-bottom:0 !important}
       .mqph-msg{padding:10px 14px !important;border-radius:8px !important;font-size:13px !important;margin-bottom:1rem !important;display:none !important}
       .mqph-msg-success{background:#dcfce7 !important;color:#166534 !important;border:1px solid #86efac !important}
       .mqph-msg-error{background:#fee2e2 !important;color:#991b1b !important;border:1px solid #fca5a5 !important}
