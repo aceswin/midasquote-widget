@@ -6265,6 +6265,14 @@ window.mqTogDrawerConfig=(prefix)=>{
       const matchedIslandStyle = (bDoorRec && bDoorRec['Island panel style']) ? islandPanelStyles.find(s => s.id === bDoorRec['Island panel style']) : null;
       const islandPanelPct = matchedIslandStyle ? (parseFloat(matchedIslandStyle.panelPct) || 0) : 0;
       const islandDecorativePct = (matchedIslandStyle && matchedIslandStyle.offersDecorative === true && matchedIslandStyle.decorativePct != null) ? parseFloat(matchedIslandStyle.decorativePct) : null;
+      // Panel INSTALL quotes (Jordan 2026-10-04): a flat dollar price to
+      // install ONE 24" panel, one for flat and one for decorative (the
+      // decorative one includes the furniture kick install). Optional —
+      // missing/blank/0 on a style means no separate panel install charge.
+      // Not a ratio of the door rate: install labour doesn't scale with
+      // species, so this stays the same whichever door in the style is picked.
+      const islandPanelInstallQuoteFlat = matchedIslandStyle ? (parseFloat(matchedIslandStyle.panelInstallQuote) || 0) : 0;
+      const islandPanelInstallQuoteDec = matchedIslandStyle ? (parseFloat(matchedIslandStyle.decorativeInstallQuote) || 0) : 0;
 
       const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
@@ -6303,7 +6311,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       // upper's own door/hinge selection) — and, as of 2026-10-03, uses the
       // same islandVanityMult as the front row above, not upperVanityMult.
       const islandBackRowMatDoorHinge = uMat.rateU * islandVanityMult + bDoorRate + bHingeRate;
-      let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandExposedFt = 0;
+      let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandPanelInstallCost = 0, islandExposedFt = 0;
       if (islandFt > 0) {
         islandBoxCost = (islandFt * islandFrontRowMatDoorHinge) + (islandDouble ? islandBackFt * islandBackRowMatDoorHinge : 0);
         // bInstall already resolves to 0 when si !== 'install', already
@@ -6326,7 +6334,16 @@ window.mqTogDrawerConfig=(prefix)=>{
         islandExposedFt = islandDouble ? 6 : (4 + islandFt);
         const effectivePanelPct = (islandPanel === 'decorative' && islandDecorativePct != null) ? islandDecorativePct : islandPanelPct;
         islandPanelCost = islandExposedFt * bDoorRate * (effectivePanelPct / 100);
-        islandCost = islandBoxCost + islandInstallCost + islandPanelCost;
+        // Panel install: same exposed footage as the panel itself, priced per
+        // 24" (2 lin ft) panel. Same decorative-vs-flat fallback condition as
+        // effectivePanelPct above so the two can never disagree. Only charged
+        // on a supply + install quote, and gets the project type's own install
+        // % adjustment (installMult) just like every other install line here.
+        if (si === 'install') {
+          const panelInstallQuote = (islandPanel === 'decorative' && islandDecorativePct != null) ? islandPanelInstallQuoteDec : islandPanelInstallQuoteFlat;
+          islandPanelInstallCost = islandExposedFt * (panelInstallQuote / 2) * installMult;
+        }
+        islandCost = islandBoxCost + islandInstallCost + islandPanelCost + islandPanelInstallCost;
       }
 
       const lines=[];
