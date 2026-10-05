@@ -10400,17 +10400,47 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // scroll wrapper). Recomputed fresh every time it opens.
     panel.style.position = 'fixed';
     panel.style.left = Math.round(anchorRect.left) + 'px';
-    panel.style.top = Math.round(anchorRect.bottom + 6) + 'px';
     panel.style.bottom = 'auto';
     panel.style.margin = '0';
+    panel.style.maxHeight = 'none';
+    panel.style.overflowY = 'visible';
 
-    const panelRect = panel.getBoundingClientRect();
-    if (panelRect.bottom > window.innerHeight) {
-      panel.style.top = 'auto';
-      panel.style.bottom = Math.round(window.innerHeight - anchorRect.top + 6) + 'px';
+    // Visible boundaries (Jordan 2026-10-04): the black top bar sits ABOVE
+    // this fixed-position panel, so a panel flipped upward from an item near
+    // the top of the screen used to have its first checkboxes hidden behind
+    // it ("the checkboxes disappear unless you have the item much farther
+    // down"). Never let the top of the list go above the bottom of the top
+    // bar (or the viewport top if the bar has scrolled away), and never let
+    // the bottom go past the viewport bottom.
+    const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
+    const minTop = Math.max(0, topbar ? Math.round(topbar.getBoundingClientRect().bottom) : 0) + 8;
+    const maxBottom = window.innerHeight - 8;
+    const gap = 6;
+    const panelH = panel.getBoundingClientRect().height;
+    const spaceBelow = maxBottom - (anchorRect.bottom + gap);
+    const spaceAbove = (anchorRect.top - gap) - minTop;
+
+    if (panelH <= spaceBelow) {
+      // Fits below the trigger — the normal case.
+      panel.style.top = Math.round(anchorRect.bottom + gap) + 'px';
+    } else if (panelH <= spaceAbove) {
+      // Doesn't fit below, but fits entirely above without touching the top bar.
+      panel.style.top = Math.round(anchorRect.top - gap - panelH) + 'px';
+    } else if (spaceBelow >= spaceAbove) {
+      // Fits neither way — use the roomier side, capped to it, and let the
+      // checkbox list scroll inside the panel so every item is still reachable.
+      panel.style.top = Math.round(anchorRect.bottom + gap) + 'px';
+      panel.style.maxHeight = Math.max(120, Math.floor(spaceBelow)) + 'px';
+      panel.style.overflowY = 'auto';
+    } else {
+      const h = Math.max(120, Math.floor(spaceAbove));
+      panel.style.maxHeight = h + 'px';
+      panel.style.overflowY = 'auto';
+      panel.style.top = Math.round(anchorRect.top - gap - Math.min(panelH, h)) + 'px';
     }
+    const panelRect = panel.getBoundingClientRect();
     if (panelRect.right > window.innerWidth) {
-      panel.style.left = Math.round(window.innerWidth - panelRect.width - 10) + 'px';
+      panel.style.left = Math.max(8, Math.round(window.innerWidth - panelRect.width - 10)) + 'px';
     }
 
     // Close on any click outside this details element. Deferred by one tick
