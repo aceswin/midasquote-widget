@@ -519,8 +519,8 @@
       #midasquote-widget .mq-tab-bar{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;gap:8px}
       #midasquote-widget .mq-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-size:14px;font-weight:500;color:#4b5563;cursor:pointer;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-tab.mq-tab-lone{flex:0 0 auto;width:calc(50% - 4px)}
-      /* Light grey centered line either side of a lone tab (shop only offers one of Cabinets/Countertops) -- flex:1 so each line fills whatever space the half-width tab leaves; align-self:center puts it on the tab's vertical middle. Decorative only. */
-      #midasquote-widget .mq-tab-ghost{flex:1;min-width:0;align-self:center;height:1px;background:#d1d5db;border:0;pointer-events:none}
+      /* Brand-colour centered line either side of a lone tab (shop only offers one of Cabinets/Countertops) -- flex:1 so each line fills whatever space the half-width tab leaves; align-self:center puts it on the tab's vertical middle. Decorative only. */
+      #midasquote-widget .mq-tab-ghost{flex:1;min-width:0;align-self:center;height:1px;background:${bc};border:0;pointer-events:none}
       #midasquote-widget .mq-tab.active{background:${bc};color:#fff;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget .mq-tab-icon{font-size:18px;flex-shrink:0}
       #midasquote-widget .mq-tab-label{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
@@ -2990,7 +2990,7 @@
         const loneTab = document.querySelector('.mq-tab');
         if (tabBar) tabBar.style.justifyContent = 'center';
         if (loneTab) loneTab.classList.add('mq-tab-lone');
-        // Jordan: with just one tab showing, add two light grey
+        // Jordan: with just one tab showing, add two brand-colour
         // lines (vertically centered) on either side of it to fill the empty space (tab keeps
         // its half-width size). Purely decorative -- aria-hidden, no clicks.
         if (tabBar && loneTab) {
