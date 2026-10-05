@@ -6990,7 +6990,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqHideAllSpecVariants = function(itemId, hide) {
     document.querySelectorAll(`[data-spec-group="${itemId}"] [id^="mq-hidden-"]`).forEach(cb => { cb.checked = hide; });
     mqMarkProductsDirty();
-    if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts();
+    // A Templates (Admin) item's variant cards live on the master template
+    // shop, not the current shop -- save through the Templates save path
+    // instead of My Products' (the same variant-card markup is reused there).
+    if ((window._mqTemplateItems || []).some(x => x.id === itemId)) {
+      if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos();
+    } else if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts();
   };
 
   // Live preview for the group card's own dedicated "shared image" slot --
@@ -7061,6 +7066,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         previewWrap.innerHTML = `<img src="${url.replace(/"/g,'&quot;')}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">⭐</div>`;
       }
     });
+    // Templates (Admin) uses this same shared-photo control (Jordan: pushed a
+    // template with variants and "it pushed everything except the image...
+    // it didnt give me the option to use the image for all variants"). There
+    // the variant photo inputs live in the Templates tab and are saved to the
+    // master template shop, so: make sure the variant list is open so the
+    // result is visible, then autosave through mqSaveTemplatePhotos (which
+    // reports its own "Template photos saved" message) instead of waiting on
+    // a "Save changes" click.
+    if ((window._mqTemplateItems || []).some(x => x.id === itemId)) {
+      const body = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
+      if (body && body.style.display === 'none') window.mqToggleTmplVarPhotos(itemId);
+      if (window.mqMarkProductsDirty) window.mqMarkProductsDirty();
+      if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos();
+      window.mqUpdateTmplVarPhotoSummary(itemId);
+      return;
+    }
     const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
     const variantWraps = document.querySelectorAll(`[data-spec-group="${itemId}"]`);
@@ -7223,6 +7244,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
       });
       showMsg('mq-templates-msg', '✓ Template photos saved!');
+      (window._mqTemplateItems || []).forEach(x => { if (window.mqUpdateTmplVarPhotoSummary) window.mqUpdateTmplVarPhotoSummary(x.id); });
     } catch(e) { showMsg('mq-templates-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -9754,6 +9776,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (priceCell) priceCell.innerHTML = mqSpecPriceCellHTML(r);
     const pricedCell = document.getElementById(`mq-spec-pricedcell-${id}`);
     if (pricedCell) pricedCell.innerHTML = mqSpecPricedCellHTML(r);
+    // Templates (Admin) cards also carry the photos section, which switches
+    // between "one photo card" (no variants) and "one-for-all + a card per
+    // variant" -- re-render it whenever variants are added/removed.
+    if (document.getElementById(`mq-tmpl-photos-${id}`)) window.mqRefreshTemplatePhotos(id);
   }
 
   window.mqToggleVariantsPanel = function(id) {
@@ -10662,13 +10688,163 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </div>`;
   }
 
+  // ---- Templates (Admin): photos for items WITH VARIANTS -------------------
+  // Jordan pushed a new specialty item from the Templates tab and "it pushed
+  // everything except the image... it didnt give me the option to use the
+  // image for all variants." Root cause: a shop's widget never uses an item's
+  // single main photo once the item has variants -- it shows each VARIANT's own
+  // photo (spec_<itemId>_v<variantId>). pushTemplateItemToOneShop already
+  // copies those per-variant photos from the master template shop verbatim,
+  // but the Templates card only ever offered the one main-photo card, so there
+  // was nowhere to set them and a variant item always arrived with no image.
+  // This gives a template with variants the same two tools My Products has:
+  // one photo for all N variants (with the "Apply to all?" confirm) and a
+  // photo card per variant. Everything autosaves to the master template
+  // shop's Photos via mqSaveTemplatePhotos, which is where the push reads.
+  function mqTmplSharedVariantPhotoUrl(itemId, variants, photosMap) {
+    if (!variants || !variants.length) return '';
+    const urls = variants.map(v => photosMap['spec_' + itemId + '_v' + v.id] || '');
+    return urls.every(u => u && u === urls[0]) ? urls[0] : '';
+  }
+
+  function mqTemplatePhotosHTML(r, savedPhotos, savedHidden) {
+    const variants = mqParseVariants(r);
+    if (!variants.length) {
+      return photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
+    }
+    const n = variants.length;
+    const itemName = (r.fields['Item name'] || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const withPhoto = variants.filter(v => savedPhotos['spec_' + r.id + '_v' + v.id]).length;
+    const sharedUrl = mqTmplSharedVariantPhotoUrl(r.id, variants, savedPhotos);
+    const allHidden = variants.every(v => savedHidden['spec_' + r.id + '_v' + v.id]);
+    const missing = withPhoto < n;
+    const placeholder = `<div style="width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">⭐</div>`;
+    const sharedPreview = sharedUrl
+      ? `<img src="${sharedUrl.replace(/"/g, '&quot;')}" style="width:100%;height:90px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:8px" onerror="this.outerHTML='<div style=\\'width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px\\'>⭐</div>'"/>`
+      : placeholder;
+    const variantCards = variants.map(v => `<div data-spec-group="${r.id}" style="background:#fffdf5;border:1px solid #fde68a;border-radius:10px;padding:5px">
+        ${photoCardShared('spec_' + r.id + '_v' + v.id, `${itemName} — ${((v.label || '').trim() || 'Variant').replace(/</g, '&lt;')}`, '⭐', 'specialty', null, null, savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos')}
+      </div>`).join('');
+    return `<div style="background:#fffbeb;border:2px solid ${missing ? '#f59e0b' : '#fde68a'};border-radius:10px;padding:10px">
+      <div onclick="mqToggleTmplVarPhotos('${r.id}')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#92400e">🖼️ Photos for ${n} variant${n === 1 ? '' : 's'}</div>
+          <div id="mq-tmpl-varphotos-summary-${r.id}" style="font-size:11px;color:${missing ? '#b45309' : '#16a34a'};font-weight:600">${withPhoto} of ${n} have a photo${missing ? ' — add them so shops get images' : ' ✓'}</div>
+        </div>
+        <span id="mq-tmpl-varphotos-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#dc2626;flex-shrink:0">▼</span>
+      </div>
+      <div id="mq-tmpl-varphotos-body-${r.id}" style="display:none;margin-top:10px">
+        <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">Optional: one photo for all ${n} variants</div>
+        <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">Upload, paste, or choose a photo below and (after you confirm) it fills in all ${n} variants at once. Or leave it blank and set each variant's own photo further down. Whatever is set here is what gets pushed to shops.</div>
+        <div id="mq-specshared-preview-${r.id}">${sharedPreview}</div>
+        <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+          📤 Upload a photo
+          <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
+        </label>
+        <div id="mq-specshared-upload-status-${r.id}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
+        <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
+          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
+          oninput="mqPreviewSpecSharedImage('${r.id}')" onblur="if(this.value.trim())mqApplySpecSharedImage('${r.id}')"/>
+        <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280;margin-bottom:10px" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px;cursor:pointer">
+          <input type="checkbox" id="mq-hideall-spec-${r.id}" ${allHidden ? 'checked' : ''} onchange="mqHideAllSpecVariants('${r.id}', this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+          🙈 Hide all ${n} variants from showroom
+        </label>
+        <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:6px">Each variant's own photo</div>
+        <div style="display:flex;flex-direction:column;gap:8px">${variantCards}</div>
+      </div>
+    </div>`;
+  }
+
+  window.mqToggleTmplVarPhotos = function(itemId) {
+    const body = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
+    const arrow = document.getElementById('mq-tmpl-varphotos-arrow-' + itemId);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(-90deg)' : 'rotate(0deg)';
+    window.mqUpdateTmplVarPhotoSummary(itemId);
+  };
+
+  // Recount from the live inputs (not the saved map) so the header stays
+  // honest after an upload / paste / apply-to-all without a re-render.
+  window.mqUpdateTmplVarPhotoSummary = function(itemId) {
+    const summary = document.getElementById('mq-tmpl-varphotos-summary-' + itemId);
+    if (!summary) return;
+    const inputs = [...document.querySelectorAll(`input[id^="mq-photo-spec_${itemId}_v"]`)];
+    const n = inputs.length;
+    if (!n) return;
+    const have = inputs.filter(i => i.value.trim()).length;
+    const missing = have < n;
+    summary.textContent = `${have} of ${n} have a photo${missing ? ' — add them so shops get images' : ' ✓'}`;
+    summary.style.color = missing ? '#b45309' : '#16a34a';
+  };
+
+  // Hooks up every upload button inside `scope` -- the normal per-card ones
+  // (mq-upload-file-<key>) AND the "one photo for all variants" ones
+  // (mq-specshared-upload-file-<itemId>, deliberately not "mq-photo-" prefixed
+  // so the save scan doesn't capture them -- see mqApplySpecSharedImage).
+  // Shared by renderTemplates and mqRefreshTemplatePhotos so a re-rendered
+  // photos section gets working uploads again.
+  function mqWireTemplatePhotoUploads(scope) {
+    if (!scope) return;
+    scope.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
+      const key = fileInput.id.replace('mq-upload-file-', '');
+      mqWireUploadButton(
+        null,
+        'mq-upload-file-' + key,
+        'mq-upload-status-' + key,
+        'mq-photo-' + key,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        // Save immediately once the upload finishes -- this tab's "Save all
+        // changes" button is easy to forget, and an uploaded-but-unsaved
+        // photo silently disappears the next time the tab reloads.
+        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos(); }
+      );
+    });
+    scope.querySelectorAll('input[type="file"][id^="mq-specshared-upload-file-"]').forEach(fileInput => {
+      const itemId = fileInput.id.replace('mq-specshared-upload-file-', '');
+      mqWireUploadButton(
+        null,
+        'mq-specshared-upload-file-' + itemId,
+        'mq-specshared-upload-status-' + itemId,
+        'mq-specshared-url-' + itemId,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        (url) => { mqPreviewSpecSharedImage(itemId); mqApplySpecSharedImage(itemId); }
+      );
+    });
+  }
+
+  // Re-renders one template card's photos section (e.g. after a variant is
+  // added/removed, which flips it between the single-photo card and the
+  // variant-photos section). Keeps the section open if it already was.
+  window.mqRefreshTemplatePhotos = function(itemId) {
+    const box = document.getElementById('mq-tmpl-photos-' + itemId);
+    const r = (window._mqTemplateItems || []).find(x => x.id === itemId);
+    const masterShop = window._mqMasterTemplateShop;
+    if (!box || !r || !masterShop) return;
+    const prevBody = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
+    const wasOpen = !!prevBody && prevBody.style.display !== 'none';
+    let photos = {}, hidden = {};
+    try { photos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+    try { hidden = masterShop.fields['Hidden'] ? JSON.parse(masterShop.fields['Hidden']) : {}; } catch(e) {}
+    box.innerHTML = mqTemplatePhotosHTML(r, photos, hidden);
+    mqWireTemplatePhotoUploads(box);
+    if (wasOpen) window.mqToggleTmplVarPhotos(itemId);
+  };
+
   // Template cards need editable name/price/unit fields too (regular My
   // Products items get that from the separate Specialty Items tab table —
   // templates don't have an equivalent, so it lives right on the card here).
   function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
     const variantCount = mqParseVariants(r).length;
-    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
+    // Wrapped in its own container so it can be re-rendered when variants are
+    // added/removed -- see mqTemplatePhotosHTML / mqRefreshTemplatePhotos.
+    const photoHtml = `<div id="mq-tmpl-photos-${r.id}">${mqTemplatePhotosHTML(r, savedPhotos, savedHidden)}</div>`;
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
     const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:6px">
@@ -10782,23 +10958,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Wire up upload buttons for every template card just rendered — this
     // step was missing entirely before, so the file picker existed visually
     // but selecting a file did nothing at all.
-    content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
-      const key = fileInput.id.replace('mq-upload-file-', '');
-      mqWireUploadButton(
-        null,
-        'mq-upload-file-' + key,
-        'mq-upload-status-' + key,
-        'mq-photo-' + key,
-        MASTER_TEMPLATE_SHOP_NAME,
-        'products',
-        // Save immediately once the upload finishes, instead of only
-        // marking dirty — same reasoning as the autosave wiring in
-        // photoCardShared above: this tab's "Save all changes" button is
-        // easy to forget, and an uploaded-but-unsaved photo silently
-        // disappears the next time this tab is reloaded.
-        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos(); }
-      );
-    });
+    // (Also wires the new "one photo for all variants" upload buttons for
+    // template items that have variants.)
+    mqWireTemplatePhotoUploads(content);
 
     // Every item's variants panel already exists in the DOM at this point
     // (inside its own hidden mq-spec-variants-row-<id>, built by
