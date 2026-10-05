@@ -1442,6 +1442,7 @@ window.logoutMember = async function () {
     rooms: { youtubeId: 'nbTFS0b1C2g' },
     pricing: { youtubeId: 'tQyYyFALg7c' },
     islandPanel: { youtubeId: 'LHsz0MRmeM0' },
+    specialty: { youtubeId: 'pZ4UNfpPVSs' },
   };
   function mqTrainingVideoBlockHTML(key) {
     const video = MQ_TRAINING_VIDEOS[key];
@@ -1986,6 +1987,7 @@ window.logoutMember = async function () {
                 <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
             </div>
+            ${mqTrainingVideoBlockHTML('specialty')}
             <div id="mq-spec-msg"></div>
             <div id="mq-spec-tips-card" class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4;max-width:480px">
               <div onclick="mqToggleSpecTips()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer">
@@ -9349,6 +9351,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // stale label (like "New template item") forever after a rename.
       if (field === 'Item name') updates['Special Items'] = value;
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
+      // Jordan: the "⭐ Pro only" filter only picked up an item AFTER a page
+      // refresh once he'd just ticked its Pro only box. Cause: the filter
+      // never reads the saved record -- it reads a data-proonly="1/0"
+      // attribute stamped onto each row/card when the tab first rendered, and
+      // nothing updated that stamp when the checkbox changed. So sync it right
+      // here (plus the in-memory record, so a later re-render of that tab
+      // doesn't stamp the stale value back). The filter is deliberately NOT
+      // re-run here: if "Pro only" is already ticked in the filter, unchecking
+      // an item shouldn't make its row vanish out from under the cursor
+      // mid-edit -- it just drops out the next time the filter is touched.
+      if (field === 'Pro only') {
+        const flag = value ? '1' : '0';
+        const rec = mqFindVariantOwnerRecord(id);
+        if (rec) rec.fields['Pro only'] = !!value;
+        document.querySelectorAll(`tr[data-id="${id}"]`).forEach(tr => tr.setAttribute('data-proonly', flag));
+        const stamp = (node) => { if (node) node.setAttribute('data-proonly', flag); };
+        // My Products cards: a plain item's single card, or a variant item's
+        // group card + each popped-out variant card.
+        const photoPreview = document.getElementById('mq-photo-preview-spec_' + id);
+        if (photoPreview) stamp(photoPreview.closest('.mq-spec-card-wrap'));
+        stamp(document.getElementById('mq-specgroup-wrap-' + id));
+        document.querySelectorAll(`[data-spec-group="${id}"]`).forEach(stamp);
+      }
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
