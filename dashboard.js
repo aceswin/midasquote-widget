@@ -1441,7 +1441,7 @@ window.logoutMember = async function () {
   const MQ_TRAINING_VIDEOS = {
     rooms: { youtubeId: 'nbTFS0b1C2g' },
     pricing: { youtubeId: 'tQyYyFALg7c' },
-    islandPanel: { youtubeId: 'nutY62g6stw' },
+    islandPanel: { youtubeId: 'LHsz0MRmeM0' },
   };
   function mqTrainingVideoBlockHTML(key) {
     const video = MQ_TRAINING_VIDEOS[key];
