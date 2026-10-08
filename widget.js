@@ -4748,72 +4748,12 @@
       }
     }
 
-    // A fast scroll on mobile can cross several short, still-collapsed
-    // sections before the flow ever gets a chance to react — each closed
-    // section is just a header row, so a whole run of them can cross the
-    // scroll-spy's centerline inside one scroll/animation frame. The ask:
-    // no matter how fast that happens, every section in between must still
-    // fully open, in order — "2 opens after 1, then 3 after 2," not a jump
-    // straight to wherever the scroll landed. This walks the step index one
-    // section at a time toward the real target, pausing briefly on each —
-    // exactly like a real step: mqUpdateStepFocus opens it and the section
-    // picks up wherever it was before (nothing forced shut, per the earlier
-    // fix above) — and smooth-scrolling to it, before settling on the
-    // section the scroll actually landed on. A gap of 0 or 1 (nothing was
-    // skipped) still jumps straight there, unchanged. A direct click always
-    // wins and cancels any walk in progress (mqCancelCatchup), since that's
-    // an explicit choice, not a skip to correct for.
-    let _mqCatchupActive = {};
-    let _mqCatchupToken = {};
-    // Reference (not copied), same reasoning as mqGetVisibleSections/
-    // _mqStepIndex above — mqCheckBottomBounceAutoOpen (outside this
-    // closure) needs to know when a walk already owns a tab's scrolling.
-    window._mqCatchupActive = _mqCatchupActive;
-    function mqCancelCatchup(prefix) {
-      if (!prefix) return;
-      _mqCatchupToken[prefix] = {};
-      _mqCatchupActive[prefix] = false;
-    }
-    function mqScrollJumpWithCatchup(sec, fromIdx) {
-      const tab = sec.closest('.mq-tab-content');
-      if (!tab) return;
-      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
-      if (!prefix) return;
-      const sections = mqGetVisibleSections(prefix);
-      const idx = sections.indexOf(sec);
-      // fromIdx lets the scroll-spy (see below) tell this exactly where the
-      // flow stood BEFORE the current batch of intersection changes, since
-      // _mqStepIndex itself may already have moved by the time this runs.
-      const current = (fromIdx == null) ? (_mqStepIndex[prefix] || 0) : fromIdx;
-      if (idx === -1 || idx === current) return;
-      const gap = Math.abs(idx - current);
-      if (gap <= 1) { window.mqJumpToSectionIfNeeded(sec); return; } // adjacent — nothing was skipped
-      const dir = idx > current ? 1 : -1;
-      const token = {};
-      _mqCatchupToken[prefix] = token;
-      _mqCatchupActive[prefix] = true;
-      function advance(step) {
-        if (_mqCatchupToken[prefix] !== token) return; // superseded — a click or a newer jump took over
-        _mqStepIndex[prefix] = step;
-        window.mqUpdateStepFocus(prefix);
-        const el = sections[step];
-        if (el) mqScrollTopNearCenter(el);
-        if (step === idx) {
-          setTimeout(() => { if (_mqCatchupToken[prefix] === token) _mqCatchupActive[prefix] = false; }, 320);
-          return;
-        }
-        setTimeout(() => advance(step + dir), 320);
-      }
-      advance(current + dir);
-    }
-    window.mqScrollJumpWithCatchup = mqScrollJumpWithCatchup;
 
     document.addEventListener('click', (e) => {
       const sec = e.target.closest('#midasquote-widget .mq-sec');
       if (!sec) return;
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
-      if (prefix) mqCancelCatchup(prefix);
       mqJumpToSectionIfNeeded(sec);
     });
 
@@ -4821,29 +4761,21 @@
     // Continue or tapping into it — a shrunk-viewport IntersectionObserver
     // (top and bottom both pulled in 50%) leaves only a thin trigger line
     // at the exact vertical center of the screen; whichever section is
-    // crossing that line becomes the current step. A slow scroll that only
-    // ever crosses one section at a time reuses the exact same instant-jump
-    // logic a click runs.
-    //
-    // A fast scroll is different: several sections can cross that thin
-    // centerline between two ticks, so the browser hands ALL of them to
-    // this callback in a single batch. Processing them one at a time, in
-    // order, used to silently defeat the catch-up walk above — jumping to
-    // entry #1 moves the step index forward by 1, which makes entry #2 look
-    // "adjacent" to that NEW position instead of to wherever the flow
-    // actually started, and so on down the batch, so a 5-section skip read
-    // as five separate 1-section hops and the walk never ran at all (this
-    // was the real bug behind the walk "not working" the first time this
-    // was tried). Fixed by resolving the WHOLE batch first, per tab: snapshot
-    // each tab's step index once before touching anything, keep only
-    // whichever entry in this batch is farthest from that snapshot (that's
-    // where the scroll actually ended up), and run exactly one jump per tab
-    // from that original position — never from a position an earlier entry
-    // in this same batch already moved.
+    // crossing that line becomes the current step. This is passive only: it
+    // updates which step is highlighted/open and NEVER scrolls the page
+    // itself (the catch-up walk that used to step through skipped sections
+    // with a smooth scroll to each one was removed -- it fought the user's
+    // own scrolling and made the page jerk when scrolling fast). Only
+    // Continue/Back/Done move the page.
     let _mqScrollSpyObserver = null;
     function mqObserveSectionsForScrollSpy() {
       if (!_mqScrollSpyObserver) {
         _mqScrollSpyObserver = new IntersectionObserver((entries) => {
+          // Resolve the batch per tab first: if several sections crossed the
+          // centerline in one tick (fast scroll), land on whichever is
+          // farthest from where the flow started -- where the scroll ended
+          // up -- with ONE instant jump, instead of hopping through each
+          // entry in order.
           const startIdx = {};
           const farthest = {};
           entries.forEach(entry => {
@@ -4851,7 +4783,6 @@
             const tab = entry.target.closest('.mq-tab-content');
             const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
             if (!prefix) { mqJumpToSectionIfNeeded(entry.target); return; }
-            if (_mqCatchupActive[prefix]) return; // a walk already owns this tab right now — let it finish
             if (!(prefix in startIdx)) startIdx[prefix] = _mqStepIndex[prefix] || 0;
             const sections = mqGetVisibleSections(prefix);
             const idx = sections.indexOf(entry.target);
@@ -4867,7 +4798,7 @@
             // See mqLockStepNav above — only a BACKWARD correction gets
             // suppressed, and only while that lock is still active.
             if (idx < current && Date.now() < (_mqStepNavLockUntil[prefix] || 0)) return;
-            mqScrollJumpWithCatchup(target, current);
+            mqJumpToSectionIfNeeded(target);
           });
         }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
       }
@@ -7827,7 +7758,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   // few tries before it happened to land exactly right.
   //
   // Rather than just flipping it open directly, it's routed through
-  // mqScrollJumpWithCatchup/mqJumpToSectionIfNeeded — the same "arriving at
+  // mqJumpToSectionIfNeeded — the same "arriving at
   // a section" path a normal scroll or click already uses — so this stays
   // consistent with the rest of the step flow: it becomes the new current
   // step and its footer updates. After opening one, it re-checks itself
@@ -7858,7 +7789,6 @@ window.mqTogDrawerConfig=(prefix)=>{
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
       if (prefix) {
-        if (window._mqCatchupActive && window._mqCatchupActive[prefix]) return; // a catch-up walk already owns this tab's scroll right now
         if (window.mqGetVisibleSections && window._mqStepIndex) {
           const visible = window.mqGetVisibleSections(prefix);
           const idx = visible.indexOf(sec);
@@ -7866,7 +7796,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           if (idx !== -1 && idx <= current) continue; // already current or done — leave it collapsed
         }
       }
-      (window.mqScrollJumpWithCatchup || window.mqJumpToSectionIfNeeded)(sec);
+      window.mqJumpToSectionIfNeeded(sec);
       // Still at the bottom after this one opens? Check again shortly so
       // the next stuck section (if any) opens right away too, instead of
       // waiting on another manual scroll.
