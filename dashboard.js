@@ -7685,7 +7685,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // state already survives a grid-only rebuild.
     function mqRefreshCatSection(cat) {
       const wasOpen = document.getElementById(`mq-cat-body-${cat}`)?.style.display !== 'none';
-      const catEl = document.querySelector(`[data-mq-cat="${cat}"]`);
+      // Jordan: "when i create a new group in my products i only see the new
+      // group after i refresh the page." Root cause: this lookup used to be
+      // an UNSCOPED document.querySelector('[data-mq-cat="door"]'), but the
+      // Pricing tab (pricing-helper-v2.js) tags its own category blocks
+      // (.mqph-cat-block) with the very same data-mq-cat attribute — and the
+      // Pricing page sits EARLIER in the DOM than My Products. Once the
+      // Pricing tab had been opened in a session, querySelector found ITS
+      // block first, so the freshly built My Products card was written over
+      // the Pricing tab's block (corrupting it) while the real My Products
+      // card on screen stayed stale until a full page refresh. Scoped to
+      // #mq-products-content .mq-card (same selector the estimator-tab
+      // scoping above already uses) so it can only ever hit this tab's card.
+      const catEl = document.querySelector(`#mq-products-content .mq-card[data-mq-cat="${cat}"]`);
       if (!catEl) return;
       catEl.outerHTML = catSection(cat);
       if (wasOpen) {
