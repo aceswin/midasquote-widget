@@ -2697,8 +2697,9 @@
     const showroomHref = showroomOwnUrl || showroomPopupUrl;
 
     return `
-      <div style="background:linear-gradient(135deg,#0f2a52,#1e3a5f);padding:16px 20px;text-align:center">
-        <div style="font-size:19px;font-weight:800;letter-spacing:0.08em;color:#fbbf24;text-transform:uppercase">⚡ MidasQuote Pro ⚡</div>
+      <div style="position:relative;background:linear-gradient(135deg,#0f2a52,#1e3a5f);padding:16px 20px;text-align:center">
+        <button type="button" id="mq-pro-refresh-btn" onclick="mqProRefresh()" title="Refresh — start a new quote" aria-label="Refresh and start a new quote" style="position:absolute;top:8px;right:8px;width:32px;height:32px;padding:0;border-radius:50%;border:1px solid rgba(251,191,36,0.6);background:rgba(255,255,255,0.08);color:#fbbf24;font-size:19px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">↻</button>
+        <div style="font-size:clamp(14px,4.4vw,19px);font-weight:800;letter-spacing:0.08em;color:#fbbf24;text-transform:uppercase">⚡ MidasQuote Pro ⚡</div>
         <div style="font-size:12px;color:#cbd5e1;letter-spacing:0.04em;margin-top:2px">Real numbers. Every time.</div>
       </div>
       <div class="mq-header">
@@ -4485,72 +4486,12 @@
       }
     };
 
-    // A fast scroll on mobile can cross several short, still-collapsed
-    // sections before the flow ever gets a chance to react — each closed
-    // section is just a header row, so a whole run of them can cross the
-    // scroll-spy's centerline inside one scroll/animation frame. The ask:
-    // no matter how fast that happens, every section in between must still
-    // fully open, in order — "2 opens after 1, then 3 after 2," not a jump
-    // straight to wherever the scroll landed. This walks the step index one
-    // section at a time toward the real target, pausing briefly on each —
-    // exactly like a real step: mqUpdateStepFocus opens it and the section
-    // picks up wherever it was before (nothing forced shut, per the earlier
-    // fix above) — and smooth-scrolling to it, before settling on the
-    // section the scroll actually landed on. A gap of 0 or 1 (nothing was
-    // skipped) still jumps straight there, unchanged. A direct click always
-    // wins and cancels any walk in progress (mqCancelCatchup), since that's
-    // an explicit choice, not a skip to correct for.
-    let _mqCatchupActive = {};
-    let _mqCatchupToken = {};
-    // Reference (not copied), same reasoning as mqGetVisibleSections/
-    // _mqStepIndex above — mqCheckBottomBounceAutoOpen (outside this
-    // closure) needs to know when a walk already owns a tab's scrolling.
-    window._mqCatchupActive = _mqCatchupActive;
-    function mqCancelCatchup(prefix) {
-      if (!prefix) return;
-      _mqCatchupToken[prefix] = {};
-      _mqCatchupActive[prefix] = false;
-    }
-    function mqScrollJumpWithCatchup(sec, fromIdx) {
-      const tab = sec.closest('.mq-tab-content');
-      if (!tab) return;
-      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
-      if (!prefix) return;
-      const sections = mqGetVisibleSections(prefix);
-      const idx = sections.indexOf(sec);
-      // fromIdx lets the scroll-spy (see below) tell this exactly where the
-      // flow stood BEFORE the current batch of intersection changes, since
-      // _mqStepIndex itself may already have moved by the time this runs.
-      const current = (fromIdx == null) ? (_mqStepIndex[prefix] || 0) : fromIdx;
-      if (idx === -1 || idx === current) return;
-      const gap = Math.abs(idx - current);
-      if (gap <= 1) { window.mqJumpToSectionIfNeeded(sec); return; } // adjacent — nothing was skipped
-      const dir = idx > current ? 1 : -1;
-      const token = {};
-      _mqCatchupToken[prefix] = token;
-      _mqCatchupActive[prefix] = true;
-      function advance(step) {
-        if (_mqCatchupToken[prefix] !== token) return; // superseded — a click or a newer jump took over
-        _mqStepIndex[prefix] = step;
-        window.mqUpdateStepFocus(prefix);
-        const el = sections[step];
-        if (el) mqScrollTopNearCenter(el);
-        if (step === idx) {
-          setTimeout(() => { if (_mqCatchupToken[prefix] === token) _mqCatchupActive[prefix] = false; }, 320);
-          return;
-        }
-        setTimeout(() => advance(step + dir), 320);
-      }
-      advance(current + dir);
-    }
-    window.mqScrollJumpWithCatchup = mqScrollJumpWithCatchup;
 
     document.addEventListener('click', (e) => {
       const sec = e.target.closest('#midasquote-widget .mq-sec');
       if (!sec) return;
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
-      if (prefix) mqCancelCatchup(prefix);
       mqJumpToSectionIfNeeded(sec);
     });
 
@@ -4558,29 +4499,21 @@
     // Continue or tapping into it — a shrunk-viewport IntersectionObserver
     // (top and bottom both pulled in 50%) leaves only a thin trigger line
     // at the exact vertical center of the screen; whichever section is
-    // crossing that line becomes the current step. A slow scroll that only
-    // ever crosses one section at a time reuses the exact same instant-jump
-    // logic a click runs.
-    //
-    // A fast scroll is different: several sections can cross that thin
-    // centerline between two ticks, so the browser hands ALL of them to
-    // this callback in a single batch. Processing them one at a time, in
-    // order, used to silently defeat the catch-up walk above — jumping to
-    // entry #1 moves the step index forward by 1, which makes entry #2 look
-    // "adjacent" to that NEW position instead of to wherever the flow
-    // actually started, and so on down the batch, so a 5-section skip read
-    // as five separate 1-section hops and the walk never ran at all (this
-    // was the real bug behind the walk "not working" the first time this
-    // was tried). Fixed by resolving the WHOLE batch first, per tab: snapshot
-    // each tab's step index once before touching anything, keep only
-    // whichever entry in this batch is farthest from that snapshot (that's
-    // where the scroll actually ended up), and run exactly one jump per tab
-    // from that original position — never from a position an earlier entry
-    // in this same batch already moved.
+    // crossing that line becomes the current step. This is passive only: it
+    // updates which step is highlighted/open and NEVER scrolls the page
+    // itself (the catch-up walk that used to step through skipped sections
+    // with a smooth scroll to each one was removed -- it fought the user's
+    // own scrolling and made the page jerk when scrolling fast). Only
+    // Continue/Back/Done move the page.
     let _mqScrollSpyObserver = null;
     function mqObserveSectionsForScrollSpy() {
       if (!_mqScrollSpyObserver) {
         _mqScrollSpyObserver = new IntersectionObserver((entries) => {
+          // Resolve the batch per tab first: if several sections crossed the
+          // centerline in one tick (fast scroll), land on whichever is
+          // farthest from where the flow started -- where the scroll ended
+          // up -- with ONE instant jump, instead of hopping through each
+          // entry in order.
           const startIdx = {};
           const farthest = {};
           entries.forEach(entry => {
@@ -4588,7 +4521,6 @@
             const tab = entry.target.closest('.mq-tab-content');
             const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
             if (!prefix) { mqJumpToSectionIfNeeded(entry.target); return; }
-            if (_mqCatchupActive[prefix]) return; // a walk already owns this tab right now — let it finish
             if (!(prefix in startIdx)) startIdx[prefix] = _mqStepIndex[prefix] || 0;
             const sections = mqGetVisibleSections(prefix);
             const idx = sections.indexOf(entry.target);
@@ -4604,7 +4536,7 @@
             // See mqLockStepNav above — only a BACKWARD correction gets
             // suppressed, and only while that lock is still active.
             if (idx < current && Date.now() < (_mqStepNavLockUntil[prefix] || 0)) return;
-            mqScrollJumpWithCatchup(target, current);
+            mqJumpToSectionIfNeeded(target);
           });
         }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
       }
@@ -7516,7 +7448,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   // few tries before it happened to land exactly right.
   //
   // Rather than just flipping it open directly, it's routed through
-  // mqScrollJumpWithCatchup/mqJumpToSectionIfNeeded — the same "arriving at
+  // mqJumpToSectionIfNeeded — the same "arriving at
   // a section" path a normal scroll or click already uses — so this stays
   // consistent with the rest of the step flow: it becomes the new current
   // step and its footer updates. After opening one, it re-checks itself
@@ -7547,7 +7479,6 @@ window.mqTogDrawerConfig=(prefix)=>{
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
       if (prefix) {
-        if (window._mqCatchupActive && window._mqCatchupActive[prefix]) return; // a catch-up walk already owns this tab's scroll right now
         if (window.mqGetVisibleSections && window._mqStepIndex) {
           const visible = window.mqGetVisibleSections(prefix);
           const idx = visible.indexOf(sec);
@@ -7555,7 +7486,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           if (idx !== -1 && idx <= current) continue; // already current or done — leave it collapsed
         }
       }
-      (window.mqScrollJumpWithCatchup || window.mqJumpToSectionIfNeeded)(sec);
+      window.mqJumpToSectionIfNeeded(sec);
       // Still at the bottom after this one opens? Check again shortly so
       // the next stuck section (if any) opens right away too, instead of
       // waiting on another manual scroll.
@@ -7689,52 +7620,75 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (typeof afterApply === 'function') afterApply();
     });
   }
-  // "Email me a copy" — lives next to the sticky bar's price. Deliberately
-  // uses a customer-safe format (ballpark range, no real costs) here rather
-  // than reusing Pro's own saveLead email template, which is meant for the
-  // shop owner's internal reference and shows the real total — sending
-  // that to whoever's looking at the screen would leak actual costs.
+  // "Email me a copy" — lives next to the sticky bar's price. Jordan: "for
+  // midasquotepro any emailing should send the real quote." This used to send
+  // a deliberately customer-safe email (ballpark range only, no real costs),
+  // which is wrong for Pro — it's the shop owner's own tool, so EVERY email
+  // it sends now goes through saveLead's real-quote template (real total,
+  // what the customer would see, full line-by-line breakdown). It also now
+  // covers the WHOLE running quote (everything already committed to the
+  // multi-project-type cart + whatever's live on the current tab), exactly
+  // like the email sent on Calculate — before, it only ever included the
+  // current tab, even though the sticky price above it shows the full total.
   function mqCurrentLiveResult() {
     const prefix = window._mqStickyPrefix;
     if (!prefix || !window._mqCalcCabinet || !window._mqCalcCountertop) return null;
     if (prefix === 'b') {
       const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
-      return { prefix, low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
+      return { prefix, label: cab.roomLabel || 'Cabinets + Countertops', low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total, lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)] };
     }
     if (prefix === 'ct') {
       const r = window._mqCalcCountertop('ct');
-      return { prefix, low: r.low, high: r.high, total: r.total, lines: r.lines };
+      return { prefix, label: 'Countertops', low: r.low, high: r.high, total: r.total, lines: (r.lines||[]).filter(l=>!l.bold) };
     }
     const r = window._mqCalcCabinet('c');
-    return { prefix, low: r.low, high: r.high, total: r.total, lines: r.lines };
+    return { prefix, label: r.roomLabel || 'Cabinets', low: r.low, high: r.high, total: r.total, lines: (r.lines||[]).filter(l=>!l.bold) };
   }
   async function mqSendQuoteCopy(email) {
     const linkEl = document.getElementById('mq-sticky-email-link');
     const result = mqCurrentLiveResult();
-    if (!result) return;
+    const cart = window._mqQuoteCart || [];
+    if (!result && !cart.length) return;
     const shop = window._mqShopData || {};
     if (linkEl) linkEl.textContent = 'Sending...';
-    const customerLineRows = (result.lines||[]).filter(l=>l&&l.label&&!l.bold)
-      .sort((a,b)=>b.cost-a.cost)
-      .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
-    await sendEmail(email, `Your updated quote from ${shop['Shop name']||''}`,
-      `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2 style="color:#1a1a1a">Your updated quote from ${shop['Shop name']||''}</h2>
-        <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
-          <div style="font-size:14px;color:#666;margin-bottom:4px">${mqShouldShowRange(result.prefix) ? 'Your estimated range' : 'Your estimate'}</div>
-          <div style="font-size:28px;font-weight:700;color:#16a34a">${mqFmtPrice(result.prefix, result.low, result.high, result.total)}</div>
-        </div>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-          <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What's included</td></tr>${customerLineRows}
-        </table>
-        <p style="color:#666;font-size:14px">${shop['Disclaimer text'] || (mqShouldShowRange(result.prefix) ? 'Ballpark estimate only. Contact us for a full quote.' : 'This quote is not final — please contact us for final numbers.')}</p>
-        <p style="color:#666;font-size:14px"><strong>${shop['Shop name']||''}</strong><br/>${shop['Phone']||''}</p>
-      </div>`);
+    const data = { shop };
+    const lead = { email };
+    const liveHasValue = !!result && ((result.low||0) > 0 || (result.high||0) > 0 || (result.total||0) > 0);
+    if (result && (liveHasValue || !cart.length)) {
+      // Current tab (+ the cart, if there is one) — same merge the Calculate
+      // email uses.
+      await mqSaveLeadWithCart(data, lead, result.label, result.low, result.high, result.lines, result.total, result.prefix);
+    } else {
+      // The current tab is blank (e.g. just switched project type after
+      // committing the last one) — send just the committed cart rather than
+      // adding an empty section.
+      const prefix = window._mqStickyPrefix || 'b';
+      await saveLead(
+        data, lead,
+        cart.map(e => e.label).join(' + '),
+        cart.reduce((s,e) => s + (e.low||0), 0),
+        cart.reduce((s,e) => s + (e.high||0), 0),
+        cart.flatMap(e => [{label: e.label, header: true}, ...e.lines.filter(l => !l.bold)]),
+        cart.reduce((s,e) => s + (e.total||0), 0),
+        prefix
+      );
+    }
     if (linkEl) {
       linkEl.textContent = '✓ Sent!';
       setTimeout(() => { linkEl.textContent = '📧 Email me a copy'; }, 2500);
     }
   }
+  // Jordan: "a refresh button at the very top right of the widget ... because
+  // i leave it on and want to refresh it for a new quote but have to right
+  // click and hit reload every time." Same effect as the browser's own
+  // reload (which also re-pulls the shop's latest prices/settings); only
+  // asks first when there's actually a quote in progress to lose.
+  window.mqProRefresh = function() {
+    const sticky = document.getElementById('mq-sticky-bar');
+    const inProgress = (window._mqQuoteCart || []).length > 0 || !!window._mqLivePreview || !!(sticky && sticky.classList.contains('show'));
+    if (inProgress && !confirm('Refresh and start a new quote? Your current quote will be cleared.')) return;
+    window.location.reload();
+  };
   window.mqEmailMyQuote = async function() {
     if (window._mqLeadEmail) {
       await mqSendQuoteCopy(window._mqLeadEmail);
