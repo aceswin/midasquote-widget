@@ -426,44 +426,91 @@
   // ============================================================
   // EMAIL & LEAD
   // ============================================================
+  // Sends one lead to the proxy worker's /save-lead and keeps trying in the
+  // background if that fails. 2026-10-08: a customer clicked "Email me a copy"
+  // a few times and the leads never reached the dashboard (the shop still got
+  // the notification emails, since those go through a separate worker). The
+  // likely cause is Airtable's per-base rate limit (5 requests/second for the
+  // whole base): go over it and Airtable rejects everything for ~30 seconds,
+  // while the old save only retried 3 times inside ~1 second, so a save that
+  // landed in that window was lost. This waits out that window: 5 attempts
+  // spread over ~45 seconds (each with its own 15s timeout), stopping early
+  // if the worker says retrying can't help (e.g. Airtable rejected a value).
+  // `requestId` is the same for every attempt of ONE save, so the worker can
+  // recognise a repeat of a save it already completed and not create a second
+  // lead; two separate clicks still send different ids and stay separate leads.
+  // Resolves {ok:true} or {ok:false, error} with the real reason, so the
+  // failure alert email can say why.
+  async function mqPostLead(payload) {
+    const waitsBeforeRetry = [3000, 6000, 13000, 23000];
+    let lastError = '';
+    for (let attempt = 0; attempt <= waitsBeforeRetry.length; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, waitsBeforeRetry[attempt - 1]));
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetch(`${CONFIG.PROXY_WORKER}/save-lead`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+          cache: 'no-store',
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) return { ok: true };
+        let info = {};
+        try { info = await res.json(); } catch(e) {}
+        lastError = `HTTP ${res.status}${info && info.error ? ' — ' + info.error : ''}`;
+        if (info && info.retryable === false) return { ok: false, error: lastError };
+      } catch(e) {
+        clearTimeout(timeoutId);
+        lastError = (e && e.name === 'AbortError') ? 'the request timed out' : String((e && e.message) || e);
+      }
+    }
+    return { ok: false, error: lastError || 'unknown error' };
+  }
+
   async function saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix, contactRequested) {
     const { shop } = data;
-    try {
-      await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-lead`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shopToken, name: lead.name, email: lead.email, phone: lead.phone,
-          quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines,
-        }),
-      });
-    } catch(e) {
-      console.error('Lead save failed', e);
+    // Kick the save off right away but DON'T wait for it: it may legitimately
+    // take up to ~45s to get through a rate-limit window, and neither the
+    // quote results nor the notification/customer emails below depend on it.
+    // Only if it still fails after every attempt does the shop get the
+    // "didn't save" alert (below), now including the actual reason.
+    const requestId = `${_mqSessionId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    mqPostLead({
+      shopToken, name: lead.name, email: lead.email, phone: lead.phone,
+      quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines, requestId,
+    }).then(result => {
+      if (result.ok) return;
+      console.error('Lead save failed', result.error);
       // The dashboard's Leads tab is built entirely from what got saved to
-      // Airtable above — if that save just failed (after 3 retries), this
+      // Airtable above — if that save just failed (after every retry), this
       // lead would otherwise vanish completely with zero trace anywhere,
-      // even though the customer's confirmation email below still sends
-      // fine (a separate, unrelated call). Since email is the one delivery
-      // path we know works, fire an extra "this one didn't save" alert to
-      // the shop so nothing is silently lost while the real cause of the
-      // save failure gets fixed. Best-effort only — if this ALSO fails,
-      // there's nothing further to fall back to; already logged above.
+      // even though the confirmation emails still send fine (a separate,
+      // unrelated call). Since email is the one delivery path we know works,
+      // fire an extra "this one didn't save" alert to the shop so nothing is
+      // silently lost while the real cause of the save failure gets fixed.
+      // Best-effort only — if this ALSO fails, there's nothing further to
+      // fall back to; already logged above.
       if (shop && shop['Lead notify email']) {
+        const safeReason = String(result.error || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         sendEmail(shop['Lead notify email'], `⚠ A lead failed to save automatically — ${quoteType} quote`,
           `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
             <h2 style="color:#b91c1c">A quote lead didn't save to your dashboard</h2>
-            <p style="color:#444;font-size:14px">Everything below came through fine, but saving it to your Leads tab failed after retrying. Here's what we have — you may want to add it manually.</p>
+            <p style="color:#444;font-size:14px">Everything below came through fine, but saving it to your Leads tab failed after retrying for about a minute. Here's what we have — you may want to add it manually.</p>
             <table style="width:100%;border-collapse:collapse;margin:16px 0">
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Quote type</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${quoteType || 'Not provided'}${roomType ? ' — ' + roomType : ''}</td></tr>
-              <tr><td style="padding:6px 8px;color:#666">Estimate</td><td style="padding:6px 8px">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Estimate</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
+              <tr><td style="padding:6px 8px;color:#666">Reason</td><td style="padding:6px 8px;color:#b91c1c;font-size:12px">${safeReason}</td></tr>
             </table>
           </div>`
         ).catch(()=>{});
       }
-    }
+    });
 
     const lineRows = (lines||[])
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
