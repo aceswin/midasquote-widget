@@ -8464,12 +8464,32 @@ window.mqTogDrawerConfig=(prefix)=>{
   // one" warning — this is not a special case in the check below, it falls
   // out naturally since pwds.includes(stored) is false against an empty list.
   function mqWidgetPwStorageKey() { return `mq_widget_pw_${shopToken}`; }
+  // Each saved password is either a plain string (older entries) or
+  // {p: "the password", t: <time it was added>}. The time is what makes
+  // "delete it, then add the same password again" work like a brand-new
+  // password: a browser that unlocked on the OLD entry remembers {p,t} and
+  // the new entry has a different t, so that browser is asked again. (Before
+  // this, re-adding the same text matched what the browser remembered, so the
+  // owner's own browser walked straight in with no password box at all.)
+  function mqWidgetPwEntries(shop) {
+    let raw = [];
+    try { raw = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { raw = []; }
+    if (!Array.isArray(raw)) raw = [];
+    return raw.map(x => (x && typeof x === 'object') ? { p: String(x.p == null ? '' : x.p), t: Number(x.t) || 0 } : { p: String(x), t: 0 });
+  }
   function mqCheckWidgetPassword(shop) {
-    let pwds = [];
-    try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
+    const entries = mqWidgetPwEntries(shop);
     let stored = null;
     try { stored = localStorage.getItem(mqWidgetPwStorageKey()); } catch(e) { stored = null; }
-    return !!stored && pwds.includes(stored);
+    if (!stored) return false;
+    let rec = null;
+    try { rec = JSON.parse(stored); } catch(e) { rec = null; }
+    if (rec && typeof rec === 'object' && 'p' in rec) {
+      return entries.some(en => en.p === String(rec.p) && en.t === (Number(rec.t) || 0));
+    }
+    // Older browsers saved just the bare password text — still honored for
+    // older (string) entries.
+    return entries.some(en => en.t === 0 && en.p === stored);
   }
   function mqRenderPasswordGate(container, shop) {
     const shopName = (shop['Shop name'] || 'This shop').replace(/</g,'&lt;');
@@ -8486,10 +8506,9 @@ window.mqTogDrawerConfig=(prefix)=>{
     const submitBtn = container.querySelector('#mq-widget-pw-submit');
     const submit = () => {
       const val = (input.value || '').trim();
-      let pwds = [];
-      try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
-      if (val && pwds.includes(val)) {
-        try { localStorage.setItem(mqWidgetPwStorageKey(), val); } catch(e) {}
+      const match = val ? mqWidgetPwEntries(shop).find(en => en.p === val) : null;
+      if (match) {
+        try { localStorage.setItem(mqWidgetPwStorageKey(), JSON.stringify({ p: match.p, t: match.t })); } catch(e) {}
         init(); // re-run init(): mqCheckWidgetPassword now passes, so this renders the real widget
       } else {
         errorEl.style.display = 'block';

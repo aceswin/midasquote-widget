@@ -9272,19 +9272,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // shop-data payload, so this is meant to keep an unlisted/trade-only
   // widget away from casual visitors, not to protect anything sensitive.
   function mqGetWidgetPasswords(shopRec) {
-    try { return shopRec.fields['Widget passwords'] ? JSON.parse(shopRec.fields['Widget passwords']) : []; }
+    try { const r = shopRec.fields['Widget passwords'] ? JSON.parse(shopRec.fields['Widget passwords']) : []; return Array.isArray(r) ? r : []; }
     catch(e) { return []; }
   }
+  // Entries are plain strings (older) or {p, t} (t = when it was added). The
+  // time lets widget.js ask a browser again if a password is deleted and then
+  // added back — see mqWidgetPwEntries in widget.js.
+  function mqPwText(x) { return (x && typeof x === 'object') ? String(x.p == null ? '' : x.p) : String(x == null ? '' : x); }
   function mqRenderWidgetPasswordList() {
     const shopRec = window._mqShopRecord;
     const list = el('mq-widgetpw-list');
     if (!list || !shopRec) return;
     const pwds = mqGetWidgetPasswords(shopRec);
-    list.innerHTML = pwds.length ? pwds.map((pw, idx) => `
+    list.innerHTML = pwds.length ? pwds.map((pwEntry, idx) => { const pw = mqPwText(pwEntry); return `
       <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #fecaca;border-radius:999px;padding:5px 10px;font-size:12px;color:#374151">
         <span style="font-family:monospace">${(pw||'').replace(/</g,'&lt;')}</span>
         <button type="button" onclick="mqRemoveWidgetPassword(${idx})" title="Remove this password" style="background:none;border:none;cursor:pointer;color:#991b1b;font-weight:700;padding:0;line-height:1;font-size:13px">✕</button>
-      </span>`).join('') : '<span style="font-size:12px;color:#9ca3af">No passwords added yet — while the toggle above is on, no one can get into the widget until you add at least one.</span>';
+      </span>`; }).join('') : '<span style="font-size:12px;color:#9ca3af">No passwords added yet — while the toggle above is on, no one can get into the widget until you add at least one.</span>';
   }
   window.mqAddWidgetPassword = async function() {
     const shopRec = window._mqShopRecord;
@@ -9293,8 +9297,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const val = (input && input.value || '').trim();
     if (!val) return;
     const pwds = mqGetWidgetPasswords(shopRec);
-    if (pwds.includes(val)) { showMsg('mq-shop-msg', 'That password is already on the list.', 'error'); return; }
-    pwds.push(val);
+    if (pwds.some(x => mqPwText(x) === val)) { showMsg('mq-shop-msg', 'That password is already on the list.', 'error'); return; }
+    pwds.push({ p: val, t: Date.now() });
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
       shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
