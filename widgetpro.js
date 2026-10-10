@@ -4990,6 +4990,15 @@
       return {
         fields,
         diffOn: !!diffOn[prefix],
+        // Whether the "+ Add island" section was OPEN. The island's own values
+        // (lin ft, double-row, dishwasher, panels) are captured by the generic
+        // field pass above, but the open/closed state of the section is just
+        // a show/hide on a wrapper div, not a field — without this, jumping
+        // to another project type and back restored every island input into
+        // a still-HIDDEN section, and calcCabinet/calcCountertop only price an
+        // island while that section is open, so the island silently dropped
+        // out of the quote until "+ Add island" was clicked again.
+        islandOpen: (() => { const fw = document.getElementById(`mq-${prefix}-island-fields-wrap`); return !!fw && fw.style.display !== 'none'; })(),
         // A per-variant entry is itself an array, so a plain shallow spread
         // would hand back the SAME nested arrays the live form keeps
         // mutating — cloning one level deep here keeps this snapshot a
@@ -5098,6 +5107,19 @@
         window.mqRefreshSurfBsFt(newId);
       });
       window._mqRestoringSurfaces = false;
+      // Re-open the island section if it was open when this was captured
+      // (see islandOpen in mqSnapshotFormState). The "+ Add island" button's
+      // wrapper is only visible when the room being restored actually
+      // supports islands (mqRefreshSectionVisibility, run just before this
+      // on a project-type switch, hides it otherwise) — so only reopen in
+      // that case, never force an island into a room that doesn't allow one.
+      if (snapshot.islandOpen) {
+        const islandFields = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+        const islandBtn = document.getElementById(`mq-${prefix}-island-btn-wrap`);
+        if (islandFields && islandFields.style.display === 'none' && islandBtn && islandBtn.style.display !== 'none') {
+          window.mqToggleIslandSection(prefix);
+        }
+      }
       mqRefreshAllPickerVisibility(prefix);
       mqRefreshBsFt(prefix);
     }
