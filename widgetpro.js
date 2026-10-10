@@ -564,6 +564,7 @@
       #midasquote-widget .mq-hint{font-size:14px;color:#4b5563;margin-top:2px;line-height:1.5}
       #midasquote-widget .mq-qty-ctrl input{width:36px!important;padding:2px 4px!important;box-shadow:none!important;border-radius:4px!important}
       #midasquote-widget .mq-qty-ctrl input.mq-linft-input{width:73px!important}
+      #midasquote-widget .mq-qty-ctrl input.mq-qty-wide{width:56px!important}
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
       #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
@@ -2625,6 +2626,28 @@
     valanceReturn: 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/term-images/valance-return.png',
     sidesplash:    'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/term-images/sidesplash.png',
   };
+  // − / + stepper for the backsplash "Side splashes" and "No backsplash
+  // cabinets" fields (Jordan: "let it have a changeable number function so
+  // they don't have to type it in unless they want to"). Same look as the
+  // cutout steppers; the box is still a normal text field, so typing a value
+  // (including a decimal for the lin-ft one) still works exactly as before.
+  // `refreshCall` is the existing oninput handler, fired on every change.
+  window.mqAdjNumField = function(inputId, delta, min, max) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    const cur = parseFloat(el.value);
+    let next = Math.round(((isNaN(cur) ? 0 : cur) + delta) * 100) / 100;
+    next = Math.max(min, Math.min(max, next));
+    el.value = next;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  function mqBsStepperHtml(inputId, refreshCall, step, max, decimal) {
+    return `<div class="mq-qty-ctrl">
+      <button class="mq-qty-btn" type="button" aria-label="Decrease" onclick="mqAdjNumField('${inputId}',${-step},0,${max})">−</button>
+      <input type="text" inputmode="${decimal ? 'decimal' : 'numeric'}"${decimal ? ' class="mq-qty-wide"' : ' pattern="[0-9]*"'} id="${inputId}" value="0" oninput="${refreshCall}" onclick="this.select()" style="text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
+      <button class="mq-qty-btn" type="button" aria-label="Increase" onclick="mqAdjNumField('${inputId}',${step},0,${max})">+</button>
+    </div>`;
+  }
   function termHelpThumb(imgUrl, label, size = 48, showCaption = true) {
     const safeLabel = label.replace(/'/g, "\\'");
     return `<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-right:8px">
@@ -2884,16 +2907,16 @@
               <div style="font-size:14px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mq-b-cab-bsft-auto">0</strong> ft — based on your base cabinet measurement above.</div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
                 ${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',36,false)}<label style="font-size:14px;color:#374151"><strong>Side splashes</strong> (Quantity)</label>
-                <input type="number" id="mq-b-cab-bs-sides" value="0" min="0" max="10" oninput="mqRefreshBsFt('b')" style="width:70px"/>
+                ${mqBsStepperHtml('mq-b-cab-bs-sides', "mqRefreshBsFt('b')", 1, 10, false)}
               </div>
               <div style="font-size:12px;color:#4b5563;margin-bottom:8px;line-height:1.5">
                 A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:14px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
-                <input type="number" id="mq-b-cab-bs-subtract" value="0" min="0" step="0.1" oninput="mqRefreshBsFt('b')" style="width:70px"/>
+                ${mqBsStepperHtml('mq-b-cab-bs-subtract', "mqRefreshBsFt('b')", 0.5, 100, true)}
               </div>
-              <div style="font-size:13px;color:#4b5563;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
+              <div style="font-size:13px;color:#4b5563;margin-top:6px">Have a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
               <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mq-b-cab-bsft-net">0</strong> ft</div>
             </div>
           </div>
@@ -6722,16 +6745,16 @@ window.mqTogDrawerConfig=(prefix)=>{
           <div style="font-size:14px;color:#166534;margin-bottom:8px">Backsplash linear footage (auto): <strong id="mqs-bsft-auto-${id}">0</strong> ft — based on the width above.</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
             ${termHelpThumb(MQ_TERM_IMAGES.sidesplash,'What is a side splash?',36,false)}<label style="font-size:14px;color:#374151"><strong>Side splashes</strong> (Quantity)</label>
-            <input type="number" id="mqs-bs-sides-${id}" value="0" min="0" max="10" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
+            ${mqBsStepperHtml(`mqs-bs-sides-${id}`, `mqRefreshSurfBsFt('${id}')`, 1, 10, false)}
           </div>
           <div style="font-size:12px;color:#4b5563;margin-bottom:8px;line-height:1.5">
             A side splash is the short piece against a wall at the end of a run of countertops. Each one adds roughly 2 linear feet to your backsplash total — count how many you have. If unsure, just leave as 0.
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <label style="font-size:14px;color:#374151;min-width:170px"><strong>No backsplash cabinets</strong> (lin ft)</label>
-            <input type="number" id="mqs-bs-subtract-${id}" value="0" min="0" step="0.1" oninput="mqRefreshSurfBsFt('${id}')" style="width:70px"/>
+            ${mqBsStepperHtml(`mqs-bs-subtract-${id}`, `mqRefreshSurfBsFt('${id}')`, 0.5, 100, true)}
           </div>
-          <div style="font-size:13px;color:#4b5563;margin-top:6px">Have an island or a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
+          <div style="font-size:13px;color:#4b5563;margin-top:6px">Have a section of counter from your base cabinet run that won't have backsplash? Enter the linear feet here and we'll subtract it off.</div>
           <div style="font-size:14px;color:#166534;margin-top:8px">Backsplash footage used: <strong id="mqs-bsft-net-${id}">0</strong> ft</div>
         </div>`;
       document.getElementById(containerId)?.appendChild(card);
