@@ -1444,6 +1444,7 @@ window.logoutMember = async function () {
     islandPanel: { youtubeId: 'LHsz0MRmeM0' },
     specialty: { youtubeId: 'pZ4UNfpPVSs' },
     products: { youtubeId: 'xbYtl12XChc' },
+    shop: { youtubeId: '_vcQFocImJk' },
   };
   function mqTrainingVideoBlockHTML(key) {
     const video = MQ_TRAINING_VIDEOS[key];
@@ -1641,6 +1642,7 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Shop info</div>
             <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
+            ${mqTrainingVideoBlockHTML('shop')}
             <div id="mq-shop-msg"></div>
 
             <div class="mq-card">
