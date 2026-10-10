@@ -1473,6 +1473,7 @@ window.logoutMember = async function () {
         <div style="position:relative;width:100%;max-width:640px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
           <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
         </div>
+        <div style="max-width:640px;margin-top:6px;font-size:12px;color:#6b7280;line-height:1.5">Video looks blurry? Click the ⚙ gear on the video → Quality → 1080p, or <a href="https://www.youtube.com/watch?v=${video.youtubeId}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline">open it on YouTube ↗</a></div>
         <button type="button" class="mq-btn mq-btn-sm" style="margin-top:10px" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
       </div>
       <div id="mq-training-video-reshow-${key}" style="display:${hidden ? 'block' : 'none'};margin-bottom:1rem">
