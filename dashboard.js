@@ -1443,6 +1443,7 @@ window.logoutMember = async function () {
     pricing: { youtubeId: 'tQyYyFALg7c' },
     islandPanel: { youtubeId: 'LHsz0MRmeM0' },
     specialty: { youtubeId: 'pZ4UNfpPVSs' },
+    products: { youtubeId: 'xbYtl12XChc' },
   };
   function mqTrainingVideoBlockHTML(key) {
     const video = MQ_TRAINING_VIDEOS[key];
@@ -2208,6 +2209,7 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('products')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">My Products</div>
             <div class="mq-page-sub">Manage everything about how each item shows up on your widget: photos and thumbnails customers see while quoting, which project types each item is available for, and which items to hide entirely. Category-level shortcuts let you show or hide a whole group at once — individual items can still override that.</div>
+            ${mqTrainingVideoBlockHTML('products')}
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
               <strong>💡 How to add a photo:</strong><br>
               <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item below and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
