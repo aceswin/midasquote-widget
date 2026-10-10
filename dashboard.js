@@ -1438,6 +1438,10 @@ window.logoutMember = async function () {
   // tracking cookies until the visitor actually plays it) inside a
   // responsive 16:9 wrapper, since an <iframe> has no natural aspect ratio
   // of its own the way a <video> tag does.
+  // Player size: max-width 640px (was 320px). YouTube picks its starting
+  // quality from the player's on-screen size, and a 320px box always got
+  // 360p no matter how sharp the upload was. The box still shrinks to fit
+  // phones/narrow screens (width:100%).
   const MQ_TRAINING_VIDEOS = {
     rooms: { youtubeId: 'nbTFS0b1C2g' },
     pricing: { youtubeId: 'tQyYyFALg7c' },
@@ -1466,7 +1470,7 @@ window.logoutMember = async function () {
     return `
       <div id="mq-training-video-${key}" style="display:${hidden ? 'none' : 'block'};margin-bottom:1rem">
         <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px">Watch the video <span style="font-size:17px">→</span></div>
-        <div style="position:relative;width:100%;max-width:320px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
+        <div style="position:relative;width:100%;max-width:640px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
           <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
         </div>
         <button type="button" class="mq-btn mq-btn-sm" style="margin-top:10px" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
