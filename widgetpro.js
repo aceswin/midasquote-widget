@@ -2491,7 +2491,7 @@
             <button type="button" onclick="mqRemoveIslandSection('${prefix}')" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;padding:0">Remove</button>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Island cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your island's sections & convert inches/mm to linear feet.</div>
           </div>
           <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
@@ -2882,12 +2882,13 @@
                 </label>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add additional counter space
+                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> <span>Add additional counter space <span style="color:#6b7280;font-weight:400">(makes your countertop longer)</span></span>
               </label>
-              <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px">
-                <label style="font-size:14px;color:#374151">Additional space (feet)</label>
+              <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px;flex-wrap:wrap">
+                <label style="font-size:14px;color:#374151">Additional length (feet)</label>
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
                 ${calcBtn('mq-b-cab-extra-ft', 'linear', 'Additional counter space')}
+                <div style="flex-basis:100%;font-size:12.5px;color:#4b5563;line-height:1.5">This adds to the <strong>length</strong> of your countertop run, on top of your base cabinets. It's priced at the same standard 25.5" depth as the rest of your counter. Need a different depth or shape? Use "Additional countertop surfaces" below instead.</div>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-top:8px">
                 <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Cutouts needed (sink, etc.)
@@ -2895,6 +2896,7 @@
               <div id="mq-b-cab-cuts" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border-radius:6px"></div>
               <div style="font-size:14px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
                 📐 Countertop area: <strong id="mq-b-cab-ctft">0</strong> lin ft &nbsp;·&nbsp; <strong id="mq-b-cab-ctsqft">0</strong> sqft
+                <div id="mq-b-cab-ctbreakdown" style="display:none;font-size:12.5px;color:#4b5563;margin-top:4px;line-height:1.5"></div>
               </div>
             </div>
             <div style="margin-bottom:0.75rem">
@@ -3538,6 +3540,7 @@
       const fieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       if (btnWrap) btnWrap.style.display = 'none';
       if (fieldsWrap) fieldsWrap.style.display = 'block';
+      if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix); // countertop-area readout includes the island
     };
     window.mqRemoveIslandSection=(prefix)=>{
       const btnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
@@ -3564,6 +3567,7 @@
       // drives live recalc) never sees them, so the price would otherwise
       // keep showing the removed island's cost until the next unrelated
       // edit. Trigger it directly.
+      if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix);
       mqScheduleLiveRecalc();
     };
     // Island "double-row (back-to-back)" + "dishwasher in the island" work
@@ -4609,6 +4613,7 @@
         if (islandDoubleEl) islandDoubleEl.checked = false;
         const islandDwElOff = document.getElementById(`mq-${prefix}-island-dw`);
         if (islandDwElOff) islandDwElOff.checked = false;
+        if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix); // island zeroed — keep the countertop-area readout in step
       } else if (islandFieldsWrap && islandFieldsWrap.style.display === 'none') {
         // Island supported here but not currently opened — show the button,
         // keep the fields collapsed (don't force it open just because the
@@ -7210,17 +7215,49 @@ window.mqTogDrawerConfig=(prefix)=>{
       _mqLinFtHoldInterval = null;
     };
     window.mqRefreshBsFt=(prefix)=>{
-      // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
+      // The "Countertop area" readout under the Both tab's countertop options.
+      // Jordan: it showed 0 lin ft / 0 sqft with an island in the quote, and
+      // once "additional space" or the dishwasher was ticked it showed ONLY
+      // those extras — "I'd like to see all the footage there." It now
+      // mirrors calcCountertop's cabinet-run block exactly: base cabinets +
+      // dishwasher gap + additional space (the wall run, all at the standard
+      // ctDepth) PLUS the island's countertop when the island section is open
+      // (island dishwasher adds 2 ft; a double-row island is 39" deep, a
+      // single row ctDepth), with a one-line breakdown of where it all comes
+      // from. The BACKSPLASH footage below still only uses the wall run
+      // (wallRunFt) — a freestanding island has no wall behind it.
       const baseFt = gn(`mq-${prefix}-bft`, 0);
       const dwChecked = document.getElementById(`mq-${prefix}-cab-dw`)?.checked;
       const extraChecked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
       const extraFt = extraChecked ? gn(`mq-${prefix}-cab-extra-ft`, 0) : 0;
-      const totalCtFt = baseFt + (dwChecked?2:0) + extraFt;
+      const dwFt = dwChecked ? 2 : 0;
+      const wallRunFt = baseFt + dwFt + extraFt;
+
+      const islandWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      const islandOpen = !!islandWrap && islandWrap.style.display !== 'none';
+      const islandCabFt = islandOpen ? gn(`mq-${prefix}-islandft`, 0) : 0;
+      const islandDouble = islandOpen && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
+      const islandDw = islandOpen && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
+      const islandLenFt = islandDw ? islandCabFt + 2 : islandCabFt;
+      const islandDepthIn = islandDouble ? 39 : ctDepth;
+      const totalCtFt = wallRunFt + islandLenFt;
+      const totalSqft = wallRunFt*(ctDepth/12) + islandLenFt*(islandDepthIn/12);
+      const r1 = n => Math.round(n*10)/10;
 
       const ctftEl = document.getElementById(`mq-${prefix}-cab-ctft`);
       const ctsqftEl = document.getElementById(`mq-${prefix}-cab-ctsqft`);
-      if (ctftEl) ctftEl.textContent = Math.round(totalCtFt*10)/10;
-      if (ctsqftEl) ctsqftEl.textContent = Math.round(totalCtFt*(ctDepth/12)*10)/10;
+      if (ctftEl) ctftEl.textContent = r1(totalCtFt);
+      if (ctsqftEl) ctsqftEl.textContent = r1(totalSqft);
+      const bdEl = document.getElementById(`mq-${prefix}-cab-ctbreakdown`);
+      if (bdEl) {
+        const parts = [];
+        if (baseFt > 0) parts.push(`Base cabinets ${r1(baseFt)} ft`);
+        if (dwFt > 0) parts.push(`Dishwasher space ${dwFt} ft`);
+        if (extraFt > 0) parts.push(`Additional space ${r1(extraFt)} ft`);
+        if (islandLenFt > 0) parts.push(`Island ${r1(islandLenFt)} ft (${islandDouble ? '39"' : '25.5"'} deep)`);
+        bdEl.textContent = parts.join(' + ');
+        bdEl.style.display = parts.length ? 'block' : 'none';
+      }
 
       const block = document.getElementById(`mq-${prefix}-cab-bsft-block`);
       if (!block) return; // only exists on the "both" tab cabinet-attached block
@@ -7230,7 +7267,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if (!hasBs) return;
       const sides = gn(`mq-${prefix}-cab-bs-sides`, 0);
       const subtractFt = gn(`mq-${prefix}-cab-bs-subtract`, 0);
-      const autoFt = totalCtFt + sides*2;
+      const autoFt = wallRunFt + sides*2;
       const netFt = Math.max(0, autoFt - subtractFt);
       const autoEl = document.getElementById(`mq-${prefix}-cab-bsft-auto`);
       const netEl  = document.getElementById(`mq-${prefix}-cab-bsft-net`);
