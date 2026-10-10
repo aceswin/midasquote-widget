@@ -3508,7 +3508,7 @@
             ${thumb}
             <div style="flex:1;min-width:0">
               <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;font-weight:600;cursor:pointer">
-                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none'" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none';if(!this.checked){document.getElementById('${idPrefix}-qty-${i}').value=1}" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
                 ${(a.label||'Addon').replace(/"/g,'&quot;')}
               </label>
               <div class="mq-qty-ctrl" id="${idPrefix}-qtywrap-${i}" style="display:none;margin-top:6px">
@@ -5744,11 +5744,17 @@
       const showValance=valanceKey&&valanceKey!=='none';
       if(crownWrap) crownWrap.style.display=showCrown?'block':'none';
       if(valanceWrap) valanceWrap.style.display=showValance?'block':'none';
+      // No crown/valance picked = the "returns" count has nothing to attach to; clear it
+      // so it doesn't reappear if a style is picked again later.
+      if(!showCrown){ const cr=document.getElementById(`mq-${prefix}-trim-crown-returns`); if(cr && cr.value!=='0') cr.value=0; }
+      if(!showValance){ const vr=document.getElementById(`mq-${prefix}-trim-valance-returns`); if(vr && vr.value!=='0') vr.value=0; }
     };
     window.mqTogTrimManualFt=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked;
       const wrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
       if (wrap) wrap.style.display = checked ? 'flex' : 'none';
+      // Back to automatic footage = as if the manual box was never used.
+      if (!checked) { const mf = document.getElementById(`mq-${prefix}-trim-manual-ft`); if (mf) mf.value = 0; }
       // Keep the "Use my upper cabinet measurements" checkbox (shown before
       // the section unfolds) in sync — they're two views of the same choice.
       const useCabCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
@@ -7337,6 +7343,24 @@ window.mqTogDrawerConfig=(prefix)=>{
     // the Both tab is (re-)entered, or when a project type change forces the
     // box on/off programmatically. Every one of THOSE call sites passes
     // {scroll:false} explicitly; only the checkbox's own onchange omits it.
+    function mqResetCabCountertopOptions(prefix) {
+      if (!document.getElementById(`mq-${prefix}-cab-mat`)) return;
+      // The countertop MATERIAL pick is deliberately kept (Jordan: people forget to
+      // re-pick it) — only the options/quantities that hang off it are reset.
+      const bsEl = document.getElementById(`mq-${prefix}-cab-bs`);
+      if (bsEl) bsEl.selectedIndex = 0;
+      const dwEl = document.getElementById(`mq-${prefix}-cab-dw`);
+      if (dwEl) dwEl.checked = false;
+      const exTog = document.getElementById(`mq-${prefix}-cab-extra-toggle`);
+      if (exTog && exTog.checked) { exTog.checked = false; window.mqTogCabExtra(prefix); }
+      const coEl = document.getElementById(`mq-${prefix}-cab-co`);
+      if (coEl && coEl.checked) { coEl.checked = false; window.mqTogCabCuts(prefix); }
+      // Rebuild the material's edge/addon/cutout/backsplash lists fresh (nothing selected).
+      window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
+      window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
+      window.mqRefreshCtAddons(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-edge`, `mq-${prefix}-cab-addons`);
+      window.mqRefreshBsFt(prefix);
+    }
     window.mqTogUseCab=(prefix, opts)=>{
       const scrollOnExisting = !opts || opts.scroll !== false;
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
@@ -7344,6 +7368,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(matDiv) matDiv.style.display=checked?'block':'none';
       const surfTitleEl = prefix==='b' ? document.getElementById('mq-b-ct-surfaces-title') : null;
       if (surfTitleEl) surfTitleEl.textContent = checked ? 'Additional countertop surfaces' : 'Countertop surfaces';
+      // Unchecking "Use my base cabinet measurements" hides this whole block, and the
+      // calc ignores it — but its picks used to sit there and come back on re-check.
+      // Put its options back to as-if-never-used (the material pick, surfaces and the
+      // supply/install + removal choices are left alone).
+      if(!checked) mqResetCabCountertopOptions(prefix);
       if(checked) {
         window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
         window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
@@ -7406,19 +7435,40 @@ window.mqTogDrawerConfig=(prefix)=>{
       window.mqRefreshSurfBsFt(id);
       window.mqSurfUpdatePreview(id);
     };
+    // Jordan: "if someone unchecks something those numbers should reset ...
+    // anything that gets unchecked should go back to as if it was never
+    // checked." Unchecking used to only HIDE a checkbox's follow-up fields —
+    // the numbers inside (e.g. 2 sink cutouts) stayed put and came straight
+    // back, still counted, the moment it was re-checked. Every checkbox that
+    // reveals fields now also puts them back to their starting values when
+    // it's unchecked (calc already ignored them while unchecked; this stops
+    // them coming back). Programmatic value changes don't fire 'input', but
+    // the change event from the checkbox itself still reaches the delegated
+    // live-recalc listener AFTER these inline handlers, so the price updates.
+    window.mqZeroQtyInputs=(container)=>{
+      if(!container) return;
+      container.querySelectorAll('input').forEach(i=>{ if(i.value!=='0') i.value='0'; });
+    };
     window.mqTogCabCuts=(prefix)=>{
       const coId   = prefix==='ct'?'mq-ct-cab-co':`mq-${prefix}-cab-co`;
       const cutsId = prefix==='ct'?'mq-ct-cab-cuts':`mq-${prefix}-cab-cuts`;
       const el=document.getElementById(cutsId);
-      if(el) el.style.display=document.getElementById(coId)?.checked?'block':'none';
+      const on=!!document.getElementById(coId)?.checked;
+      if(el) el.style.display=on?'block':'none';
+      if(!on) mqZeroQtyInputs(el);
     };
     window.mqTogCabExtra=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
       const wrap = document.getElementById(`mq-${prefix}-cab-extra-wrap`);
       if(wrap) wrap.style.display = checked ? 'flex' : 'none';
+      if(!checked){ const ft=document.getElementById(`mq-${prefix}-cab-extra-ft`); if(ft) ft.value=0; }
       mqRefreshBsFt(prefix);
     };
-    window.mqTogCuts=id=>{document.getElementById('mqscuts-'+id).style.display=document.getElementById('mqsco-'+id).checked?'block':'none';};
+    window.mqTogCuts=id=>{
+      const box=document.getElementById('mqscuts-'+id), on=!!document.getElementById('mqsco-'+id)?.checked;
+      if(box) box.style.display=on?'block':'none';
+      if(!on) mqZeroQtyInputs(box);
+    };
     window.mqRefreshBsOpts=(matSelectId, bsSelectId)=>{
       const matSel = document.getElementById(matSelectId);
       const bsSel  = document.getElementById(bsSelectId);
@@ -7561,7 +7611,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bsSel = document.getElementById(`mq-${prefix}-cab-bs`);
       const hasBs = bsSel && bsSel.value !== 'none';
       block.style.display = hasBs ? 'block' : 'none';
-      if (!hasBs) return;
+      if (!hasBs) {
+        // Backsplash set back to None — side splashes / no-backsplash feet go back to 0 too.
+        ['bs-sides','bs-subtract'].forEach(k => { const e = document.getElementById(`mq-${prefix}-cab-${k}`); if (e && e.value !== '0') e.value = 0; });
+        return;
+      }
       const sides = gn(`mq-${prefix}-cab-bs-sides`, 0);
       const subtractFt = gn(`mq-${prefix}-cab-bs-subtract`, 0);
       const autoFt = wallRunFt + sides*2;
@@ -7577,7 +7631,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bsSel = document.getElementById(`mqsbs-${id}`);
       const hasBs = bsSel && bsSel.value !== 'none';
       block.style.display = hasBs ? 'block' : 'none';
-      if (!hasBs) return;
+      if (!hasBs) {
+        ['mqs-bs-sides-','mqs-bs-subtract-'].forEach(k => { const e = document.getElementById(k + id); if (e && e.value !== '0') e.value = 0; });
+        return;
+      }
       const totalLen = mqSurfGetLegs(id).reduce((a,b)=>a+b,0);
       const baseFt = Math.round((totalLen/12)*10)/10;
       const sides = gn(`mqs-bs-sides-${id}`, 0);
