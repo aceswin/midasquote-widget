@@ -5849,7 +5849,7 @@
     //   "some drawers"   quote = 1 drawer per cabinet  = 2 drawers / 4 ft
     //   full-bank quote        = 3 drawers per cabinet = 6 drawers / 4 ft
     //   "mostly drawers" rate  = average of the two    = 4 drawers / 4 ft
-    // so each tier already MEANS a drawers-per-foot density (0.5 and 1.0),
+    // so each tier's PRICE implies a drawers-per-foot density (0.5 and 1.0) — the DISPLAYED estimate now uses lower, real-kitchen densities (see MQ_DRAWERS_PER_FT_*),
     // and the rates we already store imply a price per drawer:
     //   some:   rate*4 ft / 2 drawers = 2 x someRate  per drawer
     //   mostly: rate*4 ft / 4 drawers = mostlyRate    per drawer
@@ -5860,6 +5860,15 @@
     // Airtable fields: everything comes from the existing Rate values.
     // A shop whose rates don't fit that pattern (hand-typed, mostly <= some)
     // simply doesn't get the count box — it prices as it always did.
+    // Starting-estimate densities (Jordan 2026-10-10: the raw 0.5 / 1.0 ran
+    // high). The wizard's reference job has drawers in EVERY cabinet, but a real
+    // run also has sink + corner cabinets (and often a range/appliance cabinet)
+    // with no drawers, so the displayed estimate uses 0.4 (some) and 0.75
+    // (mostly) per lin ft. These ONLY set the starting number: the price per
+    // drawer (below, in mqDrawerCountModel) still comes from the reference job
+    // (2 / 4 drawers per 4 ft), and an untouched count never changes the price.
+    const MQ_DRAWERS_PER_FT_SOME = 0.4;
+    const MQ_DRAWERS_PER_FT_MOSTLY = 0.75;
     function mqDrawerFtNow(prefix) {
       const cabSecEl = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
       const cabSectionActive = !cabSecEl || cabSecEl.style.display !== 'none';
@@ -5879,7 +5888,7 @@
       if (!(own > 0)) return { valid:false };
       if (some > 0 && mostly > 0 && mostly <= some) return { valid:false };
       const ft = (bFt || 0) + (islandFt || 0);
-      const est = ft > 0 ? Math.max(1, Math.round(ft * (tier === 'some' ? 0.5 : 1))) : 0;
+      const est = ft > 0 ? Math.max(1, Math.round(ft * (tier === 'some' ? MQ_DRAWERS_PER_FT_SOME : MQ_DRAWERS_PER_FT_MOSTLY))) : 0;
       return { valid:true, tier, ft, est, per: tier === 'some' ? 2 * some : mostly };
     }
     window.mqRefreshDrawerCount = (prefix) => {
