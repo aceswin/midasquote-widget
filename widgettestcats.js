@@ -426,44 +426,91 @@
   // ============================================================
   // EMAIL & LEAD
   // ============================================================
+  // Sends one lead to the proxy worker's /save-lead and keeps trying in the
+  // background if that fails. 2026-10-08: a customer clicked "Email me a copy"
+  // a few times and the leads never reached the dashboard (the shop still got
+  // the notification emails, since those go through a separate worker). The
+  // likely cause is Airtable's per-base rate limit (5 requests/second for the
+  // whole base): go over it and Airtable rejects everything for ~30 seconds,
+  // while the old save only retried 3 times inside ~1 second, so a save that
+  // landed in that window was lost. This waits out that window: 5 attempts
+  // spread over ~45 seconds (each with its own 15s timeout), stopping early
+  // if the worker says retrying can't help (e.g. Airtable rejected a value).
+  // `requestId` is the same for every attempt of ONE save, so the worker can
+  // recognise a repeat of a save it already completed and not create a second
+  // lead; two separate clicks still send different ids and stay separate leads.
+  // Resolves {ok:true} or {ok:false, error} with the real reason, so the
+  // failure alert email can say why.
+  async function mqPostLead(payload) {
+    const waitsBeforeRetry = [3000, 6000, 13000, 23000];
+    let lastError = '';
+    for (let attempt = 0; attempt <= waitsBeforeRetry.length; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, waitsBeforeRetry[attempt - 1]));
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetch(`${CONFIG.PROXY_WORKER}/save-lead`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+          cache: 'no-store',
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) return { ok: true };
+        let info = {};
+        try { info = await res.json(); } catch(e) {}
+        lastError = `HTTP ${res.status}${info && info.error ? ' — ' + info.error : ''}`;
+        if (info && info.retryable === false) return { ok: false, error: lastError };
+      } catch(e) {
+        clearTimeout(timeoutId);
+        lastError = (e && e.name === 'AbortError') ? 'the request timed out' : String((e && e.message) || e);
+      }
+    }
+    return { ok: false, error: lastError || 'unknown error' };
+  }
+
   async function saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix, contactRequested) {
     const { shop } = data;
-    try {
-      await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-lead`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shopToken, name: lead.name, email: lead.email, phone: lead.phone,
-          quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines,
-        }),
-      });
-    } catch(e) {
-      console.error('Lead save failed', e);
+    // Kick the save off right away but DON'T wait for it: it may legitimately
+    // take up to ~45s to get through a rate-limit window, and neither the
+    // quote results nor the notification/customer emails below depend on it.
+    // Only if it still fails after every attempt does the shop get the
+    // "didn't save" alert (below), now including the actual reason.
+    const requestId = `${_mqSessionId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    mqPostLead({
+      shopToken, name: lead.name, email: lead.email, phone: lead.phone,
+      quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines, requestId,
+    }).then(result => {
+      if (result.ok) return;
+      console.error('Lead save failed', result.error);
       // The dashboard's Leads tab is built entirely from what got saved to
-      // Airtable above — if that save just failed (after 3 retries), this
+      // Airtable above — if that save just failed (after every retry), this
       // lead would otherwise vanish completely with zero trace anywhere,
-      // even though the customer's confirmation email below still sends
-      // fine (a separate, unrelated call). Since email is the one delivery
-      // path we know works, fire an extra "this one didn't save" alert to
-      // the shop so nothing is silently lost while the real cause of the
-      // save failure gets fixed. Best-effort only — if this ALSO fails,
-      // there's nothing further to fall back to; already logged above.
+      // even though the confirmation emails still send fine (a separate,
+      // unrelated call). Since email is the one delivery path we know works,
+      // fire an extra "this one didn't save" alert to the shop so nothing is
+      // silently lost while the real cause of the save failure gets fixed.
+      // Best-effort only — if this ALSO fails, there's nothing further to
+      // fall back to; already logged above.
       if (shop && shop['Lead notify email']) {
+        const safeReason = String(result.error || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         sendEmail(shop['Lead notify email'], `⚠ A lead failed to save automatically — ${quoteType} quote`,
           `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
             <h2 style="color:#b91c1c">A quote lead didn't save to your dashboard</h2>
-            <p style="color:#444;font-size:14px">Everything below came through fine, but saving it to your Leads tab failed after retrying. Here's what we have — you may want to add it manually.</p>
+            <p style="color:#444;font-size:14px">Everything below came through fine, but saving it to your Leads tab failed after retrying for about a minute. Here's what we have — you may want to add it manually.</p>
             <table style="width:100%;border-collapse:collapse;margin:16px 0">
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Quote type</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${quoteType || 'Not provided'}${roomType ? ' — ' + roomType : ''}</td></tr>
-              <tr><td style="padding:6px 8px;color:#666">Estimate</td><td style="padding:6px 8px">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Estimate</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
+              <tr><td style="padding:6px 8px;color:#666">Reason</td><td style="padding:6px 8px;color:#b91c1c;font-size:12px">${safeReason}</td></tr>
             </table>
           </div>`
         ).catch(()=>{});
       }
-    }
+    });
 
     const lineRows = (lines||[])
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
@@ -653,6 +700,8 @@
       #midasquote-widget .mq-tab-bar{display:flex;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;gap:8px}
       #midasquote-widget .mq-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-size:14px;font-weight:500;color:#4b5563;cursor:pointer;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-tab.mq-tab-lone{flex:0 0 auto;width:calc(50% - 4px)}
+      /* Brand-colour centered line either side of a lone tab (shop only offers one of Cabinets/Countertops) -- flex:1 so each line fills whatever space the half-width tab leaves; align-self:center puts it on the tab's vertical middle. Decorative only. */
+      #midasquote-widget .mq-tab-ghost{flex:1;min-width:0;align-self:center;height:1px;background:${bc};border:0;pointer-events:none}
       #midasquote-widget .mq-tab.active{background:${bc};color:#fff;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget .mq-tab-icon{font-size:18px;flex-shrink:0}
       #midasquote-widget .mq-tab-label{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
@@ -2741,7 +2790,7 @@
             <button type="button" onclick="mqRemoveIslandSection('${prefix}')" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;padding:0">Remove</button>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Island cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your island's sections & convert inches/mm to linear feet.</div>
           </div>
           <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
@@ -2783,6 +2832,19 @@
           <label class="mq-label">Drawer type</label>
           ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems, null, 'drawer')}
           <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
+        </div>
+        <div class="mq-field" id="mq-${prefix}-drawer-count-wrap" style="display:none;margin-top:10px">
+          <label class="mq-label">About how many drawers?</label>
+          <div id="mq-${prefix}-drawer-count-hint" style="font-size:13px;color:#4b5563;margin-bottom:8px;line-height:1.5"></div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <div class="mq-qty-ctrl">
+              <button class="mq-qty-btn" type="button" aria-label="Fewer drawers" onclick="mqAdjDrawerCount('${prefix}',-1)">−</button>
+              <input type="text" inputmode="numeric" pattern="[0-9]*" id="mq-${prefix}-drawer-count" value="0" oninput="mqDrawerCountTyped('${prefix}')" onblur="mqDrawerCountBlur('${prefix}')" onclick="this.select()" style="text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
+              <button class="mq-qty-btn" type="button" aria-label="More drawers" onclick="mqAdjDrawerCount('${prefix}',1)">+</button>
+            </div>
+            <button type="button" id="mq-${prefix}-drawer-count-reset" onclick="mqResetDrawerCount('${prefix}')" style="display:none;background:none;border:none;color:#2563eb;text-decoration:underline;font-size:12px;cursor:pointer;padding:0;font-family:inherit">Reset to our estimate</button>
+          </div>
+          <input type="hidden" id="mq-${prefix}-drawer-manual" value="0"/>
         </div>
         </div>
       </div>`:''}
@@ -3072,12 +3134,13 @@
                 </label>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add additional counter space
+                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> <span>Add additional counter space <span style="color:#6b7280;font-weight:400">(makes your countertop longer)</span></span>
               </label>
-              <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px">
-                <label style="font-size:14px;color:#374151">Additional space (feet)</label>
+              <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px;flex-wrap:wrap">
+                <label style="font-size:14px;color:#374151">Additional length (feet)</label>
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
                 ${calcBtn('mq-b-cab-extra-ft', 'linear', 'Additional counter space')}
+                <div style="flex-basis:100%;font-size:12.5px;color:#4b5563;line-height:1.5">This adds to the <strong>length</strong> of your countertop run, on top of your base cabinets. It's priced at the same standard 25.5" depth as the rest of your counter. Need a different depth or shape? Use "Additional countertop surfaces" below instead.</div>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-top:8px">
                 <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Cutouts needed (sink, etc.)
@@ -3085,6 +3148,7 @@
               <div id="mq-b-cab-cuts" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border-radius:6px"></div>
               <div style="font-size:14px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
                 📐 Countertop area: <strong id="mq-b-cab-ctft">0</strong> lin ft &nbsp;·&nbsp; <strong id="mq-b-cab-ctsqft">0</strong> sqft
+                <div id="mq-b-cab-ctbreakdown" style="display:none;font-size:12.5px;color:#4b5563;margin-top:4px;line-height:1.5"></div>
               </div>
             </div>
             <div style="margin-bottom:0.75rem">
@@ -3188,6 +3252,17 @@
         const loneTab = document.querySelector('.mq-tab');
         if (tabBar) tabBar.style.justifyContent = 'center';
         if (loneTab) loneTab.classList.add('mq-tab-lone');
+        // Jordan: with just one tab showing, add two brand-colour
+        // lines (vertically centered) on either side of it to fill the empty space (tab keeps
+        // its half-width size). Purely decorative -- aria-hidden, no clicks.
+        if (tabBar && loneTab) {
+          const ghostL = document.createElement('span');
+          ghostL.className = 'mq-tab-ghost';
+          ghostL.setAttribute('aria-hidden', 'true');
+          const ghostR = ghostL.cloneNode(false);
+          tabBar.insertBefore(ghostL, loneTab);
+          tabBar.appendChild(ghostR);
+        }
       }
       const firstVisible = ALL_TAB_IDS.find(id => !hidden.includes(id));
       const activeContent = document.querySelector('.mq-tab-content.active');
@@ -3446,7 +3521,7 @@
             ${thumb}
             <div style="flex:1;min-width:0">
               <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;font-weight:600;cursor:pointer">
-                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none'" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none';if(!this.checked){document.getElementById('${idPrefix}-qty-${i}').value=1}" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
                 ${(a.label||'Addon').replace(/"/g,'&quot;')}
               </label>
               <div class="mq-qty-ctrl" id="${idPrefix}-qtywrap-${i}" style="display:none;margin-top:6px">
@@ -3719,6 +3794,7 @@
       const fieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       if (btnWrap) btnWrap.style.display = 'none';
       if (fieldsWrap) fieldsWrap.style.display = 'block';
+      if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix); // countertop-area readout includes the island
     };
     window.mqRemoveIslandSection=(prefix)=>{
       const btnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
@@ -3745,6 +3821,7 @@
       // drives live recalc) never sees them, so the price would otherwise
       // keep showing the removed island's cost until the next unrelated
       // edit. Trigger it directly.
+      if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix);
       mqScheduleLiveRecalc();
     };
     // Island "double-row (back-to-back)" + "dishwasher in the island" work
@@ -4735,72 +4812,12 @@
       }
     }
 
-    // A fast scroll on mobile can cross several short, still-collapsed
-    // sections before the flow ever gets a chance to react — each closed
-    // section is just a header row, so a whole run of them can cross the
-    // scroll-spy's centerline inside one scroll/animation frame. The ask:
-    // no matter how fast that happens, every section in between must still
-    // fully open, in order — "2 opens after 1, then 3 after 2," not a jump
-    // straight to wherever the scroll landed. This walks the step index one
-    // section at a time toward the real target, pausing briefly on each —
-    // exactly like a real step: mqUpdateStepFocus opens it and the section
-    // picks up wherever it was before (nothing forced shut, per the earlier
-    // fix above) — and smooth-scrolling to it, before settling on the
-    // section the scroll actually landed on. A gap of 0 or 1 (nothing was
-    // skipped) still jumps straight there, unchanged. A direct click always
-    // wins and cancels any walk in progress (mqCancelCatchup), since that's
-    // an explicit choice, not a skip to correct for.
-    let _mqCatchupActive = {};
-    let _mqCatchupToken = {};
-    // Reference (not copied), same reasoning as mqGetVisibleSections/
-    // _mqStepIndex above — mqCheckBottomBounceAutoOpen (outside this
-    // closure) needs to know when a walk already owns a tab's scrolling.
-    window._mqCatchupActive = _mqCatchupActive;
-    function mqCancelCatchup(prefix) {
-      if (!prefix) return;
-      _mqCatchupToken[prefix] = {};
-      _mqCatchupActive[prefix] = false;
-    }
-    function mqScrollJumpWithCatchup(sec, fromIdx) {
-      const tab = sec.closest('.mq-tab-content');
-      if (!tab) return;
-      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
-      if (!prefix) return;
-      const sections = mqGetVisibleSections(prefix);
-      const idx = sections.indexOf(sec);
-      // fromIdx lets the scroll-spy (see below) tell this exactly where the
-      // flow stood BEFORE the current batch of intersection changes, since
-      // _mqStepIndex itself may already have moved by the time this runs.
-      const current = (fromIdx == null) ? (_mqStepIndex[prefix] || 0) : fromIdx;
-      if (idx === -1 || idx === current) return;
-      const gap = Math.abs(idx - current);
-      if (gap <= 1) { window.mqJumpToSectionIfNeeded(sec); return; } // adjacent — nothing was skipped
-      const dir = idx > current ? 1 : -1;
-      const token = {};
-      _mqCatchupToken[prefix] = token;
-      _mqCatchupActive[prefix] = true;
-      function advance(step) {
-        if (_mqCatchupToken[prefix] !== token) return; // superseded — a click or a newer jump took over
-        _mqStepIndex[prefix] = step;
-        window.mqUpdateStepFocus(prefix);
-        const el = sections[step];
-        if (el) mqScrollTopNearCenter(el);
-        if (step === idx) {
-          setTimeout(() => { if (_mqCatchupToken[prefix] === token) _mqCatchupActive[prefix] = false; }, 320);
-          return;
-        }
-        setTimeout(() => advance(step + dir), 320);
-      }
-      advance(current + dir);
-    }
-    window.mqScrollJumpWithCatchup = mqScrollJumpWithCatchup;
 
     document.addEventListener('click', (e) => {
       const sec = e.target.closest('#midasquote-widget .mq-sec');
       if (!sec) return;
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
-      if (prefix) mqCancelCatchup(prefix);
       mqJumpToSectionIfNeeded(sec);
     });
 
@@ -4808,29 +4825,21 @@
     // Continue or tapping into it — a shrunk-viewport IntersectionObserver
     // (top and bottom both pulled in 50%) leaves only a thin trigger line
     // at the exact vertical center of the screen; whichever section is
-    // crossing that line becomes the current step. A slow scroll that only
-    // ever crosses one section at a time reuses the exact same instant-jump
-    // logic a click runs.
-    //
-    // A fast scroll is different: several sections can cross that thin
-    // centerline between two ticks, so the browser hands ALL of them to
-    // this callback in a single batch. Processing them one at a time, in
-    // order, used to silently defeat the catch-up walk above — jumping to
-    // entry #1 moves the step index forward by 1, which makes entry #2 look
-    // "adjacent" to that NEW position instead of to wherever the flow
-    // actually started, and so on down the batch, so a 5-section skip read
-    // as five separate 1-section hops and the walk never ran at all (this
-    // was the real bug behind the walk "not working" the first time this
-    // was tried). Fixed by resolving the WHOLE batch first, per tab: snapshot
-    // each tab's step index once before touching anything, keep only
-    // whichever entry in this batch is farthest from that snapshot (that's
-    // where the scroll actually ended up), and run exactly one jump per tab
-    // from that original position — never from a position an earlier entry
-    // in this same batch already moved.
+    // crossing that line becomes the current step. This is passive only: it
+    // updates which step is highlighted/open and NEVER scrolls the page
+    // itself (the catch-up walk that used to step through skipped sections
+    // with a smooth scroll to each one was removed -- it fought the user's
+    // own scrolling and made the page jerk when scrolling fast). Only
+    // Continue/Back/Done move the page.
     let _mqScrollSpyObserver = null;
     function mqObserveSectionsForScrollSpy() {
       if (!_mqScrollSpyObserver) {
         _mqScrollSpyObserver = new IntersectionObserver((entries) => {
+          // Resolve the batch per tab first: if several sections crossed the
+          // centerline in one tick (fast scroll), land on whichever is
+          // farthest from where the flow started -- where the scroll ended
+          // up -- with ONE instant jump, instead of hopping through each
+          // entry in order.
           const startIdx = {};
           const farthest = {};
           entries.forEach(entry => {
@@ -4838,7 +4847,6 @@
             const tab = entry.target.closest('.mq-tab-content');
             const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
             if (!prefix) { mqJumpToSectionIfNeeded(entry.target); return; }
-            if (_mqCatchupActive[prefix]) return; // a walk already owns this tab right now — let it finish
             if (!(prefix in startIdx)) startIdx[prefix] = _mqStepIndex[prefix] || 0;
             const sections = mqGetVisibleSections(prefix);
             const idx = sections.indexOf(entry.target);
@@ -4854,7 +4862,7 @@
             // See mqLockStepNav above — only a BACKWARD correction gets
             // suppressed, and only while that lock is still active.
             if (idx < current && Date.now() < (_mqStepNavLockUntil[prefix] || 0)) return;
-            mqScrollJumpWithCatchup(target, current);
+            mqJumpToSectionIfNeeded(target);
           });
         }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
       }
@@ -4908,6 +4916,7 @@
         if (islandDoubleEl) islandDoubleEl.checked = false;
         const islandDwElOff = document.getElementById(`mq-${prefix}-island-dw`);
         if (islandDwElOff) islandDwElOff.checked = false;
+        if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix); // island zeroed — keep the countertop-area readout in step
       } else if (islandFieldsWrap && islandFieldsWrap.style.display === 'none') {
         // Island supported here but not currently opened — show the button,
         // keep the fields collapsed (don't force it open just because the
@@ -5306,6 +5315,15 @@
       return {
         fields,
         diffOn: !!diffOn[prefix],
+        // Whether the "+ Add island" section was OPEN. The island's own values
+        // (lin ft, double-row, dishwasher, panels) are captured by the generic
+        // field pass above, but the open/closed state of the section is just
+        // a show/hide on a wrapper div, not a field — without this, jumping
+        // to another project type and back restored every island input into
+        // a still-HIDDEN section, and calcCabinet/calcCountertop only price an
+        // island while that section is open, so the island silently dropped
+        // out of the quote until "+ Add island" was clicked again.
+        islandOpen: (() => { const fw = document.getElementById(`mq-${prefix}-island-fields-wrap`); return !!fw && fw.style.display !== 'none'; })(),
         // A per-variant entry is itself an array, so a plain shallow spread
         // would hand back the SAME nested arrays the live form keeps
         // mutating — cloning one level deep here keeps this snapshot a
@@ -5414,8 +5432,22 @@
         window.mqRefreshSurfBsFt(newId);
       });
       window._mqRestoringSurfaces = false;
+      // Re-open the island section if it was open when this was captured
+      // (see islandOpen in mqSnapshotFormState). The "+ Add island" button's
+      // wrapper is only visible when the room being restored actually
+      // supports islands (mqRefreshSectionVisibility, run just before this
+      // on a project-type switch, hides it otherwise) — so only reopen in
+      // that case, never force an island into a room that doesn't allow one.
+      if (snapshot.islandOpen) {
+        const islandFields = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+        const islandBtn = document.getElementById(`mq-${prefix}-island-btn-wrap`);
+        if (islandFields && islandFields.style.display === 'none' && islandBtn && islandBtn.style.display !== 'none') {
+          window.mqToggleIslandSection(prefix);
+        }
+      }
       mqRefreshAllPickerVisibility(prefix);
       mqRefreshBsFt(prefix);
+      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix);
     }
     // ===================== end snapshot / restore =====================
 
@@ -5726,11 +5758,17 @@
       const showValance=valanceKey&&valanceKey!=='none';
       if(crownWrap) crownWrap.style.display=showCrown?'block':'none';
       if(valanceWrap) valanceWrap.style.display=showValance?'block':'none';
+      // No crown/valance picked = the "returns" count has nothing to attach to; clear it
+      // so it doesn't reappear if a style is picked again later.
+      if(!showCrown){ const cr=document.getElementById(`mq-${prefix}-trim-crown-returns`); if(cr && cr.value!=='0') cr.value=0; }
+      if(!showValance){ const vr=document.getElementById(`mq-${prefix}-trim-valance-returns`); if(vr && vr.value!=='0') vr.value=0; }
     };
     window.mqTogTrimManualFt=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked;
       const wrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
       if (wrap) wrap.style.display = checked ? 'flex' : 'none';
+      // Back to automatic footage = as if the manual box was never used.
+      if (!checked) { const mf = document.getElementById(`mq-${prefix}-trim-manual-ft`); if (mf) mf.value = 0; }
       // Keep the "Use my upper cabinet measurements" checkbox (shown before
       // the section unfolds) in sync — they're two views of the same choice.
       const useCabCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
@@ -5805,7 +5843,106 @@
       }
     };
 
-window.mqTogDrawerConfig=(prefix)=>{
+// ===================== Drawer count estimate =====================
+    // Jordan's idea (2026-10-10): the pricing wizard prices ONE reference job
+    // — a 30" + an 18" base (4 lin ft, 2 cabinets):
+    //   "some drawers"   quote = 1 drawer per cabinet  = 2 drawers / 4 ft
+    //   full-bank quote        = 3 drawers per cabinet = 6 drawers / 4 ft
+    //   "mostly drawers" rate  = average of the two    = 4 drawers / 4 ft
+    // so each tier already MEANS a drawers-per-foot density (0.5 and 1.0),
+    // and the rates we already store imply a price per drawer:
+    //   some:   rate*4 ft / 2 drawers = 2 x someRate  per drawer
+    //   mostly: rate*4 ft / 4 drawers = mostlyRate    per drawer
+    // The widget shows "about N drawers" (N = base ft [+ island front row] x
+    // density) and lets the customer change it. UNTOUCHED = price exactly as
+    // before. Once they change it, the difference from the estimate x the
+    // per-drawer price is added/removed (calcCabinet, drawerAdjCost). No new
+    // Airtable fields: everything comes from the existing Rate values.
+    // A shop whose rates don't fit that pattern (hand-typed, mostly <= some)
+    // simply doesn't get the count box — it prices as it always did.
+    function mqDrawerFtNow(prefix) {
+      const cabSecEl = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
+      const cabSectionActive = !cabSecEl || cabSecEl.style.display !== 'none';
+      const bFt = cabSectionActive ? gn(`mq-${prefix}-bft`,0) : 0;
+      const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
+      const islandFt = islandSectionActive ? gn(`mq-${prefix}-islandft`,0) : 0;
+      return { bFt, islandFt };
+    }
+    function mqDrawerCountModel(prefix, bFt, islandFt) {
+      const tier = gv(`mq-${prefix}-drawer-tier`) || 'none';
+      if (tier !== 'some' && tier !== 'mostly') return { valid:false };
+      const cfgName = drawerConfigNames[parseInt(gv(`mq-${prefix}-drawer-config`) || '0')] || '';
+      const rates = (P().drawer || {})[cfgName] || {};
+      const some = rates.some || 0, mostly = rates.mostly || 0;
+      const own = tier === 'some' ? some : mostly;
+      if (!(own > 0)) return { valid:false };
+      if (some > 0 && mostly > 0 && mostly <= some) return { valid:false };
+      const ft = (bFt || 0) + (islandFt || 0);
+      const est = ft > 0 ? Math.max(1, Math.round(ft * (tier === 'some' ? 0.5 : 1))) : 0;
+      return { valid:true, tier, ft, est, per: tier === 'some' ? 2 * some : mostly };
+    }
+    window.mqRefreshDrawerCount = (prefix) => {
+      const wrap = document.getElementById(`mq-${prefix}-drawer-count-wrap`);
+      if (!wrap) return;
+      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
+      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+      const hintEl = document.getElementById(`mq-${prefix}-drawer-count-hint`);
+      const resetEl = document.getElementById(`mq-${prefix}-drawer-count-reset`);
+      const { bFt, islandFt } = mqDrawerFtNow(prefix);
+      const m = mqDrawerCountModel(prefix, bFt, islandFt);
+      if (!m.valid) {
+        // No tier / no usable rates: nothing to adjust — forget any manual count.
+        wrap.style.display = 'none';
+        if (manualEl) manualEl.value = '0';
+        return;
+      }
+      if (!(m.ft > 0)) { wrap.style.display = 'none'; return; } // no footage yet — keep any manual count
+      wrap.style.display = 'block';
+      const manual = manualEl && manualEl.value === '1';
+      if (!manual && countEl) countEl.value = String(m.est);
+      if (hintEl) hintEl.textContent = `Based on about ${Math.round(m.ft * 10) / 10} lin ft of base cabinets${islandFt > 0 ? ' (including your island)' : ''}, we estimate about ${m.est} drawers. If you know the exact number, change it here and the price will follow.`;
+      if (resetEl) resetEl.style.display = (manual && parseInt(countEl && countEl.value, 10) !== m.est) ? 'inline' : 'none';
+    };
+    window.mqDrawerCountSyncAll = () => {
+      document.querySelectorAll('[id$="-drawer-count-wrap"]').forEach(w => {
+        const p = w.id.slice(3, -'-drawer-count-wrap'.length);
+        if (p) window.mqRefreshDrawerCount(p);
+      });
+    };
+    window.mqDrawerCountTyped = (prefix) => {
+      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
+      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+      if (countEl) { const clean = countEl.value.replace(/[^0-9]/g, '').slice(0, 3); if (clean !== countEl.value) countEl.value = clean; }
+      if (manualEl) manualEl.value = '1';
+      window.mqRefreshDrawerCount(prefix);
+    };
+    window.mqDrawerCountBlur = (prefix) => {
+      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
+      if (countEl && countEl.value.trim() === '') {
+        const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+        if (manualEl) manualEl.value = '0';
+        window.mqRefreshDrawerCount(prefix);
+        countEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    };
+    window.mqAdjDrawerCount = (prefix, delta) => {
+      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
+      if (!countEl) return;
+      const cur = parseInt(countEl.value, 10);
+      const next = Math.max(1, Math.min(200, (isNaN(cur) ? 1 : cur) + delta));
+      countEl.value = String(next);
+      countEl.dispatchEvent(new Event('input', { bubbles: true })); // -> mqDrawerCountTyped + live recalc
+    };
+    window.mqResetDrawerCount = (prefix) => {
+      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+      if (manualEl) manualEl.value = '0';
+      window.mqRefreshDrawerCount(prefix);
+      if (manualEl) manualEl.dispatchEvent(new Event('change', { bubbles: true })); // -> live recalc
+    };
+    // =================== end drawer count estimate ===================
+
+    window.mqTogDrawerConfig=(prefix)=>{
       const tier=gv(`mq-${prefix}-drawer-tier`);
       const wrap=document.getElementById(`mq-${prefix}-drawer-config-wrap`);
       const opening = tier!=='none';
@@ -5821,6 +5958,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       // overflow check at initial page load ran before this wrap was ever
       // visible.
       if (opening && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
+      // A different tier means a different starting estimate (and per-drawer
+      // price), so any count the customer typed no longer applies.
+      const drawerManualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+      if (drawerManualEl) drawerManualEl.value = '0';
+      window.mqRefreshDrawerCount(prefix);
     };
 
     window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
@@ -6265,6 +6407,15 @@ window.mqTogDrawerConfig=(prefix)=>{
       const matchedIslandStyle = (bDoorRec && bDoorRec['Island panel style']) ? islandPanelStyles.find(s => s.id === bDoorRec['Island panel style']) : null;
       const islandPanelPct = matchedIslandStyle ? (parseFloat(matchedIslandStyle.panelPct) || 0) : 0;
       const islandDecorativePct = (matchedIslandStyle && matchedIslandStyle.offersDecorative === true && matchedIslandStyle.decorativePct != null) ? parseFloat(matchedIslandStyle.decorativePct) : null;
+      // Panel INSTALL prices (Jordan 2026-10-04): ONE shop-wide price to
+      // install a 24" panel for flat and one for decorative (the decorative
+      // one includes the furniture kick install) — install labour doesn't
+      // change per door style, so these live on the Shop record, not on any
+      // style. Optional: missing/blank/0 = no separate panel install charge.
+      let islandInstallRates = { flat: 0, decorative: 0 };
+      try { const o = shop['Island panel install rates'] ? JSON.parse(shop['Island panel install rates']) : {}; islandInstallRates = { flat: parseFloat(o.flat) || 0, decorative: parseFloat(o.decorative) || 0 }; } catch(e) {}
+      const islandPanelInstallQuoteFlat = islandInstallRates.flat;
+      const islandPanelInstallQuoteDec = islandInstallRates.decorative;
 
       const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
@@ -6284,6 +6435,15 @@ window.mqTogDrawerConfig=(prefix)=>{
       // island — a single-row island has no "back row" to extend.
       const islandDw = islandSectionActive && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
       const islandBackFt = islandDw ? islandFt + 2 : islandFt;
+      // Drawer count adjustment (see "Drawer count estimate" above): only
+      // applies once the customer has changed the count themselves.
+      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix);
+      const drawerModel = mqDrawerCountModel(prefix, bFt, islandFt);
+      let drawerAdjCost = 0, drawerCountUsed = 0;
+      if (drawerModel.valid && drawerModel.ft > 0 && document.getElementById(`mq-${prefix}-drawer-manual`)?.value === '1') {
+        const rawCount = parseInt(document.getElementById(`mq-${prefix}-drawer-count`)?.value, 10);
+        if (!isNaN(rawCount) && rawCount >= 0) { drawerCountUsed = rawCount; drawerAdjCost = (rawCount - drawerModel.est) * drawerModel.per; }
+      }
       // Front row of the island: same formula as bMatDoorHinge (the wall-
       // run base cabinets), but with the island's own independent %
       // adjustment (islandVanityMult) instead of the general base-cabinet
@@ -6303,7 +6463,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       // upper's own door/hinge selection) — and, as of 2026-10-03, uses the
       // same islandVanityMult as the front row above, not upperVanityMult.
       const islandBackRowMatDoorHinge = uMat.rateU * islandVanityMult + bDoorRate + bHingeRate;
-      let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandExposedFt = 0;
+      let islandCost = 0, islandBoxCost = 0, islandInstallCost = 0, islandPanelCost = 0, islandPanelInstallCost = 0, islandExposedFt = 0;
       if (islandFt > 0) {
         islandBoxCost = (islandFt * islandFrontRowMatDoorHinge) + (islandDouble ? islandBackFt * islandBackRowMatDoorHinge : 0);
         // bInstall already resolves to 0 when si !== 'install', already
@@ -6326,7 +6486,16 @@ window.mqTogDrawerConfig=(prefix)=>{
         islandExposedFt = islandDouble ? 6 : (4 + islandFt);
         const effectivePanelPct = (islandPanel === 'decorative' && islandDecorativePct != null) ? islandDecorativePct : islandPanelPct;
         islandPanelCost = islandExposedFt * bDoorRate * (effectivePanelPct / 100);
-        islandCost = islandBoxCost + islandInstallCost + islandPanelCost;
+        // Panel install: same exposed footage as the panel itself, priced per
+        // 24" (2 lin ft) panel. Same decorative-vs-flat fallback condition as
+        // effectivePanelPct above so the two can never disagree. Only charged
+        // on a supply + install quote, and gets the project type's own install
+        // % adjustment (installMult) just like every other install line here.
+        if (si === 'install') {
+          const panelInstallQuote = (islandPanel === 'decorative' && islandDecorativePct != null) ? islandPanelInstallQuoteDec : islandPanelInstallQuoteFlat;
+          islandPanelInstallCost = islandExposedFt * (panelInstallQuote / 2) * installMult;
+        }
+        islandCost = islandBoxCost + islandInstallCost + islandPanelCost + islandPanelInstallCost;
       }
 
       const lines=[];
@@ -6337,7 +6506,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
       if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
       if(islandFt>0) lines.push({label:`Island cabinets — ${islandDouble?'double-row':'single-row'}, ${islandPanel==='decorative'?'decorative':'regular'} panels (${islandFt} lin ft${islandDw?`, back row ${islandBackFt} lin ft w/ dishwasher`:''})`,cost:Math.round(islandCost)});
-      if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
+      if(drawerRate>0&&(bFt>0||drawerAdjCost!==0)) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt>0?`${bFt} lin ft bases`:'island'}${drawerAdjCost!==0?`; ${drawerCountUsed} drawers, est. ${drawerModel.est}`:''})`,cost:Math.round(drawerRate*bFt+drawerAdjCost)});
 
       // Tall cabinets — loop over every card the customer added. Each one
       // contributes its own cost (base price + door/material/install/hinge
@@ -6482,7 +6651,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const sub=uCost+bCost+islandCost+specTotal+tallCabTotal+remCost+trimCost;
+      const sub=uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+remCost+trimCost;
       const totalMult = (100 + totalAdjPct) / 100;
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
@@ -7301,6 +7470,24 @@ window.mqTogDrawerConfig=(prefix)=>{
     // the Both tab is (re-)entered, or when a project type change forces the
     // box on/off programmatically. Every one of THOSE call sites passes
     // {scroll:false} explicitly; only the checkbox's own onchange omits it.
+    function mqResetCabCountertopOptions(prefix) {
+      if (!document.getElementById(`mq-${prefix}-cab-mat`)) return;
+      // The countertop MATERIAL pick is deliberately kept (Jordan: people forget to
+      // re-pick it) — only the options/quantities that hang off it are reset.
+      const bsEl = document.getElementById(`mq-${prefix}-cab-bs`);
+      if (bsEl) bsEl.selectedIndex = 0;
+      const dwEl = document.getElementById(`mq-${prefix}-cab-dw`);
+      if (dwEl) dwEl.checked = false;
+      const exTog = document.getElementById(`mq-${prefix}-cab-extra-toggle`);
+      if (exTog && exTog.checked) { exTog.checked = false; window.mqTogCabExtra(prefix); }
+      const coEl = document.getElementById(`mq-${prefix}-cab-co`);
+      if (coEl && coEl.checked) { coEl.checked = false; window.mqTogCabCuts(prefix); }
+      // Rebuild the material's edge/addon/cutout/backsplash lists fresh (nothing selected).
+      window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
+      window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
+      window.mqRefreshCtAddons(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-edge`, `mq-${prefix}-cab-addons`);
+      window.mqRefreshBsFt(prefix);
+    }
     window.mqTogUseCab=(prefix, opts)=>{
       const scrollOnExisting = !opts || opts.scroll !== false;
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
@@ -7308,6 +7495,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(matDiv) matDiv.style.display=checked?'block':'none';
       const surfTitleEl = prefix==='b' ? document.getElementById('mq-b-ct-surfaces-title') : null;
       if (surfTitleEl) surfTitleEl.textContent = checked ? 'Additional countertop surfaces' : 'Countertop surfaces';
+      // Unchecking "Use my base cabinet measurements" hides this whole block, and the
+      // calc ignores it — but its picks used to sit there and come back on re-check.
+      // Put its options back to as-if-never-used (the material pick, surfaces and the
+      // supply/install + removal choices are left alone).
+      if(!checked) mqResetCabCountertopOptions(prefix);
       if(checked) {
         window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
         window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
@@ -7370,19 +7562,40 @@ window.mqTogDrawerConfig=(prefix)=>{
       window.mqRefreshSurfBsFt(id);
       window.mqSurfUpdatePreview(id);
     };
+    // Jordan: "if someone unchecks something those numbers should reset ...
+    // anything that gets unchecked should go back to as if it was never
+    // checked." Unchecking used to only HIDE a checkbox's follow-up fields —
+    // the numbers inside (e.g. 2 sink cutouts) stayed put and came straight
+    // back, still counted, the moment it was re-checked. Every checkbox that
+    // reveals fields now also puts them back to their starting values when
+    // it's unchecked (calc already ignored them while unchecked; this stops
+    // them coming back). Programmatic value changes don't fire 'input', but
+    // the change event from the checkbox itself still reaches the delegated
+    // live-recalc listener AFTER these inline handlers, so the price updates.
+    window.mqZeroQtyInputs=(container)=>{
+      if(!container) return;
+      container.querySelectorAll('input').forEach(i=>{ if(i.value!=='0') i.value='0'; });
+    };
     window.mqTogCabCuts=(prefix)=>{
       const coId   = prefix==='ct'?'mq-ct-cab-co':`mq-${prefix}-cab-co`;
       const cutsId = prefix==='ct'?'mq-ct-cab-cuts':`mq-${prefix}-cab-cuts`;
       const el=document.getElementById(cutsId);
-      if(el) el.style.display=document.getElementById(coId)?.checked?'block':'none';
+      const on=!!document.getElementById(coId)?.checked;
+      if(el) el.style.display=on?'block':'none';
+      if(!on) mqZeroQtyInputs(el);
     };
     window.mqTogCabExtra=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
       const wrap = document.getElementById(`mq-${prefix}-cab-extra-wrap`);
       if(wrap) wrap.style.display = checked ? 'flex' : 'none';
+      if(!checked){ const ft=document.getElementById(`mq-${prefix}-cab-extra-ft`); if(ft) ft.value=0; }
       mqRefreshBsFt(prefix);
     };
-    window.mqTogCuts=id=>{document.getElementById('mqscuts-'+id).style.display=document.getElementById('mqsco-'+id).checked?'block':'none';};
+    window.mqTogCuts=id=>{
+      const box=document.getElementById('mqscuts-'+id), on=!!document.getElementById('mqsco-'+id)?.checked;
+      if(box) box.style.display=on?'block':'none';
+      if(!on) mqZeroQtyInputs(box);
+    };
     window.mqRefreshBsOpts=(matSelectId, bsSelectId)=>{
       const matSel = document.getElementById(matSelectId);
       const bsSel  = document.getElementById(bsSelectId);
@@ -7476,27 +7689,64 @@ window.mqTogDrawerConfig=(prefix)=>{
       _mqLinFtHoldInterval = null;
     };
     window.mqRefreshBsFt=(prefix)=>{
-      // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
+      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix); // footage/island changed — keep the drawer estimate in step
+      // The "Countertop area" readout under the Both tab's countertop options.
+      // Jordan: it showed 0 lin ft / 0 sqft with an island in the quote, and
+      // once "additional space" or the dishwasher was ticked it showed ONLY
+      // those extras — "I'd like to see all the footage there." It now
+      // mirrors calcCountertop's cabinet-run block exactly: base cabinets +
+      // dishwasher gap + additional space (the wall run, all at the standard
+      // ctDepth) PLUS the island's countertop when the island section is open
+      // (island dishwasher adds 2 ft; a double-row island is 39" deep, a
+      // single row ctDepth), with a one-line breakdown of where it all comes
+      // from. The BACKSPLASH footage below still only uses the wall run
+      // (wallRunFt) — a freestanding island has no wall behind it.
       const baseFt = gn(`mq-${prefix}-bft`, 0);
       const dwChecked = document.getElementById(`mq-${prefix}-cab-dw`)?.checked;
       const extraChecked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
       const extraFt = extraChecked ? gn(`mq-${prefix}-cab-extra-ft`, 0) : 0;
-      const totalCtFt = baseFt + (dwChecked?2:0) + extraFt;
+      const dwFt = dwChecked ? 2 : 0;
+      const wallRunFt = baseFt + dwFt + extraFt;
+
+      const islandWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      const islandOpen = !!islandWrap && islandWrap.style.display !== 'none';
+      const islandCabFt = islandOpen ? gn(`mq-${prefix}-islandft`, 0) : 0;
+      const islandDouble = islandOpen && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
+      const islandDw = islandOpen && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
+      const islandLenFt = islandDw ? islandCabFt + 2 : islandCabFt;
+      const islandDepthIn = islandDouble ? 39 : ctDepth;
+      const totalCtFt = wallRunFt + islandLenFt;
+      const totalSqft = wallRunFt*(ctDepth/12) + islandLenFt*(islandDepthIn/12);
+      const r1 = n => Math.round(n*10)/10;
 
       const ctftEl = document.getElementById(`mq-${prefix}-cab-ctft`);
       const ctsqftEl = document.getElementById(`mq-${prefix}-cab-ctsqft`);
-      if (ctftEl) ctftEl.textContent = Math.round(totalCtFt*10)/10;
-      if (ctsqftEl) ctsqftEl.textContent = Math.round(totalCtFt*(ctDepth/12)*10)/10;
+      if (ctftEl) ctftEl.textContent = r1(totalCtFt);
+      if (ctsqftEl) ctsqftEl.textContent = r1(totalSqft);
+      const bdEl = document.getElementById(`mq-${prefix}-cab-ctbreakdown`);
+      if (bdEl) {
+        const parts = [];
+        if (baseFt > 0) parts.push(`Base cabinets ${r1(baseFt)} ft`);
+        if (dwFt > 0) parts.push(`Dishwasher space ${dwFt} ft`);
+        if (extraFt > 0) parts.push(`Additional space ${r1(extraFt)} ft`);
+        if (islandLenFt > 0) parts.push(`Island ${r1(islandLenFt)} ft (${islandDouble ? '39"' : '25.5"'} deep)`);
+        bdEl.textContent = parts.join(' + ');
+        bdEl.style.display = parts.length ? 'block' : 'none';
+      }
 
       const block = document.getElementById(`mq-${prefix}-cab-bsft-block`);
       if (!block) return; // only exists on the "both" tab cabinet-attached block
       const bsSel = document.getElementById(`mq-${prefix}-cab-bs`);
       const hasBs = bsSel && bsSel.value !== 'none';
       block.style.display = hasBs ? 'block' : 'none';
-      if (!hasBs) return;
+      if (!hasBs) {
+        // Backsplash set back to None — side splashes / no-backsplash feet go back to 0 too.
+        ['bs-sides','bs-subtract'].forEach(k => { const e = document.getElementById(`mq-${prefix}-cab-${k}`); if (e && e.value !== '0') e.value = 0; });
+        return;
+      }
       const sides = gn(`mq-${prefix}-cab-bs-sides`, 0);
       const subtractFt = gn(`mq-${prefix}-cab-bs-subtract`, 0);
-      const autoFt = totalCtFt + sides*2;
+      const autoFt = wallRunFt + sides*2;
       const netFt = Math.max(0, autoFt - subtractFt);
       const autoEl = document.getElementById(`mq-${prefix}-cab-bsft-auto`);
       const netEl  = document.getElementById(`mq-${prefix}-cab-bsft-net`);
@@ -7509,7 +7759,10 @@ window.mqTogDrawerConfig=(prefix)=>{
       const bsSel = document.getElementById(`mqsbs-${id}`);
       const hasBs = bsSel && bsSel.value !== 'none';
       block.style.display = hasBs ? 'block' : 'none';
-      if (!hasBs) return;
+      if (!hasBs) {
+        ['mqs-bs-sides-','mqs-bs-subtract-'].forEach(k => { const e = document.getElementById(k + id); if (e && e.value !== '0') e.value = 0; });
+        return;
+      }
       const totalLen = mqSurfGetLegs(id).reduce((a,b)=>a+b,0);
       const baseFt = Math.round((totalLen/12)*10)/10;
       const sides = gn(`mqs-bs-sides-${id}`, 0);
@@ -7796,7 +8049,7 @@ window.mqTogDrawerConfig=(prefix)=>{
   // few tries before it happened to land exactly right.
   //
   // Rather than just flipping it open directly, it's routed through
-  // mqScrollJumpWithCatchup/mqJumpToSectionIfNeeded — the same "arriving at
+  // mqJumpToSectionIfNeeded — the same "arriving at
   // a section" path a normal scroll or click already uses — so this stays
   // consistent with the rest of the step flow: it becomes the new current
   // step and its footer updates. After opening one, it re-checks itself
@@ -7827,7 +8080,6 @@ window.mqTogDrawerConfig=(prefix)=>{
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
       if (prefix) {
-        if (window._mqCatchupActive && window._mqCatchupActive[prefix]) return; // a catch-up walk already owns this tab's scroll right now
         if (window.mqGetVisibleSections && window._mqStepIndex) {
           const visible = window.mqGetVisibleSections(prefix);
           const idx = visible.indexOf(sec);
@@ -7835,7 +8087,7 @@ window.mqTogDrawerConfig=(prefix)=>{
           if (idx !== -1 && idx <= current) continue; // already current or done — leave it collapsed
         }
       }
-      (window.mqScrollJumpWithCatchup || window.mqJumpToSectionIfNeeded)(sec);
+      window.mqJumpToSectionIfNeeded(sec);
       // Still at the bottom after this one opens? Check again shortly so
       // the next stuck section (if any) opens right away too, instead of
       // waiting on another manual scroll.
@@ -8340,12 +8592,32 @@ window.mqTogDrawerConfig=(prefix)=>{
   // one" warning — this is not a special case in the check below, it falls
   // out naturally since pwds.includes(stored) is false against an empty list.
   function mqWidgetPwStorageKey() { return `mq_widget_pw_${shopToken}`; }
+  // Each saved password is either a plain string (older entries) or
+  // {p: "the password", t: <time it was added>}. The time is what makes
+  // "delete it, then add the same password again" work like a brand-new
+  // password: a browser that unlocked on the OLD entry remembers {p,t} and
+  // the new entry has a different t, so that browser is asked again. (Before
+  // this, re-adding the same text matched what the browser remembered, so the
+  // owner's own browser walked straight in with no password box at all.)
+  function mqWidgetPwEntries(shop) {
+    let raw = [];
+    try { raw = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { raw = []; }
+    if (!Array.isArray(raw)) raw = [];
+    return raw.map(x => (x && typeof x === 'object') ? { p: String(x.p == null ? '' : x.p), t: Number(x.t) || 0 } : { p: String(x), t: 0 });
+  }
   function mqCheckWidgetPassword(shop) {
-    let pwds = [];
-    try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
+    const entries = mqWidgetPwEntries(shop);
     let stored = null;
     try { stored = localStorage.getItem(mqWidgetPwStorageKey()); } catch(e) { stored = null; }
-    return !!stored && pwds.includes(stored);
+    if (!stored) return false;
+    let rec = null;
+    try { rec = JSON.parse(stored); } catch(e) { rec = null; }
+    if (rec && typeof rec === 'object' && 'p' in rec) {
+      return entries.some(en => en.p === String(rec.p) && en.t === (Number(rec.t) || 0));
+    }
+    // Older browsers saved just the bare password text — still honored for
+    // older (string) entries.
+    return entries.some(en => en.t === 0 && en.p === stored);
   }
   function mqRenderPasswordGate(container, shop) {
     const shopName = (shop['Shop name'] || 'This shop').replace(/</g,'&lt;');
@@ -8362,10 +8634,9 @@ window.mqTogDrawerConfig=(prefix)=>{
     const submitBtn = container.querySelector('#mq-widget-pw-submit');
     const submit = () => {
       const val = (input.value || '').trim();
-      let pwds = [];
-      try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
-      if (val && pwds.includes(val)) {
-        try { localStorage.setItem(mqWidgetPwStorageKey(), val); } catch(e) {}
+      const match = val ? mqWidgetPwEntries(shop).find(en => en.p === val) : null;
+      if (match) {
+        try { localStorage.setItem(mqWidgetPwStorageKey(), JSON.stringify({ p: match.p, t: match.t })); } catch(e) {}
         init(); // re-run init(): mqCheckWidgetPassword now passes, so this renders the real widget
       } else {
         errorEl.style.display = 'block';
@@ -8470,6 +8741,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     // rows, etc.) — no need to individually wire each one.
     container.addEventListener('input', mqScheduleLiveRecalc);
     container.addEventListener('change', mqScheduleLiveRecalc);
+    // Keep each "About how many drawers?" box's estimate in step with the
+    // footage/tier the customer has entered.
+    container.addEventListener('input', () => { if (window.mqDrawerCountSyncAll) window.mqDrawerCountSyncAll(); });
+    container.addEventListener('change', () => { if (window.mqDrawerCountSyncAll) window.mqDrawerCountSyncAll(); });
 
     // ── First-visit tips popup ──
     // Replaces the old showroom nudge — this widget now has photos, per-project
