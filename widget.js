@@ -2833,6 +2833,19 @@
           ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems, null, 'drawer')}
           <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
         </div>
+        <div class="mq-field" id="mq-${prefix}-drawer-count-wrap" style="display:none;margin-top:10px">
+          <label class="mq-label">About how many drawers?</label>
+          <div id="mq-${prefix}-drawer-count-hint" style="font-size:13px;color:#4b5563;margin-bottom:8px;line-height:1.5"></div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <div class="mq-qty-ctrl">
+              <button class="mq-qty-btn" type="button" aria-label="Fewer drawers" onclick="mqAdjDrawerCount('${prefix}',-1)">−</button>
+              <input type="text" inputmode="numeric" pattern="[0-9]*" id="mq-${prefix}-drawer-count" value="0" oninput="mqDrawerCountTyped('${prefix}')" onblur="mqDrawerCountBlur('${prefix}')" onclick="this.select()" style="text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
+              <button class="mq-qty-btn" type="button" aria-label="More drawers" onclick="mqAdjDrawerCount('${prefix}',1)">+</button>
+            </div>
+            <button type="button" id="mq-${prefix}-drawer-count-reset" onclick="mqResetDrawerCount('${prefix}')" style="display:none;background:none;border:none;color:#2563eb;text-decoration:underline;font-size:12px;cursor:pointer;padding:0;font-family:inherit">Reset to our estimate</button>
+          </div>
+          <input type="hidden" id="mq-${prefix}-drawer-manual" value="0"/>
+        </div>
         </div>
       </div>`:''}
       ${Object.keys(TALL_CAB).length > 0 ? `
@@ -5434,6 +5447,7 @@
       }
       mqRefreshAllPickerVisibility(prefix);
       mqRefreshBsFt(prefix);
+      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix);
     }
     // ===================== end snapshot / restore =====================
 
@@ -5829,7 +5843,115 @@
       }
     };
 
-window.mqTogDrawerConfig=(prefix)=>{
+// ===================== Drawer count estimate =====================
+    // Jordan's idea (2026-10-10): the pricing wizard prices ONE reference job
+    // — a 30" + an 18" base (4 lin ft, 2 cabinets):
+    //   "some drawers"   quote = 1 drawer per cabinet  = 2 drawers / 4 ft
+    //   full-bank quote        = 3 drawers per cabinet = 6 drawers / 4 ft
+    //   "mostly drawers" rate  = average of the two    = 4 drawers / 4 ft
+    // so each tier's PRICE implies a drawers-per-foot density (0.5 and 1.0) — the DISPLAYED estimate now uses lower, real-kitchen densities (see MQ_DRAWERS_PER_FT_*),
+    // and the rates we already store imply a price per drawer:
+    //   some:   rate*4 ft / 2 drawers = 2 x someRate  per drawer
+    //   mostly: rate*4 ft / 4 drawers = mostlyRate    per drawer
+    // The widget shows "about N drawers" (N = base ft [+ island front row] x
+    // density) and lets the customer change it. UNTOUCHED = price exactly as
+    // before. Once they change it, the difference from the estimate x the
+    // per-drawer price is added/removed (calcCabinet, drawerAdjCost). No new
+    // Airtable fields: everything comes from the existing Rate values.
+    // A shop whose rates don't fit that pattern (hand-typed, mostly <= some)
+    // simply doesn't get the count box — it prices as it always did.
+    // Starting-estimate densities (Jordan 2026-10-10: the raw 0.5 / 1.0 ran
+    // high). The wizard's reference job has drawers in EVERY cabinet, but a real
+    // run also has sink + corner cabinets (and often a range/appliance cabinet)
+    // with no drawers, so the displayed estimate uses 0.4 (some) and 0.75
+    // (mostly) per lin ft. These ONLY set the starting number: the price per
+    // drawer (below, in mqDrawerCountModel) still comes from the reference job
+    // (2 / 4 drawers per 4 ft), and an untouched count never changes the price.
+    const MQ_DRAWERS_PER_FT_SOME = 0.4;
+    const MQ_DRAWERS_PER_FT_MOSTLY = 0.75;
+    function mqDrawerFtNow(prefix) {
+      const cabSecEl = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
+      const cabSectionActive = !cabSecEl || cabSecEl.style.display !== 'none';
+      const bFt = cabSectionActive ? gn(`mq-${prefix}-bft`,0) : 0;
+      const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
+      const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
+      const islandFt = islandSectionActive ? gn(`mq-${prefix}-islandft`,0) : 0;
+      return { bFt, islandFt };
+    }
+    function mqDrawerCountModel(prefix, bFt, islandFt) {
+      const tier = gv(`mq-${prefix}-drawer-tier`) || 'none';
+      if (tier !== 'some' && tier !== 'mostly') return { valid:false };
+      const cfgName = drawerConfigNames[parseInt(gv(`mq-${prefix}-drawer-config`) || '0')] || '';
+      const rates = (P().drawer || {})[cfgName] || {};
+      const some = rates.some || 0, mostly = rates.mostly || 0;
+      const own = tier === 'some' ? some : mostly;
+      if (!(own > 0)) return { valid:false };
+      if (some > 0 && mostly > 0 && mostly <= some) return { valid:false };
+      const ft = (bFt || 0) + (islandFt || 0);
+      const est = ft > 0 ? Math.max(1, Math.round(ft * (tier === 'some' ? MQ_DRAWERS_PER_FT_SOME : MQ_DRAWERS_PER_FT_MOSTLY))) : 0;
+      return { valid:true, tier, ft, est, per: tier === 'some' ? 2 * some : mostly };
+    }
+    window.mqRefreshDrawerCount = (prefix) => {
+      const wrap = document.getElementById(`mq-${prefix}-drawer-count-wrap`);
+      if (!wrap) return;
+      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
+      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+      const hintEl = document.getElementById(`mq-${prefix}-drawer-count-hint`);
+      const resetEl = document.getElementById(`mq-${prefix}-drawer-count-reset`);
+      const { bFt, islandFt } = mqDrawerFtNow(prefix);
+      const m = mqDrawerCountModel(prefix, bFt, islandFt);
+      if (!m.valid) {
+        // No tier / no usable rates: nothing to adjust — forget any manual count.
+        wrap.style.display = 'none';
+        if (manualEl) manualEl.value = '0';
+        return;
+      }
+      if (!(m.ft > 0)) { wrap.style.display = 'none'; return; } // no footage yet — keep any manual count
+      wrap.style.display = 'block';
+      const manual = manualEl && manualEl.value === '1';
+      if (!manual && countEl) countEl.value = String(m.est);
+      if (hintEl) hintEl.textContent = `Based on about ${Math.round(m.ft * 10) / 10} lin ft of base cabinets${islandFt > 0 ? ' (including your island)' : ''}, we estimate about ${m.est} drawers. If you know the exact number, change it here and the price will follow.`;
+      if (resetEl) resetEl.style.display = (manual && parseInt(countEl && countEl.value, 10) !== m.est) ? 'inline' : 'none';
+    };
+    window.mqDrawerCountSyncAll = () => {
+      document.querySelectorAll('[id$="-drawer-count-wrap"]').forEach(w => {
+        const p = w.id.slice(3, -'-drawer-count-wrap'.length);
+        if (p) window.mqRefreshDrawerCount(p);
+      });
+    };
+    window.mqDrawerCountTyped = (prefix) => {
+      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
+      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+      if (countEl) { const clean = countEl.value.replace(/[^0-9]/g, '').slice(0, 3); if (clean !== countEl.value) countEl.value = clean; }
+      if (manualEl) manualEl.value = '1';
+      window.mqRefreshDrawerCount(prefix);
+    };
+    window.mqDrawerCountBlur = (prefix) => {
+      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
+      if (countEl && countEl.value.trim() === '') {
+        const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+        if (manualEl) manualEl.value = '0';
+        window.mqRefreshDrawerCount(prefix);
+        countEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    };
+    window.mqAdjDrawerCount = (prefix, delta) => {
+      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
+      if (!countEl) return;
+      const cur = parseInt(countEl.value, 10);
+      const next = Math.max(1, Math.min(200, (isNaN(cur) ? 1 : cur) + delta));
+      countEl.value = String(next);
+      countEl.dispatchEvent(new Event('input', { bubbles: true })); // -> mqDrawerCountTyped + live recalc
+    };
+    window.mqResetDrawerCount = (prefix) => {
+      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+      if (manualEl) manualEl.value = '0';
+      window.mqRefreshDrawerCount(prefix);
+      if (manualEl) manualEl.dispatchEvent(new Event('change', { bubbles: true })); // -> live recalc
+    };
+    // =================== end drawer count estimate ===================
+
+    window.mqTogDrawerConfig=(prefix)=>{
       const tier=gv(`mq-${prefix}-drawer-tier`);
       const wrap=document.getElementById(`mq-${prefix}-drawer-config-wrap`);
       const opening = tier!=='none';
@@ -5845,6 +5967,11 @@ window.mqTogDrawerConfig=(prefix)=>{
       // overflow check at initial page load ran before this wrap was ever
       // visible.
       if (opening && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
+      // A different tier means a different starting estimate (and per-drawer
+      // price), so any count the customer typed no longer applies.
+      const drawerManualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
+      if (drawerManualEl) drawerManualEl.value = '0';
+      window.mqRefreshDrawerCount(prefix);
     };
 
     window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
@@ -6317,6 +6444,15 @@ window.mqTogDrawerConfig=(prefix)=>{
       // island — a single-row island has no "back row" to extend.
       const islandDw = islandSectionActive && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
       const islandBackFt = islandDw ? islandFt + 2 : islandFt;
+      // Drawer count adjustment (see "Drawer count estimate" above): only
+      // applies once the customer has changed the count themselves.
+      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix);
+      const drawerModel = mqDrawerCountModel(prefix, bFt, islandFt);
+      let drawerAdjCost = 0, drawerCountUsed = 0;
+      if (drawerModel.valid && drawerModel.ft > 0 && document.getElementById(`mq-${prefix}-drawer-manual`)?.value === '1') {
+        const rawCount = parseInt(document.getElementById(`mq-${prefix}-drawer-count`)?.value, 10);
+        if (!isNaN(rawCount) && rawCount >= 0) { drawerCountUsed = rawCount; drawerAdjCost = (rawCount - drawerModel.est) * drawerModel.per; }
+      }
       // Front row of the island: same formula as bMatDoorHinge (the wall-
       // run base cabinets), but with the island's own independent %
       // adjustment (islandVanityMult) instead of the general base-cabinet
@@ -6379,7 +6515,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
       if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
       if(islandFt>0) lines.push({label:`Island cabinets — ${islandDouble?'double-row':'single-row'}, ${islandPanel==='decorative'?'decorative':'regular'} panels (${islandFt} lin ft${islandDw?`, back row ${islandBackFt} lin ft w/ dishwasher`:''})`,cost:Math.round(islandCost)});
-      if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
+      if(drawerRate>0&&(bFt>0||drawerAdjCost!==0)) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt>0?`${bFt} lin ft bases`:'island'}${drawerAdjCost!==0?`; ${drawerCountUsed} drawers, est. ${drawerModel.est}`:''})`,cost:Math.round(drawerRate*bFt+drawerAdjCost)});
 
       // Tall cabinets — loop over every card the customer added. Each one
       // contributes its own cost (base price + door/material/install/hinge
@@ -6524,7 +6660,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const sub=uCost+bCost+islandCost+specTotal+tallCabTotal+remCost+trimCost;
+      const sub=uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+remCost+trimCost;
       const totalMult = (100 + totalAdjPct) / 100;
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
@@ -7562,6 +7698,7 @@ window.mqTogDrawerConfig=(prefix)=>{
       _mqLinFtHoldInterval = null;
     };
     window.mqRefreshBsFt=(prefix)=>{
+      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix); // footage/island changed — keep the drawer estimate in step
       // The "Countertop area" readout under the Both tab's countertop options.
       // Jordan: it showed 0 lin ft / 0 sqft with an island in the quote, and
       // once "additional space" or the dishwasher was ticked it showed ONLY
@@ -8613,6 +8750,10 @@ window.mqTogDrawerConfig=(prefix)=>{
     // rows, etc.) — no need to individually wire each one.
     container.addEventListener('input', mqScheduleLiveRecalc);
     container.addEventListener('change', mqScheduleLiveRecalc);
+    // Keep each "About how many drawers?" box's estimate in step with the
+    // footage/tier the customer has entered.
+    container.addEventListener('input', () => { if (window.mqDrawerCountSyncAll) window.mqDrawerCountSyncAll(); });
+    container.addEventListener('change', () => { if (window.mqDrawerCountSyncAll) window.mqDrawerCountSyncAll(); });
 
     // ── First-visit tips popup ──
     // Replaces the old showroom nudge — this widget now has photos, per-project
