@@ -9269,19 +9269,14 @@
         #mq-fx-side .mq-fx-live-val{color:#fff;font-size:20px}
       }
 
-      /* Chooser hero */
-      #mq-fx-chooser{background:radial-gradient(120% 90% at 15% 0%,rgba(255,255,255,.16),transparent 55%),linear-gradient(135deg,var(--mq-hero-a,#222),var(--mq-hero-b,#111));color:#fff;padding:42px 18px 36px}
-      #mq-fx-chooser.mq-fx-hero-img{background:linear-gradient(180deg,rgba(0,0,0,.48),rgba(0,0,0,.74)),var(--mq-hero-img) center/cover no-repeat}
-      #mq-fx-chooser .mq-fx-ch-title{color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.35)}
-      #mq-fx-chooser .mq-fx-ch-sub{color:rgba(255,255,255,.84)}
-      #mq-fx-chooser .mq-fx-card{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.28);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(0,0,0,.22);color:#fff}
-      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{background:rgba(255,255,255,.22);border-color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.32)}
-      #mq-fx-chooser .mq-fx-card-current{border-color:#fff}
-      #mq-fx-chooser .mq-fx-card-icon{background:#fff;color:var(--mq-hero-ink,#222);box-shadow:0 4px 12px rgba(0,0,0,.22)}
-      #mq-fx-chooser .mq-fx-card-title{color:#fff}
-      #mq-fx-chooser .mq-fx-card-sub{color:rgba(255,255,255,.78)}
-      #mq-fx-chooser .mq-fx-card-arrow{color:#fff}
-      @media (min-width:700px){#mq-fx-chooser{padding:72px 28px 64px}}
+      /* Chooser cards: white background, brand-colour gradient buttons */
+      #mq-fx-chooser .mq-fx-card{background:linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#000));border:0;color:var(--mq-card-ink,#fff);box-shadow:0 8px 22px rgba(0,0,0,.20)}
+      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{filter:brightness(1.08);transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.28)}
+      #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--mq-card-a,#1a1a1a),0 8px 22px rgba(0,0,0,.20)}
+      #mq-fx-chooser .mq-fx-card-icon{background:var(--mq-card-tile,#fff);color:var(--mq-card-tile-ink,#222);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+      #mq-fx-chooser .mq-fx-card-title{color:var(--mq-card-ink,#fff)}
+      #mq-fx-chooser .mq-fx-card-sub{color:var(--mq-card-ink,#fff);opacity:.82}
+      #mq-fx-chooser .mq-fx-card-arrow{color:var(--mq-card-ink,#fff)}
 
       /* ── Full-screen focus mode ── */
       #mq-fx-top,#mq-fx-side{display:none}
@@ -9388,21 +9383,20 @@
         <div class="mq-fx-cards mq-fx-cards-${shown.length}">${shown.map(t =>
           `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-icon">${t.icon}</span><span><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about a minute' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></button>`).join('')}
         </div>`;
-      // Hero look: a dark gradient built from the shop's own brand colour, or —
-      // if the shop supplies one — a cover photo under a dark overlay.
-      // Field: Shops › "Focused cover image" (URL). window.MQ_FX_COVER lets a
-      // test page try an image without touching Airtable.
+      // Cards are filled with a gradient of the shop's own Brand colour
+      // (brand -> a darker shade). Text/icon colour flips to dark ink if the
+      // brand colour is light enough that white text wouldn't read.
       const shopRec = window._mqShopData || {};
       const bcRaw = /^#[0-9a-fA-F]{6}$/.test(shopRec['Brand colour'] || '') ? shopRec['Brand colour'] : '#1a1a1a';
       const mix = (hex, t) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - t)).toString(16).padStart(2, '0')).join('');
-      ch.style.setProperty('--mq-hero-a', mix(bcRaw, 0.35));
-      ch.style.setProperty('--mq-hero-b', mix(bcRaw, 0.74));
-      ch.style.setProperty('--mq-hero-ink', mix(bcRaw, 0.55));
-      const cover = String(window.MQ_FX_COVER || shopRec['Focused cover image'] || '').trim();
-      if (/^(https?:)?\/\//i.test(cover) || /^data:image\//i.test(cover)) {
-        ch.style.setProperty('--mq-hero-img', `url("${cover.replace(/["\\\n\r]/g, '')}")`);
-        ch.classList.add('mq-fx-hero-img');
-      }
+      const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+      const lum = 0.2126 * lin(parseInt(bcRaw.slice(1, 3), 16)) + 0.7152 * lin(parseInt(bcRaw.slice(3, 5), 16)) + 0.0722 * lin(parseInt(bcRaw.slice(5, 7), 16));
+      const lightBrand = lum > 0.42;
+      ch.style.setProperty('--mq-card-a', lightBrand ? bcRaw : mix(bcRaw, 0.0));
+      ch.style.setProperty('--mq-card-b', lightBrand ? mix(bcRaw, 0.22) : mix(bcRaw, 0.42));
+      ch.style.setProperty('--mq-card-ink', lightBrand ? '#1f2937' : '#ffffff');
+      ch.style.setProperty('--mq-card-tile', lightBrand ? 'rgba(0,0,0,.10)' : '#ffffff');
+      ch.style.setProperty('--mq-card-tile-ink', lightBrand ? '#1f2937' : mix(bcRaw, 0.45));
       const tabBar = container.querySelector('.mq-tab-bar');
       if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
     }
