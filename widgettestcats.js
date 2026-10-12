@@ -8898,6 +8898,28 @@
     const hide = !!(window._mqFxFull && tab && !tab.classList.contains('mq-fx-results'));
     document.documentElement.classList.toggle('mq-fx-nosticky', hide);
     mqAdjustWidgetBottomPadding();
+    // Live price while editing: the tall sticky bar is hidden, so a compact
+    // chip (phone: strip under the top bar; desktop: card in the side panel)
+    // mirrors its number. Only after a first Calculate — before that the
+    // lead form still gates the price, so nothing is shown early.
+    const c = document.getElementById('midasquote-widget');
+    if (c) c.classList.toggle('mq-fx-live-on', hide && !!window._mqStickyPrefix);
+    const priceEl = document.getElementById('mq-sticky-price');
+    if (priceEl && !priceEl._mqFxObs) {
+      priceEl._mqFxObs = true;
+      new MutationObserver(mqFxCopyPrice).observe(priceEl, { childList: true, characterData: true, subtree: true });
+    }
+    mqFxCopyPrice();
+  }
+  function mqFxCopyPrice() {
+    const priceEl = document.getElementById('mq-sticky-price');
+    if (!priceEl) return;
+    const txt = priceEl.textContent.trim();
+    document.querySelectorAll('.mq-fx-live-val').forEach(el => {
+      if (el.textContent === txt) return;
+      el.textContent = txt;
+      el.classList.remove('mq-fx-pulse'); void el.offsetWidth; el.classList.add('mq-fx-pulse');
+    });
   }
   window.mqFxApply = function(prefix) {
     if (!window._mqFxOn) return;
@@ -9230,6 +9252,37 @@
         #mq-fx-chooser .mq-fx-card-arrow{margin:0;font-size:24px}
       }
 
+
+      /* Live price chip (full-screen, while editing after a first estimate) */
+      .mq-fx-live{display:none;align-items:center;justify-content:space-between;gap:10px}
+      .mq-fx-live-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280}
+      .mq-fx-live-val{font-size:17px;font-weight:800;color:#111827}
+      .mq-fx-live-val.mq-fx-pulse{animation:mqFxPulse .6s ease}
+      @keyframes mqFxPulse{0%{transform:scale(1)}40%{transform:scale(1.07);color:#16a34a}100%{transform:scale(1)}}
+      #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-top{flex-wrap:wrap}
+      #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-top .mq-fx-live{display:flex;flex-basis:calc(100% + 28px);order:3;margin:2px -14px -10px;padding:7px 14px;background:#f0fdf4;border-top:1px solid #bbf7d0}
+      #mq-fx-side .mq-fx-live{display:none}
+      @media (min-width:900px){
+        #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-top .mq-fx-live{display:none}
+        #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-side .mq-fx-live{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 16px;border-radius:12px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.35);margin-bottom:20px}
+        #mq-fx-side .mq-fx-live-lbl{color:#86efac}
+        #mq-fx-side .mq-fx-live-val{color:#fff;font-size:20px}
+      }
+
+      /* Chooser hero */
+      #mq-fx-chooser{background:radial-gradient(120% 90% at 15% 0%,rgba(255,255,255,.16),transparent 55%),linear-gradient(135deg,var(--mq-hero-a,#222),var(--mq-hero-b,#111));color:#fff;padding:42px 18px 36px}
+      #mq-fx-chooser.mq-fx-hero-img{background:linear-gradient(180deg,rgba(0,0,0,.48),rgba(0,0,0,.74)),var(--mq-hero-img) center/cover no-repeat}
+      #mq-fx-chooser .mq-fx-ch-title{color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.35)}
+      #mq-fx-chooser .mq-fx-ch-sub{color:rgba(255,255,255,.84)}
+      #mq-fx-chooser .mq-fx-card{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.28);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(0,0,0,.22);color:#fff}
+      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{background:rgba(255,255,255,.22);border-color:#fff;box-shadow:0 14px 34px rgba(0,0,0,.32)}
+      #mq-fx-chooser .mq-fx-card-current{border-color:#fff}
+      #mq-fx-chooser .mq-fx-card-icon{background:#fff;color:var(--mq-hero-ink,#222);box-shadow:0 4px 12px rgba(0,0,0,.22)}
+      #mq-fx-chooser .mq-fx-card-title{color:#fff}
+      #mq-fx-chooser .mq-fx-card-sub{color:rgba(255,255,255,.78)}
+      #mq-fx-chooser .mq-fx-card-arrow{color:#fff}
+      @media (min-width:700px){#mq-fx-chooser{padding:72px 28px 64px}}
+
       /* ── Full-screen focus mode ── */
       #mq-fx-top,#mq-fx-side{display:none}
       #midasquote-widget.mq-fx.mq-fx-full{box-sizing:border-box;position:fixed;inset:0;height:100vh;height:100dvh;width:100%;max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;z-index:99990;background:#f3f4f6;padding-bottom:var(--mq-sticky-h,0px);display:block}
@@ -9335,6 +9388,21 @@
         <div class="mq-fx-cards mq-fx-cards-${shown.length}">${shown.map(t =>
           `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-icon">${t.icon}</span><span><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about a minute' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></button>`).join('')}
         </div>`;
+      // Hero look: a dark gradient built from the shop's own brand colour, or —
+      // if the shop supplies one — a cover photo under a dark overlay.
+      // Field: Shops › "Focused cover image" (URL). window.MQ_FX_COVER lets a
+      // test page try an image without touching Airtable.
+      const shopRec = window._mqShopData || {};
+      const bcRaw = /^#[0-9a-fA-F]{6}$/.test(shopRec['Brand colour'] || '') ? shopRec['Brand colour'] : '#1a1a1a';
+      const mix = (hex, t) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - t)).toString(16).padStart(2, '0')).join('');
+      ch.style.setProperty('--mq-hero-a', mix(bcRaw, 0.35));
+      ch.style.setProperty('--mq-hero-b', mix(bcRaw, 0.74));
+      ch.style.setProperty('--mq-hero-ink', mix(bcRaw, 0.55));
+      const cover = String(window.MQ_FX_COVER || shopRec['Focused cover image'] || '').trim();
+      if (/^(https?:)?\/\//i.test(cover) || /^data:image\//i.test(cover)) {
+        ch.style.setProperty('--mq-hero-img', `url("${cover.replace(/["\\\n\r]/g, '')}")`);
+        ch.classList.add('mq-fx-hero-img');
+      }
       const tabBar = container.querySelector('.mq-tab-bar');
       if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
     }
@@ -9345,7 +9413,7 @@
       const nameEl = hdr && hdr.querySelector('.mq-shop-name');
       const top = document.createElement('div');
       top.id = 'mq-fx-top';
-      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button>`;
+      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div>`;
       container.insertBefore(top, container.firstChild);
     }
     if (!document.getElementById('mq-fx-side')) {
@@ -9358,7 +9426,7 @@
       const side = document.createElement('aside');
       side.id = 'mq-fx-side';
       side.appendChild(brand);
-      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
+      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
       container.insertBefore(side, container.firstChild);
     }
     mqFxInstallSwipe(container);
