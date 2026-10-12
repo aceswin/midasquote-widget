@@ -1593,6 +1593,8 @@ window.logoutMember = async function () {
 
         <div class="mq-content">
 
+          <div id="mq-plan-banner">${mqPlanBannerInnerHTML()}</div>
+
           <!-- OVERVIEW -->
           <div class="mq-page active" id="mq-page-overview">
             <button class="mq-help-btn" onclick="mqShowHelp('overview')"><span class="mq-help-badge">?</span> Need help?</button>
@@ -5182,6 +5184,58 @@ window.logoutMember = async function () {
     if (isNaN(created.getTime())) return null;
     return new Date(created.getTime() + MQ_FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000);
   }
+
+  // Trial / Demo banner at the top of the dashboard (every tab). Jordan
+  // 2026-10-12: while a shop is on the free trial, show the day it ends plus
+  // a link to the Account tab; once it has ended, tell them they're welcome
+  // to stay on the free Demo plan and link to the Account tab if they want
+  // full access again. Paying shops see nothing. Uses the same Plan field and
+  // expiry-date helper as the Account tab (mqFreeTrialExpiryDate above), so the
+  // two can never disagree. The Demo version can be closed for the current
+  // visit (not remembered — it comes back next load, on purpose, since it's
+  // the upgrade nudge); the trial version can't be closed.
+  function mqPlanBannerInnerHTML() {
+    const rec = window._mqShopRecord;
+    const plan = (rec && rec.fields && rec.fields['Plan']) || '';
+    const btn = (label) => `<button type="button" class="mq-btn mq-btn-sm" style="white-space:nowrap;background:#fff" onclick="mqGoToAccountTab()">${label}</button>`;
+    if (plan === 'Free Trial') {
+      const expiry = mqFreeTrialExpiryDate(rec);
+      let msg, urgent = false;
+      if (!expiry) {
+        msg = `🗓️ You're on the <strong>free trial</strong> — full access. Add a plan any time in the Account tab to keep it.`;
+      } else if (expiry.getTime() <= Date.now()) {
+        urgent = true;
+        msg = `🗓️ Your <strong>free trial is ending</strong> — your account moves to the free Demo plan shortly. Pick a plan in the Account tab to keep full access.`;
+      } else {
+        const dateStr = expiry.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const daysLeft = Math.max(1, Math.ceil((expiry.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+        urgent = daysLeft <= 5;
+        msg = `🗓️ Your <strong>free trial ends ${dateStr}</strong> (${daysLeft} day${daysLeft === 1 ? '' : 's'} left). You have full access until then — add a plan in the Account tab to keep it.`;
+      }
+      const c = urgent ? { bg:'#fef2f2', bd:'#fca5a5', tx:'#991b1b' } : { bg:'#fffbeb', bd:'#fcd34d', tx:'#92400e' };
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:${c.bg};border:1px solid ${c.bd};color:${c.tx};border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
+        <span style="flex:1 1 280px">${msg}</span>${btn('Go to Account tab →')}</div>`;
+    }
+    if (plan === 'Demo' && !window._mqDemoBannerDismissed) {
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
+        <span style="flex:1 1 280px">Your <strong>free trial has ended</strong> — you're welcome to stay on the free Demo plan. Want full access again? Pick a plan in the Account tab.</span>
+        <span style="display:flex;align-items:center;gap:10px">${btn('Get full access →')}<button type="button" aria-label="Dismiss" title="Dismiss" onclick="mqDismissDemoBanner()" style="background:none;border:none;color:#1e3a8a;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px">✕</button></span></div>`;
+    }
+    return '';
+  }
+  window.mqRefreshPlanBanner = function() {
+    const holder = document.getElementById('mq-plan-banner');
+    if (holder) holder.innerHTML = mqPlanBannerInnerHTML();
+  };
+  window.mqDismissDemoBanner = function() {
+    window._mqDemoBannerDismissed = true;
+    window.mqRefreshPlanBanner();
+  };
+  window.mqGoToAccountTab = function() {
+    const navEl = document.querySelector('#midasquote-dashboard .mq-nav-item[onclick^="mqNav(\'billing\'"]');
+    if (navEl) window.mqNav('billing', navEl);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   function renderLeads(leads, limit, selectable) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
@@ -14156,6 +14210,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
+    if (window.mqRefreshPlanBanner) window.mqRefreshPlanBanner(); // plan may have changed since the page loaded
     // Re-checks on every tab switch, not just the initial page load — so a
     // shop already using the dashboard when a new announcement goes out
     // sees it the moment they click anywhere, no refresh needed. Skips
