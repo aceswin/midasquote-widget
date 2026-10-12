@@ -426,91 +426,44 @@
   // ============================================================
   // EMAIL & LEAD
   // ============================================================
-  // Sends one lead to the proxy worker's /save-lead and keeps trying in the
-  // background if that fails. 2026-10-08: a customer clicked "Email me a copy"
-  // a few times and the leads never reached the dashboard (the shop still got
-  // the notification emails, since those go through a separate worker). The
-  // likely cause is Airtable's per-base rate limit (5 requests/second for the
-  // whole base): go over it and Airtable rejects everything for ~30 seconds,
-  // while the old save only retried 3 times inside ~1 second, so a save that
-  // landed in that window was lost. This waits out that window: 5 attempts
-  // spread over ~45 seconds (each with its own 15s timeout), stopping early
-  // if the worker says retrying can't help (e.g. Airtable rejected a value).
-  // `requestId` is the same for every attempt of ONE save, so the worker can
-  // recognise a repeat of a save it already completed and not create a second
-  // lead; two separate clicks still send different ids and stay separate leads.
-  // Resolves {ok:true} or {ok:false, error} with the real reason, so the
-  // failure alert email can say why.
-  async function mqPostLead(payload) {
-    const waitsBeforeRetry = [3000, 6000, 13000, 23000];
-    let lastError = '';
-    for (let attempt = 0; attempt <= waitsBeforeRetry.length; attempt++) {
-      if (attempt > 0) await new Promise(r => setTimeout(r, waitsBeforeRetry[attempt - 1]));
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      try {
-        const res = await fetch(`${CONFIG.PROXY_WORKER}/save-lead`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-          cache: 'no-store',
-        });
-        clearTimeout(timeoutId);
-        if (res.ok) return { ok: true };
-        let info = {};
-        try { info = await res.json(); } catch(e) {}
-        lastError = `HTTP ${res.status}${info && info.error ? ' — ' + info.error : ''}`;
-        if (info && info.retryable === false) return { ok: false, error: lastError };
-      } catch(e) {
-        clearTimeout(timeoutId);
-        lastError = (e && e.name === 'AbortError') ? 'the request timed out' : String((e && e.message) || e);
-      }
-    }
-    return { ok: false, error: lastError || 'unknown error' };
-  }
-
   async function saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix, contactRequested) {
     const { shop } = data;
-    // Kick the save off right away but DON'T wait for it: it may legitimately
-    // take up to ~45s to get through a rate-limit window, and neither the
-    // quote results nor the notification/customer emails below depend on it.
-    // Only if it still fails after every attempt does the shop get the
-    // "didn't save" alert (below), now including the actual reason.
-    const requestId = `${_mqSessionId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-    mqPostLead({
-      shopToken, name: lead.name, email: lead.email, phone: lead.phone,
-      quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines, requestId,
-    }).then(result => {
-      if (result.ok) return;
-      console.error('Lead save failed', result.error);
+    try {
+      await fetchWithRetry(`${CONFIG.PROXY_WORKER}/save-lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shopToken, name: lead.name, email: lead.email, phone: lead.phone,
+          quoteType, roomType: roomType||'', sessionId: _mqSessionId, low, high, lines,
+        }),
+      });
+    } catch(e) {
+      console.error('Lead save failed', e);
       // The dashboard's Leads tab is built entirely from what got saved to
-      // Airtable above — if that save just failed (after every retry), this
+      // Airtable above — if that save just failed (after 3 retries), this
       // lead would otherwise vanish completely with zero trace anywhere,
-      // even though the confirmation emails still send fine (a separate,
-      // unrelated call). Since email is the one delivery path we know works,
-      // fire an extra "this one didn't save" alert to the shop so nothing is
-      // silently lost while the real cause of the save failure gets fixed.
-      // Best-effort only — if this ALSO fails, there's nothing further to
-      // fall back to; already logged above.
+      // even though the customer's confirmation email below still sends
+      // fine (a separate, unrelated call). Since email is the one delivery
+      // path we know works, fire an extra "this one didn't save" alert to
+      // the shop so nothing is silently lost while the real cause of the
+      // save failure gets fixed. Best-effort only — if this ALSO fails,
+      // there's nothing further to fall back to; already logged above.
       if (shop && shop['Lead notify email']) {
-        const safeReason = String(result.error || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         sendEmail(shop['Lead notify email'], `⚠ A lead failed to save automatically — ${quoteType} quote`,
           `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
             <h2 style="color:#b91c1c">A quote lead didn't save to your dashboard</h2>
-            <p style="color:#444;font-size:14px">Everything below came through fine, but saving it to your Leads tab failed after retrying for about a minute. Here's what we have — you may want to add it manually.</p>
+            <p style="color:#444;font-size:14px">Everything below came through fine, but saving it to your Leads tab failed after retrying. Here's what we have — you may want to add it manually.</p>
             <table style="width:100%;border-collapse:collapse;margin:16px 0">
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Quote type</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${quoteType || 'Not provided'}${roomType ? ' — ' + roomType : ''}</td></tr>
-              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Estimate</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
-              <tr><td style="padding:6px 8px;color:#666">Reason</td><td style="padding:6px 8px;color:#b91c1c;font-size:12px">${safeReason}</td></tr>
+              <tr><td style="padding:6px 8px;color:#666">Estimate</td><td style="padding:6px 8px">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
             </table>
           </div>`
         ).catch(()=>{});
       }
-    });
+    }
 
     const lineRows = (lines||[])
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
@@ -2790,7 +2743,7 @@
             <button type="button" onclick="mqRemoveIslandSection('${prefix}')" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;text-decoration:underline;padding:0">Remove</button>
           </div>
           <div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">Island cabinets (lin ft)</label>
-            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" oninput="mqRefreshBsFt('${prefix}')" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${prefix}-islandft" value="0" min="0" max="40" step="0.5" onclick="this.select()" style="text-align:center;padding-right:26px"/><span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;font-weight:600;pointer-events:none">ft</span></div>${calcBtn(`mq-${prefix}-islandft`,'linear','Island cabinets')}</div>
             <div style="font-size:13px;color:#2563eb;font-weight:700;margin-top:4px">👉 Use the calculator to add up your island's sections & convert inches/mm to linear feet.</div>
           </div>
           <div class="mq-field" id="mq-${prefix}-island-double-wrap" style="display:none;margin-top:10px">
@@ -2832,19 +2785,6 @@
           <label class="mq-label">Drawer type</label>
           ${pickerRow(`mq-${prefix}-drawer-config`, drawerConfigItems, null, 'drawer')}
           <select id="mq-${prefix}-drawer-config" style="display:none">${drawerConfigOpts}</select>
-        </div>
-        <div class="mq-field" id="mq-${prefix}-drawer-count-wrap" style="display:none;margin-top:10px">
-          <label class="mq-label">About how many drawers?</label>
-          <div id="mq-${prefix}-drawer-count-hint" style="font-size:13px;color:#4b5563;margin-bottom:8px;line-height:1.5"></div>
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <div class="mq-qty-ctrl">
-              <button class="mq-qty-btn" type="button" aria-label="Fewer drawers" onclick="mqAdjDrawerCount('${prefix}',-1)">−</button>
-              <input type="text" inputmode="numeric" pattern="[0-9]*" id="mq-${prefix}-drawer-count" value="0" oninput="mqDrawerCountTyped('${prefix}')" onblur="mqDrawerCountBlur('${prefix}')" onclick="this.select()" style="text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
-              <button class="mq-qty-btn" type="button" aria-label="More drawers" onclick="mqAdjDrawerCount('${prefix}',1)">+</button>
-            </div>
-            <button type="button" id="mq-${prefix}-drawer-count-reset" onclick="mqResetDrawerCount('${prefix}')" style="display:none;background:none;border:none;color:#2563eb;text-decoration:underline;font-size:12px;cursor:pointer;padding:0;font-family:inherit">Reset to our estimate</button>
-          </div>
-          <input type="hidden" id="mq-${prefix}-drawer-manual" value="0"/>
         </div>
         </div>
       </div>`:''}
@@ -3134,13 +3074,12 @@
                 </label>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> <span>Add additional counter space <span style="color:#6b7280;font-weight:400">(makes your countertop longer)</span></span>
+                <input type="checkbox" id="mq-b-cab-extra-toggle" onchange="mqTogCabExtra('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add additional counter space
               </label>
-              <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px;flex-wrap:wrap">
-                <label style="font-size:14px;color:#374151">Additional length (feet)</label>
+              <div id="mq-b-cab-extra-wrap" style="display:none;margin-top:8px;align-items:center;gap:8px">
+                <label style="font-size:14px;color:#374151">Additional space (feet)</label>
                 <input type="number" id="mq-b-cab-extra-ft" value="0" min="0" step="0.5" oninput="mqRefreshBsFt('b')" style="width:80px"/>
                 ${calcBtn('mq-b-cab-extra-ft', 'linear', 'Additional counter space')}
-                <div style="flex-basis:100%;font-size:12.5px;color:#4b5563;line-height:1.5">This adds to the <strong>length</strong> of your countertop run, on top of your base cabinets. It's priced at the same standard 25.5" depth as the rest of your counter. Need a different depth or shape? Use "Additional countertop surfaces" below instead.</div>
               </div>
               <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-top:8px">
                 <input type="checkbox" id="mq-b-cab-co" onchange="mqTogCabCuts('b')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Cutouts needed (sink, etc.)
@@ -3148,7 +3087,6 @@
               <div id="mq-b-cab-cuts" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border-radius:6px"></div>
               <div style="font-size:14px;color:#166534;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
                 📐 Countertop area: <strong id="mq-b-cab-ctft">0</strong> lin ft &nbsp;·&nbsp; <strong id="mq-b-cab-ctsqft">0</strong> sqft
-                <div id="mq-b-cab-ctbreakdown" style="display:none;font-size:12.5px;color:#4b5563;margin-top:4px;line-height:1.5"></div>
               </div>
             </div>
             <div style="margin-bottom:0.75rem">
@@ -3521,7 +3459,7 @@
             ${thumb}
             <div style="flex:1;min-width:0">
               <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;font-weight:600;cursor:pointer">
-                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none';if(!this.checked){document.getElementById('${idPrefix}-qty-${i}').value=1}" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+                <input type="checkbox" id="${idPrefix}-${i}" onchange="document.getElementById('${idPrefix}-qtywrap-${i}').style.display=this.checked?'flex':'none'" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
                 ${(a.label||'Addon').replace(/"/g,'&quot;')}
               </label>
               <div class="mq-qty-ctrl" id="${idPrefix}-qtywrap-${i}" style="display:none;margin-top:6px">
@@ -3794,7 +3732,6 @@
       const fieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       if (btnWrap) btnWrap.style.display = 'none';
       if (fieldsWrap) fieldsWrap.style.display = 'block';
-      if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix); // countertop-area readout includes the island
     };
     window.mqRemoveIslandSection=(prefix)=>{
       const btnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
@@ -3821,7 +3758,6 @@
       // drives live recalc) never sees them, so the price would otherwise
       // keep showing the removed island's cost until the next unrelated
       // edit. Trigger it directly.
-      if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix);
       mqScheduleLiveRecalc();
     };
     // Island "double-row (back-to-back)" + "dishwasher in the island" work
@@ -4617,13 +4553,10 @@
       const anchorSelector = prefix === 'b' ? '.mq-grand-total' : '.mq-res-hdr';
       let attempts = 0;
       function tryScroll() {
-        if (window._mqFxFull) { const fc = document.getElementById('midasquote-widget'); if (fc) fc.scrollTo({ top: 0, behavior: 'smooth' }); return; } // full-screen layer scrolls itself, from the top
         attempts++;
         const resultEl = document.getElementById(resultId);
-        // Focused mode: land on the results screen's own top bar (Edit my answers) so the whole breakdown reads top-down, rather than pinning just the price block.
-        const fxBar = (window._mqFxOn && resultEl) ? resultEl.closest('.mq-tab-content')?.querySelector(':scope > .mq-fx-resbar') : null;
-        const anchorEl = fxBar || (resultEl ? resultEl.querySelector(anchorSelector) : null);
-        if (!anchorEl || anchorEl.offsetParent === null) return; // hidden (e.g. customer already went back to edit)
+        const anchorEl = resultEl ? resultEl.querySelector(anchorSelector) : null;
+        if (!anchorEl) return;
         const topGap = 16; // small breathing room above the price block
         const rect = anchorEl.getBoundingClientRect();
         const scrollAmount = rect.top - topGap;
@@ -4690,10 +4623,7 @@
         footer.className = 'mq-step-footer';
         sec.appendChild(footer);
       }
-      if (index === current && window._mqFxOn) {
-        footer.style.display = 'flex';
-        footer.innerHTML = window.mqFxFooterHTML(prefix, index, total);
-      } else if (index === current) {
+      if (index === current) {
         footer.style.display = 'flex';
         footer.innerHTML = `
           ${index > 0 ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>` : '<span></span>'}
@@ -4726,7 +4656,6 @@
           window.mqToggleCollapse(key);
         }
       }
-      if (window._mqFxOn && window.mqFxApply) window.mqFxApply(prefix);
       mqObserveSectionsForScrollSpy();
     };
 
@@ -4740,9 +4669,6 @@
       const btnId = prefix === 'c' ? 'mq-c-calc-btn' : (prefix === 'ct' ? 'mq-ct-calc-btn' : 'mq-b-calc-btn');
       const btn = document.getElementById(btnId);
       if (!btn) return;
-      // Focused mode: the Calculate button is hidden — the last step's own
-      // "See my estimate" button is the call to action, so just press it.
-      if (window._mqFxOn) { if (!btn.disabled) btn.click(); return; }
       btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
       btn.classList.remove('mq-calc-btn-pulse');
       void btn.offsetWidth; // restart the animation if it's already mid-pulse
@@ -4788,10 +4714,8 @@
       const sections = mqGetVisibleSections(prefix);
       const wasLast = (_mqStepIndex[prefix] || 0) >= sections.length - 1;
       _mqStepIndex[prefix] = Math.min((_mqStepIndex[prefix] || 0) + 1, sections.length - 1);
-      if (window._mqFxOn) window._mqFxDir = wasLast ? null : 'next';
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
-      if (window._mqFxOn) { window.mqFxScrollToStep(); return; }
       mqLockStepNav(prefix);
       const next = sections[_mqStepIndex[prefix]];
       if (next) mqScrollTopNearCenter(next);
@@ -4799,9 +4723,7 @@
 
     window.mqStepBack = function(prefix) {
       _mqStepIndex[prefix] = Math.max((_mqStepIndex[prefix] || 0) - 1, 0);
-      if (window._mqFxOn) window._mqFxDir = 'back';
       window.mqUpdateStepFocus(prefix);
-      if (window._mqFxOn) { window.mqFxScrollToStep(); return; }
       mqLockStepNav(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
@@ -4814,7 +4736,6 @@
     // in either direction (e.g. jumping back from Specialty Items to Doors
     // by tapping that section directly, same as scrolling up would).
     window.mqJumpToSectionIfNeeded = function(sec) {
-      if (window._mqFxOn) return; // Focused mode: only Continue/Back/swipe move the step
       const tab = sec.closest('.mq-tab-content');
       if (!tab) return;
       const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
@@ -4827,12 +4748,72 @@
       }
     }
 
+    // A fast scroll on mobile can cross several short, still-collapsed
+    // sections before the flow ever gets a chance to react — each closed
+    // section is just a header row, so a whole run of them can cross the
+    // scroll-spy's centerline inside one scroll/animation frame. The ask:
+    // no matter how fast that happens, every section in between must still
+    // fully open, in order — "2 opens after 1, then 3 after 2," not a jump
+    // straight to wherever the scroll landed. This walks the step index one
+    // section at a time toward the real target, pausing briefly on each —
+    // exactly like a real step: mqUpdateStepFocus opens it and the section
+    // picks up wherever it was before (nothing forced shut, per the earlier
+    // fix above) — and smooth-scrolling to it, before settling on the
+    // section the scroll actually landed on. A gap of 0 or 1 (nothing was
+    // skipped) still jumps straight there, unchanged. A direct click always
+    // wins and cancels any walk in progress (mqCancelCatchup), since that's
+    // an explicit choice, not a skip to correct for.
+    let _mqCatchupActive = {};
+    let _mqCatchupToken = {};
+    // Reference (not copied), same reasoning as mqGetVisibleSections/
+    // _mqStepIndex above — mqCheckBottomBounceAutoOpen (outside this
+    // closure) needs to know when a walk already owns a tab's scrolling.
+    window._mqCatchupActive = _mqCatchupActive;
+    function mqCancelCatchup(prefix) {
+      if (!prefix) return;
+      _mqCatchupToken[prefix] = {};
+      _mqCatchupActive[prefix] = false;
+    }
+    function mqScrollJumpWithCatchup(sec, fromIdx) {
+      const tab = sec.closest('.mq-tab-content');
+      if (!tab) return;
+      const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
+      if (!prefix) return;
+      const sections = mqGetVisibleSections(prefix);
+      const idx = sections.indexOf(sec);
+      // fromIdx lets the scroll-spy (see below) tell this exactly where the
+      // flow stood BEFORE the current batch of intersection changes, since
+      // _mqStepIndex itself may already have moved by the time this runs.
+      const current = (fromIdx == null) ? (_mqStepIndex[prefix] || 0) : fromIdx;
+      if (idx === -1 || idx === current) return;
+      const gap = Math.abs(idx - current);
+      if (gap <= 1) { window.mqJumpToSectionIfNeeded(sec); return; } // adjacent — nothing was skipped
+      const dir = idx > current ? 1 : -1;
+      const token = {};
+      _mqCatchupToken[prefix] = token;
+      _mqCatchupActive[prefix] = true;
+      function advance(step) {
+        if (_mqCatchupToken[prefix] !== token) return; // superseded — a click or a newer jump took over
+        _mqStepIndex[prefix] = step;
+        window.mqUpdateStepFocus(prefix);
+        const el = sections[step];
+        if (el) mqScrollTopNearCenter(el);
+        if (step === idx) {
+          setTimeout(() => { if (_mqCatchupToken[prefix] === token) _mqCatchupActive[prefix] = false; }, 320);
+          return;
+        }
+        setTimeout(() => advance(step + dir), 320);
+      }
+      advance(current + dir);
+    }
+    window.mqScrollJumpWithCatchup = mqScrollJumpWithCatchup;
 
     document.addEventListener('click', (e) => {
       const sec = e.target.closest('#midasquote-widget .mq-sec');
       if (!sec) return;
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
+      if (prefix) mqCancelCatchup(prefix);
       mqJumpToSectionIfNeeded(sec);
     });
 
@@ -4840,21 +4821,29 @@
     // Continue or tapping into it — a shrunk-viewport IntersectionObserver
     // (top and bottom both pulled in 50%) leaves only a thin trigger line
     // at the exact vertical center of the screen; whichever section is
-    // crossing that line becomes the current step. This is passive only: it
-    // updates which step is highlighted/open and NEVER scrolls the page
-    // itself (the catch-up walk that used to step through skipped sections
-    // with a smooth scroll to each one was removed -- it fought the user's
-    // own scrolling and made the page jerk when scrolling fast). Only
-    // Continue/Back/Done move the page.
+    // crossing that line becomes the current step. A slow scroll that only
+    // ever crosses one section at a time reuses the exact same instant-jump
+    // logic a click runs.
+    //
+    // A fast scroll is different: several sections can cross that thin
+    // centerline between two ticks, so the browser hands ALL of them to
+    // this callback in a single batch. Processing them one at a time, in
+    // order, used to silently defeat the catch-up walk above — jumping to
+    // entry #1 moves the step index forward by 1, which makes entry #2 look
+    // "adjacent" to that NEW position instead of to wherever the flow
+    // actually started, and so on down the batch, so a 5-section skip read
+    // as five separate 1-section hops and the walk never ran at all (this
+    // was the real bug behind the walk "not working" the first time this
+    // was tried). Fixed by resolving the WHOLE batch first, per tab: snapshot
+    // each tab's step index once before touching anything, keep only
+    // whichever entry in this batch is farthest from that snapshot (that's
+    // where the scroll actually ended up), and run exactly one jump per tab
+    // from that original position — never from a position an earlier entry
+    // in this same batch already moved.
     let _mqScrollSpyObserver = null;
     function mqObserveSectionsForScrollSpy() {
       if (!_mqScrollSpyObserver) {
         _mqScrollSpyObserver = new IntersectionObserver((entries) => {
-          // Resolve the batch per tab first: if several sections crossed the
-          // centerline in one tick (fast scroll), land on whichever is
-          // farthest from where the flow started -- where the scroll ended
-          // up -- with ONE instant jump, instead of hopping through each
-          // entry in order.
           const startIdx = {};
           const farthest = {};
           entries.forEach(entry => {
@@ -4862,6 +4851,7 @@
             const tab = entry.target.closest('.mq-tab-content');
             const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
             if (!prefix) { mqJumpToSectionIfNeeded(entry.target); return; }
+            if (_mqCatchupActive[prefix]) return; // a walk already owns this tab right now — let it finish
             if (!(prefix in startIdx)) startIdx[prefix] = _mqStepIndex[prefix] || 0;
             const sections = mqGetVisibleSections(prefix);
             const idx = sections.indexOf(entry.target);
@@ -4877,7 +4867,7 @@
             // See mqLockStepNav above — only a BACKWARD correction gets
             // suppressed, and only while that lock is still active.
             if (idx < current && Date.now() < (_mqStepNavLockUntil[prefix] || 0)) return;
-            mqJumpToSectionIfNeeded(target);
+            mqScrollJumpWithCatchup(target, current);
           });
         }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
       }
@@ -4931,7 +4921,6 @@
         if (islandDoubleEl) islandDoubleEl.checked = false;
         const islandDwElOff = document.getElementById(`mq-${prefix}-island-dw`);
         if (islandDwElOff) islandDwElOff.checked = false;
-        if (window.mqRefreshBsFt) window.mqRefreshBsFt(prefix); // island zeroed — keep the countertop-area readout in step
       } else if (islandFieldsWrap && islandFieldsWrap.style.display === 'none') {
         // Island supported here but not currently opened — show the button,
         // keep the fields collapsed (don't force it open just because the
@@ -5330,15 +5319,6 @@
       return {
         fields,
         diffOn: !!diffOn[prefix],
-        // Whether the "+ Add island" section was OPEN. The island's own values
-        // (lin ft, double-row, dishwasher, panels) are captured by the generic
-        // field pass above, but the open/closed state of the section is just
-        // a show/hide on a wrapper div, not a field — without this, jumping
-        // to another project type and back restored every island input into
-        // a still-HIDDEN section, and calcCabinet/calcCountertop only price an
-        // island while that section is open, so the island silently dropped
-        // out of the quote until "+ Add island" was clicked again.
-        islandOpen: (() => { const fw = document.getElementById(`mq-${prefix}-island-fields-wrap`); return !!fw && fw.style.display !== 'none'; })(),
         // A per-variant entry is itself an array, so a plain shallow spread
         // would hand back the SAME nested arrays the live form keeps
         // mutating — cloning one level deep here keeps this snapshot a
@@ -5447,22 +5427,8 @@
         window.mqRefreshSurfBsFt(newId);
       });
       window._mqRestoringSurfaces = false;
-      // Re-open the island section if it was open when this was captured
-      // (see islandOpen in mqSnapshotFormState). The "+ Add island" button's
-      // wrapper is only visible when the room being restored actually
-      // supports islands (mqRefreshSectionVisibility, run just before this
-      // on a project-type switch, hides it otherwise) — so only reopen in
-      // that case, never force an island into a room that doesn't allow one.
-      if (snapshot.islandOpen) {
-        const islandFields = document.getElementById(`mq-${prefix}-island-fields-wrap`);
-        const islandBtn = document.getElementById(`mq-${prefix}-island-btn-wrap`);
-        if (islandFields && islandFields.style.display === 'none' && islandBtn && islandBtn.style.display !== 'none') {
-          window.mqToggleIslandSection(prefix);
-        }
-      }
       mqRefreshAllPickerVisibility(prefix);
       mqRefreshBsFt(prefix);
-      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix);
     }
     // ===================== end snapshot / restore =====================
 
@@ -5645,7 +5611,6 @@
     // Reuses mqScrollWithOffset so a shop site's own sticky header doesn't
     // cover the landing spot.
     window.mqScrollToTop = function() {
-      if (window._mqFxFull) { const fc = document.getElementById('midasquote-widget'); if (fc) fc.scrollTo({ top: 0, behavior: 'smooth' }); return; }
       const prefix = window._mqActiveTabPrefix || 'b';
       const tabId = prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets');
       const target = document.getElementById(`mq-${prefix}-room`) || document.getElementById(tabId) || document.getElementById('midasquote-widget');
@@ -5774,17 +5739,11 @@
       const showValance=valanceKey&&valanceKey!=='none';
       if(crownWrap) crownWrap.style.display=showCrown?'block':'none';
       if(valanceWrap) valanceWrap.style.display=showValance?'block':'none';
-      // No crown/valance picked = the "returns" count has nothing to attach to; clear it
-      // so it doesn't reappear if a style is picked again later.
-      if(!showCrown){ const cr=document.getElementById(`mq-${prefix}-trim-crown-returns`); if(cr && cr.value!=='0') cr.value=0; }
-      if(!showValance){ const vr=document.getElementById(`mq-${prefix}-trim-valance-returns`); if(vr && vr.value!=='0') vr.value=0; }
     };
     window.mqTogTrimManualFt=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-trim-manual-toggle`)?.checked;
       const wrap = document.getElementById(`mq-${prefix}-trim-manual-wrap`);
       if (wrap) wrap.style.display = checked ? 'flex' : 'none';
-      // Back to automatic footage = as if the manual box was never used.
-      if (!checked) { const mf = document.getElementById(`mq-${prefix}-trim-manual-ft`); if (mf) mf.value = 0; }
       // Keep the "Use my upper cabinet measurements" checkbox (shown before
       // the section unfolds) in sync — they're two views of the same choice.
       const useCabCb = document.getElementById(`mq-${prefix}-trim-use-cab`);
@@ -5859,115 +5818,7 @@
       }
     };
 
-// ===================== Drawer count estimate =====================
-    // Jordan's idea (2026-10-10): the pricing wizard prices ONE reference job
-    // — a 30" + an 18" base (4 lin ft, 2 cabinets):
-    //   "some drawers"   quote = 1 drawer per cabinet  = 2 drawers / 4 ft
-    //   full-bank quote        = 3 drawers per cabinet = 6 drawers / 4 ft
-    //   "mostly drawers" rate  = average of the two    = 4 drawers / 4 ft
-    // so each tier's PRICE implies a drawers-per-foot density (0.5 and 1.0) — the DISPLAYED estimate now uses lower, real-kitchen densities (see MQ_DRAWERS_PER_FT_*),
-    // and the rates we already store imply a price per drawer:
-    //   some:   rate*4 ft / 2 drawers = 2 x someRate  per drawer
-    //   mostly: rate*4 ft / 4 drawers = mostlyRate    per drawer
-    // The widget shows "about N drawers" (N = base ft [+ island front row] x
-    // density) and lets the customer change it. UNTOUCHED = price exactly as
-    // before. Once they change it, the difference from the estimate x the
-    // per-drawer price is added/removed (calcCabinet, drawerAdjCost). No new
-    // Airtable fields: everything comes from the existing Rate values.
-    // A shop whose rates don't fit that pattern (hand-typed, mostly <= some)
-    // simply doesn't get the count box — it prices as it always did.
-    // Starting-estimate densities (Jordan 2026-10-10: the raw 0.5 / 1.0 ran
-    // high). The wizard's reference job has drawers in EVERY cabinet, but a real
-    // run also has sink + corner cabinets (and often a range/appliance cabinet)
-    // with no drawers, so the displayed estimate uses 0.4 (some) and 0.75
-    // (mostly) per lin ft. These ONLY set the starting number: the price per
-    // drawer (below, in mqDrawerCountModel) still comes from the reference job
-    // (2 / 4 drawers per 4 ft), and an untouched count never changes the price.
-    const MQ_DRAWERS_PER_FT_SOME = 0.4;
-    const MQ_DRAWERS_PER_FT_MOSTLY = 0.75;
-    function mqDrawerFtNow(prefix) {
-      const cabSecEl = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
-      const cabSectionActive = !cabSecEl || cabSecEl.style.display !== 'none';
-      const bFt = cabSectionActive ? gn(`mq-${prefix}-bft`,0) : 0;
-      const islandFieldsEl = document.getElementById(`mq-${prefix}-island-fields-wrap`);
-      const islandSectionActive = cabSectionActive && islandFieldsEl && islandFieldsEl.style.display !== 'none';
-      const islandFt = islandSectionActive ? gn(`mq-${prefix}-islandft`,0) : 0;
-      return { bFt, islandFt };
-    }
-    function mqDrawerCountModel(prefix, bFt, islandFt) {
-      const tier = gv(`mq-${prefix}-drawer-tier`) || 'none';
-      if (tier !== 'some' && tier !== 'mostly') return { valid:false };
-      const cfgName = drawerConfigNames[parseInt(gv(`mq-${prefix}-drawer-config`) || '0')] || '';
-      const rates = (P().drawer || {})[cfgName] || {};
-      const some = rates.some || 0, mostly = rates.mostly || 0;
-      const own = tier === 'some' ? some : mostly;
-      if (!(own > 0)) return { valid:false };
-      if (some > 0 && mostly > 0 && mostly <= some) return { valid:false };
-      const ft = (bFt || 0) + (islandFt || 0);
-      const est = ft > 0 ? Math.max(1, Math.round(ft * (tier === 'some' ? MQ_DRAWERS_PER_FT_SOME : MQ_DRAWERS_PER_FT_MOSTLY))) : 0;
-      return { valid:true, tier, ft, est, per: tier === 'some' ? 2 * some : mostly };
-    }
-    window.mqRefreshDrawerCount = (prefix) => {
-      const wrap = document.getElementById(`mq-${prefix}-drawer-count-wrap`);
-      if (!wrap) return;
-      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
-      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
-      const hintEl = document.getElementById(`mq-${prefix}-drawer-count-hint`);
-      const resetEl = document.getElementById(`mq-${prefix}-drawer-count-reset`);
-      const { bFt, islandFt } = mqDrawerFtNow(prefix);
-      const m = mqDrawerCountModel(prefix, bFt, islandFt);
-      if (!m.valid) {
-        // No tier / no usable rates: nothing to adjust — forget any manual count.
-        wrap.style.display = 'none';
-        if (manualEl) manualEl.value = '0';
-        return;
-      }
-      if (!(m.ft > 0)) { wrap.style.display = 'none'; return; } // no footage yet — keep any manual count
-      wrap.style.display = 'block';
-      const manual = manualEl && manualEl.value === '1';
-      if (!manual && countEl) countEl.value = String(m.est);
-      if (hintEl) hintEl.textContent = `Based on about ${Math.round(m.ft * 10) / 10} lin ft of base cabinets${islandFt > 0 ? ' (including your island)' : ''}, we estimate about ${m.est} drawers. If you know the exact number, change it here and the price will follow.`;
-      if (resetEl) resetEl.style.display = (manual && parseInt(countEl && countEl.value, 10) !== m.est) ? 'inline' : 'none';
-    };
-    window.mqDrawerCountSyncAll = () => {
-      document.querySelectorAll('[id$="-drawer-count-wrap"]').forEach(w => {
-        const p = w.id.slice(3, -'-drawer-count-wrap'.length);
-        if (p) window.mqRefreshDrawerCount(p);
-      });
-    };
-    window.mqDrawerCountTyped = (prefix) => {
-      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
-      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
-      if (countEl) { const clean = countEl.value.replace(/[^0-9]/g, '').slice(0, 3); if (clean !== countEl.value) countEl.value = clean; }
-      if (manualEl) manualEl.value = '1';
-      window.mqRefreshDrawerCount(prefix);
-    };
-    window.mqDrawerCountBlur = (prefix) => {
-      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
-      if (countEl && countEl.value.trim() === '') {
-        const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
-        if (manualEl) manualEl.value = '0';
-        window.mqRefreshDrawerCount(prefix);
-        countEl.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    };
-    window.mqAdjDrawerCount = (prefix, delta) => {
-      const countEl = document.getElementById(`mq-${prefix}-drawer-count`);
-      if (!countEl) return;
-      const cur = parseInt(countEl.value, 10);
-      const next = Math.max(1, Math.min(200, (isNaN(cur) ? 1 : cur) + delta));
-      countEl.value = String(next);
-      countEl.dispatchEvent(new Event('input', { bubbles: true })); // -> mqDrawerCountTyped + live recalc
-    };
-    window.mqResetDrawerCount = (prefix) => {
-      const manualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
-      if (manualEl) manualEl.value = '0';
-      window.mqRefreshDrawerCount(prefix);
-      if (manualEl) manualEl.dispatchEvent(new Event('change', { bubbles: true })); // -> live recalc
-    };
-    // =================== end drawer count estimate ===================
-
-    window.mqTogDrawerConfig=(prefix)=>{
+window.mqTogDrawerConfig=(prefix)=>{
       const tier=gv(`mq-${prefix}-drawer-tier`);
       const wrap=document.getElementById(`mq-${prefix}-drawer-config-wrap`);
       const opening = tier!=='none';
@@ -5983,11 +5834,6 @@
       // overflow check at initial page load ran before this wrap was ever
       // visible.
       if (opening && window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
-      // A different tier means a different starting estimate (and per-drawer
-      // price), so any count the customer typed no longer applies.
-      const drawerManualEl = document.getElementById(`mq-${prefix}-drawer-manual`);
-      if (drawerManualEl) drawerManualEl.value = '0';
-      window.mqRefreshDrawerCount(prefix);
     };
 
     window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
@@ -6460,15 +6306,6 @@
       // island — a single-row island has no "back row" to extend.
       const islandDw = islandSectionActive && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
       const islandBackFt = islandDw ? islandFt + 2 : islandFt;
-      // Drawer count adjustment (see "Drawer count estimate" above): only
-      // applies once the customer has changed the count themselves.
-      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix);
-      const drawerModel = mqDrawerCountModel(prefix, bFt, islandFt);
-      let drawerAdjCost = 0, drawerCountUsed = 0;
-      if (drawerModel.valid && drawerModel.ft > 0 && document.getElementById(`mq-${prefix}-drawer-manual`)?.value === '1') {
-        const rawCount = parseInt(document.getElementById(`mq-${prefix}-drawer-count`)?.value, 10);
-        if (!isNaN(rawCount) && rawCount >= 0) { drawerCountUsed = rawCount; drawerAdjCost = (rawCount - drawerModel.est) * drawerModel.per; }
-      }
       // Front row of the island: same formula as bMatDoorHinge (the wall-
       // run base cabinets), but with the island's own independent %
       // adjustment (islandVanityMult) instead of the general base-cabinet
@@ -6531,7 +6368,7 @@
       if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
       if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
       if(islandFt>0) lines.push({label:`Island cabinets — ${islandDouble?'double-row':'single-row'}, ${islandPanel==='decorative'?'decorative':'regular'} panels (${islandFt} lin ft${islandDw?`, back row ${islandBackFt} lin ft w/ dishwasher`:''})`,cost:Math.round(islandCost)});
-      if(drawerRate>0&&(bFt>0||drawerAdjCost!==0)) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt>0?`${bFt} lin ft bases`:'island'}${drawerAdjCost!==0?`; ${drawerCountUsed} drawers, est. ${drawerModel.est}`:''})`,cost:Math.round(drawerRate*bFt+drawerAdjCost)});
+      if(drawerRate>0&&bFt>0) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt} lin ft bases)`,cost:Math.round(drawerRate*bFt)});
 
       // Tall cabinets — loop over every card the customer added. Each one
       // contributes its own cost (base price + door/material/install/hinge
@@ -6676,7 +6513,7 @@
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const sub=uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+remCost+trimCost;
+      const sub=uCost+bCost+islandCost+specTotal+tallCabTotal+remCost+trimCost;
       const totalMult = (100 + totalAdjPct) / 100;
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
@@ -6987,7 +6824,7 @@
         mqUpdateFinancingBox('c', r.low, r.high, r.total);
         window.mqShowStickyBar('c', r.low, r.high, r.total);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('c');mqScrollResultsIntoView('c');
+        document.getElementById('mq-c-result').classList.add('show');mqScrollResultsIntoView('c');
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel,r.total,'c');
       });
@@ -7010,7 +6847,7 @@
           mqUpdateFinancingBox('ct', r.low, r.high, r.total);
           window.mqShowStickyBar('ct', r.low, r.high, r.total);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('ct');mqScrollResultsIntoView('ct');
+          document.getElementById('mq-ct-result').classList.add('show');mqScrollResultsIntoView('ct');
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await mqSaveLeadWithCart(data,lead,'Countertops',r.low,r.high,r.lines,'',r.total,'ct');
         },900);
@@ -7044,7 +6881,7 @@
           mqUpdateFinancingBox('b', tl, th, totalB);
           window.mqShowStickyBar('b', tl, th, totalB);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('b');mqScrollResultsIntoView('b');
+          document.getElementById('mq-b-result').classList.add('show');mqScrollResultsIntoView('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel,totalB,'b');
         },1200);
@@ -7495,24 +7332,6 @@
     // the Both tab is (re-)entered, or when a project type change forces the
     // box on/off programmatically. Every one of THOSE call sites passes
     // {scroll:false} explicitly; only the checkbox's own onchange omits it.
-    function mqResetCabCountertopOptions(prefix) {
-      if (!document.getElementById(`mq-${prefix}-cab-mat`)) return;
-      // The countertop MATERIAL pick is deliberately kept (Jordan: people forget to
-      // re-pick it) — only the options/quantities that hang off it are reset.
-      const bsEl = document.getElementById(`mq-${prefix}-cab-bs`);
-      if (bsEl) bsEl.selectedIndex = 0;
-      const dwEl = document.getElementById(`mq-${prefix}-cab-dw`);
-      if (dwEl) dwEl.checked = false;
-      const exTog = document.getElementById(`mq-${prefix}-cab-extra-toggle`);
-      if (exTog && exTog.checked) { exTog.checked = false; window.mqTogCabExtra(prefix); }
-      const coEl = document.getElementById(`mq-${prefix}-cab-co`);
-      if (coEl && coEl.checked) { coEl.checked = false; window.mqTogCabCuts(prefix); }
-      // Rebuild the material's edge/addon/cutout/backsplash lists fresh (nothing selected).
-      window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
-      window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
-      window.mqRefreshCtAddons(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-edge`, `mq-${prefix}-cab-addons`);
-      window.mqRefreshBsFt(prefix);
-    }
     window.mqTogUseCab=(prefix, opts)=>{
       const scrollOnExisting = !opts || opts.scroll !== false;
       const checked = document.getElementById(`mq-${prefix}-use-cab`)?.checked;
@@ -7520,11 +7339,6 @@
       if(matDiv) matDiv.style.display=checked?'block':'none';
       const surfTitleEl = prefix==='b' ? document.getElementById('mq-b-ct-surfaces-title') : null;
       if (surfTitleEl) surfTitleEl.textContent = checked ? 'Additional countertop surfaces' : 'Countertop surfaces';
-      // Unchecking "Use my base cabinet measurements" hides this whole block, and the
-      // calc ignores it — but its picks used to sit there and come back on re-check.
-      // Put its options back to as-if-never-used (the material pick, surfaces and the
-      // supply/install + removal choices are left alone).
-      if(!checked) mqResetCabCountertopOptions(prefix);
       if(checked) {
         window.mqRefreshBsOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-bs`);
         window.mqRefreshCutoutOpts(`mq-${prefix}-ct-mat-cab`, `mq-${prefix}-cab-cuts`);
@@ -7587,40 +7401,19 @@
       window.mqRefreshSurfBsFt(id);
       window.mqSurfUpdatePreview(id);
     };
-    // Jordan: "if someone unchecks something those numbers should reset ...
-    // anything that gets unchecked should go back to as if it was never
-    // checked." Unchecking used to only HIDE a checkbox's follow-up fields —
-    // the numbers inside (e.g. 2 sink cutouts) stayed put and came straight
-    // back, still counted, the moment it was re-checked. Every checkbox that
-    // reveals fields now also puts them back to their starting values when
-    // it's unchecked (calc already ignored them while unchecked; this stops
-    // them coming back). Programmatic value changes don't fire 'input', but
-    // the change event from the checkbox itself still reaches the delegated
-    // live-recalc listener AFTER these inline handlers, so the price updates.
-    window.mqZeroQtyInputs=(container)=>{
-      if(!container) return;
-      container.querySelectorAll('input').forEach(i=>{ if(i.value!=='0') i.value='0'; });
-    };
     window.mqTogCabCuts=(prefix)=>{
       const coId   = prefix==='ct'?'mq-ct-cab-co':`mq-${prefix}-cab-co`;
       const cutsId = prefix==='ct'?'mq-ct-cab-cuts':`mq-${prefix}-cab-cuts`;
       const el=document.getElementById(cutsId);
-      const on=!!document.getElementById(coId)?.checked;
-      if(el) el.style.display=on?'block':'none';
-      if(!on) mqZeroQtyInputs(el);
+      if(el) el.style.display=document.getElementById(coId)?.checked?'block':'none';
     };
     window.mqTogCabExtra=(prefix)=>{
       const checked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
       const wrap = document.getElementById(`mq-${prefix}-cab-extra-wrap`);
       if(wrap) wrap.style.display = checked ? 'flex' : 'none';
-      if(!checked){ const ft=document.getElementById(`mq-${prefix}-cab-extra-ft`); if(ft) ft.value=0; }
       mqRefreshBsFt(prefix);
     };
-    window.mqTogCuts=id=>{
-      const box=document.getElementById('mqscuts-'+id), on=!!document.getElementById('mqsco-'+id)?.checked;
-      if(box) box.style.display=on?'block':'none';
-      if(!on) mqZeroQtyInputs(box);
-    };
+    window.mqTogCuts=id=>{document.getElementById('mqscuts-'+id).style.display=document.getElementById('mqsco-'+id).checked?'block':'none';};
     window.mqRefreshBsOpts=(matSelectId, bsSelectId)=>{
       const matSel = document.getElementById(matSelectId);
       const bsSel  = document.getElementById(bsSelectId);
@@ -7714,64 +7507,27 @@
       _mqLinFtHoldInterval = null;
     };
     window.mqRefreshBsFt=(prefix)=>{
-      if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix); // footage/island changed — keep the drawer estimate in step
-      // The "Countertop area" readout under the Both tab's countertop options.
-      // Jordan: it showed 0 lin ft / 0 sqft with an island in the quote, and
-      // once "additional space" or the dishwasher was ticked it showed ONLY
-      // those extras — "I'd like to see all the footage there." It now
-      // mirrors calcCountertop's cabinet-run block exactly: base cabinets +
-      // dishwasher gap + additional space (the wall run, all at the standard
-      // ctDepth) PLUS the island's countertop when the island section is open
-      // (island dishwasher adds 2 ft; a double-row island is 39" deep, a
-      // single row ctDepth), with a one-line breakdown of where it all comes
-      // from. The BACKSPLASH footage below still only uses the wall run
-      // (wallRunFt) — a freestanding island has no wall behind it.
+      // Total countertop linear footage = base cabinets + dishwasher gap (if checked) + any additional space entered
       const baseFt = gn(`mq-${prefix}-bft`, 0);
       const dwChecked = document.getElementById(`mq-${prefix}-cab-dw`)?.checked;
       const extraChecked = document.getElementById(`mq-${prefix}-cab-extra-toggle`)?.checked;
       const extraFt = extraChecked ? gn(`mq-${prefix}-cab-extra-ft`, 0) : 0;
-      const dwFt = dwChecked ? 2 : 0;
-      const wallRunFt = baseFt + dwFt + extraFt;
-
-      const islandWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
-      const islandOpen = !!islandWrap && islandWrap.style.display !== 'none';
-      const islandCabFt = islandOpen ? gn(`mq-${prefix}-islandft`, 0) : 0;
-      const islandDouble = islandOpen && document.getElementById(`mq-${prefix}-island-double`)?.checked === true;
-      const islandDw = islandOpen && islandDouble && document.getElementById(`mq-${prefix}-island-dw`)?.checked === true;
-      const islandLenFt = islandDw ? islandCabFt + 2 : islandCabFt;
-      const islandDepthIn = islandDouble ? 39 : ctDepth;
-      const totalCtFt = wallRunFt + islandLenFt;
-      const totalSqft = wallRunFt*(ctDepth/12) + islandLenFt*(islandDepthIn/12);
-      const r1 = n => Math.round(n*10)/10;
+      const totalCtFt = baseFt + (dwChecked?2:0) + extraFt;
 
       const ctftEl = document.getElementById(`mq-${prefix}-cab-ctft`);
       const ctsqftEl = document.getElementById(`mq-${prefix}-cab-ctsqft`);
-      if (ctftEl) ctftEl.textContent = r1(totalCtFt);
-      if (ctsqftEl) ctsqftEl.textContent = r1(totalSqft);
-      const bdEl = document.getElementById(`mq-${prefix}-cab-ctbreakdown`);
-      if (bdEl) {
-        const parts = [];
-        if (baseFt > 0) parts.push(`Base cabinets ${r1(baseFt)} ft`);
-        if (dwFt > 0) parts.push(`Dishwasher space ${dwFt} ft`);
-        if (extraFt > 0) parts.push(`Additional space ${r1(extraFt)} ft`);
-        if (islandLenFt > 0) parts.push(`Island ${r1(islandLenFt)} ft (${islandDouble ? '39"' : '25.5"'} deep)`);
-        bdEl.textContent = parts.join(' + ');
-        bdEl.style.display = parts.length ? 'block' : 'none';
-      }
+      if (ctftEl) ctftEl.textContent = Math.round(totalCtFt*10)/10;
+      if (ctsqftEl) ctsqftEl.textContent = Math.round(totalCtFt*(ctDepth/12)*10)/10;
 
       const block = document.getElementById(`mq-${prefix}-cab-bsft-block`);
       if (!block) return; // only exists on the "both" tab cabinet-attached block
       const bsSel = document.getElementById(`mq-${prefix}-cab-bs`);
       const hasBs = bsSel && bsSel.value !== 'none';
       block.style.display = hasBs ? 'block' : 'none';
-      if (!hasBs) {
-        // Backsplash set back to None — side splashes / no-backsplash feet go back to 0 too.
-        ['bs-sides','bs-subtract'].forEach(k => { const e = document.getElementById(`mq-${prefix}-cab-${k}`); if (e && e.value !== '0') e.value = 0; });
-        return;
-      }
+      if (!hasBs) return;
       const sides = gn(`mq-${prefix}-cab-bs-sides`, 0);
       const subtractFt = gn(`mq-${prefix}-cab-bs-subtract`, 0);
-      const autoFt = wallRunFt + sides*2;
+      const autoFt = totalCtFt + sides*2;
       const netFt = Math.max(0, autoFt - subtractFt);
       const autoEl = document.getElementById(`mq-${prefix}-cab-bsft-auto`);
       const netEl  = document.getElementById(`mq-${prefix}-cab-bsft-net`);
@@ -7784,10 +7540,7 @@
       const bsSel = document.getElementById(`mqsbs-${id}`);
       const hasBs = bsSel && bsSel.value !== 'none';
       block.style.display = hasBs ? 'block' : 'none';
-      if (!hasBs) {
-        ['mqs-bs-sides-','mqs-bs-subtract-'].forEach(k => { const e = document.getElementById(k + id); if (e && e.value !== '0') e.value = 0; });
-        return;
-      }
+      if (!hasBs) return;
       const totalLen = mqSurfGetLegs(id).reduce((a,b)=>a+b,0);
       const baseFt = Math.round((totalLen/12)*10)/10;
       const sides = gn(`mqs-bs-sides-${id}`, 0);
@@ -8000,7 +7753,6 @@
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
     if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
-    if (window.mqFxInit) window.mqFxInit();
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
     // bar from before and let it re-earn its spot once they Calculate again.
     window._mqStickyPrefix = null;
@@ -8075,7 +7827,7 @@
   // few tries before it happened to land exactly right.
   //
   // Rather than just flipping it open directly, it's routed through
-  // mqJumpToSectionIfNeeded — the same "arriving at
+  // mqScrollJumpWithCatchup/mqJumpToSectionIfNeeded — the same "arriving at
   // a section" path a normal scroll or click already uses — so this stays
   // consistent with the rest of the step flow: it becomes the new current
   // step and its footer updates. After opening one, it re-checks itself
@@ -8094,7 +7846,6 @@
   // backward to whatever most recently collapsed, right as Continue was
   // trying to move it forward.
   function mqCheckBottomBounceAutoOpen() {
-    if (window._mqFxOn) return; // Focused mode never needs the scroll-to-bottom auto-open
     const doc = document.documentElement;
     const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 24;
     if (!atBottom) return;
@@ -8107,6 +7858,7 @@
       const tab = sec.closest('.mq-tab-content');
       const prefix = tab ? (tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null))) : null;
       if (prefix) {
+        if (window._mqCatchupActive && window._mqCatchupActive[prefix]) return; // a catch-up walk already owns this tab's scroll right now
         if (window.mqGetVisibleSections && window._mqStepIndex) {
           const visible = window.mqGetVisibleSections(prefix);
           const idx = visible.indexOf(sec);
@@ -8114,7 +7866,7 @@
           if (idx !== -1 && idx <= current) continue; // already current or done — leave it collapsed
         }
       }
-      window.mqJumpToSectionIfNeeded(sec);
+      (window.mqScrollJumpWithCatchup || window.mqJumpToSectionIfNeeded)(sec);
       // Still at the bottom after this one opens? Check again shortly so
       // the next stuck section (if any) opens right away too, instead of
       // waiting on another manual scroll.
@@ -8255,7 +8007,6 @@
       if (_mqOrigBodyPaddingBottom === null) {
         _mqOrigBodyPaddingBottom = document.body.style.paddingBottom || '';
       }
-      document.documentElement.style.setProperty('--mq-sticky-h', (bar && bar.classList.contains('show') ? bar.offsetHeight : 0) + 'px');
       if (bar && bar.classList.contains('show')) {
         document.body.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
       } else {
@@ -8620,32 +8371,12 @@
   // one" warning — this is not a special case in the check below, it falls
   // out naturally since pwds.includes(stored) is false against an empty list.
   function mqWidgetPwStorageKey() { return `mq_widget_pw_${shopToken}`; }
-  // Each saved password is either a plain string (older entries) or
-  // {p: "the password", t: <time it was added>}. The time is what makes
-  // "delete it, then add the same password again" work like a brand-new
-  // password: a browser that unlocked on the OLD entry remembers {p,t} and
-  // the new entry has a different t, so that browser is asked again. (Before
-  // this, re-adding the same text matched what the browser remembered, so the
-  // owner's own browser walked straight in with no password box at all.)
-  function mqWidgetPwEntries(shop) {
-    let raw = [];
-    try { raw = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { raw = []; }
-    if (!Array.isArray(raw)) raw = [];
-    return raw.map(x => (x && typeof x === 'object') ? { p: String(x.p == null ? '' : x.p), t: Number(x.t) || 0 } : { p: String(x), t: 0 });
-  }
   function mqCheckWidgetPassword(shop) {
-    const entries = mqWidgetPwEntries(shop);
+    let pwds = [];
+    try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
     let stored = null;
     try { stored = localStorage.getItem(mqWidgetPwStorageKey()); } catch(e) { stored = null; }
-    if (!stored) return false;
-    let rec = null;
-    try { rec = JSON.parse(stored); } catch(e) { rec = null; }
-    if (rec && typeof rec === 'object' && 'p' in rec) {
-      return entries.some(en => en.p === String(rec.p) && en.t === (Number(rec.t) || 0));
-    }
-    // Older browsers saved just the bare password text — still honored for
-    // older (string) entries.
-    return entries.some(en => en.t === 0 && en.p === stored);
+    return !!stored && pwds.includes(stored);
   }
   function mqRenderPasswordGate(container, shop) {
     const shopName = (shop['Shop name'] || 'This shop').replace(/</g,'&lt;');
@@ -8662,9 +8393,10 @@
     const submitBtn = container.querySelector('#mq-widget-pw-submit');
     const submit = () => {
       const val = (input.value || '').trim();
-      const match = val ? mqWidgetPwEntries(shop).find(en => en.p === val) : null;
-      if (match) {
-        try { localStorage.setItem(mqWidgetPwStorageKey(), JSON.stringify({ p: match.p, t: match.t })); } catch(e) {}
+      let pwds = [];
+      try { pwds = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { pwds = []; }
+      if (val && pwds.includes(val)) {
+        try { localStorage.setItem(mqWidgetPwStorageKey(), val); } catch(e) {}
         init(); // re-run init(): mqCheckWidgetPassword now passes, so this renders the real widget
       } else {
         errorEl.style.display = 'block';
@@ -8762,7 +8494,6 @@
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
     if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
-    if (window.mqFxInit) window.mqFxInit();
     mqSetupModalOverlays();
     mqSetupStickyBar();
     // Delegated so it automatically covers every input/select/checkbox in
@@ -8770,10 +8501,6 @@
     // rows, etc.) — no need to individually wire each one.
     container.addEventListener('input', mqScheduleLiveRecalc);
     container.addEventListener('change', mqScheduleLiveRecalc);
-    // Keep each "About how many drawers?" box's estimate in step with the
-    // footage/tier the customer has entered.
-    container.addEventListener('input', () => { if (window.mqDrawerCountSyncAll) window.mqDrawerCountSyncAll(); });
-    container.addEventListener('change', () => { if (window.mqDrawerCountSyncAll) window.mqDrawerCountSyncAll(); });
 
     // ── First-visit tips popup ──
     // Replaces the old showroom nudge — this widget now has photos, per-project
@@ -8816,517 +8543,6 @@
       } catch(e) { /* localStorage unavailable — skip popup */ }
     }
   }
-
-  // ════════════════════════════════════════════════════════════════════
-  // FOCUSED MODE ("one step at a time") — TEST BUILD
-  // ════════════════════════════════════════════════════════════════════
-  // A layer on top of the normal guided-step system: instead of one long
-  // scrolling page where every section is stacked, the customer first picks
-  // what they want a quote for (cards), then sees ONE section at a time with
-  // a progress bar, a friendly prompt, and Back/Continue (or a swipe on
-  // touch screens). When the last step is finished it calculates and shows a
-  // results screen with a way back to edit answers.
-  //
-  // Nothing here changes any pricing/maths — it only decides which existing
-  // section is on screen. Off-screen sections are kept in the DOM (just
-  // visually hidden) so every existing function that reads them, including
-  // the offsetParent-based mqGetVisibleSections, keeps working unchanged.
-  // window._mqFxOn is hard-wired true in this test file; later it becomes a
-  // per-shop setting (Classic vs Focused).
-  window._mqFxOn = true;
-  window._mqFxDir = null;
-  const _mqFxLastPct = {};
-
-  // Inline SVG icons — the 🪵/🪨 emoji don't exist on a lot of Windows machines
-  // (they show as empty boxes), so nothing here depends on emoji fonts.
-  const MQ_FX_SVG = (inner) => `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
-  const MQ_FX_TABS = [
-    { id:'both',        icon: MQ_FX_SVG('<path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>'), title:'Cabinets + countertops', sub:'A full project quote' },
-    { id:'cabinets',    icon: MQ_FX_SVG('<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M12 3.5v17"/><path d="M9.6 11v2M14.4 11v2"/>'), title:'Cabinets only',          sub:'Just the cabinets' },
-    { id:'countertops', icon: MQ_FX_SVG('<path d="M2.5 9.5h19v4h-19z"/><path d="M5 13.5v6.5M19 13.5v6.5"/><path d="M6 6.5h4"/>'), title:'Countertops only',       sub:'Just the countertops' },
-  ];
-  function mqFxPrefixOfTabId(id) { return id === 'both' ? 'b' : (id === 'countertops' ? 'ct' : 'c'); }
-  function mqFxTabEl(prefix) { return document.getElementById(prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets')); }
-  function mqFxVisibleTabIds() {
-    const hidden = window._mqHiddenTabs || [];
-    return MQ_FX_TABS.map(t => t.id).filter(id => !hidden.includes(id));
-  }
-
-  // Friendly per-step prompt. Keyed by the section's id suffix; falls back to
-  // the section's own title so a section added in future still gets a screen.
-  function mqFxPromptFor(sec, index) {
-    const id = sec.id || '';
-    const ends = s => id.endsWith(s);
-    if (!id) return { t: "Let's start with your project", l: 'Project', s: "Tell us what you're planning — everything that follows adjusts to match." };
-    if (ends('-measuring-sec')) return { t: 'Quick tip: measuring', l: 'Measuring', s: "A minute here makes your estimate much more accurate. Have a look, then continue." };
-    if (ends('-si-field')) {
-      const sel = sec.querySelector('select[id$="-si"]');
-      const canInstall = sel && sel.options.length > 1;
-      return canInstall
-        ? { t: 'Do you need installation?', l: 'Installation', s: "Just the cabinets, or installed too? You can also let us know if the old ones need to come out." }
-        : { t: 'Anything to remove first?', l: 'Removal', s: 'Let us know if your existing cabinets need to come out.' };
-    }
-    if (ends('-cabinet-selections-sec')) return { t: 'Pick your cabinet style', l: 'Cabinet style', s: 'Choose a material and a door style.' };
-    if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', l: 'Size', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
-    if (ends('-drawers-sec')) return { t: 'How about drawers?', l: 'Drawers', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
-    if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', l: 'Tall cabinets', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };
-    if (ends('-trim-sec')) return { t: 'Finishing touches', l: 'Finishing touches', s: 'Crown moulding and valance add the final polish. Skip ahead if you don’t need them.' };
-    if (ends('-specialty-sec')) return { t: 'Any extras?', l: 'Extras', s: 'Pull-outs, special features and more — add what you like, or just continue.' };
-    if (ends('b-ct-options-sec')) return { t: 'Now, your countertops', l: 'Countertops', s: 'Choose your material and how you’d like it supplied.' };
-    if (ends('b-ct-surfaces-sec')) return { t: 'Any other countertop areas?', l: 'More surfaces', s: 'Bar tops, a separate vanity, an island — add them here, or just continue.' };
-    if (ends('ct-surfaces-sec')) return { t: 'Tell us about your countertops', l: 'Countertops', s: 'Add each surface you need. You can add more than one.' };
-    const titleEl = sec.querySelector('.mq-sec-title');
-    const fallbackT = (titleEl ? titleEl.textContent.replace(/^\s*\d+\s*/, '').trim() : '') || 'Next';
-    return { t: fallbackT, l: fallbackT, s: '' };
-  }
-
-  // Rebuilds which section is on screen for this tab, plus the progress head.
-  window.mqFxApply = function(prefix) {
-    if (!window._mqFxOn) return;
-    const tab = mqFxTabEl(prefix);
-    if (!tab) return;
-    const secs = window.mqGetVisibleSections(prefix);
-    const inResults = tab.classList.contains('mq-fx-results');
-    const idx = Math.max(0, Math.min((window._mqStepIndex[prefix] || 0), secs.length - 1));
-    const dir = window._mqFxDir;
-    window._mqFxDir = null;
-    const labels = secs.map((sec, i) => mqFxPromptFor(sec, i).l || mqFxPromptFor(sec, i).t);
-    secs.forEach((sec, i) => {
-      const isCur = !inResults && i === idx;
-      sec.classList.toggle('mq-fx-off', !isCur);
-      sec.classList.toggle('mq-fx-cur', isCur);
-      const old = sec.querySelector(':scope > .mq-fx-head');
-      if (old) old.remove();
-      sec.classList.remove('mq-fx-in-next', 'mq-fx-in-back');
-      if (!isCur) return;
-      const p = mqFxPromptFor(sec, i);
-      const pct = Math.round(((i + 1) / secs.length) * 100);
-      const head = document.createElement('div');
-      head.className = 'mq-fx-head';
-      head.innerHTML = `
-        <div class="mq-fx-progress-row"><span class="mq-fx-stepcount">Step ${i + 1} of ${secs.length}</span>${i < secs.length - 1 ? '<span class="mq-fx-swipehint">Swipe ← to continue</span>' : ''}</div>
-        <div class="mq-fx-bar"><div class="mq-fx-bar-fill" style="width:${_mqFxLastPct[prefix] != null ? _mqFxLastPct[prefix] : pct}%"></div></div>
-        <h2 class="mq-fx-title">${p.t}</h2>
-        ${p.s ? `<p class="mq-fx-sub">${p.s}</p>` : ''}`;
-      sec.insertBefore(head, sec.firstChild);
-      const legend = tab.querySelector(':scope > .mq-fx-legend');
-      if (legend && /(cabinet-selections-sec|ct-options-sec|ct-surfaces-sec)$/.test(sec.id || '')) {
-        const lc = legend.cloneNode(true);
-        lc.classList.remove('mq-fx-legend');
-        lc.classList.add('mq-fx-legend-clone');
-        head.appendChild(lc);
-      }
-      const fill = head.querySelector('.mq-fx-bar-fill');
-      requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = pct + '%'; }));
-      _mqFxLastPct[prefix] = pct;
-      if (dir) {
-        void sec.offsetWidth;
-        sec.classList.add(dir === 'back' ? 'mq-fx-in-back' : 'mq-fx-in-next');
-        setTimeout(() => sec.classList.remove('mq-fx-in-next', 'mq-fx-in-back'), 450);
-      }
-    });
-    if (window._mqFxFull && prefix === window._mqActiveTabPrefix) mqFxRenderSide(prefix, labels, idx, inResults);
-    // Picker arrows measure scrollWidth, which reads 0 while hidden.
-    if (window.mqUpdateAllPickerArrows) requestAnimationFrame(() => window.mqUpdateAllPickerArrows());
-  };
-
-  window.mqFxFooterHTML = function(prefix, index, total) {
-    const isLast = index >= total - 1;
-    const back = index > 0
-      ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>`
-      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Exit</button>`;
-    return `${back}<button type="button" class="mq-step-continue-btn" onclick="event.stopPropagation();mqStepContinue('${prefix}')">${isLast ? 'See my estimate ✨' : 'Continue →'}</button>`;
-  };
-
-  window.mqFxScrollToStep = function() {
-    if (window._mqFxFull) { const c = document.getElementById('midasquote-widget'); if (c) c.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-    const sec = document.querySelector('#midasquote-widget .mq-tab-content.active .mq-sec.mq-fx-cur');
-    if (!sec || !window.mqScrollWithOffset) return;
-    const top = sec.getBoundingClientRect().top;
-    if (top < 40 || top > window.innerHeight * 0.45) window.mqScrollWithOffset(sec, 70);
-  };
-
-  // ── Full-screen focus mode ──
-  // Starting a quote lifts the widget out of the page into a fixed full-screen
-  // layer (a placeholder holds its spot so the page doesn't jump), freezes
-  // the page behind it, and gives the customer an Exit button / Esc key to
-  // come back. Moving the node (rather than just styling it fixed in place)
-  // keeps it immune to host-page ancestors with transforms/filters, which
-  // would otherwise break position:fixed.
-  window._mqFxFull = false;
-  window.mqFxEnterFull = function() {
-    const c = document.getElementById('midasquote-widget');
-    if (!c || window._mqFxFull) return;
-    const ph = document.createElement('div');
-    ph.id = 'mq-fx-placeholder';
-    ph.style.height = c.offsetHeight + 'px';
-    window._mqFxScrollY = window.pageYOffset;
-    c.parentNode.insertBefore(ph, c);
-    document.body.appendChild(c);
-    c.classList.add('mq-fx-full');
-    c.classList.remove('mq-fx-chooser-on');
-    c.setAttribute('role', 'dialog');
-    c.setAttribute('aria-modal', 'true');
-    c.setAttribute('aria-label', 'Get an estimate');
-    window._mqFxPrevOverflow = [document.documentElement.style.overflow, document.body.style.overflow];
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    window._mqFxFull = true;
-    c.scrollTop = 0;
-    // The Demo watermark is absolutely positioned inside the widget, which
-    // would only cover the first screenful of a scrolling full-screen layer.
-    const wm = [...c.children].find(el => /DEMO/.test(el.style.backgroundImage || ''));
-    if (wm) { wm.dataset.mqFxPos = wm.style.position; wm.style.position = 'fixed'; }
-  };
-  window.mqFxExitFull = function() {
-    const c = document.getElementById('midasquote-widget');
-    const ph = document.getElementById('mq-fx-placeholder');
-    if (!c || !window._mqFxFull) return;
-    c.classList.remove('mq-fx-full');
-    c.removeAttribute('role'); c.removeAttribute('aria-modal'); c.removeAttribute('aria-label');
-    const wm = [...c.children].find(el => el.dataset && el.dataset.mqFxPos !== undefined);
-    if (wm) { wm.style.position = wm.dataset.mqFxPos || 'absolute'; delete wm.dataset.mqFxPos; }
-    if (ph) ph.replaceWith(c);
-    const prev = window._mqFxPrevOverflow || ['', ''];
-    document.documentElement.style.overflow = prev[0];
-    document.body.style.overflow = prev[1];
-    window._mqFxFull = false;
-    window.scrollTo(0, window._mqFxScrollY || 0);
-  };
-
-  window.mqFxToChooser = function() {
-    const container = document.getElementById('midasquote-widget');
-    if (!container) return;
-    window.mqFxExitFull();
-    container.classList.add('mq-fx-chooser-on');
-    const active = window._mqActiveTabPrefix;
-    container.querySelectorAll('.mq-fx-card').forEach(c => {
-      const p = mqFxPrefixOfTabId(c.dataset.tab);
-      const isCur = p === active;
-      c.classList.toggle('mq-fx-card-current', isCur);
-      const subEl = c.querySelector('.mq-fx-card-sub');
-      if (!subEl) return;
-      if (subEl.dataset.orig === undefined) subEl.dataset.orig = subEl.textContent;
-      const tab = mqFxTabEl(p);
-      const hasProgress = isCur && ((window._mqStepIndex[p] || 0) > 0 || (tab && tab.classList.contains('mq-fx-results')));
-      subEl.textContent = hasProgress ? 'Pick up where you left off' : subEl.dataset.orig;
-    });
-    window.mqScrollWithOffset && window.mqScrollWithOffset(container, 20);
-  };
-
-  window.mqFxStart = function(id) {
-    const container = document.getElementById('midasquote-widget');
-    if (!container) return;
-    const prev = window._mqActiveTabPrefix;
-    const next = mqFxPrefixOfTabId(id);
-    const btn = document.querySelector(`.mq-tab[onclick^="mqSwitchTab('${id}'"]`);
-    if (btn) window.mqSwitchTab(id, btn);
-    if (prev !== next) {
-      [prev, next].forEach(p => { const t = mqFxTabEl(p); if (t) t.classList.remove('mq-fx-results'); });
-      window._mqStepIndex[next] = 0;
-      _mqFxLastPct[next] = null;
-    }
-    window.mqFxEnterFull();
-    container.classList.remove('mq-fx-chooser-on');
-    window._mqFxDir = 'next';
-    window.mqUpdateStepFocus(next);
-    window.mqFxScrollToStep();
-  };
-
-  // Desktop side stepper — rebuilt on every step change.
-  function mqFxRenderSide(prefix, labels, idx, inResults) {
-    const ol = document.getElementById('mq-fx-steps');
-    if (!ol) return;
-    const tabDef = MQ_FX_TABS.find(t => mqFxPrefixOfTabId(t.id) === prefix);
-    const typeEl = document.getElementById('mq-fx-side-type');
-    if (typeEl) {
-      const roomSel = document.getElementById(`mq-${prefix}-room`);
-      const roomName = roomSel && roomSel.selectedOptions[0] ? roomSel.selectedOptions[0].textContent : '';
-      typeEl.innerHTML = `<span class="mq-fx-side-type-kicker">Your quote</span><span class="mq-fx-side-type-name">${tabDef ? tabDef.title : ''}</span>${roomName ? `<span class="mq-fx-side-type-room">${roomName}</span>` : ''}`;
-    }
-    const items = labels.map((l, i) => {
-      const state = inResults || i < idx ? 'done' : (i === idx ? 'cur' : 'todo');
-      const click = state === 'done' ? ` onclick="mqFxGoTo('${prefix}',${i})" role="button" tabindex="0"` : '';
-      return `<li class="mq-fx-stp mq-fx-stp-${state}"${click}><span class="mq-fx-stp-dot">${state === 'done' ? '✓' : i + 1}</span><span class="mq-fx-stp-label">${l}</span></li>`;
-    });
-    items.push(`<li class="mq-fx-stp ${inResults ? 'mq-fx-stp-cur' : 'mq-fx-stp-todo'}"><span class="mq-fx-stp-dot">★</span><span class="mq-fx-stp-label">Your estimate</span></li>`);
-    ol.innerHTML = items.join('');
-  }
-
-  window.mqFxGoTo = function(prefix, i) {
-    const tab = mqFxTabEl(prefix);
-    if (!tab) return;
-    const cur = window._mqStepIndex[prefix] || 0;
-    const wasResults = tab.classList.contains('mq-fx-results');
-    tab.classList.remove('mq-fx-results');
-    window._mqStepIndex[prefix] = i;
-    _mqFxLastPct[prefix] = null;
-    window._mqFxDir = (wasResults || i < cur) ? 'back' : 'next';
-    window.mqUpdateStepFocus(prefix);
-    window.mqFxScrollToStep();
-  };
-
-  window.mqFxShowResults = function(prefix) {
-    if (!window._mqFxOn) return;
-    const tab = mqFxTabEl(prefix);
-    if (!tab) return;
-    tab.classList.add('mq-fx-results');
-    window.mqFxApply(prefix);
-  };
-
-  window.mqFxEditAnswers = function(prefix, toStart) {
-    const tab = mqFxTabEl(prefix);
-    if (!tab) return;
-    tab.classList.remove('mq-fx-results');
-    const secs = window.mqGetVisibleSections(prefix);
-    window._mqStepIndex[prefix] = toStart ? 0 : Math.max(0, secs.length - 1);
-    _mqFxLastPct[prefix] = null;
-    window._mqFxDir = 'back';
-    window.mqUpdateStepFocus(prefix);
-    window.mqFxScrollToStep();
-  };
-
-  function mqFxSwipeBlocked(t, container) {
-    if (!(t instanceof Element)) return true;
-    if (t.closest('input,select,textarea,button,a,label,summary,[contenteditable="true"],.mq-vpicker-row,.mq-measure-carousel-track,.mq-step-footer')) return true;
-    for (let n = t; n && n !== container; n = n.parentElement) {
-      const cs = getComputedStyle(n);
-      if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 1) return true;
-    }
-    return false;
-  }
-
-  function mqFxInstallSwipe(container) {
-    if (container._mqFxSwipe) return;
-    container._mqFxSwipe = true;
-    let sx = 0, sy = 0, st = 0, ok = false;
-    container.addEventListener('touchstart', e => {
-      ok = false;
-      if (!window._mqFxOn || e.touches.length !== 1) return;
-      if (container.classList.contains('mq-fx-chooser-on')) return;
-      const tab = container.querySelector('.mq-tab-content.active');
-      if (!tab || tab.classList.contains('mq-fx-results')) return;
-      if (mqFxSwipeBlocked(e.target, container)) return;
-      ok = true; sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
-    }, { passive: true });
-    container.addEventListener('touchend', e => {
-      if (!ok) return;
-      ok = false;
-      const t = e.changedTouches[0];
-      const dx = t.clientX - sx, dy = t.clientY - sy;
-      if (Date.now() - st > 900 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
-      const prefix = window._mqActiveTabPrefix;
-      const total = window.mqGetVisibleSections(prefix).length;
-      const idx = window._mqStepIndex[prefix] || 0;
-      // Swiping forward never triggers the final "calculate" — that stays a
-      // deliberate button tap so a stray swipe can't pop the lead form.
-      if (dx < 0) { if (idx < total - 1) window.mqStepContinue(prefix); }
-      else if (idx > 0) window.mqStepBack(prefix);
-    }, { passive: true });
-  }
-
-  function mqFxInjectStyles() {
-    if (document.getElementById('mq-fx-styles')) return;
-    const fc = window._mqFocalColor || '#2563eb';
-    const s = document.createElement('style');
-    s.id = 'mq-fx-styles';
-    s.textContent = `
-      #midasquote-widget.mq-fx{overflow:clip}
-      #midasquote-widget.mq-fx .mq-tab-bar,
-      #midasquote-widget.mq-fx .mq-fx-legend,
-      #midasquote-widget.mq-fx .mq-both-divider,
-      #midasquote-widget.mq-fx .mq-sec-header-row,
-      #midasquote-widget.mq-fx .mq-sec > .mq-sec-title,
-      #midasquote-widget.mq-fx .mq-calc-btn,
-      #midasquote-widget.mq-fx .mq-step-badge{display:none!important}
-      #midasquote-widget.mq-fx .mq-tab-content{position:relative}
-      #midasquote-widget.mq-fx.mq-fx-chooser-on .mq-tab-content{display:none!important}
-      #midasquote-widget.mq-fx:not(.mq-fx-chooser-on) #mq-fx-chooser{display:none}
-      #midasquote-widget.mq-fx .mq-sec.mq-fx-off{position:absolute;left:0;top:0;width:100%;height:0;margin:0;padding:0;border:0;overflow:hidden;visibility:hidden;pointer-events:none;box-shadow:none}
-      #midasquote-widget.mq-fx .mq-sec.mq-step-current,
-      #midasquote-widget.mq-fx .mq-sec.mq-step-done,
-      #midasquote-widget.mq-fx .mq-sec.mq-step-upcoming{filter:none;opacity:1;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
-      #midasquote-widget.mq-fx .mq-sec{padding:16px;margin-bottom:0}
-      #midasquote-widget.mq-fx .mq-tab-content{padding:12px}
-      #midasquote-widget.mq-fx .mq-tab-content:not(.mq-fx-results) .mq-result,
-      #midasquote-widget.mq-fx .mq-tab-content:not(.mq-fx-results) .mq-combined-result{display:none!important}
-      #midasquote-widget.mq-fx .mq-fx-resbar{display:none}
-      #midasquote-widget.mq-fx .mq-tab-content.mq-fx-results .mq-fx-resbar{display:flex}
-      #midasquote-widget.mq-fx .mq-fx-head{margin-bottom:18px}
-      #midasquote-widget.mq-fx .mq-fx-progress-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;color:#6b7280;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
-      #midasquote-widget.mq-fx .mq-fx-swipehint{display:none;font-weight:600;text-transform:none;letter-spacing:0;color:#9ca3af}
-      @media (pointer:coarse){#midasquote-widget.mq-fx .mq-fx-swipehint{display:inline}}
-      #midasquote-widget.mq-fx .mq-fx-bar{height:6px;border-radius:99px;background:#e5e7eb;overflow:hidden;margin-bottom:18px}
-      #midasquote-widget.mq-fx .mq-fx-bar-fill{height:100%;border-radius:99px;background:${fc};transition:width .45s cubic-bezier(.4,0,.2,1)}
-      #midasquote-widget.mq-fx .mq-fx-title{font-size:23px;line-height:1.2;font-weight:800;color:#111827;margin:0 0 6px;letter-spacing:-.01em}
-      #midasquote-widget.mq-fx .mq-fx-sub{font-size:15px;line-height:1.5;color:#4b5563;margin:0}
-      #midasquote-widget.mq-fx .mq-fx-legend-clone{margin:14px 0 0!important}
-      #midasquote-widget.mq-fx .mq-sec.mq-fx-in-next{animation:mqFxInNext .38s cubic-bezier(.2,.7,.2,1) backwards}
-      #midasquote-widget.mq-fx .mq-sec.mq-fx-in-back{animation:mqFxInBack .38s cubic-bezier(.2,.7,.2,1) backwards}
-      @keyframes mqFxInNext{from{opacity:0;transform:translateX(42px)}to{opacity:1;transform:none}}
-      @keyframes mqFxInBack{from{opacity:0;transform:translateX(-42px)}to{opacity:1;transform:none}}
-      @media (prefers-reduced-motion:reduce){#midasquote-widget.mq-fx .mq-sec.mq-fx-in-next,#midasquote-widget.mq-fx .mq-sec.mq-fx-in-back{animation:none}}
-      #midasquote-widget.mq-fx .mq-step-footer{position:sticky;bottom:var(--mq-sticky-h,0px);z-index:6;background:#fff;margin:18px -16px -16px;padding:12px 16px;border-top:1px solid #e5e7eb;border-radius:0 0 10px 10px;box-shadow:0 -6px 14px rgba(0,0,0,.05)}
-      #midasquote-widget.mq-fx .mq-step-continue-btn{background:${fc};color:#fff;font-size:15px;font-weight:700;padding:11px 20px;border-radius:10px;flex:0 1 208px;margin-left:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)}
-      #midasquote-widget.mq-fx .mq-step-back-btn{font-size:15px;padding:12px 8px}
-      @media (max-width:600px){#midasquote-widget.mq-fx .mq-step-continue-btn{flex:0 1 190px}}
-      #mq-fx-chooser{padding:26px 16px 22px;text-align:center;animation:mqFxInNext .4s ease backwards}
-      #mq-fx-chooser .mq-fx-ch-title{font-size:25px;line-height:1.2;font-weight:800;color:#111827;margin-bottom:6px;letter-spacing:-.01em}
-      #mq-fx-chooser .mq-fx-ch-sub{font-size:15px;color:#4b5563;margin-bottom:20px}
-      #mq-fx-chooser .mq-fx-cards{display:grid;gap:12px;max-width:520px;margin:0 auto}
-      #mq-fx-chooser .mq-fx-card{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:16px 18px;cursor:pointer;font-family:inherit;transition:border-color .15s,transform .15s,box-shadow .15s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
-      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{border-color:${fc};transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.12);outline:none}
-      #mq-fx-chooser .mq-fx-card-current{border-color:${fc}}
-      #mq-fx-chooser .mq-fx-card-icon{display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:14px;background:${fc}14;color:${fc};flex-shrink:0}
-      #mq-fx-chooser .mq-fx-card-title{font-size:17px;font-weight:800;color:#111827;display:block}
-      #mq-fx-chooser .mq-fx-card-sub{font-size:13.5px;color:#6b7280;display:block;margin-top:2px}
-      #mq-fx-chooser .mq-fx-card-arrow{margin-left:auto;font-size:22px;color:${fc};flex-shrink:0}
-      #midasquote-widget.mq-fx .mq-fx-resbar{gap:10px;flex-wrap:wrap;margin-bottom:12px}
-      #midasquote-widget.mq-fx .mq-fx-resbtn{background:#fff;border:1.5px solid #d1d5db;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit}
-      #midasquote-widget.mq-fx .mq-fx-resbtn:hover{border-color:${fc};color:${fc}}
-      #midasquote-widget.mq-fx .mq-fx-resbtn-pri{background:${fc};border-color:${fc};color:#fff}
-      #midasquote-widget.mq-fx .mq-fx-resbtn-pri:hover{color:#fff;opacity:.9}
-
-      @media (min-width:700px){
-        #mq-fx-chooser{padding:44px 28px 40px}
-        #mq-fx-chooser .mq-fx-ch-title{font-size:32px}
-        #mq-fx-chooser .mq-fx-ch-sub{font-size:16px;margin-bottom:30px}
-        #mq-fx-chooser .mq-fx-cards{grid-template-columns:repeat(3,1fr);max-width:820px;gap:18px}
-        #mq-fx-chooser .mq-fx-card{flex-direction:column;text-align:center;padding:30px 18px 24px;gap:16px}
-        #mq-fx-chooser .mq-fx-card-icon{width:68px;height:68px;border-radius:18px}
-        #mq-fx-chooser .mq-fx-card-icon svg{width:36px;height:36px}
-        #mq-fx-chooser .mq-fx-card-title{font-size:18px}
-        #mq-fx-chooser .mq-fx-card-arrow{margin:0;font-size:24px}
-      }
-
-      /* ── Full-screen focus mode ── */
-      #mq-fx-top,#mq-fx-side{display:none}
-      #midasquote-widget.mq-fx.mq-fx-full{box-sizing:border-box;position:fixed;inset:0;height:100vh;height:100dvh;width:100%;max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;z-index:99990;background:#f3f4f6;padding-bottom:var(--mq-sticky-h,0px);display:block}
-      #midasquote-widget.mq-fx-full .mq-header,
-      #midasquote-widget.mq-fx-full .mq-powered-by,
-      #midasquote-widget.mq-fx-full #mq-fx-chooser{display:none!important}
-      #midasquote-widget.mq-fx-full #mq-fx-top{display:flex;position:sticky;top:0;z-index:20;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#fff;border-bottom:1px solid #e5e7eb}
-      #mq-fx-top .mq-fx-top-brand{display:flex;flex-direction:column;min-width:0}
-      #mq-fx-top .mq-fx-top-name{font-size:15px;font-weight:800;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      #mq-fx-top .mq-fx-top-pw{font-size:11px;color:#9ca3af;font-weight:600}
-      #mq-fx-top .mq-fx-top-pw a{color:#6b7280;text-decoration:none}
-      #mq-fx-top .mq-fx-exit{background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;border-radius:99px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
-      #mq-fx-top .mq-fx-exit:hover{background:#e5e7eb}
-      #midasquote-widget.mq-fx-full .mq-tab-content{padding:12px 10px 60px;max-width:860px;margin:0 auto}
-      #midasquote-widget.mq-fx-full .mq-sec{--mq-fx-pad:16px;border:1px solid #e5e7eb;border-left:1px solid #e5e7eb;border-radius:16px;padding:var(--mq-fx-pad);box-shadow:0 6px 24px rgba(0,0,0,.07)}
-      #midasquote-widget.mq-fx-full .mq-sec.mq-step-current,#midasquote-widget.mq-fx-full .mq-sec.mq-step-done,#midasquote-widget.mq-fx-full .mq-sec.mq-step-upcoming{box-shadow:0 6px 24px rgba(0,0,0,.07)}
-      #midasquote-widget.mq-fx-full .mq-step-footer{margin:18px calc(var(--mq-fx-pad,16px) * -1) calc(var(--mq-fx-pad,16px) * -1);padding:12px var(--mq-fx-pad,16px);border-radius:0 0 16px 16px}
-      @media (min-width:900px){
-        #midasquote-widget.mq-fx.mq-fx-full{padding-left:300px;background:#f1f3f6}
-        #midasquote-widget.mq-fx-full #mq-fx-side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:var(--mq-sticky-h,0px);width:300px;padding:30px 24px 22px;background:linear-gradient(180deg,#14161b 0%,#1d2027 100%);color:#fff;z-index:30;overflow-y:auto}
-        #midasquote-widget.mq-fx-full #mq-fx-top{background:transparent;border-bottom:0;justify-content:flex-end;padding:18px 28px 0;pointer-events:none}
-        #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-top-brand{display:none}
-        #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-exit{pointer-events:auto;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-        #midasquote-widget.mq-fx-full .mq-tab-content{padding:4px 40px 90px;max-width:900px}
-        #midasquote-widget.mq-fx-full .mq-sec{--mq-fx-pad:36px;border-radius:20px;box-shadow:0 14px 44px rgba(17,24,39,.10)}
-        #midasquote-widget.mq-fx-full .mq-step-footer{border-radius:0 0 20px 20px}
-        #midasquote-widget.mq-fx-full .mq-fx-title{font-size:32px}
-        #midasquote-widget.mq-fx-full .mq-fx-sub{font-size:16.5px}
-        #midasquote-widget.mq-fx-full .mq-fx-bar{display:none}
-        #midasquote-widget.mq-fx-full .mq-fx-head{margin-bottom:24px}
-      }
-      #mq-fx-side .mq-fx-side-brand{display:flex;align-items:center;gap:12px;padding:0;border:0;margin-bottom:26px}
-      #mq-fx-side .mq-fx-side-brand .mq-shop-name{color:#fff;font-size:16px;font-weight:800}
-      #mq-fx-side .mq-fx-side-brand .mq-shop-sub{color:#9ca3af;font-size:12.5px}
-      #mq-fx-side .mq-fx-side-brand>*{flex-shrink:0}
-      #mq-fx-side .mq-fx-side-brand>div[style*="flex:1"]{flex:1;min-width:0}
-      #mq-fx-side-type{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.07);margin-bottom:22px}
-      .mq-fx-side-type-kicker{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#9ca3af}
-      .mq-fx-side-type-name{font-size:16px;font-weight:800;color:#fff}
-      .mq-fx-side-type-room{font-size:13px;color:#cbd5e1}
-      #mq-fx-steps{list-style:none;margin:0;padding:0;flex:1}
-      .mq-fx-stp{display:flex;align-items:center;gap:12px;padding:8px 0;position:relative;color:#8b93a1;font-size:14.5px;font-weight:600}
-      .mq-fx-stp:not(:last-child)::after{content:'';position:absolute;left:13px;top:36px;bottom:-8px;width:2px;background:rgba(255,255,255,.12)}
-      .mq-fx-stp-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;border:2px solid rgba(255,255,255,.18);flex-shrink:0;background:#1d2027;position:relative;z-index:1}
-      .mq-fx-stp-cur{color:#fff}
-      .mq-fx-stp-cur .mq-fx-stp-dot{background:${fc};border-color:${fc};color:#fff;box-shadow:0 0 0 4px ${fc}40}
-      .mq-fx-stp-done{color:#d1d5db;cursor:pointer}
-      .mq-fx-stp-done:hover{color:#fff}
-      .mq-fx-stp-done .mq-fx-stp-dot{background:#16a34a;border-color:#16a34a;color:#fff}
-      .mq-fx-side-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
-      .mq-fx-side-link{color:#cbd5e1;font-size:13px;font-weight:600;text-decoration:none}
-      .mq-fx-side-link:hover{color:#fff}
-      .mq-fx-side-pw{font-size:11.5px;color:#7b8494;font-weight:600}
-      .mq-fx-side-pw a{color:#aab2c0;text-decoration:none}
-      .mq-fx-side-exit{background:transparent;border:1px solid rgba(255,255,255,.22);color:#e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center}
-      .mq-fx-side-exit:hover{background:rgba(255,255,255,.08)}
-    `;
-    document.head.appendChild(s);
-  }
-
-  // Runs after every full render of the widget (initial load and "start a new
-  // estimate", which both replace the container's innerHTML).
-  window.mqFxInit = function() {
-    const container = document.getElementById('midasquote-widget');
-    if (!container || !window._mqFxOn) return;
-    if (window._mqFxFull) window.mqFxExitFull(); // a rebuild (start new estimate) always lands back inline
-    container.classList.add('mq-fx');
-    mqFxInjectStyles();
-    container.querySelectorAll('.mq-tab-content').forEach(tab => {
-      const prefix = mqFxPrefixOfTabId(tab.id.replace('mq-tab-', ''));
-      const legend = tab.firstElementChild;
-      if (legend && !legend.classList.contains('mq-fx-legend') && legend.tagName === 'DIV' && !legend.className) legend.classList.add('mq-fx-legend');
-      if (!tab.querySelector(':scope > .mq-fx-resbar')) {
-        const bar = document.createElement('div');
-        bar.className = 'mq-fx-resbar';
-        bar.innerHTML = `<button type="button" class="mq-fx-resbtn" onclick="mqFxEditAnswers('${prefix}')">← Edit my answers</button>`
-          + (prefix === 'ct' ? '' : `<button type="button" class="mq-fx-resbtn" onclick="mqFxEditAnswers('${prefix}', true)">➕ Quote another project type</button>`);
-        tab.insertBefore(bar, tab.firstChild);
-      }
-    });
-    if (!document.getElementById('mq-fx-chooser')) {
-      const ch = document.createElement('div');
-      ch.id = 'mq-fx-chooser';
-      ch.innerHTML = `<div class="mq-fx-ch-title">What would you like a quote for?</div>
-        <div class="mq-fx-ch-sub">Pick one to get started — it only takes a minute.</div>
-        <div class="mq-fx-cards">${MQ_FX_TABS.filter(t => mqFxVisibleTabIds().includes(t.id)).map(t =>
-          `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-icon">${t.icon}</span><span><span class="mq-fx-card-title">${t.title}</span><span class="mq-fx-card-sub">${t.sub}</span></span><span class="mq-fx-card-arrow">›</span></button>`).join('')}
-        </div>`;
-      const tabBar = container.querySelector('.mq-tab-bar');
-      if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
-    }
-    // Top bar (Exit button; shop name on phones) and desktop side stepper —
-    // only visible in full-screen mode (CSS).
-    if (!document.getElementById('mq-fx-top')) {
-      const hdr = container.querySelector('.mq-header');
-      const nameEl = hdr && hdr.querySelector('.mq-shop-name');
-      const top = document.createElement('div');
-      top.id = 'mq-fx-top';
-      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button>`;
-      container.insertBefore(top, container.firstChild);
-    }
-    if (!document.getElementById('mq-fx-side')) {
-      const hdr = container.querySelector('.mq-header');
-      const brand = hdr ? hdr.cloneNode(true) : document.createElement('div');
-      brand.querySelectorAll('a').forEach(a => a.remove());
-      brand.className = 'mq-fx-side-brand';
-      brand.removeAttribute('style');
-      const showroom = hdr && hdr.querySelector('a[href]');
-      const side = document.createElement('aside');
-      side.id = 'mq-fx-side';
-      side.appendChild(brand);
-      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
-      container.insertBefore(side, container.firstChild);
-    }
-    mqFxInstallSwipe(container);
-    if (!window._mqFxEscBound) {
-      window._mqFxEscBound = true;
-      document.addEventListener('keydown', e => {
-        if (e.key !== 'Escape' || !window._mqFxFull) return;
-        if (document.querySelector('.mq-lightbox.show, .mq-overlay.show')) return; // let those close first
-        window.mqFxToChooser();
-      });
-    }
-    container.classList.add('mq-fx-chooser-on');
-    // Re-run for whatever tab is active so the head/off-classes exist on the
-    // very first paint (wireWidget's own step setup ran before this).
-    window.mqFxApply(window._mqActiveTabPrefix || 'b');
-  };
 
   init();
   mqInitMobileFontFix();
