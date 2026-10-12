@@ -5162,27 +5162,56 @@ window.logoutMember = async function () {
     return `${datePart} · ${timePart}`;
   }
 
-  // Free trial expiry date, shown on the Account tab so a trialing shop
-  // knows the exact day they'll be moved to the free Demo tier (Jordan:
-  // "add a trial count down ... just the day their trial expires would be
-  // even better"). The real 30-day cutoff is ENFORCED server-side by the
-  // midasquote-signup-worker Cloudflare Worker's daily Cron Trigger — this
-  // is purely a client-side display of when that cutoff will land, computed
-  // from the Shops record's own Airtable `createdTime` (set automatically
-  // when the onboarding Worker creates the row at signup) + 30 days. No
-  // dedicated "trial start" field exists in Airtable to read instead — this
-  // was confirmed with Jordan rather than assumed, since getting a
-  // customer-facing date wrong would be worse than not showing one. If a
-  // dedicated field is ever added (e.g. because the signup-worker's own
-  // cutoff logic turns out to be based on something else), swap the
-  // `shopRecord.createdTime` line below for that field instead — everything
-  // downstream of it (formatting, days-left math) stays the same.
+  // Free trial expiry date, shown on the Account tab and in the top banner so
+  // a trialing shop knows the day their trial ends (Jordan: "add a trial count
+  // down ... just the day their trial expires would be even better"). The real
+  // cutoff is ENFORCED server-side by the midasquote-signup-worker's daily
+  // Cron Trigger (checked 2026-10-12 against its code): it flips every shop
+  // with Plan = "Free Trial" whose `Free trial start date` is BEFORE
+  // (today UTC - 30 days) to Plan = "Demo". The same worker's webhook is what
+  // stamps `Free trial start date` = today when a shop first gets the free plan.
+  // So this display reads that SAME field + 30 days (falling back to the
+  // record's createdTime only if the field is empty): the trial covers the whole
+  // end date, and the flip happens on the daily run after it.
   const MQ_FREE_TRIAL_DAYS = 30;
+  // 2026-10-12: now prefers the Shops table's own "Free trial start date"
+  // field (Jordan already has it — changing that date restarts a shop's
+  // trial countdown here), and only falls back to the record's createdTime
+  // when that field is empty. An Airtable date-only value ("2026-09-16") is
+  // read as a LOCAL calendar day — new Date("2026-09-16") would be UTC
+  // midnight and show as the previous evening in North American time zones.
+  function mqFreeTrialStartDate(shopRecord) {
+    if (!shopRecord) return null;
+    const raw = shopRecord.fields && shopRecord.fields['Free trial start date'];
+    if (raw) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(raw).trim());
+      const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(raw);
+      if (!isNaN(d.getTime())) return d;
+    }
+    if (shopRecord.createdTime) {
+      const c = new Date(shopRecord.createdTime);
+      if (!isNaN(c.getTime())) return c;
+    }
+    return null;
+  }
+  // Calendar days from today to the trial's end date. 0 = today IS the last
+  // day (the shop still has full access today — the cron only flips a shop on
+  // the run after its end date); negative = the end date has passed but the
+  // daily cron hasn't run yet.
+  function mqFreeTrialDaysLeft(expiry) {
+    const DAY = 24 * 60 * 60 * 1000;
+    const t = new Date();
+    const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    const end = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+    return Math.round((end.getTime() - today.getTime()) / DAY);
+  }
+  function mqFreeTrialLeftText(n) { return n <= 0 ? 'last day' : `${n} day${n === 1 ? '' : 's'} left`; }
   function mqFreeTrialExpiryDate(shopRecord) {
-    if (!shopRecord || !shopRecord.createdTime) return null;
-    const created = new Date(shopRecord.createdTime);
-    if (isNaN(created.getTime())) return null;
-    return new Date(created.getTime() + MQ_FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    const start = mqFreeTrialStartDate(shopRecord);
+    if (!start) return null;
+    // Calendar-day arithmetic (not +30*24h) so a daylight-saving change inside the
+    // 30 days can't shift the displayed end date by a day.
+    return new Date(start.getFullYear(), start.getMonth(), start.getDate() + MQ_FREE_TRIAL_DAYS);
   }
 
   // Trial / Demo banner at the top of the dashboard (every tab). Jordan
@@ -5203,14 +5232,14 @@ window.logoutMember = async function () {
       let msg, urgent = false;
       if (!expiry) {
         msg = `🗓️ You're on the <strong>free trial</strong> — full access. Add a plan any time in the Account tab to keep it.`;
-      } else if (expiry.getTime() <= Date.now()) {
+      } else if (mqFreeTrialDaysLeft(expiry) < 0) {
         urgent = true;
         msg = `🗓️ Your <strong>free trial is ending</strong> — your account moves to the free Demo plan shortly. Pick a plan in the Account tab to keep full access.`;
       } else {
         const dateStr = expiry.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        const daysLeft = Math.max(1, Math.ceil((expiry.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+        const daysLeft = mqFreeTrialDaysLeft(expiry);
         urgent = daysLeft <= 5;
-        msg = `🗓️ Your <strong>free trial ends ${dateStr}</strong> (${daysLeft} day${daysLeft === 1 ? '' : 's'} left). You have full access until then — add a plan in the Account tab to keep it.`;
+        msg = `🗓️ Your <strong>free trial ends ${dateStr}</strong> (${mqFreeTrialLeftText(daysLeft)}). You have full access until then — add a plan in the Account tab to keep it.`;
       }
       const c = urgent ? { bg:'#fef2f2', bd:'#fca5a5', tx:'#991b1b' } : { bg:'#fffbeb', bd:'#fcd34d', tx:'#92400e' };
       return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:${c.bg};border:1px solid ${c.bd};color:${c.tx};border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
@@ -14293,8 +14322,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             const expiryDate = mqFreeTrialExpiryDate(window._mqShopRecord);
             if (expiryDate) {
               const dateStr = expiryDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-              const daysLeft = Math.max(0, Math.ceil((expiryDate - new Date()) / (24 * 60 * 60 * 1000)));
-              trialExpiryHTML = `<p style="font-size:13px;color:#92400e;background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px">🗓️ Your free trial ends <strong>${dateStr}</strong> (${daysLeft} day${daysLeft === 1 ? '' : 's'} left).</p>`;
+              const daysLeft = mqFreeTrialDaysLeft(expiryDate);
+              trialExpiryHTML = `<p style="font-size:13px;color:#92400e;background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px">🗓️ Your free trial ends <strong>${dateStr}</strong> (${mqFreeTrialLeftText(daysLeft)}).</p>`;
             }
           }
           planEl.innerHTML = `
