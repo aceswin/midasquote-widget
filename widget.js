@@ -2,6 +2,14 @@
  * MidasQuote Widget v3.3 — TEST BUILD (widgettest.js)
  * Adds visual thumbnails to specialty items so customers don't have to
  * guess what unfamiliar terms mean without leaving the widget.
+ *
+ * Two layouts, chosen per shop on the dashboard's Shop Info tab
+ * ("Widget layout", Airtable Shops field 'Widget layout'): "Classic" (the
+ * original scrolling guided-steps page, the default) or "Focused" (one
+ * question at a time, full-screen on its own). A `?layout=focused` or
+ * `?layout=classic` on the page's own URL overrides the saved setting —
+ * that's what the dashboard's "Preview" links use. MidasQuote Pro
+ * (widgetpro.js) is untouched and always Classic.
  */
 
 (function() {
@@ -132,6 +140,17 @@
     // Free Demo tier: set this here (not just later in renderWidget) because
     // it needs to exist before shopPhotos gets parsed below, not after.
     window._mqIsDemoPlan = (shop['Plan']||'') === 'Demo';
+
+    // Widget layout: Classic (default) or Focused. Must be settled before the
+    // first render, since the Focused layer hooks into the render. The page's
+    // own ?layout=focused|classic wins over the saved setting (used by the
+    // dashboard's Preview links so a shop can try either before choosing).
+    (function() {
+      let urlLayout = '';
+      try { urlLayout = (new URLSearchParams(window.location.search).get('layout') || '').toLowerCase(); } catch(e) {}
+      const saved = String(shop['Widget layout'] || '').trim().toLowerCase();
+      window._mqFxOn = urlLayout === 'focused' || (urlLayout !== 'classic' && saved === 'focused');
+    })();
 
     // Parse the shop's saved product photos (same JSON field the dashboard's
     // My Products tab and showroom page already read) so the widget can show
@@ -4617,10 +4636,13 @@
       const anchorSelector = prefix === 'b' ? '.mq-grand-total' : '.mq-res-hdr';
       let attempts = 0;
       function tryScroll() {
+        if (window._mqFxFull) { const fc = document.getElementById('midasquote-widget'); if (fc) fc.scrollTo({ top: 0, behavior: 'smooth' }); return; } // full-screen layer scrolls itself, from the top
         attempts++;
         const resultEl = document.getElementById(resultId);
-        const anchorEl = resultEl ? resultEl.querySelector(anchorSelector) : null;
-        if (!anchorEl) return;
+        // Focused mode: land on the results screen's own top bar (Edit my answers) so the whole breakdown reads top-down, rather than pinning just the price block.
+        const fxBar = (window._mqFxOn && resultEl) ? resultEl.closest('.mq-tab-content')?.querySelector(':scope > .mq-fx-resbar') : null;
+        const anchorEl = fxBar || (resultEl ? resultEl.querySelector(anchorSelector) : null);
+        if (!anchorEl || anchorEl.offsetParent === null) return; // hidden (e.g. customer already went back to edit)
         const topGap = 16; // small breathing room above the price block
         const rect = anchorEl.getBoundingClientRect();
         const scrollAmount = rect.top - topGap;
@@ -4687,7 +4709,10 @@
         footer.className = 'mq-step-footer';
         sec.appendChild(footer);
       }
-      if (index === current) {
+      if (index === current && window._mqFxOn) {
+        footer.style.display = 'flex';
+        footer.innerHTML = window.mqFxFooterHTML(prefix, index, total);
+      } else if (index === current) {
         footer.style.display = 'flex';
         footer.innerHTML = `
           ${index > 0 ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>` : '<span></span>'}
@@ -4720,6 +4745,7 @@
           window.mqToggleCollapse(key);
         }
       }
+      if (window._mqFxOn && window.mqFxApply) window.mqFxApply(prefix);
       mqObserveSectionsForScrollSpy();
     };
 
@@ -4733,6 +4759,9 @@
       const btnId = prefix === 'c' ? 'mq-c-calc-btn' : (prefix === 'ct' ? 'mq-ct-calc-btn' : 'mq-b-calc-btn');
       const btn = document.getElementById(btnId);
       if (!btn) return;
+      // Focused mode: the Calculate button is hidden — the last step's own
+      // "See my estimate" button is the call to action, so just press it.
+      if (window._mqFxOn) { if (!btn.disabled) btn.click(); return; }
       btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
       btn.classList.remove('mq-calc-btn-pulse');
       void btn.offsetWidth; // restart the animation if it's already mid-pulse
@@ -4778,8 +4807,10 @@
       const sections = mqGetVisibleSections(prefix);
       const wasLast = (_mqStepIndex[prefix] || 0) >= sections.length - 1;
       _mqStepIndex[prefix] = Math.min((_mqStepIndex[prefix] || 0) + 1, sections.length - 1);
+      if (window._mqFxOn) window._mqFxDir = wasLast ? null : 'next';
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
+      if (window._mqFxOn) { window.mqFxScrollToStep(); return; }
       mqLockStepNav(prefix);
       const next = sections[_mqStepIndex[prefix]];
       if (next) mqScrollTopNearCenter(next);
@@ -4787,7 +4818,9 @@
 
     window.mqStepBack = function(prefix) {
       _mqStepIndex[prefix] = Math.max((_mqStepIndex[prefix] || 0) - 1, 0);
+      if (window._mqFxOn) window._mqFxDir = 'back';
       window.mqUpdateStepFocus(prefix);
+      if (window._mqFxOn) { window.mqFxScrollToStep(); return; }
       mqLockStepNav(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
@@ -4800,6 +4833,7 @@
     // in either direction (e.g. jumping back from Specialty Items to Doors
     // by tapping that section directly, same as scrolling up would).
     window.mqJumpToSectionIfNeeded = function(sec) {
+      if (window._mqFxOn) return; // Focused mode: only Continue/Back/swipe move the step
       const tab = sec.closest('.mq-tab-content');
       if (!tab) return;
       const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
@@ -5630,6 +5664,7 @@
     // Reuses mqScrollWithOffset so a shop site's own sticky header doesn't
     // cover the landing spot.
     window.mqScrollToTop = function() {
+      if (window._mqFxFull) { const fc = document.getElementById('midasquote-widget'); if (fc) fc.scrollTo({ top: 0, behavior: 'smooth' }); return; }
       const prefix = window._mqActiveTabPrefix || 'b';
       const tabId = prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets');
       const target = document.getElementById(`mq-${prefix}-room`) || document.getElementById(tabId) || document.getElementById('midasquote-widget');
@@ -6971,7 +7006,7 @@
         mqUpdateFinancingBox('c', r.low, r.high, r.total);
         window.mqShowStickyBar('c', r.low, r.high, r.total);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');mqScrollResultsIntoView('c');
+        document.getElementById('mq-c-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('c');mqScrollResultsIntoView('c');
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel,r.total,'c');
       });
@@ -6994,7 +7029,7 @@
           mqUpdateFinancingBox('ct', r.low, r.high, r.total);
           window.mqShowStickyBar('ct', r.low, r.high, r.total);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');mqScrollResultsIntoView('ct');
+          document.getElementById('mq-ct-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('ct');mqScrollResultsIntoView('ct');
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await mqSaveLeadWithCart(data,lead,'Countertops',r.low,r.high,r.lines,'',r.total,'ct');
         },900);
@@ -7028,7 +7063,7 @@
           mqUpdateFinancingBox('b', tl, th, totalB);
           window.mqShowStickyBar('b', tl, th, totalB);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');mqScrollResultsIntoView('b');
+          document.getElementById('mq-b-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('b');mqScrollResultsIntoView('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel,totalB,'b');
         },1200);
@@ -7984,6 +8019,7 @@
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
     if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
+    if (window.mqFxInit) window.mqFxInit();
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
     // bar from before and let it re-earn its spot once they Calculate again.
     window._mqStickyPrefix = null;
@@ -8077,6 +8113,7 @@
   // backward to whatever most recently collapsed, right as Continue was
   // trying to move it forward.
   function mqCheckBottomBounceAutoOpen() {
+    if (window._mqFxOn) return; // Focused mode never needs the scroll-to-bottom auto-open
     const doc = document.documentElement;
     const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 24;
     if (!atBottom) return;
@@ -8237,6 +8274,7 @@
       if (_mqOrigBodyPaddingBottom === null) {
         _mqOrigBodyPaddingBottom = document.body.style.paddingBottom || '';
       }
+      document.documentElement.style.setProperty('--mq-sticky-h', (bar && bar.classList.contains('show') ? bar.offsetHeight : 0) + 'px');
       if (bar && bar.classList.contains('show')) {
         document.body.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
       } else {
@@ -8743,6 +8781,7 @@
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
     if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
+    if (window.mqFxInit) window.mqFxInit();
     mqSetupModalOverlays();
     mqSetupStickyBar();
     // Delegated so it automatically covers every input/select/checkbox in
@@ -8796,6 +8835,649 @@
       } catch(e) { /* localStorage unavailable — skip popup */ }
     }
   }
+
+  // ════════════════════════════════════════════════════════════════════
+  // FOCUSED MODE ("one step at a time") — TEST BUILD
+  // ════════════════════════════════════════════════════════════════════
+  // A layer on top of the normal guided-step system: instead of one long
+  // scrolling page where every section is stacked, the customer first picks
+  // what they want a quote for (cards), then sees ONE section at a time with
+  // a progress bar, a friendly prompt, and Back/Continue (or a swipe on
+  // touch screens). When the last step is finished it calculates and shows a
+  // results screen with a way back to edit answers.
+  //
+  // Nothing here changes any pricing/maths — it only decides which existing
+  // section is on screen. Off-screen sections are kept in the DOM (just
+  // visually hidden) so every existing function that reads them, including
+  // the offsetParent-based mqGetVisibleSections, keeps working unchanged.
+  // window._mqFxOn is decided per shop in loadShopData (Shop Info → Widget
+  // layout, or a ?layout= override on the page URL). Every hook above checks
+  // it, so Classic shops run exactly the original code paths.
+  window._mqFxOn = false;
+  window._mqFxDir = null;
+  const _mqFxLastPct = {};
+
+  // Inline SVG icons — the 🪵/🪨 emoji don't exist on a lot of Windows machines
+  // (they show as empty boxes), so nothing here depends on emoji fonts.
+  const MQ_FX_SVG = (inner) => `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+  const MQ_FX_TABS = [
+    { id:'both',        icon: MQ_FX_SVG('<path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>'), title:'Cabinets + countertops', startTitle:'Start your full project quote', sub:'A full project quote' },
+    { id:'cabinets',    icon: MQ_FX_SVG('<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M12 3.5v17"/><path d="M9.6 11v2M14.4 11v2"/>'), title:'Cabinets only',          startTitle:'Start your cabinet quote', sub:'Just the cabinets' },
+    { id:'countertops', icon: MQ_FX_SVG('<path d="M2.5 9.5h19v4h-19z"/><path d="M5 13.5v6.5M19 13.5v6.5"/><path d="M6 6.5h4"/>'), title:'Countertops only',       startTitle:'Start your countertop quote', sub:'Just the countertops' },
+  ];
+  function mqFxPrefixOfTabId(id) { return id === 'both' ? 'b' : (id === 'countertops' ? 'ct' : 'c'); }
+  function mqFxTabEl(prefix) { return document.getElementById(prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets')); }
+  function mqFxVisibleTabIds() {
+    const hidden = window._mqHiddenTabs || [];
+    return MQ_FX_TABS.map(t => t.id).filter(id => !hidden.includes(id));
+  }
+
+  // Friendly per-step prompt. Keyed by the section's id suffix; falls back to
+  // the section's own title so a section added in future still gets a screen.
+  // ctx.priced = a cabinet-pricing step (selections / measurements / drawers /
+  // tall cabinets) already came earlier in this flow. When it didn't — e.g.
+  // Refacing, Repainting, Odd jobs, where the shop's specialty items ARE the
+  // quote — "Any extras?" would read as optional fluff, so those steps are
+  // worded as the main event instead.
+  function mqFxPromptFor(sec, index, ctx) {
+    ctx = ctx || { priced: true, room: '' };
+    const id = sec.id || '';
+    const ends = s => id.endsWith(s);
+    if (!id) return { t: "Let's start with your project", l: 'Project', s: "Tell us what you're planning — everything that follows adjusts to match." };
+    if (ends('-measuring-sec')) return { t: 'Quick tip: measuring', l: 'Measuring', s: "A minute here makes your estimate much more accurate. Have a look, then continue." };
+    if (ends('-si-field')) {
+      const sel = sec.querySelector('select[id$="-si"]');
+      const canInstall = sel && sel.options.length > 1;
+      return canInstall
+        ? { t: 'Do you need installation?', l: 'Installation', s: "Just the cabinets, or installed too? You can also let us know if the old ones need to come out." }
+        : { t: 'Anything to remove first?', l: 'Removal', s: 'Let us know if your existing cabinets need to come out.' };
+    }
+    if (ends('-cabinet-selections-sec')) return { t: 'Pick your cabinet style', l: 'Cabinet style', s: 'Choose a material and a door style.' };
+    if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', l: 'Size', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
+    if (ends('-drawers-sec')) return { t: 'How about drawers?', l: 'Drawers', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
+    if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', l: 'Tall cabinets', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };
+    if (ends('-trim-sec') && !ctx.priced) return { t: 'Choose your trim', l: 'Trim', s: 'Pick the crown moulding and valance you’d like — or skip any you don’t need.' };
+    if (ends('-trim-sec')) return { t: 'Finishing touches', l: 'Finishing touches', s: 'Crown moulding and valance add the final polish. Skip ahead if you don’t need them.' };
+    if (ends('-specialty-sec') && !ctx.priced) return { t: 'What would you like done?', l: 'Your items', s: ctx.room ? `Choose what you need for your ${ctx.room.toLowerCase()} project — add quantities or sizes where asked.` : 'Choose what you need — add quantities or sizes where asked.', main: true };
+    if (ends('-specialty-sec')) return { t: 'Any extras?', l: 'Extras', s: 'Pull-outs, special features and more — add what you like, or just continue.' };
+    if (ends('b-ct-options-sec')) return { t: 'Now, your countertops', l: 'Countertops', s: 'Choose your material and how you’d like it supplied.' };
+    if (ends('b-ct-surfaces-sec')) return { t: 'Any other countertop areas?', l: 'More surfaces', s: 'Bar tops, a separate vanity, an island — add them here, or just continue.' };
+    if (ends('ct-surfaces-sec')) return { t: 'Tell us about your countertops', l: 'Countertops', s: 'Add each surface you need. You can add more than one.' };
+    const titleEl = sec.querySelector('.mq-sec-title');
+    const fallbackT = (titleEl ? titleEl.textContent.replace(/^\s*\d+\s*/, '').trim() : '') || 'Next';
+    return { t: fallbackT, l: fallbackT, s: '' };
+  }
+
+  // Rebuilds which section is on screen for this tab, plus the progress head.
+  // The sticky estimate bar is tall (especially on phones). While the customer
+  // is stepping through questions in full-screen mode it would pin the
+  // Back/Continue footer far above the bottom of the screen, so it's hidden
+  // then and only shown on the results screen.
+  function mqFxSyncSticky() {
+    const tab = mqFxTabEl(window._mqActiveTabPrefix || 'b');
+    const hide = !!(window._mqFxFull && tab && !tab.classList.contains('mq-fx-results'));
+    document.documentElement.classList.toggle('mq-fx-nosticky', hide);
+    mqAdjustWidgetBottomPadding();
+    // Live price while editing: the tall sticky bar is hidden, so a compact
+    // chip (phone: strip under the top bar; desktop: card in the side panel)
+    // mirrors its number. Only after a first Calculate — before that the
+    // lead form still gates the price, so nothing is shown early.
+    const c = document.getElementById('midasquote-widget');
+    if (c) c.classList.toggle('mq-fx-live-on', hide && !!window._mqStickyPrefix);
+    const priceEl = document.getElementById('mq-sticky-price');
+    if (priceEl && !priceEl._mqFxObs) {
+      priceEl._mqFxObs = true;
+      new MutationObserver(mqFxCopyPrice).observe(priceEl, { childList: true, characterData: true, subtree: true });
+    }
+    mqFxCopyPrice();
+  }
+  function mqFxCopyPrice() {
+    const priceEl = document.getElementById('mq-sticky-price');
+    if (!priceEl) return;
+    const txt = priceEl.textContent.trim();
+    document.querySelectorAll('.mq-fx-live-val').forEach(el => {
+      if (el.textContent === txt) return;
+      el.textContent = txt;
+      el.classList.remove('mq-fx-pulse'); void el.offsetWidth; el.classList.add('mq-fx-pulse');
+    });
+  }
+  window.mqFxApply = function(prefix) {
+    if (!window._mqFxOn) return;
+    const tab = mqFxTabEl(prefix);
+    if (!tab) return;
+    const secs = window.mqGetVisibleSections(prefix);
+    const inResults = tab.classList.contains('mq-fx-results');
+    const idx = Math.max(0, Math.min((window._mqStepIndex[prefix] || 0), secs.length - 1));
+    const dir = window._mqFxDir;
+    window._mqFxDir = null;
+    const roomSelEl = document.getElementById(`mq-${prefix}-room`);
+    const roomName = roomSelEl && roomSelEl.selectedOptions[0] ? roomSelEl.selectedOptions[0].textContent.trim() : '';
+    const PRICED_RE = /(cabinet-selections|cabinet-measurements|drawers|tallcabs)-sec$/;
+    const prompts = secs.map((sec, i) => mqFxPromptFor(sec, i, { priced: secs.slice(0, i).some(x => PRICED_RE.test(x.id || '')), room: roomName }));
+    const labels = prompts.map(pr => pr.l || pr.t);
+    secs.forEach((sec, i) => {
+      const isCur = !inResults && i === idx;
+      sec.classList.toggle('mq-fx-off', !isCur);
+      sec.classList.toggle('mq-fx-cur', isCur);
+      if (!isCur) sec.classList.remove('mq-fx-main');
+      const old = sec.querySelector(':scope > .mq-fx-head');
+      if (old) old.remove();
+      sec.classList.remove('mq-fx-in-next', 'mq-fx-in-back');
+      if (!isCur) return;
+      const p = prompts[i];
+      sec.classList.toggle('mq-fx-main', !!p.main);
+      const pct = Math.round(((i + 1) / secs.length) * 100);
+      const head = document.createElement('div');
+      head.className = 'mq-fx-head';
+      head.innerHTML = `
+        <div class="mq-fx-progress-row"><span class="mq-fx-stepcount">Step ${i + 1} of ${secs.length}</span>${i < secs.length - 1 ? '<span class="mq-fx-swipehint">Swipe ← to continue</span>' : ''}</div>
+        <div class="mq-fx-bar"><div class="mq-fx-bar-fill" style="width:${_mqFxLastPct[prefix] != null ? _mqFxLastPct[prefix] : pct}%"></div></div>
+        <h2 class="mq-fx-title">${p.t}</h2>
+        ${p.s ? `<p class="mq-fx-sub">${p.s}</p>` : ''}`;
+      sec.insertBefore(head, sec.firstChild);
+      const legend = tab.querySelector(':scope > .mq-fx-legend');
+      if (legend && /(cabinet-selections-sec|ct-options-sec|ct-surfaces-sec)$/.test(sec.id || '')) {
+        const lc = legend.cloneNode(true);
+        lc.classList.remove('mq-fx-legend');
+        lc.classList.add('mq-fx-legend-clone');
+        head.appendChild(lc);
+      }
+      const fill = head.querySelector('.mq-fx-bar-fill');
+      requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = pct + '%'; }));
+      _mqFxLastPct[prefix] = pct;
+      if (dir) {
+        void sec.offsetWidth;
+        sec.classList.add(dir === 'back' ? 'mq-fx-in-back' : 'mq-fx-in-next');
+        setTimeout(() => sec.classList.remove('mq-fx-in-next', 'mq-fx-in-back'), 450);
+      }
+    });
+    if (window._mqFxFull && prefix === window._mqActiveTabPrefix) mqFxRenderSide(prefix, labels, idx, inResults);
+    mqFxSyncSticky();
+    // Picker arrows measure scrollWidth, which reads 0 while hidden.
+    if (window.mqUpdateAllPickerArrows) requestAnimationFrame(() => window.mqUpdateAllPickerArrows());
+  };
+
+  window.mqFxFooterHTML = function(prefix, index, total) {
+    const isLast = index >= total - 1;
+    const back = index > 0
+      ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>`
+      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Exit</button>`;
+    return `${back}<button type="button" class="mq-step-continue-btn" onclick="event.stopPropagation();mqStepContinue('${prefix}')">${isLast ? 'See my estimate ✨' : 'Continue →'}</button>`;
+  };
+
+  window.mqFxScrollToStep = function() {
+    if (window._mqFxFull) { const c = document.getElementById('midasquote-widget'); if (c) c.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    const sec = document.querySelector('#midasquote-widget .mq-tab-content.active .mq-sec.mq-fx-cur');
+    if (!sec || !window.mqScrollWithOffset) return;
+    const top = sec.getBoundingClientRect().top;
+    if (top < 40 || top > window.innerHeight * 0.45) window.mqScrollWithOffset(sec, 70);
+  };
+
+  // ── Full-screen focus mode ──
+  // Starting a quote lifts the widget out of the page into a fixed full-screen
+  // layer (a placeholder holds its spot so the page doesn't jump), freezes
+  // the page behind it, and gives the customer an Exit button / Esc key to
+  // come back. Moving the node (rather than just styling it fixed in place)
+  // keeps it immune to host-page ancestors with transforms/filters, which
+  // would otherwise break position:fixed.
+  window._mqFxFull = false;
+  window.mqFxEnterFull = function() {
+    const c = document.getElementById('midasquote-widget');
+    if (!c || window._mqFxFull) return;
+    const ph = document.createElement('div');
+    ph.id = 'mq-fx-placeholder';
+    ph.style.height = c.offsetHeight + 'px';
+    window._mqFxScrollY = window.pageYOffset;
+    c.parentNode.insertBefore(ph, c);
+    document.body.appendChild(c);
+    c.classList.add('mq-fx-full');
+    c.classList.remove('mq-fx-chooser-on');
+    c.setAttribute('role', 'dialog');
+    c.setAttribute('aria-modal', 'true');
+    c.setAttribute('aria-label', 'Get an estimate');
+    window._mqFxPrevOverflow = [document.documentElement.style.overflow, document.body.style.overflow];
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    window._mqFxFull = true;
+    mqFxSyncSticky();
+    c.scrollTop = 0;
+    // The Demo watermark is absolutely positioned inside the widget, which
+    // would only cover the first screenful of a scrolling full-screen layer.
+    const wm = [...c.children].find(el => /DEMO/.test(el.style.backgroundImage || ''));
+    if (wm) { wm.dataset.mqFxPos = wm.style.position; wm.style.position = 'fixed'; }
+  };
+  window.mqFxExitFull = function() {
+    const c = document.getElementById('midasquote-widget');
+    const ph = document.getElementById('mq-fx-placeholder');
+    if (!c || !window._mqFxFull) return;
+    c.classList.remove('mq-fx-full');
+    c.removeAttribute('role'); c.removeAttribute('aria-modal'); c.removeAttribute('aria-label');
+    const wm = [...c.children].find(el => el.dataset && el.dataset.mqFxPos !== undefined);
+    if (wm) { wm.style.position = wm.dataset.mqFxPos || 'absolute'; delete wm.dataset.mqFxPos; }
+    if (ph) ph.replaceWith(c);
+    const prev = window._mqFxPrevOverflow || ['', ''];
+    document.documentElement.style.overflow = prev[0];
+    document.body.style.overflow = prev[1];
+    window._mqFxFull = false;
+    mqFxSyncSticky();
+    window.scrollTo(0, window._mqFxScrollY || 0);
+  };
+
+  window.mqFxToChooser = function() {
+    const container = document.getElementById('midasquote-widget');
+    if (!container) return;
+    window.mqFxExitFull();
+    container.classList.add('mq-fx-chooser-on');
+    const active = window._mqActiveTabPrefix;
+    container.querySelectorAll('.mq-fx-card').forEach(c => {
+      const p = mqFxPrefixOfTabId(c.dataset.tab);
+      const isCur = p === active;
+      c.classList.toggle('mq-fx-card-current', isCur);
+      const subEl = c.querySelector('.mq-fx-card-sub');
+      if (!subEl) return;
+      if (subEl.dataset.orig === undefined) subEl.dataset.orig = subEl.textContent;
+      const tab = mqFxTabEl(p);
+      const hasProgress = isCur && ((window._mqStepIndex[p] || 0) > 0 || (tab && tab.classList.contains('mq-fx-results')));
+      subEl.textContent = hasProgress ? 'Pick up where you left off' : subEl.dataset.orig;
+    });
+    window.mqScrollWithOffset && window.mqScrollWithOffset(container, 20);
+  };
+
+  window.mqFxStart = function(id) {
+    const container = document.getElementById('midasquote-widget');
+    if (!container) return;
+    const prev = window._mqActiveTabPrefix;
+    const next = mqFxPrefixOfTabId(id);
+    const btn = document.querySelector(`.mq-tab[onclick^="mqSwitchTab('${id}'"]`);
+    if (btn) window.mqSwitchTab(id, btn);
+    if (prev !== next) {
+      [prev, next].forEach(p => { const t = mqFxTabEl(p); if (t) t.classList.remove('mq-fx-results'); });
+      window._mqStepIndex[next] = 0;
+      _mqFxLastPct[next] = null;
+    }
+    window.mqFxEnterFull();
+    container.classList.remove('mq-fx-chooser-on');
+    window._mqFxDir = 'next';
+    window.mqUpdateStepFocus(next);
+    window.mqFxScrollToStep();
+  };
+
+  // Desktop side stepper — rebuilt on every step change.
+  function mqFxRenderSide(prefix, labels, idx, inResults) {
+    const ol = document.getElementById('mq-fx-steps');
+    if (!ol) return;
+    const tabDef = MQ_FX_TABS.find(t => mqFxPrefixOfTabId(t.id) === prefix);
+    const typeEl = document.getElementById('mq-fx-side-type');
+    if (typeEl) {
+      const roomSel = document.getElementById(`mq-${prefix}-room`);
+      const roomName = roomSel && roomSel.selectedOptions[0] ? roomSel.selectedOptions[0].textContent : '';
+      typeEl.innerHTML = `<span class="mq-fx-side-type-kicker">Your quote</span><span class="mq-fx-side-type-name">${tabDef ? tabDef.title : ''}</span>${roomName ? `<span class="mq-fx-side-type-room">${roomName}</span>` : ''}`;
+    }
+    const items = labels.map((l, i) => {
+      const state = inResults || i < idx ? 'done' : (i === idx ? 'cur' : 'todo');
+      const click = state === 'done' ? ` onclick="mqFxGoTo('${prefix}',${i})" role="button" tabindex="0"` : '';
+      return `<li class="mq-fx-stp mq-fx-stp-${state}"${click}><span class="mq-fx-stp-dot">${state === 'done' ? '✓' : i + 1}</span><span class="mq-fx-stp-label">${l}</span></li>`;
+    });
+    items.push(`<li class="mq-fx-stp ${inResults ? 'mq-fx-stp-cur' : 'mq-fx-stp-todo'}"><span class="mq-fx-stp-dot">★</span><span class="mq-fx-stp-label">Your estimate</span></li>`);
+    ol.innerHTML = items.join('');
+  }
+
+  window.mqFxGoTo = function(prefix, i) {
+    const tab = mqFxTabEl(prefix);
+    if (!tab) return;
+    const cur = window._mqStepIndex[prefix] || 0;
+    const wasResults = tab.classList.contains('mq-fx-results');
+    tab.classList.remove('mq-fx-results');
+    window._mqStepIndex[prefix] = i;
+    _mqFxLastPct[prefix] = null;
+    window._mqFxDir = (wasResults || i < cur) ? 'back' : 'next';
+    window.mqUpdateStepFocus(prefix);
+    window.mqFxScrollToStep();
+  };
+
+  window.mqFxShowResults = function(prefix) {
+    if (!window._mqFxOn) return;
+    const tab = mqFxTabEl(prefix);
+    if (!tab) return;
+    tab.classList.add('mq-fx-results');
+    window.mqFxApply(prefix);
+  };
+
+  window.mqFxEditAnswers = function(prefix, toStart) {
+    const tab = mqFxTabEl(prefix);
+    if (!tab) return;
+    tab.classList.remove('mq-fx-results');
+    const secs = window.mqGetVisibleSections(prefix);
+    window._mqStepIndex[prefix] = toStart ? 0 : Math.max(0, secs.length - 1);
+    _mqFxLastPct[prefix] = null;
+    window._mqFxDir = 'back';
+    window.mqUpdateStepFocus(prefix);
+    window.mqFxScrollToStep();
+  };
+
+  function mqFxSwipeBlocked(t, container) {
+    if (!(t instanceof Element)) return true;
+    if (t.closest('input,select,textarea,button,a,label,summary,[contenteditable="true"],.mq-vpicker-row,.mq-measure-carousel-track,.mq-step-footer')) return true;
+    for (let n = t; n && n !== container; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 1) return true;
+    }
+    return false;
+  }
+
+  function mqFxInstallSwipe(container) {
+    if (container._mqFxSwipe) return;
+    container._mqFxSwipe = true;
+    let sx = 0, sy = 0, st = 0, ok = false;
+    container.addEventListener('touchstart', e => {
+      ok = false;
+      if (!window._mqFxOn || e.touches.length !== 1) return;
+      if (container.classList.contains('mq-fx-chooser-on')) return;
+      const tab = container.querySelector('.mq-tab-content.active');
+      if (!tab || tab.classList.contains('mq-fx-results')) return;
+      if (mqFxSwipeBlocked(e.target, container)) return;
+      ok = true; sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+    }, { passive: true });
+    container.addEventListener('touchend', e => {
+      if (!ok) return;
+      ok = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Date.now() - st > 900 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+      const prefix = window._mqActiveTabPrefix;
+      const total = window.mqGetVisibleSections(prefix).length;
+      const idx = window._mqStepIndex[prefix] || 0;
+      // Swiping forward never triggers the final "calculate" — that stays a
+      // deliberate button tap so a stray swipe can't pop the lead form.
+      if (dx < 0) { if (idx < total - 1) window.mqStepContinue(prefix); }
+      else if (idx > 0) window.mqStepBack(prefix);
+    }, { passive: true });
+  }
+
+  function mqFxInjectStyles() {
+    if (document.getElementById('mq-fx-styles')) return;
+    const fc = window._mqFocalColor || '#2563eb';
+    const s = document.createElement('style');
+    s.id = 'mq-fx-styles';
+    s.textContent = `
+      #midasquote-widget.mq-fx{overflow:clip}
+      #midasquote-widget.mq-fx .mq-tab-bar,
+      #midasquote-widget.mq-fx .mq-fx-legend,
+      #midasquote-widget.mq-fx .mq-both-divider,
+      #midasquote-widget.mq-fx .mq-sec-header-row,
+      #midasquote-widget.mq-fx .mq-sec > .mq-sec-title,
+      #midasquote-widget.mq-fx .mq-calc-btn,
+      #midasquote-widget.mq-fx .mq-step-badge{display:none!important}
+      #midasquote-widget.mq-fx .mq-tab-content{position:relative}
+      #midasquote-widget.mq-fx.mq-fx-chooser-on .mq-tab-content{display:none!important}
+      #midasquote-widget.mq-fx:not(.mq-fx-chooser-on) #mq-fx-chooser{display:none}
+      #midasquote-widget.mq-fx .mq-sec.mq-fx-off{position:absolute;left:0;top:0;width:100%;height:0;margin:0;padding:0;border:0;overflow:hidden;visibility:hidden;pointer-events:none;box-shadow:none}
+      #midasquote-widget.mq-fx .mq-sec.mq-step-current,
+      #midasquote-widget.mq-fx .mq-sec.mq-step-done,
+      #midasquote-widget.mq-fx .mq-sec.mq-step-upcoming{filter:none;opacity:1;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
+      #midasquote-widget.mq-fx .mq-sec{padding:16px;margin-bottom:0}
+      #midasquote-widget.mq-fx .mq-tab-content{padding:12px}
+      #midasquote-widget.mq-fx .mq-tab-content:not(.mq-fx-results) .mq-result,
+      #midasquote-widget.mq-fx .mq-tab-content:not(.mq-fx-results) .mq-combined-result{display:none!important}
+      #midasquote-widget.mq-fx .mq-fx-resbar{display:none}
+      #midasquote-widget.mq-fx .mq-tab-content.mq-fx-results .mq-fx-resbar{display:flex}
+      #midasquote-widget.mq-fx .mq-sec.mq-fx-main > div[style*="font-size:13px"]:not([id]){display:none}
+      html.mq-fx-nosticky #mq-sticky-bar{display:none!important}
+      #midasquote-widget.mq-fx .mq-fx-head{margin-bottom:18px}
+      #midasquote-widget.mq-fx .mq-fx-progress-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;color:#6b7280;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
+      #midasquote-widget.mq-fx .mq-fx-swipehint{display:none;font-weight:600;text-transform:none;letter-spacing:0;color:#9ca3af}
+      @media (pointer:coarse){#midasquote-widget.mq-fx .mq-fx-swipehint{display:inline}}
+      #midasquote-widget.mq-fx .mq-fx-bar{height:6px;border-radius:99px;background:#e5e7eb;overflow:hidden;margin-bottom:18px}
+      #midasquote-widget.mq-fx .mq-fx-bar-fill{height:100%;border-radius:99px;background:${fc};transition:width .45s cubic-bezier(.4,0,.2,1)}
+      #midasquote-widget.mq-fx .mq-fx-title{font-size:23px;line-height:1.2;font-weight:800;color:#111827;margin:0 0 6px;letter-spacing:-.01em}
+      #midasquote-widget.mq-fx .mq-fx-sub{font-size:15px;line-height:1.5;color:#4b5563;margin:0}
+      #midasquote-widget.mq-fx .mq-fx-legend-clone{margin:14px 0 0!important}
+      #midasquote-widget.mq-fx .mq-sec.mq-fx-in-next{animation:mqFxInNext .38s cubic-bezier(.2,.7,.2,1) backwards}
+      #midasquote-widget.mq-fx .mq-sec.mq-fx-in-back{animation:mqFxInBack .38s cubic-bezier(.2,.7,.2,1) backwards}
+      @keyframes mqFxInNext{from{opacity:0;transform:translateX(42px)}to{opacity:1;transform:none}}
+      @keyframes mqFxInBack{from{opacity:0;transform:translateX(-42px)}to{opacity:1;transform:none}}
+      @media (prefers-reduced-motion:reduce){#midasquote-widget.mq-fx .mq-sec.mq-fx-in-next,#midasquote-widget.mq-fx .mq-sec.mq-fx-in-back{animation:none}}
+      #midasquote-widget.mq-fx .mq-step-footer{position:sticky;bottom:var(--mq-sticky-h,0px);z-index:6;background:#fff;margin:18px -16px -16px;padding:12px 16px;border-top:1px solid #e5e7eb;border-radius:0 0 10px 10px;box-shadow:0 -6px 14px rgba(0,0,0,.05)}
+      #midasquote-widget.mq-fx .mq-step-continue-btn{background:${fc};color:#fff;font-size:15px;font-weight:700;padding:11px 20px;border-radius:10px;flex:0 1 208px;margin-left:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+      #midasquote-widget.mq-fx .mq-step-back-btn{font-size:15px;padding:12px 8px}
+      @media (max-width:600px){#midasquote-widget.mq-fx .mq-step-continue-btn{flex:0 1 190px}}
+      #mq-fx-chooser{padding:26px 16px 22px;text-align:center;animation:mqFxInNext .4s ease backwards}
+      #mq-fx-chooser .mq-fx-ch-title{font-size:25px;line-height:1.2;font-weight:800;color:#111827;margin-bottom:6px;letter-spacing:-.01em}
+      #mq-fx-chooser .mq-fx-ch-sub{font-size:15px;color:#4b5563;margin-bottom:20px}
+      #mq-fx-chooser .mq-fx-cards{display:grid;gap:12px;max-width:520px;margin:0 auto}
+      #mq-fx-chooser .mq-fx-card{display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:left;width:100%;padding:0;overflow:hidden;background:#fff;border:2px solid #e5e7eb;border-radius:16px;cursor:pointer;font-family:inherit;transition:transform .18s,box-shadow .18s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
+      #mq-fx-chooser .mq-fx-card-photo{position:relative;display:flex;gap:2px;width:100%;height:118px;background:#fff;overflow:hidden;flex-shrink:0}
+      #mq-fx-chooser .mq-fx-card-photo img{position:relative;z-index:1;flex:1 1 0;min-width:0;height:100%;object-fit:cover;display:block;transition:transform .45s ease;box-shadow:inset 0 -56px 44px -34px rgba(0,0,0,.3)}
+      #mq-fx-chooser .mq-fx-card:hover .mq-fx-card-photo img,#mq-fx-chooser .mq-fx-card:focus-visible .mq-fx-card-photo img{transform:scale(1.06)}
+      #mq-fx-chooser .mq-fx-card-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a)}
+      #mq-fx-chooser .mq-fx-card-icon svg{width:44px;height:44px}
+      #mq-fx-chooser .mq-fx-card-body{display:flex;align-items:center;gap:12px;padding:13px 16px 15px}
+      #mq-fx-chooser .mq-fx-card-text{flex:1;min-width:0}
+      #mq-fx-chooser .mq-fx-card-title{font-size:17px;font-weight:800;color:#111827;display:block}
+      #mq-fx-chooser .mq-fx-card-sub{font-size:13.5px;color:#6b7280;display:block;margin-top:2px}
+      #mq-fx-chooser .mq-fx-card-arrow{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a);font-size:22px;line-height:1;padding-bottom:3px;flex-shrink:0;transition:transform .18s,background .18s,color .18s}
+      #mq-fx-chooser .mq-fx-card:hover .mq-fx-card-arrow,#mq-fx-chooser .mq-fx-card:focus-visible .mq-fx-card-arrow{transform:translateX(3px)}
+      #mq-fx-chooser .mq-fx-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin:-6px auto 20px;font-size:13px;font-weight:600;color:#4b5563}
+      #mq-fx-chooser .mq-fx-trust span{display:inline-flex;align-items:center;gap:6px}
+      #mq-fx-chooser .mq-fx-trust svg{width:15px;height:15px;color:var(--mq-card-ink,#1a1a1a);flex-shrink:0}
+      #midasquote-widget.mq-fx .mq-fx-resbar{gap:10px;flex-wrap:wrap;margin-bottom:12px}
+      #midasquote-widget.mq-fx .mq-fx-resbtn{background:#fff;border:1.5px solid #d1d5db;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit}
+      #midasquote-widget.mq-fx .mq-fx-resbtn:hover{border-color:${fc};color:${fc}}
+      #midasquote-widget.mq-fx .mq-fx-resbtn-pri{background:${fc};border-color:${fc};color:#fff}
+      #midasquote-widget.mq-fx .mq-fx-resbtn-pri:hover{color:#fff;opacity:.9}
+
+      @media (min-width:700px){
+        #mq-fx-chooser{padding:44px 28px 40px}
+        #mq-fx-chooser .mq-fx-ch-title{font-size:32px}
+        #mq-fx-chooser .mq-fx-ch-sub{font-size:16px;margin-bottom:30px}
+        #mq-fx-chooser .mq-fx-cards{grid-template-columns:repeat(3,1fr);max-width:820px;gap:18px}
+        #mq-fx-chooser .mq-fx-cards-2{grid-template-columns:repeat(2,1fr);max-width:560px}
+        #mq-fx-chooser .mq-fx-cards-1{grid-template-columns:1fr;max-width:380px}
+        #mq-fx-chooser .mq-fx-card-photo{height:168px}
+        #mq-fx-chooser .mq-fx-card-icon svg{width:54px;height:54px}
+        #mq-fx-chooser .mq-fx-card-body{padding:16px 18px 18px}
+        #mq-fx-chooser .mq-fx-card-title{font-size:18px}
+        #mq-fx-chooser .mq-fx-trust{margin:-14px auto 30px;font-size:14px;gap:6px 22px}
+      }
+
+
+      /* Live price chip (full-screen, while editing after a first estimate) */
+      .mq-fx-live{display:none;align-items:center;justify-content:space-between;gap:10px}
+      .mq-fx-live-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280}
+      .mq-fx-live-val{font-size:17px;font-weight:800;color:#111827}
+      .mq-fx-live-val.mq-fx-pulse{animation:mqFxPulse .6s ease}
+      @keyframes mqFxPulse{0%{transform:scale(1)}40%{transform:scale(1.07);color:#16a34a}100%{transform:scale(1)}}
+      #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-top{flex-wrap:wrap}
+      #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-top .mq-fx-live{display:flex;flex-basis:calc(100% + 28px);order:3;margin:2px -14px -10px;padding:7px 14px;background:#f0fdf4;border-top:1px solid #bbf7d0}
+      #mq-fx-side .mq-fx-live{display:none}
+      @media (min-width:900px){
+        #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-top .mq-fx-live{display:none}
+        #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-side .mq-fx-live{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 16px;border-radius:12px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.35);margin-bottom:20px}
+        #mq-fx-side .mq-fx-live-lbl{color:#86efac}
+        #mq-fx-side .mq-fx-live-val{color:#fff;font-size:20px}
+      }
+
+      /* Chooser cards: white, with a brand-colour gradient border */
+      #mq-fx-chooser .mq-fx-card{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.07)}
+      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{border-color:transparent;transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.16),0 0 0 4px var(--mq-card-tint,#e5e7eb);outline:none}
+      #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 4px var(--mq-card-tint,#e5e7eb),0 4px 14px rgba(0,0,0,.07)}
+
+      /* ── Full-screen focus mode ── */
+      #mq-fx-top,#mq-fx-side{display:none}
+      #midasquote-widget.mq-fx.mq-fx-full{box-sizing:border-box;position:fixed;inset:0;height:100vh;height:100dvh;width:100%;max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;z-index:99990;background:#f3f4f6;padding-bottom:var(--mq-sticky-h,0px);display:block}
+      #midasquote-widget.mq-fx-full .mq-header,
+      #midasquote-widget.mq-fx-full .mq-powered-by,
+      #midasquote-widget.mq-fx-full #mq-fx-chooser{display:none!important}
+      #midasquote-widget.mq-fx-full #mq-fx-top{display:flex;position:sticky;top:0;z-index:20;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#fff;border-bottom:1px solid #e5e7eb}
+      #mq-fx-top .mq-fx-top-brand{display:flex;flex-direction:column;min-width:0}
+      #mq-fx-top .mq-fx-top-name{font-size:15px;font-weight:800;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #mq-fx-top .mq-fx-top-pw{font-size:11px;color:#9ca3af;font-weight:600}
+      #mq-fx-top .mq-fx-top-pw a{color:#6b7280;text-decoration:none}
+      #mq-fx-top .mq-fx-exit{background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;border-radius:99px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
+      #mq-fx-top .mq-fx-exit:hover{background:#e5e7eb}
+      #midasquote-widget.mq-fx-full .mq-tab-content{padding:12px 10px 60px;max-width:860px;margin:0 auto}
+      #midasquote-widget.mq-fx-full .mq-sec{--mq-fx-pad:16px;border:1px solid #e5e7eb;border-left:1px solid #e5e7eb;border-radius:16px;padding:var(--mq-fx-pad);box-shadow:0 6px 24px rgba(0,0,0,.07)}
+      #midasquote-widget.mq-fx-full .mq-sec.mq-step-current,#midasquote-widget.mq-fx-full .mq-sec.mq-step-done,#midasquote-widget.mq-fx-full .mq-sec.mq-step-upcoming{box-shadow:0 6px 24px rgba(0,0,0,.07)}
+      #midasquote-widget.mq-fx-full .mq-step-footer{margin:18px calc(var(--mq-fx-pad,16px) * -1) calc(var(--mq-fx-pad,16px) * -1);padding:12px var(--mq-fx-pad,16px);border-radius:0 0 16px 16px}
+      @media (min-width:900px){
+        #midasquote-widget.mq-fx.mq-fx-full{padding-left:300px;background:#f1f3f6}
+        #midasquote-widget.mq-fx-full #mq-fx-side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:var(--mq-sticky-h,0px);width:300px;padding:30px 24px 22px;background:linear-gradient(180deg,#14161b 0%,#1d2027 100%);color:#fff;z-index:30;overflow-y:auto}
+        #midasquote-widget.mq-fx-full #mq-fx-top{background:transparent;border-bottom:0;justify-content:flex-end;padding:18px 28px 0;pointer-events:none}
+        #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-top-brand{display:none}
+        #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-exit{pointer-events:auto;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+        #midasquote-widget.mq-fx-full .mq-tab-content{padding:4px 40px 90px;max-width:900px}
+        #midasquote-widget.mq-fx-full .mq-sec{--mq-fx-pad:36px;border-radius:20px;box-shadow:0 14px 44px rgba(17,24,39,.10)}
+        #midasquote-widget.mq-fx-full .mq-step-footer{border-radius:0 0 20px 20px}
+        #midasquote-widget.mq-fx-full .mq-fx-title{font-size:32px}
+        #midasquote-widget.mq-fx-full .mq-fx-sub{font-size:16.5px}
+        #midasquote-widget.mq-fx-full .mq-fx-bar{display:none}
+        #midasquote-widget.mq-fx-full .mq-fx-head{margin-bottom:24px}
+      }
+      #mq-fx-side{scrollbar-width:thin;scrollbar-color:#3a3f4b transparent;overflow-x:hidden}
+      #mq-fx-side::-webkit-scrollbar{width:6px}
+      #mq-fx-side::-webkit-scrollbar-thumb{background:#3a3f4b;border-radius:99px}
+      @media (min-width:900px) and (max-height:800px){
+        #midasquote-widget.mq-fx-full #mq-fx-side{padding:20px 20px 16px}
+        #mq-fx-side .mq-fx-side-brand{margin-bottom:14px}
+        #mq-fx-side-type{padding:10px 14px;margin-bottom:12px}
+        .mq-fx-stp{padding:4px 0;font-size:14px}
+        .mq-fx-stp:not(:last-child)::after{top:30px;bottom:-4px}
+        .mq-fx-stp-dot{width:26px;height:26px}
+        .mq-fx-stp:not(:last-child)::after{left:12px}
+        .mq-fx-side-foot{margin-top:10px;padding-top:12px;gap:8px}
+      }
+      #mq-fx-side .mq-fx-side-brand{display:flex;align-items:center;gap:12px;padding:0;border:0;margin-bottom:26px}
+      #mq-fx-side .mq-fx-side-brand .mq-shop-name{color:#fff;font-size:16px;font-weight:800}
+      #mq-fx-side .mq-fx-side-brand .mq-shop-sub{color:#9ca3af;font-size:12.5px}
+      #mq-fx-side .mq-fx-side-brand>*{flex-shrink:0}
+      #mq-fx-side .mq-fx-side-brand>div[style*="flex:1"]{flex:1;min-width:0}
+      #mq-fx-side-type{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.07);margin-bottom:22px}
+      .mq-fx-side-type-kicker{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#9ca3af}
+      .mq-fx-side-type-name{font-size:16px;font-weight:800;color:#fff}
+      .mq-fx-side-type-room{font-size:13px;color:#cbd5e1}
+      #mq-fx-steps{list-style:none;margin:0;padding:0;flex:1}
+      .mq-fx-stp{display:flex;align-items:center;gap:12px;padding:8px 0;position:relative;color:#8b93a1;font-size:14.5px;font-weight:600}
+      .mq-fx-stp:not(:last-child)::after{content:'';position:absolute;left:13px;top:36px;bottom:-8px;width:2px;background:rgba(255,255,255,.12)}
+      .mq-fx-stp-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;border:2px solid rgba(255,255,255,.18);flex-shrink:0;background:#1d2027;position:relative;z-index:1}
+      .mq-fx-stp-cur{color:#fff}
+      .mq-fx-stp-cur .mq-fx-stp-dot{background:${fc};border-color:${fc};color:#fff;box-shadow:0 0 0 4px ${fc}40}
+      .mq-fx-stp-done{color:#d1d5db;cursor:pointer}
+      .mq-fx-stp-done:hover{color:#fff}
+      .mq-fx-stp-done .mq-fx-stp-dot{background:#16a34a;border-color:#16a34a;color:#fff}
+      .mq-fx-side-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
+      .mq-fx-side-link{color:#cbd5e1;font-size:13px;font-weight:600;text-decoration:none}
+      .mq-fx-side-link:hover{color:#fff}
+      .mq-fx-side-pw{font-size:11.5px;color:#7b8494;font-weight:600}
+      .mq-fx-side-pw a{color:#aab2c0;text-decoration:none}
+      .mq-fx-side-exit{background:transparent;border:1px solid rgba(255,255,255,.22);color:#e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center}
+      .mq-fx-side-exit:hover{background:rgba(255,255,255,.08)}
+    `;
+    document.head.appendChild(s);
+  }
+
+  // Runs after every full render of the widget (initial load and "start a new
+  // estimate", which both replace the container's innerHTML).
+  window.mqFxInit = function() {
+    const container = document.getElementById('midasquote-widget');
+    if (!container || !window._mqFxOn) return;
+    if (window._mqFxFull) window.mqFxExitFull(); // a rebuild (start new estimate) always lands back inline
+    container.classList.add('mq-fx');
+    mqFxInjectStyles();
+    container.querySelectorAll('.mq-tab-content').forEach(tab => {
+      const prefix = mqFxPrefixOfTabId(tab.id.replace('mq-tab-', ''));
+      const legend = tab.firstElementChild;
+      if (legend && !legend.classList.contains('mq-fx-legend') && legend.tagName === 'DIV' && !legend.className) legend.classList.add('mq-fx-legend');
+      if (!tab.querySelector(':scope > .mq-fx-resbar')) {
+        const bar = document.createElement('div');
+        bar.className = 'mq-fx-resbar';
+        bar.innerHTML = `<button type="button" class="mq-fx-resbtn" onclick="mqFxEditAnswers('${prefix}')">← Edit my answers</button>`
+          + (prefix === 'ct' ? '' : `<button type="button" class="mq-fx-resbtn" onclick="mqFxEditAnswers('${prefix}', true)">➕ Quote another project type</button>`);
+        tab.insertBefore(bar, tab.firstChild);
+      }
+    });
+    if (!document.getElementById('mq-fx-chooser')) {
+      const ch = document.createElement('div');
+      ch.id = 'mq-fx-chooser';
+      // Shops can hide quote types, so this may be 3, 2 or just 1 card. With
+      // one, there's nothing to "pick" — it becomes a single start card.
+      const shown = MQ_FX_TABS.filter(t => mqFxVisibleTabIds().includes(t.id));
+      const one = shown.length === 1;
+      // Photos: reuse the project-type cover images the shop already has.
+      // Cabinets -> their Kitchen cover; Countertops -> their kitchen-counters
+      // cover; Both -> the two side by side. A Demo shop gets the standard
+      // library photos (same rule as the cover image inside the quote). If a
+      // photo is missing/fails to load, the brand-tint icon underneath shows.
+      const rooms = (window._mqRoomTypes || []).filter(r => r && r.active !== false);
+      const CT_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/countertop-';
+      const cleanUrl = u => String(u || '').trim().replace(/["'<>\s]/g, c => encodeURIComponent(c));
+      const cabRoom = rooms.find(r => !r.forCountertops && r.id === 'kitchen') || rooms.find(r => !r.forCountertops && /kitchen/i.test(r.name || '')) || rooms.find(r => !r.forCountertops);
+      const ctRoom = rooms.find(r => r.forCountertops && r.id === 'ct_kitchen') || rooms.find(r => r.forCountertops);
+      const cabPhoto = cleanUrl((cabRoom && !window._mqIsDemoPlan && (cabRoom.coverImage || '').trim()) || 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/kitchen.jpg');
+      const ctDefaultKey = ctRoom ? String(ctRoom.id || '').replace(/^ct_/, '') : 'kitchen';
+      const ctPhoto = cleanUrl((ctRoom && !window._mqIsDemoPlan && (ctRoom.coverImage || '').trim()) || CT_BASE + (['kitchen', 'bathroom', 'laundry', 'garage', 'commercial', 'other'].includes(ctDefaultKey) ? ctDefaultKey : 'kitchen') + '.jpg');
+      const photosFor = id => (id === 'cabinets' ? [cabPhoto] : id === 'countertops' ? [ctPhoto] : [cabPhoto, ctPhoto]);
+      const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`).join('');
+      const TR = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+      const trust = `<div class="mq-fx-trust"><span>${TR('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}About 5 minutes</span><span>${TR('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}No obligation</span><span>${TR('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>')}Instant ballpark</span></div>`;
+      ch.innerHTML = `<div class="mq-fx-ch-title">${one ? 'Ready for your estimate?' : 'What would you like a quote for?'}</div>
+        <div class="mq-fx-ch-sub">${one ? 'Answer a few quick questions to get your estimate.' : 'Pick one to get started.'}</div>
+        ${trust}
+        <div class="mq-fx-cards mq-fx-cards-${shown.length}">${shown.map(t =>
+          `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about 5 minutes' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></span></button>`).join('')}
+        </div>`;
+      // Cards are white with a gradient BORDER of the shop's own Brand colour
+      // (brand -> a lighter shade of it); the icon tile is a soft tint of the
+      // brand colour. A light brand (e.g. yellow) gets a darker icon so it
+      // still reads on the tint.
+      const shopRec = window._mqShopData || {};
+      const bcRaw = /^#[0-9a-fA-F]{6}$/.test(shopRec['Brand colour'] || '') ? shopRec['Brand colour'] : '#1a1a1a';
+      const mix = (hex, t, to) => '#' + [1, 3, 5].map(i => { const c = parseInt(hex.slice(i, i + 2), 16); return Math.round(c + (to - c) * t).toString(16).padStart(2, '0'); }).join('');
+      const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+      const lum = 0.2126 * lin(parseInt(bcRaw.slice(1, 3), 16)) + 0.7152 * lin(parseInt(bcRaw.slice(3, 5), 16)) + 0.0722 * lin(parseInt(bcRaw.slice(5, 7), 16));
+      ch.style.setProperty('--mq-card-a', bcRaw);
+      ch.style.setProperty('--mq-card-b', mix(bcRaw, 0.45, 255));
+      ch.style.setProperty('--mq-card-tint', bcRaw + '1a');
+      ch.style.setProperty('--mq-card-ink', lum > 0.42 ? mix(bcRaw, 0.5, 0) : bcRaw);
+      const tabBar = container.querySelector('.mq-tab-bar');
+      if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
+    }
+    // Top bar (Exit button; shop name on phones) and desktop side stepper —
+    // only visible in full-screen mode (CSS).
+    if (!document.getElementById('mq-fx-top')) {
+      const hdr = container.querySelector('.mq-header');
+      const nameEl = hdr && hdr.querySelector('.mq-shop-name');
+      const top = document.createElement('div');
+      top.id = 'mq-fx-top';
+      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div>`;
+      container.insertBefore(top, container.firstChild);
+    }
+    if (!document.getElementById('mq-fx-side')) {
+      const hdr = container.querySelector('.mq-header');
+      const brand = hdr ? hdr.cloneNode(true) : document.createElement('div');
+      brand.querySelectorAll('a').forEach(a => a.remove());
+      brand.className = 'mq-fx-side-brand';
+      brand.removeAttribute('style');
+      const showroom = hdr && hdr.querySelector('a[href]');
+      const side = document.createElement('aside');
+      side.id = 'mq-fx-side';
+      side.appendChild(brand);
+      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
+      container.insertBefore(side, container.firstChild);
+    }
+    mqFxInstallSwipe(container);
+    if (!window._mqFxEscBound) {
+      window._mqFxEscBound = true;
+      document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape' || !window._mqFxFull) return;
+        if (document.querySelector('.mq-lightbox.show, .mq-overlay.show')) return; // let those close first
+        window.mqFxToChooser();
+      });
+    }
+    container.classList.add('mq-fx-chooser-on');
+    // Re-run for whatever tab is active so the head/off-classes exist on the
+    // very first paint (wireWidget's own step setup ran before this).
+    window.mqFxApply(window._mqActiveTabPrefix || 'b');
+  };
 
   init();
   mqInitMobileFontFix();
