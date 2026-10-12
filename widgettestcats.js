@@ -9228,6 +9228,8 @@
       #mq-fx-chooser .mq-fx-card{display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:left;width:100%;padding:0;overflow:hidden;background:#fff;border:2px solid #e5e7eb;border-radius:16px;cursor:pointer;font-family:inherit;transition:transform .18s,box-shadow .18s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
       #mq-fx-chooser .mq-fx-card-photo{position:relative;display:flex;gap:2px;width:100%;height:118px;background:#fff;overflow:hidden;flex-shrink:0}
       #mq-fx-chooser .mq-fx-card-photo img{position:relative;z-index:1;flex:1 1 0;min-width:0;height:100%;object-fit:cover;display:block;transition:transform .45s ease;box-shadow:inset 0 -56px 44px -34px rgba(0,0,0,.3)}
+      #mq-fx-chooser .mq-fx-card-photo::after{content:"";position:absolute;z-index:2;inset:0;pointer-events:none;background:linear-gradient(135deg,var(--mq-card-a,#1a1a1a) 0%,rgba(0,0,0,0) 95%);opacity:.6;mix-blend-mode:multiply;transition:opacity .35s ease}
+      #mq-fx-chooser .mq-fx-card:hover .mq-fx-card-photo::after,#mq-fx-chooser .mq-fx-card:focus-visible .mq-fx-card-photo::after{opacity:.2}
       #mq-fx-chooser .mq-fx-card:hover .mq-fx-card-photo img,#mq-fx-chooser .mq-fx-card:focus-visible .mq-fx-card-photo img{transform:scale(1.06)}
       #mq-fx-chooser .mq-fx-card-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a)}
       #mq-fx-chooser .mq-fx-card-icon svg{width:44px;height:44px}
@@ -9398,12 +9400,12 @@
       const photosFor = id => (id === 'cabinets' ? [cabPhoto] : id === 'countertops' ? [ctPhoto] : [cabPhoto, ctPhoto]);
       const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`).join('');
       const TR = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-      const trust = `<div class="mq-fx-trust"><span>${TR('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}About a minute</span><span>${TR('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}No obligation</span><span>${TR('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>')}Instant ballpark</span></div>`;
+      const trust = `<div class="mq-fx-trust"><span>${TR('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}About 5 minutes</span><span>${TR('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}No obligation</span><span>${TR('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>')}Instant ballpark</span></div>`;
       ch.innerHTML = `<div class="mq-fx-ch-title">${one ? 'Ready for your estimate?' : 'What would you like a quote for?'}</div>
-        <div class="mq-fx-ch-sub">${one ? 'Answer a few quick questions — it only takes a minute.' : 'Pick one to get started — it only takes a minute.'}</div>
+        <div class="mq-fx-ch-sub">${one ? 'Answer a few quick questions to get your estimate.' : 'Pick one to get started.'}</div>
         ${trust}
         <div class="mq-fx-cards mq-fx-cards-${shown.length}">${shown.map(t =>
-          `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about a minute' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></span></button>`).join('')}
+          `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about 5 minutes' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></span></button>`).join('')}
         </div>`;
       // Cards are white with a gradient BORDER of the shop's own Brand colour
       // (brand -> a lighter shade of it); the icon tile is a soft tint of the
