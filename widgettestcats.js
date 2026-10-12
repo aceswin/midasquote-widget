@@ -9227,7 +9227,7 @@
       #mq-fx-chooser .mq-fx-cards{display:grid;gap:12px;max-width:520px;margin:0 auto}
       #mq-fx-chooser .mq-fx-card{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:16px 18px;cursor:pointer;font-family:inherit;transition:border-color .15s,transform .15s,box-shadow .15s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
       #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{border-color:${fc};transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.12);outline:none}
-      #mq-fx-chooser .mq-fx-card-current{border-color:${fc}}
+      
       #mq-fx-chooser .mq-fx-card-icon{display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:14px;background:${fc}14;color:${fc};flex-shrink:0}
       #mq-fx-chooser .mq-fx-card-title{font-size:17px;font-weight:800;color:#111827;display:block}
       #mq-fx-chooser .mq-fx-card-sub{font-size:13.5px;color:#6b7280;display:block;margin-top:2px}
@@ -9271,7 +9271,7 @@
 
       /* Chooser cards: white, with a brand-colour gradient border */
       #mq-fx-chooser .mq-fx-card{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.07)}
-      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{background:linear-gradient(var(--mq-card-tint,#f3f4f6),var(--mq-card-tint,#f3f4f6)) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border-color:transparent;transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.14)}
+      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{border-color:transparent;transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.16),0 0 0 4px var(--mq-card-tint,#e5e7eb);outline:none}
       #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 4px var(--mq-card-tint,#e5e7eb),0 4px 14px rgba(0,0,0,.07)}
       #mq-fx-chooser .mq-fx-card-icon{background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a);box-shadow:none}
       #mq-fx-chooser .mq-fx-card-arrow{color:var(--mq-card-ink,#1a1a1a)}
