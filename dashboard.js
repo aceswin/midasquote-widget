@@ -421,6 +421,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <p style="margin:0">Require a password before customers can use your widget at all, for when you don't want it fully public. Add as many passwords as you like; removing one instantly locks out anyone whose browser had it saved.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🎛️ Widget layout</div>
+          <p style="margin:0">Pick <strong>Classic</strong> (one scrolling page, the original look) or <strong>Focused</strong> (one question at a time, full screen). It changes your embedded widget and your standalone link everywhere at once — no new embed code to paste. Use the Preview links to try either one before choosing. MidasQuote Pro always stays the same.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Estimator tabs</div>
           <p style="margin:0">A card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
         </div>
@@ -1616,7 +1620,7 @@ window.logoutMember = async function () {
             </div>
             <div class="mq-card">
               <div class="mq-card-title">🔗 Your widget embed code</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear. Whether it shows the Classic or Focused layout is set in Shop Info → 🎛️ Widget layout — changing it there updates this widget instantly, no new code needed.</p>
               <div class="mq-embed-box" id="mq-embed-preview"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-1">Copy</button></div>
             </div>
           </div>
@@ -1897,6 +1901,29 @@ window.logoutMember = async function () {
                 </div>
                 <span class="mq-hint" style="display:block;margin-top:8px">Once a customer enters a correct password, their browser remembers it — they will not be asked again unless you remove that specific password from this list.</span>
               </div>
+              </div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('layout')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-layout-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                🎛️ Widget layout
+              </div>
+              <div id="mq-shopsec-layout-body" style="display:none">
+              <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose how your widget feels to customers. This applies to your embedded widget and your standalone widget link everywhere at once — there's nothing to re-paste. MidasQuote Pro isn't affected — it always keeps its standard layout.</div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <div id="mq-layout-classic" onclick="mqSetWidgetLayout('Classic')" style="flex:1;min-width:230px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">📜 Classic</div>
+                  <div style="font-size:12px;color:#6b7280;line-height:1.5">One scrolling page. Customers see every step and can jump around freely. This is how your widget has always worked.</div>
+                  <a href="https://widget.midasquote.com/?shop=${token}&layout=classic" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#1d4ed8;text-decoration:none">Preview Classic ↗</a>
+                </div>
+                <div id="mq-layout-focused" onclick="mqSetWidgetLayout('Focused')" style="flex:1;min-width:230px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🎯 Focused</div>
+                  <div style="font-size:12px;color:#6b7280;line-height:1.5">One question at a time, in a clean full-screen view with photo cards to start, a progress stepper, and a live price. Great on phones.</div>
+                  <a href="https://widget.midasquote.com/?shop=${token}&layout=focused" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#1d4ed8;text-decoration:none">Preview Focused ↗</a>
+                </div>
+              </div>
+              <div id="mq-layout-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
               </div>
             </div>
 
@@ -3986,6 +4013,7 @@ window.logoutMember = async function () {
       const applyProChk = el('mq-tabs-applypro-toggle');
       if (applyProChk) applyProChk.checked = tabsCfg.applyToPro;
     })();
+    mqRenderWidgetLayoutUI(f['Widget layout']);
     const notifyEveryToggle = el('mq-notify-every-toggle');
     if (notifyEveryToggle) {
       notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
@@ -8465,6 +8493,36 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRec.fields['Show showroom'] = !isOn ? 'Show' : 'Hide';
       showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
+  };
+
+  // Widget layout — 'Widget layout' on the Shops table (single line text):
+  // "Classic" (or blank = default) or "Focused". widget.js reads it at load,
+  // so the embed code and standalone link never need to change. widgetpro.js
+  // deliberately ignores it (Pro always stays Classic).
+  function mqRenderWidgetLayoutUI(value) {
+    const layout = String(value || '').trim().toLowerCase() === 'focused' ? 'Focused' : 'Classic';
+    const c = el('mq-layout-classic'), f = el('mq-layout-focused');
+    if (c) { c.style.borderColor = layout === 'Classic' ? '#1a1a1a' : '#e5e7eb'; c.style.background = layout === 'Classic' ? '#f9fafb' : '#fff'; }
+    if (f) { f.style.borderColor = layout === 'Focused' ? '#1a1a1a' : '#e5e7eb'; f.style.background = layout === 'Focused' ? '#f9fafb' : '#fff'; }
+    const note = el('mq-layout-note');
+    if (note) note.textContent = layout === 'Focused'
+      ? '🎯 Focused is live on your embedded widget and standalone link.'
+      : '📜 Classic is live on your embedded widget and standalone link.';
+  }
+  window.mqSetWidgetLayout = async function(layout) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const prev = shopRec.fields['Widget layout'] || '';
+    if ((String(prev).trim().toLowerCase() === 'focused' ? 'Focused' : 'Classic') === layout) return;
+    mqRenderWidgetLayoutUI(layout);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget layout': layout });
+      shopRec.fields['Widget layout'] = layout;
+      showMsg('mq-shop-msg', '✓ Widget layout set to ' + layout + '. It\'s live on your widget now.');
+    } catch(e) {
+      mqRenderWidgetLayoutUI(prev);
+      showMsg('mq-shop-msg', 'Error saving.', 'error');
+    }
   };
 
   // Estimator tabs (widget's Both/Cabinets/Countertops top-level tabs) —
