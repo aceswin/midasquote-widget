@@ -9269,14 +9269,12 @@
         #mq-fx-side .mq-fx-live-val{color:#fff;font-size:20px}
       }
 
-      /* Chooser cards: white background, brand-colour gradient buttons */
-      #mq-fx-chooser .mq-fx-card{background:linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#000));border:0;color:var(--mq-card-ink,#fff);box-shadow:0 8px 22px rgba(0,0,0,.20)}
-      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{filter:brightness(1.08);transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.28)}
-      #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--mq-card-a,#1a1a1a),0 8px 22px rgba(0,0,0,.20)}
-      #mq-fx-chooser .mq-fx-card-icon{background:var(--mq-card-tile,#fff);color:var(--mq-card-tile-ink,#222);box-shadow:0 4px 12px rgba(0,0,0,.18)}
-      #mq-fx-chooser .mq-fx-card-title{color:var(--mq-card-ink,#fff)}
-      #mq-fx-chooser .mq-fx-card-sub{color:var(--mq-card-ink,#fff);opacity:.82}
-      #mq-fx-chooser .mq-fx-card-arrow{color:var(--mq-card-ink,#fff)}
+      /* Chooser cards: white, with a brand-colour gradient border */
+      #mq-fx-chooser .mq-fx-card{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.07)}
+      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{background:linear-gradient(var(--mq-card-tint,#f3f4f6),var(--mq-card-tint,#f3f4f6)) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border-color:transparent;transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.14)}
+      #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 4px var(--mq-card-tint,#e5e7eb),0 4px 14px rgba(0,0,0,.07)}
+      #mq-fx-chooser .mq-fx-card-icon{background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a);box-shadow:none}
+      #mq-fx-chooser .mq-fx-card-arrow{color:var(--mq-card-ink,#1a1a1a)}
 
       /* ── Full-screen focus mode ── */
       #mq-fx-top,#mq-fx-side{display:none}
@@ -9383,20 +9381,19 @@
         <div class="mq-fx-cards mq-fx-cards-${shown.length}">${shown.map(t =>
           `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-icon">${t.icon}</span><span><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about a minute' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></button>`).join('')}
         </div>`;
-      // Cards are filled with a gradient of the shop's own Brand colour
-      // (brand -> a darker shade). Text/icon colour flips to dark ink if the
-      // brand colour is light enough that white text wouldn't read.
+      // Cards are white with a gradient BORDER of the shop's own Brand colour
+      // (brand -> a lighter shade of it); the icon tile is a soft tint of the
+      // brand colour. A light brand (e.g. yellow) gets a darker icon so it
+      // still reads on the tint.
       const shopRec = window._mqShopData || {};
       const bcRaw = /^#[0-9a-fA-F]{6}$/.test(shopRec['Brand colour'] || '') ? shopRec['Brand colour'] : '#1a1a1a';
-      const mix = (hex, t) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - t)).toString(16).padStart(2, '0')).join('');
+      const mix = (hex, t, to) => '#' + [1, 3, 5].map(i => { const c = parseInt(hex.slice(i, i + 2), 16); return Math.round(c + (to - c) * t).toString(16).padStart(2, '0'); }).join('');
       const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
       const lum = 0.2126 * lin(parseInt(bcRaw.slice(1, 3), 16)) + 0.7152 * lin(parseInt(bcRaw.slice(3, 5), 16)) + 0.0722 * lin(parseInt(bcRaw.slice(5, 7), 16));
-      const lightBrand = lum > 0.42;
-      ch.style.setProperty('--mq-card-a', lightBrand ? bcRaw : mix(bcRaw, 0.0));
-      ch.style.setProperty('--mq-card-b', lightBrand ? mix(bcRaw, 0.22) : mix(bcRaw, 0.42));
-      ch.style.setProperty('--mq-card-ink', lightBrand ? '#1f2937' : '#ffffff');
-      ch.style.setProperty('--mq-card-tile', lightBrand ? 'rgba(0,0,0,.10)' : '#ffffff');
-      ch.style.setProperty('--mq-card-tile-ink', lightBrand ? '#1f2937' : mix(bcRaw, 0.45));
+      ch.style.setProperty('--mq-card-a', bcRaw);
+      ch.style.setProperty('--mq-card-b', mix(bcRaw, 0.45, 255));
+      ch.style.setProperty('--mq-card-tint', bcRaw + '1a');
+      ch.style.setProperty('--mq-card-ink', lum > 0.42 ? mix(bcRaw, 0.5, 0) : bcRaw);
       const tabBar = container.querySelector('.mq-tab-bar');
       if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
     }
