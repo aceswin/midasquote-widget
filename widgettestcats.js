@@ -4619,8 +4619,10 @@
       function tryScroll() {
         attempts++;
         const resultEl = document.getElementById(resultId);
-        const anchorEl = resultEl ? resultEl.querySelector(anchorSelector) : null;
-        if (!anchorEl) return;
+        // Focused mode: land on the results screen's own top bar (Edit my answers) so the whole breakdown reads top-down, rather than pinning just the price block.
+        const fxBar = (window._mqFxOn && resultEl) ? resultEl.closest('.mq-tab-content')?.querySelector(':scope > .mq-fx-resbar') : null;
+        const anchorEl = fxBar || (resultEl ? resultEl.querySelector(anchorSelector) : null);
+        if (!anchorEl || anchorEl.offsetParent === null) return; // hidden (e.g. customer already went back to edit)
         const topGap = 16; // small breathing room above the price block
         const rect = anchorEl.getBoundingClientRect();
         const scrollAmount = rect.top - topGap;
@@ -4687,7 +4689,10 @@
         footer.className = 'mq-step-footer';
         sec.appendChild(footer);
       }
-      if (index === current) {
+      if (index === current && window._mqFxOn) {
+        footer.style.display = 'flex';
+        footer.innerHTML = window.mqFxFooterHTML(prefix, index, total);
+      } else if (index === current) {
         footer.style.display = 'flex';
         footer.innerHTML = `
           ${index > 0 ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>` : '<span></span>'}
@@ -4720,6 +4725,7 @@
           window.mqToggleCollapse(key);
         }
       }
+      if (window._mqFxOn && window.mqFxApply) window.mqFxApply(prefix);
       mqObserveSectionsForScrollSpy();
     };
 
@@ -4733,6 +4739,9 @@
       const btnId = prefix === 'c' ? 'mq-c-calc-btn' : (prefix === 'ct' ? 'mq-ct-calc-btn' : 'mq-b-calc-btn');
       const btn = document.getElementById(btnId);
       if (!btn) return;
+      // Focused mode: the Calculate button is hidden — the last step's own
+      // "See my estimate" button is the call to action, so just press it.
+      if (window._mqFxOn) { if (!btn.disabled) btn.click(); return; }
       btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
       btn.classList.remove('mq-calc-btn-pulse');
       void btn.offsetWidth; // restart the animation if it's already mid-pulse
@@ -4778,8 +4787,10 @@
       const sections = mqGetVisibleSections(prefix);
       const wasLast = (_mqStepIndex[prefix] || 0) >= sections.length - 1;
       _mqStepIndex[prefix] = Math.min((_mqStepIndex[prefix] || 0) + 1, sections.length - 1);
+      if (window._mqFxOn) window._mqFxDir = wasLast ? null : 'next';
       window.mqUpdateStepFocus(prefix);
       if (wasLast) { mqHighlightCalcButton(prefix); return; }
+      if (window._mqFxOn) { window.mqFxScrollToStep(); return; }
       mqLockStepNav(prefix);
       const next = sections[_mqStepIndex[prefix]];
       if (next) mqScrollTopNearCenter(next);
@@ -4787,7 +4798,9 @@
 
     window.mqStepBack = function(prefix) {
       _mqStepIndex[prefix] = Math.max((_mqStepIndex[prefix] || 0) - 1, 0);
+      if (window._mqFxOn) window._mqFxDir = 'back';
       window.mqUpdateStepFocus(prefix);
+      if (window._mqFxOn) { window.mqFxScrollToStep(); return; }
       mqLockStepNav(prefix);
       const sections = mqGetVisibleSections(prefix);
       const cur = sections[_mqStepIndex[prefix]];
@@ -4800,6 +4813,7 @@
     // in either direction (e.g. jumping back from Specialty Items to Doors
     // by tapping that section directly, same as scrolling up would).
     window.mqJumpToSectionIfNeeded = function(sec) {
+      if (window._mqFxOn) return; // Focused mode: only Continue/Back/swipe move the step
       const tab = sec.closest('.mq-tab-content');
       if (!tab) return;
       const prefix = tab.id === 'mq-tab-cabinets' ? 'c' : (tab.id === 'mq-tab-both' ? 'b' : (tab.id === 'mq-tab-countertops' ? 'ct' : null));
@@ -6971,7 +6985,7 @@
         mqUpdateFinancingBox('c', r.low, r.high, r.total);
         window.mqShowStickyBar('c', r.low, r.high, r.total);
         document.getElementById('mq-c-loading').classList.remove('show');
-        document.getElementById('mq-c-result').classList.add('show');mqScrollResultsIntoView('c');
+        document.getElementById('mq-c-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('c');mqScrollResultsIntoView('c');
         document.getElementById('mq-c-calc-btn').disabled=false;
         if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets',r.low,r.high,r.lines,r.roomLabel,r.total,'c');
       });
@@ -6994,7 +7008,7 @@
           mqUpdateFinancingBox('ct', r.low, r.high, r.total);
           window.mqShowStickyBar('ct', r.low, r.high, r.total);
           document.getElementById('mq-ct-loading').classList.remove('show');
-          document.getElementById('mq-ct-result').classList.add('show');mqScrollResultsIntoView('ct');
+          document.getElementById('mq-ct-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('ct');mqScrollResultsIntoView('ct');
           document.getElementById('mq-ct-calc-btn').disabled=false;
           if(lead) await mqSaveLeadWithCart(data,lead,'Countertops',r.low,r.high,r.lines,'',r.total,'ct');
         },900);
@@ -7028,7 +7042,7 @@
           mqUpdateFinancingBox('b', tl, th, totalB);
           window.mqShowStickyBar('b', tl, th, totalB);
           document.getElementById('mq-b-loading').classList.remove('show');
-          document.getElementById('mq-b-result').classList.add('show');mqScrollResultsIntoView('b');
+          document.getElementById('mq-b-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('b');mqScrollResultsIntoView('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
           if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel,totalB,'b');
         },1200);
@@ -7984,6 +7998,7 @@
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
     if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
+    if (window.mqFxInit) window.mqFxInit();
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
     // bar from before and let it re-earn its spot once they Calculate again.
     window._mqStickyPrefix = null;
@@ -8077,6 +8092,7 @@
   // backward to whatever most recently collapsed, right as Continue was
   // trying to move it forward.
   function mqCheckBottomBounceAutoOpen() {
+    if (window._mqFxOn) return; // Focused mode never needs the scroll-to-bottom auto-open
     const doc = document.documentElement;
     const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 24;
     if (!atBottom) return;
@@ -8237,6 +8253,7 @@
       if (_mqOrigBodyPaddingBottom === null) {
         _mqOrigBodyPaddingBottom = document.body.style.paddingBottom || '';
       }
+      document.documentElement.style.setProperty('--mq-sticky-h', (bar && bar.classList.contains('show') ? bar.offsetHeight : 0) + 'px');
       if (bar && bar.classList.contains('show')) {
         document.body.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
       } else {
@@ -8743,6 +8760,7 @@
     container.innerHTML=buildWidgetHTML(shop,specs,data);
     wireWidget(data);
     if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
+    if (window.mqFxInit) window.mqFxInit();
     mqSetupModalOverlays();
     mqSetupStickyBar();
     // Delegated so it automatically covers every input/select/checkbox in
@@ -8796,6 +8814,319 @@
       } catch(e) { /* localStorage unavailable — skip popup */ }
     }
   }
+
+  // ════════════════════════════════════════════════════════════════════
+  // FOCUSED MODE ("one step at a time") — TEST BUILD
+  // ════════════════════════════════════════════════════════════════════
+  // A layer on top of the normal guided-step system: instead of one long
+  // scrolling page where every section is stacked, the customer first picks
+  // what they want a quote for (cards), then sees ONE section at a time with
+  // a progress bar, a friendly prompt, and Back/Continue (or a swipe on
+  // touch screens). When the last step is finished it calculates and shows a
+  // results screen with a way back to edit answers.
+  //
+  // Nothing here changes any pricing/maths — it only decides which existing
+  // section is on screen. Off-screen sections are kept in the DOM (just
+  // visually hidden) so every existing function that reads them, including
+  // the offsetParent-based mqGetVisibleSections, keeps working unchanged.
+  // window._mqFxOn is hard-wired true in this test file; later it becomes a
+  // per-shop setting (Classic vs Focused).
+  window._mqFxOn = true;
+  window._mqFxDir = null;
+  const _mqFxLastPct = {};
+
+  const MQ_FX_TABS = [
+    { id:'both',        icon:'✨', title:'Cabinets + countertops', sub:'A full project quote' },
+    { id:'cabinets',    icon:'🪵', title:'Cabinets only',          sub:'Just the cabinets' },
+    { id:'countertops', icon:'🪨', title:'Countertops only',       sub:'Just the countertops' },
+  ];
+  function mqFxPrefixOfTabId(id) { return id === 'both' ? 'b' : (id === 'countertops' ? 'ct' : 'c'); }
+  function mqFxTabEl(prefix) { return document.getElementById(prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets')); }
+  function mqFxVisibleTabIds() {
+    const hidden = window._mqHiddenTabs || [];
+    return MQ_FX_TABS.map(t => t.id).filter(id => !hidden.includes(id));
+  }
+  function mqFxHasChooser() { return mqFxVisibleTabIds().length > 1; }
+
+  // Friendly per-step prompt. Keyed by the section's id suffix; falls back to
+  // the section's own title so a section added in future still gets a screen.
+  function mqFxPromptFor(sec, index) {
+    const id = sec.id || '';
+    const ends = s => id.endsWith(s);
+    if (!id) return { t: "Let's start with your project", s: "Tell us what you're planning — everything that follows adjusts to match." };
+    if (ends('-measuring-sec')) return { t: 'Quick tip: measuring', s: "A minute here makes your estimate much more accurate. Have a look, then continue." };
+    if (ends('-si-field')) {
+      const sel = sec.querySelector('select[id$="-si"]');
+      const canInstall = sel && sel.options.length > 1;
+      return canInstall
+        ? { t: 'Do you need installation?', s: "Just the cabinets, or installed too? You can also let us know if the old ones need to come out." }
+        : { t: 'Anything to remove first?', s: 'Let us know if your existing cabinets need to come out.' };
+    }
+    if (ends('-cabinet-selections-sec')) return { t: 'Pick your cabinet style', s: 'Choose a material and a door style.' };
+    if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
+    if (ends('-drawers-sec')) return { t: 'How about drawers?', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
+    if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };
+    if (ends('-trim-sec')) return { t: 'Finishing touches', s: 'Crown moulding and valance add the final polish. Skip ahead if you don’t need them.' };
+    if (ends('-specialty-sec')) return { t: 'Any extras?', s: 'Pull-outs, special features and more — add what you like, or just continue.' };
+    if (ends('b-ct-options-sec')) return { t: 'Now, your countertops', s: 'Choose your material and how you’d like it supplied.' };
+    if (ends('b-ct-surfaces-sec')) return { t: 'Any other countertop areas?', s: 'Bar tops, a separate vanity, an island — add them here, or just continue.' };
+    if (ends('ct-surfaces-sec')) return { t: 'Tell us about your countertops', s: 'Add each surface you need. You can add more than one.' };
+    const titleEl = sec.querySelector('.mq-sec-title');
+    return { t: (titleEl ? titleEl.textContent.replace(/^\s*\d+\s*/, '').trim() : '') || 'Next', s: '' };
+  }
+
+  // Rebuilds which section is on screen for this tab, plus the progress head.
+  window.mqFxApply = function(prefix) {
+    if (!window._mqFxOn) return;
+    const tab = mqFxTabEl(prefix);
+    if (!tab) return;
+    const secs = window.mqGetVisibleSections(prefix);
+    const inResults = tab.classList.contains('mq-fx-results');
+    const idx = Math.max(0, Math.min((window._mqStepIndex[prefix] || 0), secs.length - 1));
+    const dir = window._mqFxDir;
+    window._mqFxDir = null;
+    secs.forEach((sec, i) => {
+      const isCur = !inResults && i === idx;
+      sec.classList.toggle('mq-fx-off', !isCur);
+      sec.classList.toggle('mq-fx-cur', isCur);
+      const old = sec.querySelector(':scope > .mq-fx-head');
+      if (old) old.remove();
+      sec.classList.remove('mq-fx-in-next', 'mq-fx-in-back');
+      if (!isCur) return;
+      const p = mqFxPromptFor(sec, i);
+      const pct = Math.round(((i + 1) / secs.length) * 100);
+      const head = document.createElement('div');
+      head.className = 'mq-fx-head';
+      head.innerHTML = `
+        <div class="mq-fx-progress-row"><span class="mq-fx-stepcount">Step ${i + 1} of ${secs.length}</span>${i < secs.length - 1 ? '<span class="mq-fx-swipehint">Swipe ← to continue</span>' : ''}</div>
+        <div class="mq-fx-bar"><div class="mq-fx-bar-fill" style="width:${_mqFxLastPct[prefix] != null ? _mqFxLastPct[prefix] : pct}%"></div></div>
+        <h2 class="mq-fx-title">${p.t}</h2>
+        ${p.s ? `<p class="mq-fx-sub">${p.s}</p>` : ''}`;
+      sec.insertBefore(head, sec.firstChild);
+      const legend = tab.querySelector(':scope > .mq-fx-legend');
+      if (legend && /(cabinet-selections-sec|ct-options-sec|ct-surfaces-sec)$/.test(sec.id || '')) {
+        const lc = legend.cloneNode(true);
+        lc.classList.remove('mq-fx-legend');
+        lc.classList.add('mq-fx-legend-clone');
+        head.appendChild(lc);
+      }
+      const fill = head.querySelector('.mq-fx-bar-fill');
+      requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = pct + '%'; }));
+      _mqFxLastPct[prefix] = pct;
+      if (dir) {
+        void sec.offsetWidth;
+        sec.classList.add(dir === 'back' ? 'mq-fx-in-back' : 'mq-fx-in-next');
+        setTimeout(() => sec.classList.remove('mq-fx-in-next', 'mq-fx-in-back'), 450);
+      }
+    });
+    // Picker arrows measure scrollWidth, which reads 0 while hidden.
+    if (window.mqUpdateAllPickerArrows) requestAnimationFrame(() => window.mqUpdateAllPickerArrows());
+  };
+
+  window.mqFxFooterHTML = function(prefix, index, total) {
+    const isLast = index >= total - 1;
+    const back = index > 0
+      ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>`
+      : (mqFxHasChooser() ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Change</button>` : '<span></span>');
+    return `${back}<button type="button" class="mq-step-continue-btn" onclick="event.stopPropagation();mqStepContinue('${prefix}')">${isLast ? 'See my estimate ✨' : 'Continue →'}</button>`;
+  };
+
+  window.mqFxScrollToStep = function() {
+    const sec = document.querySelector('#midasquote-widget .mq-tab-content.active .mq-sec.mq-fx-cur');
+    if (!sec || !window.mqScrollWithOffset) return;
+    const top = sec.getBoundingClientRect().top;
+    if (top < 40 || top > window.innerHeight * 0.45) window.mqScrollWithOffset(sec, 70);
+  };
+
+  window.mqFxToChooser = function() {
+    const container = document.getElementById('midasquote-widget');
+    if (!container) return;
+    container.classList.add('mq-fx-chooser-on');
+    const active = window._mqActiveTabPrefix;
+    container.querySelectorAll('.mq-fx-card').forEach(c => c.classList.toggle('mq-fx-card-current', mqFxPrefixOfTabId(c.dataset.tab) === active));
+    window.mqScrollWithOffset && window.mqScrollWithOffset(container, 20);
+  };
+
+  window.mqFxStart = function(id) {
+    const container = document.getElementById('midasquote-widget');
+    if (!container) return;
+    const prev = window._mqActiveTabPrefix;
+    const next = mqFxPrefixOfTabId(id);
+    const btn = document.querySelector(`.mq-tab[onclick^="mqSwitchTab('${id}'"]`);
+    if (btn) window.mqSwitchTab(id, btn);
+    if (prev !== next) {
+      [prev, next].forEach(p => { const t = mqFxTabEl(p); if (t) t.classList.remove('mq-fx-results'); });
+      window._mqStepIndex[next] = 0;
+      _mqFxLastPct[next] = null;
+    }
+    container.classList.remove('mq-fx-chooser-on');
+    window._mqFxDir = 'next';
+    window.mqUpdateStepFocus(next);
+    window.mqFxScrollToStep();
+  };
+
+  window.mqFxShowResults = function(prefix) {
+    if (!window._mqFxOn) return;
+    const tab = mqFxTabEl(prefix);
+    if (!tab) return;
+    tab.classList.add('mq-fx-results');
+    window.mqFxApply(prefix);
+  };
+
+  window.mqFxEditAnswers = function(prefix, toStart) {
+    const tab = mqFxTabEl(prefix);
+    if (!tab) return;
+    tab.classList.remove('mq-fx-results');
+    const secs = window.mqGetVisibleSections(prefix);
+    window._mqStepIndex[prefix] = toStart ? 0 : Math.max(0, secs.length - 1);
+    _mqFxLastPct[prefix] = null;
+    window._mqFxDir = 'back';
+    window.mqUpdateStepFocus(prefix);
+    window.mqFxScrollToStep();
+  };
+
+  function mqFxSwipeBlocked(t, container) {
+    if (!(t instanceof Element)) return true;
+    if (t.closest('input,select,textarea,button,a,label,summary,[contenteditable="true"],.mq-vpicker-row,.mq-measure-carousel-track,.mq-step-footer')) return true;
+    for (let n = t; n && n !== container; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 1) return true;
+    }
+    return false;
+  }
+
+  function mqFxInstallSwipe(container) {
+    if (container._mqFxSwipe) return;
+    container._mqFxSwipe = true;
+    let sx = 0, sy = 0, st = 0, ok = false;
+    container.addEventListener('touchstart', e => {
+      ok = false;
+      if (!window._mqFxOn || e.touches.length !== 1) return;
+      if (container.classList.contains('mq-fx-chooser-on')) return;
+      const tab = container.querySelector('.mq-tab-content.active');
+      if (!tab || tab.classList.contains('mq-fx-results')) return;
+      if (mqFxSwipeBlocked(e.target, container)) return;
+      ok = true; sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+    }, { passive: true });
+    container.addEventListener('touchend', e => {
+      if (!ok) return;
+      ok = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Date.now() - st > 900 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+      const prefix = window._mqActiveTabPrefix;
+      const total = window.mqGetVisibleSections(prefix).length;
+      const idx = window._mqStepIndex[prefix] || 0;
+      // Swiping forward never triggers the final "calculate" — that stays a
+      // deliberate button tap so a stray swipe can't pop the lead form.
+      if (dx < 0) { if (idx < total - 1) window.mqStepContinue(prefix); }
+      else if (idx > 0) window.mqStepBack(prefix);
+    }, { passive: true });
+  }
+
+  function mqFxInjectStyles() {
+    if (document.getElementById('mq-fx-styles')) return;
+    const fc = window._mqFocalColor || '#2563eb';
+    const s = document.createElement('style');
+    s.id = 'mq-fx-styles';
+    s.textContent = `
+      #midasquote-widget.mq-fx{overflow:clip}
+      #midasquote-widget.mq-fx .mq-tab-bar,
+      #midasquote-widget.mq-fx .mq-fx-legend,
+      #midasquote-widget.mq-fx .mq-both-divider,
+      #midasquote-widget.mq-fx .mq-sec-header-row,
+      #midasquote-widget.mq-fx .mq-sec > .mq-sec-title,
+      #midasquote-widget.mq-fx .mq-calc-btn,
+      #midasquote-widget.mq-fx .mq-step-badge{display:none!important}
+      #midasquote-widget.mq-fx .mq-tab-content{position:relative}
+      #midasquote-widget.mq-fx.mq-fx-chooser-on .mq-tab-content{display:none!important}
+      #midasquote-widget.mq-fx:not(.mq-fx-chooser-on) #mq-fx-chooser{display:none}
+      #midasquote-widget.mq-fx .mq-sec.mq-fx-off{position:absolute;left:0;top:0;width:100%;height:0;margin:0;padding:0;border:0;overflow:hidden;visibility:hidden;pointer-events:none;box-shadow:none}
+      #midasquote-widget.mq-fx .mq-sec.mq-step-current,
+      #midasquote-widget.mq-fx .mq-sec.mq-step-done,
+      #midasquote-widget.mq-fx .mq-sec.mq-step-upcoming{filter:none;opacity:1;box-shadow:0 4px 14px rgba(0,0,0,0.10)}
+      #midasquote-widget.mq-fx .mq-sec{padding:16px;margin-bottom:0}
+      #midasquote-widget.mq-fx .mq-tab-content{padding:12px}
+      #midasquote-widget.mq-fx .mq-tab-content:not(.mq-fx-results) .mq-result,
+      #midasquote-widget.mq-fx .mq-tab-content:not(.mq-fx-results) .mq-combined-result{display:none!important}
+      #midasquote-widget.mq-fx .mq-fx-resbar{display:none}
+      #midasquote-widget.mq-fx .mq-tab-content.mq-fx-results .mq-fx-resbar{display:flex}
+      #midasquote-widget.mq-fx .mq-fx-head{margin-bottom:18px}
+      #midasquote-widget.mq-fx .mq-fx-progress-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;color:#6b7280;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
+      #midasquote-widget.mq-fx .mq-fx-swipehint{display:none;font-weight:600;text-transform:none;letter-spacing:0;color:#9ca3af}
+      @media (pointer:coarse){#midasquote-widget.mq-fx .mq-fx-swipehint{display:inline}}
+      #midasquote-widget.mq-fx .mq-fx-bar{height:6px;border-radius:99px;background:#e5e7eb;overflow:hidden;margin-bottom:18px}
+      #midasquote-widget.mq-fx .mq-fx-bar-fill{height:100%;border-radius:99px;background:${fc};transition:width .45s cubic-bezier(.4,0,.2,1)}
+      #midasquote-widget.mq-fx .mq-fx-title{font-size:23px;line-height:1.2;font-weight:800;color:#111827;margin:0 0 6px;letter-spacing:-.01em}
+      #midasquote-widget.mq-fx .mq-fx-sub{font-size:15px;line-height:1.5;color:#4b5563;margin:0}
+      #midasquote-widget.mq-fx .mq-fx-legend-clone{margin:14px 0 0!important}
+      #midasquote-widget.mq-fx .mq-sec.mq-fx-in-next{animation:mqFxInNext .38s cubic-bezier(.2,.7,.2,1) backwards}
+      #midasquote-widget.mq-fx .mq-sec.mq-fx-in-back{animation:mqFxInBack .38s cubic-bezier(.2,.7,.2,1) backwards}
+      @keyframes mqFxInNext{from{opacity:0;transform:translateX(42px)}to{opacity:1;transform:none}}
+      @keyframes mqFxInBack{from{opacity:0;transform:translateX(-42px)}to{opacity:1;transform:none}}
+      @media (prefers-reduced-motion:reduce){#midasquote-widget.mq-fx .mq-sec.mq-fx-in-next,#midasquote-widget.mq-fx .mq-sec.mq-fx-in-back{animation:none}}
+      #midasquote-widget.mq-fx .mq-step-footer{position:sticky;bottom:var(--mq-sticky-h,0px);z-index:6;background:#fff;margin:18px -16px -16px;padding:12px 16px;border-top:1px solid #e5e7eb;border-radius:0 0 10px 10px;box-shadow:0 -6px 14px rgba(0,0,0,.05)}
+      #midasquote-widget.mq-fx .mq-step-continue-btn{background:${fc};color:#fff;font-size:16px;font-weight:700;padding:13px 26px;border-radius:10px;flex:1;max-width:260px;margin-left:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+      #midasquote-widget.mq-fx .mq-step-back-btn{font-size:15px;padding:12px 8px}
+      @media (max-width:600px){#midasquote-widget.mq-fx .mq-step-continue-btn{max-width:none}}
+      #mq-fx-chooser{padding:26px 16px 22px;text-align:center;animation:mqFxInNext .4s ease backwards}
+      #mq-fx-chooser .mq-fx-ch-title{font-size:25px;line-height:1.2;font-weight:800;color:#111827;margin-bottom:6px;letter-spacing:-.01em}
+      #mq-fx-chooser .mq-fx-ch-sub{font-size:15px;color:#4b5563;margin-bottom:20px}
+      #mq-fx-chooser .mq-fx-cards{display:grid;gap:12px;max-width:520px;margin:0 auto}
+      #mq-fx-chooser .mq-fx-card{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:16px 18px;cursor:pointer;font-family:inherit;transition:border-color .15s,transform .15s,box-shadow .15s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
+      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{border-color:${fc};transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.12);outline:none}
+      #mq-fx-chooser .mq-fx-card-current{border-color:${fc}}
+      #mq-fx-chooser .mq-fx-card-icon{font-size:30px;line-height:1;flex-shrink:0}
+      #mq-fx-chooser .mq-fx-card-title{font-size:17px;font-weight:800;color:#111827;display:block}
+      #mq-fx-chooser .mq-fx-card-sub{font-size:13.5px;color:#6b7280;display:block;margin-top:2px}
+      #mq-fx-chooser .mq-fx-card-arrow{margin-left:auto;font-size:22px;color:${fc};flex-shrink:0}
+      #midasquote-widget.mq-fx .mq-fx-resbar{gap:10px;flex-wrap:wrap;margin-bottom:12px}
+      #midasquote-widget.mq-fx .mq-fx-resbtn{background:#fff;border:1.5px solid #d1d5db;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit}
+      #midasquote-widget.mq-fx .mq-fx-resbtn:hover{border-color:${fc};color:${fc}}
+      #midasquote-widget.mq-fx .mq-fx-resbtn-pri{background:${fc};border-color:${fc};color:#fff}
+      #midasquote-widget.mq-fx .mq-fx-resbtn-pri:hover{color:#fff;opacity:.9}
+    `;
+    document.head.appendChild(s);
+  }
+
+  // Runs after every full render of the widget (initial load and "start a new
+  // estimate", which both replace the container's innerHTML).
+  window.mqFxInit = function() {
+    const container = document.getElementById('midasquote-widget');
+    if (!container || !window._mqFxOn) return;
+    container.classList.add('mq-fx');
+    mqFxInjectStyles();
+    container.querySelectorAll('.mq-tab-content').forEach(tab => {
+      const prefix = mqFxPrefixOfTabId(tab.id.replace('mq-tab-', ''));
+      const legend = tab.firstElementChild;
+      if (legend && !legend.classList.contains('mq-fx-legend') && legend.tagName === 'DIV' && !legend.className) legend.classList.add('mq-fx-legend');
+      if (!tab.querySelector(':scope > .mq-fx-resbar')) {
+        const bar = document.createElement('div');
+        bar.className = 'mq-fx-resbar';
+        bar.innerHTML = `<button type="button" class="mq-fx-resbtn" onclick="mqFxEditAnswers('${prefix}')">← Edit my answers</button>`
+          + (prefix === 'ct' ? '' : `<button type="button" class="mq-fx-resbtn" onclick="mqFxEditAnswers('${prefix}', true)">➕ Quote another project type</button>`);
+        tab.insertBefore(bar, tab.firstChild);
+      }
+    });
+    if (!document.getElementById('mq-fx-chooser')) {
+      const ch = document.createElement('div');
+      ch.id = 'mq-fx-chooser';
+      ch.innerHTML = `<div class="mq-fx-ch-title">What would you like a quote for?</div>
+        <div class="mq-fx-ch-sub">Pick one to get started — it only takes a minute.</div>
+        <div class="mq-fx-cards">${MQ_FX_TABS.filter(t => mqFxVisibleTabIds().includes(t.id)).map(t =>
+          `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-icon">${t.icon}</span><span><span class="mq-fx-card-title">${t.title}</span><span class="mq-fx-card-sub">${t.sub}</span></span><span class="mq-fx-card-arrow">›</span></button>`).join('')}
+        </div>`;
+      const tabBar = container.querySelector('.mq-tab-bar');
+      if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
+    }
+    mqFxInstallSwipe(container);
+    const visible = mqFxVisibleTabIds();
+    if (visible.length === 1) { container.classList.remove('mq-fx-chooser-on'); window.mqFxStart(visible[0]); }
+    else container.classList.add('mq-fx-chooser-on');
+    // Re-run for whatever tab is active so the head/off-classes exist on the
+    // very first paint (wireWidget's own step setup ran before this).
+    window.mqFxApply(window._mqActiveTabPrefix || 'b');
+  };
 
   init();
   mqInitMobileFontFix();
