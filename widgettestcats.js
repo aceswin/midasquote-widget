@@ -4617,6 +4617,7 @@
       const anchorSelector = prefix === 'b' ? '.mq-grand-total' : '.mq-res-hdr';
       let attempts = 0;
       function tryScroll() {
+        if (window._mqFxFull) { const fc = document.getElementById('midasquote-widget'); if (fc) fc.scrollTo({ top: 0, behavior: 'smooth' }); return; } // full-screen layer scrolls itself, from the top
         attempts++;
         const resultEl = document.getElementById(resultId);
         // Focused mode: land on the results screen's own top bar (Edit my answers) so the whole breakdown reads top-down, rather than pinning just the price block.
@@ -5644,6 +5645,7 @@
     // Reuses mqScrollWithOffset so a shop site's own sticky header doesn't
     // cover the landing spot.
     window.mqScrollToTop = function() {
+      if (window._mqFxFull) { const fc = document.getElementById('midasquote-widget'); if (fc) fc.scrollTo({ top: 0, behavior: 'smooth' }); return; }
       const prefix = window._mqActiveTabPrefix || 'b';
       const tabId = prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets');
       const target = document.getElementById(`mq-${prefix}-room`) || document.getElementById(tabId) || document.getElementById('midasquote-widget');
@@ -8835,10 +8837,13 @@
   window._mqFxDir = null;
   const _mqFxLastPct = {};
 
+  // Inline SVG icons — the 🪵/🪨 emoji don't exist on a lot of Windows machines
+  // (they show as empty boxes), so nothing here depends on emoji fonts.
+  const MQ_FX_SVG = (inner) => `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
   const MQ_FX_TABS = [
-    { id:'both',        icon:'✨', title:'Cabinets + countertops', sub:'A full project quote' },
-    { id:'cabinets',    icon:'🪵', title:'Cabinets only',          sub:'Just the cabinets' },
-    { id:'countertops', icon:'🪨', title:'Countertops only',       sub:'Just the countertops' },
+    { id:'both',        icon: MQ_FX_SVG('<path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>'), title:'Cabinets + countertops', sub:'A full project quote' },
+    { id:'cabinets',    icon: MQ_FX_SVG('<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M12 3.5v17"/><path d="M9.6 11v2M14.4 11v2"/>'), title:'Cabinets only',          sub:'Just the cabinets' },
+    { id:'countertops', icon: MQ_FX_SVG('<path d="M2.5 9.5h19v4h-19z"/><path d="M5 13.5v6.5M19 13.5v6.5"/><path d="M6 6.5h4"/>'), title:'Countertops only',       sub:'Just the countertops' },
   ];
   function mqFxPrefixOfTabId(id) { return id === 'both' ? 'b' : (id === 'countertops' ? 'ct' : 'c'); }
   function mqFxTabEl(prefix) { return document.getElementById(prefix === 'b' ? 'mq-tab-both' : (prefix === 'ct' ? 'mq-tab-countertops' : 'mq-tab-cabinets')); }
@@ -8846,33 +8851,33 @@
     const hidden = window._mqHiddenTabs || [];
     return MQ_FX_TABS.map(t => t.id).filter(id => !hidden.includes(id));
   }
-  function mqFxHasChooser() { return mqFxVisibleTabIds().length > 1; }
 
   // Friendly per-step prompt. Keyed by the section's id suffix; falls back to
   // the section's own title so a section added in future still gets a screen.
   function mqFxPromptFor(sec, index) {
     const id = sec.id || '';
     const ends = s => id.endsWith(s);
-    if (!id) return { t: "Let's start with your project", s: "Tell us what you're planning — everything that follows adjusts to match." };
-    if (ends('-measuring-sec')) return { t: 'Quick tip: measuring', s: "A minute here makes your estimate much more accurate. Have a look, then continue." };
+    if (!id) return { t: "Let's start with your project", l: 'Project', s: "Tell us what you're planning — everything that follows adjusts to match." };
+    if (ends('-measuring-sec')) return { t: 'Quick tip: measuring', l: 'Measuring', s: "A minute here makes your estimate much more accurate. Have a look, then continue." };
     if (ends('-si-field')) {
       const sel = sec.querySelector('select[id$="-si"]');
       const canInstall = sel && sel.options.length > 1;
       return canInstall
-        ? { t: 'Do you need installation?', s: "Just the cabinets, or installed too? You can also let us know if the old ones need to come out." }
-        : { t: 'Anything to remove first?', s: 'Let us know if your existing cabinets need to come out.' };
+        ? { t: 'Do you need installation?', l: 'Installation', s: "Just the cabinets, or installed too? You can also let us know if the old ones need to come out." }
+        : { t: 'Anything to remove first?', l: 'Removal', s: 'Let us know if your existing cabinets need to come out.' };
     }
-    if (ends('-cabinet-selections-sec')) return { t: 'Pick your cabinet style', s: 'Choose a material and a door style.' };
-    if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
-    if (ends('-drawers-sec')) return { t: 'How about drawers?', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
-    if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };
-    if (ends('-trim-sec')) return { t: 'Finishing touches', s: 'Crown moulding and valance add the final polish. Skip ahead if you don’t need them.' };
-    if (ends('-specialty-sec')) return { t: 'Any extras?', s: 'Pull-outs, special features and more — add what you like, or just continue.' };
-    if (ends('b-ct-options-sec')) return { t: 'Now, your countertops', s: 'Choose your material and how you’d like it supplied.' };
-    if (ends('b-ct-surfaces-sec')) return { t: 'Any other countertop areas?', s: 'Bar tops, a separate vanity, an island — add them here, or just continue.' };
-    if (ends('ct-surfaces-sec')) return { t: 'Tell us about your countertops', s: 'Add each surface you need. You can add more than one.' };
+    if (ends('-cabinet-selections-sec')) return { t: 'Pick your cabinet style', l: 'Cabinet style', s: 'Choose a material and a door style.' };
+    if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', l: 'Size', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
+    if (ends('-drawers-sec')) return { t: 'How about drawers?', l: 'Drawers', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
+    if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', l: 'Tall cabinets', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };
+    if (ends('-trim-sec')) return { t: 'Finishing touches', l: 'Finishing touches', s: 'Crown moulding and valance add the final polish. Skip ahead if you don’t need them.' };
+    if (ends('-specialty-sec')) return { t: 'Any extras?', l: 'Extras', s: 'Pull-outs, special features and more — add what you like, or just continue.' };
+    if (ends('b-ct-options-sec')) return { t: 'Now, your countertops', l: 'Countertops', s: 'Choose your material and how you’d like it supplied.' };
+    if (ends('b-ct-surfaces-sec')) return { t: 'Any other countertop areas?', l: 'More surfaces', s: 'Bar tops, a separate vanity, an island — add them here, or just continue.' };
+    if (ends('ct-surfaces-sec')) return { t: 'Tell us about your countertops', l: 'Countertops', s: 'Add each surface you need. You can add more than one.' };
     const titleEl = sec.querySelector('.mq-sec-title');
-    return { t: (titleEl ? titleEl.textContent.replace(/^\s*\d+\s*/, '').trim() : '') || 'Next', s: '' };
+    const fallbackT = (titleEl ? titleEl.textContent.replace(/^\s*\d+\s*/, '').trim() : '') || 'Next';
+    return { t: fallbackT, l: fallbackT, s: '' };
   }
 
   // Rebuilds which section is on screen for this tab, plus the progress head.
@@ -8885,6 +8890,7 @@
     const idx = Math.max(0, Math.min((window._mqStepIndex[prefix] || 0), secs.length - 1));
     const dir = window._mqFxDir;
     window._mqFxDir = null;
+    const labels = secs.map((sec, i) => mqFxPromptFor(sec, i).l || mqFxPromptFor(sec, i).t);
     secs.forEach((sec, i) => {
       const isCur = !inResults && i === idx;
       sec.classList.toggle('mq-fx-off', !isCur);
@@ -8919,6 +8925,7 @@
         setTimeout(() => sec.classList.remove('mq-fx-in-next', 'mq-fx-in-back'), 450);
       }
     });
+    if (window._mqFxFull && prefix === window._mqActiveTabPrefix) mqFxRenderSide(prefix, labels, idx, inResults);
     // Picker arrows measure scrollWidth, which reads 0 while hidden.
     if (window.mqUpdateAllPickerArrows) requestAnimationFrame(() => window.mqUpdateAllPickerArrows());
   };
@@ -8927,23 +8934,83 @@
     const isLast = index >= total - 1;
     const back = index > 0
       ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>`
-      : (mqFxHasChooser() ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Change</button>` : '<span></span>');
+      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Exit</button>`;
     return `${back}<button type="button" class="mq-step-continue-btn" onclick="event.stopPropagation();mqStepContinue('${prefix}')">${isLast ? 'See my estimate ✨' : 'Continue →'}</button>`;
   };
 
   window.mqFxScrollToStep = function() {
+    if (window._mqFxFull) { const c = document.getElementById('midasquote-widget'); if (c) c.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     const sec = document.querySelector('#midasquote-widget .mq-tab-content.active .mq-sec.mq-fx-cur');
     if (!sec || !window.mqScrollWithOffset) return;
     const top = sec.getBoundingClientRect().top;
     if (top < 40 || top > window.innerHeight * 0.45) window.mqScrollWithOffset(sec, 70);
   };
 
+  // ── Full-screen focus mode ──
+  // Starting a quote lifts the widget out of the page into a fixed full-screen
+  // layer (a placeholder holds its spot so the page doesn't jump), freezes
+  // the page behind it, and gives the customer an Exit button / Esc key to
+  // come back. Moving the node (rather than just styling it fixed in place)
+  // keeps it immune to host-page ancestors with transforms/filters, which
+  // would otherwise break position:fixed.
+  window._mqFxFull = false;
+  window.mqFxEnterFull = function() {
+    const c = document.getElementById('midasquote-widget');
+    if (!c || window._mqFxFull) return;
+    const ph = document.createElement('div');
+    ph.id = 'mq-fx-placeholder';
+    ph.style.height = c.offsetHeight + 'px';
+    window._mqFxScrollY = window.pageYOffset;
+    c.parentNode.insertBefore(ph, c);
+    document.body.appendChild(c);
+    c.classList.add('mq-fx-full');
+    c.classList.remove('mq-fx-chooser-on');
+    c.setAttribute('role', 'dialog');
+    c.setAttribute('aria-modal', 'true');
+    c.setAttribute('aria-label', 'Get an estimate');
+    window._mqFxPrevOverflow = [document.documentElement.style.overflow, document.body.style.overflow];
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    window._mqFxFull = true;
+    c.scrollTop = 0;
+    // The Demo watermark is absolutely positioned inside the widget, which
+    // would only cover the first screenful of a scrolling full-screen layer.
+    const wm = [...c.children].find(el => /DEMO/.test(el.style.backgroundImage || ''));
+    if (wm) { wm.dataset.mqFxPos = wm.style.position; wm.style.position = 'fixed'; }
+  };
+  window.mqFxExitFull = function() {
+    const c = document.getElementById('midasquote-widget');
+    const ph = document.getElementById('mq-fx-placeholder');
+    if (!c || !window._mqFxFull) return;
+    c.classList.remove('mq-fx-full');
+    c.removeAttribute('role'); c.removeAttribute('aria-modal'); c.removeAttribute('aria-label');
+    const wm = [...c.children].find(el => el.dataset && el.dataset.mqFxPos !== undefined);
+    if (wm) { wm.style.position = wm.dataset.mqFxPos || 'absolute'; delete wm.dataset.mqFxPos; }
+    if (ph) ph.replaceWith(c);
+    const prev = window._mqFxPrevOverflow || ['', ''];
+    document.documentElement.style.overflow = prev[0];
+    document.body.style.overflow = prev[1];
+    window._mqFxFull = false;
+    window.scrollTo(0, window._mqFxScrollY || 0);
+  };
+
   window.mqFxToChooser = function() {
     const container = document.getElementById('midasquote-widget');
     if (!container) return;
+    window.mqFxExitFull();
     container.classList.add('mq-fx-chooser-on');
     const active = window._mqActiveTabPrefix;
-    container.querySelectorAll('.mq-fx-card').forEach(c => c.classList.toggle('mq-fx-card-current', mqFxPrefixOfTabId(c.dataset.tab) === active));
+    container.querySelectorAll('.mq-fx-card').forEach(c => {
+      const p = mqFxPrefixOfTabId(c.dataset.tab);
+      const isCur = p === active;
+      c.classList.toggle('mq-fx-card-current', isCur);
+      const subEl = c.querySelector('.mq-fx-card-sub');
+      if (!subEl) return;
+      if (subEl.dataset.orig === undefined) subEl.dataset.orig = subEl.textContent;
+      const tab = mqFxTabEl(p);
+      const hasProgress = isCur && ((window._mqStepIndex[p] || 0) > 0 || (tab && tab.classList.contains('mq-fx-results')));
+      subEl.textContent = hasProgress ? 'Pick up where you left off' : subEl.dataset.orig;
+    });
     window.mqScrollWithOffset && window.mqScrollWithOffset(container, 20);
   };
 
@@ -8959,9 +9026,43 @@
       window._mqStepIndex[next] = 0;
       _mqFxLastPct[next] = null;
     }
+    window.mqFxEnterFull();
     container.classList.remove('mq-fx-chooser-on');
     window._mqFxDir = 'next';
     window.mqUpdateStepFocus(next);
+    window.mqFxScrollToStep();
+  };
+
+  // Desktop side stepper — rebuilt on every step change.
+  function mqFxRenderSide(prefix, labels, idx, inResults) {
+    const ol = document.getElementById('mq-fx-steps');
+    if (!ol) return;
+    const tabDef = MQ_FX_TABS.find(t => mqFxPrefixOfTabId(t.id) === prefix);
+    const typeEl = document.getElementById('mq-fx-side-type');
+    if (typeEl) {
+      const roomSel = document.getElementById(`mq-${prefix}-room`);
+      const roomName = roomSel && roomSel.selectedOptions[0] ? roomSel.selectedOptions[0].textContent : '';
+      typeEl.innerHTML = `<span class="mq-fx-side-type-kicker">Your quote</span><span class="mq-fx-side-type-name">${tabDef ? tabDef.title : ''}</span>${roomName ? `<span class="mq-fx-side-type-room">${roomName}</span>` : ''}`;
+    }
+    const items = labels.map((l, i) => {
+      const state = inResults || i < idx ? 'done' : (i === idx ? 'cur' : 'todo');
+      const click = state === 'done' ? ` onclick="mqFxGoTo('${prefix}',${i})" role="button" tabindex="0"` : '';
+      return `<li class="mq-fx-stp mq-fx-stp-${state}"${click}><span class="mq-fx-stp-dot">${state === 'done' ? '✓' : i + 1}</span><span class="mq-fx-stp-label">${l}</span></li>`;
+    });
+    items.push(`<li class="mq-fx-stp ${inResults ? 'mq-fx-stp-cur' : 'mq-fx-stp-todo'}"><span class="mq-fx-stp-dot">★</span><span class="mq-fx-stp-label">Your estimate</span></li>`);
+    ol.innerHTML = items.join('');
+  }
+
+  window.mqFxGoTo = function(prefix, i) {
+    const tab = mqFxTabEl(prefix);
+    if (!tab) return;
+    const cur = window._mqStepIndex[prefix] || 0;
+    const wasResults = tab.classList.contains('mq-fx-results');
+    tab.classList.remove('mq-fx-results');
+    window._mqStepIndex[prefix] = i;
+    _mqFxLastPct[prefix] = null;
+    window._mqFxDir = (wasResults || i < cur) ? 'back' : 'next';
+    window.mqUpdateStepFocus(prefix);
     window.mqFxScrollToStep();
   };
 
@@ -9066,9 +9167,9 @@
       @keyframes mqFxInBack{from{opacity:0;transform:translateX(-42px)}to{opacity:1;transform:none}}
       @media (prefers-reduced-motion:reduce){#midasquote-widget.mq-fx .mq-sec.mq-fx-in-next,#midasquote-widget.mq-fx .mq-sec.mq-fx-in-back{animation:none}}
       #midasquote-widget.mq-fx .mq-step-footer{position:sticky;bottom:var(--mq-sticky-h,0px);z-index:6;background:#fff;margin:18px -16px -16px;padding:12px 16px;border-top:1px solid #e5e7eb;border-radius:0 0 10px 10px;box-shadow:0 -6px 14px rgba(0,0,0,.05)}
-      #midasquote-widget.mq-fx .mq-step-continue-btn{background:${fc};color:#fff;font-size:16px;font-weight:700;padding:13px 26px;border-radius:10px;flex:1;max-width:260px;margin-left:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+      #midasquote-widget.mq-fx .mq-step-continue-btn{background:${fc};color:#fff;font-size:15px;font-weight:700;padding:11px 20px;border-radius:10px;flex:0 1 208px;margin-left:auto;box-shadow:0 4px 12px rgba(0,0,0,.18)}
       #midasquote-widget.mq-fx .mq-step-back-btn{font-size:15px;padding:12px 8px}
-      @media (max-width:600px){#midasquote-widget.mq-fx .mq-step-continue-btn{max-width:none}}
+      @media (max-width:600px){#midasquote-widget.mq-fx .mq-step-continue-btn{flex:0 1 190px}}
       #mq-fx-chooser{padding:26px 16px 22px;text-align:center;animation:mqFxInNext .4s ease backwards}
       #mq-fx-chooser .mq-fx-ch-title{font-size:25px;line-height:1.2;font-weight:800;color:#111827;margin-bottom:6px;letter-spacing:-.01em}
       #mq-fx-chooser .mq-fx-ch-sub{font-size:15px;color:#4b5563;margin-bottom:20px}
@@ -9076,7 +9177,7 @@
       #mq-fx-chooser .mq-fx-card{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:16px 18px;cursor:pointer;font-family:inherit;transition:border-color .15s,transform .15s,box-shadow .15s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
       #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{border-color:${fc};transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.12);outline:none}
       #mq-fx-chooser .mq-fx-card-current{border-color:${fc}}
-      #mq-fx-chooser .mq-fx-card-icon{font-size:30px;line-height:1;flex-shrink:0}
+      #mq-fx-chooser .mq-fx-card-icon{display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:14px;background:${fc}14;color:${fc};flex-shrink:0}
       #mq-fx-chooser .mq-fx-card-title{font-size:17px;font-weight:800;color:#111827;display:block}
       #mq-fx-chooser .mq-fx-card-sub{font-size:13.5px;color:#6b7280;display:block;margin-top:2px}
       #mq-fx-chooser .mq-fx-card-arrow{margin-left:auto;font-size:22px;color:${fc};flex-shrink:0}
@@ -9085,6 +9186,75 @@
       #midasquote-widget.mq-fx .mq-fx-resbtn:hover{border-color:${fc};color:${fc}}
       #midasquote-widget.mq-fx .mq-fx-resbtn-pri{background:${fc};border-color:${fc};color:#fff}
       #midasquote-widget.mq-fx .mq-fx-resbtn-pri:hover{color:#fff;opacity:.9}
+
+      @media (min-width:700px){
+        #mq-fx-chooser{padding:44px 28px 40px}
+        #mq-fx-chooser .mq-fx-ch-title{font-size:32px}
+        #mq-fx-chooser .mq-fx-ch-sub{font-size:16px;margin-bottom:30px}
+        #mq-fx-chooser .mq-fx-cards{grid-template-columns:repeat(3,1fr);max-width:820px;gap:18px}
+        #mq-fx-chooser .mq-fx-card{flex-direction:column;text-align:center;padding:30px 18px 24px;gap:16px}
+        #mq-fx-chooser .mq-fx-card-icon{width:68px;height:68px;border-radius:18px}
+        #mq-fx-chooser .mq-fx-card-icon svg{width:36px;height:36px}
+        #mq-fx-chooser .mq-fx-card-title{font-size:18px}
+        #mq-fx-chooser .mq-fx-card-arrow{margin:0;font-size:24px}
+      }
+
+      /* ── Full-screen focus mode ── */
+      #mq-fx-top,#mq-fx-side{display:none}
+      #midasquote-widget.mq-fx.mq-fx-full{box-sizing:border-box;position:fixed;inset:0;height:100vh;height:100dvh;width:100%;max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;z-index:99990;background:#f3f4f6;padding-bottom:var(--mq-sticky-h,0px);display:block}
+      #midasquote-widget.mq-fx-full .mq-header,
+      #midasquote-widget.mq-fx-full .mq-powered-by,
+      #midasquote-widget.mq-fx-full #mq-fx-chooser{display:none!important}
+      #midasquote-widget.mq-fx-full #mq-fx-top{display:flex;position:sticky;top:0;z-index:20;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#fff;border-bottom:1px solid #e5e7eb}
+      #mq-fx-top .mq-fx-top-brand{display:flex;flex-direction:column;min-width:0}
+      #mq-fx-top .mq-fx-top-name{font-size:15px;font-weight:800;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #mq-fx-top .mq-fx-top-pw{font-size:11px;color:#9ca3af;font-weight:600}
+      #mq-fx-top .mq-fx-top-pw a{color:#6b7280;text-decoration:none}
+      #mq-fx-top .mq-fx-exit{background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;border-radius:99px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
+      #mq-fx-top .mq-fx-exit:hover{background:#e5e7eb}
+      #midasquote-widget.mq-fx-full .mq-tab-content{padding:12px 10px 60px;max-width:860px;margin:0 auto}
+      #midasquote-widget.mq-fx-full .mq-sec{--mq-fx-pad:16px;border:1px solid #e5e7eb;border-left:1px solid #e5e7eb;border-radius:16px;padding:var(--mq-fx-pad);box-shadow:0 6px 24px rgba(0,0,0,.07)}
+      #midasquote-widget.mq-fx-full .mq-sec.mq-step-current,#midasquote-widget.mq-fx-full .mq-sec.mq-step-done,#midasquote-widget.mq-fx-full .mq-sec.mq-step-upcoming{box-shadow:0 6px 24px rgba(0,0,0,.07)}
+      #midasquote-widget.mq-fx-full .mq-step-footer{margin:18px calc(var(--mq-fx-pad,16px) * -1) calc(var(--mq-fx-pad,16px) * -1);padding:12px var(--mq-fx-pad,16px);border-radius:0 0 16px 16px}
+      @media (min-width:900px){
+        #midasquote-widget.mq-fx.mq-fx-full{padding-left:300px;background:#f1f3f6}
+        #midasquote-widget.mq-fx-full #mq-fx-side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:var(--mq-sticky-h,0px);width:300px;padding:30px 24px 22px;background:linear-gradient(180deg,#14161b 0%,#1d2027 100%);color:#fff;z-index:30;overflow-y:auto}
+        #midasquote-widget.mq-fx-full #mq-fx-top{background:transparent;border-bottom:0;justify-content:flex-end;padding:18px 28px 0;pointer-events:none}
+        #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-top-brand{display:none}
+        #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-exit{pointer-events:auto;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+        #midasquote-widget.mq-fx-full .mq-tab-content{padding:4px 40px 90px;max-width:900px}
+        #midasquote-widget.mq-fx-full .mq-sec{--mq-fx-pad:36px;border-radius:20px;box-shadow:0 14px 44px rgba(17,24,39,.10)}
+        #midasquote-widget.mq-fx-full .mq-step-footer{border-radius:0 0 20px 20px}
+        #midasquote-widget.mq-fx-full .mq-fx-title{font-size:32px}
+        #midasquote-widget.mq-fx-full .mq-fx-sub{font-size:16.5px}
+        #midasquote-widget.mq-fx-full .mq-fx-bar{display:none}
+        #midasquote-widget.mq-fx-full .mq-fx-head{margin-bottom:24px}
+      }
+      #mq-fx-side .mq-fx-side-brand{display:flex;align-items:center;gap:12px;padding:0;border:0;margin-bottom:26px}
+      #mq-fx-side .mq-fx-side-brand .mq-shop-name{color:#fff;font-size:16px;font-weight:800}
+      #mq-fx-side .mq-fx-side-brand .mq-shop-sub{color:#9ca3af;font-size:12.5px}
+      #mq-fx-side .mq-fx-side-brand>*{flex-shrink:0}
+      #mq-fx-side .mq-fx-side-brand>div[style*="flex:1"]{flex:1;min-width:0}
+      #mq-fx-side-type{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.07);margin-bottom:22px}
+      .mq-fx-side-type-kicker{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#9ca3af}
+      .mq-fx-side-type-name{font-size:16px;font-weight:800;color:#fff}
+      .mq-fx-side-type-room{font-size:13px;color:#cbd5e1}
+      #mq-fx-steps{list-style:none;margin:0;padding:0;flex:1}
+      .mq-fx-stp{display:flex;align-items:center;gap:12px;padding:8px 0;position:relative;color:#8b93a1;font-size:14.5px;font-weight:600}
+      .mq-fx-stp:not(:last-child)::after{content:'';position:absolute;left:13px;top:36px;bottom:-8px;width:2px;background:rgba(255,255,255,.12)}
+      .mq-fx-stp-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;border:2px solid rgba(255,255,255,.18);flex-shrink:0;background:#1d2027;position:relative;z-index:1}
+      .mq-fx-stp-cur{color:#fff}
+      .mq-fx-stp-cur .mq-fx-stp-dot{background:${fc};border-color:${fc};color:#fff;box-shadow:0 0 0 4px ${fc}40}
+      .mq-fx-stp-done{color:#d1d5db;cursor:pointer}
+      .mq-fx-stp-done:hover{color:#fff}
+      .mq-fx-stp-done .mq-fx-stp-dot{background:#16a34a;border-color:#16a34a;color:#fff}
+      .mq-fx-side-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
+      .mq-fx-side-link{color:#cbd5e1;font-size:13px;font-weight:600;text-decoration:none}
+      .mq-fx-side-link:hover{color:#fff}
+      .mq-fx-side-pw{font-size:11.5px;color:#7b8494;font-weight:600}
+      .mq-fx-side-pw a{color:#aab2c0;text-decoration:none}
+      .mq-fx-side-exit{background:transparent;border:1px solid rgba(255,255,255,.22);color:#e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center}
+      .mq-fx-side-exit:hover{background:rgba(255,255,255,.08)}
     `;
     document.head.appendChild(s);
   }
@@ -9094,6 +9264,7 @@
   window.mqFxInit = function() {
     const container = document.getElementById('midasquote-widget');
     if (!container || !window._mqFxOn) return;
+    if (window._mqFxFull) window.mqFxExitFull(); // a rebuild (start new estimate) always lands back inline
     container.classList.add('mq-fx');
     mqFxInjectStyles();
     container.querySelectorAll('.mq-tab-content').forEach(tab => {
@@ -9119,10 +9290,39 @@
       const tabBar = container.querySelector('.mq-tab-bar');
       if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
     }
+    // Top bar (Exit button; shop name on phones) and desktop side stepper —
+    // only visible in full-screen mode (CSS).
+    if (!document.getElementById('mq-fx-top')) {
+      const hdr = container.querySelector('.mq-header');
+      const nameEl = hdr && hdr.querySelector('.mq-shop-name');
+      const top = document.createElement('div');
+      top.id = 'mq-fx-top';
+      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button>`;
+      container.insertBefore(top, container.firstChild);
+    }
+    if (!document.getElementById('mq-fx-side')) {
+      const hdr = container.querySelector('.mq-header');
+      const brand = hdr ? hdr.cloneNode(true) : document.createElement('div');
+      brand.querySelectorAll('a').forEach(a => a.remove());
+      brand.className = 'mq-fx-side-brand';
+      brand.removeAttribute('style');
+      const showroom = hdr && hdr.querySelector('a[href]');
+      const side = document.createElement('aside');
+      side.id = 'mq-fx-side';
+      side.appendChild(brand);
+      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
+      container.insertBefore(side, container.firstChild);
+    }
     mqFxInstallSwipe(container);
-    const visible = mqFxVisibleTabIds();
-    if (visible.length === 1) { container.classList.remove('mq-fx-chooser-on'); window.mqFxStart(visible[0]); }
-    else container.classList.add('mq-fx-chooser-on');
+    if (!window._mqFxEscBound) {
+      window._mqFxEscBound = true;
+      document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape' || !window._mqFxFull) return;
+        if (document.querySelector('.mq-lightbox.show, .mq-overlay.show')) return; // let those close first
+        window.mqFxToChooser();
+      });
+    }
+    container.classList.add('mq-fx-chooser-on');
     // Re-run for whatever tab is active so the head/off-classes exist on the
     // very first paint (wireWidget's own step setup ran before this).
     window.mqFxApply(window._mqActiveTabPrefix || 'b');
